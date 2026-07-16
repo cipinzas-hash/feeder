@@ -1,0 +1,33 @@
+name: Actualizar feed de Angst
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'   # cada 4 horas
+  workflow_dispatch: {}      # botón "Run workflow" manual en la pestaña Actions
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Bajar feeds y extraer texto completo
+        run: npm run build
+
+      - name: Commitear data/feed.json si cambió
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/feed.json
+          git diff --staged --quiet || git commit -m "Actualizar feed $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push
