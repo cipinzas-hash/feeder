@@ -1,1 +1,39 @@
-
+[
+  { "cat": "Melee", "feeds": [
+    { "name": "Start.gg Blog", "url": "https://blog.start.gg/feed" },
+    { "name": "r/SSBM", "url": "https://www.reddit.com/r/SSBM/.rss" }
+  ]},
+  { "cat": "Pokémon TCG", "feeds": [
+    { "name": "r/pkmntcg Torneos", "url": "https://www.reddit.com/r/pkmntcg/search.rss?q=flair%3Atournament&sort=new" },
+    { "name": "PocketMonsters", "url": "https://pocketmonsters.net/rss" }
+  ]},
+  { "cat": "Gaming", "feeds": [
+    { "name": "Eurogamer", "url": "https://eurogamer.net/feed" },
+    { "name": "Kotaku", "url": "https://kotaku.com/rss" },
+    { "name": "GBAtemp", "url": "https://gbatemp.net/forums/-/index.rss" }
+  ]},
+  { "cat": "Películas / Series / Animación", "feeds": [
+    { "name": "FirstShowing", "url": "https://www.firstshowing.net/feed" },
+    { "name": "Anime News Network", "url": "https://www.animenewsnetwork.com/newsfeed/rss.xml" },
+    { "name": "r/movies", "url": "https://www.reddit.com/r/movies/.rss" },
+    { "name": "r/television", "url": "https://www.reddit.com/r/television/.rss" }
+  ]},
+  { "cat": "Dark scene / Música", "feeds": [
+    { "name": "Side-Line Magazine", "url": "https://www.side-line.com/feed" },
+    { "name": "Post-Punk.com", "url": "https://post-punk.com/feed" },
+    { "name": "Electrozombies", "url": "https://electrozombies.com/feed" }
+  ]},
+  { "cat": "Ciencia / Conocimiento", "feeds": [
+    { "name": "New Scientist", "url": "https://www.newscientist.com/feed/home" },
+    { "name": "The Conversation", "url": "https://theconversation.com/global/articles.atom" }
+  ]},
+  { "cat": "Tecnología", "feeds": [
+    { "name": "Ars Technica", "url": "https://arstechnica.com/feed" },
+    { "name": "The Verge", "url": "https://www.theverge.com/rss/index.xml" },
+    { "name": "Pluralistic", "url": "https://pluralistic.net/feed" }
+  ]},
+  { "cat": "Poliamor", "feeds": [
+    { "name": "Polyamory in the Media", "url": "https://polyinthemedia.blogspot.com/feeds/posts/default" },
+    { "name": "Psychology Today - Polyamory", "url": "https://www.psychologytoday.com/us/blog/the-polyamorists-next-door/feed" }
+  ]}
+]
