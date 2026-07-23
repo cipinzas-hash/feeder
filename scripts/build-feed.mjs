@@ -31,6 +31,7 @@ const parser = new Parser({
       ["content:encoded", "contentEncoded"],
       ["media:content", "mediaContent", { keepArray: true }],
       ["media:thumbnail", "mediaThumbnail"],
+      ["yt:videoId", "ytVideoId"],
     ],
   },
 });
@@ -74,94 +75,9 @@ async function fetchFeed(source, cat) {
   try {
     const feed = await parser.parseURL(source.url);
     return (feed.items || [])
-      .map(item => ({
-        guid: item.guid || item.id || item.link,
-        title: (item.title || "").trim(),
-        link: item.link || "",
-        summary: stripHtml(item.contentSnippet || item.summary || item.content || "").slice(0, 260),
-        image: extractImage(item),
-        pubDate: item.isoDate || (item.pubDate ? new Date(item.pubDate).toISOString() : null),
-        source: source.name,
-        categoria: cat,
-        fullText: item.contentEncoded ? sanitize(item.contentEncoded) : null,
-      }))
-      .filter(a => a.title && a.link && a.guid);
-  } catch (e) {
-    console.error(`✗ ${cat} · ${source.name}: ${e.message}`);
-    return [];
-  }
-}
-
-async function extractFullText(url) {
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-    const res = await fetch(url, { signal: controller.signal, headers: { "User-Agent": UA } });
-    clearTimeout(timer);
-    if (!res.ok) return null;
-    const html = await res.text();
-    const dom = new JSDOM(html, { url });
-    const article = new Readability(dom.window.document).parse();
-    if (!article?.content) return null;
-    return sanitize(article.content);
-  } catch (e) {
-    return null;
-  }
-}
-
-async function main() {
-  const feedsConfig = JSON.parse(await readFile(FEEDS_PATH, "utf-8"));
-
-  // Corrida anterior — para reusar fullText ya extraído y no repetir trabajo.
-  let previous = { categories: [] };
-  try {
-    previous = JSON.parse(await readFile(OUTPUT_PATH, "utf-8"));
-  } catch (e) { /* primera corrida, no hay archivo previo todavía */ }
-  const previousByGuid = new Map();
-  for (const cat of previous.categories || []) {
-    for (const item of cat.items || []) previousByGuid.set(item.guid, item);
-  }
-
-  const allSources = feedsConfig.flatMap(g => g.feeds.map(f => ({ ...f, cat: g.cat })));
-  console.log(`Bajando ${allSources.length} feeds...`);
-  const fetched = await mapWithConcurrency(allSources, FEED_CONCURRENCY, f => fetchFeed(f, f.cat));
-  const allItems = fetched.flat();
-
-  const cutoff = Date.now() - RETENTION_DAYS * 86400000;
-  const recentItems = allItems.filter(a => !a.pubDate || new Date(a.pubDate).getTime() >= cutoff);
-
-  let extractionsUsed = 0;
-  console.log(`Extrayendo texto completo (tope ${MAX_NEW_EXTRACTIONS_PER_RUN} nuevas esta corrida)...`);
-  const withFullText = await mapWithConcurrency(recentItems, EXTRACT_CONCURRENCY, async item => {
-    if (item.fullText) return item; // ya vino con content:encoded
-    const prev = previousByGuid.get(item.guid);
-    if (prev?.fullText) return { ...item, fullText: prev.fullText }; // ya se había extraído antes
-    if (extractionsUsed >= MAX_NEW_EXTRACTIONS_PER_RUN) return item; // se completa en la próxima corrida
-    extractionsUsed++;
-    const fullText = await extractFullText(item.link);
-    return { ...item, fullText };
-  });
-
-  const byCat = {};
-  withFullText.forEach(item => {
-    if (!byCat[item.categoria]) byCat[item.categoria] = [];
-    byCat[item.categoria].push(item);
-  });
-  const categories = Object.entries(byCat).map(([cat, items]) => ({
-    cat,
-    items: items.sort((a, b) => (b.pubDate || "").localeCompare(a.pubDate || "")),
-  }));
-
-  const output = { generatedAt: new Date().toISOString(), categories };
-  await mkdir(new URL("../data/", import.meta.url), { recursive: true });
-  await writeFile(OUTPUT_PATH, JSON.stringify(output, null, 2));
-
-  const total = withFullText.length;
-  const withText = withFullText.filter(i => i.fullText).length;
-  console.log(`✓ ${total} items en ${categories.length} categorías · ${withText} con texto completo · ${extractionsUsed} extracciones nuevas esta corrida`);
-}
-
-main().catch(e => {
-  console.error("Error fatal:", e);
-  process.exit(1);
-});
+      .map(item => {
+        const base = {
+          guid: item.guid || item.id || item.link,
+          title: (item.title || "").trim(),
+          link: item.link || "",
+          summary: stripHtml(item.contentSnippet || item.summary || item.content || "")
