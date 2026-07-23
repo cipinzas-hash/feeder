@@ -11,6 +11,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20   # red de seguridad: con el fix del abort, el peor caso ronda ~5-6 min
     steps:
       - uses: actions/checkout@v4
 
