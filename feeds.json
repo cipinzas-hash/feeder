@@ -5,7 +5,12 @@
   ]},
   { "cat": "Pokémon TCG", "feeds": [
     { "name": "r/pkmntcg Torneos", "url": "https://www.reddit.com/r/pkmntcg/search.rss?q=flair%3Atournament&sort=new" },
-    { "name": "PocketMonsters", "url": "https://pocketmonsters.net/rss" }
+    { "name": "PocketMonsters", "url": "https://pocketmonsters.net/rss" },
+    { "name": "Marriland - TCG News", "url": "https://marriland.com/category/news/pokemon-tcg/feed" },
+    { "name": "PokemonDB", "url": "https://pokemondb.net/news/feed" },
+    { "name": "Rare Candy", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCkgkRXdzdVrMGO4vjLmzzjw", "tipo": "video" },
+    { "name": "Meta Pod", "url": "https://anchor.fm/s/238c39d0/podcast/rss", "tipo": "podcast" },
+    { "name": "Uncommon Energy", "url": "https://anchor.fm/s/8755b1a8/podcast/rss", "tipo": "podcast" }
   ]},
   { "cat": "Gaming", "feeds": [
     { "name": "Eurogamer", "url": "https://eurogamer.net/feed" },
