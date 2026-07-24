@@ -46,9 +46,16 @@ async function omdb(imdbId) {
   try {
     const url = `https://www.omdbapi.com/?i=${imdbId}&apikey=${OMDB_KEY}`;
     const res = await fetch(url);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.error(`OMDb http ${res.status} para ${imdbId}: ${body.slice(0, 200)}`);
+      return null;
+    }
     const data = await res.json();
-    if (data.Response === "False") return null;
+    if (data.Response === "False") {
+      console.error(`OMDb Response=False para ${imdbId}: ${data.Error}`);
+      return null;
+    }
     const rt = (data.Ratings || []).find(r => r.Source === "Rotten Tomatoes");
     const mc = (data.Ratings || []).find(r => r.Source === "Metacritic");
     return {
@@ -117,8 +124,16 @@ async function loadCache() {
 
 // ─── Enriquecimiento por ítem (rating + reviews + trailer + cast) ─────────
 
+function needsRetry(cached) {
+  if (!cached) return true;
+  const r = cached.rating || {};
+  // si TMDb sí tiene voto propio pero los 3 campos de OMDb están vacíos,
+  // asumimos que fue un fallo de OMDb (key inválida, rate limit, etc.) y reintentamos
+  return r.imdb == null && r.rt == null && r.metascore == null;
+}
+
 async function enrichMovieOrTv(mediaType, id, cache, guid) {
-  if (cache[guid]) return cache[guid]; // ya enriquecido en corrida anterior
+  if (cache[guid] && !needsRetry(cache[guid])) return cache[guid];
 
   const [details, credits, videos, reviewsRes, externalIds] = await Promise.all([
     tmdb(`/${mediaType}/${id}`),
