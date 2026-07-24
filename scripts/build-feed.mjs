@@ -32,6 +32,21 @@ const TIMEOUT_MS = 15000;
 
 const UA = "Mozilla/5.0 (compatible; AngstFeedBot/1.0; +personal use, no scraping at scale)";
 
+// ── Filtro Dark scene / Música: noticias de "release" sin forma de escucharlo ──
+// Heurística v1, sobre título en inglés (idioma real de Side-Line/Post-Punk/
+// Electrozombies) — se espera afinar después de ver casos reales filtrados/
+// mantenidos, no es exacta. Solo aplica si categoria === MUSIC_CATEGORIA.
+const MUSIC_CATEGORIA = "Dark scene / Música";
+const RELEASE_TITLE_RE = /\b(new (single|album|ep|track|song|video)|out now|video premiere|song premiere|premieres?\b|shares? (new )?(song|track|video)|announces? new (album|ep|single)|drops? new|unveils? new (song|track|video))\b/i;
+const LISTEN_EMBED_RE = /(youtube\.com\/(embed|watch)|youtu\.be\/|bandcamp\.com\/(track|album|embeddedplayer)|soundcloud\.com|open\.spotify\.com)/i;
+
+function looksLikeReleaseNews(title) {
+  return RELEASE_TITLE_RE.test(title || "");
+}
+function hasListenEmbed(rawHtml) {
+  return LISTEN_EMBED_RE.test(rawHtml || "");
+}
+
 const parser = new Parser({
   timeout: TIMEOUT_MS,
   headers: { "User-Agent": UA },
@@ -85,6 +100,7 @@ async function fetchFeed(source, cat) {
     const feed = await parser.parseURL(source.url);
     return (feed.items || [])
       .map(item => {
+        const rawForEmbedCheck = item.contentEncoded || item.content || item.summary || "";
         const base = {
           guid: item.guid || item.id || item.link,
           title: (item.title || "").trim(),
@@ -95,6 +111,7 @@ async function fetchFeed(source, cat) {
           source: source.name,
           categoria: cat,
           fullText: item.contentEncoded ? sanitize(item.contentEncoded) : null,
+          hasListenEmbed: hasListenEmbed(rawForEmbedCheck),
         };
         // video/podcast: mismo shape de siempre + los campos que usa ExtendedView
         // para embeber en vez de extraer texto. Sin "tipo" en feeds.json, el item
@@ -119,17 +136,19 @@ async function extractFullText(url) {
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     const res = await fetch(url, { signal: controller.signal, headers: { "User-Agent": UA } });
-    if (!res.ok) return null;
+    if (!res.ok) return { sanitized: null, hasEmbed: false };
     // el abort tiene que seguir armado durante res.text() también: fetch() resuelve
     // apenas llegan los headers, no cuando termina de bajar el body — si no, una
     // página que gotea el body muy lento (o se cuelga) queda leyendo sin límite.
     const html = await res.text();
     const dom = new JSDOM(html, { url });
     const article = new Readability(dom.window.document).parse();
-    if (!article?.content) return null;
-    return sanitize(article.content);
+    if (!article?.content) return { sanitized: null, hasEmbed: false };
+    // chequeo de embed ANTES de sanitize(): DOMPurify pela <iframe> por defecto,
+    // así que si se chequea después del sanitize nunca se va a detectar nada.
+    return { sanitized: sanitize(article.content), hasEmbed: hasListenEmbed(article.content) };
   } catch (e) {
-    return null;
+    return { sanitized: null, hasEmbed: false };
   } finally {
     clearTimeout(timer);
   }
@@ -403,14 +422,26 @@ async function main() {
   console.log(`Extrayendo texto completo (tope ${MAX_NEW_EXTRACTIONS_PER_RUN} nuevas esta corrida)...`);
   const withFullText = await mapWithConcurrency(recentItems, EXTRACT_CONCURRENCY, async item => {
     if (item.tipo === "video") return item; // el link es la página de YouTube, no hay texto real que extraer ahí
-    if (item.fullText) return item; // ya vino con content:encoded
+    if (item.fullText) return item; // ya vino con content:encoded, hasListenEmbed ya seteado en fetchFeed
     const prev = previousByGuid.get(item.guid);
-    if (prev?.fullText) return { ...item, fullText: prev.fullText }; // ya se había extraído antes
+    if (prev?.fullText) return { ...item, fullText: prev.fullText, hasListenEmbed: prev.hasListenEmbed ?? item.hasListenEmbed }; // ya se había extraído antes
     if (extractionsUsed >= MAX_NEW_EXTRACTIONS_PER_RUN) return item; // se completa en la próxima corrida
     extractionsUsed++;
-    const fullText = await extractFullText(item.link);
-    return { ...item, fullText };
+    const { sanitized, hasEmbed } = await extractFullText(item.link);
+    return { ...item, fullText: sanitized, hasListenEmbed: item.hasListenEmbed || hasEmbed };
   });
+
+  // Dark scene / Música: descarta noticias de "release" que no traen forma de
+  // escucharlo. Heurística v1 — ver comentario junto a RELEASE_TITLE_RE arriba.
+  const musicFiltered = withFullText.filter(item => {
+    if (item.categoria !== MUSIC_CATEGORIA) return true;
+    if (!looksLikeReleaseNews(item.title)) return true;
+    return !!item.hasListenEmbed;
+  });
+  const droppedMusicCount = withFullText.length - musicFiltered.length;
+  if (droppedMusicCount > 0) {
+    console.log(`✓ Dark scene/Música: ${droppedMusicCount} noticia(s) de release sin link para escuchar, descartadas`);
+  }
 
   // Melee: se generan aparte (no vienen de feeds.json). Los upsets se acumulan
   // igual que antes (se combinan con lo ya generado en corridas previas); los
@@ -428,7 +459,7 @@ async function main() {
     a => !a.pubDate || new Date(a.pubDate).getTime() >= cutoff
   );
 
-  const finalItems = [...withFullText, ...allMeleeItems];
+  const finalItems = [...musicFiltered, ...allMeleeItems];
 
   const byCat = {};
   finalItems.forEach(item => {
