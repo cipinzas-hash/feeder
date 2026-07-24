@@ -46,6 +46,14 @@ function looksLikeReleaseNews(title) {
 function hasListenEmbed(rawHtml) {
   return LISTEN_EMBED_RE.test(rawHtml || "");
 }
+// Si el embed ya detectado es de YouTube, se puede sacar el videoId directo del
+// HTML sin gastar cuota de búsqueda — y es más preciso: es el video real que
+// puso la banda/sello, no un resultado de búsqueda aproximado.
+function extractYoutubeId(rawHtml) {
+  if (!rawHtml) return null;
+  const m = rawHtml.match(/(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
 
 const parser = new Parser({
   timeout: TIMEOUT_MS,
@@ -101,6 +109,7 @@ async function fetchFeed(source, cat) {
     return (feed.items || [])
       .map(item => {
         const rawForEmbedCheck = item.contentEncoded || item.content || item.summary || "";
+        const directYoutubeId = extractYoutubeId(rawForEmbedCheck);
         const base = {
           guid: item.guid || item.id || item.link,
           title: (item.title || "").trim(),
@@ -112,6 +121,7 @@ async function fetchFeed(source, cat) {
           categoria: cat,
           fullText: item.contentEncoded ? sanitize(item.contentEncoded) : null,
           hasListenEmbed: hasListenEmbed(rawForEmbedCheck),
+          ...(directYoutubeId ? { tipo: "video", videoId: directYoutubeId } : {}),
         };
         // video/podcast: mismo shape de siempre + los campos que usa ExtendedView
         // para embeber en vez de extraer texto. Sin "tipo" en feeds.json, el item
@@ -136,19 +146,23 @@ async function extractFullText(url) {
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     const res = await fetch(url, { signal: controller.signal, headers: { "User-Agent": UA } });
-    if (!res.ok) return { sanitized: null, hasEmbed: false };
+    if (!res.ok) return { sanitized: null, hasEmbed: false, videoId: null };
     // el abort tiene que seguir armado durante res.text() también: fetch() resuelve
     // apenas llegan los headers, no cuando termina de bajar el body — si no, una
     // página que gotea el body muy lento (o se cuelga) queda leyendo sin límite.
     const html = await res.text();
     const dom = new JSDOM(html, { url });
     const article = new Readability(dom.window.document).parse();
-    if (!article?.content) return { sanitized: null, hasEmbed: false };
+    if (!article?.content) return { sanitized: null, hasEmbed: false, videoId: null };
     // chequeo de embed ANTES de sanitize(): DOMPurify pela <iframe> por defecto,
     // así que si se chequea después del sanitize nunca se va a detectar nada.
-    return { sanitized: sanitize(article.content), hasEmbed: hasListenEmbed(article.content) };
+    return {
+      sanitized: sanitize(article.content),
+      hasEmbed: hasListenEmbed(article.content),
+      videoId: extractYoutubeId(article.content),
+    };
   } catch (e) {
-    return { sanitized: null, hasEmbed: false };
+    return { sanitized: null, hasEmbed: false, videoId: null };
   } finally {
     clearTimeout(timer);
   }
@@ -238,6 +252,26 @@ function timestampToSeconds(ts) {
   if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2];
   if (p.length === 2) return p[0] * 60 + p[1];
   return 0;
+}
+
+// Búsqueda de respaldo para Dark scene/Música: cuando un post de "release" no
+// trae ningún embed reproducible (ni YouTube directo, ni Bandcamp/SoundCloud/
+// Spotify que igual no sabemos renderizar todavía), se busca en YouTube por el
+// título de la noticia. Sin matching de timestamp (a diferencia de findVod para
+// Melee) — acá alcanza con encontrar el video, no un momento puntual dentro de él.
+async function findMusicVideo(title) {
+  if (!YOUTUBE_API_KEY) return null;
+  try {
+    const q = encodeURIComponent(`${title} official`);
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=1&key=${YOUTUBE_API_KEY}`
+    );
+    const data = await res.json();
+    return data?.items?.[0]?.id?.videoId || null;
+  } catch (e) {
+    console.error(`✗ Música · búsqueda YouTube ("${title}"): ${e.message}`);
+    return null;
+  }
 }
 
 async function findVod(tournamentName, ganadorNombre, perdedorNombre) {
@@ -422,25 +456,43 @@ async function main() {
   console.log(`Extrayendo texto completo (tope ${MAX_NEW_EXTRACTIONS_PER_RUN} nuevas esta corrida)...`);
   const withFullText = await mapWithConcurrency(recentItems, EXTRACT_CONCURRENCY, async item => {
     if (item.tipo === "video") return item; // el link es la página de YouTube, no hay texto real que extraer ahí
-    if (item.fullText) return item; // ya vino con content:encoded, hasListenEmbed ya seteado en fetchFeed
+    if (item.fullText) return item; // ya vino con content:encoded, hasListenEmbed/tipo ya seteados en fetchFeed
     const prev = previousByGuid.get(item.guid);
-    if (prev?.fullText) return { ...item, fullText: prev.fullText, hasListenEmbed: prev.hasListenEmbed ?? item.hasListenEmbed }; // ya se había extraído antes
+    if (prev?.fullText) {
+      // ya se había extraído antes — se conserva también tipo/videoId si ya se habían resuelto
+      const carried = { ...item, fullText: prev.fullText, hasListenEmbed: prev.hasListenEmbed ?? item.hasListenEmbed };
+      if (prev.tipo === "video" && prev.videoId) { carried.tipo = "video"; carried.videoId = prev.videoId; }
+      return carried;
+    }
     if (extractionsUsed >= MAX_NEW_EXTRACTIONS_PER_RUN) return item; // se completa en la próxima corrida
     extractionsUsed++;
-    const { sanitized, hasEmbed } = await extractFullText(item.link);
-    return { ...item, fullText: sanitized, hasListenEmbed: item.hasListenEmbed || hasEmbed };
+    const { sanitized, hasEmbed, videoId } = await extractFullText(item.link);
+    const out = { ...item, fullText: sanitized, hasListenEmbed: item.hasListenEmbed || hasEmbed };
+    if (videoId && !out.tipo) { out.tipo = "video"; out.videoId = videoId; }
+    return out;
   });
 
-  // Dark scene / Música: descarta noticias de "release" que no traen forma de
-  // escucharlo. Heurística v1 — ver comentario junto a RELEASE_TITLE_RE arriba.
-  const musicFiltered = withFullText.filter(item => {
+  // Dark scene / Música: para noticias de "release" sin un embed reproducible
+  // todavía (ni YouTube directo, ni algo que sepamos renderizar), se busca en
+  // YouTube como respaldo — recién si eso también falla, se descarta. Heurística
+  // v1 de "es release" — ver comentario junto a RELEASE_TITLE_RE arriba.
+  const musicResolved = await mapWithConcurrency(withFullText, EXTRACT_CONCURRENCY, async item => {
+    if (item.categoria !== MUSIC_CATEGORIA) return item;
+    if (!looksLikeReleaseNews(item.title)) return item;
+    if (item.tipo === "video" && item.videoId) return item; // ya resuelto (directo o de una corrida anterior)
+    const videoId = await findMusicVideo(item.title);
+    if (videoId) return { ...item, tipo: "video", videoId, hasListenEmbed: true };
+    return item;
+  });
+
+  const musicFiltered = musicResolved.filter(item => {
     if (item.categoria !== MUSIC_CATEGORIA) return true;
     if (!looksLikeReleaseNews(item.title)) return true;
-    return !!item.hasListenEmbed;
+    return item.tipo === "video" && !!item.videoId;
   });
-  const droppedMusicCount = withFullText.length - musicFiltered.length;
+  const droppedMusicCount = musicResolved.length - musicFiltered.length;
   if (droppedMusicCount > 0) {
-    console.log(`✓ Dark scene/Música: ${droppedMusicCount} noticia(s) de release sin link para escuchar, descartadas`);
+    console.log(`✓ Dark scene/Música: ${droppedMusicCount} noticia(s) de release sin forma de escucharla (ni embed ni búsqueda YouTube), descartadas`);
   }
 
   // Melee: se generan aparte (no vienen de feeds.json). Los upsets se acumulan
