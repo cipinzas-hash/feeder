@@ -54,6 +54,34 @@ function extractYoutubeId(rawHtml) {
   const m = rawHtml.match(/(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
   return m ? m[1] : null;
 }
+// Bandcamp NO tiene oEmbed (confirmado — lo rechaza, 404). Solo se puede reusar
+// un embed si el blog YA trae el iframe de EmbeddedPlayer en el HTML crudo; si
+// solo hay un link plano a la canción, no hay forma legítima de reconstruirlo
+// (la API real de Bandcamp es para sellos/artistas, no para esto).
+function extractBandcampEmbedUrl(rawHtml) {
+  if (!rawHtml) return null;
+  const m = rawHtml.match(/https?:\/\/bandcamp\.com\/EmbeddedPlayer\/[^"'\s<>]+/i);
+  return m ? m[0] : null;
+}
+// SoundCloud sí tiene oEmbed público real, sin auth — solo hace falta el link
+// plano a la canción, la resolución del embed pasa en musicResolved (main()).
+function extractSoundcloudTrackUrl(rawHtml) {
+  if (!rawHtml) return null;
+  const m = rawHtml.match(/https?:\/\/soundcloud\.com\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+/i);
+  return m ? m[0] : null;
+}
+async function resolveSoundcloudEmbed(trackUrl) {
+  try {
+    const res = await fetch(`https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(trackUrl)}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const m = (data.html || "").match(/src="([^"]+)"/);
+    return m ? m[1] : null;
+  } catch (e) {
+    console.error(`✗ Música · oEmbed SoundCloud (${trackUrl}): ${e.message}`);
+    return null;
+  }
+}
 
 const parser = new Parser({
   timeout: TIMEOUT_MS,
@@ -110,6 +138,8 @@ async function fetchFeed(source, cat) {
       .map(item => {
         const rawForEmbedCheck = item.contentEncoded || item.content || item.summary || "";
         const directYoutubeId = extractYoutubeId(rawForEmbedCheck);
+        const bandcampEmbedUrl = extractBandcampEmbedUrl(rawForEmbedCheck);
+        const soundcloudTrackUrl = !directYoutubeId && !bandcampEmbedUrl ? extractSoundcloudTrackUrl(rawForEmbedCheck) : null;
         const base = {
           guid: item.guid || item.id || item.link,
           title: (item.title || "").trim(),
@@ -122,6 +152,8 @@ async function fetchFeed(source, cat) {
           fullText: item.contentEncoded ? sanitize(item.contentEncoded) : null,
           hasListenEmbed: hasListenEmbed(rawForEmbedCheck),
           ...(directYoutubeId ? { tipo: "video", videoId: directYoutubeId } : {}),
+          ...(bandcampEmbedUrl ? { bandcampEmbedUrl } : {}),
+          ...(soundcloudTrackUrl ? { soundcloudTrackUrl } : {}),
         };
         // video/podcast: mismo shape de siempre + los campos que usa ExtendedView
         // para embeber en vez de extraer texto. Sin "tipo" en feeds.json, el item
@@ -146,23 +178,27 @@ async function extractFullText(url) {
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     const res = await fetch(url, { signal: controller.signal, headers: { "User-Agent": UA } });
-    if (!res.ok) return { sanitized: null, hasEmbed: false, videoId: null };
+    if (!res.ok) return { sanitized: null, hasEmbed: false, videoId: null, bandcampEmbedUrl: null, soundcloudTrackUrl: null };
     // el abort tiene que seguir armado durante res.text() también: fetch() resuelve
     // apenas llegan los headers, no cuando termina de bajar el body — si no, una
     // página que gotea el body muy lento (o se cuelga) queda leyendo sin límite.
     const html = await res.text();
     const dom = new JSDOM(html, { url });
     const article = new Readability(dom.window.document).parse();
-    if (!article?.content) return { sanitized: null, hasEmbed: false, videoId: null };
+    if (!article?.content) return { sanitized: null, hasEmbed: false, videoId: null, bandcampEmbedUrl: null, soundcloudTrackUrl: null };
     // chequeo de embed ANTES de sanitize(): DOMPurify pela <iframe> por defecto,
     // así que si se chequea después del sanitize nunca se va a detectar nada.
+    const videoId = extractYoutubeId(article.content);
+    const bandcampEmbedUrl = extractBandcampEmbedUrl(article.content);
     return {
       sanitized: sanitize(article.content),
       hasEmbed: hasListenEmbed(article.content),
-      videoId: extractYoutubeId(article.content),
+      videoId,
+      bandcampEmbedUrl,
+      soundcloudTrackUrl: !videoId && !bandcampEmbedUrl ? extractSoundcloudTrackUrl(article.content) : null,
     };
   } catch (e) {
-    return { sanitized: null, hasEmbed: false, videoId: null };
+    return { sanitized: null, hasEmbed: false, videoId: null, bandcampEmbedUrl: null, soundcloudTrackUrl: null };
   } finally {
     clearTimeout(timer);
   }
@@ -456,30 +492,43 @@ async function main() {
   console.log(`Extrayendo texto completo (tope ${MAX_NEW_EXTRACTIONS_PER_RUN} nuevas esta corrida)...`);
   const withFullText = await mapWithConcurrency(recentItems, EXTRACT_CONCURRENCY, async item => {
     if (item.tipo === "video") return item; // el link es la página de YouTube, no hay texto real que extraer ahí
-    if (item.fullText) return item; // ya vino con content:encoded, hasListenEmbed/tipo ya seteados en fetchFeed
+    if (item.fullText) return item; // ya vino con content:encoded, hasListenEmbed/tipo/bandcamp/soundcloud ya seteados en fetchFeed
     const prev = previousByGuid.get(item.guid);
     if (prev?.fullText) {
-      // ya se había extraído antes — se conserva también tipo/videoId si ya se habían resuelto
+      // ya se había extraído antes — se conservan también los embeds ya resueltos
       const carried = { ...item, fullText: prev.fullText, hasListenEmbed: prev.hasListenEmbed ?? item.hasListenEmbed };
       if (prev.tipo === "video" && prev.videoId) { carried.tipo = "video"; carried.videoId = prev.videoId; }
+      if (prev.bandcampEmbedUrl) carried.bandcampEmbedUrl = prev.bandcampEmbedUrl;
+      if (prev.soundcloudEmbedUrl) carried.soundcloudEmbedUrl = prev.soundcloudEmbedUrl;
       return carried;
     }
     if (extractionsUsed >= MAX_NEW_EXTRACTIONS_PER_RUN) return item; // se completa en la próxima corrida
     extractionsUsed++;
-    const { sanitized, hasEmbed, videoId } = await extractFullText(item.link);
+    const { sanitized, hasEmbed, videoId, bandcampEmbedUrl, soundcloudTrackUrl } = await extractFullText(item.link);
     const out = { ...item, fullText: sanitized, hasListenEmbed: item.hasListenEmbed || hasEmbed };
     if (videoId && !out.tipo) { out.tipo = "video"; out.videoId = videoId; }
+    if (bandcampEmbedUrl && !out.bandcampEmbedUrl) out.bandcampEmbedUrl = bandcampEmbedUrl;
+    if (soundcloudTrackUrl && !out.soundcloudTrackUrl) out.soundcloudTrackUrl = soundcloudTrackUrl;
     return out;
   });
 
   // Dark scene / Música: para noticias de "release" sin un embed reproducible
-  // todavía (ni YouTube directo, ni algo que sepamos renderizar), se busca en
-  // YouTube como respaldo — recién si eso también falla, se descarta. Heurística
-  // v1 de "es release" — ver comentario junto a RELEASE_TITLE_RE arriba.
+  // todavía, se prueba en orden: YouTube directo (ya resuelto arriba) → Bandcamp
+  // (si el blog ya trae el iframe embebido, se reusa tal cual — Bandcamp no tiene
+  // oEmbed, no hay forma de construirlo desde un link plano) → SoundCloud (oEmbed
+  // público, solo necesita el link) → búsqueda de respaldo en YouTube. Recién si
+  // las cuatro fallan se descarta. Heurística v1 de "es release" — ver comentario
+  // junto a RELEASE_TITLE_RE arriba.
   const musicResolved = await mapWithConcurrency(withFullText, EXTRACT_CONCURRENCY, async item => {
     if (item.categoria !== MUSIC_CATEGORIA) return item;
     if (!looksLikeReleaseNews(item.title)) return item;
     if (item.tipo === "video" && item.videoId) return item; // ya resuelto (directo o de una corrida anterior)
+    if (item.bandcampEmbedUrl) return { ...item, hasListenEmbed: true }; // ya trae el iframe, se usa tal cual
+    if (item.soundcloudEmbedUrl) return item; // ya resuelto en una corrida anterior
+    if (item.soundcloudTrackUrl) {
+      const embedUrl = await resolveSoundcloudEmbed(item.soundcloudTrackUrl);
+      if (embedUrl) return { ...item, soundcloudEmbedUrl: embedUrl, hasListenEmbed: true };
+    }
     const videoId = await findMusicVideo(item.title);
     if (videoId) return { ...item, tipo: "video", videoId, hasListenEmbed: true };
     return item;
@@ -488,11 +537,11 @@ async function main() {
   const musicFiltered = musicResolved.filter(item => {
     if (item.categoria !== MUSIC_CATEGORIA) return true;
     if (!looksLikeReleaseNews(item.title)) return true;
-    return item.tipo === "video" && !!item.videoId;
+    return (item.tipo === "video" && !!item.videoId) || !!item.bandcampEmbedUrl || !!item.soundcloudEmbedUrl;
   });
   const droppedMusicCount = musicResolved.length - musicFiltered.length;
   if (droppedMusicCount > 0) {
-    console.log(`✓ Dark scene/Música: ${droppedMusicCount} noticia(s) de release sin forma de escucharla (ni embed ni búsqueda YouTube), descartadas`);
+    console.log(`✓ Dark scene/Música: ${droppedMusicCount} noticia(s) de release sin forma de escucharla (ni YouTube/Bandcamp/SoundCloud), descartadas`);
   }
 
   // Melee: se generan aparte (no vienen de feeds.json). Los upsets se acumulan
