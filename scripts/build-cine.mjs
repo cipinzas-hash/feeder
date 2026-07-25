@@ -2,11 +2,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Arma data/cine.json: descubrimiento + sinopsis (TMDb) + puntajes agregados
 // (OMDb, solo para los ítems ya seleccionados) + reseñas de usuario (TMDb;
-// Jikan para anime) + trailer (TMDb videos) + cast (TMDb credits).
+// Jikan para anime) + trailer (TMDb videos, con respaldo de búsqueda en YouTube
+// si TMDb no trae ninguno) + cast (TMDb credits).
 //
 // Secrets requeridos en el repo (Settings → Secrets and variables → Actions):
 //   TMDB_API_KEY
 //   OMDB_API_KEY
+//   YOUTUBE_API_KEY (ya existe — la usa también el módulo Melee)
 //
 // No requiere key: Jikan (MyAnimeList no oficial).
 //
@@ -18,6 +20,7 @@ import fs from "fs/promises";
 
 const TMDB_KEY = process.env.TMDB_API_KEY;
 const OMDB_KEY = process.env.OMDB_API_KEY;
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const OUT_PATH = "data/cine.json";
 const CACHE_PATH = "data/cine.json"; // se lee el propio output anterior como cache
 
@@ -30,6 +33,23 @@ if (!TMDB_KEY) {
 }
 
 // ─── Utilidades ────────────────────────────────────────────────────────────
+
+// Búsqueda de respaldo cuando TMDb no trae ningún trailer oficial en /videos.
+// Sin matching de duración/timestamp — alcanza con encontrar el video correcto.
+async function findMovieTrailer(title) {
+  if (!YOUTUBE_API_KEY) return null;
+  try {
+    const q = encodeURIComponent(`${title} trailer official`);
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=1&key=${YOUTUBE_API_KEY}`
+    );
+    const data = await res.json();
+    return data?.items?.[0]?.id?.videoId || null;
+  } catch (e) {
+    console.error(`✗ Cine · búsqueda YouTube de trailer ("${title}"): ${e.message}`);
+    return null;
+  }
+}
 
 async function tmdb(path, params = {}, language = "es-CL") {
   const url = new URL(`https://api.themoviedb.org/3${path}`);
@@ -211,9 +231,12 @@ async function enrichMovieOrTv(mediaType, id, cache, guid) {
     return null;
   }
 
-  const trailer = (videos.results || []).find(
+  let trailerKey = (videos.results || []).find(
     v => v.site === "YouTube" && v.type === "Trailer" && v.official
-  ) || (videos.results || []).find(v => v.site === "YouTube" && v.type === "Trailer");
+  )?.key || (videos.results || []).find(v => v.site === "YouTube" && v.type === "Trailer")?.key;
+  if (!trailerKey) {
+    trailerKey = await findMovieTrailer(details.title || details.name);
+  }
 
   const cast = (credits.cast || [])
     .filter(c => c.known_for_department === "Acting")
@@ -238,7 +261,7 @@ async function enrichMovieOrTv(mediaType, id, cache, guid) {
       tmdb: details.vote_average ? Math.round(details.vote_average * 10) / 10 : null,
     },
     reviews: pickUserReviews(reviewsRes.results),
-    trailer: trailer ? { key: trailer.key, site: "YouTube" } : null,
+    trailer: trailerKey ? { key: trailerKey, site: "YouTube" } : null,
     cast,
   };
 }
