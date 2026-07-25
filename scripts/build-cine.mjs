@@ -31,10 +31,10 @@ if (!TMDB_KEY) {
 
 // ─── Utilidades ────────────────────────────────────────────────────────────
 
-async function tmdb(path, params = {}) {
+async function tmdb(path, params = {}, language = "es-CL") {
   const url = new URL(`https://api.themoviedb.org/3${path}`);
   url.searchParams.set("api_key", TMDB_KEY);
-  url.searchParams.set("language", "es-CL");
+  if (language) url.searchParams.set("language", language);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
   const res = await fetch(url);
   if (!res.ok) throw new Error(`TMDb ${path} → http ${res.status}`);
@@ -62,11 +62,46 @@ async function omdb(imdbId) {
       imdb: data.imdbRating && data.imdbRating !== "N/A" ? parseFloat(data.imdbRating) : null,
       rt: rt ? parseInt(rt.Value) : null,
       metascore: mc ? parseInt(mc.Value) : (data.Metascore && data.Metascore !== "N/A" ? parseInt(data.Metascore) : null),
+      plot: data.Plot && data.Plot !== "N/A" ? data.Plot : null,
+      poster: data.Poster && data.Poster !== "N/A" ? data.Poster : null,
     };
   } catch (e) {
     console.error("OMDb error:", e.message);
     return null;
   }
+}
+
+// ── Wikipedia: relleno universal, último recurso después de TMDb (es/en) y OMDb ──
+// API REST pública, sin key, contenido con licencia abierta (CC BY-SA) — no es
+// scraping ni zona gris de ToS, a diferencia de RT/Metacritic. Intenta español
+// primero (nuestro público), cae a inglés si no hay página o viene vacía.
+async function wikipediaSummary(title, lang) {
+  try {
+    let res = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
+    if (!res.ok) {
+      const searchRes = await fetch(
+        `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&format=json&origin=*`
+      );
+      const searchData = await searchRes.json();
+      const hit = searchData?.query?.search?.[0]?.title;
+      if (!hit) return null;
+      res = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(hit)}`);
+      if (!res.ok) return null;
+    }
+    const data = await res.json();
+    return {
+      extract: data.extract || null,
+      thumbnail: data.thumbnail?.source || data.originalimage?.source || null,
+    };
+  } catch (e) {
+    console.error(`✗ Wikipedia (${lang}) para "${title}": ${e.message}`);
+    return null;
+  }
+}
+async function wikipediaFallback(title) {
+  const es = await wikipediaSummary(title, "es");
+  if (es && (es.extract || es.thumbnail)) return es;
+  return wikipediaSummary(title, "en");
 }
 
 async function jikanFetch(path) {
@@ -145,6 +180,37 @@ async function enrichMovieOrTv(mediaType, id, cache, guid) {
 
   const omdbData = await omdb(externalIds.imdb_id);
 
+  // ── Sinopsis: TMDb es-CL → TMDb en-US → OMDb Plot → Wikipedia (relleno universal) ──
+  let summary = details.overview || null;
+  if (!summary) {
+    const detailsEn = await tmdb(`/${mediaType}/${id}`, {}, "en-US");
+    summary = detailsEn.overview || null;
+  }
+  if (!summary) summary = omdbData?.plot || null;
+
+  // ── Poster: TMDb (idioma pedido) → TMDb /images (todos los idiomas) → OMDb → Wikipedia ──
+  let image = details.poster_path ? `https://image.tmdb.org/t/p/w500${details.poster_path}` : null;
+  if (!image) {
+    const imagesRes = await tmdb(`/${mediaType}/${id}/images`, { include_image_language: "en,es,null" }, null);
+    const anyPoster = imagesRes.posters?.[0]?.file_path;
+    if (anyPoster) image = `https://image.tmdb.org/t/p/w500${anyPoster}`;
+  }
+  if (!image) image = omdbData?.poster || null;
+
+  // ── Relleno universal: solo se llama a Wikipedia si todavía falta algo ──
+  if (!summary || !image) {
+    const wiki = await wikipediaFallback(details.title || details.name);
+    if (!summary && wiki?.extract) summary = wiki.extract;
+    if (!image && wiki?.thumbnail) image = wiki.thumbnail;
+  }
+
+  // Cero entradas incompletas: si ninguna de las 4 fuentes trajo sinopsis o
+  // poster, se descarta el ítem en vez de publicarlo con huecos.
+  if (!summary || !image) {
+    console.log(`✗ Cine: "${details.title || details.name}" descartado — sin ${!summary ? "sinopsis" : ""}${!summary && !image ? " ni " : ""}${!image ? "poster" : ""} tras agotar TMDb/OMDb/Wikipedia`);
+    return null;
+  }
+
   const trailer = (videos.results || []).find(
     v => v.site === "YouTube" && v.type === "Trailer" && v.official
   ) || (videos.results || []).find(v => v.site === "YouTube" && v.type === "Trailer");
@@ -159,8 +225,8 @@ async function enrichMovieOrTv(mediaType, id, cache, guid) {
     guid,
     title: details.title || details.name,
     link: `https://www.themoviedb.org/${mediaType}/${id}`,
-    summary: details.overview || "",
-    image: details.poster_path ? `https://image.tmdb.org/t/p/w500${details.poster_path}` : null,
+    summary,
+    image,
     pubDate: details.release_date || details.first_air_date || null,
     source: "TMDb",
     categoria: CATEGORIA,
@@ -252,12 +318,14 @@ async function main() {
 
   for (const m of movies) {
     try {
-      items.push(await enrichMovieOrTv("movie", m.id, cache, `tmdb-movie-${m.id}`));
+      const enriched = await enrichMovieOrTv("movie", m.id, cache, `tmdb-movie-${m.id}`);
+      if (enriched) items.push(enriched);
     } catch (e) { console.error(`movie ${m.id} falló:`, e.message); }
   }
   for (const t of tv) {
     try {
-      items.push(await enrichMovieOrTv("tv", t.id, cache, `tmdb-tv-${t.id}`));
+      const enriched = await enrichMovieOrTv("tv", t.id, cache, `tmdb-tv-${t.id}`);
+      if (enriched) items.push(enriched);
     } catch (e) { console.error(`tv ${t.id} falló:`, e.message); }
   }
   for (const a of anime) {
