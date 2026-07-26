@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ANGST — Feed (prototipo)</title>
+  <script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script crossorigin="anonymous" src="https://unpkg.com/@babel/standalone@7.23.10/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body{background:#0a0a0a;overscroll-behavior:none;}
+    .article-body img{max-width:100%;border-radius:8px;margin:12px 0;display:block;}
+    .article-body a{color:inherit;text-decoration:underline;}
+    .article-body p{margin:0 0 14px;}
+    .article-body h1,.article-body h2,.article-body h3{font-family:'Caveat',cursive;color:#fff;margin:18px 0 8px;line-height:1.2;}
+    .article-body blockquote{border-left:2px solid #333;padding-left:12px;color:rgba(255,255,255,0.5);margin:12px 0;}
+    .article-body figure{margin:12px 0;}
+    .article-body figcaption{font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <div id="err" style="display:none;position:fixed;inset:0;background:#1a0000;color:#ffc;font-family:monospace;font-size:13px;padding:24px;z-index:9999;white-space:pre-wrap;overflow:auto;"></div>
+  <script>
+    function showErr(msg,line,stack){var el=document.getElementById('err');el.style.display='block';el.textContent='ERROR\n\n'+msg+(line?'\nLine: '+line:'')+(stack?'\n\n'+stack:'');}
+    window.onerror=function(msg,src,line,col,err){showErr(msg,line,err&&err.stack);return true;};
+    window.addEventListener('unhandledrejection',function(e){showErr(String(e.reason),null,e.reason&&e.reason.stack);});
+  </script>
+  <script type="text/babel" data-presets="env,react">
+    const { useState, useEffect, useRef } = React;
+
+    // ─── Fuente de datos: los JSON que arman los GitHub Actions ─────────────────
+    // Si tu rama por defecto no es "main", este es el único lugar que hay que tocar.
+    const FEED_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/data/feed.json";
+    const CINE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/data/cine.json";
+
+    const CINE_CATEGORIA = "Películas / Series / Animación";
+    const MUSIC_CATEGORIA = "Dark scene / Música";
+
+    // Colores por categoría — reusa acentos que ya existen en Angst (melee/pokemon/gym/fadiman)
+    const CAT_COLORS = {
+      "Melee": "#ff6600",
+      "Pokémon TCG": "#ffcc00",
+      "Gaming": "#5c9cff",
+      "Películas / Series / Animación": "#e91e8c",
+      "Dark scene / Música": "#7b4fd4",
+      "Ciencia / Conocimiento": "#2e7d52",
+      "Tecnología": "#26a69a",
+      "Poliamor": "#aac756",
+    };
+
+    // ─── Discriminador "formato" → decide StoryCard/ExtendedView vs sus versiones
+    // de cine (CineStoryCard/CineExtendedView) o música (MusicStoryCard/
+    // MusicExtendedView). Deliberadamente distinto de "item.tipo" (que ya existe
+    // y controla video/podcast/texto DENTRO del mismo StoryCard) — son dos ejes
+    // distintos: "tipo" es la acción central de un item de lectura, "formato"
+    // decide qué layout completo de tarjeta se usa.
+    const FORMATO_BY_CATEGORIA = {
+      [CINE_CATEGORIA]: "cine",
+      [MUSIC_CATEGORIA]: "musica",
+    };
+
+    // Tabla de componentes por formato — referencia funciones declaradas más abajo
+    // en el archivo (function declarations, hoisted, así que el orden no importa).
+    function cardsFor(formato) {
+      if (formato === "cine") return { Story: CineStoryCard, Extended: CineExtendedView };
+      if (formato === "musica") return { Story: MusicStoryCard, Extended: MusicExtendedView };
+      return { Story: StoryCard, Extended: ExtendedView };
+    }
+
+
+    const REFRESH_THROTTLE_MS = 4 * 60 * 60 * 1000; // 4 horas
+    const STORAGE_KEY = "angst-feed-proto-v1";
+
+    // ─── Orden round-robin entre categorías (no cronológico puro) ──────────────
+    // Se mantiene igual — el JSON ya viene agrupado por categoría, esto solo
+    // decide el orden de aparición.
+    function roundRobinMerge(byCategoryArrays) {
+      const queues = byCategoryArrays.map(c => ({ cat: c.cat, items: [...c.items] }));
+      const out = [];
+      let progressed = true;
+      while (progressed) {
+        progressed = false;
+        for (const q of queues) {
+          if (q.items.length) { out.push(q.items.shift()); progressed = true; }
+        }
+      }
+      return out;
+    }
+
+    // ─── Fetch de datos: dos JSON (feed de lectura + cine), fusionados por categoría ──
+    // Ambos Actions ya hicieron el trabajo pesado del lado del servidor. Acá solo
+    // se lee y se etiqueta con "formato" para que el render sepa qué layout de
+    // tarjeta usar (no confundir con "item.tipo", que sigue intacto para video/
+    // podcast/texto dentro del StoryCard normal). Si cine.json no existe todavía
+    // o falla, el feed de lectura sigue funcionando igual — no es fuente obligatoria.
+    async function fetchJsonSafe(url) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) return null;
+        return await res.json();
+      } catch (e) { return null; }
+    }
+
+    async function fetchFeedData() {
+      const [feedData, cineData] = await Promise.all([
+        fetchJsonSafe(FEED_JSON_URL),
+        fetchJsonSafe(CINE_JSON_URL),
+      ]);
+      if (!feedData && !cineData) throw new Error("no se pudo leer ni feed.json ni cine.json");
+
+      const merged = {}; // cat -> items[]
+      function ingest(data, formatoDefault) {
+        if (!data) return;
+        for (const c of (data.categories || [])) {
+          const formato = FORMATO_BY_CATEGORIA[c.cat] || formatoDefault;
+          const items = (c.items || []).map(it => ({ ...it, formato }));
+          merged[c.cat] = [...(merged[c.cat] || []), ...items];
+        }
+      }
+      ingest(feedData, "lectura");
+      ingest(cineData, "cine");
+
+      const byCategoryArrays = Object.entries(merged).map(([cat, items]) => ({ cat, items }));
+      const diag = byCategoryArrays.map(c => ({
+        cat: c.cat,
+        count: c.items.length,
+        withText: c.items.filter(i => i.formato === "cine" || (i.tipo === "video" && i.videoId) || i.fullText).length,
+      }));
+      const generatedAt = feedData?.generatedAt || cineData?.generatedAt || null;
+      return { queue: roundRobinMerge(byCategoryArrays), diag, generatedAt };
+    }
+
+    // ─── Storage (clave propia — al integrarse a Angst, pasa a la regla vital) ──
+    async function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (e) { return null; }
+    }
+    function saveState(state) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    }
+    // Solo para esta etapa de pruebas — borra el estado y recarga, para no
+    // depender de la consola del navegador cada vez que el throttle de 4h molesta.
+    function resetTestState() {
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+      window.location.reload();
+    }
+
+    // Gestos removidos — la navegación es 100% por botones (ver StoryCard/ExtendedView).
+    const btnGhost = { flex: 1, background: "transparent", border: "1px dashed #444", color: "#aaa", borderRadius: 10, padding: "10px 6px", fontFamily: "'DM Sans',sans-serif", fontSize: 10, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 };
+
+    // ─── Acción principal según tipo de contenido ──────────────────────────────
+    // texto (default, sin campo "tipo" en el item) → leer · video → ver · podcast → escuchar.
+    // Todo lo demás (navegación, botones, orden round-robin) queda idéntico —
+    // esto solo decide el ícono/label del botón central y qué renderiza ExtendedView.
+    function primaryAction(tipo) {
+      if (tipo === "video") return { icon: "▶️", label: "ver" };
+      if (tipo === "podcast") return { icon: "🎧", label: "escuchar" };
+      return { icon: "⬆️", label: "leer" };
+    }
+
+    // ─── FormatoTag — badges retro tipo Pokémon (TXT/VID/AUD), hasta 2 por item,
+    // el de medio (VID/AUD) primero si existe, TXT después. Mismo color por
+    // etiqueta siempre, independiente de la categoría (CAT_COLORS es un eje
+    // distinto). Sombra dura offset sin blur, esquinas chicas — no píldora.
+    const FORMATO_BADGE_COLORS = { TXT: "#6b7280", VID: "#e0483e", AUD: "#9b59d0" };
+
+    function formatoBadges(item) {
+      const badges = [];
+      if (item.formato === "cine") {
+        if (item.trailer && item.trailer.key) badges.push("VID");
+        if (item.summary) badges.push("TXT");
+      } else if (item.formato === "musica") {
+        const hasVideo = item.tipo === "video" && !!item.videoId;
+        const hasAudio = !!item.bandcampEmbedUrl || !!item.soundcloudEmbedUrl;
+        if (hasVideo) badges.push("VID");
+        else if (hasAudio) badges.push("AUD");
+        if (item.fullText) badges.push("TXT");
+      } else {
+        // formato "lectura" — incluye Melee (tipo:"video", sin fullText → solo VID)
+        if (item.tipo === "video") badges.push("VID");
+        else if (item.tipo === "podcast") badges.push("AUD");
+        if (item.fullText) badges.push("TXT");
+      }
+      return badges;
+    }
+
+    function FormatoTag({ item }) {
+      const badges = formatoBadges(item);
+      if (!badges.length) return null;
+      return (
+        <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 8 }}>
+          {badges.map(b => (
+            <span key={b} style={{
+              fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 800,
+              letterSpacing: "0.04em", color: "#fff", background: FORMATO_BADGE_COLORS[b],
+              padding: "3px 8px", borderRadius: 4, boxShadow: "2px 2px 0 rgba(0,0,0,0.45)",
+            }}>{b}</span>
+          ))}
+        </div>
+      );
+    }
+
+    // ─── StoryCard ───────────────────────────────────────────────────────────────
+    // Navegación 100% por botones: ⬅️ cambiar categoría · ⬆️ leer completo ·
+    // ➡️ leer siguiente · ⬇️ guardar · 🔀 shuffle (reordena lo que queda en cola,
+    // no trae nada nuevo — no rompe la lógica de "scroll sano").
+    function StoryCard({ item, onSkip, onExpand, onSave, onChangeCategory, onShuffle, onOpenBuzon, onOpenDiag, hasDiag, onRefresh, canRefresh, refreshing, buzonCount }) {
+      const color = CAT_COLORS[item.categoria] || "#888";
+      const [imgFailed, setImgFailed] = useState(false);
+      useEffect(() => { setImgFailed(false); }, [item.guid]);
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none" }}>
+          <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+            {item.image && !imgFailed
+              ? <img src={item.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.5 }} onError={() => setImgFailed(true)} />
+              : <div style={{ width: "100%", height: "100%", background: `linear-gradient(160deg, ${color}33, #0a0a0a)` }} />
+            }
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.55))" }} />
+            <div style={{ position: "absolute", top: 16, left: 16, right: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+              <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#111", background: color, borderRadius: 20, padding: "4px 12px", fontWeight: 700 }}>{item.categoria}</span>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <button onClick={onOpenBuzon} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>📌 {buzonCount}</button>
+                <button onClick={onShuffle} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer" }}>🔀</button>
+                <button onClick={onOpenDiag} disabled={!hasDiag} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: hasDiag ? "pointer" : "default", opacity: hasDiag ? 1 : 0.3 }}>🩺</button>
+                <button onClick={onRefresh} disabled={!canRefresh || refreshing} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: (!canRefresh || refreshing) ? "default" : "pointer", opacity: (!canRefresh || refreshing) ? 0.35 : 1 }}>{refreshing ? "…" : "↻"}</button>
+              </div>
+            </div>
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 20px 16px" }}>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.45)", marginBottom: 6 }}>{item.source}</div>
+              <FormatoTag item={item} />
+              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 28, fontWeight: 700, color: "#fff", lineHeight: 1.15, marginBottom: 10 }}>{item.title}</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.5 }}>{item.summary}</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
+            <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
+            <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
+            <button onClick={onExpand} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>{primaryAction(item.tipo).icon}</span>{primaryAction(item.tipo).label}</button>
+            <button onClick={onSkip} style={btnGhost}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── RatingBadges ────────────────────────────────────────────────────────────
+    function RatingBadges({ rating, size = "sm" }) {
+      if (!rating) return null;
+      const chips = [];
+      if (rating.imdb != null) chips.push({ label: "IMDb", value: rating.imdb.toFixed(1), bg: "#f5c518", fg: "#000" });
+      if (rating.rt != null) chips.push({ label: rating.rt >= 60 ? "🍅" : "🟢", value: `${rating.rt}%`, bg: "#fa320a", fg: "#fff" });
+      if (rating.metascore != null) chips.push({ label: "MC", value: rating.metascore, bg: rating.metascore >= 61 ? "#6c3" : rating.metascore >= 40 ? "#fc3" : "#c0392b", fg: "#000" });
+      if (rating.tmdb != null) chips.push({ label: "TMDb", value: rating.tmdb.toFixed(1), bg: "#01b4e4", fg: "#000" });
+      if (!chips.length) return null;
+      const fontSize = size === "lg" ? 12 : 10;
+      const pad = size === "lg" ? "5px 10px" : "3px 7px";
+      return (
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+          {chips.map((c, i) => (
+            <span key={i} style={{ background: c.bg, color: c.fg, borderRadius: 6, padding: pad, fontFamily: "'DM Sans',sans-serif", fontSize, fontWeight: 700, display: "flex", gap: 4, alignItems: "center" }}>
+              <span>{c.label}</span><span>{c.value}</span>
+            </span>
+          ))}
+        </div>
+      );
+    }
+
+    // ─── CineStoryCard — formato "cine" del card cerrado ────────────────────────
+    function CineStoryCard({ item, onSkip, onExpand, onSave, onChangeCategory, onShuffle, onOpenBuzon, onOpenDiag, hasDiag, onRefresh, canRefresh, refreshing, buzonCount }) {
+      const color = CAT_COLORS[item.categoria] || "#e91e8c";
+      const [imgFailed, setImgFailed] = useState(false);
+      useEffect(() => { setImgFailed(false); }, [item.guid]);
+      const leads = (item.cast || []).filter(c => c.order < 4).slice(0, 4);
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none" }}>
+          <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", perspective: 900 }}>
+            <div style={{ position: "absolute", top: 16, left: 16, right: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, zIndex: 5 }}>
+              <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#111", background: color, borderRadius: 20, padding: "4px 12px", fontWeight: 700 }}>{item.categoria}</span>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <button onClick={onOpenBuzon} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>📌 {buzonCount}</button>
+                <button onClick={onShuffle} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer" }}>🔀</button>
+                <button onClick={onOpenDiag} disabled={!hasDiag} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: hasDiag ? "pointer" : "default", opacity: hasDiag ? 1 : 0.3 }}>🩺</button>
+                <button onClick={onRefresh} disabled={!canRefresh || refreshing} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: (!canRefresh || refreshing) ? "default" : "pointer", opacity: (!canRefresh || refreshing) ? 0.35 : 1 }}>{refreshing ? "…" : "↻"}</button>
+              </div>
+            </div>
+
+            <div style={{ width: "62%", maxWidth: 260, transform: "rotateX(2deg)", transformStyle: "preserve-3d" }}>
+              <div style={{ borderRadius: 10, overflow: "hidden", boxShadow: `0 20px 50px -10px ${color}55, 0 0 0 1px rgba(255,255,255,0.06)` }}>
+                {item.image && !imgFailed
+                  ? <img src={item.image} alt="" style={{ width: "100%", display: "block", aspectRatio: "2/3", objectFit: "cover" }} onError={() => setImgFailed(true)} />
+                  : <div style={{ width: "100%", aspectRatio: "2/3", background: `linear-gradient(160deg, ${color}44, #0a0a0a)` }} />
+                }
+              </div>
+            </div>
+
+            <div style={{ marginTop: 18, textAlign: "center", padding: "0 24px" }}>
+              <FormatoTag item={item} />
+              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", lineHeight: 1.15, marginBottom: 8 }}>{item.title}</div>
+              <div style={{ marginBottom: 10 }}><RatingBadges rating={item.rating} /></div>
+              {leads.length > 0 && (
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
+                  {leads.map(c => c.name).join(" · ")}
+                </div>
+              )}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
+            <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
+            <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
+            <button onClick={onExpand} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>⬆️</span>detalle</button>
+            <button onClick={onSkip} style={btnGhost}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
+          </div>
+        </div>
+      );
+    }
+
+    function ReviewBlock({ label, review, color }) {
+      return (
+        <div style={{ background: "#151515", borderRadius: 10, padding: "10px 12px", marginBottom: 8, borderLeft: `2px solid ${color}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+            <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>{label}</span>
+            <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color, fontWeight: 700 }}>{review.rating}/10</span>
+          </div>
+          <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }}>{review.text}</div>
+          <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 6 }}>— {review.author}</div>
+        </div>
+      );
+    }
+
+    // ─── CineExtendedView — formato "cine" del detalle ──────────────────────────
+    function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions }) {
+      const color = CAT_COLORS[item.categoria] || "#e91e8c";
+      const leads = (item.cast || []).filter(c => c.order < 4);
+      const supporting = (item.cast || []).filter(c => c.order >= 4);
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "#0d0d0d", display: "flex", flexDirection: "column", zIndex: 50 }}>
+          <div style={{ padding: "14px 18px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #1a1a1a" }}>
+            <button onClick={onBack} style={{ background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" }}>←</button>
+            <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 }}>{item.source}</span>
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: "18px 20px 30px" }}>
+            {item.image && (
+              <img src={item.image} alt="" style={{ width: 120, borderRadius: 10, float: "left", marginRight: 14, marginBottom: 10 }} onError={e => { e.target.style.display = "none"; }} />
+            )}
+            <FormatoTag item={item} />
+            <div style={{ fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", marginBottom: 8, lineHeight: 1.2 }}>{item.title}</div>
+            <div style={{ marginBottom: 12 }}><RatingBadges rating={item.rating} size="lg" /></div>
+            <div style={{ clear: "both" }} />
+
+            {item.trailer && (
+              <div style={{ margin: "16px 0", borderRadius: 10, overflow: "hidden", aspectRatio: "16/9" }}>
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${item.trailer.key}`}
+                  style={{ width: "100%", height: "100%", border: "none" }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              </div>
+            )}
+
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, marginBottom: 18 }}>
+              {item.summary}
+            </div>
+
+            {leads.length > 0 && (
+              <div style={{ marginBottom: 18 }}>
+                <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 6 }}>reparto principal</div>
+                {leads.map((c, i) => (
+                  <div key={i} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.7)", marginBottom: 2 }}>
+                    <b style={{ color: "#fff" }}>{c.name}</b>{c.character ? ` — ${c.character}` : ""}
+                  </div>
+                ))}
+                {supporting.length > 0 && (
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6 }}>
+                    {supporting.map(c => c.name).join(" · ")}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {item.reviews ? (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 }}>reseñas de usuario</div>
+                <ReviewBlock label="mejor valorada" review={item.reviews.top} color={color} />
+                {item.reviews.bottom && <ReviewBlock label="peor valorada" review={item.reviews.bottom} color={color} />}
+              </div>
+            ) : (
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#666", fontStyle: "italic" }}>
+                sin reseñas de usuario disponibles para este título
+              </div>
+            )}
+          </div>
+          {!hideActions && (
+            <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
+              <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
+              <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
+              <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ─── CineCoverFlow — solo dentro del Buzón, filtrado a la categoría cine ────
+    function CineCoverFlow({ items, onOpen }) {
+      const [scrollX, setScrollX] = useState(0);
+      const ITEM_W = 144;
+      function onScroll(e) { setScrollX(e.target.scrollLeft); }
+      return (
+        <div onScroll={onScroll} style={{
+          display: "flex", overflowX: "auto", scrollSnapType: "x mandatory",
+          padding: "30px calc(50% - 65px) 40px", alignItems: "center", perspective: 1000,
+        }}>
+          {items.map((item, i) => {
+            const center = scrollX / ITEM_W;
+            const dist = i - center;
+            const rotate = Math.max(-55, Math.min(55, dist * 55));
+            const scale = 1 - Math.min(0.25, Math.abs(dist) * 0.15);
+            return (
+              <div key={item.guid} onClick={() => onOpen(item)} style={{
+                flexShrink: 0, width: 130, marginRight: 14, scrollSnapAlign: "center", cursor: "pointer",
+                transform: `rotateY(${-rotate}deg) scale(${scale})`, transformOrigin: "center center",
+                zIndex: Math.round(100 - Math.abs(dist) * 10),
+              }}>
+                <div style={{ borderRadius: 8, overflow: "hidden", boxShadow: "0 10px 30px rgba(0,0,0,0.6)" }}>
+                  {item.image
+                    ? <img src={item.image} alt="" style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block" }} onError={e => { e.target.style.display = "none"; }} />
+                    : <div style={{ width: "100%", aspectRatio: "2/3", background: "#1a1a1a" }} />
+                  }
+                </div>
+                {item.image && (
+                  <div style={{
+                    width: "100%", aspectRatio: "2/3", marginTop: 1,
+                    backgroundImage: `url(${item.image})`, backgroundSize: "cover", backgroundPosition: "center",
+                    transform: "scaleY(-1)", opacity: 0.35,
+                    maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 60%)",
+                    WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 60%)",
+                  }} />
+                )}
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#ccc", marginTop: 6, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
+                {item.rating?.imdb != null && (
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#f5c518", textAlign: "center" }}>★ {item.rating.imdb.toFixed(1)}</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // ─── MusicStoryCard — formato "musica": el reproductor es lo primero que se ve,
+    // no algo escondido dentro del detalle. Si el item trae tipo:"video" (YouTube
+    // encontrado por el Action, ver build-feed.mjs), el cerrado muestra el thumbnail
+    // con badge de play — tocar "escuchar" abre el embed real recién en el detalle
+    // (mismo criterio de liviandad que CineStoryCard: nada de iframe hasta que se
+    // pide). Si no hay video (post que no es de release, ej. entrevista/tour), cae
+    // a un cerrado de texto simple — no todo en un blog de música es "para escuchar".
+    function MusicStoryCard({ item, onSkip, onExpand, onSave, onChangeCategory, onShuffle, onOpenBuzon, onOpenDiag, hasDiag, onRefresh, canRefresh, refreshing, buzonCount }) {
+      const color = CAT_COLORS[item.categoria] || "#7b4fd4";
+      const hasVideo = item.tipo === "video" && item.videoId;
+      const hasBandcamp = !!item.bandcampEmbedUrl;
+      const hasSoundcloud = !!item.soundcloudEmbedUrl;
+      const hasListen = hasVideo || hasBandcamp || hasSoundcloud;
+      // Solo YouTube tiene una URL de thumbnail trivial; Bandcamp/SoundCloud no —
+      // para esos se usa el mismo placeholder degradé que cine, con el badge de play.
+      const thumb = hasVideo ? `https://img.youtube.com/vi/${item.videoId}/hqdefault.jpg` : null;
+      const [imgFailed, setImgFailed] = useState(false);
+      useEffect(() => { setImgFailed(false); }, [item.guid]);
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none" }}>
+          <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ position: "absolute", top: 16, left: 16, right: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, zIndex: 5 }}>
+              <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#111", background: color, borderRadius: 20, padding: "4px 12px", fontWeight: 700 }}>{item.categoria}</span>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <button onClick={onOpenBuzon} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>📌 {buzonCount}</button>
+                <button onClick={onShuffle} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer" }}>🔀</button>
+                <button onClick={onOpenDiag} disabled={!hasDiag} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: hasDiag ? "pointer" : "default", opacity: hasDiag ? 1 : 0.3 }}>🩺</button>
+                <button onClick={onRefresh} disabled={!canRefresh || refreshing} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: (!canRefresh || refreshing) ? "default" : "pointer", opacity: (!canRefresh || refreshing) ? 0.35 : 1 }}>{refreshing ? "…" : "↻"}</button>
+              </div>
+            </div>
+
+            {hasListen ? (
+              <div onClick={onExpand} style={{ width: "84%", maxWidth: 340, cursor: "pointer" }}>
+                <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", boxShadow: `0 20px 50px -10px ${color}55` }}>
+                  {thumb && !imgFailed
+                    ? <img src={thumb} alt="" style={{ width: "100%", display: "block", aspectRatio: "16/9", objectFit: "cover" }} onError={() => setImgFailed(true)} />
+                    : <div style={{ width: "100%", aspectRatio: "16/9", background: `linear-gradient(160deg, ${color}44, #0a0a0a)` }} />
+                  }
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>▶️</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ padding: "0 30px", textAlign: "center" }}>
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>{item.summary}</div>
+              </div>
+            )}
+
+            <div style={{ marginTop: 18, textAlign: "center", padding: "0 24px" }}>
+              <FormatoTag item={item} />
+              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", lineHeight: 1.15, marginBottom: 6 }}>{item.title}</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.45)" }}>{item.source}</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
+            <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
+            <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
+            <button onClick={onExpand} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}>
+              <span style={{ fontSize: 17 }}>{hasListen ? "▶️" : "⬆️"}</span>{hasListen ? "escuchar" : "detalle"}
+            </button>
+            <button onClick={onSkip} style={btnGhost}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── MusicExtendedView — el embed va arriba de todo, el texto queda como
+    // contexto secundario debajo (banda, sello, gira, lo que traiga el blog).
+    function MusicExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions }) {
+      const color = CAT_COLORS[item.categoria] || "#7b4fd4";
+      const hasVideo = item.tipo === "video" && item.videoId;
+      const hasBandcamp = !hasVideo && !!item.bandcampEmbedUrl;
+      const hasSoundcloud = !hasVideo && !hasBandcamp && !!item.soundcloudEmbedUrl;
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "#0d0d0d", display: "flex", flexDirection: "column", zIndex: 50 }}>
+          <div style={{ padding: "14px 18px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #1a1a1a" }}>
+            <button onClick={onBack} style={{ background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" }}>←</button>
+            <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 }}>{item.source}</span>
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: "18px 20px 30px" }}>
+            <FormatoTag item={item} />
+            <div style={{ fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", marginBottom: 14, lineHeight: 1.2 }}>{item.title}</div>
+
+            {hasVideo && (
+              <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: 10, overflow: "hidden", marginBottom: 16, background: "#000" }}>
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${item.videoId}`}
+                  title={item.title}
+                  style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              </div>
+            )}
+
+            {hasBandcamp && (
+              <div style={{ borderRadius: 10, overflow: "hidden", marginBottom: 16 }}>
+                <iframe
+                  src={item.bandcampEmbedUrl}
+                  title={item.title}
+                  style={{ width: "100%", height: 120, border: "none" }}
+                  seamless
+                />
+              </div>
+            )}
+
+            {hasSoundcloud && (
+              <div style={{ borderRadius: 10, overflow: "hidden", marginBottom: 16 }}>
+                <iframe
+                  src={item.soundcloudEmbedUrl}
+                  title={item.title}
+                  style={{ width: "100%", height: 166, border: "none" }}
+                  allow="autoplay"
+                />
+              </div>
+            )}
+
+            {item.fullText ? (
+              <div className="article-body" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 15, color: "rgba(255,255,255,0.8)", lineHeight: 1.7 }}
+                dangerouslySetInnerHTML={{ __html: item.fullText }} />
+            ) : (
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{item.summary}</div>
+            )}
+          </div>
+          {!hideActions && (
+            <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
+              <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
+              <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
+              <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ─── ExtendedView ────────────────────────────────────────────────────────────
+    // El texto completo ya viene resuelto en el item (lo extrajo el Action del
+    // lado del servidor) — nada de fetch en vivo acá, por eso no hay estado de carga.
+    function ExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions }) {
+      const [scrollPct, setScrollPct] = useState(0);
+
+      function onScroll(e) {
+        const el = e.target;
+        const max = el.scrollHeight - el.clientHeight;
+        setScrollPct(max > 0 ? Math.min(100, (el.scrollTop / max) * 100) : 100);
+      }
+
+      const color = CAT_COLORS[item.categoria] || "#fff";
+
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "#0d0d0d", display: "flex", flexDirection: "column", zIndex: 50 }}>
+          <div style={{ height: 3, background: "#1a1a1a" }}>
+            <div style={{ height: "100%", width: `${scrollPct}%`, background: color, transition: "width 0.15s" }} />
+          </div>
+          <div style={{ padding: "14px 18px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #1a1a1a" }}>
+            <button onClick={onBack} style={{ background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" }}>←</button>
+            <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 }}>{item.source}</span>
+          </div>
+          <div onScroll={onScroll} style={{ flex: 1, overflowY: "auto", padding: "18px 20px 30px" }}>
+            <FormatoTag item={item} />
+            <div style={{ fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", marginBottom: 14, lineHeight: 1.2 }}>{item.title}</div>
+
+            {item.tipo === "video" && item.videoId ? (
+              // Video (ej. Rare Candy en YouTube): se embebe con iframe, nunca se sale de la app.
+              // El feed de YouTube no trae texto real que extraer, por eso va el summary como bajada.
+              <div>
+                <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: 10, overflow: "hidden", marginBottom: 14, background: "#000" }}>
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${item.videoId}`}
+                    title={item.title}
+                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                </div>
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{item.summary}</div>
+              </div>
+            ) : item.tipo === "podcast" && item.audioUrl ? (
+              // Podcast (ej. Meta Pod, Uncommon Energy): <audio> nativo con el enclosure del RSS.
+              // Show notes ya vienen resueltas como fullText (o summary si el Action no las extrajo).
+              <div>
+                <audio controls src={item.audioUrl} style={{ width: "100%", marginBottom: 14, colorScheme: "dark" }} />
+                {item.fullText ? (
+                  <div className="article-body" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 15, color: "rgba(255,255,255,0.8)", lineHeight: 1.7 }}
+                    dangerouslySetInnerHTML={{ __html: item.fullText }} />
+                ) : (
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{item.summary}</div>
+                )}
+              </div>
+            ) : item.fullText ? (
+              <div className="article-body" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 15, color: "rgba(255,255,255,0.8)", lineHeight: 1.7 }}
+                dangerouslySetInnerHTML={{ __html: item.fullText }} />
+            ) : (
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#888", lineHeight: 1.6 }}>
+                el Action no pudo extraer el texto completo de esta en particular.{" "}
+                <a href={item.link} target="_blank" rel="noopener" style={{ color }}>ver original ↗</a>
+              </div>
+            )}
+          </div>
+          {!hideActions && (
+            <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
+              <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
+              <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
+              <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ─── EndScreen ───────────────────────────────────────────────────────────────
+    function EndScreen({ onGoBuzon, onRefresh, canRefresh, refreshing, nextRefreshAt, refreshMsg, onReset, onOpenDiag, hasDiag }) {
+      const [now, setNow] = useState(Date.now());
+      useEffect(() => { const iv = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(iv); }, []);
+      const msLeft = nextRefreshAt ? Math.max(0, nextRefreshAt - now) : 0;
+      const hLeft = Math.floor(msLeft / 3600000), mLeft = Math.floor((msLeft % 3600000) / 60000);
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 24 }}>
+          <div style={{ fontFamily: "'Caveat',cursive", fontSize: 44, fontWeight: 700, color: "#fff" }}>estás al día ✓</div>
+          <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.4)", textAlign: "center" }}>
+            {refreshMsg || (msLeft > 0 ? `próxima actualización en ${hLeft > 0 ? hLeft + "h " : ""}${mLeft}m` : "ya podés buscar novedades")}
+          </div>
+          {canRefresh && (
+            <button onClick={onRefresh} disabled={refreshing} style={{ background: "#fff", border: "none", color: "#111", borderRadius: 20, padding: "10px 22px", fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, cursor: "pointer", opacity: refreshing ? 0.5 : 1 }}>
+              {refreshing ? "buscando…" : "↻ buscar novedades"}
+            </button>
+          )}
+          <button onClick={onGoBuzon} style={{ background: "transparent", border: "1px dashed #333", color: "#aaa", borderRadius: 20, padding: "9px 20px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, cursor: "pointer" }}>
+            📌 ver buzón
+          </button>
+          <button onClick={onOpenDiag} disabled={!hasDiag} style={{ background: "transparent", border: "1px dashed #333", color: hasDiag ? "#aaa" : "#333", borderRadius: 20, padding: "9px 20px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, cursor: hasDiag ? "pointer" : "default" }}>
+            🩺 ver diagnóstico
+          </button>
+          <button onClick={onReset} style={{ background: "transparent", border: "none", color: "#333", fontSize: 10, textDecoration: "underline", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", marginTop: 8 }}>
+            🧪 resetear estado (solo para probar)
+          </button>
+        </div>
+      );
+    }
+
+    // ─── BuzonView ───────────────────────────────────────────────────────────────
+    function BuzonView({ buzon, onClose, onOpen, onRemove }) {
+      const [filterCat, setFilterCat] = useState("todas");
+      const cats = ["todas", ...Object.keys(CAT_COLORS)];
+      const filtered = filterCat === "todas" ? buzon : buzon.filter(b => b.categoria === filterCat);
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", zIndex: 60, display: "flex", flexDirection: "column" }}>
+          <div style={{ padding: "16px 18px 10px", display: "flex", alignItems: "center", gap: 10 }}>
+            <button onClick={onClose} style={{ background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" }}>←</button>
+            <span style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff" }}>📌 buzón</span>
+          </div>
+          <div style={{ display: "flex", gap: 6, padding: "0 18px 12px", overflowX: "auto" }}>
+            {cats.map(c => (
+              <button key={c} onClick={() => setFilterCat(c)} style={{
+                fontFamily: "'DM Sans',sans-serif", fontSize: 11, padding: "5px 12px", borderRadius: 20,
+                border: "1px solid", cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap",
+                background: filterCat === c ? (CAT_COLORS[c] || "#fff") : "transparent",
+                color: filterCat === c ? "#111" : "#999",
+                borderColor: filterCat === c ? (CAT_COLORS[c] || "#fff") : "#333",
+              }}>{c}</button>
+            ))}
+          </div>
+          {filterCat === CINE_CATEGORIA && filtered.length > 0 ? (
+            <CineCoverFlow items={filtered} onOpen={onOpen} />
+          ) : (
+            <div style={{ flex: 1, overflowY: "auto", padding: "0 18px 30px" }}>
+              {filtered.length === 0 && <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "40px 0" }}>vacío por ahora</div>}
+              {filtered.map(item => (
+                <div key={item.guid} style={{ display: "flex", gap: 10, padding: "10px 0", borderBottom: "1px solid #1a1a1a", alignItems: "center" }}>
+                  {item.image && <img src={item.image} style={{ width: 48, height: 48, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} onError={e => { e.target.style.display = "none"; }} />}
+                  <div onClick={() => onOpen(item)} style={{ flex: 1, minWidth: 0, cursor: "pointer" }}>
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{item.source} · {item.categoria}</div>
+                  </div>
+                  <button onClick={() => onRemove(item.guid)} style={{ background: "transparent", border: "none", color: "#444", fontSize: 16, cursor: "pointer" }}>×</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ─── DiagPanel ───────────────────────────────────────────────────────────────
+    // Diagnóstico del último refresh, accesible desde el botón 🩺 en cualquier
+    // momento. Ahora es un solo fetch (el JSON del Action), así que el detalle
+    // es por categoría — items totales y cuántos con texto completo — más el
+    // "generatedAt" del JSON, que dice cuándo corrió el Action de verdad
+    // (distinto de cuándo vos revisaste, que es lastRefresh).
+    function DiagPanel({ diag, generatedAt, onClose }) {
+      const total = diag.reduce((s, d) => s + d.count, 0);
+      const totalText = diag.reduce((s, d) => s + d.withText, 0);
+      return (
+        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", zIndex: 90, display: "flex", flexDirection: "column" }}>
+          <div style={{ padding: "16px 18px 8px", display: "flex", alignItems: "center", gap: 10 }}>
+            <button onClick={onClose} style={{ background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" }}>←</button>
+            <span style={{ fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff" }}>🩺 diagnóstico del JSON</span>
+          </div>
+          <div style={{ padding: "0 18px 4px", fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
+            {diag.length > 0 ? `${total} items totales · ${totalText} con texto completo` : "todavía no se leyó el JSON en esta sesión"}
+          </div>
+          {generatedAt && (
+            <div style={{ padding: "0 18px 10px", fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)" }}>
+              el Action generó este JSON: {new Date(generatedAt).toLocaleString("es-CL")}
+            </div>
+          )}
+          <div style={{ flex: 1, overflowY: "auto", padding: "0 18px 30px" }}>
+            {diag.map((d, i) => (
+              <div key={i} style={{ display: "flex", gap: 8, padding: "7px 0", borderBottom: "1px solid #1a1a1a", fontFamily: "'DM Sans',sans-serif", fontSize: 11, alignItems: "flex-start" }}>
+                <span style={{ flexShrink: 0, color: d.count > 0 ? "#7cb890" : "#c77" }}>{d.count > 0 ? "✓" : "✗"}</span>
+                <span style={{ flex: 1, color: "#999" }}>{d.cat}</span>
+                <span style={{ color: "#666", maxWidth: 160, textAlign: "right" }}>{d.count} items · {d.withText} con texto</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ─── App ─────────────────────────────────────────────────────────────────────
+    function App() {
+      const [loaded, setLoaded] = useState(false);
+      const [queue, setQueue] = useState([]);
+      const [seen, setSeen] = useState([]);
+      const [buzon, setBuzon] = useState([]);
+      const [lastRefresh, setLastRefresh] = useState(null);
+      const [view, setView] = useState("story");
+      const [refreshing, setRefreshing] = useState(false);
+      const [refreshMsg, setRefreshMsg] = useState(null);
+      const [refreshDiag, setRefreshDiag] = useState([]);
+      const [feedGeneratedAt, setFeedGeneratedAt] = useState(null);
+      const [toast, setToast] = useState(null);
+      const [buzonOpenItem, setBuzonOpenItem] = useState(null);
+      const [showDiagPanel, setShowDiagPanel] = useState(false);
+
+      const queueRef = useRef([]); const seenRef = useRef([]); const buzonRef = useRef([]); const lastRefreshRef = useRef(null);
+      useEffect(() => { queueRef.current = queue; }, [queue]);
+      useEffect(() => { seenRef.current = seen; }, [seen]);
+      useEffect(() => { buzonRef.current = buzon; }, [buzon]);
+      useEffect(() => { lastRefreshRef.current = lastRefresh; }, [lastRefresh]);
+
+      function persist(overrides = {}) {
+        saveState({
+          feedQueue: overrides.queue ?? queueRef.current,
+          feedSeen: overrides.seen ?? seenRef.current,
+          feedBuzon: overrides.buzon ?? buzonRef.current,
+          feedLastRefresh: overrides.lastRefresh ?? lastRefreshRef.current,
+        });
+      }
+
+      useEffect(() => {
+        (async () => {
+          const s = await loadState();
+          if (s) {
+            setQueue(s.feedQueue || []);
+            setSeen(s.feedSeen || []);
+            setBuzon(s.feedBuzon || []);
+            setLastRefresh(s.feedLastRefresh || null);
+            if (!(s.feedQueue || []).length) setView("end");
+          } else {
+            setView("end");
+          }
+          setLoaded(true);
+        })();
+      }, []);
+
+      // Precarga liviana de la imagen de la siguiente historia
+      useEffect(() => {
+        const next = queue[1];
+        if (next && next.image) { const img = new Image(); img.src = next.image; }
+      }, [queue]);
+
+      const canRefresh = !lastRefresh || (Date.now() - new Date(lastRefresh).getTime()) > REFRESH_THROTTLE_MS;
+      const nextRefreshAt = lastRefresh ? new Date(lastRefresh).getTime() + REFRESH_THROTTLE_MS : null;
+
+      async function doRefresh() {
+        if (refreshing || !canRefresh) return;
+        setRefreshing(true);
+        setRefreshMsg("actualizando…");
+        try {
+          const { queue: fresh, diag, generatedAt } = await fetchFeedData();
+          setRefreshDiag(diag);
+          setFeedGeneratedAt(generatedAt);
+          const knownGuids = new Set([...seenRef.current, ...buzonRef.current.map(b => b.guid), ...queueRef.current.map(q => q.guid)]);
+          const newOnes = fresh.filter(a => !knownGuids.has(a.guid));
+          const nextQueue = [...queueRef.current, ...newOnes];
+          setQueue(nextQueue);
+          const ts = new Date().toISOString();
+          setLastRefresh(ts);
+          persist({ queue: nextQueue, lastRefresh: ts });
+          if (nextQueue.length) setView("story");
+          const totalItems = diag.reduce((s, d) => s + d.count, 0);
+          setRefreshMsg(newOnes.length > 0 ? `✓ ${newOnes.length} nuevas` : `sin novedades — ${totalItems} items en el JSON`);
+        } catch (e) {
+          setRefreshMsg("error al leer el JSON — revisá la URL o si el repo/Action sigue bien");
+        }
+        setRefreshing(false);
+        setTimeout(() => setRefreshMsg(null), 4000);
+      }
+
+      function showToast(msg) { setToast(msg); setTimeout(() => setToast(null), 1800); }
+
+      function advance() {
+        setQueue(q => {
+          const [current, ...rest] = q;
+          if (current) {
+            const nextSeen = [...seenRef.current, current.guid].slice(-500);
+            setSeen(nextSeen);
+            persist({ queue: rest, seen: nextSeen });
+          }
+          if (!rest.length) setView("end");
+          return rest;
+        });
+      }
+
+      function handleSkip() { advance(); }
+
+      function handleSave() {
+        const current = queueRef.current[0];
+        if (!current) return;
+        const nextBuzon = [...buzonRef.current, current];
+        setBuzon(nextBuzon);
+        persist({ buzon: nextBuzon });
+        showToast(`guardado en ${current.categoria}`);
+        advance();
+      }
+
+      function handleExpand() { setView("extended"); }
+      function handleBack() { setView("story"); }
+      function handleAdvanceFromExtended() { setView("story"); advance(); }
+
+      // ⬅️ Cambiar categoría: NO descarta nada — solo empuja toda la categoría
+      // actual al final de la cola. Nada se pierde, nada se marca como visto,
+      // es puro reordenamiento (igual espíritu que shuffle).
+      function handleChangeCategory() {
+        const cur = queueRef.current[0];
+        if (!cur) return;
+        const sameCategory = queueRef.current.filter(x => x.categoria === cur.categoria);
+        const others = queueRef.current.filter(x => x.categoria !== cur.categoria);
+        const reordered = [...others, ...sameCategory];
+        setQueue(reordered);
+        persist({ queue: reordered });
+        setView(reordered.length ? "story" : "end");
+      }
+
+      // 🔀 Shuffle: solo reordena lo que ya está cargado, no trae nada nuevo —
+      // no compite con el criterio de "scroll sano" (nada de contenido infinito/relleno).
+      function handleShuffle() {
+        setQueue(q => {
+          const arr = [...q];
+          for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+          }
+          persist({ queue: arr });
+          return arr;
+        });
+      }
+
+      function removeFromBuzon(guid) {
+        const next = buzon.filter(b => b.guid !== guid);
+        setBuzon(next);
+        persist({ buzon: next });
+      }
+
+      if (!loaded) return <div style={{ position: "fixed", inset: 0, background: "#0a0a0a" }} />;
+
+      if (buzonOpenItem) {
+        const { Extended } = cardsFor(buzonOpenItem.formato);
+        return <Extended item={buzonOpenItem} onBack={() => setBuzonOpenItem(null)} onNext={() => setBuzonOpenItem(null)} onSave={() => {}} hideActions />;
+      }
+
+      if (showDiagPanel) {
+        return <DiagPanel diag={refreshDiag} generatedAt={feedGeneratedAt} onClose={() => setShowDiagPanel(false)} />;
+      }
+
+      const current = queue[0];
+      const { Story: CurrentStory, Extended: CurrentExtended } = current ? cardsFor(current.formato) : {};
+
+      return (
+        <div style={{ fontFamily: "'DM Sans',sans-serif" }}>
+          {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#fff", color: "#111", padding: "8px 18px", borderRadius: 20, fontFamily: "'Caveat',cursive", fontSize: 15, fontWeight: 700, zIndex: 200 }}>{toast}</div>}
+
+          {view === "story" && current && (
+            <CurrentStory item={current} onSkip={handleSkip} onExpand={handleExpand} onSave={handleSave}
+              onChangeCategory={handleChangeCategory} onShuffle={handleShuffle}
+              onOpenBuzon={() => setView("buzon")} onOpenDiag={() => setShowDiagPanel(true)} hasDiag={refreshDiag.length > 0}
+              onRefresh={doRefresh} canRefresh={canRefresh} refreshing={refreshing} buzonCount={buzon.length} />
+          )}
+          {view === "extended" && current && (
+            <CurrentExtended item={current} onBack={handleBack} onNext={handleAdvanceFromExtended} onSave={handleSave} onChangeCategory={handleChangeCategory} />
+          )}
+          {view === "end" && (
+            <EndScreen onGoBuzon={() => setView("buzon")} onRefresh={doRefresh} canRefresh={canRefresh} refreshing={refreshing} nextRefreshAt={nextRefreshAt} refreshMsg={refreshMsg} onReset={resetTestState} onOpenDiag={() => setShowDiagPanel(true)} hasDiag={refreshDiag.length > 0} />
+          )}
+          {view === "buzon" && (
+            <BuzonView buzon={buzon} onClose={() => setView(queue.length ? "story" : "end")}
+              onOpen={item => setBuzonOpenItem(item)}
+              onRemove={removeFromBuzon} />
+          )}
+        </div>
+      );
+    }
+
+    try {
+      ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+    } catch (e) {
+      document.getElementById('err').style.display = 'block';
+      document.getElementById('err').textContent = 'RENDER ERROR\n\n' + e.message + '\n\n' + (e.stack || '');
+    }
+  </script>
+</body>
+</html>
