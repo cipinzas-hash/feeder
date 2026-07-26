@@ -224,6 +224,8 @@ const STARTGG_ENDPOINT = "https://api.start.gg/gql/alpha";
 const TOP_SEED_CUTOFF = 10;
 const UPSET_SEED_DIFF_THRESHOLD = 5;
 const HYPE_WINDOW_DAYS = 14; // cuántos días antes de que empiece un major se genera el aviso de "se viene"
+const PROJECTION_WINDOW_DAYS = 3; // el seeding suele cerrarse recién cerca del check-in, no 14 días antes
+const PROJECTION_TOP_CUTOFF = 8; // solo nos interesan choques proyectados entre seeds de este rango
 
 async function startggQuery(query, variables) {
   const res = await fetch(STARTGG_ENDPOINT, {
@@ -234,6 +236,31 @@ async function startggQuery(query, variables) {
   const json = await res.json();
   if (json.errors) throw new Error(JSON.stringify(json.errors));
   return json.data;
+}
+
+// Trae todos los entrants con seed de un evento, paginando (los majors grandes
+// pasan de 100 entrants). Descarta los que todavía no tienen seed asignado
+// (el seeding suele cerrarse recién cerca del check-in del torneo).
+async function fetchAllEntrants(eventId) {
+  const perPage = 100;
+  let page = 1;
+  let all = [];
+  while (page <= 10) { // salvaguarda: tope de 1000 entrants, ningún major llega a eso
+    const query = `
+      query($eventId: ID!, $page: Int!, $perPage: Int!){
+        event(id:$eventId){
+          entrants(query:{ page:$page, perPage:$perPage }){
+            nodes{ id name initialSeedNum }
+          }
+        }
+      }`;
+    const data = await startggQuery(query, { eventId, page, perPage });
+    const nodes = data?.event?.entrants?.nodes || [];
+    all = all.concat(nodes);
+    if (nodes.length < perPage) break;
+    page++;
+  }
+  return all.filter(e => e.initialSeedNum != null);
 }
 
 function parseSlugFromBracketUrl(bracketUrl) {
@@ -369,6 +396,136 @@ function buildHypeItem(slug, tournamentName, bracketUrl, startAtSeconds) {
   };
 }
 
+// ── Proyección de bracket: sorteo estándar + choques anticipados ───────────
+//
+// Bajo la asunción de "cero upsets" (el seed más alto siempre gana), el top 8
+// final es trivialmente los seeds 1 al 8 — no depende de si es simple o doble
+// eliminación, y no es contenido interesante para hype. Lo que sí vale la pena
+// proyectar es CUÁNDO se cruzan dos seeds específicos según el sorteo real del
+// bracket: si dos favoritos quedan del mismo lado, pueden chocar mucho antes
+// de lo esperado, y eso sí genera hype real ("choque de titanes en ronda 2").
+//
+// Método de sorteo estándar (reflection seeding), el mismo que usa cualquier
+// generador de brackets: para un bracket de tamaño N, seeds(N) da el orden en
+// que se ubican los seeds en el array de posiciones (posición 0-indexed).
+function standardSeedOrder(bracketSize) {
+  function seeds(n) {
+    if (n === 1) return [1];
+    const prev = seeds(n / 2);
+    const out = [];
+    for (const s of prev) out.push(s, n + 1 - s);
+    return out;
+  }
+  return seeds(bracketSize);
+}
+
+function nextPowerOfTwo(n) {
+  return Math.pow(2, Math.ceil(Math.log2(Math.max(2, n))));
+}
+
+// Posición (0-indexed) de cada seed dentro del sorteo — para saber en qué
+// "rama" del bracket cae cada uno.
+function seedPositions(bracketSize) {
+  const order = standardSeedOrder(bracketSize);
+  const pos = {};
+  order.forEach((seed, idx) => { pos[seed] = idx; });
+  return pos;
+}
+
+// Ronda de winners bracket en la que dos seeds colisionarían si ambos ganan
+// todo lo anterior — la más chica posible (ronda 1 = primera ronda del
+// bracket). null si algún seed no tiene posición (no debería pasar si ambos
+// vienen de la misma lista de entrants).
+function collisionRound(seedA, seedB, bracketSize, positions) {
+  const pA = positions[seedA], pB = positions[seedB];
+  if (pA == null || pB == null || pA === pB) return null;
+  let r = 1;
+  while (Math.floor(pA / Math.pow(2, r)) !== Math.floor(pB / Math.pow(2, r))) r++;
+  return r;
+}
+
+function roundLabel(r, totalRounds) {
+  const fromFinal = totalRounds - r;
+  if (fromFinal <= 0) return "la gran final de winners";
+  if (fromFinal === 1) return "semifinal de winners";
+  if (fromFinal === 2) return "cuartos de winners";
+  return `ronda ${r} de winners`;
+}
+
+// Arma el item de "proyección de bracket" para un torneo cuyo seeding ya
+// cerró (a diferencia del hype item de countdown, este necesita entrants con
+// seed real, así que solo se intenta cerca de la fecha — ver PROJECTION_WINDOW_DAYS).
+// Devuelve null si no hay suficientes seeds top 8 para decir algo interesante.
+function buildBracketProjectionItem(slug, tournamentName, bracketUrl, entrants) {
+  if (entrants.length < 4) return null;
+
+  const bracketSize = nextPowerOfTwo(entrants.length);
+  const totalRounds = Math.log2(bracketSize);
+  const positions = seedPositions(bracketSize);
+  const bySeed = {};
+  for (const e of entrants) bySeed[e.initialSeedNum] = e;
+
+  const topSeeds = Object.keys(bySeed).map(Number).filter(s => s <= PROJECTION_TOP_CUTOFF).sort((a, b) => a - b);
+  if (topSeeds.length < 2) return null;
+
+  // Choques anticipados entre favoritos: para cada par de top 8, la ronda en
+  // la que se cruzarían si ambos ganan todo antes. Nos interesan los que
+  // colisionan MÁS TEMPRANO de lo que uno esperaría (cualquier ronda antes de
+  // semifinal/final ya es noticia).
+  const earlyCollisions = [];
+  for (let i = 0; i < topSeeds.length; i++) {
+    for (let j = i + 1; j < topSeeds.length; j++) {
+      const r = collisionRound(topSeeds[i], topSeeds[j], bracketSize, positions);
+      if (r != null && totalRounds - r >= 2) { // más de 2 rondas antes de la final = "temprano"
+        earlyCollisions.push({ seedA: topSeeds[i], seedB: topSeeds[j], round: r });
+      }
+    }
+  }
+  earlyCollisions.sort((a, b) => a.round - b.round);
+
+  // Primera ronda: buscar el matchup más desparejo que involucre un top 8
+  // (posible upset temprano — el favorito puede caer antes de lo esperado).
+  const order = standardSeedOrder(bracketSize);
+  let biggestMismatch = null;
+  for (let i = 0; i < order.length; i += 2) {
+    const seedA = order[i], seedB = order[i + 1];
+    const a = bySeed[seedA], b = bySeed[seedB];
+    if (!a || !b) continue; // bye
+    const favorito = seedA < seedB ? a : b;
+    const rival = seedA < seedB ? b : a;
+    const favoritoSeed = Math.min(seedA, seedB), rivalSeed = Math.max(seedA, seedB);
+    if (favoritoSeed > PROJECTION_TOP_CUTOFF) continue;
+    if (!biggestMismatch || (rivalSeed - favoritoSeed) < (biggestMismatch.rivalSeed - biggestMismatch.favoritoSeed)) {
+      biggestMismatch = { favorito: favorito.name, favoritoSeed, rival: rival.name, rivalSeed };
+    }
+  }
+
+  if (earlyCollisions.length === 0 && !biggestMismatch) return null;
+
+  const partes = [];
+  if (earlyCollisions.length > 0) {
+    const c = earlyCollisions[0];
+    const nombreA = bySeed[c.seedA].name, nombreB = bySeed[c.seedB].name;
+    partes.push(`si ambos ganan todo antes, ${nombreA} [${c.seedA}] y ${nombreB} [${c.seedB}] chocarían en ${roundLabel(c.round, totalRounds)} — antes de lo esperado.`);
+  }
+  if (biggestMismatch) {
+    partes.push(`ojo con primera ronda: ${biggestMismatch.rival} [${biggestMismatch.rivalSeed}] enfrenta a ${biggestMismatch.favorito} [${biggestMismatch.favoritoSeed}], candidato a upset temprano.`);
+  }
+
+  return {
+    guid: `melee-proyeccion-${slug}`,
+    title: `Proyección de bracket: ${tournamentName}`,
+    link: bracketUrl,
+    summary: partes.join(" "),
+    image: null,
+    pubDate: new Date().toISOString(), // se recalcula cada corrida, no se acumula (mismo criterio que buildHypeItem)
+    source: tournamentName,
+    categoria: "Melee",
+    fullText: null,
+    esProyeccion: true,
+  };
+}
+
 // previousMeleeGuids: sets de guids de upsets ya generados en corridas anteriores
 //   (para no duplicar). Los items de hype no entran acá — se regeneran siempre.
 // previousProcessedEventIds: ids de evento de start.gg cuyo bracket ya se escaneó
@@ -377,7 +534,7 @@ function buildHypeItem(slug, tournamentName, bracketUrl, startAtSeconds) {
 async function fetchMeleeItems(previousMeleeGuids, previousProcessedEventIds) {
   if (!STARTGG_API_KEY) {
     console.error("✗ Melee · falta STARTGG_API_KEY, se omite esta categoría esta corrida");
-    return { upsetItems: [], hypeItems: [], processedEventIds: previousProcessedEventIds };
+    return { upsetItems: [], hypeItems: [], projectionItems: [], processedEventIds: previousProcessedEventIds };
   }
 
   let tournaments = [];
@@ -386,11 +543,12 @@ async function fetchMeleeItems(previousMeleeGuids, previousProcessedEventIds) {
     tournaments = await res.json();
   } catch (e) {
     console.error(`✗ Melee · no se pudo leer meleemajors.gg: ${e.message}`);
-    return { upsetItems: [], hypeItems: [], processedEventIds: previousProcessedEventIds };
+    return { upsetItems: [], hypeItems: [], projectionItems: [], processedEventIds: previousProcessedEventIds };
   }
 
   const upsetItems = [];
   const hypeItems = [];
+  const projectionItems = [];
   const processedEventIds = new Set(previousProcessedEventIds);
 
   for (const t of tournaments) {
@@ -413,6 +571,18 @@ async function fetchMeleeItems(previousMeleeGuids, previousProcessedEventIds) {
         const daysUntil = (eventInfo.startAt * 1000 - Date.now()) / 86400000;
         if (daysUntil <= HYPE_WINDOW_DAYS) {
           hypeItems.push(buildHypeItem(slug, tournamentName, t.bracketUrl, eventInfo.startAt));
+        }
+        // Proyección de bracket: solo cerca de la fecha, porque el seeding real
+        // recién cierra cerca del check-in — pedirlo 14 días antes daría una
+        // lista vacía o incompleta la mayoría de las veces.
+        if (daysUntil <= PROJECTION_WINDOW_DAYS) {
+          try {
+            const entrants = await fetchAllEntrants(eventInfo.id);
+            const projectionItem = buildBracketProjectionItem(slug, tournamentName, t.bracketUrl, entrants);
+            if (projectionItem) projectionItems.push(projectionItem);
+          } catch (e) {
+            console.error(`✗ Melee · proyección de bracket (${tournamentName}): ${e.message}`);
+          }
         }
       }
       continue;
@@ -458,7 +628,7 @@ async function fetchMeleeItems(previousMeleeGuids, previousProcessedEventIds) {
     processedEventIds.add(eventInfo.id);
   }
 
-  return { upsetItems, hypeItems, processedEventIds: Array.from(processedEventIds) };
+  return { upsetItems, hypeItems, projectionItems, processedEventIds: Array.from(processedEventIds) };
 }
 // ================= Fin módulo Melee =================
 
@@ -546,17 +716,18 @@ async function main() {
 
   // Melee: se generan aparte (no vienen de feeds.json). Los upsets se acumulan
   // igual que antes (se combinan con lo ya generado en corridas previas); los
-  // items de "hype" (torneo por venir) se regeneran frescos en cada corrida,
-  // así que no se cargan del archivo anterior — se descartan los viejos y se
-  // usan solo los que acaba de calcular esta corrida.
+  // items de "hype" (torneo por venir) y de "proyección de bracket" se
+  // regeneran frescos en cada corrida, así que no se cargan del archivo
+  // anterior — se descartan los viejos y se usan solo los que acaba de
+  // calcular esta corrida.
   console.log("Procesando Melee (meleemajors.gg + start.gg + YouTube)...");
-  const previousUpsetItemsOnly = previousMeleeItems.filter(i => !i.esHype);
-  const { upsetItems: newUpsetItems, hypeItems, processedEventIds } = await fetchMeleeItems(
+  const previousUpsetItemsOnly = previousMeleeItems.filter(i => !i.esHype && !i.esProyeccion);
+  const { upsetItems: newUpsetItems, hypeItems, projectionItems, processedEventIds } = await fetchMeleeItems(
     previousMeleeGuids,
     previousProcessedEventIds
   );
-  console.log(`✓ Melee · ${newUpsetItems.length} upsets nuevos, ${hypeItems.length} torneo(s) generando hype esta corrida`);
-  const allMeleeItems = [...previousUpsetItemsOnly, ...newUpsetItems, ...hypeItems].filter(
+  console.log(`✓ Melee · ${newUpsetItems.length} upsets nuevos, ${hypeItems.length} torneo(s) generando hype, ${projectionItems.length} proyección(es) de bracket esta corrida`);
+  const allMeleeItems = [...previousUpsetItemsOnly, ...newUpsetItems, ...hypeItems, ...projectionItems].filter(
     a => !a.pubDate || new Date(a.pubDate).getTime() >= cutoff
   );
 
