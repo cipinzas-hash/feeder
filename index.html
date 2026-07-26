@@ -164,6 +164,14 @@
       return { icon: "⬆️", label: "leer" };
     }
 
+    // ─── Compartir por WhatsApp ─────────────────────────────────────────────────
+    // wa.me abre WhatsApp (app o web) con el mensaje precargado, el usuario elige
+    // el contacto ahí mismo. Sin SDK, sin permisos — es solo un link.
+    function shareToWhatsApp(item) {
+      const text = encodeURIComponent(`${item.title}\n${item.link}`);
+      window.open(`https://wa.me/?text=${text}`, "_blank");
+    }
+
     // ─── FormatoTag — badges retro tipo Pokémon (TXT/VID/AUD), hasta 2 por item,
     // el de medio (VID/AUD) primero si existe, TXT después. Mismo color por
     // etiqueta siempre, independiente de la categoría (CAT_COLORS es un eje
@@ -342,6 +350,7 @@
           <div style={{ padding: "14px 18px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #1a1a1a" }}>
             <button onClick={onBack} style={{ background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" }}>←</button>
             <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 }}>{item.source}</span>
+            <a href={item.link} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>fuente ↗</a>
           </div>
           <div style={{ flex: 1, overflowY: "auto", padding: "18px 20px 30px" }}>
             {item.image && (
@@ -400,6 +409,7 @@
             <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
               <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
               <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
+              <button onClick={() => shareToWhatsApp(item)} style={btnGhost}><span style={{ fontSize: 17 }}>📤</span>compartir</button>
               <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
             </div>
           )}
@@ -533,6 +543,7 @@
           <div style={{ padding: "14px 18px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #1a1a1a" }}>
             <button onClick={onBack} style={{ background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" }}>←</button>
             <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 }}>{item.source}</span>
+            <a href={item.link} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>fuente ↗</a>
           </div>
           <div style={{ flex: 1, overflowY: "auto", padding: "18px 20px 30px" }}>
             <FormatoTag item={item} />
@@ -584,6 +595,7 @@
             <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
               <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
               <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
+              <button onClick={() => shareToWhatsApp(item)} style={btnGhost}><span style={{ fontSize: 17 }}>📤</span>compartir</button>
               <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
             </div>
           )}
@@ -613,6 +625,7 @@
           <div style={{ padding: "14px 18px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #1a1a1a" }}>
             <button onClick={onBack} style={{ background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" }}>←</button>
             <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 }}>{item.source}</span>
+            <a href={item.link} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>fuente ↗</a>
           </div>
           <div onScroll={onScroll} style={{ flex: 1, overflowY: "auto", padding: "18px 20px 30px" }}>
             <FormatoTag item={item} />
@@ -660,6 +673,7 @@
             <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
               <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
               <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
+              <button onClick={() => shareToWhatsApp(item)} style={btnGhost}><span style={{ fontSize: 17 }}>📤</span>compartir</button>
               <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
             </div>
           )}
