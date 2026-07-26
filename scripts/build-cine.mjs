@@ -183,8 +183,12 @@ function needsRetry(cached) {
   if (!cached) return true;
   const r = cached.rating || {};
   // si TMDb sí tiene voto propio pero los 3 campos de OMDb están vacíos,
-  // asumimos que fue un fallo de OMDb (key inválida, rate limit, etc.) y reintentamos
-  return r.imdb == null && r.rt == null && r.metascore == null;
+  // asumimos que fue un fallo de OMDb (key inválida, rate limit, etc.) y reintentamos.
+  // Mismo criterio para el trailer: si no quedó ninguno, reintentamos — puede que
+  // antes no hubiera YOUTUBE_API_KEY seteada y ahora sí haya fallback disponible.
+  const ratingMissing = r.imdb == null && r.rt == null && r.metascore == null;
+  const trailerMissing = !cached.trailer;
+  return ratingMissing || trailerMissing;
 }
 
 async function enrichMovieOrTv(mediaType, id, cache, guid) {
@@ -267,7 +271,7 @@ async function enrichMovieOrTv(mediaType, id, cache, guid) {
 }
 
 async function enrichAnime(malId, cache, guid) {
-  if (cache[guid]) return cache[guid];
+  if (cache[guid] && !needsRetry(cache[guid])) return cache[guid];
 
   const [detailsRes, reviewsRes] = await Promise.all([
     jikanFetch(`/anime/${malId}/full`),
@@ -275,6 +279,11 @@ async function enrichAnime(malId, cache, guid) {
   ]);
   const d = detailsRes?.data;
   if (!d) return null;
+
+  let trailerKey = d.trailer?.youtube_id || null;
+  if (!trailerKey) {
+    trailerKey = await findMovieTrailer(d.title);
+  }
 
   return {
     guid,
@@ -288,7 +297,7 @@ async function enrichAnime(malId, cache, guid) {
     fullText: null,
     rating: { imdb: null, rt: null, metascore: null, tmdb: d.score ?? null },
     reviews: pickJikanReviews(reviewsRes?.data),
-    trailer: d.trailer?.youtube_id ? { key: d.trailer.youtube_id, site: "YouTube" } : null,
+    trailer: trailerKey ? { key: trailerKey, site: "YouTube" } : null,
     cast: [], // Jikan no trae reparto en /full; queda vacío, no bloquea el resto
   };
 }
