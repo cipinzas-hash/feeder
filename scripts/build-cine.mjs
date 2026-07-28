@@ -24,8 +24,17 @@ const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const OUT_PATH = "data/cine.json";
 const CACHE_PATH = "data/cine.json"; // se lee el propio output anterior como cache
 
-const CATEGORIA = "Películas / Series / Animación";
+const CATEGORIA_PELICULAS = "Películas";
+const CATEGORIA_SERIES = "Series";
+const CATEGORIA_ANIMACION = "Animación";
 const REGION = "CL";
+
+// Destacados: catálogo "vitrina" — un ítem se conserva 30 días desde que el
+// sistema lo descubrió por primera vez (firstSeenAt), sin importar si sigue
+// en trending/now_playing esa corrida. Así se puede hojear el mes completo,
+// no solo lo que trajo la corrida más reciente.
+const RETENTION_DAYS = 30;
+const RETENTION_MS = RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
 if (!TMDB_KEY) {
   console.error("Falta TMDB_API_KEY — abortando.");
@@ -193,6 +202,7 @@ function needsRetry(cached) {
 
 async function enrichMovieOrTv(mediaType, id, cache, guid) {
   if (cache[guid] && !needsRetry(cache[guid])) return cache[guid];
+  const firstSeenAt = cache[guid]?.firstSeenAt || new Date().toISOString();
 
   const [details, credits, videos, reviewsRes, externalIds] = await Promise.all([
     tmdb(`/${mediaType}/${id}`),
@@ -256,7 +266,8 @@ async function enrichMovieOrTv(mediaType, id, cache, guid) {
     image,
     pubDate: details.release_date || details.first_air_date || null,
     source: "TMDb",
-    categoria: CATEGORIA,
+    categoria: mediaType === "movie" ? CATEGORIA_PELICULAS : CATEGORIA_SERIES,
+    firstSeenAt,
     fullText: null,
     rating: {
       imdb: omdbData?.imdb ?? null,
@@ -272,6 +283,7 @@ async function enrichMovieOrTv(mediaType, id, cache, guid) {
 
 async function enrichAnime(malId, cache, guid) {
   if (cache[guid] && !needsRetry(cache[guid])) return cache[guid];
+  const firstSeenAt = cache[guid]?.firstSeenAt || new Date().toISOString();
 
   const [detailsRes, reviewsRes] = await Promise.all([
     jikanFetch(`/anime/${malId}/full`),
@@ -293,7 +305,8 @@ async function enrichAnime(malId, cache, guid) {
     image: d.images?.jpg?.large_image_url || null,
     pubDate: d.aired?.from || null,
     source: "MyAnimeList",
-    categoria: CATEGORIA,
+    categoria: CATEGORIA_ANIMACION,
+    firstSeenAt,
     fullText: null,
     rating: { imdb: null, rt: null, metascore: null, tmdb: d.score ?? null },
     reviews: pickJikanReviews(reviewsRes?.data),
@@ -341,40 +354,81 @@ async function discoverAnime() {
 
 // ─── Main ───────────────────────────────────────────────────────────────────
 
+function isFresh(item) {
+  if (!item.firstSeenAt) return false; // cache viejo, de antes de esta feature — no se arrastra
+  return Date.now() - new Date(item.firstSeenAt).getTime() <= RETENTION_MS;
+}
+
+// Arrastra del cache lo que sigue vigente (dentro de RETENTION_DAYS) pero no
+// fue redescubierto esta corrida — ej. una peli que ya salió del top de
+// trending/now_playing pero todavía no cumple el mes en el catálogo.
+function carryOverFresh(cache, guidPrefix, alreadyIncludedGuids) {
+  const out = [];
+  for (const [guid, item] of Object.entries(cache)) {
+    if (!guid.startsWith(guidPrefix)) continue;
+    if (alreadyIncludedGuids.has(guid)) continue;
+    if (!isFresh(item)) continue;
+    out.push(item);
+  }
+  return out;
+}
+
 async function main() {
   const cache = await loadCache();
 
   const [movies, tv, anime] = await Promise.all([discoverMovies(), discoverTv(), discoverAnime()]);
 
-  const items = [];
+  const movieItems = [];
+  const tvItems = [];
+  const animeItems = [];
 
   for (const m of movies) {
     try {
       const enriched = await enrichMovieOrTv("movie", m.id, cache, `tmdb-movie-${m.id}`);
-      if (enriched) items.push(enriched);
+      if (enriched) movieItems.push(enriched);
     } catch (e) { console.error(`movie ${m.id} falló:`, e.message); }
   }
   for (const t of tv) {
     try {
       const enriched = await enrichMovieOrTv("tv", t.id, cache, `tmdb-tv-${t.id}`);
-      if (enriched) items.push(enriched);
+      if (enriched) tvItems.push(enriched);
     } catch (e) { console.error(`tv ${t.id} falló:`, e.message); }
   }
   for (const a of anime) {
     try {
       const enriched = await enrichAnime(a.mal_id, cache, `mal-${a.mal_id}`);
-      if (enriched) items.push(enriched);
+      if (enriched) animeItems.push(enriched);
     } catch (e) { console.error(`anime ${a.mal_id} falló:`, e.message); }
   }
 
+  // Catálogo de 30 días: sumar lo que sigue vigente en cache y no se
+  // redescubrió esta corrida (salió del top trending pero no cumplió el mes).
+  const movieGuids = new Set(movieItems.map(i => i.guid));
+  const tvGuids = new Set(tvItems.map(i => i.guid));
+  const animeGuids = new Set(animeItems.map(i => i.guid));
+  movieItems.push(...carryOverFresh(cache, "tmdb-movie-", movieGuids));
+  tvItems.push(...carryOverFresh(cache, "tmdb-tv-", tvGuids));
+  animeItems.push(...carryOverFresh(cache, "mal-", animeGuids));
+
+  // Filtro final: aunque haya sido redescubierto esta corrida, si ya pasó el
+  // mes desde firstSeenAt, se descarta igual (caso raro pero posible: algo
+  // vuelve a trending justo el día que cumple 30 días).
+  const finalMovies = movieItems.filter(isFresh);
+  const finalTv = tvItems.filter(isFresh);
+  const finalAnime = animeItems.filter(isFresh);
+
   const output = {
     generatedAt: new Date().toISOString(),
-    categories: [{ cat: CATEGORIA, items }],
+    categories: [
+      { cat: CATEGORIA_PELICULAS, items: finalMovies },
+      { cat: CATEGORIA_SERIES, items: finalTv },
+      { cat: CATEGORIA_ANIMACION, items: finalAnime },
+    ],
   };
 
   await fs.mkdir("data", { recursive: true });
   await fs.writeFile(OUT_PATH, JSON.stringify(output, null, 2));
-  console.log(`✓ cine.json: ${items.length} items (${movies.length} pelis, ${tv.length} series, ${anime.length} anime)`);
+  console.log(`✓ cine.json: ${finalMovies.length} pelis, ${finalTv.length} series, ${finalAnime.length} anime (catálogo 30 días)`);
 }
 
 main().catch(e => {
