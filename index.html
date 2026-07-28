@@ -39,6 +39,10 @@
     // Destacados (vitrina audiovisual) — 3 categorías separadas, cada una su
     // propio carrusel. Ya no participan del swipe round-robin de "Noticias".
     const CINE_CATEGORIAS = ["Películas", "Series", "Animación"];
+    // Microdocumentales vive en Vitrina también, pero NO es carrusel de posters
+    // (es un feed vertical de video+comentario) — por eso es una categoría aparte
+    // de CINE_CATEGORIAS aunque comparta la misma exclusión del round-robin.
+    const VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales"];
     const NOTICIAS_CATEGORIA = "Noticias"; // RSS cine/TV/anime — vive en el área "Noticias", no en Vitrina
     const MUSIC_CATEGORIA = "Dark scene / Música";
 
@@ -51,6 +55,7 @@
       "Películas": "#e91e8c",
       "Series": "#e91e8c",
       "Animación": "#e91e8c",
+      "Microdocumentales": "#26a69a",
       "Dark scene / Música": "#7b4fd4",
       "Ciencia / Conocimiento": "#2e7d52",
       "Tecnología": "#26a69a",
@@ -133,12 +138,12 @@
       ingest(feedData, "lectura");
       ingest(cineData, "cine");
 
-      // Vitrina (Películas/Series/Animación) sale del round-robin de Noticias —
-      // es un catálogo aparte, siempre completo (no se consume/descarta al leerlo).
+      // Vitrina (Películas/Series/Animación/Microdocumentales) sale del round-robin
+      // de Noticias — es un catálogo aparte, siempre completo.
       const vitrina = {};
       const feedCats = [];
       for (const [cat, items] of Object.entries(merged)) {
-        if (CINE_CATEGORIAS.includes(cat)) vitrina[cat] = items;
+        if (VITRINA_CATEGORIAS.includes(cat)) vitrina[cat] = items;
         else feedCats.push({ cat, items });
       }
 
@@ -936,6 +941,51 @@
       );
     }
 
+    // ─── MicrodocFeed — Microdocumentales dentro de Vitrina. NO es carrusel:
+    // scroll vertical, cada ítem = título + comentario del autor (summary) +
+    // video embebido, separados por un divisor suave y oscuro. Formato "lectura"
+    // de base (viene de feed.json, no de cine.json), por eso no hay poster/rating.
+    function MicrodocFeed({ items }) {
+      if (!items.length) {
+        return (
+          <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" }}>
+            nada por acá todavía
+          </div>
+        );
+      }
+      return (
+        <div style={{ padding: "6px 18px 30px" }}>
+          {items.map((item, i) => (
+            <div key={item.guid} style={{
+              padding: "22px 0",
+              borderBottom: i < items.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+            }}>
+              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 8, lineHeight: 1.2 }}>{item.title}</div>
+              {item.summary && (
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: 12 }}>
+                  {item.summary}
+                </div>
+              )}
+              {item.videoId ? (
+                <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: 10, overflow: "hidden", background: "#000" }}>
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${item.videoId}`}
+                    title={item.title}
+                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                </div>
+              ) : (
+                <a href={item.link} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#26a69a" }}>ver original ↗</a>
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
     // ─── VitrinaView — carrusel de Destacados (Películas/Series/Animación) ─────
     // Segmented control fijo arriba, sin auto-alternancia: se queda en la
     // categoría elegida hasta que el usuario cambia manualmente. Muestra el
@@ -943,7 +993,7 @@
     function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen }) {
       const items = vitrinaData[vitrinaCat] || [];
       const segBtn = (active) => ({
-        flex: 1, padding: "9px 6px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700,
+        flex: 1, padding: "9px 4px", fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700,
         border: "1px solid", borderRadius: 20, cursor: "pointer",
         background: active ? (CAT_COLORS[vitrinaCat] || "#e91e8c") : "transparent",
         color: active ? "#111" : "#999",
@@ -954,12 +1004,15 @@
           <div style={{ padding: "16px 18px 4px" }}>
             <span style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff" }}>🎬 vitrina audiovisual</span>
           </div>
-          <div style={{ display: "flex", gap: 8, padding: "12px 18px" }}>
-            {CINE_CATEGORIAS.map(cat => (
+          <div style={{ display: "flex", gap: 6, padding: "12px 18px" }}>
+            {VITRINA_CATEGORIAS.map(cat => (
               <button key={cat} onClick={() => onChangeCat(cat)} style={segBtn(cat === vitrinaCat)}>{cat}</button>
             ))}
           </div>
-          <CineCoverFlow items={items} onOpen={onOpen} />
+          {vitrinaCat === "Microdocumentales"
+            ? <MicrodocFeed items={items} />
+            : <CineCoverFlow items={items} onOpen={onOpen} />
+          }
         </div>
       );
     }
@@ -982,7 +1035,7 @@
       const [showDiagPanel, setShowDiagPanel] = useState(false);
       const [area, setArea] = useState("noticias"); // "noticias" | "vitrina"
       const [vitrinaCat, setVitrinaCat] = useState("Películas");
-      const [vitrinaData, setVitrinaData] = useState({ "Películas": [], "Series": [], "Animación": [] });
+      const [vitrinaData, setVitrinaData] = useState({ "Películas": [], "Series": [], "Animación": [], "Microdocumentales": [] });
       const [vitrinaOpenItem, setVitrinaOpenItem] = useState(null);
       const [exportError, setExportError] = useState(null);
 
@@ -1018,16 +1071,15 @@
       }, []);
 
       // Vitrina se carga aparte, sin el throttle de 4h del feed de lectura —
-      // es un catálogo de consulta, no una cola que se consume.
+      // es un catálogo de consulta, no una cola que se consume. fetchFeedData
+      // ya separa lo que es Vitrina (incluye Microdocumentales, que vive en
+      // feed.json, no en cine.json) de lo que va al round-robin de Noticias.
       useEffect(() => {
         (async () => {
-          const cineData = await fetchJsonSafe(CINE_JSON_URL);
-          if (!cineData) return;
-          const next = { "Películas": [], "Series": [], "Animación": [] };
-          for (const c of (cineData.categories || [])) {
-            if (CINE_CATEGORIAS.includes(c.cat)) next[c.cat] = c.items || [];
-          }
-          setVitrinaData(next);
+          try {
+            const { vitrina } = await fetchFeedData();
+            if (vitrina) setVitrinaData(v => ({ ...v, ...vitrina }));
+          } catch (e) { /* silencioso — doRefresh ya maneja el error visible */ }
         })();
       }, []);
 
