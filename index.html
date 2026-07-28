@@ -36,7 +36,10 @@
     const FEED_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/data/feed.json";
     const CINE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/data/cine.json";
 
-    const CINE_CATEGORIA = "Películas / Series / Animación";
+    // Destacados (vitrina audiovisual) — 3 categorías separadas, cada una su
+    // propio carrusel. Ya no participan del swipe round-robin de "Noticias".
+    const CINE_CATEGORIAS = ["Películas", "Series", "Animación"];
+    const NOTICIAS_CATEGORIA = "Noticias"; // RSS cine/TV/anime — vive en el área "Noticias", no en Vitrina
     const MUSIC_CATEGORIA = "Dark scene / Música";
 
     // Colores por categoría — reusa acentos que ya existen en Angst (melee/pokemon/gym/fadiman)
@@ -44,7 +47,10 @@
       "Melee": "#ff6600",
       "Pokémon TCG": "#ffcc00",
       "Gaming": "#5c9cff",
-      "Películas / Series / Animación": "#e91e8c",
+      "Noticias": "#e91e8c",
+      "Películas": "#e91e8c",
+      "Series": "#e91e8c",
+      "Animación": "#e91e8c",
       "Dark scene / Música": "#7b4fd4",
       "Ciencia / Conocimiento": "#2e7d52",
       "Tecnología": "#26a69a",
@@ -58,14 +64,18 @@
     // distintos: "tipo" es la acción central de un item de lectura, "formato"
     // decide qué layout completo de tarjeta se usa.
     const FORMATO_BY_CATEGORIA = {
-      [CINE_CATEGORIA]: "cine",
+      "Películas": "cine",
+      "Series": "cine",
+      "Animación": "cine",
       [MUSIC_CATEGORIA]: "musica",
     };
 
     // Tabla de componentes por formato — referencia funciones declaradas más abajo
     // en el archivo (function declarations, hoisted, así que el orden no importa).
+    // "cine" ya no tiene Story: Vitrina reemplazó el swipe de una tarjeta a la vez
+    // por el carrusel (CineCoverFlow) + detalle (CineExtendedView).
     function cardsFor(formato) {
-      if (formato === "cine") return { Story: CineStoryCard, Extended: CineExtendedView };
+      if (formato === "cine") return { Story: null, Extended: CineExtendedView };
       if (formato === "musica") return { Story: MusicStoryCard, Extended: MusicExtendedView };
       return { Story: StoryCard, Extended: ExtendedView };
     }
@@ -123,14 +133,22 @@
       ingest(feedData, "lectura");
       ingest(cineData, "cine");
 
-      const byCategoryArrays = Object.entries(merged).map(([cat, items]) => ({ cat, items }));
-      const diag = byCategoryArrays.map(c => ({
+      // Vitrina (Películas/Series/Animación) sale del round-robin de Noticias —
+      // es un catálogo aparte, siempre completo (no se consume/descarta al leerlo).
+      const vitrina = {};
+      const feedCats = [];
+      for (const [cat, items] of Object.entries(merged)) {
+        if (CINE_CATEGORIAS.includes(cat)) vitrina[cat] = items;
+        else feedCats.push({ cat, items });
+      }
+
+      const diag = feedCats.map(c => ({
         cat: c.cat,
         count: c.items.length,
-        withText: c.items.filter(i => i.formato === "cine" || (i.tipo === "video" && i.videoId) || i.fullText).length,
+        withText: c.items.filter(i => (i.tipo === "video" && i.videoId) || i.fullText).length,
       }));
       const generatedAt = feedData?.generatedAt || cineData?.generatedAt || null;
-      return { queue: roundRobinMerge(byCategoryArrays), diag, generatedAt };
+      return { queue: roundRobinMerge(feedCats), vitrina, diag, generatedAt };
     }
 
     // ─── Storage (clave propia — al integrarse a Angst, pasa a la regla vital) ──
@@ -170,6 +188,126 @@
     function shareToWhatsApp(item) {
       const text = encodeURIComponent(`${item.title}\n${item.link}`);
       window.open(`https://wa.me/?text=${text}`, "_blank");
+    }
+
+    // ─── Exportar imagen para RRSS (solo desde el Buzón) ───────────────────────
+    // Renderiza poster + título + rating + sinopsis en un canvas 1080×1920
+    // (proporción Instagram Story) y lo descarga como PNG — el usuario lo sube
+    // manualmente a la red social que quiera, no hay integración directa.
+    function loadImageForCanvas(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous"; // necesario para no "tainted-ear" el canvas
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("no se pudo cargar la imagen"));
+        img.src = url;
+      });
+    }
+
+    function wrapCanvasText(ctx, text, maxWidth) {
+      const words = (text || "").split(/\s+/);
+      const lines = [];
+      let line = "";
+      for (const w of words) {
+        const test = line ? `${line} ${w}` : w;
+        if (ctx.measureText(test).width > maxWidth && line) {
+          lines.push(line);
+          line = w;
+        } else {
+          line = test;
+        }
+      }
+      if (line) lines.push(line);
+      return lines;
+    }
+
+    async function exportCineShareImage(item, onError) {
+      const W = 1080, H = 1920;
+      const canvas = document.createElement("canvas");
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext("2d");
+
+      // Fondo
+      ctx.fillStyle = "#0a0a0a";
+      ctx.fillRect(0, 0, W, H);
+
+      // Poster — ocupa el ~68% superior, "cover" (recorta, no deforma)
+      const posterH = Math.round(H * 0.68);
+      try {
+        if (item.image) {
+          const img = await loadImageForCanvas(item.image);
+          const scale = Math.max(W / img.width, posterH / img.height);
+          const dw = img.width * scale, dh = img.height * scale;
+          ctx.drawImage(img, (W - dw) / 2, (posterH - dh) / 2, dw, dh);
+        } else {
+          ctx.fillStyle = "#1a1a1a";
+          ctx.fillRect(0, 0, W, posterH);
+        }
+      } catch (e) {
+        onError && onError("no se pudo exportar el poster de esta ficha (bloqueo de origen de la imagen) — probá con otro título");
+        return false;
+      }
+
+      // Degradé para que el texto de abajo se lea sobre el poster
+      const grad = ctx.createLinearGradient(0, posterH - 420, 0, posterH + 20);
+      grad.addColorStop(0, "rgba(10,10,10,0)");
+      grad.addColorStop(1, "rgba(10,10,10,1)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, posterH - 420, W, 440);
+
+      const marginX = 64;
+      let y = posterH + 70;
+
+      // Título
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "700 58px 'DM Sans', sans-serif";
+      const titleLines = wrapCanvasText(ctx, item.title, W - marginX * 2).slice(0, 2);
+      for (const line of titleLines) { ctx.fillText(line, marginX, y); y += 66; }
+      y += 10;
+
+      // Rating (IMDb / RT / Metascore / TMDb — lo que haya)
+      const r = item.rating || {};
+      const chips = [];
+      if (r.imdb != null) chips.push(`★ ${r.imdb.toFixed(1)} IMDb`);
+      if (r.rt != null) chips.push(`🍅 ${r.rt}% RT`);
+      if (r.metascore != null) chips.push(`Ⓜ ${r.metascore} MC`);
+      if (!chips.length && r.tmdb != null) chips.push(`★ ${r.tmdb} TMDb`);
+      if (chips.length) {
+        ctx.font = "700 32px 'DM Sans', sans-serif";
+        ctx.fillStyle = "#f5c518";
+        ctx.fillText(chips.join("   "), marginX, y);
+        y += 56;
+      } else {
+        y += 20;
+      }
+
+      // Sinopsis
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
+      ctx.font = "400 32px 'DM Sans', sans-serif";
+      const summaryLines = wrapCanvasText(ctx, item.summary || "", W - marginX * 2).slice(0, 7);
+      for (const line of summaryLines) { ctx.fillText(line, marginX, y); y += 42; }
+
+      // Marca al pie
+      ctx.fillStyle = "rgba(255,255,255,0.3)";
+      ctx.font = "600 24px 'DM Sans', sans-serif";
+      ctx.fillText("ANGST", marginX, H - 50);
+
+      try {
+        const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
+        if (!blob) throw new Error("toBlob devolvió null");
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${(item.title || "angst").replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        return true;
+      } catch (e) {
+        onError && onError("no se pudo exportar esta imagen (bloqueo del origen del poster) — probá con otro título");
+        return false;
+      }
     }
 
     // ─── FormatoTag — badges retro tipo Pokémon (TXT/VID/AUD), hasta 2 por item,
@@ -278,54 +416,9 @@
       );
     }
 
-    // ─── CineStoryCard — formato "cine" del card cerrado ────────────────────────
-    function CineStoryCard({ item, onSkip, onExpand, onSave, onChangeCategory, onShuffle, onOpenBuzon, onOpenDiag, hasDiag, onRefresh, canRefresh, refreshing, buzonCount }) {
-      const color = CAT_COLORS[item.categoria] || "#e91e8c";
-      const [imgFailed, setImgFailed] = useState(false);
-      useEffect(() => { setImgFailed(false); }, [item.guid]);
-      const leads = (item.cast || []).filter(c => c.order < 4).slice(0, 4);
-      return (
-        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none" }}>
-          <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", perspective: 900 }}>
-            <div style={{ position: "absolute", top: 16, left: 16, right: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, zIndex: 5 }}>
-              <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#111", background: color, borderRadius: 20, padding: "4px 12px", fontWeight: 700 }}>{item.categoria}</span>
-              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                <button onClick={onOpenBuzon} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>📌 {buzonCount}</button>
-                <button onClick={onShuffle} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer" }}>🔀</button>
-                <button onClick={onOpenDiag} disabled={!hasDiag} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: hasDiag ? "pointer" : "default", opacity: hasDiag ? 1 : 0.3 }}>🩺</button>
-                <button onClick={onRefresh} disabled={!canRefresh || refreshing} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: (!canRefresh || refreshing) ? "default" : "pointer", opacity: (!canRefresh || refreshing) ? 0.35 : 1 }}>{refreshing ? "…" : "↻"}</button>
-              </div>
-            </div>
-
-            <div style={{ width: "62%", maxWidth: 260, transform: "rotateX(2deg)", transformStyle: "preserve-3d" }}>
-              <div style={{ borderRadius: 10, overflow: "hidden", boxShadow: `0 20px 50px -10px ${color}55, 0 0 0 1px rgba(255,255,255,0.06)` }}>
-                {item.image && !imgFailed
-                  ? <img src={item.image} alt="" style={{ width: "100%", display: "block", aspectRatio: "2/3", objectFit: "cover" }} onError={() => setImgFailed(true)} />
-                  : <div style={{ width: "100%", aspectRatio: "2/3", background: `linear-gradient(160deg, ${color}44, #0a0a0a)` }} />
-                }
-              </div>
-            </div>
-
-            <div style={{ marginTop: 18, textAlign: "center", padding: "0 24px" }}>
-              <FormatoTag item={item} />
-              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", lineHeight: 1.15, marginBottom: 8 }}>{item.title}</div>
-              <div style={{ marginBottom: 10 }}><RatingBadges rating={item.rating} /></div>
-              {leads.length > 0 && (
-                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
-                  {leads.map(c => c.name).join(" · ")}
-                </div>
-              )}
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
-            <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
-            <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
-            <button onClick={onExpand} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>⬆️</span>detalle</button>
-            <button onClick={onSkip} style={btnGhost}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
-          </div>
-        </div>
-      );
-    }
+    // CineStoryCard fue removido esta sesión: Vitrina reemplaza el swipe de una
+    // tarjeta de cine a la vez por el carrusel (CineCoverFlow) + detalle
+    // (CineExtendedView, más abajo). "cine" ya no participa del formato "story".
 
     function ReviewBlock({ label, review, color }) {
       return (
@@ -341,7 +434,7 @@
     }
 
     // ─── CineExtendedView — formato "cine" del detalle ──────────────────────────
-    function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions }) {
+    function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions, onExportImage }) {
       const color = CAT_COLORS[item.categoria] || "#e91e8c";
       const leads = (item.cast || []).filter(c => c.order < 4);
       const supporting = (item.cast || []).filter(c => c.order >= 4);
@@ -413,53 +506,90 @@
               <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
             </div>
           )}
+          {hideActions && onExportImage && (
+            <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
+              <button onClick={() => onExportImage(item)} style={{ ...btnGhost, background: color, color: "#111", borderColor: color, flex: "none", width: "100%" }}>
+                <span style={{ fontSize: 17 }}>📸</span>exportar imagen para compartir
+              </button>
+            </div>
+          )}
         </div>
       );
     }
 
-    // ─── CineCoverFlow — solo dentro del Buzón, filtrado a la categoría cine ────
+    // ─── CineCoverFlow — carrusel de posters con perspectiva 3D. Se usa en el
+    // Buzón (filtrado a lo guardado) y en Vitrina (catálogo completo del mes).
+    // Flechas ◀️▶️ a los costados + loop infinito (después del último vuelve
+    // al primero, y viceversa) además del scroll táctil de siempre.
     function CineCoverFlow({ items, onOpen }) {
       const [scrollX, setScrollX] = useState(0);
+      const containerRef = useRef(null);
       const ITEM_W = 144;
       function onScroll(e) { setScrollX(e.target.scrollLeft); }
+      function scrollToIndex(i) {
+        if (!items.length) return;
+        const wrapped = ((i % items.length) + items.length) % items.length;
+        containerRef.current?.scrollTo({ left: wrapped * ITEM_W, behavior: "smooth" });
+      }
+      const currentIndex = Math.round(scrollX / ITEM_W);
+
+      if (!items.length) {
+        return (
+          <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" }}>
+            nada por acá todavía
+          </div>
+        );
+      }
+
+      const arrowStyle = {
+        position: "absolute", top: "38%", transform: "translateY(-50%)", zIndex: 10,
+        background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", fontSize: 20,
+        width: 40, height: 40, borderRadius: 20, cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      };
+
       return (
-        <div onScroll={onScroll} style={{
-          display: "flex", overflowX: "auto", scrollSnapType: "x mandatory",
-          padding: "30px calc(50% - 65px) 40px", alignItems: "center", perspective: 1000,
-        }}>
-          {items.map((item, i) => {
-            const center = scrollX / ITEM_W;
-            const dist = i - center;
-            const rotate = Math.max(-55, Math.min(55, dist * 55));
-            const scale = 1 - Math.min(0.25, Math.abs(dist) * 0.15);
-            return (
-              <div key={item.guid} onClick={() => onOpen(item)} style={{
-                flexShrink: 0, width: 130, marginRight: 14, scrollSnapAlign: "center", cursor: "pointer",
-                transform: `rotateY(${-rotate}deg) scale(${scale})`, transformOrigin: "center center",
-                zIndex: Math.round(100 - Math.abs(dist) * 10),
-              }}>
-                <div style={{ borderRadius: 8, overflow: "hidden", boxShadow: "0 10px 30px rgba(0,0,0,0.6)" }}>
-                  {item.image
-                    ? <img src={item.image} alt="" style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block" }} onError={e => { e.target.style.display = "none"; }} />
-                    : <div style={{ width: "100%", aspectRatio: "2/3", background: "#1a1a1a" }} />
-                  }
+        <div style={{ position: "relative" }}>
+          <button onClick={() => scrollToIndex(currentIndex - 1)} style={{ ...arrowStyle, left: 6 }}>◀️</button>
+          <button onClick={() => scrollToIndex(currentIndex + 1)} style={{ ...arrowStyle, right: 6 }}>▶️</button>
+          <div ref={containerRef} onScroll={onScroll} style={{
+            display: "flex", overflowX: "auto", scrollSnapType: "x mandatory",
+            padding: "30px calc(50% - 65px) 40px", alignItems: "center", perspective: 1000,
+          }}>
+            {items.map((item, i) => {
+              const center = scrollX / ITEM_W;
+              const dist = i - center;
+              const rotate = Math.max(-55, Math.min(55, dist * 55));
+              const scale = 1 - Math.min(0.25, Math.abs(dist) * 0.15);
+              return (
+                <div key={item.guid} onClick={() => onOpen(item)} style={{
+                  flexShrink: 0, width: 130, marginRight: 14, scrollSnapAlign: "center", cursor: "pointer",
+                  transform: `rotateY(${-rotate}deg) scale(${scale})`, transformOrigin: "center center",
+                  zIndex: Math.round(100 - Math.abs(dist) * 10),
+                }}>
+                  <div style={{ borderRadius: 8, overflow: "hidden", boxShadow: "0 10px 30px rgba(0,0,0,0.6)" }}>
+                    {item.image
+                      ? <img src={item.image} alt="" style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block" }} onError={e => { e.target.style.display = "none"; }} />
+                      : <div style={{ width: "100%", aspectRatio: "2/3", background: "#1a1a1a" }} />
+                    }
+                  </div>
+                  {item.image && (
+                    <div style={{
+                      width: "100%", aspectRatio: "2/3", marginTop: 1,
+                      backgroundImage: `url(${item.image})`, backgroundSize: "cover", backgroundPosition: "center",
+                      transform: "scaleY(-1)", opacity: 0.35,
+                      maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 60%)",
+                      WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 60%)",
+                    }} />
+                  )}
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#ccc", marginTop: 6, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
+                  {item.rating?.imdb != null && (
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#f5c518", textAlign: "center" }}>★ {item.rating.imdb.toFixed(1)}</div>
+                  )}
                 </div>
-                {item.image && (
-                  <div style={{
-                    width: "100%", aspectRatio: "2/3", marginTop: 1,
-                    backgroundImage: `url(${item.image})`, backgroundSize: "cover", backgroundPosition: "center",
-                    transform: "scaleY(-1)", opacity: 0.35,
-                    maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 60%)",
-                    WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 60%)",
-                  }} />
-                )}
-                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#ccc", marginTop: 6, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
-                {item.rating?.imdb != null && (
-                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#f5c518", textAlign: "center" }}>★ {item.rating.imdb.toFixed(1)}</div>
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       );
     }
@@ -733,7 +863,7 @@
               }}>{c}</button>
             ))}
           </div>
-          {filterCat === CINE_CATEGORIA && filtered.length > 0 ? (
+          {CINE_CATEGORIAS.includes(filterCat) && filtered.length > 0 ? (
             <CineCoverFlow items={filtered} onOpen={onOpen} />
           ) : (
             <div style={{ flex: 1, overflowY: "auto", padding: "0 18px 30px" }}>
@@ -790,6 +920,51 @@
       );
     }
 
+    // ─── TabBar — Noticias / Vitrina, fijo abajo, siempre visible ──────────────
+    function TabBar({ area, onChange, buzonCount, onOpenBuzon }) {
+      const tabBtn = (active) => ({
+        flex: 1, background: "transparent", border: "none", cursor: "pointer",
+        padding: "10px 6px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700,
+        color: active ? "#fff" : "#666", borderTop: active ? "2px solid #e91e8c" : "2px solid transparent",
+      });
+      return (
+        <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, display: "flex", background: "#111", zIndex: 40, paddingBottom: "env(safe-area-inset-bottom)" }}>
+          <button onClick={() => onChange("noticias")} style={tabBtn(area === "noticias")}>📰 Noticias</button>
+          <button onClick={() => onChange("vitrina")} style={tabBtn(area === "vitrina")}>🎬 Vitrina</button>
+          <button onClick={onOpenBuzon} style={tabBtn(false)}>📌 {buzonCount}</button>
+        </div>
+      );
+    }
+
+    // ─── VitrinaView — carrusel de Destacados (Películas/Series/Animación) ─────
+    // Segmented control fijo arriba, sin auto-alternancia: se queda en la
+    // categoría elegida hasta que el usuario cambia manualmente. Muestra el
+    // catálogo completo de 30 días, no solo lo cargado en la cola de Noticias.
+    function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen }) {
+      const items = vitrinaData[vitrinaCat] || [];
+      const segBtn = (active) => ({
+        flex: 1, padding: "9px 6px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700,
+        border: "1px solid", borderRadius: 20, cursor: "pointer",
+        background: active ? (CAT_COLORS[vitrinaCat] || "#e91e8c") : "transparent",
+        color: active ? "#111" : "#999",
+        borderColor: active ? (CAT_COLORS[vitrinaCat] || "#e91e8c") : "#333",
+      });
+      return (
+        <div style={{ paddingBottom: 70 }}>
+          <div style={{ padding: "16px 18px 4px" }}>
+            <span style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff" }}>🎬 vitrina audiovisual</span>
+          </div>
+          <div style={{ display: "flex", gap: 8, padding: "12px 18px" }}>
+            {CINE_CATEGORIAS.map(cat => (
+              <button key={cat} onClick={() => onChangeCat(cat)} style={segBtn(cat === vitrinaCat)}>{cat}</button>
+            ))}
+          </div>
+          <CineCoverFlow items={items} onOpen={onOpen} />
+        </div>
+      );
+    }
+
+
     // ─── App ─────────────────────────────────────────────────────────────────────
     function App() {
       const [loaded, setLoaded] = useState(false);
@@ -805,6 +980,11 @@
       const [toast, setToast] = useState(null);
       const [buzonOpenItem, setBuzonOpenItem] = useState(null);
       const [showDiagPanel, setShowDiagPanel] = useState(false);
+      const [area, setArea] = useState("noticias"); // "noticias" | "vitrina"
+      const [vitrinaCat, setVitrinaCat] = useState("Películas");
+      const [vitrinaData, setVitrinaData] = useState({ "Películas": [], "Series": [], "Animación": [] });
+      const [vitrinaOpenItem, setVitrinaOpenItem] = useState(null);
+      const [exportError, setExportError] = useState(null);
 
       const queueRef = useRef([]); const seenRef = useRef([]); const buzonRef = useRef([]); const lastRefreshRef = useRef(null);
       useEffect(() => { queueRef.current = queue; }, [queue]);
@@ -837,7 +1017,21 @@
         })();
       }, []);
 
-      // Precarga liviana de la imagen de la siguiente historia
+      // Vitrina se carga aparte, sin el throttle de 4h del feed de lectura —
+      // es un catálogo de consulta, no una cola que se consume.
+      useEffect(() => {
+        (async () => {
+          const cineData = await fetchJsonSafe(CINE_JSON_URL);
+          if (!cineData) return;
+          const next = { "Películas": [], "Series": [], "Animación": [] };
+          for (const c of (cineData.categories || [])) {
+            if (CINE_CATEGORIAS.includes(c.cat)) next[c.cat] = c.items || [];
+          }
+          setVitrinaData(next);
+        })();
+      }, []);
+
+
       useEffect(() => {
         const next = queue[1];
         if (next && next.image) { const img = new Image(); img.src = next.image; }
@@ -851,9 +1045,10 @@
         setRefreshing(true);
         setRefreshMsg("actualizando…");
         try {
-          const { queue: fresh, diag, generatedAt } = await fetchFeedData();
+          const { queue: fresh, vitrina, diag, generatedAt } = await fetchFeedData();
           setRefreshDiag(diag);
           setFeedGeneratedAt(generatedAt);
+          if (vitrina) setVitrinaData(v => ({ ...v, ...vitrina }));
           const knownGuids = new Set([...seenRef.current, ...buzonRef.current.map(b => b.guid), ...queueRef.current.map(q => q.guid)]);
           const newOnes = fresh.filter(a => !knownGuids.has(a.guid));
           const nextQueue = [...queueRef.current, ...newOnes];
@@ -936,11 +1131,65 @@
         persist({ buzon: next });
       }
 
+      // ─── Vitrina: guardar/siguiente/categoría operan sobre vitrinaData[vitrinaCat],
+      // no sobre la cola de Noticias — son dos ejes de navegación independientes.
+      function handleVitrinaSave(item) {
+        const nextBuzon = [...buzonRef.current, item];
+        setBuzon(nextBuzon);
+        persist({ buzon: nextBuzon });
+        showToast(`guardado en ${item.categoria}`);
+      }
+
+      function handleVitrinaNext(item) {
+        const list = vitrinaData[vitrinaCat] || [];
+        const idx = list.findIndex(i => i.guid === item.guid);
+        if (idx === -1 || !list.length) { setVitrinaOpenItem(null); return; }
+        setVitrinaOpenItem(list[(idx + 1) % list.length]);
+      }
+
+      // "⬅️ categoría" dentro de Vitrina: cicla Películas → Series → Animación →
+      // Películas y abre el primer ítem de la nueva subcategoría.
+      function handleVitrinaChangeCategory() {
+        const idx = CINE_CATEGORIAS.indexOf(vitrinaCat);
+        const nextCat = CINE_CATEGORIAS[(idx + 1) % CINE_CATEGORIAS.length];
+        setVitrinaCat(nextCat);
+        const list = vitrinaData[nextCat] || [];
+        setVitrinaOpenItem(list[0] || null);
+      }
+
+      async function handleExportImage(item) {
+        showToast("generando imagen…");
+        const ok = await exportCineShareImage(item, msg => setExportError(msg));
+        if (ok) showToast("✓ imagen descargada");
+      }
+
       if (!loaded) return <div style={{ position: "fixed", inset: 0, background: "#0a0a0a" }} />;
 
       if (buzonOpenItem) {
         const { Extended } = cardsFor(buzonOpenItem.formato);
-        return <Extended item={buzonOpenItem} onBack={() => setBuzonOpenItem(null)} onNext={() => setBuzonOpenItem(null)} onSave={() => {}} hideActions />;
+        const isCine = buzonOpenItem.formato === "cine";
+        return (
+          <>
+            <Extended item={buzonOpenItem} onBack={() => setBuzonOpenItem(null)} onNext={() => setBuzonOpenItem(null)} onSave={() => {}} hideActions
+              {...(isCine ? { onExportImage: handleExportImage } : {})} />
+            {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#fff", color: "#111", padding: "8px 18px", borderRadius: 20, fontFamily: "'Caveat',cursive", fontSize: 15, fontWeight: 700, zIndex: 200 }}>{toast}</div>}
+            {exportError && (
+              <div style={{ position: "fixed", bottom: 90, left: 18, right: 18, background: "#3a1010", border: "1px solid #6b2020", color: "#f5b5b5", borderRadius: 10, padding: "10px 14px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, zIndex: 200 }}>
+                {exportError}
+                <button onClick={() => setExportError(null)} style={{ float: "right", background: "transparent", border: "none", color: "#f5b5b5", cursor: "pointer" }}>×</button>
+              </div>
+            )}
+          </>
+        );
+      }
+
+      if (vitrinaOpenItem) {
+        return (
+          <CineExtendedView item={vitrinaOpenItem} onBack={() => setVitrinaOpenItem(null)}
+            onNext={() => handleVitrinaNext(vitrinaOpenItem)}
+            onSave={() => handleVitrinaSave(vitrinaOpenItem)}
+            onChangeCategory={handleVitrinaChangeCategory} />
+        );
       }
 
       if (showDiagPanel) {
@@ -954,23 +1203,31 @@
         <div style={{ fontFamily: "'DM Sans',sans-serif" }}>
           {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#fff", color: "#111", padding: "8px 18px", borderRadius: 20, fontFamily: "'Caveat',cursive", fontSize: 15, fontWeight: 700, zIndex: 200 }}>{toast}</div>}
 
-          {view === "story" && current && (
-            <CurrentStory item={current} onSkip={handleSkip} onExpand={handleExpand} onSave={handleSave}
-              onChangeCategory={handleChangeCategory} onShuffle={handleShuffle}
-              onOpenBuzon={() => setView("buzon")} onOpenDiag={() => setShowDiagPanel(true)} hasDiag={refreshDiag.length > 0}
-              onRefresh={doRefresh} canRefresh={canRefresh} refreshing={refreshing} buzonCount={buzon.length} />
+          {area === "vitrina" ? (
+            <VitrinaView vitrinaData={vitrinaData} vitrinaCat={vitrinaCat} onChangeCat={setVitrinaCat} onOpen={item => setVitrinaOpenItem(item)} />
+          ) : (
+            <>
+              {view === "story" && current && (
+                <CurrentStory item={current} onSkip={handleSkip} onExpand={handleExpand} onSave={handleSave}
+                  onChangeCategory={handleChangeCategory} onShuffle={handleShuffle}
+                  onOpenBuzon={() => setView("buzon")} onOpenDiag={() => setShowDiagPanel(true)} hasDiag={refreshDiag.length > 0}
+                  onRefresh={doRefresh} canRefresh={canRefresh} refreshing={refreshing} buzonCount={buzon.length} />
+              )}
+              {view === "extended" && current && (
+                <CurrentExtended item={current} onBack={handleBack} onNext={handleAdvanceFromExtended} onSave={handleSave} onChangeCategory={handleChangeCategory} />
+              )}
+              {view === "end" && (
+                <EndScreen onGoBuzon={() => setView("buzon")} onRefresh={doRefresh} canRefresh={canRefresh} refreshing={refreshing} nextRefreshAt={nextRefreshAt} refreshMsg={refreshMsg} onReset={resetTestState} onOpenDiag={() => setShowDiagPanel(true)} hasDiag={refreshDiag.length > 0} />
+              )}
+              {view === "buzon" && (
+                <BuzonView buzon={buzon} onClose={() => setView(queue.length ? "story" : "end")}
+                  onOpen={item => setBuzonOpenItem(item)}
+                  onRemove={removeFromBuzon} />
+              )}
+            </>
           )}
-          {view === "extended" && current && (
-            <CurrentExtended item={current} onBack={handleBack} onNext={handleAdvanceFromExtended} onSave={handleSave} onChangeCategory={handleChangeCategory} />
-          )}
-          {view === "end" && (
-            <EndScreen onGoBuzon={() => setView("buzon")} onRefresh={doRefresh} canRefresh={canRefresh} refreshing={refreshing} nextRefreshAt={nextRefreshAt} refreshMsg={refreshMsg} onReset={resetTestState} onOpenDiag={() => setShowDiagPanel(true)} hasDiag={refreshDiag.length > 0} />
-          )}
-          {view === "buzon" && (
-            <BuzonView buzon={buzon} onClose={() => setView(queue.length ? "story" : "end")}
-              onOpen={item => setBuzonOpenItem(item)}
-              onRemove={removeFromBuzon} />
-          )}
+
+          <TabBar area={area} onChange={setArea} buzonCount={buzon.length} onOpenBuzon={() => { setArea("noticias"); setView("buzon"); }} />
         </div>
       );
     }
