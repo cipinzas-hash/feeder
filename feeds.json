@@ -1,47 +1,172 @@
 [
-  { "cat": "Melee", "feeds": [] },
-  { "cat": "Pokémon TCG", "feeds": [
-    { "name": "PocketMonsters", "url": "https://pocketmonsters.net/rss" },
-    { "name": "Marriland - TCG News", "url": "https://marriland.com/category/news/pokemon-tcg/feed" },
-    { "name": "PokemonDB", "url": "https://pokemondb.net/news/feed" },
-    { "name": "Rare Candy", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCkgkRXdzdVrMGO4vjLmzzjw", "tipo": "video" },
-    { "name": "Meta Pod", "url": "https://anchor.fm/s/238c39d0/podcast/rss", "tipo": "podcast" },
-    { "name": "Uncommon Energy", "url": "https://anchor.fm/s/8755b1a8/podcast/rss", "tipo": "podcast" }
-  ]},
-  { "cat": "Gaming", "feeds": [
-    { "name": "Eurogamer", "url": "https://eurogamer.net/feed" },
-    { "name": "Kotaku", "url": "https://kotaku.com/rss" },
-    { "name": "GBAtemp", "url": "https://gbatemp.net/forums/-/index.rss" }
-  ]},
-  { "cat": "Noticias", "feeds": [
-    { "name": "FirstShowing", "url": "https://www.firstshowing.net/feed" },
-    { "name": "Flickering Myth", "url": "https://www.flickeringmyth.com/feed" },
-    { "name": "Little White Lies", "url": "https://lwlies.com/feed.rss" },
-    { "name": "Anime News Network", "url": "https://www.animenewsnetwork.com/newsfeed/rss.xml" }
-  ]},
-  { "cat": "Dark scene / Música", "feeds": [
-    { "name": "Side-Line Magazine", "url": "https://www.side-line.com/feed" },
-    { "name": "Post-Punk.com", "url": "https://post-punk.com/feed" },
-    { "name": "Electrozombies", "url": "https://electrozombies.com/feed" }
-  ]},
-  { "cat": "Ciencia / Conocimiento", "feeds": [
-    { "name": "New Scientist", "url": "https://www.newscientist.com/feed/home" },
-    { "name": "The Conversation", "url": "https://theconversation.com/global/articles.atom" }
-  ]},
-  { "cat": "Tecnología", "feeds": [
-    { "name": "Ars Technica", "url": "https://arstechnica.com/feed" },
-    { "name": "Pluralistic", "url": "https://pluralistic.net/feed" }
-  ]},
-  { "cat": "Microdocumentales", "feeds": [
-    { "name": "Design Docs", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC98Glz-MWdnqeZDBxRPUUvQ", "tipo": "video" },
-    { "name": "NoClip", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC0fDG3byEcMtbOqPMymDNbw", "tipo": "video" },
-    { "name": "Company Man", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCQMyhrt92_8XM0KgZH6VnRg", "tipo": "video" },
-    { "name": "Wendover Productions", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC9RM-iSvTu1uPJb8X5yp3EQ", "tipo": "video" },
-    { "name": "Real Engineering", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCR1IuLEqb6UEA_zQ81kwXfg", "tipo": "video" },
-    { "name": "toldinstone", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCqBiWcuTF8IaLH7wBqnihsQ", "tipo": "video" }
-  ]},
-  { "cat": "Poliamor", "feeds": [
-    { "name": "Polyamory in the Media", "url": "https://polyinthemedia.blogspot.com/feeds/posts/default" },
-    { "name": "Psychology Today - Polyamory", "url": "https://www.psychologytoday.com/us/blog/the-polyamorists-next-door/feed" }
-  ]}
+  {
+    "cat": "Melee",
+    "feeds": []
+  },
+  {
+    "cat": "Pokémon TCG",
+    "feeds": [
+      {
+        "name": "PocketMonsters",
+        "url": "https://pocketmonsters.net/rss"
+      },
+      {
+        "name": "Marriland - TCG News",
+        "url": "https://marriland.com/category/news/pokemon-tcg/feed"
+      },
+      {
+        "name": "PokemonDB",
+        "url": "https://pokemondb.net/news/feed"
+      },
+      {
+        "name": "Rare Candy",
+        "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCkgkRXdzdVrMGO4vjLmzzjw",
+        "tipo": "video"
+      }
+    ]
+  },
+  {
+    "cat": "Gaming",
+    "feeds": [
+      {
+        "name": "Eurogamer",
+        "url": "https://eurogamer.net/feed"
+      },
+      {
+        "name": "Kotaku",
+        "url": "https://kotaku.com/rss"
+      },
+      {
+        "name": "GBAtemp",
+        "url": "https://gbatemp.net/forums/-/index.rss"
+      }
+    ]
+  },
+  {
+    "cat": "Noticias",
+    "feeds": [
+      {
+        "name": "FirstShowing",
+        "url": "https://www.firstshowing.net/feed"
+      },
+      {
+        "name": "Flickering Myth",
+        "url": "https://www.flickeringmyth.com/feed"
+      },
+      {
+        "name": "Little White Lies",
+        "url": "https://lwlies.com/feed.rss"
+      },
+      {
+        "name": "Anime News Network",
+        "url": "https://www.animenewsnetwork.com/newsfeed/rss.xml"
+      }
+    ]
+  },
+  {
+    "cat": "Dark scene / Música",
+    "feeds": [
+      {
+        "name": "Side-Line Magazine",
+        "url": "https://www.side-line.com/feed"
+      },
+      {
+        "name": "Post-Punk.com",
+        "url": "https://post-punk.com/feed"
+      },
+      {
+        "name": "Electrozombies",
+        "url": "https://electrozombies.com/feed"
+      }
+    ]
+  },
+  {
+    "cat": "Ciencia / Conocimiento",
+    "feeds": [
+      {
+        "name": "New Scientist",
+        "url": "https://www.newscientist.com/feed/home"
+      },
+      {
+        "name": "The Conversation",
+        "url": "https://theconversation.com/global/articles.atom"
+      }
+    ]
+  },
+  {
+    "cat": "Tecnología",
+    "feeds": [
+      {
+        "name": "Ars Technica",
+        "url": "https://arstechnica.com/feed"
+      },
+      {
+        "name": "Pluralistic",
+        "url": "https://pluralistic.net/feed"
+      }
+    ]
+  },
+  {
+    "cat": "Microdocumentales",
+    "feeds": [
+      {
+        "name": "Design Docs",
+        "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC98Glz-MWdnqeZDBxRPUUvQ",
+        "tipo": "video"
+      },
+      {
+        "name": "NoClip",
+        "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC0fDG3byEcMtbOqPMymDNbw",
+        "tipo": "video"
+      },
+      {
+        "name": "Company Man",
+        "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCQMyhrt92_8XM0KgZH6VnRg",
+        "tipo": "video"
+      },
+      {
+        "name": "Wendover Productions",
+        "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC9RM-iSvTu1uPJb8X5yp3EQ",
+        "tipo": "video"
+      },
+      {
+        "name": "Real Engineering",
+        "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCR1IuLEqb6UEA_zQ81kwXfg",
+        "tipo": "video"
+      },
+      {
+        "name": "toldinstone",
+        "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCqBiWcuTF8IaLH7wBqnihsQ",
+        "tipo": "video"
+      }
+    ]
+  },
+  {
+    "cat": "Podcasts",
+    "feeds": [
+      {
+        "name": "Meta Pod",
+        "url": "https://anchor.fm/s/238c39d0/podcast/rss",
+        "tipo": "podcast"
+      },
+      {
+        "name": "Uncommon Energy",
+        "url": "https://anchor.fm/s/8755b1a8/podcast/rss",
+        "tipo": "podcast"
+      }
+    ]
+  },
+  {
+    "cat": "Poliamor",
+    "feeds": [
+      {
+        "name": "Polyamory in the Media",
+        "url": "https://polyinthemedia.blogspot.com/feeds/posts/default"
+      },
+      {
+        "name": "Psychology Today - Polyamory",
+        "url": "https://www.psychologytoday.com/us/blog/the-polyamorists-next-door/feed"
+      }
+    ]
+  }
 ]
