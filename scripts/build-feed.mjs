@@ -526,6 +526,100 @@ function buildBracketProjectionItem(slug, tournamentName, bracketUrl, entrants) 
   };
 }
 
+// ── Fase 3: preview de Top 8 y archivo permanente del torneo ───────────────
+//
+// start.gg no tiene un campo "es Top 8" directo, pero los TOs de Melee casi
+// siempre nombran la fase final "Top 8" (a veces "Top 8 Bracket") — se
+// detecta por nombre de fase, mismo criterio informal que usa el resto de la
+// escena para esto. Si un torneo nombra su fase distinto, simplemente no se
+// genera preview (no rompe nada, solo no hay ese aviso puntual).
+const TOP8_PHASE_NAME_RE = /top\s*8/i;
+
+async function fetchEventPhases(eventId) {
+  const query = `
+    query($eventId: ID!){
+      event(id:$eventId){
+        phases{
+          id name state
+          seeds(query:{ page:1, perPage:8 }){ nodes{ seedNum entrant{ name } } }
+        }
+      }
+    }`;
+  const data = await startggQuery(query, { eventId });
+  return data?.event?.phases || [];
+}
+
+function findTop8Phase(phases) {
+  return phases.find(p => TOP8_PHASE_NAME_RE.test(p.name || "")) || null;
+}
+
+// Se regenera fresco cada corrida mientras la fase Top 8 exista y no haya
+// cerrado — mismo criterio que buildHypeItem/buildBracketProjectionItem, no
+// se acumula entre corridas.
+function buildTop8PreviewItem(slug, tournamentName, bracketUrl, top8Phase) {
+  const seeds = (top8Phase.seeds?.nodes || [])
+    .filter(s => s.entrant)
+    .sort((a, b) => (a.seedNum ?? 99) - (b.seedNum ?? 99));
+  if (seeds.length < 2) return null;
+  const lista = seeds.map(s => `${s.entrant.name}${s.seedNum ? ` [${s.seedNum}]` : ""}`).join(", ");
+  return {
+    guid: `melee-top8-${slug}`,
+    title: `Top 8 de ${tournamentName}`,
+    link: bracketUrl,
+    summary: `Quedaron: ${lista}.`,
+    image: null,
+    pubDate: new Date().toISOString(),
+    source: tournamentName,
+    categoria: "Melee",
+    fullText: null,
+    esTop8Preview: true,
+  };
+}
+
+async function fetchFinalStandings(eventId) {
+  const query = `
+    query($eventId: ID!){
+      event(id:$eventId){
+        standings(query:{ page:1, perPage:8 }){ nodes{ placement entrant{ name } } }
+      }
+    }`;
+  const data = await startggQuery(query, { eventId });
+  return (data?.event?.standings?.nodes || []).filter(n => n.entrant);
+}
+
+// El registro permanente del torneo: se arma UNA sola vez, en la misma
+// corrida en la que el evento pasa a COMPLETED por primera vez (justo antes
+// de que processedEventIds lo excluya de futuros escaneos). A diferencia de
+// los upsets sueltos — que sí expiran a los 30 días como el resto del feed,
+// ver RETENTION_DAYS más abajo — este item queda exento para siempre (mismo
+// criterio que Podcasts): es el resumen final del torneo, no un aviso
+// puntual que pierde sentido con el tiempo.
+function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings, tournamentUpsets, vod) {
+  if (!standings.length) return null;
+  const top8Line = [...standings]
+    .sort((a, b) => a.placement - b.placement)
+    .map(s => `${s.placement}° ${s.entrant.name}`)
+    .join(" · ");
+  const upsetsLine = tournamentUpsets.length
+    ? ` Upsets destacados: ${tournamentUpsets.slice(0, 5).map(u => u.title).join("; ")}.`
+    : "";
+  return {
+    guid: `melee-archivo-${slug}`,
+    title: `Resultado final: ${tournamentName}`,
+    link: bracketUrl,
+    summary: `${top8Line}.${upsetsLine}`,
+    image: null,
+    pubDate: new Date().toISOString(),
+    source: tournamentName,
+    categoria: "Melee",
+    fullText: null,
+    tipo: vod?.videoId ? "video" : undefined,
+    videoId: vod?.videoId || null,
+    startSeconds: vod?.startSeconds || 0,
+    esArchivo: true,
+  };
+}
+
 // previousUpsetItemsByGuid: Map guid→item de upsets ya generados en corridas
 //   anteriores (para no duplicar, y para reintentar el VOD de los que
 //   quedaron sin uno mientras el torneo estaba ACTIVE). Los items de hype no
@@ -538,7 +632,7 @@ function buildBracketProjectionItem(slug, tournamentName, bracketUrl, entrants) 
 async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventIds) {
   if (!STARTGG_API_KEY) {
     console.error("✗ Melee · falta STARTGG_API_KEY, se omite esta categoría esta corrida");
-    return { upsetItems: [], hypeItems: [], projectionItems: [], processedEventIds: previousProcessedEventIds };
+    return { upsetItems: [], hypeItems: [], projectionItems: [], top8Items: [], archiveItems: [], processedEventIds: previousProcessedEventIds };
   }
 
   let tournaments = [];
@@ -547,12 +641,14 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
     tournaments = await res.json();
   } catch (e) {
     console.error(`✗ Melee · no se pudo leer meleemajors.gg: ${e.message}`);
-    return { upsetItems: [], hypeItems: [], projectionItems: [], processedEventIds: previousProcessedEventIds };
+    return { upsetItems: [], hypeItems: [], projectionItems: [], top8Items: [], archiveItems: [], processedEventIds: previousProcessedEventIds };
   }
 
   const upsetItems = [];
   const hypeItems = [];
   const projectionItems = [];
+  const top8Items = [];
+  const archiveItems = [];
   const processedEventIds = new Set(previousProcessedEventIds);
 
   for (const t of tournaments) {
@@ -652,10 +748,45 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
       });
     }
 
+    // Fase 3a: preview de Top 8, solo mientras el torneo sigue ACTIVE (una
+    // vez COMPLETED ya no aporta nada — el archivo permanente lo reemplaza).
+    if (state === "ACTIVE") {
+      try {
+        const phases = await fetchEventPhases(eventInfo.id);
+        const top8Phase = findTop8Phase(phases);
+        if (top8Phase && top8Phase.state !== "COMPLETED") {
+          const preview = buildTop8PreviewItem(slug, tournamentName, t.bracketUrl, top8Phase);
+          if (preview) top8Items.push(preview);
+        }
+      } catch (e) {
+        console.error(`✗ Melee · preview de Top 8 (${tournamentName}): ${e.message}`);
+      }
+    }
+
+    // Fase 3b: archivo permanente — se arma una sola vez, justo en la corrida
+    // donde el torneo pasa a COMPLETED por primera vez (antes de que
+    // processedEventIds lo excluya de futuros escaneos).
+    if (state === "COMPLETED" && !previousProcessedEventIds.includes(eventInfo.id)) {
+      try {
+        const standings = await fetchFinalStandings(eventInfo.id);
+        const tournamentUpsets = [...upsetItems, ...previousUpsetItemsByGuid.values()].filter(
+          i => i.source === tournamentName && i.esUpset
+        );
+        const finalistNames = [...standings].sort((a, b) => a.placement - b.placement).slice(0, 2).map(s => s.entrant.name);
+        const vod = finalistNames.length === 2
+          ? await findVod(tournamentName, finalistNames[0], finalistNames[1])
+          : { videoId: null, startSeconds: 0 };
+        const archiveItem = buildTournamentArchiveItem(slug, tournamentName, t.bracketUrl, standings, tournamentUpsets, vod);
+        if (archiveItem) archiveItems.push(archiveItem);
+      } catch (e) {
+        console.error(`✗ Melee · archivo final (${tournamentName}): ${e.message}`);
+      }
+    }
+
     if (state === "COMPLETED") processedEventIds.add(eventInfo.id);
   }
 
-  return { upsetItems, hypeItems, projectionItems, processedEventIds: Array.from(processedEventIds) };
+  return { upsetItems, hypeItems, projectionItems, top8Items, archiveItems, processedEventIds: Array.from(processedEventIds) };
 }
 // ================= Fin módulo Melee =================
 
@@ -745,26 +876,32 @@ async function main() {
 
   // Melee: se generan aparte (no vienen de feeds.json). Los upsets se acumulan
   // igual que antes (se combinan con lo ya generado en corridas previas); los
-  // items de "hype" (torneo por venir) y de "proyección de bracket" se
-  // regeneran frescos en cada corrida, así que no se cargan del archivo
-  // anterior — se descartan los viejos y se usan solo los que acaba de
-  // calcular esta corrida.
+  // items de "hype" (torneo por venir), "proyección de bracket" y "preview de
+  // Top 8" se regeneran frescos en cada corrida, así que no se cargan del
+  // archivo anterior. El archivo permanente por torneo (esArchivo) es lo
+  // único que sí se carga y se conserva para siempre, exento de
+  // RETENTION_DAYS — es el registro final, no un aviso que caduca.
   console.log("Procesando Melee (meleemajors.gg + start.gg + YouTube)...");
-  const previousUpsetItemsOnly = previousMeleeItems.filter(i => !i.esHype && !i.esProyeccion);
+  const previousUpsetItemsOnly = previousMeleeItems.filter(
+    i => !i.esHype && !i.esProyeccion && !i.esTop8Preview && !i.esArchivo
+  );
+  const previousArchiveItems = previousMeleeItems.filter(i => i.esArchivo);
   const previousUpsetItemsByGuid = new Map(previousUpsetItemsOnly.map(i => [i.guid, i]));
-  const { upsetItems: newUpsetItems, hypeItems, projectionItems, processedEventIds } = await fetchMeleeItems(
+  const { upsetItems: newUpsetItems, hypeItems, projectionItems, top8Items, archiveItems: newArchiveItems, processedEventIds } = await fetchMeleeItems(
     previousUpsetItemsByGuid,
     previousProcessedEventIds
   );
-  console.log(`✓ Melee · ${newUpsetItems.length} upset(s) nuevo(s)/actualizado(s), ${hypeItems.length} torneo(s) generando hype, ${projectionItems.length} proyección(es) de bracket esta corrida`);
+  console.log(`✓ Melee · ${newUpsetItems.length} upset(s) nuevo(s)/actualizado(s), ${hypeItems.length} torneo(s) generando hype, ${projectionItems.length} proyección(es) de bracket, ${top8Items.length} preview(s) de Top 8, ${newArchiveItems.length} archivo(s) final(es) nuevo(s) esta corrida`);
   // newUpsetItems puede traer versiones actualizadas (VOD recién encontrado)
   // de items que ya estaban en previousUpsetItemsOnly — hay que reemplazarlos,
   // no duplicarlos.
   const newUpsetGuids = new Set(newUpsetItems.map(i => i.guid));
   const carriedUpsetItems = previousUpsetItemsOnly.filter(i => !newUpsetGuids.has(i.guid));
-  const allMeleeItems = [...carriedUpsetItems, ...newUpsetItems, ...hypeItems, ...projectionItems].filter(
+  const allArchiveItems = [...previousArchiveItems, ...newArchiveItems]; // permanente, sin filtro de cutoff
+  const cutoffFilteredMeleeItems = [...carriedUpsetItems, ...newUpsetItems, ...hypeItems, ...projectionItems, ...top8Items].filter(
     a => !a.pubDate || new Date(a.pubDate).getTime() >= cutoff
   );
+  const allMeleeItems = [...cutoffFilteredMeleeItems, ...allArchiveItems];
 
   const finalItems = [...musicFiltered, ...allMeleeItems];
 
