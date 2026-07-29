@@ -63,6 +63,24 @@
       "Poliamor": "#aac756",
     };
 
+    // ─── STATUS_BADGE — traduce item.status (crudo de TMDb para pelis/series,
+    // de Jikan para anime) a lo que Cristopher realmente quiere saber al ver
+    // una tarjeta en Vitrina: ¿esto es un estreno, sigue en emisión, o es una
+    // serie vieja ya terminada? "Released" (pelis) no se muestra — es el caso
+    // normal y no aporta nada, solo ruido.
+    const STATUS_BADGE = {
+      "Returning Series": { label: "EN EMISIÓN", color: "#4caf7d" },
+      "In Production": { label: "EN PRODUCCIÓN", color: "#5c9cff" },
+      "Planned": { label: "PRÓXIMAMENTE", color: "#5c9cff" },
+      "Pilot": { label: "PILOTO", color: "#5c9cff" },
+      "Post Production": { label: "POST-PRODUCCIÓN", color: "#5c9cff" },
+      "Ended": { label: "FINALIZADA", color: "#888" },
+      "Canceled": { label: "CANCELADA", color: "#888" },
+      "Currently Airing": { label: "EN EMISIÓN", color: "#4caf7d" },
+      "Finished Airing": { label: "FINALIZADA", color: "#888" },
+      "Not yet aired": { label: "PRÓXIMAMENTE", color: "#5c9cff" },
+    };
+
     // ─── Discriminador "formato" → decide StoryCard/ExtendedView vs sus versiones
     // de cine (CineStoryCard/CineExtendedView) o música (MusicStoryCard/
     // MusicExtendedView). Deliberadamente distinto de "item.tipo" (que ya existe
@@ -590,10 +608,25 @@
                       }} />
                     </div>
                   )}
-                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#ccc", marginTop: 6, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
-                  {item.rating?.imdb != null && (
-                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#f5c518", textAlign: "center" }}>★ {item.rating.imdb.toFixed(1)}</div>
-                  )}
+                  <div style={{ fontFamily: "'Caveat',cursive", fontWeight: 700, fontSize: 18, color: "#fff", marginTop: 6, textAlign: "center", lineHeight: 1.15, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.title}</div>
+                  {(() => {
+                    const score = item.rating?.imdb ?? item.rating?.tmdb ?? null;
+                    return (
+                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: score != null ? "#f5c518" : "#666", textAlign: "center", marginTop: 2 }}>
+                        {score != null ? `★ ${score.toFixed(1)}` : "TBD"}
+                      </div>
+                    );
+                  })()}
+                  {(() => {
+                    const badge = STATUS_BADGE[item.status];
+                    if (!badge) return null;
+                    return (
+                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, color: badge.color, textAlign: "center", marginTop: 2, letterSpacing: 0.3 }}>
+                        {badge.label}
+                        {item.status === "Returning Series" && item.nextEpisodeDate ? ` · ${item.nextEpisodeDate}` : ""}
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}
