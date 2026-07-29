@@ -656,7 +656,10 @@ async function main() {
   const allItems = fetched.flat();
 
   const cutoff = Date.now() - RETENTION_DAYS * 86400000;
-  const recentItems = allItems.filter(a => !a.pubDate || new Date(a.pubDate).getTime() >= cutoff);
+  // Podcasts (Meta Pod, Uncommon Energy) queda fuera de la retención de 30 días:
+  // son shows activos con cadencia baja, se acumulan indefinidamente en vez de
+  // perderse cada mes como el resto del feed de lectura.
+  const recentItems = allItems.filter(a => a.categoria === "Podcasts" || !a.pubDate || new Date(a.pubDate).getTime() >= cutoff);
 
   let extractionsUsed = 0;
   console.log(`Extrayendo texto completo (tope ${MAX_NEW_EXTRACTIONS_PER_RUN} nuevas esta corrida)...`);
