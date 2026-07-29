@@ -42,7 +42,7 @@
     // Microdocumentales vive en Vitrina también, pero NO es carrusel de posters
     // (es un feed vertical de video+comentario) — por eso es una categoría aparte
     // de CINE_CATEGORIAS aunque comparta la misma exclusión del round-robin.
-    const VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales"];
+    const VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales", "Podcasts"];
     const NOTICIAS_CATEGORIA = "Noticias"; // RSS cine/TV/anime — vive en el área "Noticias", no en Vitrina
     const MUSIC_CATEGORIA = "Dark scene / Música";
 
@@ -56,6 +56,7 @@
       "Series": "#e91e8c",
       "Animación": "#e91e8c",
       "Microdocumentales": "#26a69a",
+      "Podcasts": "#ffcc00",
       "Dark scene / Música": "#7b4fd4",
       "Ciencia / Conocimiento": "#2e7d52",
       "Tecnología": "#26a69a",
@@ -579,13 +580,15 @@
                     }
                   </div>
                   {item.image && (
-                    <div style={{
-                      width: "100%", aspectRatio: "2/3", marginTop: 1,
-                      backgroundImage: `url(${item.image})`, backgroundSize: "cover", backgroundPosition: "center",
-                      transform: "scaleY(-1)", opacity: 0.35,
-                      maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 60%)",
-                      WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 60%)",
-                    }} />
+                    <div style={{ width: "100%", height: 42, overflow: "hidden", marginTop: 1 }}>
+                      <div style={{
+                        width: "100%", aspectRatio: "2/3",
+                        backgroundImage: `url(${item.image})`, backgroundSize: "cover", backgroundPosition: "center",
+                        transform: "scaleY(-1)", opacity: 0.2,
+                        maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 85%)",
+                        WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 85%)",
+                      }} />
+                    </div>
                   )}
                   <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#ccc", marginTop: 6, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
                   {item.rating?.imdb != null && (
@@ -986,6 +989,102 @@
       );
     }
 
+    // ─── PodcastFeed — Podcasts dentro de Vitrina. Mismo patrón que MicrodocFeed
+    // (scroll vertical, sin retención de 30 días — se acumulan indefinidamente,
+    // ver build-feed.mjs), pero separados por chips de podcast (item.source) en
+    // vez de mostrarse mezclados, y con marca manual de escuchado/pendiente.
+    // El estado de escuchados vive en su propia clave de localStorage, aislada
+    // del blob principal de la app (queue/buzon/etc.) para no tocar persist().
+    const PODCASTS_ESCUCHADOS_KEY = "angst-feed-podcasts-escuchados-v1";
+    function loadPodcastsEscuchados() {
+      try {
+        const raw = localStorage.getItem(PODCASTS_ESCUCHADOS_KEY);
+        return raw ? new Set(JSON.parse(raw)) : new Set();
+      } catch (e) { return new Set(); }
+    }
+    function savePodcastsEscuchados(set) {
+      try { localStorage.setItem(PODCASTS_ESCUCHADOS_KEY, JSON.stringify([...set])); } catch (e) {}
+    }
+
+    function PodcastFeed({ items }) {
+      const [escuchados, setEscuchados] = useState(() => loadPodcastsEscuchados());
+      const podcastNames = [...new Set(items.map(i => i.source))];
+      const [activePodcast, setActivePodcast] = useState(null);
+
+      useEffect(() => {
+        if (!activePodcast && podcastNames.length) setActivePodcast(podcastNames[0]);
+      }, [podcastNames.join("|")]);
+
+      function toggleEscuchado(guid) {
+        setEscuchados(prev => {
+          const next = new Set(prev);
+          if (next.has(guid)) next.delete(guid); else next.add(guid);
+          savePodcastsEscuchados(next);
+          return next;
+        });
+      }
+
+      if (!items.length) {
+        return (
+          <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" }}>
+            nada por acá todavía
+          </div>
+        );
+      }
+
+      const shown = items.filter(i => i.source === activePodcast);
+      const chipStyle = (active) => ({
+        padding: "6px 14px", fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700,
+        border: "1px solid", borderRadius: 20, cursor: "pointer", whiteSpace: "nowrap",
+        background: active ? "#ffcc00" : "transparent",
+        color: active ? "#111" : "#999",
+        borderColor: active ? "#ffcc00" : "#333",
+      });
+
+      return (
+        <div style={{ paddingBottom: 30 }}>
+          <div style={{ display: "flex", gap: 6, padding: "6px 18px 14px", overflowX: "auto" }}>
+            {podcastNames.map(name => (
+              <button key={name} onClick={() => setActivePodcast(name)} style={chipStyle(name === activePodcast)}>{name}</button>
+            ))}
+          </div>
+          <div style={{ padding: "0 18px 30px" }}>
+            {shown.map((item, i) => {
+              const escuchado = escuchados.has(item.guid);
+              return (
+                <div key={item.guid} style={{
+                  padding: "22px 0",
+                  borderBottom: i < shown.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                  opacity: escuchado ? 0.55 : 1,
+                }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+                    <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>{item.title}</div>
+                    <button onClick={() => toggleEscuchado(item.guid)} style={{
+                      flexShrink: 0, fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700,
+                      border: "1px solid " + (escuchado ? "#333" : "#ffcc00"), borderRadius: 14, padding: "4px 10px",
+                      background: "transparent", color: escuchado ? "#666" : "#ffcc00", cursor: "pointer",
+                    }}>
+                      {escuchado ? "✓ escuchado" : "marcar escuchado"}
+                    </button>
+                  </div>
+                  {item.summary && (
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: 12 }}>
+                      {item.summary}
+                    </div>
+                  )}
+                  {item.audioUrl ? (
+                    <audio controls src={item.audioUrl} style={{ width: "100%", colorScheme: "dark" }} />
+                  ) : (
+                    <a href={item.link} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#ffcc00" }}>ver original ↗</a>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
     // ─── VitrinaView — carrusel de Destacados (Películas/Series/Animación) ─────
     // Segmented control fijo arriba, sin auto-alternancia: se queda en la
     // categoría elegida hasta que el usuario cambia manualmente. Muestra el
@@ -1011,6 +1110,8 @@
           </div>
           {vitrinaCat === "Microdocumentales"
             ? <MicrodocFeed items={items} />
+            : vitrinaCat === "Podcasts"
+            ? <PodcastFeed items={items} />
             : <CineCoverFlow items={items} onOpen={onOpen} />
           }
         </div>
@@ -1035,7 +1136,7 @@
       const [showDiagPanel, setShowDiagPanel] = useState(false);
       const [area, setArea] = useState("noticias"); // "noticias" | "vitrina"
       const [vitrinaCat, setVitrinaCat] = useState("Películas");
-      const [vitrinaData, setVitrinaData] = useState({ "Películas": [], "Series": [], "Animación": [], "Microdocumentales": [] });
+      const [vitrinaData, setVitrinaData] = useState({ "Películas": [], "Series": [], "Animación": [], "Microdocumentales": [], "Podcasts": [] });
       const [vitrinaOpenItem, setVitrinaOpenItem] = useState(null);
       const [exportError, setExportError] = useState(null);
 
