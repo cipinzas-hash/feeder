@@ -5,6 +5,13 @@ on:
     - cron: '0 */4 * * *'   # cada 4 horas
   workflow_dispatch: {}      # botón "Run workflow" manual en la pestaña Actions
 
+# Evita que una corrida manual se solape con la programada (o dos manuales
+# seguidas): en vez de competir por el mismo push a main y terminar en
+# failure/cancelled, la segunda espera en cola a que termine la primera.
+concurrency:
+  group: feed-update
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -41,6 +48,7 @@ jobs:
           done
 
   build-cine:
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
