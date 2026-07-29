@@ -197,7 +197,8 @@ function needsRetry(cached) {
   // antes no hubiera YOUTUBE_API_KEY seteada y ahora sí haya fallback disponible.
   const ratingMissing = r.imdb == null && r.rt == null && r.metascore == null;
   const trailerMissing = !cached.trailer;
-  return ratingMissing || trailerMissing;
+  const statusMissing = cached.status === undefined;
+  return ratingMissing || trailerMissing || statusMissing;
 }
 
 async function enrichMovieOrTv(mediaType, id, cache, guid) {
@@ -275,6 +276,10 @@ async function enrichMovieOrTv(mediaType, id, cache, guid) {
       metascore: omdbData?.metascore ?? null,
       tmdb: details.vote_average ? Math.round(details.vote_average * 10) / 10 : null,
     },
+    // TMDb: movies → Released/Post Production/In Production/Planned/Canceled/Rumored.
+    // TV → Returning Series/Ended/Canceled/In Production/Planned/Pilot.
+    status: details.status || null,
+    nextEpisodeDate: mediaType === "tv" ? (details.next_episode_to_air?.air_date || null) : null,
     reviews: pickUserReviews(reviewsRes.results),
     trailer: trailerKey ? { key: trailerKey, site: "YouTube" } : null,
     cast,
@@ -309,6 +314,9 @@ async function enrichAnime(malId, cache, guid) {
     firstSeenAt,
     fullText: null,
     rating: { imdb: null, rt: null, metascore: null, tmdb: d.score ?? null },
+    // Jikan: Currently Airing / Finished Airing / Not yet aired
+    status: d.status || null,
+    nextEpisodeDate: null,
     reviews: pickJikanReviews(reviewsRes?.data),
     trailer: trailerKey ? { key: trailerKey, site: "YouTube" } : null,
     cast: [], // Jikan no trae reparto en /full; queda vacío, no bloquea el resto
