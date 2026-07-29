@@ -1229,7 +1229,12 @@
         setQueue(q => {
           const [current, ...rest] = q;
           if (current) {
-            const nextSeen = [...seenRef.current, current.guid].slice(-500);
+            // Cap generoso: antes eran 500 y se vaciaba en pocos días de uso normal,
+            // haciendo que ítems ya descartados volvieran a aparecer como "nuevos"
+            // en el próximo refresh (su guid ya no estaba en seen). 5000 guids en
+            // localStorage es un costo trivial (~150-200KB) frente al problema que
+            // resuelve.
+            const nextSeen = [...seenRef.current, current.guid].slice(-5000);
             setSeen(nextSeen);
             persist({ queue: rest, seen: nextSeen });
           }
