@@ -1058,11 +1058,15 @@
         (async () => {
           const s = await loadState();
           if (s) {
-            setQueue(s.feedQueue || []);
+            // Migración defensiva: colas guardadas antes de esta sesión pueden traer
+            // ítems formato "cine" (CineStoryCard ya no existe, Vitrina los reemplazó).
+            // Sin este filtro, React explota (error #130: componente null/undefined).
+            const cleanQueue = (s.feedQueue || []).filter(it => it.formato !== "cine");
+            setQueue(cleanQueue);
             setSeen(s.feedSeen || []);
             setBuzon(s.feedBuzon || []);
             setLastRefresh(s.feedLastRefresh || null);
-            if (!(s.feedQueue || []).length) setView("end");
+            if (!cleanQueue.length) setView("end");
           } else {
             setView("end");
           }
@@ -1259,13 +1263,13 @@
             <VitrinaView vitrinaData={vitrinaData} vitrinaCat={vitrinaCat} onChangeCat={setVitrinaCat} onOpen={item => setVitrinaOpenItem(item)} />
           ) : (
             <>
-              {view === "story" && current && (
+              {view === "story" && current && CurrentStory && (
                 <CurrentStory item={current} onSkip={handleSkip} onExpand={handleExpand} onSave={handleSave}
                   onChangeCategory={handleChangeCategory} onShuffle={handleShuffle}
                   onOpenBuzon={() => setView("buzon")} onOpenDiag={() => setShowDiagPanel(true)} hasDiag={refreshDiag.length > 0}
                   onRefresh={doRefresh} canRefresh={canRefresh} refreshing={refreshing} buzonCount={buzon.length} />
               )}
-              {view === "extended" && current && (
+              {view === "extended" && current && CurrentExtended && (
                 <CurrentExtended item={current} onBack={handleBack} onNext={handleAdvanceFromExtended} onSave={handleSave} onChangeCategory={handleChangeCategory} />
               )}
               {view === "end" && (
