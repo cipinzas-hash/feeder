@@ -526,12 +526,16 @@ function buildBracketProjectionItem(slug, tournamentName, bracketUrl, entrants) 
   };
 }
 
-// previousMeleeGuids: sets de guids de upsets ya generados en corridas anteriores
-//   (para no duplicar). Los items de hype no entran acá — se regeneran siempre.
-// previousProcessedEventIds: ids de evento de start.gg cuyo bracket ya se escaneó
-//   completo — evita repetir llamadas a start.gg/YouTube por un torneo que ya
-//   no va a cambiar (terminó y ya se sacaron sus upsets una vez).
-async function fetchMeleeItems(previousMeleeGuids, previousProcessedEventIds) {
+// previousUpsetItemsByGuid: Map guid→item de upsets ya generados en corridas
+//   anteriores (para no duplicar, y para reintentar el VOD de los que
+//   quedaron sin uno mientras el torneo estaba ACTIVE). Los items de hype no
+//   entran acá — se regeneran siempre.
+// previousProcessedEventIds: ids de evento de start.gg cuyo bracket ya
+//   terminó y ya se escaneó del todo (COMPLETED) — evita repetir llamadas a
+//   start.gg por un torneo que ya no va a cambiar. Mientras el torneo está
+//   ACTIVE (día 1 en curso) nunca entra acá, así que se re-escanea cada
+//   corrida hasta que cierra.
+async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventIds) {
   if (!STARTGG_API_KEY) {
     console.error("✗ Melee · falta STARTGG_API_KEY, se omite esta categoría esta corrida");
     return { upsetItems: [], hypeItems: [], projectionItems: [], processedEventIds: previousProcessedEventIds };
@@ -564,9 +568,12 @@ async function fetchMeleeItems(previousMeleeGuids, previousProcessedEventIds) {
     }
     if (!eventInfo) continue;
     const tournamentName = t.name || eventInfo.tournament?.name || eventInfo.name;
+    const state = eventInfo.state;
 
-    // Torneo todavía no termina: candidato a "hype", no a upsets.
-    if (eventInfo.state !== "COMPLETED") {
+    // Fase 1 (hype): el torneo todavía no arrancó (CREATED/READY/QUEUED/etc).
+    // Nada de sets todavía — solo countdown + proyección de bracket cerca de
+    // la fecha.
+    if (state !== "ACTIVE" && state !== "COMPLETED") {
       if (eventInfo.startAt) {
         const daysUntil = (eventInfo.startAt * 1000 - Date.now()) / 86400000;
         if (daysUntil <= HYPE_WINDOW_DAYS) {
@@ -588,8 +595,14 @@ async function fetchMeleeItems(previousMeleeGuids, previousProcessedEventIds) {
       continue;
     }
 
-    // Torneo ya terminado: detección de upsets (comportamiento de antes).
-    if (previousProcessedEventIds.includes(eventInfo.id)) continue; // ya escaneado antes
+    // Fase 2 (día 1 en adelante): el torneo ya está ACTIVE o COMPLETED —
+    // se escanean los sets ya jugados y se detectan upsets por seeding en
+    // ambos casos. La diferencia es solo el manejo del VOD y de
+    // processedEventIds: mientras está ACTIVE puede volver a escanearse en
+    // la próxima corrida (todavía puede haber sets nuevos), y no tiene
+    // sentido buscar el VOD de top 8 porque normalmente se sube recién
+    // terminado el torneo — se busca/reintenta una vez que pasa a COMPLETED.
+    if (state === "COMPLETED" && previousProcessedEventIds.includes(eventInfo.id)) continue; // ya escaneado y cerrado
 
     let sets = [];
     try {
@@ -604,9 +617,23 @@ async function fetchMeleeItems(previousMeleeGuids, previousProcessedEventIds) {
       const guid = `melee-${slug}-${u.ganador.nombre}-vs-${u.perdedor.nombre}-${u.ronda}`
         .toLowerCase()
         .replace(/\s+/g, "-");
-      if (previousMeleeGuids.has(guid)) continue;
 
-      const vod = await findVod(tournamentName, u.ganador.nombre, u.perdedor.nombre);
+      const already = previousUpsetItemsByGuid.get(guid);
+      if (already) {
+        // Ya existe de una corrida anterior (probablemente generado durante
+        // ACTIVE, sin VOD todavía). Si ahora el torneo está COMPLETED y
+        // sigue sin VOD, se reintenta la búsqueda; si no, se deja tal cual.
+        if (state === "COMPLETED" && !already.videoId) {
+          const vod = await findVod(tournamentName, u.ganador.nombre, u.perdedor.nombre);
+          if (vod.videoId) upsetItems.push({ ...already, videoId: vod.videoId, startSeconds: vod.startSeconds });
+        }
+        continue;
+      }
+
+      // Durante ACTIVE no se busca VOD — el video de top 8 normalmente sube
+      // recién terminado el torneo, así que sería gastar cuota de YouTube
+      // buscando algo que casi seguro no existe todavía.
+      const vod = state === "COMPLETED" ? await findVod(tournamentName, u.ganador.nombre, u.perdedor.nombre) : { videoId: null, startSeconds: 0 };
 
       upsetItems.push({
         guid,
@@ -625,7 +652,7 @@ async function fetchMeleeItems(previousMeleeGuids, previousProcessedEventIds) {
       });
     }
 
-    processedEventIds.add(eventInfo.id);
+    if (state === "COMPLETED") processedEventIds.add(eventInfo.id);
   }
 
   return { upsetItems, hypeItems, projectionItems, processedEventIds: Array.from(processedEventIds) };
@@ -647,7 +674,6 @@ async function main() {
     for (const item of cat.items || []) previousByGuid.set(item.guid, item);
   }
   const previousMeleeItems = (previous.categories || []).find(c => c.cat === "Melee")?.items || [];
-  const previousMeleeGuids = new Set(previousMeleeItems.map(i => i.guid));
   const previousProcessedEventIds = previous.meleeProcessedEvents || [];
 
   const allSources = feedsConfig.flatMap(g => g.feeds.map(f => ({ ...f, cat: g.cat })));
@@ -725,12 +751,18 @@ async function main() {
   // calcular esta corrida.
   console.log("Procesando Melee (meleemajors.gg + start.gg + YouTube)...");
   const previousUpsetItemsOnly = previousMeleeItems.filter(i => !i.esHype && !i.esProyeccion);
+  const previousUpsetItemsByGuid = new Map(previousUpsetItemsOnly.map(i => [i.guid, i]));
   const { upsetItems: newUpsetItems, hypeItems, projectionItems, processedEventIds } = await fetchMeleeItems(
-    previousMeleeGuids,
+    previousUpsetItemsByGuid,
     previousProcessedEventIds
   );
-  console.log(`✓ Melee · ${newUpsetItems.length} upsets nuevos, ${hypeItems.length} torneo(s) generando hype, ${projectionItems.length} proyección(es) de bracket esta corrida`);
-  const allMeleeItems = [...previousUpsetItemsOnly, ...newUpsetItems, ...hypeItems, ...projectionItems].filter(
+  console.log(`✓ Melee · ${newUpsetItems.length} upset(s) nuevo(s)/actualizado(s), ${hypeItems.length} torneo(s) generando hype, ${projectionItems.length} proyección(es) de bracket esta corrida`);
+  // newUpsetItems puede traer versiones actualizadas (VOD recién encontrado)
+  // de items que ya estaban en previousUpsetItemsOnly — hay que reemplazarlos,
+  // no duplicarlos.
+  const newUpsetGuids = new Set(newUpsetItems.map(i => i.guid));
+  const carriedUpsetItems = previousUpsetItemsOnly.filter(i => !newUpsetGuids.has(i.guid));
+  const allMeleeItems = [...carriedUpsetItems, ...newUpsetItems, ...hypeItems, ...projectionItems].filter(
     a => !a.pubDate || new Date(a.pubDate).getTime() >= cutoff
   );
 
