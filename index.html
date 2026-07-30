@@ -42,7 +42,7 @@
     // Microdocumentales vive en Vitrina también, pero NO es carrusel de posters
     // (es un feed vertical de video+comentario) — por eso es una categoría aparte
     // de CINE_CATEGORIAS aunque comparta la misma exclusión del round-robin.
-    const VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales", "Podcasts"];
+    const VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales", "Podcasts", "Melee"];
     const NOTICIAS_CATEGORIA = "Noticias"; // RSS cine/TV/anime — vive en el área "Noticias", no en Vitrina
     const MUSIC_CATEGORIA = "Dark scene / Música";
 
@@ -1118,6 +1118,147 @@
       );
     }
 
+    // ─── PlayerAvatar — foto de perfil de start.gg si existe, silueta genérica
+    // si no (muchos jugadores nunca la subieron, sobre todo amateurs).
+    function PlayerAvatar({ src, size = 40 }) {
+      return src ? (
+        <img src={src} alt="" style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0, background: "#222" }} />
+      ) : (
+        <div style={{
+          width: size, height: size, borderRadius: "50%", flexShrink: 0,
+          background: "#2a2a2a", display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: size * 0.55, color: "#555",
+        }}>👤</div>
+      );
+    }
+
+    function MeleeMatchup({ item }) {
+      const g = item.ganador, p = item.perdedor;
+      if (!g || !p) {
+        // Items viejos generados antes de este cambio no tienen ganador/perdedor
+        // estructurado — se cae al título plano para no romper nada.
+        return <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#ccc" }}>{item.title}</div>;
+      }
+      return (
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <PlayerAvatar src={g.foto} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#fff" }}>
+              {g.nombre} <span style={{ color: "#999", fontWeight: 400 }}>[{g.seed}]{g.pj ? ` · ${g.pj}` : ""}</span>
+            </div>
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#777", marginTop: 2 }}>
+              venció a {p.nombre} [{p.seed}]{p.pj ? ` · ${p.pj}` : ""}
+            </div>
+          </div>
+          <PlayerAvatar src={p.foto} size={30} />
+        </div>
+      );
+    }
+
+    // ─── MeleeFeed — Melee dentro de Vitrina, agrupado por torneo (carpeta
+    // expandible) en vez de la lista plana que vivía en el swipe de Noticias.
+    // Cada torneo puede tener: preview de Top 8 (esTop8Preview, solo mientras
+    // sigue en curso), upsets sueltos, y el archivo final permanente
+    // (esArchivo) una vez que termina — ese es el que se muestra primero
+    // cuando está disponible, como resumen.
+    function MeleeFeed({ items }) {
+      const [openTournament, setOpenTournament] = useState(null);
+      const torneos = {};
+      for (const it of items) {
+        (torneos[it.source] = torneos[it.source] || []).push(it);
+      }
+      const nombres = Object.keys(torneos);
+      // Torneos con archivo (terminados) primero, más recientes arriba.
+      nombres.sort((a, b) => {
+        const aArchivo = torneos[a].some(i => i.esArchivo);
+        const bArchivo = torneos[b].some(i => i.esArchivo);
+        if (aArchivo !== bArchivo) return aArchivo ? -1 : 1;
+        const aDate = Math.max(...torneos[a].map(i => (i.pubDate ? new Date(i.pubDate).getTime() : 0)));
+        const bDate = Math.max(...torneos[b].map(i => (i.pubDate ? new Date(i.pubDate).getTime() : 0)));
+        return bDate - aDate;
+      });
+
+      if (!nombres.length) {
+        return (
+          <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" }}>
+            nada por acá todavía
+          </div>
+        );
+      }
+
+      return (
+        <div style={{ padding: "6px 18px 30px" }}>
+          {nombres.map(nombre => {
+            const grupo = torneos[nombre];
+            const archivo = grupo.find(i => i.esArchivo);
+            const top8 = grupo.find(i => i.esTop8Preview);
+            const upsets = grupo.filter(i => !i.esArchivo && !i.esTop8Preview && !i.esHype && !i.esProyeccion);
+            const open = openTournament === nombre;
+            const estado = archivo ? "finalizado" : top8 ? "en Top 8" : "en curso";
+            return (
+              <div key={nombre} style={{ marginBottom: 10, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, overflow: "hidden" }}>
+                <button onClick={() => setOpenTournament(open ? null : nombre)} style={{
+                  width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "14px 16px", background: "rgba(255,102,0,0.06)", border: "none", cursor: "pointer", textAlign: "left",
+                }}>
+                  <div style={{ fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff" }}>{nombre}</div>
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, color: "#ff6600" }}>{estado.toUpperCase()} {open ? "▲" : "▼"}</div>
+                </button>
+                {open && (
+                  <div style={{ padding: "14px 16px" }}>
+                    {archivo && (
+                      <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 6 }}>RESULTADO FINAL</div>
+                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#ddd", lineHeight: 1.6 }}>{archivo.summary}</div>
+                        {archivo.videoId && (
+                          <a href={`https://youtube.com/watch?v=${archivo.videoId}${archivo.startSeconds ? `&t=${archivo.startSeconds}s` : ""}`} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#ff6600", display: "inline-block", marginTop: 8 }}>
+                            ▶ ver VOD
+                          </a>
+                        )}
+                      </div>
+                    )}
+                    {top8 && !archivo && (
+                      <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 8 }}>TOP 8</div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                          {(top8.jugadores || []).map(j => (
+                            <div key={j.nombre} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 60 }}>
+                              <PlayerAvatar src={j.foto} size={44} />
+                              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ccc", textAlign: "center", marginTop: 4 }}>{j.nombre}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {upsets.length > 0 && (
+                      <div>
+                        {archivo || top8 ? (
+                          <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>UPSETS</div>
+                        ) : null}
+                        {upsets.map((it, i) => (
+                          <div key={it.guid} style={{ padding: "10px 0", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
+                            <MeleeMatchup item={it} />
+                            {it.videoId && (
+                              <a href={`https://youtube.com/watch?v=${it.videoId}${it.startSeconds ? `&t=${it.startSeconds}s` : ""}`} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#ff6600", display: "inline-block", marginTop: 6 }}>
+                                ▶ ver clip
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {!archivo && !top8 && upsets.length === 0 && (
+                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#666" }}>sin novedades todavía</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
     // ─── VitrinaView — carrusel de Destacados (Películas/Series/Animación) ─────
     // Segmented control fijo arriba, sin auto-alternancia: se queda en la
     // categoría elegida hasta que el usuario cambia manualmente. Muestra el
@@ -1145,6 +1286,8 @@
             ? <MicrodocFeed items={items} />
             : vitrinaCat === "Podcasts"
             ? <PodcastFeed items={items} />
+            : vitrinaCat === "Melee"
+            ? <MeleeFeed items={items} />
             : <CineCoverFlow items={items} onOpen={onOpen} />
           }
         </div>
@@ -1169,7 +1312,7 @@
       const [showDiagPanel, setShowDiagPanel] = useState(false);
       const [area, setArea] = useState("noticias"); // "noticias" | "vitrina"
       const [vitrinaCat, setVitrinaCat] = useState("Películas");
-      const [vitrinaData, setVitrinaData] = useState({ "Películas": [], "Series": [], "Animación": [], "Microdocumentales": [], "Podcasts": [] });
+      const [vitrinaData, setVitrinaData] = useState({ "Películas": [], "Series": [], "Animación": [], "Microdocumentales": [], "Podcasts": [], "Melee": [] });
       const [vitrinaOpenItem, setVitrinaOpenItem] = useState(null);
       const [exportError, setExportError] = useState(null);
 
