@@ -1192,9 +1192,11 @@
             const grupo = torneos[nombre];
             const archivo = grupo.find(i => i.esArchivo);
             const top8 = grupo.find(i => i.esTop8Preview);
+            const hype = grupo.find(i => i.esHype);
+            const proyeccion = grupo.find(i => i.esProyeccion);
             const upsets = grupo.filter(i => !i.esArchivo && !i.esTop8Preview && !i.esHype && !i.esProyeccion);
             const open = openTournament === nombre;
-            const estado = archivo ? "finalizado" : top8 ? "en Top 8" : "en curso";
+            const estado = archivo ? "finalizado" : top8 ? "en Top 8" : (upsets.length ? "en curso" : "próximamente");
             return (
               <div key={nombre} style={{ marginBottom: 10, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, overflow: "hidden" }}>
                 <button onClick={() => setOpenTournament(open ? null : nombre)} style={{
@@ -1206,6 +1208,16 @@
                 </button>
                 {open && (
                   <div style={{ padding: "14px 16px" }}>
+                    {!archivo && (hype || proyeccion) && (
+                      <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 6 }}>PRÓXIMAMENTE</div>
+                        {hype && <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#ddd", lineHeight: 1.6 }}>{hype.summary}</div>}
+                        {proyeccion && <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#ddd", lineHeight: 1.6, marginTop: hype ? 8 : 0 }}>{proyeccion.summary}</div>}
+                        <a href={(hype || proyeccion).link} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#ff6600", display: "inline-block", marginTop: 8 }}>
+                          ver bracket ↗
+                        </a>
+                      </div>
+                    )}
                     {archivo && (
                       <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                         <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 6 }}>RESULTADO FINAL</div>
@@ -1247,7 +1259,7 @@
                         ))}
                       </div>
                     )}
-                    {!archivo && !top8 && upsets.length === 0 && (
+                    {!archivo && !top8 && !hype && !proyeccion && upsets.length === 0 && (
                       <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#666" }}>sin novedades todavía</div>
                     )}
                   </div>
