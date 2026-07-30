@@ -279,12 +279,49 @@ async function fetchCompletedSets(eventId) {
     query($eventId: ID!){
       event(id:$eventId){
         sets(perPage:60, page:1, sortType: RECENT){
-          nodes{ id fullRoundText winnerId slots{ entrant{ id name initialSeedNum } } }
+          nodes{
+            id fullRoundText winnerId
+            slots{
+              entrant{
+                id name initialSeedNum
+                participants{ player{ user{ images{ url type } } } }
+              }
+            }
+            games{ selections{ entrant{ id } character{ name } } }
+          }
         }
       }
     }`;
   const data = await startggQuery(query, { eventId });
   return data?.event?.sets?.nodes || [];
+}
+
+// De un entrant saca la primera foto de perfil "profile" que haya subido el
+// jugador a start.gg. No todos tienen — muchos amateurs nunca la suben, y
+// ahí queda null (el frontend muestra un placeholder genérico).
+function entrantFace(entrant) {
+  const images = entrant?.participants?.[0]?.player?.user?.images || [];
+  const profile = images.find(img => img.type === "profile") || images[0];
+  return profile?.url || null;
+}
+
+// El personaje "representativo" del set: el más jugado entre los games
+// reportados para ese entrant (no siempre es fijo — hay quien cambia de PJ
+// entre games de un mismo set). Si el TO no reportó con auto-report de
+// Slippi, games/selections viene vacío y esto da null sin romper nada.
+function entrantCharacter(games, entrantId) {
+  const counts = {};
+  for (const g of games || []) {
+    for (const sel of g.selections || []) {
+      if (sel.entrant?.id === entrantId && sel.character?.name) {
+        counts[sel.character.name] = (counts[sel.character.name] || 0) + 1;
+      }
+    }
+  }
+  const entries = Object.entries(counts);
+  if (!entries.length) return null;
+  entries.sort((a, b) => b[1] - a[1]);
+  return entries[0][0];
 }
 
 function detectUpsets(sets) {
@@ -301,8 +338,18 @@ function detectUpsets(sets) {
     if (top10Involved || bigUpset) {
       out.push({
         ronda: set.fullRoundText,
-        ganador: { nombre: winner.name, seed: winner.initialSeedNum },
-        perdedor: { nombre: loser.name, seed: loser.initialSeedNum },
+        ganador: {
+          nombre: winner.name,
+          seed: winner.initialSeedNum,
+          pj: entrantCharacter(set.games, winner.id),
+          foto: entrantFace(winner),
+        },
+        perdedor: {
+          nombre: loser.name,
+          seed: loser.initialSeedNum,
+          pj: entrantCharacter(set.games, loser.id),
+          foto: entrantFace(loser),
+        },
         esUpset: winner.initialSeedNum > loser.initialSeedNum,
       });
     }
@@ -541,7 +588,12 @@ async function fetchEventPhases(eventId) {
       event(id:$eventId){
         phases{
           id name state
-          seeds(query:{ page:1, perPage:8 }){ nodes{ seedNum entrant{ name } } }
+          seeds(query:{ page:1, perPage:8 }){
+            nodes{
+              seedNum
+              entrant{ name participants{ player{ user{ images{ url type } } } } }
+            }
+          }
         }
       }
     }`;
@@ -561,7 +613,12 @@ function buildTop8PreviewItem(slug, tournamentName, bracketUrl, top8Phase) {
     .filter(s => s.entrant)
     .sort((a, b) => (a.seedNum ?? 99) - (b.seedNum ?? 99));
   if (seeds.length < 2) return null;
-  const lista = seeds.map(s => `${s.entrant.name}${s.seedNum ? ` [${s.seedNum}]` : ""}`).join(", ");
+  const jugadores = seeds.map(s => ({
+    nombre: s.entrant.name,
+    seed: s.seedNum ?? null,
+    foto: entrantFace(s.entrant),
+  }));
+  const lista = jugadores.map(j => `${j.nombre}${j.seed ? ` [${j.seed}]` : ""}`).join(", ");
   return {
     guid: `melee-top8-${slug}`,
     title: `Top 8 de ${tournamentName}`,
@@ -573,6 +630,7 @@ function buildTop8PreviewItem(slug, tournamentName, bracketUrl, top8Phase) {
     categoria: "Melee",
     fullText: null,
     esTop8Preview: true,
+    jugadores,
   };
 }
 
@@ -730,10 +788,12 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
       // recién terminado el torneo, así que sería gastar cuota de YouTube
       // buscando algo que casi seguro no existe todavía.
       const vod = state === "COMPLETED" ? await findVod(tournamentName, u.ganador.nombre, u.perdedor.nombre) : { videoId: null, startSeconds: 0 };
+      const pjGanador = u.ganador.pj ? ` (${u.ganador.pj})` : "";
+      const pjPerdedor = u.perdedor.pj ? ` (${u.perdedor.pj})` : "";
 
       upsetItems.push({
         guid,
-        title: `${u.ganador.nombre} [${u.ganador.seed}] venció a ${u.perdedor.nombre} [${u.perdedor.seed}]`,
+        title: `${u.ganador.nombre}${pjGanador} [${u.ganador.seed}] venció a ${u.perdedor.nombre}${pjPerdedor} [${u.perdedor.seed}]`,
         link: t.bracketUrl,
         summary: `${u.ronda} de ${tournamentName}.`,
         image: null,
@@ -745,6 +805,8 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
         videoId: vod.videoId,
         startSeconds: vod.startSeconds, // opcional — el prototipo lo ignora si no lo usa todavía
         esUpset: u.esUpset,
+        ganador: { nombre: u.ganador.nombre, seed: u.ganador.seed, pj: u.ganador.pj, foto: u.ganador.foto },
+        perdedor: { nombre: u.perdedor.nombre, seed: u.perdedor.seed, pj: u.perdedor.pj, foto: u.perdedor.foto },
       });
     }
 
