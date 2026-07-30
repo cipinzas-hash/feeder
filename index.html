@@ -1212,7 +1212,24 @@
                       <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                         <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 6 }}>PRÓXIMAMENTE</div>
                         {hype && <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#ddd", lineHeight: 1.6 }}>{hype.summary}</div>}
+                        {hype?.startAt && (
+                          <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#999", marginTop: 4 }}>
+                            {new Date(hype.startAt * 1000).toLocaleString("es-CL", { timeZone: "America/Santiago", weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })} (hora Chile)
+                          </div>
+                        )}
                         {proyeccion && <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#ddd", lineHeight: 1.6, marginTop: hype ? 8 : 0 }}>{proyeccion.summary}</div>}
+                        {hype?.notableEntrants?.length > 0 && (
+                          <div style={{ marginTop: 12 }}>
+                            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 6 }}>ENTRANTS DESTACADOS</div>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 12px" }}>
+                              {hype.notableEntrants.map(e => (
+                                <div key={e.seed} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#ddd" }}>
+                                  <span style={{ color: "#ff6600", fontWeight: 700 }}>[{e.seed}]</span> {e.nombre}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         <a href={(hype || proyeccion).link} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#ff6600", display: "inline-block", marginTop: 8 }}>
                           ver bracket ↗
                         </a>
