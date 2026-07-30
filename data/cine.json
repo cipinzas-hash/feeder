@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-30T17:15:41.068Z",
+  "generatedAt": "2026-07-30T23:42:39.032Z",
   "categories": [
     {
       "cat": "Películas",
@@ -98,7 +98,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 7.9
+            "tmdb": 8
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -142,7 +142,7 @@
             },
             {
               "name": "Michael Mando",
-              "character": "Mac Gargan",
+              "character": "Mac Gargan / Scorpion",
               "order": 6
             },
             {
@@ -806,7 +806,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.2
+            "tmdb": 6.6
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -814,7 +814,7 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "yUIE9zln6w8",
+            "key": "iEYfTLsIqJ0",
             "site": "YouTube"
           },
           "cast": [
@@ -935,6 +935,85 @@
             {
               "name": "Jeremy Shamos",
               "character": "Claypool",
+              "order": 9
+            }
+          ]
+        },
+        {
+          "guid": "tmdb-movie-1083381",
+          "title": "Backrooms",
+          "link": "https://www.themoviedb.org/movie/1083381",
+          "summary": "Una puerta extraña aparece en el sótano de una sala de exposición de muebles.",
+          "image": "https://image.tmdb.org/t/p/w500/ur2yYTVGPkEDmLdoQ1Obm2RKXuU.jpg",
+          "pubDate": "2026-05-27",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-07-30T23:42:27.730Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7,
+            "rt": null,
+            "metascore": 77,
+            "tmdb": 7.1
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "9EYRSmbsqzY",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Chiwetel Ejiofor",
+              "character": "Clark",
+              "order": 0
+            },
+            {
+              "name": "Renate Reinsve",
+              "character": "Mary",
+              "order": 1
+            },
+            {
+              "name": "Finn Bennett",
+              "character": "Bobby",
+              "order": 2
+            },
+            {
+              "name": "Lukita Maxwell",
+              "character": "Kat",
+              "order": 3
+            },
+            {
+              "name": "Mark Duplass",
+              "character": "Phil",
+              "order": 4
+            },
+            {
+              "name": "Avan Jogia",
+              "character": "Naren Warne",
+              "order": 5
+            },
+            {
+              "name": "Robert Bobroczkyi",
+              "character": "Pirate Clark",
+              "order": 6
+            },
+            {
+              "name": "Ember Ambrose",
+              "character": "Young Mary",
+              "order": 7
+            },
+            {
+              "name": "Krista Kosonen",
+              "character": "Nora",
+              "order": 8
+            },
+            {
+              "name": "Philip Granger",
+              "character": "Meterman",
               "order": 9
             }
           ]
@@ -1291,6 +1370,40 @@
           ]
         },
         {
+          "guid": "tmdb-tv-22980",
+          "title": "Watch What Happens Live with Andy Cohen",
+          "link": "https://www.themoviedb.org/tv/22980",
+          "summary": "Bravo network executive Andy Cohen discusses pop culture topics with celebrities and reality show personalities.",
+          "image": "https://image.tmdb.org/t/p/w500/onSD9UXfJwrMXWhq7UY7hGF2S1h.jpg",
+          "pubDate": "2009-07-16",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-07-28T17:13:08.649Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 5.6,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 5
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-07-30",
+          "numberOfSeasons": 24,
+          "currentSeason": 23,
+          "reviews": null,
+          "trailer": {
+            "key": "4teWsnW4x4I",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Andy Cohen",
+              "character": "Self - Host",
+              "order": 0
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-94664",
           "title": "Mushoku Tensei Jobless Reincarnation",
           "link": "https://www.themoviedb.org/tv/94664",
@@ -1341,40 +1454,6 @@
               "name": "Konomi Kohara",
               "character": "Roxy Migurdia (voice)",
               "order": 5
-            }
-          ]
-        },
-        {
-          "guid": "tmdb-tv-22980",
-          "title": "Watch What Happens Live with Andy Cohen",
-          "link": "https://www.themoviedb.org/tv/22980",
-          "summary": "Bravo network executive Andy Cohen discusses pop culture topics with celebrities and reality show personalities.",
-          "image": "https://image.tmdb.org/t/p/w500/onSD9UXfJwrMXWhq7UY7hGF2S1h.jpg",
-          "pubDate": "2009-07-16",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-07-28T17:13:08.649Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 5.6,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 5
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-07-30",
-          "numberOfSeasons": 24,
-          "currentSeason": 23,
-          "reviews": null,
-          "trailer": {
-            "key": "4teWsnW4x4I",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Andy Cohen",
-              "character": "Self - Host",
-              "order": 0
             }
           ]
         },
@@ -1521,85 +1600,6 @@
           ]
         },
         {
-          "guid": "tmdb-tv-206559",
-          "title": "Binnelanders",
-          "link": "https://www.themoviedb.org/tv/206559",
-          "summary": "A South African Afrikaans soap opera. It is set in and around the fictional private hospital, Binneland Kliniek, in Pretoria, and the storyline follows the trials, trauma and tribulations of the staff and patients of the hospital.",
-          "image": "https://image.tmdb.org/t/p/w500/3bzECfllho8PphdYujLUIuhncJD.jpg",
-          "pubDate": "2005-10-13",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-07-28T17:13:11.365Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.4,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 5.5
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-07-30",
-          "numberOfSeasons": 22,
-          "currentSeason": 22,
-          "reviews": null,
-          "trailer": {
-            "key": "qSxFADwILZs",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Hans Strydom",
-              "character": "Dr. At Koster",
-              "order": 0
-            },
-            {
-              "name": "Germandt Geldenhuys",
-              "character": "Louis Koster",
-              "order": 66
-            },
-            {
-              "name": "Je-ani Swiegelaar",
-              "character": "Naomi Koster",
-              "order": 71
-            },
-            {
-              "name": "Gerald Steyn",
-              "character": "Dr. Uys Wagener",
-              "order": 81
-            },
-            {
-              "name": "Marlee van der Merwe",
-              "character": "Dr. Ella Swart",
-              "order": 82
-            },
-            {
-              "name": "Roberto Kyle",
-              "character": "Dr. Joe Olivier",
-              "order": 83
-            },
-            {
-              "name": "Melinda Viljoen",
-              "character": "Tracy Jonker",
-              "order": 84
-            },
-            {
-              "name": "Antoinette Modise",
-              "character": "Bonnie Jacobs",
-              "order": 85
-            },
-            {
-              "name": "Megan Troskie",
-              "character": "Thalia Ferreira",
-              "order": 86
-            },
-            {
-              "name": "Izette Blignaut",
-              "character": "Petro van Zyl",
-              "order": 87
-            }
-          ]
-        },
-        {
           "guid": "tmdb-tv-45140",
           "title": "Los Jóvenes Titanes en Acción",
           "link": "https://www.themoviedb.org/tv/45140",
@@ -1680,6 +1680,218 @@
             "site": "YouTube"
           },
           "cast": []
+        },
+        {
+          "guid": "tmdb-tv-46271",
+          "title": "Secret Story",
+          "link": "https://www.themoviedb.org/tv/46271",
+          "summary": "The game contestants are cut off from the rest of the world during ten to fifteen weeks in a house called “house of secrets”, where every room is fitted with video cameras, except the restroom. The goal is to keep a secret while trying to discover the other contestants' secret.",
+          "image": "https://image.tmdb.org/t/p/w500/jDFFyXE04vv9pvHzJESgbJnNRc2.jpg",
+          "pubDate": "2007-06-23",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-07-30T23:42:27.798Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 4.6,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 4.5
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-07-30",
+          "numberOfSeasons": 14,
+          "currentSeason": 14,
+          "reviews": null,
+          "trailer": {
+            "key": "qJXmdY4lVR0",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Dominique Duforest",
+              "character": "La Voix",
+              "order": 209
+            },
+            {
+              "name": "Christophe Beaugrand",
+              "character": "Présentateur",
+              "order": 211
+            },
+            {
+              "name": "Arwen",
+              "character": "Arwen",
+              "order": 226
+            },
+            {
+              "name": "Malo",
+              "character": "Malo",
+              "order": 227
+            },
+            {
+              "name": "Maguette",
+              "character": "Maguette",
+              "order": 228
+            },
+            {
+              "name": "Léonie",
+              "character": "Léonie",
+              "order": 229
+            },
+            {
+              "name": "Greta",
+              "character": "Greta",
+              "order": 230
+            },
+            {
+              "name": "Lou",
+              "character": "Lou",
+              "order": 231
+            },
+            {
+              "name": "Océane",
+              "character": "Océane",
+              "order": 232
+            },
+            {
+              "name": "Arthur",
+              "character": "Arthur",
+              "order": 233
+            }
+          ]
+        },
+        {
+          "guid": "tmdb-tv-206559",
+          "title": "Binnelanders",
+          "link": "https://www.themoviedb.org/tv/206559",
+          "summary": "A South African Afrikaans soap opera. It is set in and around the fictional private hospital, Binneland Kliniek, in Pretoria, and the storyline follows the trials, trauma and tribulations of the staff and patients of the hospital.",
+          "image": "https://image.tmdb.org/t/p/w500/3bzECfllho8PphdYujLUIuhncJD.jpg",
+          "pubDate": "2005-10-13",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-07-28T17:13:11.365Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.4,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 5.5
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-07-30",
+          "numberOfSeasons": 22,
+          "currentSeason": 22,
+          "reviews": null,
+          "trailer": {
+            "key": "qSxFADwILZs",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Hans Strydom",
+              "character": "Dr. At Koster",
+              "order": 0
+            },
+            {
+              "name": "Germandt Geldenhuys",
+              "character": "Louis Koster",
+              "order": 66
+            },
+            {
+              "name": "Je-ani Swiegelaar",
+              "character": "Naomi Koster",
+              "order": 71
+            },
+            {
+              "name": "Gerald Steyn",
+              "character": "Dr. Uys Wagener",
+              "order": 81
+            },
+            {
+              "name": "Marlee van der Merwe",
+              "character": "Dr. Ella Swart",
+              "order": 82
+            },
+            {
+              "name": "Roberto Kyle",
+              "character": "Dr. Joe Olivier",
+              "order": 83
+            },
+            {
+              "name": "Melinda Viljoen",
+              "character": "Tracy Jonker",
+              "order": 84
+            },
+            {
+              "name": "Antoinette Modise",
+              "character": "Bonnie Jacobs",
+              "order": 85
+            },
+            {
+              "name": "Megan Troskie",
+              "character": "Thalia Ferreira",
+              "order": 86
+            },
+            {
+              "name": "Izette Blignaut",
+              "character": "Petro van Zyl",
+              "order": 87
+            }
+          ]
+        },
+        {
+          "guid": "tmdb-tv-278624",
+          "title": "Lucky",
+          "link": "https://www.themoviedb.org/tv/278624",
+          "summary": "Cuando un robo de varios millones de dólares sale mal, la estafadora Lucky se ve obligada a huir. Perseguida tanto por el FBI como por un despiadado jefe criminal, Lucky deberá luchar por su vida y buscar una salida.",
+          "image": "https://image.tmdb.org/t/p/w500/vZ3GfOoeha2xVCPec0jv2jf3yfC.jpg",
+          "pubDate": "2026-07-14",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-07-30T17:15:33.192Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.1
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-08-04",
+          "numberOfSeasons": 1,
+          "currentSeason": 1,
+          "reviews": null,
+          "trailer": {
+            "key": "gMxK1852DV0",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Anya Taylor-Joy",
+              "character": "Luciana 'Lucky' Armstrong",
+              "order": 0
+            },
+            {
+              "name": "Annette Bening",
+              "character": "Priscilla Masterson",
+              "order": 1
+            },
+            {
+              "name": "Clifton Collins Jr.",
+              "character": "Harris Dutch",
+              "order": 2
+            },
+            {
+              "name": "Aunjanue Ellis-Taylor",
+              "character": "Agent Billie Rand",
+              "order": 3
+            },
+            {
+              "name": "Timothy Olyphant",
+              "character": "John Armstrong",
+              "order": 4
+            }
+          ]
         },
         {
           "guid": "tmdb-tv-91555",
@@ -1903,60 +2115,6 @@
               "name": "Rhett McLaughlin",
               "character": "Self - Host",
               "order": 2
-            }
-          ]
-        },
-        {
-          "guid": "tmdb-tv-278624",
-          "title": "Lucky",
-          "link": "https://www.themoviedb.org/tv/278624",
-          "summary": "Cuando un robo de varios millones de dólares sale mal, la estafadora Lucky se ve obligada a huir. Perseguida tanto por el FBI como por un despiadado jefe criminal, Lucky deberá luchar por su vida y buscar una salida.",
-          "image": "https://image.tmdb.org/t/p/w500/vZ3GfOoeha2xVCPec0jv2jf3yfC.jpg",
-          "pubDate": "2026-07-14",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-07-30T17:15:33.192Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.1
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-08-04",
-          "numberOfSeasons": 1,
-          "currentSeason": 1,
-          "reviews": null,
-          "trailer": {
-            "key": "gMxK1852DV0",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Anya Taylor-Joy",
-              "character": "Luciana 'Lucky' Armstrong",
-              "order": 0
-            },
-            {
-              "name": "Annette Bening",
-              "character": "Priscilla Masterson",
-              "order": 1
-            },
-            {
-              "name": "Clifton Collins Jr.",
-              "character": "Harris Dutch",
-              "order": 2
-            },
-            {
-              "name": "Aunjanue Ellis-Taylor",
-              "character": "Agent Billie Rand",
-              "order": 3
-            },
-            {
-              "name": "Timothy Olyphant",
-              "character": "John Armstrong",
-              "order": 4
             }
           ]
         },
@@ -2213,6 +2371,32 @@
           "cast": []
         },
         {
+          "guid": "mal-49233",
+          "title": "Youjo Senki II",
+          "link": "https://myanimelist.net/anime/49233/Youjo_Senki_II",
+          "summary": "Second season of Youjo Senki.",
+          "image": "https://cdn.myanimelist.net/images/anime/1917/158371l.jpg",
+          "pubDate": "2026-07-08T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:25:54.857Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.37
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "gn4rbzV-dvY",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
           "guid": "mal-62076",
           "title": "Super no Ura de Yani Suu Futari",
           "link": "https://myanimelist.net/anime/62076/Super_no_Ura_de_Yani_Suu_Futari",
@@ -2233,7 +2417,33 @@
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": {
-            "key": "2f3OT_0DYQ4",
+            "key": "BJvW_SwQn3w",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-60636",
+          "title": "Bleach: Sennen Kessen-hen - Kashin-tan",
+          "link": "https://myanimelist.net/anime/60636/Bleach__Sennen_Kessen-hen_-_Kashin-tan",
+          "summary": "Final part of Bleach: Sennen Kessen-hen.",
+          "image": "https://cdn.myanimelist.net/images/anime/1275/158595l.jpg",
+          "pubDate": "2026-07-25T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:25:56.743Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Not yet aired",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "DKKZ10FsSBM",
             "site": "YouTube"
           },
           "cast": []
@@ -2260,6 +2470,32 @@
           "reviews": null,
           "trailer": {
             "key": "JP3ksqOosBY",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-62542",
+          "title": "Grand Blue Season 3",
+          "link": "https://myanimelist.net/anime/62542/Grand_Blue_Season_3",
+          "summary": "Third season of Grand Blue.",
+          "image": "https://cdn.myanimelist.net/images/anime/1615/158194l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:25:59.404Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.41
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "YT9xRs9VXCE",
             "site": "YouTube"
           },
           "cast": []
@@ -2343,6 +2579,58 @@
           "cast": []
         },
         {
+          "guid": "mal-58929",
+          "title": "Koukaku Kidoutai (TV)",
+          "link": "https://myanimelist.net/anime/58929/Koukaku_Kidoutai_TV",
+          "summary": "In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetics, its citizens are able to replace their limbs with robotic parts. The world is now more interconnected than ever before, and the city's Public Security Section 9 is responsible for combating corruption, terrorism, and other dangerous threats following this shift toward globalization.\n\nThe strong-willed Major Motoko Kusanagi of Section 9 spearheads a case involving a mysterious hacker known only as the \"Puppet Master,\" who leaves a trail of victims stripped of their memories. Like many in this futuristic world, the Puppet Master's body is almost entirely robotic, giving them incredible power.\n\nAs Motoko and her subordinates follow the enigmatic criminal's trail, other parties—including Section 6—start to get involved, forcing her to confront the extremely complicated nature of the case. Pondering about various philosophical questions, such as her own life's meaning, Motoko soon realizes that the one who will provide these answers is none other than the Puppet Master themself.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1474/158937l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:26:03.147Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.02
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "7yE9MHlifmw",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-62513",
+          "title": "Clevatess II: Majuu no Ou to Itsuwari no Yuusha Denshou",
+          "link": "https://myanimelist.net/anime/62513/Clevatess_II__Majuu_no_Ou_to_Itsuwari_no_Yuusha_Denshou",
+          "summary": "Second season of Clevatess.",
+          "image": "https://cdn.myanimelist.net/images/anime/1741/157105l.jpg",
+          "pubDate": "2026-07-08T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-29T11:02:25.970Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.68
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "qsbyAix6lUY",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
           "guid": "mal-61126",
           "title": "Kimi ga Shinu made Koi wo Shitai",
           "link": "https://myanimelist.net/anime/61126/Kimi_ga_Shinu_made_Koi_wo_Shitai",
@@ -2369,58 +2657,6 @@
           "cast": []
         },
         {
-          "guid": "mal-49233",
-          "title": "Youjo Senki II",
-          "link": "https://myanimelist.net/anime/49233/Youjo_Senki_II",
-          "summary": "Second season of Youjo Senki.",
-          "image": "https://cdn.myanimelist.net/images/anime/1917/158371l.jpg",
-          "pubDate": "2026-07-08T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:25:54.857Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.45
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "V8Gx2_sHMRI",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-60636",
-          "title": "Bleach: Sennen Kessen-hen - Kashin-tan",
-          "link": "https://myanimelist.net/anime/60636/Bleach__Sennen_Kessen-hen_-_Kashin-tan",
-          "summary": "Final part of Bleach: Sennen Kessen-hen.",
-          "image": "https://cdn.myanimelist.net/images/anime/1275/158595l.jpg",
-          "pubDate": "2026-07-25T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:25:56.743Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Not yet aired",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "DKKZ10FsSBM",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
           "guid": "mal-63832",
           "title": "Seihantai na Kimi to Boku 2nd Season",
           "link": "https://myanimelist.net/anime/63832/Seihantai_na_Kimi_to_Boku_2nd_Season",
@@ -2442,54 +2678,6 @@
           "reviews": null,
           "trailer": {
             "key": "99y6FoobERg",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-58929",
-          "title": "Koukaku Kidoutai (TV)",
-          "link": "https://myanimelist.net/anime/58929/Koukaku_Kidoutai_TV",
-          "summary": "In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetics, its citizens are able to replace their limbs with robotic parts. The world is now more interconnected than ever before, and the city's Public Security Section 9 is responsible for combating corruption, terrorism, and other dangerous threats following this shift toward globalization.\n\nThe strong-willed Major Motoko Kusanagi of Section 9 spearheads a case involving a mysterious hacker known only as the \"Puppet Master,\" who leaves a trail of victims stripped of their memories. Like many in this futuristic world, the Puppet Master's body is almost entirely robotic, giving them incredible power.\n\nAs Motoko and her subordinates follow the enigmatic criminal's trail, other parties—including Section 6—start to get involved, forcing her to confront the extremely complicated nature of the case. Pondering about various philosophical questions, such as her own life's meaning, Motoko soon realizes that the one who will provide these answers is none other than the Puppet Master themself.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1474/158937l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:26:03.147Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.02
-          },
-          "reviews": null,
-          "trailer": {
-            "key": "7yE9MHlifmw",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-62513",
-          "title": "Clevatess II: Majuu no Ou to Itsuwari no Yuusha Denshou",
-          "link": "https://myanimelist.net/anime/62513/Clevatess_II__Majuu_no_Ou_to_Itsuwari_no_Yuusha_Denshou",
-          "summary": "Second season of Clevatess.",
-          "image": "https://cdn.myanimelist.net/images/anime/1741/157105l.jpg",
-          "pubDate": "2026-07-08T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-29T11:02:25.970Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.68
-          },
-          "reviews": null,
-          "trailer": {
-            "key": "qsbyAix6lUY",
             "site": "YouTube"
           },
           "cast": []
