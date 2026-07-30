@@ -1033,7 +1033,30 @@
     // scroll vertical, cada ítem = título + comentario del autor (summary) +
     // video embebido, separados por un divisor suave y oscuro. Formato "lectura"
     // de base (viene de feed.json, no de cine.json), por eso no hay poster/rating.
+    // Mismo patrón que PODCASTS_ESCUCHADOS_KEY: localStorage propio, aislado
+    // del blob principal de la app.
+    const MICRODOCS_VISTOS_KEY = "angst-feed-microdocs-vistos-v1";
+    function loadMicrodocsVistos() {
+      try {
+        const raw = localStorage.getItem(MICRODOCS_VISTOS_KEY);
+        return raw ? new Set(JSON.parse(raw)) : new Set();
+      } catch (e) { return new Set(); }
+    }
+    function saveMicrodocsVistos(set) {
+      try { localStorage.setItem(MICRODOCS_VISTOS_KEY, JSON.stringify([...set])); } catch (e) {}
+    }
+
     function MicrodocFeed({ items }) {
+      const [vistos, setVistos] = useState(() => loadMicrodocsVistos());
+      function toggleVisto(guid) {
+        setVistos(prev => {
+          const next = new Set(prev);
+          if (next.has(guid)) next.delete(guid); else next.add(guid);
+          saveMicrodocsVistos(next);
+          return next;
+        });
+      }
+
       if (!items.length) {
         return (
           <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" }}>
@@ -1043,12 +1066,24 @@
       }
       return (
         <div style={{ padding: "6px 18px 30px" }}>
-          {items.map((item, i) => (
+          {items.map((item, i) => {
+            const visto = vistos.has(item.guid);
+            return (
             <div key={item.guid} style={{
               padding: "22px 0",
               borderBottom: i < items.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+              opacity: visto ? 0.55 : 1,
             }}>
-              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 8, lineHeight: 1.2 }}>{item.title}</div>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+                <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>{item.title}</div>
+                <button onClick={() => toggleVisto(item.guid)} style={{
+                  flexShrink: 0, fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700,
+                  border: "1px solid " + (visto ? "#333" : "#26a69a"), borderRadius: 14, padding: "4px 10px",
+                  background: "transparent", color: visto ? "#666" : "#26a69a", cursor: "pointer",
+                }}>
+                  {visto ? "✓ visto" : "marcar visto"}
+                </button>
+              </div>
               {item.summary && (
                 <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: 12 }}>
                   {item.summary}
@@ -1069,7 +1104,8 @@
                 <a href={item.link} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#26a69a" }}>ver original ↗</a>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       );
     }
