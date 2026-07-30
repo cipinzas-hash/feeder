@@ -198,7 +198,8 @@ function needsRetry(cached) {
   const ratingMissing = r.imdb == null && r.rt == null && r.metascore == null;
   const trailerMissing = !cached.trailer;
   const statusMissing = cached.status === undefined;
-  return ratingMissing || trailerMissing || statusMissing;
+  const seasonsMissing = cached.numberOfSeasons === undefined;
+  return ratingMissing || trailerMissing || statusMissing || seasonsMissing;
 }
 
 async function enrichMovieOrTv(mediaType, id, cache, guid) {
@@ -280,6 +281,11 @@ async function enrichMovieOrTv(mediaType, id, cache, guid) {
     // TV → Returning Series/Ended/Canceled/In Production/Planned/Pilot.
     status: details.status || null,
     nextEpisodeDate: mediaType === "tv" ? (details.next_episode_to_air?.air_date || null) : null,
+    numberOfSeasons: mediaType === "tv" ? (details.number_of_seasons || null) : null,
+    // "en curso" = la última temporada que emitió (no necesariamente la
+    // última numerada — a veces TMDb cuenta specials como su propia
+    // temporada). Si terminó, esto no se usa: se muestra el total.
+    currentSeason: mediaType === "tv" ? (details.last_episode_to_air?.season_number || null) : null,
     reviews: pickUserReviews(reviewsRes.results),
     trailer: trailerKey ? { key: trailerKey, site: "YouTube" } : null,
     cast,
