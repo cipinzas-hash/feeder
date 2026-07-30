@@ -385,7 +385,7 @@
       const [imgFailed, setImgFailed] = useState(false);
       useEffect(() => { setImgFailed(false); }, [item.guid]);
       return (
-        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none" }}>
+        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none", zIndex: 50 }}>
           <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
             {item.image && !imgFailed
               ? <img src={item.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.5 }} onError={() => setImgFailed(true)} />
@@ -654,7 +654,7 @@
       const [imgFailed, setImgFailed] = useState(false);
       useEffect(() => { setImgFailed(false); }, [item.guid]);
       return (
-        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none" }}>
+        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none", zIndex: 50 }}>
           <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
             <div style={{ position: "absolute", top: 16, left: 16, right: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, zIndex: 5 }}>
               <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#111", background: color, borderRadius: 20, padding: "4px 12px", fontWeight: 700 }}>{item.categoria}</span>
