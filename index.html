@@ -385,7 +385,7 @@
       const [imgFailed, setImgFailed] = useState(false);
       useEffect(() => { setImgFailed(false); }, [item.guid]);
       return (
-        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none", zIndex: 50 }}>
+        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none" }}>
           <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
             {item.image && !imgFailed
               ? <img src={item.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.5 }} onError={() => setImgFailed(true)} />
@@ -408,7 +408,7 @@
               <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.5 }}>{item.summary}</div>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
+          <div style={{ display: "flex", gap: 6, padding: "10px 10px calc(10px + 50px + env(safe-area-inset-bottom))", background: "#111" }}>
             <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
             <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
             <button onClick={onExpand} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>{primaryAction(item.tipo).icon}</span>{primaryAction(item.tipo).label}</button>
@@ -654,7 +654,7 @@
       const [imgFailed, setImgFailed] = useState(false);
       useEffect(() => { setImgFailed(false); }, [item.guid]);
       return (
-        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none", zIndex: 50 }}>
+        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none" }}>
           <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
             <div style={{ position: "absolute", top: 16, left: 16, right: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, zIndex: 5 }}>
               <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#111", background: color, borderRadius: 20, padding: "4px 12px", fontWeight: 700 }}>{item.categoria}</span>
@@ -690,7 +690,7 @@
               <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.45)" }}>{item.source}</div>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
+          <div style={{ display: "flex", gap: 6, padding: "10px 10px calc(10px + 50px + env(safe-area-inset-bottom))", background: "#111" }}>
             <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
             <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
             <button onClick={onExpand} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}>
