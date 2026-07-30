@@ -260,7 +260,9 @@ async function fetchAllEntrants(eventId) {
     if (nodes.length < perPage) break;
     page++;
   }
-  return all.filter(e => e.initialSeedNum != null);
+  return all; // sin filtrar: el conteo total de inscritos necesita a todos,
+              // tengan seed asignado todavía o no. Quien necesite solo los
+              // seedeados filtra initialSeedNum != null en el call site.
 }
 
 function parseSlugFromBracketUrl(bracketUrl) {
@@ -426,20 +428,34 @@ async function findVod(tournamentName, ganadorNombre, perdedorNombre) {
 // por torneo, así que simplemente se reemplaza a sí mismo con la cuenta
 // regresiva actualizada cada vez, y desaparece solo una vez que el torneo deja
 // de estar "por venir" (pasa a generar sus propios upsets en vez de esto).
-function buildHypeItem(slug, tournamentName, bracketUrl, startAtSeconds) {
+function buildHypeItem(slug, tournamentName, bracketUrl, startAtSeconds, entrants) {
   const daysUntil = (startAtSeconds * 1000 - Date.now()) / 86400000;
   const cuando = daysUntil <= 0 ? "¡ya está en curso!" : `empieza en ${Math.ceil(daysUntil)} día(s)`;
+  const totalEntrants = entrants ? entrants.length : null;
+  // "Destacados" = los primeros 16 por seed. Si todavía no cerró el seeding
+  // (entrants sin initialSeedNum), simplemente no hay nada que mostrar acá
+  // todavía — no es un error, es que es muy pronto.
+  const notableEntrants = entrants
+    ? entrants
+        .filter(e => e.initialSeedNum != null)
+        .sort((a, b) => a.initialSeedNum - b.initialSeedNum)
+        .slice(0, 16)
+        .map(e => ({ nombre: e.name, seed: e.initialSeedNum }))
+    : [];
   return {
     guid: `melee-hype-${slug}`,
     title: `Se viene ${tournamentName}`,
     link: bracketUrl,
-    summary: `${cuando} Bracket en start.gg.`,
+    summary: `${cuando} Bracket en start.gg.${totalEntrants != null ? ` ${totalEntrants} inscritos hasta ahora.` : ""}`,
     image: null,
     pubDate: new Date().toISOString(), // se regenera cada corrida, no se acumula
     source: tournamentName,
     categoria: "Melee",
     fullText: null,
     esHype: true,
+    startAt: startAtSeconds, // epoch segundos — el frontend lo formatea en horario local
+    totalEntrants,
+    notableEntrants,
   };
 }
 
@@ -510,7 +526,7 @@ function buildBracketProjectionItem(slug, tournamentName, bracketUrl, entrants) 
   const totalRounds = Math.log2(bracketSize);
   const positions = seedPositions(bracketSize);
   const bySeed = {};
-  for (const e of entrants) bySeed[e.initialSeedNum] = e;
+  for (const e of entrants) if (e.initialSeedNum != null) bySeed[e.initialSeedNum] = e;
 
   const topSeeds = Object.keys(bySeed).map(Number).filter(s => s <= PROJECTION_TOP_CUTOFF).sort((a, b) => a - b);
   if (topSeeds.length < 2) return null;
@@ -730,20 +746,23 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
     if (state !== "ACTIVE" && state !== "COMPLETED") {
       if (eventInfo.startAt) {
         const daysUntil = (eventInfo.startAt * 1000 - Date.now()) / 86400000;
-        if (daysUntil <= HYPE_WINDOW_DAYS) {
-          hypeItems.push(buildHypeItem(slug, tournamentName, t.bracketUrl, eventInfo.startAt));
-        }
-        // Proyección de bracket: solo cerca de la fecha, porque el seeding real
-        // recién cierra cerca del check-in — pedirlo 14 días antes daría una
-        // lista vacía o incompleta la mayoría de las veces.
+        // Entrants: solo cerca de la fecha, porque el seeding real recién
+        // cierra cerca del check-in — pedirlo 14 días antes daría una lista
+        // vacía o incompleta la mayoría de las veces.
+        let entrants = null;
         if (daysUntil <= PROJECTION_WINDOW_DAYS) {
           try {
-            const entrants = await fetchAllEntrants(eventInfo.id);
-            const projectionItem = buildBracketProjectionItem(slug, tournamentName, t.bracketUrl, entrants);
-            if (projectionItem) projectionItems.push(projectionItem);
+            entrants = await fetchAllEntrants(eventInfo.id);
           } catch (e) {
-            console.error(`✗ Melee · proyección de bracket (${tournamentName}): ${e.message}`);
+            console.error(`✗ Melee · entrants (${tournamentName}): ${e.message}`);
           }
+        }
+        if (daysUntil <= HYPE_WINDOW_DAYS) {
+          hypeItems.push(buildHypeItem(slug, tournamentName, t.bracketUrl, eventInfo.startAt, entrants));
+        }
+        if (entrants) {
+          const projectionItem = buildBracketProjectionItem(slug, tournamentName, t.bracketUrl, entrants);
+          if (projectionItem) projectionItems.push(projectionItem);
         }
       }
       continue;
