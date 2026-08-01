@@ -148,6 +148,7 @@ async function fetchFeed(source, cat) {
           image: extractImage(item),
           pubDate: item.isoDate || (item.pubDate ? new Date(item.pubDate).toISOString() : null),
           source: source.name,
+          tema: source.tema || null,
           categoria: cat,
           fullText: item.contentEncoded ? sanitize(item.contentEncoded) : null,
           hasListenEmbed: hasListenEmbed(rawForEmbedCheck),
