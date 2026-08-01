@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-31T23:43:33.345Z",
+  "generatedAt": "2026-08-01T11:58:53.473Z",
   "categories": [
     {
       "cat": "Películas",
@@ -19,7 +19,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 8
+            "tmdb": 8.1
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -42,43 +42,43 @@
               "order": 1
             },
             {
-              "name": "Sadie Sink",
-              "character": "Jean Grey",
+              "name": "Mark Ruffalo",
+              "character": "Bruce Banner / Hulk",
               "order": 2
-            },
-            {
-              "name": "Jacob Batalon",
-              "character": "Ned Leeds",
-              "order": 3
             },
             {
               "name": "Jon Bernthal",
               "character": "Frank Castle / Punisher",
+              "order": 3
+            },
+            {
+              "name": "Jacob Batalon",
+              "character": "Ned Leeds",
               "order": 4
             },
             {
-              "name": "Tramell Tillman",
-              "character": "Bill Metzger",
+              "name": "Sadie Sink",
+              "character": "Jean Grey",
               "order": 5
             },
             {
-              "name": "Michael Mando",
-              "character": "Mac Gargan / Scorpion",
+              "name": "Florence Pugh",
+              "character": "Yelena Belova / Black Widow",
               "order": 6
-            },
-            {
-              "name": "Mark Ruffalo",
-              "character": "Bruce Banner / Hulk",
-              "order": 7
             },
             {
               "name": "Liza Colón-Zayas",
               "character": "Detective Jean DeWolff",
+              "order": 7
+            },
+            {
+              "name": "Tramell Tillman",
+              "character": "William 'Bill' Metzger",
               "order": 8
             },
             {
-              "name": "Marvin Jones III",
-              "character": "Tombstone",
+              "name": "Marisa Tomei",
+              "character": "May Parker",
               "order": 9
             }
           ]
@@ -713,6 +713,75 @@
           "cast": []
         },
         {
+          "guid": "tmdb-movie-1481343",
+          "title": "La Boca del Diablo",
+          "link": "https://www.themoviedb.org/movie/1481343",
+          "summary": "Cinco amigos exploran el sistema de cuevas de la Boca del Diablo en Tailandia, para correr una última aventura antes de empezar su vida en el mundo real. Pero pronto descubren que algo los está cazando bajo el agua... rápida, silenciosa y mortalmente. En la agobiante oscuridad, la confianza se quiebra, el pánico cunde, y cada decisión se convierte en una lucha por sobrevivir.",
+          "image": "https://image.tmdb.org/t/p/w500/cPsXFr7g39Kjul7Wx8XBpZwkOS4.jpg",
+          "pubDate": "2026-07-29",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-07-29T10:14:54.016Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.8
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "yUIE9zln6w8",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Kathryn Newton",
+              "character": "Sara",
+              "order": 0
+            },
+            {
+              "name": "Lana Condor",
+              "character": "Max",
+              "order": 1
+            },
+            {
+              "name": "Nico Hiraga",
+              "character": "James",
+              "order": 2
+            },
+            {
+              "name": "Gavin Casalegno",
+              "character": "Greg",
+              "order": 3
+            },
+            {
+              "name": "Tommi Rose",
+              "character": "Adrienne",
+              "order": 4
+            },
+            {
+              "name": "Tayme Thapthimthong",
+              "character": "Wat",
+              "order": 5
+            },
+            {
+              "name": "สหจักร บุญธนกิจ",
+              "character": "Captain",
+              "order": 6
+            },
+            {
+              "name": "Harrison Luna",
+              "character": "Ryan",
+              "order": 7
+            }
+          ]
+        },
+        {
           "guid": "tmdb-movie-1339713",
           "title": "Obsession",
           "link": "https://www.themoviedb.org/movie/1339713",
@@ -871,6 +940,85 @@
           ]
         },
         {
+          "guid": "tmdb-movie-454639",
+          "title": "He-Man y los masters del universo",
+          "link": "https://www.themoviedb.org/movie/454639",
+          "summary": "En las regiones más lejanas del espacio, el reino de Eternia está amenazado por el villano Skeletor y sus traviesos ejércitos de oscuridad. Para salvar el reino de su padre y proteger las vidas de sus seres queridos, el joven príncipe Adam tiene que recuperar una espada mítica y convertirse en el legendario guerrero conocido como He-Man.",
+          "image": "https://image.tmdb.org/t/p/w500/A6kqScyPEsn6akDS5HyPf9jE4Od.jpg",
+          "pubDate": "2026-06-03",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-07-29T10:14:53.836Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.9,
+            "rt": null,
+            "metascore": 52,
+            "tmdb": 7.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "K2p_Xz8i2Uo",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Nicholas Galitzine",
+              "character": "Adam / He-Man",
+              "order": 0
+            },
+            {
+              "name": "Camila Mendes",
+              "character": "Teela",
+              "order": 1
+            },
+            {
+              "name": "Idris Elba",
+              "character": "Duncan",
+              "order": 2
+            },
+            {
+              "name": "Jared Leto",
+              "character": "Skeletor",
+              "order": 3
+            },
+            {
+              "name": "Alison Brie",
+              "character": "Evil-Lyn",
+              "order": 4
+            },
+            {
+              "name": "Jóhannes Haukur Jóhannesson",
+              "character": "Fisto",
+              "order": 5
+            },
+            {
+              "name": "Jon Xue Zhang",
+              "character": "Ram Man",
+              "order": 6
+            },
+            {
+              "name": "Sam C. Wilson",
+              "character": "Trap Jaw",
+              "order": 7
+            },
+            {
+              "name": "James Purefoy",
+              "character": "King Randor",
+              "order": 8
+            },
+            {
+              "name": "Charlotte Riley",
+              "character": "Queen Marlena",
+              "order": 9
+            }
+          ]
+        },
+        {
           "guid": "tmdb-movie-980431",
           "title": "La leyenda de Aang: El último Airbender",
           "link": "https://www.themoviedb.org/movie/980431",
@@ -950,75 +1098,6 @@
           ]
         },
         {
-          "guid": "tmdb-movie-1481343",
-          "title": "La Boca del Diablo",
-          "link": "https://www.themoviedb.org/movie/1481343",
-          "summary": "Cinco amigos exploran el sistema de cuevas de la Boca del Diablo en Tailandia, para correr una última aventura antes de empezar su vida en el mundo real. Pero pronto descubren que algo los está cazando bajo el agua... rápida, silenciosa y mortalmente. En la agobiante oscuridad, la confianza se quiebra, el pánico cunde, y cada decisión se convierte en una lucha por sobrevivir.",
-          "image": "https://image.tmdb.org/t/p/w500/cPsXFr7g39Kjul7Wx8XBpZwkOS4.jpg",
-          "pubDate": "2026-07-29",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-07-29T10:14:54.016Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.8
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "yUIE9zln6w8",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Kathryn Newton",
-              "character": "Sara",
-              "order": 0
-            },
-            {
-              "name": "Lana Condor",
-              "character": "Max",
-              "order": 1
-            },
-            {
-              "name": "Nico Hiraga",
-              "character": "James",
-              "order": 2
-            },
-            {
-              "name": "Gavin Casalegno",
-              "character": "Greg",
-              "order": 3
-            },
-            {
-              "name": "Tommi Rose",
-              "character": "Adrienne",
-              "order": 4
-            },
-            {
-              "name": "Tayme Thapthimthong",
-              "character": "Wat",
-              "order": 5
-            },
-            {
-              "name": "สหจักร บุญธนกิจ",
-              "character": "Captain",
-              "order": 6
-            },
-            {
-              "name": "Harrison Luna",
-              "character": "Ryan",
-              "order": 7
-            }
-          ]
-        },
-        {
           "guid": "tmdb-movie-1083381",
           "title": "Backrooms",
           "link": "https://www.themoviedb.org/movie/1083381",
@@ -1093,85 +1172,6 @@
             {
               "name": "Philip Granger",
               "character": "Meterman",
-              "order": 9
-            }
-          ]
-        },
-        {
-          "guid": "tmdb-movie-454639",
-          "title": "He-Man y los masters del universo",
-          "link": "https://www.themoviedb.org/movie/454639",
-          "summary": "En las regiones más lejanas del espacio, el reino de Eternia está amenazado por el villano Skeletor y sus traviesos ejércitos de oscuridad. Para salvar el reino de su padre y proteger las vidas de sus seres queridos, el joven príncipe Adam tiene que recuperar una espada mítica y convertirse en el legendario guerrero conocido como He-Man.",
-          "image": "https://image.tmdb.org/t/p/w500/A6kqScyPEsn6akDS5HyPf9jE4Od.jpg",
-          "pubDate": "2026-06-03",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-07-29T10:14:53.836Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.9,
-            "rt": null,
-            "metascore": 52,
-            "tmdb": 7.3
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "K2p_Xz8i2Uo",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Nicholas Galitzine",
-              "character": "Adam / He-Man",
-              "order": 0
-            },
-            {
-              "name": "Camila Mendes",
-              "character": "Teela",
-              "order": 1
-            },
-            {
-              "name": "Idris Elba",
-              "character": "Duncan",
-              "order": 2
-            },
-            {
-              "name": "Jared Leto",
-              "character": "Skeletor",
-              "order": 3
-            },
-            {
-              "name": "Alison Brie",
-              "character": "Evil-Lyn",
-              "order": 4
-            },
-            {
-              "name": "Jóhannes Haukur Jóhannesson",
-              "character": "Fisto",
-              "order": 5
-            },
-            {
-              "name": "Jon Xue Zhang",
-              "character": "Ram Man",
-              "order": 6
-            },
-            {
-              "name": "Sam C. Wilson",
-              "character": "Trap Jaw",
-              "order": 7
-            },
-            {
-              "name": "James Purefoy",
-              "character": "King Randor",
-              "order": 8
-            },
-            {
-              "name": "Charlotte Riley",
-              "character": "Queen Marlena",
               "order": 9
             }
           ]
@@ -1616,55 +1616,6 @@
           ]
         },
         {
-          "guid": "tmdb-tv-65334",
-          "title": "Prodigiosa: Las aventuras de Ladybug",
-          "link": "https://www.themoviedb.org/tv/65334",
-          "summary": "Cuando París corre peligro, Marinette se convierte en Ladybug. Lo que no sabe, es que su apuesto amigo Adrien es Cat Noir, otro superhéroe al servicio de la ciudad.",
-          "image": "https://image.tmdb.org/t/p/w500/z9n5ZOECtbug5h07kq7RxoLRBOZ.jpg",
-          "pubDate": "2015-10-19",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-07-29T10:14:54.407Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.5,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.1
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": 6,
-          "currentSeason": 6,
-          "reviews": null,
-          "trailer": {
-            "key": "aBNkRHf_iEk",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Anouck Hautbois",
-              "character": "Marinette Dupain-Cheng / Ladybug (voice)",
-              "order": 1
-            },
-            {
-              "name": "Benjamin Bollen",
-              "character": "Adrien Agreste / Chat Noir (voice)",
-              "order": 2
-            },
-            {
-              "name": "Marie Nonnenmacher",
-              "character": "Tikki (voice)",
-              "order": 4
-            },
-            {
-              "name": "Thierry Kazazian",
-              "character": "Plagg (voice)",
-              "order": 5
-            }
-          ]
-        },
-        {
           "guid": "tmdb-tv-23393",
           "title": "BBC Proms",
           "link": "https://www.themoviedb.org/tv/23393",
@@ -1682,7 +1633,7 @@
             "tmdb": 7.7
           },
           "status": "Returning Series",
-          "nextEpisodeDate": "2026-07-31",
+          "nextEpisodeDate": "2026-08-01",
           "numberOfSeasons": 80,
           "currentSeason": 80,
           "reviews": null,
@@ -1693,36 +1644,56 @@
           "cast": []
         },
         {
-          "guid": "tmdb-tv-61818",
-          "title": "Late Night with Seth Meyers",
-          "link": "https://www.themoviedb.org/tv/61818",
-          "summary": "Seth Meyers, who is \"Saturday Night Live's\" longest serving anchor on the show's wildly popular \"Weekend Update,\" takes over as host of NBC's \"Late Night\" — home to A-list celebrity guests, memorable comedy and the best in musical talent. As the Emmy Award-winning head writer for \"SNL,\" Meyers has established a reputation for sharp wit and perfectly timed comedy, and has gained fame for his spot-on jokes and satire. Meyers takes his departure from \"SNL\" to his new post at \"Late Night,\" as Jimmy Fallon moves to \"The Tonight Show\".",
-          "image": "https://image.tmdb.org/t/p/w500/u8VruEGv7mtyJihVn2CSA1u90pk.jpg",
-          "pubDate": "2014-02-25",
+          "guid": "tmdb-tv-278624",
+          "title": "Lucky",
+          "link": "https://www.themoviedb.org/tv/278624",
+          "summary": "Cuando un robo de varios millones de dólares sale mal, la estafadora Lucky se ve obligada a huir. Perseguida tanto por el FBI como por un despiadado jefe criminal, Lucky deberá luchar por su vida y buscar una salida.",
+          "image": "https://image.tmdb.org/t/p/w500/vZ3GfOoeha2xVCPec0jv2jf3yfC.jpg",
+          "pubDate": "2026-07-14",
           "source": "TMDb",
           "categoria": "Series",
-          "firstSeenAt": "2026-07-28T17:13:10.873Z",
+          "firstSeenAt": "2026-07-30T17:15:33.192Z",
           "fullText": null,
           "rating": {
-            "imdb": 6.3,
+            "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 5.1
+            "tmdb": 7.2
           },
           "status": "Returning Series",
-          "nextEpisodeDate": "2026-07-30",
-          "numberOfSeasons": 13,
-          "currentSeason": 13,
+          "nextEpisodeDate": "2026-08-04",
+          "numberOfSeasons": 1,
+          "currentSeason": 1,
           "reviews": null,
           "trailer": {
-            "key": "rLwbzGyC6t4",
+            "key": "gMxK1852DV0",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Seth Meyers",
-              "character": "Self - Host",
+              "name": "Anya Taylor-Joy",
+              "character": "Luciana 'Lucky' Armstrong",
               "order": 0
+            },
+            {
+              "name": "Annette Bening",
+              "character": "Priscilla Masterson",
+              "order": 1
+            },
+            {
+              "name": "Clifton Collins Jr.",
+              "character": "Harris Dutch",
+              "order": 2
+            },
+            {
+              "name": "Aunjanue Ellis-Taylor",
+              "character": "Agent Billie Rand",
+              "order": 3
+            },
+            {
+              "name": "Timothy Olyphant",
+              "character": "John Armstrong",
+              "order": 4
             }
           ]
         },
@@ -1792,60 +1763,6 @@
               "name": "원현준",
               "character": "Kang Guk-cheol (Mole Cricket)",
               "order": 7
-            }
-          ]
-        },
-        {
-          "guid": "tmdb-tv-278624",
-          "title": "Lucky",
-          "link": "https://www.themoviedb.org/tv/278624",
-          "summary": "Cuando un robo de varios millones de dólares sale mal, la estafadora Lucky se ve obligada a huir. Perseguida tanto por el FBI como por un despiadado jefe criminal, Lucky deberá luchar por su vida y buscar una salida.",
-          "image": "https://image.tmdb.org/t/p/w500/vZ3GfOoeha2xVCPec0jv2jf3yfC.jpg",
-          "pubDate": "2026-07-14",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-07-30T17:15:33.192Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.2
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-08-04",
-          "numberOfSeasons": 1,
-          "currentSeason": 1,
-          "reviews": null,
-          "trailer": {
-            "key": "gMxK1852DV0",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Anya Taylor-Joy",
-              "character": "Luciana 'Lucky' Armstrong",
-              "order": 0
-            },
-            {
-              "name": "Annette Bening",
-              "character": "Priscilla Masterson",
-              "order": 1
-            },
-            {
-              "name": "Clifton Collins Jr.",
-              "character": "Harris Dutch",
-              "order": 2
-            },
-            {
-              "name": "Aunjanue Ellis-Taylor",
-              "character": "Agent Billie Rand",
-              "order": 3
-            },
-            {
-              "name": "Timothy Olyphant",
-              "character": "John Armstrong",
-              "order": 4
             }
           ]
         },
@@ -2159,6 +2076,222 @@
           ]
         },
         {
+          "guid": "tmdb-tv-113962",
+          "title": "Operaciones Especiales: Lioness",
+          "link": "https://www.themoviedb.org/tv/113962",
+          "summary": "Cruz Manuelos, una joven infante de marina ruda pero apasionada, es reclutada para unirse al Equipo Lioness Engagement de la CIA para ayudar a acabar con una organización terrorista desde adentro. Joe, el jefe de estación del programa Lioness, tiene la tarea de capacitar, administrar y liderar a sus agentes encubiertos.",
+          "image": "https://image.tmdb.org/t/p/w500/d0r0rxI9UjMVvD5Krc5oET2O0gU.jpg",
+          "pubDate": "2023-07-23",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-08-01T11:58:45.453Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.8,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-08-02",
+          "numberOfSeasons": 3,
+          "currentSeason": 2,
+          "reviews": null,
+          "trailer": {
+            "key": "7YunYBwleJM",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Zoe Saldaña",
+              "character": "Joe McNamara",
+              "order": 0
+            },
+            {
+              "name": "Laysla De Oliveira",
+              "character": "Cruz Manuelos",
+              "order": 1
+            },
+            {
+              "name": "Dave Annable",
+              "character": "Neal McNamara",
+              "order": 2
+            },
+            {
+              "name": "Jill Wagner",
+              "character": "Bobby",
+              "order": 3
+            },
+            {
+              "name": "LaMonica Garrett",
+              "character": "Tucker",
+              "order": 4
+            },
+            {
+              "name": "James Jordan",
+              "character": "Two Cups",
+              "order": 5
+            },
+            {
+              "name": "Genesis Rodriguez",
+              "character": "Captain Josephina 'Josie' Carrillo",
+              "order": 6
+            },
+            {
+              "name": "Michael Kelly",
+              "character": "Byron Westfield",
+              "order": 7
+            },
+            {
+              "name": "Austin Hébert",
+              "character": "Randy",
+              "order": 8
+            },
+            {
+              "name": "Jonah Wharton",
+              "character": "Tex",
+              "order": 10
+            }
+          ]
+        },
+        {
+          "guid": "tmdb-tv-30984",
+          "title": "Bleach",
+          "link": "https://www.themoviedb.org/tv/30984",
+          "summary": "La serie narra las aventuras de Ichigo Kurosaki, un adolescente que tiene la facultad de interactuar con los espíritus. Una noche, Ichigo se encuentra con una shinigami —personificación japonesa del Dios de la muerte— llamada Rukia Kuchiki, quien se sorprende que pueda verla. Sin embargo, su conversación es interrumpida por la aparición de un hollow, un espíritu maligno. Después de que Rukia fuera gravemente herida al tratar de proteger a Ichigo, esta intenta traspasarle parte de sus poderes a Ichigo para que pueda enfrentarse al hollow en igualdad de condiciones. No obstante, Ichigo sin darse cuenta los absorbe casi por completo y logra vencer con facilidad al espíritu.",
+          "image": "https://image.tmdb.org/t/p/w500/rsv116o9M983WvInXztEiwc6WRD.jpg",
+          "pubDate": "2004-10-05",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-07-31T10:10:19.297Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.2,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.4
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-08-01",
+          "numberOfSeasons": 2,
+          "currentSeason": 2,
+          "reviews": null,
+          "trailer": {
+            "key": "mnFXQUq-7ks",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Masakazu Morita",
+              "character": "Ichigo Kurosaki (voice)",
+              "order": 0
+            },
+            {
+              "name": "Fumiko Orikasa",
+              "character": "Rukia Kuchiki (voice)",
+              "order": 1
+            },
+            {
+              "name": "Hiroki Yasumoto",
+              "character": "Yasutora Sado (voice)",
+              "order": 2
+            },
+            {
+              "name": "松岡由貴",
+              "character": "Orihime Inoue (voice)",
+              "order": 3
+            },
+            {
+              "name": "Noriaki Sugiyama",
+              "character": "Uryu Ishida (voice)",
+              "order": 4
+            }
+          ]
+        },
+        {
+          "guid": "tmdb-tv-65334",
+          "title": "Prodigiosa: Las aventuras de Ladybug",
+          "link": "https://www.themoviedb.org/tv/65334",
+          "summary": "Cuando París corre peligro, Marinette se convierte en Ladybug. Lo que no sabe, es que su apuesto amigo Adrien es Cat Noir, otro superhéroe al servicio de la ciudad.",
+          "image": "https://image.tmdb.org/t/p/w500/z9n5ZOECtbug5h07kq7RxoLRBOZ.jpg",
+          "pubDate": "2015-10-19",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-07-29T10:14:54.407Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.5,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.1
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": 6,
+          "currentSeason": 6,
+          "reviews": null,
+          "trailer": {
+            "key": "aBNkRHf_iEk",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Anouck Hautbois",
+              "character": "Marinette Dupain-Cheng / Ladybug (voice)",
+              "order": 1
+            },
+            {
+              "name": "Benjamin Bollen",
+              "character": "Adrien Agreste / Chat Noir (voice)",
+              "order": 2
+            },
+            {
+              "name": "Marie Nonnenmacher",
+              "character": "Tikki (voice)",
+              "order": 4
+            },
+            {
+              "name": "Thierry Kazazian",
+              "character": "Plagg (voice)",
+              "order": 5
+            }
+          ]
+        },
+        {
+          "guid": "tmdb-tv-61818",
+          "title": "Late Night with Seth Meyers",
+          "link": "https://www.themoviedb.org/tv/61818",
+          "summary": "Seth Meyers, who is \"Saturday Night Live's\" longest serving anchor on the show's wildly popular \"Weekend Update,\" takes over as host of NBC's \"Late Night\" — home to A-list celebrity guests, memorable comedy and the best in musical talent. As the Emmy Award-winning head writer for \"SNL,\" Meyers has established a reputation for sharp wit and perfectly timed comedy, and has gained fame for his spot-on jokes and satire. Meyers takes his departure from \"SNL\" to his new post at \"Late Night,\" as Jimmy Fallon moves to \"The Tonight Show\".",
+          "image": "https://image.tmdb.org/t/p/w500/u8VruEGv7mtyJihVn2CSA1u90pk.jpg",
+          "pubDate": "2014-02-25",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-07-28T17:13:10.873Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.3,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 5.1
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-07-30",
+          "numberOfSeasons": 13,
+          "currentSeason": 13,
+          "reviews": null,
+          "trailer": {
+            "key": "rLwbzGyC6t4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Seth Meyers",
+              "character": "Self - Host",
+              "order": 0
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-30983",
           "title": "Detective Conan",
           "link": "https://www.themoviedb.org/tv/30983",
@@ -2313,60 +2446,6 @@
               "name": "鹿骐",
               "character": "Zhang Mingshu",
               "order": 9
-            }
-          ]
-        },
-        {
-          "guid": "tmdb-tv-30984",
-          "title": "Bleach",
-          "link": "https://www.themoviedb.org/tv/30984",
-          "summary": "La serie narra las aventuras de Ichigo Kurosaki, un adolescente que tiene la facultad de interactuar con los espíritus. Una noche, Ichigo se encuentra con una shinigami —personificación japonesa del Dios de la muerte— llamada Rukia Kuchiki, quien se sorprende que pueda verla. Sin embargo, su conversación es interrumpida por la aparición de un hollow, un espíritu maligno. Después de que Rukia fuera gravemente herida al tratar de proteger a Ichigo, esta intenta traspasarle parte de sus poderes a Ichigo para que pueda enfrentarse al hollow en igualdad de condiciones. No obstante, Ichigo sin darse cuenta los absorbe casi por completo y logra vencer con facilidad al espíritu.",
-          "image": "https://image.tmdb.org/t/p/w500/rsv116o9M983WvInXztEiwc6WRD.jpg",
-          "pubDate": "2004-10-05",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-07-31T10:10:19.297Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.2,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.4
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-08-01",
-          "numberOfSeasons": 2,
-          "currentSeason": 2,
-          "reviews": null,
-          "trailer": {
-            "key": "mnFXQUq-7ks",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Masakazu Morita",
-              "character": "Ichigo Kurosaki (voice)",
-              "order": 0
-            },
-            {
-              "name": "Fumiko Orikasa",
-              "character": "Rukia Kuchiki (voice)",
-              "order": 1
-            },
-            {
-              "name": "Hiroki Yasumoto",
-              "character": "Yasutora Sado (voice)",
-              "order": 2
-            },
-            {
-              "name": "松岡由貴",
-              "character": "Orihime Inoue (voice)",
-              "order": 3
-            },
-            {
-              "name": "Noriaki Sugiyama",
-              "character": "Uryu Ishida (voice)",
-              "order": 4
             }
           ]
         },
