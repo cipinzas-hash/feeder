@@ -1,0 +1,12 @@
+{
+  "name": "angst",
+  "private": true,
+  "type": "module",
+  "description": "Angst — planner semanal modular. modules/feed/ tiene su propio package.json (dependencias del pipeline de Actions, separadas de las del build principal).",
+  "scripts": {
+    "build": "node build/assemble.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  }
+}

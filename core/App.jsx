@@ -13,6 +13,7 @@ import EjercicioPage from "../modules/ejercicio/EjercicioPage.jsx";
 import NutricionPage from "../modules/nutricion/NutricionPage.jsx";
 import BudgetPage from "../modules/presupuesto/BudgetPage.jsx";
 import EspritPage from "../modules/espiritu/EspritPage.jsx";
+import FeedPage from "../modules/feed/FeedPage.jsx";
 
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
@@ -1162,7 +1163,7 @@ function AngstApp() {
         </div>
 
         {(()=>{
-          const TABS=[{label:"📅 Semana",emoji:"📅"},{label:"💵 Presupuesto",emoji:"💵"},{label:"📒 Emprendimientos",emoji:"📒"},{label:"🧠 mindfulness",emoji:"🧠"},{label:"🩺 salud",emoji:"🩺"},{label:"🍄 fadiman",emoji:"🍄"},{label:"🥗 nutrición",emoji:"🥗"},{label:"🏋️ ejercicio",emoji:"🏋️"},{label:"🃏 pokécripto",emoji:"🃏"}];
+          const TABS=[{label:"📅 Semana",emoji:"📅"},{label:"💵 Presupuesto",emoji:"💵"},{label:"📒 Emprendimientos",emoji:"📒"},{label:"🧠 mindfulness",emoji:"🧠"},{label:"🩺 salud",emoji:"🩺"},{label:"🍄 fadiman",emoji:"🍄"},{label:"🥗 nutrición",emoji:"🥗"},{label:"🏋️ ejercicio",emoji:"🏋️"},{label:"🃏 pokécripto",emoji:"🃏"},{label:"📰 feed",emoji:"📰"}];
           return (
             <div className="tabs" style={{userSelect:"none"}}>
               {TABS.map((tab,ti)=>{
@@ -1586,6 +1587,7 @@ function AngstApp() {
             setPokePriceCache(next);pokePriceCacheRef.current=next;saveToStorage({pokePriceCache:next});
           }}
         />}
+        {page===9&&<FeedPage/>}
 
         <div className="ftr">
           <div className="ftr-copy">{STOIC_PHRASES[footerIdx]}</div>
