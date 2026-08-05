@@ -900,9 +900,26 @@ async function main() {
   // perderse cada mes como el resto del feed de lectura.
   const recentItems = allItems.filter(a => a.categoria === "Podcasts" || !a.pubDate || new Date(a.pubDate).getTime() >= cutoff);
 
+  // Conciertos: los 6 canales (WackenTV, Hellfest, M'era Luna, Bangers Open
+  // Air, ARTE Concert, MagentaTV) suben de todo -- trailers, aftermovies,
+  // vlogs, anuncios de line-up, contenido genérico de la plataforma (caso
+  // MagentaTV). Se filtra por título para quedarse solo con presentaciones
+  // en vivo de bandas puntuales, no cobertura genérica del festival.
+  const CONCIERTOS_EXCLUDE_RE = /\btrailer\b|\baftermovie\b|\bvlog\b|subscribers?|line[- ]?up|ticket|entrevista|\binterview\b|documentary|explains?|announcement|winter nights|full metal cruise/i;
+  const CONCIERTOS_INCLUDE_RE = /\blive\b|\bconcert\b|\ben vivo\b/i;
+  const recentItemsFiltered = recentItems.filter(a => {
+    if (a.categoria !== "Conciertos") return true;
+    if (CONCIERTOS_EXCLUDE_RE.test(a.title)) return false;
+    return CONCIERTOS_INCLUDE_RE.test(a.title);
+  });
+  const droppedConciertosCount = recentItems.length - recentItemsFiltered.length;
+  if (droppedConciertosCount > 0) {
+    console.log(`✓ Conciertos: ${droppedConciertosCount} video(s) descartados (no parecen presentación en vivo de una banda)`);
+  }
+
   let extractionsUsed = 0;
   console.log(`Extrayendo texto completo (tope ${MAX_NEW_EXTRACTIONS_PER_RUN} nuevas esta corrida)...`);
-  const withFullText = await mapWithConcurrency(recentItems, EXTRACT_CONCURRENCY, async item => {
+  const withFullText = await mapWithConcurrency(recentItemsFiltered, EXTRACT_CONCURRENCY, async item => {
     if (item.tipo === "video") return item; // el link es la página de YouTube, no hay texto real que extraer ahí
     if (item.fullText) return item; // ya vino con content:encoded, hasListenEmbed/tipo/bandcamp/soundcloud ya seteados en fetchFeed
     const prev = previousByGuid.get(item.guid);
