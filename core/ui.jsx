@@ -290,8 +290,8 @@ function EF({ value, placeholder, multiline, onSave, dark, small }) {
   const s = {width:"100%",border:dark?"1px solid #333":"1px dashed #aaa",background:dark?"#222":"#fafafa",borderRadius:6,padding:"6px 10px",fontSize:fs,fontFamily:"'DM Sans',sans-serif",color:dark?"#fff":"#111",outline:"none",resize:"none",lineHeight:1.5};
   if (ed) {
     return multiline
-      ? <textarea autoFocus value={txt} rows={3} onChange={e=>setTxt(e.target.value)} onBlur={commit} onKeyDown={e=>{if(e.key==="Escape")commit();}} style={s}/>
-      : <input autoFocus type="text" value={txt} onChange={e=>setTxt(e.target.value)} onBlur={commit} onKeyDown={e=>{if(e.key==="Enter"||e.key==="Escape")commit();}} style={s}/>;
+      ? <textarea autoFocus value={txt} rows={3} onChange={e=>{const v=e.target.value;setTxt(v);onSave(v);}} onBlur={commit} onKeyDown={e=>{if(e.key==="Escape")commit();}} style={s}/>
+      : <input autoFocus type="text" value={txt} onChange={e=>{const v=e.target.value;setTxt(v);onSave(v);}} onBlur={commit} onKeyDown={e=>{if(e.key==="Enter"||e.key==="Escape")commit();}} style={s}/>;
   }
   return (
     <div onClick={()=>{setTxt(value);setEd(true);}} style={{cursor:"pointer",fontSize:fs,lineHeight:1.5,color:value?(dark?"#ccc":"#333"):(dark?"#555":"#bbb"),fontStyle:value?"normal":"italic",padding:"6px 10px",border:dark?"1px solid #222":"1px dashed #e8e8e8",borderRadius:6,minHeight:multiline?60:38,whiteSpace:"pre-wrap",transition:"border-color 0.15s",background:dark?"#1a1a1a":"transparent"}}

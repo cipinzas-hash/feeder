@@ -486,9 +486,17 @@ var __angst = (() => {
     const fs = small ? 13 : 15;
     const s = { width: "100%", border: dark ? "1px solid #333" : "1px dashed #aaa", background: dark ? "#222" : "#fafafa", borderRadius: 6, padding: "6px 10px", fontSize: fs, fontFamily: "'DM Sans',sans-serif", color: dark ? "#fff" : "#111", outline: "none", resize: "none", lineHeight: 1.5 };
     if (ed) {
-      return multiline ? /* @__PURE__ */ React.createElement("textarea", { autoFocus: true, value: txt, rows: 3, onChange: (e) => setTxt(e.target.value), onBlur: commit, onKeyDown: (e) => {
+      return multiline ? /* @__PURE__ */ React.createElement("textarea", { autoFocus: true, value: txt, rows: 3, onChange: (e) => {
+        const v = e.target.value;
+        setTxt(v);
+        onSave(v);
+      }, onBlur: commit, onKeyDown: (e) => {
         if (e.key === "Escape") commit();
-      }, style: s }) : /* @__PURE__ */ React.createElement("input", { autoFocus: true, type: "text", value: txt, onChange: (e) => setTxt(e.target.value), onBlur: commit, onKeyDown: (e) => {
+      }, style: s }) : /* @__PURE__ */ React.createElement("input", { autoFocus: true, type: "text", value: txt, onChange: (e) => {
+        const v = e.target.value;
+        setTxt(v);
+        onSave(v);
+      }, onBlur: commit, onKeyDown: (e) => {
         if (e.key === "Enter" || e.key === "Escape") commit();
       }, style: s });
     }
@@ -5598,7 +5606,11 @@ var __angst = (() => {
     }, onMouseLeave: (e) => {
       e.currentTarget.style.borderColor = "#e0e0e0";
       e.currentTarget.style.color = "#bbb";
-    } }, "\u2039"), ed ? /* @__PURE__ */ React.createElement("input", { autoFocus: true, value: txt, onChange: (e) => setTxt(e.target.value), onBlur: commit, onKeyDown: (e) => {
+    } }, "\u2039"), ed ? /* @__PURE__ */ React.createElement("input", { autoFocus: true, value: txt, onChange: (e) => {
+      const v = e.target.value;
+      setTxt(v);
+      onSave(parseInt(v.replace(/\D/g, "")) || 0);
+    }, onBlur: commit, onKeyDown: (e) => {
       if (e.key === "Enter" || e.key === "Escape") commit();
     }, style: { width: 82, border: "1px dashed #aaa", background: "#fafafa", borderRadius: 4, padding: "2px 5px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", color: "#111", outline: "none", textAlign: "right" } }) : /* @__PURE__ */ React.createElement("div", { onClick: () => {
       setTxt(String(value));
@@ -5642,7 +5654,11 @@ var __angst = (() => {
       }, style: { background: "transparent", border: "1px dashed #555", borderRadius: 4, color: "#aaa", fontSize: 11, padding: "2px 8px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", letterSpacing: 1 } }, "+ agregar"))
     ), /* @__PURE__ */ React.createElement("div", { style: { border: "1px solid #eee", borderTop: "none", borderRadius: "0 0 8px 8px", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: checkable ? "24px " + COL : COL, gap: 4, padding: "6px 12px", background: "#f8f8f8", borderBottom: "1px solid #eee" } }, checkable && /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 2, textTransform: "uppercase" } }, "Fondo"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 1, textAlign: "right", paddingRight: 24 } }, "$ Mensual"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 1, textAlign: "center" } }, "%"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 1, textAlign: "right" } }, "Proy. anual"), /* @__PURE__ */ React.createElement("div", null)), rows.map((row, i) => {
       const rp = T > 0 ? (row.monto / T * 100).toFixed(1) : "-";
-      return /* @__PURE__ */ React.createElement("div", { key: row.id, style: { display: "grid", gridTemplateColumns: checkable ? "24px " + COL : COL, gap: 4, padding: "9px 12px", borderBottom: i < rows.length - 1 ? "1px dashed #f0f0f0" : "none", alignItems: "center", background: i % 2 === 0 ? "#fff" : "#fafafa" } }, checkable && /* @__PURE__ */ React.createElement("div", { onClick: () => onRowCheck && onRowCheck(secKey, row.id, !row.checked), style: { display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 16, height: 16, borderRadius: 3, border: row.checked ? "none" : "1.5px dashed #ccc", background: row.checked ? "#111" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", flexShrink: 0 } }, row.checked && /* @__PURE__ */ React.createElement("span", { style: { color: "#fff", fontSize: 10, fontWeight: 700, lineHeight: 1 } }, "\u2713"))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: row.checked ? "#bbb" : "#333", textDecoration: row.checked ? "line-through" : "none", display: "flex", alignItems: "center", gap: 5, minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { style: { flexShrink: 0 } }, row.emoji), editId === row.id ? /* @__PURE__ */ React.createElement("input", { autoFocus: true, value: editLabel, onChange: (e) => setEditLabel(e.target.value), onBlur: () => {
+      return /* @__PURE__ */ React.createElement("div", { key: row.id, style: { display: "grid", gridTemplateColumns: checkable ? "24px " + COL : COL, gap: 4, padding: "9px 12px", borderBottom: i < rows.length - 1 ? "1px dashed #f0f0f0" : "none", alignItems: "center", background: i % 2 === 0 ? "#fff" : "#fafafa" } }, checkable && /* @__PURE__ */ React.createElement("div", { onClick: () => onRowCheck && onRowCheck(secKey, row.id, !row.checked), style: { display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 16, height: 16, borderRadius: 3, border: row.checked ? "none" : "1.5px dashed #ccc", background: row.checked ? "#111" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", flexShrink: 0 } }, row.checked && /* @__PURE__ */ React.createElement("span", { style: { color: "#fff", fontSize: 10, fontWeight: 700, lineHeight: 1 } }, "\u2713"))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: row.checked ? "#bbb" : "#333", textDecoration: row.checked ? "line-through" : "none", display: "flex", alignItems: "center", gap: 5, minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { style: { flexShrink: 0 } }, row.emoji), editId === row.id ? /* @__PURE__ */ React.createElement("input", { autoFocus: true, value: editLabel, onChange: (e) => {
+        const v = e.target.value;
+        setEditLabel(v);
+        if (v.trim()) onRowSave(secKey, row.id, row.monto, v);
+      }, onBlur: () => {
         if (editLabel.trim()) onRowSave(secKey, row.id, row.monto, editLabel);
         setEditId(null);
       }, onKeyDown: (e) => {
@@ -7993,6 +8009,16 @@ ${item.link}`);
       setEditingTask({ dateKey, tid });
       setEditText(text);
     }
+    function persistTaskText(dateKey, tid, text) {
+      setDayData((prev) => {
+        const day = prev[dateKey] || makeEmptyDay();
+        const newTasks = day.tasks.map((t) => t.id === tid ? { ...t, text } : t);
+        const next = { ...prev, [dateKey]: { ...day, tasks: newTasks } };
+        dayDataRef.current = next;
+        saveToStorage({ dayData: next });
+        return next;
+      });
+    }
     function commitTask() {
       if (!editingTask) return;
       const { dateKey, tid } = editingTask;
@@ -8754,7 +8780,11 @@ ${item.link}`);
         }, style: { background: "transparent", border: "none", color: "#ccc", fontSize: 15, cursor: "pointer", flexShrink: 0, lineHeight: 1 }, className: "fdel" }, "\xD7"));
       }), fixed.map((task) => {
         const isEd = editingTask?.dateKey === dateKey && editingTask?.tid === task.id;
-        return /* @__PURE__ */ React.createElement("div", { key: task.id, className: "frow", style: { position: "relative" } }, /* @__PURE__ */ React.createElement("div", { className: "fdot", style: task.urgent ? { background: "#ff3b30", boxShadow: "0 0 5px #ff3b30" } : {} }), isEd ? /* @__PURE__ */ React.createElement("textarea", { autoFocus: true, value: editText, rows: 1, onChange: (e) => setEditText(e.target.value), onBlur: commitTask, onKeyDown: (e) => {
+        return /* @__PURE__ */ React.createElement("div", { key: task.id, className: "frow", style: { position: "relative" } }, /* @__PURE__ */ React.createElement("div", { className: "fdot", style: task.urgent ? { background: "#ff3b30", boxShadow: "0 0 5px #ff3b30" } : {} }), isEd ? /* @__PURE__ */ React.createElement("textarea", { autoFocus: true, value: editText, rows: 1, onChange: (e) => {
+          const v = e.target.value;
+          setEditText(v);
+          persistTaskText(dateKey, task.id, v);
+        }, onBlur: commitTask, onKeyDown: (e) => {
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             commitTask();
@@ -8851,7 +8881,11 @@ ${item.link}`);
             }
           },
           /* @__PURE__ */ React.createElement("div", { onClick: () => updateTask(dateKey, task.id, { done: !done }), style: { width: 21, height: 21, borderRadius: "50%", border: `2px solid ${done ? "#111" : "#ccc"}`, background: done ? "#111" : "transparent", flexShrink: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" } }, done && /* @__PURE__ */ React.createElement("span", { style: { color: "#fff", fontSize: 10, lineHeight: 1, fontWeight: 700 } }, "\u2713")),
-          isEd ? /* @__PURE__ */ React.createElement("textarea", { className: "tinp", autoFocus: true, value: editText, rows: 2, onChange: (e) => setEditText(e.target.value), onBlur: commitTask, onKeyDown: (e) => {
+          isEd ? /* @__PURE__ */ React.createElement("textarea", { className: "tinp", autoFocus: true, value: editText, rows: 2, onChange: (e) => {
+            const v = e.target.value;
+            setEditText(v);
+            persistTaskText(dateKey, task.id, v);
+          }, onBlur: commitTask, onKeyDown: (e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
               commitTask();

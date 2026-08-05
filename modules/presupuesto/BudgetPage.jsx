@@ -183,7 +183,7 @@ function AmountRow({ value, total, onSave }) {
     <div style={{display:"flex",alignItems:"center",gap:2,justifyContent:"flex-end"}}>
       <button style={btnStyle} onClick={()=>nudge(-1000)} onMouseEnter={e=>{e.currentTarget.style.borderColor="#888";e.currentTarget.style.color="#555";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="#e0e0e0";e.currentTarget.style.color="#bbb";}}>‹</button>
       {ed
-        ? <input autoFocus value={txt} onChange={e=>setTxt(e.target.value)} onBlur={commit} onKeyDown={e=>{if(e.key==="Enter"||e.key==="Escape")commit();}} style={{width:82,border:"1px dashed #aaa",background:"#fafafa",borderRadius:4,padding:"2px 5px",fontSize:13,fontFamily:"'DM Sans',sans-serif",color:"#111",outline:"none",textAlign:"right"}}/>
+        ? <input autoFocus value={txt} onChange={e=>{const v=e.target.value;setTxt(v);onSave(parseInt(v.replace(/\D/g,""))||0);}} onBlur={commit} onKeyDown={e=>{if(e.key==="Enter"||e.key==="Escape")commit();}} style={{width:82,border:"1px dashed #aaa",background:"#fafafa",borderRadius:4,padding:"2px 5px",fontSize:13,fontFamily:"'DM Sans',sans-serif",color:"#111",outline:"none",textAlign:"right"}}/>
         : <div onClick={()=>{setTxt(String(value));setEd(true);}} style={{width:82,cursor:"pointer",fontSize:13,color:"#333",fontFamily:"'DM Sans',sans-serif",textAlign:"right",padding:"2px 5px",border:"1px solid transparent",borderRadius:4}} onMouseEnter={e=>e.currentTarget.style.borderColor="#ddd"} onMouseLeave={e=>e.currentTarget.style.borderColor="transparent"}>{fmtCLP(value)}</div>
       }
       <button style={btnStyle} onClick={()=>nudge(1000)} onMouseEnter={e=>{e.currentTarget.style.borderColor="#888";e.currentTarget.style.color="#555";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="#e0e0e0";e.currentTarget.style.color="#bbb";}}>›</button>
@@ -244,7 +244,7 @@ function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit
               <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:row.checked?"#bbb":"#333",textDecoration:row.checked?"line-through":"none",display:"flex",alignItems:"center",gap:5,minWidth:0}}>
                 <span style={{flexShrink:0}}>{row.emoji}</span>
                 {editId===row.id
-                  ? <input autoFocus value={editLabel} onChange={e=>setEditLabel(e.target.value)} onBlur={()=>{if(editLabel.trim())onRowSave(secKey,row.id,row.monto,editLabel);setEditId(null);}} onKeyDown={e=>{if(e.key==="Enter"){if(editLabel.trim())onRowSave(secKey,row.id,row.monto,editLabel);setEditId(null);}if(e.key==="Escape")setEditId(null);}} style={{fontSize:12,border:"1px dashed #aaa",borderRadius:4,padding:"1px 5px",outline:"none",background:"#fafafa",width:"100%"}}/>
+                  ? <input autoFocus value={editLabel} onChange={e=>{const v=e.target.value;setEditLabel(v);if(v.trim())onRowSave(secKey,row.id,row.monto,v);}} onBlur={()=>{if(editLabel.trim())onRowSave(secKey,row.id,row.monto,editLabel);setEditId(null);}} onKeyDown={e=>{if(e.key==="Enter"){if(editLabel.trim())onRowSave(secKey,row.id,row.monto,editLabel);setEditId(null);}if(e.key==="Escape")setEditId(null);}} style={{fontSize:12,border:"1px dashed #aaa",borderRadius:4,padding:"1px 5px",outline:"none",background:"#fafafa",width:"100%"}}/>
                   : <span onClick={()=>{setEditLabel(row.label);setEditId(row.id);}} style={{cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title="clic para editar">{row.label}</span>
                 }
               </div>

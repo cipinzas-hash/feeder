@@ -580,6 +580,17 @@ function AngstApp() {
 
   function startEdit(dateKey, tid, text){ setEditingTask({dateKey,tid}); setEditText(text); }
 
+  function persistTaskText(dateKey, tid, text){
+    setDayData(prev => {
+      const day = prev[dateKey] || makeEmptyDay();
+      const newTasks = day.tasks.map(t=>t.id===tid?{...t,text}:t);
+      const next = { ...prev, [dateKey]: { ...day, tasks: newTasks } };
+      dayDataRef.current = next;
+      saveToStorage({dayData: next});
+      return next;
+    });
+  }
+
   function commitTask(){
     if(!editingTask) return;
     const {dateKey, tid} = editingTask;
@@ -1351,7 +1362,7 @@ function AngstApp() {
                                 <div key={task.id} className="frow" style={{position:"relative"}}>
                                   <div className="fdot" style={task.urgent?{background:"#ff3b30",boxShadow:"0 0 5px #ff3b30"}:{}}/>
                                   {isEd
-                                    ?<textarea autoFocus value={editText} rows={1} onChange={e=>setEditText(e.target.value)} onBlur={commitTask} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();commitTask();}}} style={{flex:1,background:"#222",border:"1px solid #555",color:"#fff",padding:"3px 7px",fontSize:14,fontFamily:"'DM Sans',sans-serif",fontWeight:600,outline:"none",resize:"none",borderRadius:4,lineHeight:1.4}}/>
+                                    ?<textarea autoFocus value={editText} rows={1} onChange={e=>{const v=e.target.value;setEditText(v);persistTaskText(dateKey,task.id,v);}} onBlur={commitTask} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();commitTask();}}} style={{flex:1,background:"#222",border:"1px solid #555",color:"#fff",padding:"3px 7px",fontSize:14,fontFamily:"'DM Sans',sans-serif",fontWeight:600,outline:"none",resize:"none",borderRadius:4,lineHeight:1.4}}/>
                                     :<div className="ftxt" onClick={()=>startEdit(dateKey,task.id,task.text)}>{task.text}</div>
                                   }
                                   {task.deadline
@@ -1452,7 +1463,7 @@ function AngstApp() {
                                   {done&&<span style={{color:"#fff",fontSize:10,lineHeight:1,fontWeight:700}}>✓</span>}
                                 </div>
                                 {isEd
-                                  ?<textarea className="tinp" autoFocus value={editText} rows={2} onChange={e=>setEditText(e.target.value)} onBlur={commitTask} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();commitTask();}}}/>
+                                  ?<textarea className="tinp" autoFocus value={editText} rows={2} onChange={e=>{const v=e.target.value;setEditText(v);persistTaskText(dateKey,task.id,v);}} onBlur={commitTask} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();commitTask();}}}/>
                                   :<div className="ttxt" style={task.carried?{borderLeft:"2px dashed #ddd",paddingLeft:6}:{}} onClick={()=>!done&&startEdit(dateKey,task.id,task.text)} style={{textDecoration:done?"line-through":"none",color:done?"#bbb":"#333",cursor:done?"default":"pointer"}}>{task.text}</div>
                                 }
                                 {!done&&<button onClick={()=>updateTask(dateKey,task.id,{urgent:!task.urgent})} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:12,opacity:task.urgent?1:0.15,padding:"0 1px",lineHeight:1,transition:"opacity 0.15s"}} title="urgente">🚨</button>}
