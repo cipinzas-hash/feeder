@@ -7111,7 +7111,8 @@ ${item.link}`);
     });
     return /* @__PURE__ */ React.createElement("div", { style: { paddingBottom: 70, background: "#111", minHeight: "100vh" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 18px 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff" } }, "\u{1F3AC} vitrina audiovisual")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "12px 18px" } }, VITRINA_CATEGORIAS.map((cat) => /* @__PURE__ */ React.createElement("button", { key: cat, onClick: () => onChangeCat(cat), style: segBtn(cat === vitrinaCat) }, cat))), vitrinaCat === "Microdocumentales" ? /* @__PURE__ */ React.createElement(MicrodocFeed, { items }) : vitrinaCat === "Podcasts" ? /* @__PURE__ */ React.createElement(PodcastFeed, { items }) : vitrinaCat === "Melee" ? /* @__PURE__ */ React.createElement(MeleeFeed, { items }) : /* @__PURE__ */ React.createElement(CineCoverFlow, { items, onOpen, generatedAt }));
   }
-  function FeedPage() {
+  function FeedPage({ onExit }) {
+    const ExitBtn = () => /* @__PURE__ */ React.createElement("button", { onClick: onExit, title: "Volver a Angst", style: { position: "fixed", top: "calc(10px + env(safe-area-inset-top))", right: 12, zIndex: 999, background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", borderRadius: 20, width: 34, height: 34, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, "\u2715");
     const [loaded, setLoaded] = useState7(false);
     const [queue, setQueue] = useState7([]);
     const [seen, setSeen] = useState7([]);
@@ -7304,7 +7305,7 @@ ${item.link}`);
       const ok = await exportCineShareImage(item, (msg) => setExportError(msg));
       if (ok) showToast("\u2713 imagen descargada");
     }
-    if (!loaded) return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#0a0a0a" } });
+    if (!loaded) return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#0a0a0a" } }), /* @__PURE__ */ React.createElement(ExitBtn, null));
     if (buzonOpenItem) {
       const { Extended } = cardsFor(buzonOpenItem.formato);
       const isCine = buzonOpenItem.formato === "cine";
@@ -7319,10 +7320,10 @@ ${item.link}`);
           hideActions: true,
           ...isCine ? { onExportImage: handleExportImage } : {}
         }
-      ), toast && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#fff", color: "#111", padding: "8px 18px", borderRadius: 20, fontFamily: "'Caveat',cursive", fontSize: 15, fontWeight: 700, zIndex: 200 } }, toast), exportError && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", bottom: 90, left: 18, right: 18, background: "#3a1010", border: "1px solid #6b2020", color: "#f5b5b5", borderRadius: 10, padding: "10px 14px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, zIndex: 200 } }, exportError, /* @__PURE__ */ React.createElement("button", { onClick: () => setExportError(null), style: { float: "right", background: "transparent", border: "none", color: "#f5b5b5", cursor: "pointer" } }, "\xD7")));
+      ), toast && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#fff", color: "#111", padding: "8px 18px", borderRadius: 20, fontFamily: "'Caveat',cursive", fontSize: 15, fontWeight: 700, zIndex: 200 } }, toast), exportError && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", bottom: 90, left: 18, right: 18, background: "#3a1010", border: "1px solid #6b2020", color: "#f5b5b5", borderRadius: 10, padding: "10px 14px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, zIndex: 200 } }, exportError, /* @__PURE__ */ React.createElement("button", { onClick: () => setExportError(null), style: { float: "right", background: "transparent", border: "none", color: "#f5b5b5", cursor: "pointer" } }, "\xD7")), /* @__PURE__ */ React.createElement(ExitBtn, null));
     }
     if (vitrinaOpenItem) {
-      return /* @__PURE__ */ React.createElement(
+      return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
         CineExtendedView,
         {
           item: vitrinaOpenItem,
@@ -7331,10 +7332,10 @@ ${item.link}`);
           onSave: () => handleVitrinaSave(vitrinaOpenItem),
           onChangeCategory: handleVitrinaChangeCategory
         }
-      );
+      ), /* @__PURE__ */ React.createElement(ExitBtn, null));
     }
     if (showDiagPanel) {
-      return /* @__PURE__ */ React.createElement(DiagPanel, { diag: refreshDiag, generatedAt: feedGeneratedAt, onClose: () => setShowDiagPanel(false) });
+      return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(DiagPanel, { diag: refreshDiag, generatedAt: feedGeneratedAt, onClose: () => setShowDiagPanel(false) }), /* @__PURE__ */ React.createElement(ExitBtn, null));
     }
     const current = queue[0];
     const { Story: CurrentStory, Extended: CurrentExtended } = current ? cardsFor(current.formato) : {};
@@ -7366,7 +7367,7 @@ ${item.link}`);
     )), /* @__PURE__ */ React.createElement(TabBar, { area, onChange: setArea, buzonCount: buzon.length, onOpenBuzon: () => {
       setArea("noticias");
       setView("buzon");
-    } }));
+    } }), /* @__PURE__ */ React.createElement(ExitBtn, null));
   }
   var FeedPage_default = FeedPage;
 
@@ -9063,7 +9064,7 @@ ${item.link}`);
           saveToStorage({ pokePriceCache: next });
         }
       }
-    ), page === 9 && /* @__PURE__ */ React.createElement(FeedPage_default, null), /* @__PURE__ */ React.createElement("div", { className: "ftr" }, /* @__PURE__ */ React.createElement("div", { className: "ftr-copy" }, STOIC_PHRASES[footerIdx]), /* @__PURE__ */ React.createElement("button", { onClick: () => setSearchOpen(true), style: { background: "transparent", border: "none", cursor: "pointer", fontSize: 16, opacity: 0.4, padding: "0 4px", lineHeight: 1 }, title: "buscar" }, "\u{1F50D}"), /* @__PURE__ */ React.createElement("div", { className: "ftr-logo" }, "ANGST")), searchOpen && /* @__PURE__ */ React.createElement(SearchModal, { dayData, nutria, kidsHealth, routines, onClose: () => setSearchOpen(false) }), scheduleOpen && /* @__PURE__ */ React.createElement(ScheduleModal, { dateKey: scheduleOpen, day: dayData[scheduleOpen] || makeEmptyDay(), isWork: Array.isArray(calMarks[scheduleOpen]) ? calMarks[scheduleOpen].includes("work") : calMarks[scheduleOpen] === "work", isColegio: Array.isArray(calMarks[scheduleOpen]) ? calMarks[scheduleOpen].includes("colegio") : calMarks[scheduleOpen] === "colegio", onSave: (sched) => updateDay(scheduleOpen, { schedule: sched }), onClose: () => setScheduleOpen(null), onNavigate: (dk) => setScheduleOpen(dk) })));
+    ), page === 9 && /* @__PURE__ */ React.createElement(FeedPage_default, { onExit: () => setPage(0) }), /* @__PURE__ */ React.createElement("div", { className: "ftr" }, /* @__PURE__ */ React.createElement("div", { className: "ftr-copy" }, STOIC_PHRASES[footerIdx]), /* @__PURE__ */ React.createElement("button", { onClick: () => setSearchOpen(true), style: { background: "transparent", border: "none", cursor: "pointer", fontSize: 16, opacity: 0.4, padding: "0 4px", lineHeight: 1 }, title: "buscar" }, "\u{1F50D}"), /* @__PURE__ */ React.createElement("div", { className: "ftr-logo" }, "ANGST")), searchOpen && /* @__PURE__ */ React.createElement(SearchModal, { dayData, nutria, kidsHealth, routines, onClose: () => setSearchOpen(false) }), scheduleOpen && /* @__PURE__ */ React.createElement(ScheduleModal, { dateKey: scheduleOpen, day: dayData[scheduleOpen] || makeEmptyDay(), isWork: Array.isArray(calMarks[scheduleOpen]) ? calMarks[scheduleOpen].includes("work") : calMarks[scheduleOpen] === "work", isColegio: Array.isArray(calMarks[scheduleOpen]) ? calMarks[scheduleOpen].includes("colegio") : calMarks[scheduleOpen] === "colegio", onSave: (sched) => updateDay(scheduleOpen, { schedule: sched }), onClose: () => setScheduleOpen(null), onNavigate: (dk) => setScheduleOpen(dk) })));
   }
   var App_default = AngstApp;
   return __toCommonJS(App_exports);

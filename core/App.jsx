@@ -1609,7 +1609,7 @@ function AngstApp() {
             setPokePriceCache(next);pokePriceCacheRef.current=next;saveToStorage({pokePriceCache:next});
           }}
         />}
-        {page===9&&<FeedPage/>}
+        {page===9&&<FeedPage onExit={()=>setPage(0)}/>}
 
         <div className="ftr">
           <div className="ftr-copy">{STOIC_PHRASES[footerIdx]}</div>

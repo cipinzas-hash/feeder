@@ -1399,7 +1399,10 @@
 
 
     // ─── App ─────────────────────────────────────────────────────────────────────
-    function FeedPage() {
+    function FeedPage({ onExit }) {
+      const ExitBtn = () => (
+        <button onClick={onExit} title="Volver a Angst" style={{ position: "fixed", top: "calc(10px + env(safe-area-inset-top))", right: 12, zIndex: 999, background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", borderRadius: 20, width: 34, height: 34, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+      );
       const [loaded, setLoaded] = useState(false);
       const [queue, setQueue] = useState([]);
       const [seen, setSeen] = useState([]);
@@ -1604,7 +1607,7 @@
         if (ok) showToast("✓ imagen descargada");
       }
 
-      if (!loaded) return <div style={{ position: "fixed", inset: 0, background: "#0a0a0a" }} />;
+      if (!loaded) return <><div style={{ position: "fixed", inset: 0, background: "#0a0a0a" }} /><ExitBtn/></>;
 
       if (buzonOpenItem) {
         const { Extended } = cardsFor(buzonOpenItem.formato);
@@ -1620,21 +1623,25 @@
                 <button onClick={() => setExportError(null)} style={{ float: "right", background: "transparent", border: "none", color: "#f5b5b5", cursor: "pointer" }}>×</button>
               </div>
             )}
+            <ExitBtn/>
           </>
         );
       }
 
       if (vitrinaOpenItem) {
         return (
-          <CineExtendedView item={vitrinaOpenItem} onBack={() => setVitrinaOpenItem(null)}
-            onNext={() => handleVitrinaNext(vitrinaOpenItem)}
-            onSave={() => handleVitrinaSave(vitrinaOpenItem)}
-            onChangeCategory={handleVitrinaChangeCategory} />
+          <>
+            <CineExtendedView item={vitrinaOpenItem} onBack={() => setVitrinaOpenItem(null)}
+              onNext={() => handleVitrinaNext(vitrinaOpenItem)}
+              onSave={() => handleVitrinaSave(vitrinaOpenItem)}
+              onChangeCategory={handleVitrinaChangeCategory} />
+            <ExitBtn/>
+          </>
         );
       }
 
       if (showDiagPanel) {
-        return <DiagPanel diag={refreshDiag} generatedAt={feedGeneratedAt} onClose={() => setShowDiagPanel(false)} />;
+        return <><DiagPanel diag={refreshDiag} generatedAt={feedGeneratedAt} onClose={() => setShowDiagPanel(false)} /><ExitBtn/></>;
       }
 
       const current = queue[0];
@@ -1669,6 +1676,7 @@
           )}
 
           <TabBar area={area} onChange={setArea} buzonCount={buzon.length} onOpenBuzon={() => { setArea("noticias"); setView("buzon"); }} />
+          <ExitBtn/>
         </div>
       );
     }
