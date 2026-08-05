@@ -527,13 +527,10 @@
       const [scrollX, setScrollX] = useState(0);
       const [containerW, setContainerW] = useState(0);
       const containerRef = useRef(null);
-      const ITEM_W = 144; // ancho de tarjeta (130) + separación (14)
-      const CARD_W = 130;
+      const CARD_W = 160; // antes 130 -- tarjetas más grandes
+      const GAP = 8; // antes 14 -- más juntas
+      const ITEM_W = CARD_W + GAP;
 
-      // Centrado medido de verdad (no un calc() adivinado): el padding lateral
-      // es exactamente la mitad del ancho real del contenedor menos la mitad
-      // de la tarjeta, así el primer y el último item quedan tan centrados
-      // como cualquiera del medio, sin importar el tamaño de pantalla.
       useEffect(() => {
         function measure() { if (containerRef.current) setContainerW(containerRef.current.clientWidth); }
         measure();
@@ -542,17 +539,34 @@
       }, []);
       const sidePad = Math.max(8, containerW / 2 - CARD_W / 2);
 
-      // Se agrega una tarjeta virtual al final ("eso es todo por ahora, con
-      // fecha de última actualización") en vez de que el carrusel vuelva de
-      // golpe al primer item sin aviso — el ciclo total es items.length + 1.
-      const total = items.length + 1;
-      function onScroll(e) { setScrollX(e.target.scrollLeft); }
-      function scrollToIndex(i) {
-        if (!items.length) return;
-        const wrapped = ((i % total) + total) % total;
-        containerRef.current?.scrollTo({ left: wrapped * ITEM_W, behavior: "smooth" });
+      // Loop infinito real (estilo WiiFlow): se renderizan 3 vueltas seguidas
+      // del mismo catálogo (+ tarjeta "eso es todo" al final de cada una). En
+      // vez de tapar el final con un tope, apenas el scroll sale de la vuelta
+      // del medio se reposiciona de un salto sin animación exactamente una
+      // vuelta atrás/adelante -- como el contenido de cada vuelta es idéntico,
+      // el salto es invisible. Así "siguiente" (botón o swipe) nunca se topa
+      // con un final real.
+      const total = items.length + 1; // incluye la tarjeta "eso es todo"
+      const lapWidth = total * ITEM_W;
+
+      useEffect(() => {
+        if (containerRef.current && items.length) {
+          containerRef.current.scrollLeft = lapWidth;
+          setScrollX(lapWidth);
+        }
+      }, [items.length, lapWidth]);
+
+      function onScroll(e) {
+        const el = e.target;
+        let x = el.scrollLeft;
+        if (x < lapWidth * 0.5) { el.scrollLeft = x + lapWidth; x += lapWidth; }
+        else if (x > lapWidth * 1.5) { el.scrollLeft = x - lapWidth; x -= lapWidth; }
+        setScrollX(x);
       }
-      const currentIndex = Math.round(scrollX / ITEM_W);
+      function step(dir) {
+        if (!items.length || !containerRef.current) return;
+        containerRef.current.scrollTo({ left: containerRef.current.scrollLeft + dir * ITEM_W, behavior: "smooth" });
+      }
 
       if (!items.length) {
         return (
@@ -569,24 +583,47 @@
         display: "flex", alignItems: "center", justifyContent: "center",
       };
 
+      const center = scrollX / ITEM_W;
+      const renderList = [0, 1, 2].flatMap(lap =>
+        [...items.map((item, i) => ({ item, absIdx: lap * total + i })), { item: null, absIdx: lap * total + items.length }]
+      );
+
       return (
         <div style={{ position: "relative" }}>
-          <button onClick={() => scrollToIndex(currentIndex - 1)} style={{ ...arrowStyle, left: 6 }}>◀️</button>
-          <button onClick={() => scrollToIndex(currentIndex + 1)} style={{ ...arrowStyle, right: 6 }}>▶️</button>
+          <button onClick={() => step(-1)} style={{ ...arrowStyle, left: 6 }}>◀️</button>
+          <button onClick={() => step(1)} style={{ ...arrowStyle, right: 6 }}>▶️</button>
           <div ref={containerRef} onScroll={onScroll} style={{
             display: "flex", overflowX: "auto", scrollSnapType: "x mandatory",
             padding: `30px ${sidePad}px 40px`, alignItems: "center", perspective: 1000,
           }}>
-            {items.map((item, i) => {
-              const center = scrollX / ITEM_W;
-              const dist = i - center;
+            {renderList.map(({ item, absIdx }) => {
+              const dist = absIdx - center;
+              // Solo se renderiza el detalle si está cerca de lo visible --
+              // 3 vueltas completas de posters con srcs reales sería pesado.
+              if (Math.abs(dist) > 6) return <div key={absIdx} style={{ flexShrink: 0, width: CARD_W, marginRight: GAP }} />;
               const rotate = Math.max(-55, Math.min(55, dist * 55));
               const scale = 1 - Math.min(0.25, Math.abs(dist) * 0.15);
               const isCenter = Math.abs(dist) < 0.5;
+              if (!item) {
+                return (
+                  <div key={absIdx} style={{
+                    flexShrink: 0, width: CARD_W, marginRight: GAP, scrollSnapAlign: "center", display: "flex", flexDirection: "column",
+                    alignItems: "center", justifyContent: "center", aspectRatio: "2/3",
+                    border: "1px dashed #333", borderRadius: 8, padding: 12, textAlign: "center",
+                    transform: `rotateY(${-rotate}deg) scale(${scale})`, transformOrigin: "center center",
+                  }}>
+                    <div style={{ fontSize: 26, marginBottom: 8 }}>🔄</div>
+                    <div style={{ fontFamily: "'Caveat',cursive", fontSize: 17, color: "#999", lineHeight: 1.3 }}>eso es todo por ahora</div>
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 10 }}>
+                      {generatedAt ? `actualizado ${new Date(generatedAt).toLocaleString("es-CL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : ""}
+                    </div>
+                  </div>
+                );
+              }
               const temporada = seasonLabel(item);
               return (
-                <div key={item.guid} onClick={() => onOpen(item)} style={{
-                  flexShrink: 0, width: CARD_W, marginRight: 14, scrollSnapAlign: "center", cursor: "pointer",
+                <div key={absIdx} onClick={() => onOpen(item)} style={{
+                  flexShrink: 0, width: CARD_W, marginRight: GAP, scrollSnapAlign: "center", cursor: "pointer",
                   transform: `rotateY(${-rotate}deg) scale(${scale})`, transformOrigin: "center center",
                   zIndex: Math.round(100 - Math.abs(dist) * 10),
                 }}>
@@ -638,19 +675,6 @@
                 </div>
               );
             })}
-            {/* Tarjeta final: cierra el ciclo con la fecha de la última corrida
-                en vez de saltar directo al primer item sin aviso. */}
-            <div style={{
-              flexShrink: 0, width: CARD_W, scrollSnapAlign: "center", display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center", aspectRatio: "2/3",
-              border: "1px dashed #333", borderRadius: 8, padding: 12, textAlign: "center",
-            }}>
-              <div style={{ fontSize: 26, marginBottom: 8 }}>🔄</div>
-              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 17, color: "#999", lineHeight: 1.3 }}>eso es todo por ahora</div>
-              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 10 }}>
-                {generatedAt ? `actualizado ${new Date(generatedAt).toLocaleString("es-CL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : ""}
-              </div>
-            </div>
           </div>
         </div>
       );
