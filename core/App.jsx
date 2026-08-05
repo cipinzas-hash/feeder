@@ -886,13 +886,23 @@ function AngstApp() {
       pokeCarpetas: clone(pokeCarpetasRef.current),
       pokeDarkCatalogo: clone(pokeDarkCatalogoRef.current),
       pokePriceCache: clone(pokePriceCacheRef.current),
+      // Feed mantiene sus propias claves de localStorage, aisladas del motor
+      // de refs de arriba (angst-feed-proto-v1 = cola/vistos/buzon/último
+      // refresh; las otras dos = sets de "visto/escuchado"). Se leen directo
+      // de localStorage acá porque no pasan por React state en este nivel.
+      feedState: readLocalJSON("angst-feed-proto-v1"),
+      feedMicrodocsVistos: readLocalJSON("angst-feed-microdocs-vistos-v1"),
+      feedPodcastsEscuchados: readLocalJSON("angst-feed-podcasts-escuchados-v1"),
     };
+  }
+  function readLocalJSON(key){
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch(e){ return null; }
   }
   // Lista de campos persistidos que SIEMPRE deben viajar en el export.
   // Si agregás un campo de estado nuevo: sumalo en buildExportPayload,
   // en saveToStorage, acá, y en restoreFromPayload — las 4 ubicaciones
   // de la regla vital.
-  const REQUIRED_EXPORT_FIELDS = ['dayData','weekOffset','budgets','nutria','calMarks','cookingOpts','aseoOpts','routines','recurring','lastRollover','kidsHealth','custody','fadimanData','nutriLog','ejercicioLog','ejercicioDecks','customFoods','foodOverrides','customEjercicios','nutriDecks','pokeInventario','pokeCarpetas','pokeDarkCatalogo','pokePriceCache'];
+  const REQUIRED_EXPORT_FIELDS = ['dayData','weekOffset','budgets','nutria','calMarks','cookingOpts','aseoOpts','routines','recurring','lastRollover','kidsHealth','custody','fadimanData','nutriLog','ejercicioLog','ejercicioDecks','customFoods','foodOverrides','customEjercicios','nutriDecks','pokeInventario','pokeCarpetas','pokeDarkCatalogo','pokePriceCache','feedState','feedMicrodocsVistos','feedPodcastsEscuchados'];
 
   function handleExport(){
     const fullPayload = buildExportPayload();
@@ -942,6 +952,11 @@ function AngstApp() {
       custody: d.custody!==undefined ? d.custody : custody,
     };
     try { localStorage.setItem("angst-v12", JSON.stringify(merged)); } catch(e){}
+    // Las 3 claves propias de Feed no viven en angst-v12 (no son refs de acá),
+    // así que se escriben directo si el JSON importado las trae.
+    if(d.feedState!=null){ try{ localStorage.setItem("angst-feed-proto-v1", JSON.stringify(d.feedState)); }catch(e){} }
+    if(d.feedMicrodocsVistos!=null){ try{ localStorage.setItem("angst-feed-microdocs-vistos-v1", JSON.stringify(d.feedMicrodocsVistos)); }catch(e){} }
+    if(d.feedPodcastsEscuchados!=null){ try{ localStorage.setItem("angst-feed-podcasts-escuchados-v1", JSON.stringify(d.feedPodcastsEscuchados)); }catch(e){} }
     setLoadMsg(`✓ Restauración completa desde ${sourceLabel||"backup"}`);
     setTimeout(()=>setLoadMsg(null), 4000);
     return true;
