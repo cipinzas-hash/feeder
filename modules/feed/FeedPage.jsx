@@ -1376,7 +1376,7 @@
         borderColor: active ? (CAT_COLORS[vitrinaCat] || "#e91e8c") : "#333",
       });
       return (
-        <div style={{ paddingBottom: 70 }}>
+        <div style={{ paddingBottom: 70, background: "#111", minHeight: "100vh" }}>
           <div style={{ padding: "16px 18px 4px" }}>
             <span style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff" }}>🎬 vitrina audiovisual</span>
           </div>
