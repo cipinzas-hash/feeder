@@ -1078,6 +1078,7 @@ function AngstApp() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
+        html,body{overflow-x:hidden;}
         .app{background:#f7f6f4;min-height:100vh;font-family:'DM Sans',sans-serif;}
         .hdr{background:#111;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
         .hdr-title{font-family:'Caveat',cursive;font-size:clamp(24px,5vw,32px);color:#fff;font-weight:700;}

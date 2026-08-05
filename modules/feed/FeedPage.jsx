@@ -12,6 +12,7 @@
     // (es un feed vertical de video+comentario) — por eso es una categoría aparte
     // de CINE_CATEGORIAS aunque comparta la misma exclusión del round-robin.
     const VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales", "Podcasts", "Melee"];
+    const VITRINA_ICONS = { "Películas": "🎬", "Series": "📺", "Animación": "⛩️", "Microdocumentales": "🎥", "Podcasts": "🎙️", "Melee": "🕹️" };
     const NOTICIAS_CATEGORIA = "Noticias"; // RSS cine/TV/anime — vive en el área "Noticias", no en Vitrina
     const MUSIC_CATEGORIA = "Dark scene / Música";
 
@@ -1393,7 +1394,7 @@
     function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, generatedAt }) {
       const items = vitrinaData[vitrinaCat] || [];
       const segBtn = (active) => ({
-        flex: 1, padding: "9px 4px", fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700,
+        flex: 1, padding: "9px 4px", fontSize: 20,
         border: "1px solid", borderRadius: 20, cursor: "pointer",
         background: active ? (CAT_COLORS[vitrinaCat] || "#e91e8c") : "transparent",
         color: active ? "#111" : "#999",
@@ -1406,7 +1407,7 @@
           </div>
           <div style={{ display: "flex", gap: 6, padding: "12px 18px" }}>
             {VITRINA_CATEGORIAS.map(cat => (
-              <button key={cat} onClick={() => onChangeCat(cat)} style={segBtn(cat === vitrinaCat)}>{cat}</button>
+              <button key={cat} onClick={() => onChangeCat(cat)} title={cat} style={segBtn(cat === vitrinaCat)}>{VITRINA_ICONS[cat] || cat}</button>
             ))}
           </div>
           {vitrinaCat === "Microdocumentales"

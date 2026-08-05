@@ -6334,6 +6334,7 @@ var __angst = (() => {
   var CINE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/cine.json";
   var CINE_CATEGORIAS = ["Pel\xEDculas", "Series", "Animaci\xF3n"];
   var VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales", "Podcasts", "Melee"];
+  var VITRINA_ICONS = { "Pel\xEDculas": "\u{1F3AC}", "Series": "\u{1F4FA}", "Animaci\xF3n": "\u26E9\uFE0F", "Microdocumentales": "\u{1F3A5}", "Podcasts": "\u{1F399}\uFE0F", "Melee": "\u{1F579}\uFE0F" };
   var MUSIC_CATEGORIA = "Dark scene / M\xFAsica";
   var CAT_COLORS = {
     "Melee": "#ff6600",
@@ -7124,9 +7125,7 @@ ${item.link}`);
     const segBtn = (active) => ({
       flex: 1,
       padding: "9px 4px",
-      fontFamily: "'DM Sans',sans-serif",
-      fontSize: 11,
-      fontWeight: 700,
+      fontSize: 20,
       border: "1px solid",
       borderRadius: 20,
       cursor: "pointer",
@@ -7134,7 +7133,7 @@ ${item.link}`);
       color: active ? "#111" : "#999",
       borderColor: active ? CAT_COLORS[vitrinaCat] || "#e91e8c" : "#333"
     });
-    return /* @__PURE__ */ React.createElement("div", { style: { paddingBottom: 70, background: "#111", minHeight: "100vh" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 18px 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff" } }, "\u{1F3AC} vitrina audiovisual")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "12px 18px" } }, VITRINA_CATEGORIAS.map((cat) => /* @__PURE__ */ React.createElement("button", { key: cat, onClick: () => onChangeCat(cat), style: segBtn(cat === vitrinaCat) }, cat))), vitrinaCat === "Microdocumentales" ? /* @__PURE__ */ React.createElement(MicrodocFeed, { items }) : vitrinaCat === "Podcasts" ? /* @__PURE__ */ React.createElement(PodcastFeed, { items }) : vitrinaCat === "Melee" ? /* @__PURE__ */ React.createElement(MeleeFeed, { items }) : /* @__PURE__ */ React.createElement(CineCoverFlow, { items, onOpen, generatedAt }));
+    return /* @__PURE__ */ React.createElement("div", { style: { paddingBottom: 70, background: "#111", minHeight: "100vh" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 18px 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff" } }, "\u{1F3AC} vitrina audiovisual")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "12px 18px" } }, VITRINA_CATEGORIAS.map((cat) => /* @__PURE__ */ React.createElement("button", { key: cat, onClick: () => onChangeCat(cat), title: cat, style: segBtn(cat === vitrinaCat) }, VITRINA_ICONS[cat] || cat))), vitrinaCat === "Microdocumentales" ? /* @__PURE__ */ React.createElement(MicrodocFeed, { items }) : vitrinaCat === "Podcasts" ? /* @__PURE__ */ React.createElement(PodcastFeed, { items }) : vitrinaCat === "Melee" ? /* @__PURE__ */ React.createElement(MeleeFeed, { items }) : /* @__PURE__ */ React.createElement(CineCoverFlow, { items, onOpen, generatedAt }));
   }
   function FeedPage({ onExit }) {
     const ExitBtn = () => /* @__PURE__ */ React.createElement("button", { onClick: onExit, title: "Volver a Angst", style: { position: "fixed", top: "calc(10px + env(safe-area-inset-top))", right: 12, zIndex: 999, background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", borderRadius: 20, width: 34, height: 34, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, "\u2715");
@@ -8603,6 +8602,7 @@ ${item.link}`);
     return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("style", null, `
         @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
+        html,body{overflow-x:hidden;}
         .app{background:#f7f6f4;min-height:100vh;font-family:'DM Sans',sans-serif;}
         .hdr{background:#111;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
         .hdr-title{font-family:'Caveat',cursive;font-size:clamp(24px,5vw,32px);color:#fff;font-weight:700;}
