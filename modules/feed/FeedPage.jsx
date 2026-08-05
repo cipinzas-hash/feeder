@@ -11,8 +11,8 @@
     // Microdocumentales vive en Vitrina también, pero NO es carrusel de posters
     // (es un feed vertical de video+comentario) — por eso es una categoría aparte
     // de CINE_CATEGORIAS aunque comparta la misma exclusión del round-robin.
-    const VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales", "Podcasts", "Melee"];
-    const VITRINA_ICONS = { "Películas": "🎬", "Series": "📺", "Animación": "⛩️", "Microdocumentales": "🎥", "Podcasts": "🎙️", "Melee": "🕹️" };
+    const VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales", "Podcasts", "Melee", "Conciertos"];
+    const VITRINA_ICONS = { "Películas": "🎬", "Series": "📺", "Animación": "⛩️", "Microdocumentales": "🎥", "Podcasts": "🎙️", "Melee": "🕹️", "Conciertos": "🎪" };
     const NOTICIAS_CATEGORIA = "Noticias"; // RSS cine/TV/anime — vive en el área "Noticias", no en Vitrina
     const MUSIC_CATEGORIA = "Dark scene / Música";
 
@@ -1104,6 +1104,87 @@
       );
     }
 
+    // ─── ConcertFeed — Conciertos (festivales: WackenTV, Hellfest, M'era Luna)
+    // dentro de Vitrina. Mismo patrón exacto que MicrodocFeed (scroll vertical,
+    // marca manual visto/pendiente), clave de localStorage propia y aislada.
+    const CONCIERTOS_VISTOS_KEY = "angst-feed-conciertos-vistos-v1";
+    function loadConciertosVistos() {
+      try {
+        const raw = localStorage.getItem(CONCIERTOS_VISTOS_KEY);
+        return raw ? new Set(JSON.parse(raw)) : new Set();
+      } catch (e) { return new Set(); }
+    }
+    function saveConciertosVistos(set) {
+      try { localStorage.setItem(CONCIERTOS_VISTOS_KEY, JSON.stringify([...set])); } catch (e) {}
+    }
+
+    function ConcertFeed({ items }) {
+      const [vistos, setVistos] = useState(() => loadConciertosVistos());
+      function toggleVisto(guid) {
+        setVistos(prev => {
+          const next = new Set(prev);
+          if (next.has(guid)) next.delete(guid); else next.add(guid);
+          saveConciertosVistos(next);
+          return next;
+        });
+      }
+
+      if (!items.length) {
+        return (
+          <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" }}>
+            nada por acá todavía
+          </div>
+        );
+      }
+      return (
+        <div style={{ padding: "6px 18px 30px" }}>
+          {items.map((item, i) => {
+            const visto = vistos.has(item.guid);
+            return (
+            <div key={item.guid} style={{
+              padding: "22px 0",
+              borderBottom: i < items.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+              opacity: visto ? 0.55 : 1,
+            }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+                <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>{item.title}</div>
+                <button onClick={() => toggleVisto(item.guid)} style={{
+                  flexShrink: 0, fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700,
+                  border: "1px solid " + (visto ? "#333" : "#26a69a"), borderRadius: 14, padding: "4px 10px",
+                  background: "transparent", color: visto ? "#666" : "#26a69a", cursor: "pointer",
+                }}>
+                  {visto ? "✓ visto" : "marcar visto"}
+                </button>
+              </div>
+              {item.source && (
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>{item.source}</div>
+              )}
+              {item.summary && (
+                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: 12 }}>
+                  {item.summary}
+                </div>
+              )}
+              {item.videoId ? (
+                <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: 10, overflow: "hidden", background: "#000" }}>
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${item.videoId}`}
+                    title={item.title}
+                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                </div>
+              ) : (
+                <a href={item.link} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#26a69a" }}>ver original ↗</a>
+              )}
+            </div>
+            );
+          })}
+        </div>
+      );
+    }
+
     // ─── PodcastFeed — Podcasts dentro de Vitrina. Mismo patrón que MicrodocFeed
     // (scroll vertical, sin retención de 30 días — se acumulan indefinidamente,
     // ver build-feed.mjs), pero separados por chips de podcast (item.source) en
@@ -1416,6 +1497,8 @@
             ? <PodcastFeed items={items} />
             : vitrinaCat === "Melee"
             ? <MeleeFeed items={items} />
+            : vitrinaCat === "Conciertos"
+            ? <ConcertFeed items={items} />
             : <CineCoverFlow items={items} onOpen={onOpen} generatedAt={generatedAt} />
           }
         </div>
@@ -1443,7 +1526,7 @@
       const [showDiagPanel, setShowDiagPanel] = useState(false);
       const [area, setArea] = useState("noticias"); // "noticias" | "vitrina"
       const [vitrinaCat, setVitrinaCat] = useState("Películas");
-      const [vitrinaData, setVitrinaData] = useState({ "Películas": [], "Series": [], "Animación": [], "Microdocumentales": [], "Podcasts": [], "Melee": [] });
+      const [vitrinaData, setVitrinaData] = useState({ "Películas": [], "Series": [], "Animación": [], "Microdocumentales": [], "Podcasts": [], "Melee": [], "Conciertos": [] });
       const [vitrinaOpenItem, setVitrinaOpenItem] = useState(null);
       const [exportError, setExportError] = useState(null);
 
