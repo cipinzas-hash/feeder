@@ -930,7 +930,18 @@ function AngstApp() {
     if(d.pokeCarpetas){ setPokeCarpetas(d.pokeCarpetas); pokeCarpetasRef.current=d.pokeCarpetas; }
     if(d.pokeDarkCatalogo){ setPokeDarkCatalogo(d.pokeDarkCatalogo); pokeDarkCatalogoRef.current=d.pokeDarkCatalogo; }
     if(d.pokePriceCache){ setPokePriceCache(d.pokePriceCache); pokePriceCacheRef.current=d.pokePriceCache; }
-    try { localStorage.setItem("angst-v12", JSON.stringify(d)); } catch(e){}
+    // No persistir el JSON crudo importado (puede ser parcial y borraría
+    // del localStorage los campos que no traía). Se arma el payload
+    // completo desde los refs recién actualizados arriba, con fallback
+    // explícito para cookingOpts/aseoOpts/custody (no tienen ref propio,
+    // por lo que su valor de closure acá seguiría stale si el JSON los trae).
+    const merged = {
+      ...buildExportPayload(),
+      cookingOpts: d.cookingOpts!==undefined ? d.cookingOpts : cookingOpts,
+      aseoOpts: d.aseoOpts!==undefined ? d.aseoOpts : aseoOpts,
+      custody: d.custody!==undefined ? d.custody : custody,
+    };
+    try { localStorage.setItem("angst-v12", JSON.stringify(merged)); } catch(e){}
     setLoadMsg(`✓ Restauración completa desde ${sourceLabel||"backup"}`);
     setTimeout(()=>setLoadMsg(null), 4000);
     return true;

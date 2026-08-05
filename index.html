@@ -8413,8 +8413,14 @@ ${item.link}`);
         setPokePriceCache(d.pokePriceCache);
         pokePriceCacheRef.current = d.pokePriceCache;
       }
+      const merged = {
+        ...buildExportPayload(),
+        cookingOpts: d.cookingOpts !== void 0 ? d.cookingOpts : cookingOpts,
+        aseoOpts: d.aseoOpts !== void 0 ? d.aseoOpts : aseoOpts,
+        custody: d.custody !== void 0 ? d.custody : custody
+      };
       try {
-        localStorage.setItem("angst-v12", JSON.stringify(d));
+        localStorage.setItem("angst-v12", JSON.stringify(merged));
       } catch (e) {
       }
       setLoadMsg(`\u2713 Restauraci\xF3n completa desde ${sourceLabel || "backup"}`);
