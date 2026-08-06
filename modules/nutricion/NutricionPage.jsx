@@ -269,14 +269,38 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
   const [moveMenuOpen, setMoveMenuOpen] = useState(null); // uid de la entrada con el popover "mover a otra comida" abierto
   const [apiLoading, setApiLoading] = useState(false);
 
-  // Key de USDA FoodData Central: se pide una vez por UI (no hardcodeada en
-  // el código, no queda visible en el index.html compilado) y se guarda en
-  // su propia clave de localStorage, fuera de la regla vital de export/
-  // import (mismo criterio que la key de TCG en Pokecripto).
-  const USDA_KEY_STORAGE = "angst-usda-fdc-key";
-  const [usdaKey, setUsdaKeyState] = useState(() => { try { return localStorage.getItem(USDA_KEY_STORAGE) || ""; } catch(e){ return ""; } });
-  const [usdaKeyInput, setUsdaKeyInput] = useState("");
-  function saveUsdaKey(k){ try { localStorage.setItem(USDA_KEY_STORAGE, k); } catch(e){} setUsdaKeyState(k); }
+  // Base offline de alimentos (USDA FoodData Central, Foundation + SR
+  // Legacy -- armada semanalmente por GitHub Actions, ver
+  // scripts/build-nutricion.mjs). Antes se llamaba a la API de USDA directo
+  // desde el navegador, pero esa API no manda headers CORS -- el fetch
+  // fallaba en silencio siempre. Ahora se trae un JSON estático ya armado
+  // (mismo patrón que feed.json/cine.json) y se cachea en localStorage para
+  // que la búsqueda funcione offline después de la primera carga.
+  const NUTRICION_DB_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/nutricion.json";
+  const NUTRICION_DB_CACHE_KEY = "angst-nutricion-db-v1";
+  const NUTRICION_DB_MAX_AGE_MS = 7 * 86400000; // si el caché tiene más de 7 días, se refresca en segundo plano
+  const [foodsDb, setFoodsDb] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let cachedGeneratedAt = null;
+    try {
+      const raw = localStorage.getItem(NUTRICION_DB_CACHE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (!cancelled) setFoodsDb(parsed.foods || []);
+        cachedGeneratedAt = parsed.generatedAt;
+      }
+    } catch (e) {}
+    const isStale = !cachedGeneratedAt || (Date.now() - new Date(cachedGeneratedAt).getTime()) > NUTRICION_DB_MAX_AGE_MS;
+    if (!isStale) return;
+    fetch(NUTRICION_DB_URL).then(r => r.json()).then(data => {
+      if (cancelled || !data?.foods) return;
+      setFoodsDb(data.foods);
+      try { localStorage.setItem(NUTRICION_DB_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+    }).catch(() => {}); // sin conexión o repo aún sin correr el workflow -- se sigue con lo que había en caché (o vacío)
+    return () => { cancelled = true; };
+  }, []);
 
   const log = nutriLog[dateKey] || [];
   const totalKcal = Math.round(log.reduce((a,e)=>a+e.kcal*e.qty,0));
@@ -404,43 +428,23 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
     : [];
 
   function normalizeApiFood(item, idx){
-    const name = item.description || item.foodDescription || item.name || item.food_name || item.label || "alimento";
-    const kcal = parseFloat(item.calories || item.energy || item.kcal || item.energy_kcal || item.nf_calories || 0) || 0;
-    const prot = parseFloat(item.protein || item.proteins || item.protein_g || item.nf_protein || 0) || 0;
-    return { id:`api-${Date.now()}-${idx}`, emoji:"🌐", name, prep:"USDA FoodData Central", kcal:Math.round(kcal), prot:parseFloat(prot.toFixed(1)), unit:"porción", portionType:"", cat:"otros", catKey:"otros", source:"api" };
+    return { id:`db-${item.fdcId ?? idx}`, emoji:"🌐", name: item.name, prep:"USDA FoodData Central", kcal: item.kcal || 0, prot: item.prot || 0, unit:"porción", portionType:"", cat:"otros", catKey:"otros", source:"db" };
   }
 
   useEffect(()=>{
-    let cancelled = false;
-    async function run(){
-      const q = searchQuery.trim();
-      if(q.length < 3){ setApiFoodResults([]); setApiLoading(false); return; }
-      const localLower = allFoodsFlat().map(f=>f.name.toLowerCase());
-      const localMatch = localLower.some(n=>n.includes(q.toLowerCase()));
-      if(localMatch && searchResults.length >= 3){ setApiFoodResults([]); setApiLoading(false); return; }
-      if(!usdaKey){ setApiFoodResults([]); setApiLoading(false); return; }
-      setApiLoading(true);
-      try {
-        // Foundation Foods + SR Legacy: ingredientes crudos y preparaciones
-        // estándar (raw/cooked/roasted/boiled/etc.), no "Branded" (productos
-        // envasados con marca) -- es justo lo que se buscaba evitar.
-        const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(q)}&pageSize=8&dataType=Foundation,SR%20Legacy&api_key=${encodeURIComponent(usdaKey)}`;
-        const r = await fetch(url);
-        const data = await r.json();
-        const foods = (data.foods || []).map(f=>{
-          const nutrients = f.foodNutrients || [];
-          const energy = nutrients.find(n=>n.nutrientName==="Energy" && n.unitName==="KCAL") || nutrients.find(n=>n.nutrientName==="Energy");
-          const protein = nutrients.find(n=>n.nutrientName==="Protein");
-          return { description: f.description, calories: energy?.value, protein: protein?.value };
-        }).filter(x=>x.description && (x.calories || x.protein));
-        const normalized = foods.map(normalizeApiFood).filter(f=>f.name && !localLower.includes(f.name.toLowerCase())).slice(0,6);
-        if(!cancelled) setApiFoodResults(normalized);
-      } catch(e){ if(!cancelled) setApiFoodResults([]); }
-      if(!cancelled) setApiLoading(false);
-    }
-    run();
-    return ()=>{ cancelled = true; };
-  }, [searchQuery, dateKey, usdaKey]);
+    const q = searchQuery.trim();
+    if(q.length < 3 || !foodsDb){ setApiFoodResults([]); setApiLoading(false); return; }
+    const localLower = allFoodsFlat().map(f=>f.name.toLowerCase());
+    const localMatch = localLower.some(n=>n.includes(q.toLowerCase()));
+    if(localMatch && searchResults.length >= 3){ setApiFoodResults([]); setApiLoading(false); return; }
+    setApiLoading(true);
+    const qLower = q.toLowerCase();
+    const hits = foodsDb.filter(f => f.name.toLowerCase().includes(qLower));
+    const normalized = hits.map(normalizeApiFood).filter(f=>f.name && !localLower.includes(f.name.toLowerCase())).slice(0,6);
+    setApiFoodResults(normalized);
+    setApiLoading(false);
+  }, [searchQuery, dateKey, foodsDb]);
+
 
   function openDeckPlanner(existingDeck){
     if(existingDeck){
@@ -890,14 +894,6 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
               {searchResults.length===0 && apiFoodResults.length===0 && !apiLoading && (
                 <div style={{padding:"12px 14px",fontFamily:"'Caveat',cursive",fontSize:14,color:"#bbb"}}>sin resultados — probá desde "explorar por categoría"</div>
               )}
-              {!usdaKey && (
-                <div style={{padding:"10px 12px",borderTop:"1px dashed #f0f0f0",display:"flex",gap:6}}>
-                  <input value={usdaKeyInput} onChange={e=>setUsdaKeyInput(e.target.value)} placeholder="API key de USDA FoodData Central"
-                    style={{flex:1,minWidth:0,border:"1px solid #ddd",borderRadius:8,padding:"6px 8px",fontFamily:"'DM Sans',sans-serif",fontSize:11,outline:"none"}}/>
-                  <button onClick={()=>{ if(usdaKeyInput.trim()){ saveUsdaKey(usdaKeyInput.trim()); setUsdaKeyInput(""); } }}
-                    style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:700,border:"none",borderRadius:8,padding:"6px 10px",background:"#111",color:"#fff",cursor:"pointer"}}>guardar</button>
-                </div>
-              )}
             </div>
           )}
           <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="busca un alimento..."
@@ -1183,14 +1179,6 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
               <div onClick={()=>{openNewModal("otros",searchQuery.trim());setSearchQuery("");}}
                 style={{padding:"12px 14px",cursor:"pointer",fontFamily:"'Caveat',cursive",fontSize:15,color:"#555"}}>
                 + agregar "{searchQuery.trim()}" como nuevo alimento
-              </div>
-            )}
-            {!usdaKey && (
-              <div style={{padding:"10px 12px",borderTop:"1px dashed #f0f0f0",display:"flex",gap:6}}>
-                <input value={usdaKeyInput} onChange={e=>setUsdaKeyInput(e.target.value)} placeholder="API key de USDA FoodData Central"
-                  style={{flex:1,minWidth:0,border:"1px solid #ddd",borderRadius:8,padding:"6px 8px",fontFamily:"'DM Sans',sans-serif",fontSize:11,outline:"none"}}/>
-                <button onClick={()=>{ if(usdaKeyInput.trim()){ saveUsdaKey(usdaKeyInput.trim()); setUsdaKeyInput(""); } }}
-                  style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:700,border:"none",borderRadius:8,padding:"6px 10px",background:"#111",color:"#fff",cursor:"pointer"}}>guardar</button>
               </div>
             )}
           </div>

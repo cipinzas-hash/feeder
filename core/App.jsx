@@ -152,6 +152,13 @@ function AngstApp() {
   const pokeDarkCatalogoRef = useRef([]);
   const [pokePriceCache, setPokePriceCache] = useState({});
   const pokePriceCacheRef = useRef({});
+  // Key de tcgpricelookup.com: se pide una sola vez desde el banner de
+  // Pokecripto, aislada del backup (mismo criterio que la key de USDA en
+  // Nutrición) -- antes no se pasaba como prop, así que el banner nunca
+  // podía cerrarse aunque se guardara la key (saveApiKey era undefined).
+  const TCG_KEY_STORAGE = "angst-tcg-price-key";
+  const [pokeApiKey, setPokeApiKey] = useState(()=>{ try{ return localStorage.getItem(TCG_KEY_STORAGE)||""; }catch(e){ return ""; } });
+  function savePokeApiKey(k){ try{ localStorage.setItem(TCG_KEY_STORAGE,k); }catch(e){} setPokeApiKey(k); }
   const [nutriDecks, setNutriDecks] = useState([]);
   const nutriDecksRef = useRef([]);
   const lastExportSizeRef = useRef(0);
@@ -1628,6 +1635,8 @@ function AngstApp() {
             const next = typeof d === 'function' ? d(pokePriceCacheRef.current) : d;
             setPokePriceCache(next);pokePriceCacheRef.current=next;saveToStorage({pokePriceCache:next});
           }}
+          apiKey={pokeApiKey}
+          saveApiKey={savePokeApiKey}
         />}
         {page===9&&<FeedPage onExit={()=>setPage(0)}/>}
 

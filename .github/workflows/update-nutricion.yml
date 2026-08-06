@@ -1,0 +1,42 @@
+name: Actualizar base de nutrición (USDA FDC)
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'   # lunes 05:00 UTC -- semanal, la composición nutricional no cambia día a día
+  workflow_dispatch: {}    # botón "Run workflow" manual en la pestaña Actions
+
+concurrency:
+  group: nutricion-update
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-nutricion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Bajar base de alimentos (USDA FoodData Central)
+        working-directory: modules/feed
+        env:
+          USDA_API_KEY: ${{ secrets.USDA_API_KEY }}
+        run: node scripts/build-nutricion.mjs
+
+      - name: Commitear data/nutricion.json si cambió
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add modules/feed/data/nutricion.json
+          git diff --staged --quiet || git commit -m "Actualizar base de nutrición $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && break
+            echo "push falló, reintentando ($i/3)..."
+            sleep 5
+          done
