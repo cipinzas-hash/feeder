@@ -704,10 +704,10 @@ function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings,
 //   start.gg por un torneo que ya no va a cambiar. Mientras el torneo está
 //   ACTIVE (día 1 en curso) nunca entra acá, así que se re-escanea cada
 //   corrida hasta que cierra.
-async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventIds) {
+async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventIds, previousTrackedTournaments = []) {
   if (!STARTGG_API_KEY) {
     console.error("✗ Melee · falta STARTGG_API_KEY, se omite esta categoría esta corrida");
-    return { upsetItems: [], hypeItems: [], projectionItems: [], top8Items: [], archiveItems: [], processedEventIds: previousProcessedEventIds };
+    return { upsetItems: [], hypeItems: [], projectionItems: [], top8Items: [], archiveItems: [], processedEventIds: previousProcessedEventIds, trackedTournaments: previousTrackedTournaments };
   }
 
   let tournaments = [];
@@ -716,7 +716,31 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
     tournaments = await res.json();
   } catch (e) {
     console.error(`✗ Melee · no se pudo leer meleemajors.gg: ${e.message}`);
-    return { upsetItems: [], hypeItems: [], projectionItems: [], top8Items: [], archiveItems: [], processedEventIds: previousProcessedEventIds };
+    tournaments = []; // seguir igual con lo rastreado de corridas anteriores (ver abajo)
+  }
+
+  // meleemajors.gg deja de listar un torneo apenas termina (o incluso antes,
+  // por su propia lógica de retención). Si eso pasa justo antes de que esta
+  // corrida detecte el cambio a COMPLETED, el torneo nunca se vuelve a
+  // visitar y el archivo permanente (esArchivo) no se llega a construir --
+  // se pierde para siempre, sin aviso (esto es lo que pasó con GOML26).
+  // Fix: se combina el listado fresco con los torneos "rastreados" de la
+  // corrida anterior (cualquiera que llegó a ACTIVE/COMPLETED pero todavía
+  // no quedó en processedEventIds) -- así se los sigue consultando directo
+  // contra start.gg aunque el listado externo ya no los mencione.
+  const seenSlugs = new Set();
+  const combinedTournaments = [];
+  for (const t of tournaments) {
+    const slug = parseSlugFromBracketUrl(t.bracketUrl);
+    if (slug && !seenSlugs.has(slug)) { seenSlugs.add(slug); combinedTournaments.push(t); }
+  }
+  let recoveredCount = 0;
+  for (const t of previousTrackedTournaments) {
+    const slug = parseSlugFromBracketUrl(t.bracketUrl);
+    if (slug && !seenSlugs.has(slug)) { seenSlugs.add(slug); combinedTournaments.push(t); recoveredCount++; }
+  }
+  if (recoveredCount > 0) {
+    console.log(`✓ Melee · ${recoveredCount} torneo(s) ya no listado(s) en meleemajors.gg pero recuperado(s) del rastreo previo`);
   }
 
   const upsetItems = [];
@@ -725,8 +749,9 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
   const top8Items = [];
   const archiveItems = [];
   const processedEventIds = new Set(previousProcessedEventIds);
+  const trackedTournaments = [];
 
-  for (const t of tournaments) {
+  for (const t of combinedTournaments) {
     const slug = parseSlugFromBracketUrl(t.bracketUrl);
     if (!slug) continue;
 
@@ -866,9 +891,16 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
     }
 
     if (state === "COMPLETED") processedEventIds.add(eventInfo.id);
+
+    // Se sigue rastreando mientras no quede completamente cerrado -- una vez
+    // en processedEventIds (COMPLETED + archivo ya construido) ya no hace
+    // falta, el bloque de arriba (línea ~779) lo salta directo la próxima vez.
+    if (!processedEventIds.has(eventInfo.id)) {
+      trackedTournaments.push({ bracketUrl: t.bracketUrl, name: tournamentName });
+    }
   }
 
-  return { upsetItems, hypeItems, projectionItems, top8Items, archiveItems, processedEventIds: Array.from(processedEventIds) };
+  return { upsetItems, hypeItems, projectionItems, top8Items, archiveItems, processedEventIds: Array.from(processedEventIds), trackedTournaments };
 }
 // ================= Fin módulo Melee =================
 
@@ -888,6 +920,7 @@ async function main() {
   }
   const previousMeleeItems = (previous.categories || []).find(c => c.cat === "Melee")?.items || [];
   const previousProcessedEventIds = previous.meleeProcessedEvents || [];
+  const previousTrackedTournaments = previous.meleeTrackedTournaments || [];
 
   const allSources = feedsConfig.flatMap(g => g.feeds.map(f => ({ ...f, cat: g.cat })));
   console.log(`Bajando ${allSources.length} feeds...`);
@@ -1017,9 +1050,10 @@ async function main() {
   );
   const previousArchiveItems = previousMeleeItems.filter(i => i.esArchivo);
   const previousUpsetItemsByGuid = new Map(previousUpsetItemsOnly.map(i => [i.guid, i]));
-  const { upsetItems: newUpsetItems, hypeItems, projectionItems, top8Items, archiveItems: newArchiveItems, processedEventIds } = await fetchMeleeItems(
+  const { upsetItems: newUpsetItems, hypeItems, projectionItems, top8Items, archiveItems: newArchiveItems, processedEventIds, trackedTournaments } = await fetchMeleeItems(
     previousUpsetItemsByGuid,
-    previousProcessedEventIds
+    previousProcessedEventIds,
+    previousTrackedTournaments
   );
   console.log(`✓ Melee · ${newUpsetItems.length} upset(s) nuevo(s)/actualizado(s), ${hypeItems.length} torneo(s) generando hype, ${projectionItems.length} proyección(es) de bracket, ${top8Items.length} preview(s) de Top 8, ${newArchiveItems.length} archivo(s) final(es) nuevo(s) esta corrida`);
   // newUpsetItems puede traer versiones actualizadas (VOD recién encontrado)
@@ -1049,6 +1083,7 @@ async function main() {
     generatedAt: new Date().toISOString(),
     categories,
     meleeProcessedEvents: processedEventIds, // solo control interno, la app no necesita leer esto
+    meleeTrackedTournaments: trackedTournaments, // idem -- torneos ACTIVE/COMPLETED aún sin archivo, se re-consultan aunque desaparezcan de meleemajors.gg
   };
   await mkdir(new URL("../data/", import.meta.url), { recursive: true });
   await writeFile(OUTPUT_PATH, JSON.stringify(output, null, 2));
