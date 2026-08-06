@@ -903,18 +903,49 @@ async function main() {
   // Conciertos: los 6 canales (WackenTV, Hellfest, M'era Luna, Bangers Open
   // Air, ARTE Concert, MagentaTV) suben de todo -- trailers, aftermovies,
   // vlogs, anuncios de line-up, contenido genérico de la plataforma (caso
-  // MagentaTV). Se filtra por título para quedarse solo con presentaciones
-  // en vivo de bandas puntuales, no cobertura genérica del festival.
-  const CONCIERTOS_EXCLUDE_RE = /\btrailer\b|\baftermovie\b|\bvlog\b|subscribers?|line[- ]?up|ticket|entrevista|\binterview\b|documentary|explains?|announcement|winter nights|full metal cruise/i;
-  const CONCIERTOS_INCLUDE_RE = /\blive\b|\bconcert\b|\ben vivo\b/i;
-  const recentItemsFiltered = recentItems.filter(a => {
+  // MagentaTV), y también recortes cortos de un tema suelto. El filtro por
+  // título solo (versión anterior) fallaba demasiado -- títulos de "live
+  // performance" reales no siempre dicen "live", y clips cortos de 3-4 min
+  // sí pueden decirlo. Se cambia a duración real: la idea es una performance
+  // completa en un solo video, no cortos. >=30 min vía YouTube Data API
+  // (contentDetails.duration), en lotes de 50 ids por llamada.
+  const CONCIERTOS_MIN_SECONDS = 30 * 60;
+  const CONCIERTOS_EXCLUDE_RE = /\btrailer\b|\baftermovie\b|\bvlog\b|subscribers?|line[- ]?up|ticket|entrevista|\binterview\b|documentary|explains?|announcement|\bshorts?\b|playlist/i;
+  const CONCIERTOS_INCLUDE_RE = /\blive\b|\bconcert\b|\ben vivo\b/i; // fallback si no hay YOUTUBE_API_KEY
+
+  function parseISO8601Duration(iso) {
+    const m = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso || "");
+    if (!m) return 0;
+    const h = parseInt(m[1] || "0", 10), min = parseInt(m[2] || "0", 10), s = parseInt(m[3] || "0", 10);
+    return h * 3600 + min * 60 + s;
+  }
+  async function fetchDurationsMap(videoIds) {
+    const map = {};
+    if (!YOUTUBE_API_KEY || !videoIds.length) return map;
+    for (let i = 0; i < videoIds.length; i += 50) {
+      const batch = videoIds.slice(i, i + 50);
+      try {
+        const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${batch.join(",")}&key=${YOUTUBE_API_KEY}`);
+        const data = await res.json();
+        for (const v of data.items || []) map[v.id] = parseISO8601Duration(v.contentDetails?.duration);
+      } catch (e) { console.error(`✗ Conciertos duración (lote): ${e.message}`); }
+    }
+    return map;
+  }
+
+  const conciertosPreFiltered = recentItems.filter(a => a.categoria !== "Conciertos" || !CONCIERTOS_EXCLUDE_RE.test(a.title));
+  const conciertosVideoIds = conciertosPreFiltered.filter(a => a.categoria === "Conciertos" && a.videoId).map(a => a.videoId);
+  const conciertosDurations = await fetchDurationsMap(conciertosVideoIds);
+  const recentItemsFiltered = conciertosPreFiltered.filter(a => {
     if (a.categoria !== "Conciertos") return true;
-    if (CONCIERTOS_EXCLUDE_RE.test(a.title)) return false;
-    return CONCIERTOS_INCLUDE_RE.test(a.title);
+    if (!YOUTUBE_API_KEY) return CONCIERTOS_INCLUDE_RE.test(a.title); // sin key, fallback al criterio de título
+    if (!a.videoId) return false;
+    const dur = conciertosDurations[a.videoId];
+    return dur != null && dur >= CONCIERTOS_MIN_SECONDS;
   });
   const droppedConciertosCount = recentItems.length - recentItemsFiltered.length;
   if (droppedConciertosCount > 0) {
-    console.log(`✓ Conciertos: ${droppedConciertosCount} video(s) descartados (no parecen presentación en vivo de una banda)`);
+    console.log(`✓ Conciertos: ${droppedConciertosCount} video(s) descartados (trailers/clips cortos, o sin llegar a 30 min)`);
   }
 
   let extractionsUsed = 0;
