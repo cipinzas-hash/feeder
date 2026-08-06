@@ -1424,6 +1424,9 @@ var __angst = (() => {
     function normNum(n) {
       return String(n || "").toLowerCase().replace(/[^a-z0-9]/g, "").replace(/^0+(?=\d)/, "");
     }
+    function normName(s) {
+      return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    }
     try {
       let q = name;
       if (setCode && number) q = `${name} ${setCode} ${number}`;
@@ -1435,9 +1438,9 @@ var __angst = (() => {
       if (!r.ok) return null;
       const data = await r.json();
       const cards = data.data || [];
-      const nameLow = name.toLowerCase(), numNorm = normNum(number);
+      const nameNorm = normName(name), numNorm = normNum(number);
       const setCodeLow = (setCode || "").toLowerCase();
-      const match = number && setCode && cards.find((c) => c.name?.toLowerCase() === nameLow && normNum(c.number) === numNorm && (c.set?.ptcgoCode?.toLowerCase() === setCodeLow || c.set?.id?.toLowerCase() === setCodeLow)) || number && cards.find((c) => c.name?.toLowerCase() === nameLow && normNum(c.number) === numNorm);
+      const match = number && setCode && cards.find((c) => normName(c.name) === nameNorm && normNum(c.number) === numNorm && (c.set?.ptcgoCode?.toLowerCase() === setCodeLow || c.set?.id?.toLowerCase() === setCodeLow)) || number && cards.find((c) => normName(c.name) === nameNorm && normNum(c.number) === numNorm);
       if (!match) return null;
       const nm = match.prices?.raw?.near_mint?.tcgplayer, lp = match.prices?.raw?.lightly_played?.tcgplayer;
       const best = nm || lp;

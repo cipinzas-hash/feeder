@@ -153,6 +153,16 @@ async function fetchTCGPrice(name, setName, number, setCode, apiKey){
   function normNum(n){
     return String(n||"").toLowerCase().replace(/[^a-z0-9]/g,"").replace(/^0+(?=\d)/,"");
   }
+  // Mismo criterio para el nombre: pokemontcg.io y tcgpricelookup.com pueden
+  // diferir en espacios dobles, guiones (- vs – vs —), may/minúscula de "ex"/
+  // "EX", o acentos -- nada de eso debería impedir el match si el número ya
+  // lo ancla a la carta correcta. Se le saca todo signo de puntuación y
+  // espacios, y se le sacan acentos (NFD + strip de diacríticos).
+  function normName(s){
+    return String(s||"")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"") // acentos
+      .toLowerCase().replace(/[^a-z0-9]/g,"");
+  }
   try{
     let q = name;
     if(setCode && number) q = `${name} ${setCode} ${number}`;
@@ -162,15 +172,17 @@ async function fetchTCGPrice(name, setName, number, setCode, apiKey){
     if(!r.ok) return null;
     const data = await r.json();
     const cards = data.data||[];
-    const nameLow=name.toLowerCase(), numNorm=normNum(number);
+    const nameNorm=normName(name), numNorm=normNum(number);
     const setCodeLow=(setCode||"").toLowerCase();
     // Solo matcheamos con nombre+número (+setCode si lo tenemos). Nada de
     // fallback por nombre solo o por prefijo de set — eso es lo que generaba
     // snapshots de la variante equivocada (holo vs estándar, u otro set con
     // carta homónima). Preferimos no tener precio a tener uno contaminado.
+    // El nombre se compara normalizado (sin acentos/puntuación/espacios) en
+    // vez de string exacto -- el número sigue siendo el ancla real.
     const match =
-      (number && setCode && cards.find(c=>c.name?.toLowerCase()===nameLow&&normNum(c.number)===numNorm&&(c.set?.ptcgoCode?.toLowerCase()===setCodeLow||c.set?.id?.toLowerCase()===setCodeLow))) ||
-      (number && cards.find(c=>c.name?.toLowerCase()===nameLow&&normNum(c.number)===numNorm));
+      (number && setCode && cards.find(c=>normName(c.name)===nameNorm&&normNum(c.number)===numNorm&&(c.set?.ptcgoCode?.toLowerCase()===setCodeLow||c.set?.id?.toLowerCase()===setCodeLow))) ||
+      (number && cards.find(c=>normName(c.name)===nameNorm&&normNum(c.number)===numNorm));
     if(!match) return null;
     const nm=match.prices?.raw?.near_mint?.tcgplayer, lp=match.prices?.raw?.lightly_played?.tcgplayer;
     const best=nm||lp;
