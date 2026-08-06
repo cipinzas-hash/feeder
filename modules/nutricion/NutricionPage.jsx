@@ -269,6 +269,15 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
   const [moveMenuOpen, setMoveMenuOpen] = useState(null); // uid de la entrada con el popover "mover a otra comida" abierto
   const [apiLoading, setApiLoading] = useState(false);
 
+  // Key de USDA FoodData Central: se pide una vez por UI (no hardcodeada en
+  // el código, no queda visible en el index.html compilado) y se guarda en
+  // su propia clave de localStorage, fuera de la regla vital de export/
+  // import (mismo criterio que la key de TCG en Pokecripto).
+  const USDA_KEY_STORAGE = "angst-usda-fdc-key";
+  const [usdaKey, setUsdaKeyState] = useState(() => { try { return localStorage.getItem(USDA_KEY_STORAGE) || ""; } catch(e){ return ""; } });
+  const [usdaKeyInput, setUsdaKeyInput] = useState("");
+  function saveUsdaKey(k){ try { localStorage.setItem(USDA_KEY_STORAGE, k); } catch(e){} setUsdaKeyState(k); }
+
   const log = nutriLog[dateKey] || [];
   const totalKcal = Math.round(log.reduce((a,e)=>a+e.kcal*e.qty,0));
   const totalProt = parseFloat(log.reduce((a,e)=>a+e.prot*e.qty,0).toFixed(1));
@@ -398,7 +407,7 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
     const name = item.description || item.foodDescription || item.name || item.food_name || item.label || "alimento";
     const kcal = parseFloat(item.calories || item.energy || item.kcal || item.energy_kcal || item.nf_calories || 0) || 0;
     const prot = parseFloat(item.protein || item.proteins || item.protein_g || item.nf_protein || 0) || 0;
-    return { id:`api-${Date.now()}-${idx}`, emoji:"🌐", name, prep:"sugerido por api", kcal:Math.round(kcal), prot:parseFloat(prot.toFixed(1)), unit:"porción", portionType:"", cat:"otros", catKey:"otros", source:"api" };
+    return { id:`api-${Date.now()}-${idx}`, emoji:"🌐", name, prep:"USDA FoodData Central", kcal:Math.round(kcal), prot:parseFloat(prot.toFixed(1)), unit:"porción", portionType:"", cat:"otros", catKey:"otros", source:"api" };
   }
 
   useEffect(()=>{
@@ -409,24 +418,29 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
       const localLower = allFoodsFlat().map(f=>f.name.toLowerCase());
       const localMatch = localLower.some(n=>n.includes(q.toLowerCase()));
       if(localMatch && searchResults.length >= 3){ setApiFoodResults([]); setApiLoading(false); return; }
+      if(!usdaKey){ setApiFoodResults([]); setApiLoading(false); return; }
       setApiLoading(true);
       try {
-        const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=6`;
+        // Foundation Foods + SR Legacy: ingredientes crudos y preparaciones
+        // estándar (raw/cooked/roasted/boiled/etc.), no "Branded" (productos
+        // envasados con marca) -- es justo lo que se buscaba evitar.
+        const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(q)}&pageSize=8&dataType=Foundation,SR%20Legacy&api_key=${encodeURIComponent(usdaKey)}`;
         const r = await fetch(url);
         const data = await r.json();
-        const foods = (data.products || []).map((p,i)=>({
-          description: p.product_name || p.generic_name || p.abbreviated_product_name || p.brands,
-          calories: p.nutriments?.['energy-kcal_100g'] || p.nutriments?.energy_kcal_100g || p.nutriments?.['energy-kcal_serving'],
-          protein: p.nutriments?.proteins_100g || p.nutriments?.proteins_serving
-        })).filter(x=>x.description && (x.calories || x.protein));
-        const normalized = foods.map(normalizeApiFood).filter(f=>f.name && !localLower.includes(f.name.toLowerCase())).slice(0,5);
+        const foods = (data.foods || []).map(f=>{
+          const nutrients = f.foodNutrients || [];
+          const energy = nutrients.find(n=>n.nutrientName==="Energy" && n.unitName==="KCAL") || nutrients.find(n=>n.nutrientName==="Energy");
+          const protein = nutrients.find(n=>n.nutrientName==="Protein");
+          return { description: f.description, calories: energy?.value, protein: protein?.value };
+        }).filter(x=>x.description && (x.calories || x.protein));
+        const normalized = foods.map(normalizeApiFood).filter(f=>f.name && !localLower.includes(f.name.toLowerCase())).slice(0,6);
         if(!cancelled) setApiFoodResults(normalized);
       } catch(e){ if(!cancelled) setApiFoodResults([]); }
       if(!cancelled) setApiLoading(false);
     }
     run();
     return ()=>{ cancelled = true; };
-  }, [searchQuery, dateKey]);
+  }, [searchQuery, dateKey, usdaKey]);
 
   function openDeckPlanner(existingDeck){
     if(existingDeck){
@@ -876,6 +890,14 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
               {searchResults.length===0 && apiFoodResults.length===0 && !apiLoading && (
                 <div style={{padding:"12px 14px",fontFamily:"'Caveat',cursive",fontSize:14,color:"#bbb"}}>sin resultados — probá desde "explorar por categoría"</div>
               )}
+              {!usdaKey && (
+                <div style={{padding:"10px 12px",borderTop:"1px dashed #f0f0f0",display:"flex",gap:6}}>
+                  <input value={usdaKeyInput} onChange={e=>setUsdaKeyInput(e.target.value)} placeholder="API key de USDA FoodData Central"
+                    style={{flex:1,minWidth:0,border:"1px solid #ddd",borderRadius:8,padding:"6px 8px",fontFamily:"'DM Sans',sans-serif",fontSize:11,outline:"none"}}/>
+                  <button onClick={()=>{ if(usdaKeyInput.trim()){ saveUsdaKey(usdaKeyInput.trim()); setUsdaKeyInput(""); } }}
+                    style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:700,border:"none",borderRadius:8,padding:"6px 10px",background:"#111",color:"#fff",cursor:"pointer"}}>guardar</button>
+                </div>
+              )}
             </div>
           )}
           <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="busca un alimento..."
@@ -1161,6 +1183,14 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
               <div onClick={()=>{openNewModal("otros",searchQuery.trim());setSearchQuery("");}}
                 style={{padding:"12px 14px",cursor:"pointer",fontFamily:"'Caveat',cursive",fontSize:15,color:"#555"}}>
                 + agregar "{searchQuery.trim()}" como nuevo alimento
+              </div>
+            )}
+            {!usdaKey && (
+              <div style={{padding:"10px 12px",borderTop:"1px dashed #f0f0f0",display:"flex",gap:6}}>
+                <input value={usdaKeyInput} onChange={e=>setUsdaKeyInput(e.target.value)} placeholder="API key de USDA FoodData Central"
+                  style={{flex:1,minWidth:0,border:"1px solid #ddd",borderRadius:8,padding:"6px 8px",fontFamily:"'DM Sans',sans-serif",fontSize:11,outline:"none"}}/>
+                <button onClick={()=>{ if(usdaKeyInput.trim()){ saveUsdaKey(usdaKeyInput.trim()); setUsdaKeyInput(""); } }}
+                  style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:700,border:"none",borderRadius:8,padding:"6px 10px",background:"#111",color:"#fff",cursor:"pointer"}}>guardar</button>
               </div>
             )}
           </div>

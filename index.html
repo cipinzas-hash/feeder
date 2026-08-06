@@ -5030,6 +5030,22 @@ var __angst = (() => {
     const [apiFoodResults, setApiFoodResults] = useState5([]);
     const [moveMenuOpen, setMoveMenuOpen] = useState5(null);
     const [apiLoading, setApiLoading] = useState5(false);
+    const USDA_KEY_STORAGE = "angst-usda-fdc-key";
+    const [usdaKey, setUsdaKeyState] = useState5(() => {
+      try {
+        return localStorage.getItem(USDA_KEY_STORAGE) || "";
+      } catch (e) {
+        return "";
+      }
+    });
+    const [usdaKeyInput, setUsdaKeyInput] = useState5("");
+    function saveUsdaKey(k) {
+      try {
+        localStorage.setItem(USDA_KEY_STORAGE, k);
+      } catch (e) {
+      }
+      setUsdaKeyState(k);
+    }
     const log = nutriLog[dateKey] || [];
     const totalKcal = Math.round(log.reduce((a, e) => a + e.kcal * e.qty, 0));
     const totalProt = parseFloat(log.reduce((a, e) => a + e.prot * e.qty, 0).toFixed(1));
@@ -5156,7 +5172,7 @@ var __angst = (() => {
       const name = item.description || item.foodDescription || item.name || item.food_name || item.label || "alimento";
       const kcal = parseFloat(item.calories || item.energy || item.kcal || item.energy_kcal || item.nf_calories || 0) || 0;
       const prot = parseFloat(item.protein || item.proteins || item.protein_g || item.nf_protein || 0) || 0;
-      return { id: `api-${Date.now()}-${idx}`, emoji: "\u{1F310}", name, prep: "sugerido por api", kcal: Math.round(kcal), prot: parseFloat(prot.toFixed(1)), unit: "porci\xF3n", portionType: "", cat: "otros", catKey: "otros", source: "api" };
+      return { id: `api-${Date.now()}-${idx}`, emoji: "\u{1F310}", name, prep: "USDA FoodData Central", kcal: Math.round(kcal), prot: parseFloat(prot.toFixed(1)), unit: "porci\xF3n", portionType: "", cat: "otros", catKey: "otros", source: "api" };
     }
     useEffect5(() => {
       let cancelled = false;
@@ -5174,17 +5190,23 @@ var __angst = (() => {
           setApiLoading(false);
           return;
         }
+        if (!usdaKey) {
+          setApiFoodResults([]);
+          setApiLoading(false);
+          return;
+        }
         setApiLoading(true);
         try {
-          const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=6`;
+          const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(q)}&pageSize=8&dataType=Foundation,SR%20Legacy&api_key=${encodeURIComponent(usdaKey)}`;
           const r = await fetch(url);
           const data = await r.json();
-          const foods = (data.products || []).map((p, i) => ({
-            description: p.product_name || p.generic_name || p.abbreviated_product_name || p.brands,
-            calories: p.nutriments?.["energy-kcal_100g"] || p.nutriments?.energy_kcal_100g || p.nutriments?.["energy-kcal_serving"],
-            protein: p.nutriments?.proteins_100g || p.nutriments?.proteins_serving
-          })).filter((x) => x.description && (x.calories || x.protein));
-          const normalized = foods.map(normalizeApiFood).filter((f) => f.name && !localLower.includes(f.name.toLowerCase())).slice(0, 5);
+          const foods = (data.foods || []).map((f) => {
+            const nutrients = f.foodNutrients || [];
+            const energy = nutrients.find((n) => n.nutrientName === "Energy" && n.unitName === "KCAL") || nutrients.find((n) => n.nutrientName === "Energy");
+            const protein = nutrients.find((n) => n.nutrientName === "Protein");
+            return { description: f.description, calories: energy?.value, protein: protein?.value };
+          }).filter((x) => x.description && (x.calories || x.protein));
+          const normalized = foods.map(normalizeApiFood).filter((f) => f.name && !localLower.includes(f.name.toLowerCase())).slice(0, 6);
           if (!cancelled) setApiFoodResults(normalized);
         } catch (e) {
           if (!cancelled) setApiFoodResults([]);
@@ -5195,7 +5217,7 @@ var __angst = (() => {
       return () => {
         cancelled = true;
       };
-    }, [searchQuery, dateKey]);
+    }, [searchQuery, dateKey, usdaKey]);
     function openDeckPlanner(existingDeck) {
       if (existingDeck) {
         setDeckEditor({ id: existingDeck.id, name: existingDeck.name, items: (existingDeck.items || []).map((it) => ({ ...it })), isNew: false });
@@ -5394,7 +5416,27 @@ var __angst = (() => {
           placeholder: "nombre del mazo...",
           style: { width: "100%", border: "1.5px solid #111", borderRadius: 10, padding: "12px 14px", fontFamily: "'Caveat',cursive", fontSize: 18, outline: "none", boxSizing: "border-box", marginBottom: 14, color: "#111" }
         }
-      ), /* @__PURE__ */ React.createElement("div", { style: { background: "#111", borderRadius: 12, padding: "14px 16px", marginBottom: 16, display: "flex", gap: 20 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", lineHeight: 1 } }, deckKcal), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 } }, "kcal totales")), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", lineHeight: 1 } }, deckProt, "g"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 } }, "prote\xEDna"))), itemsByMeal.map((meal) => /* @__PURE__ */ React.createElement("div", { key: meal.id, style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: "#111", marginBottom: 6 } }, meal.emoji, " ", meal.label), meal.entries.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#ddd", fontStyle: "italic", padding: "4px 2px" } }, "sin alimentos") : meal.entries.map((e) => /* @__PURE__ */ React.createElement("div", { key: e.uid, style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16, flexShrink: 0 } }, e.emoji), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333", fontWeight: 600 } }, e.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, "\xD7", e.qty, " ", e.unit, " \xB7 ", Math.round(e.kcal * e.qty), "kcal")), /* @__PURE__ */ React.createElement(MoveMealButton, { uid: e.uid, currentMeal: meal.id, isOpen: moveMenuOpen === e.uid, onToggle: setMoveMenuOpen, onMove: moveDeckItemMeal }), /* @__PURE__ */ React.createElement("button", { onClick: () => removeDeckItem(e.uid), style: { background: "transparent", border: "none", color: "#ddd", fontSize: 16, cursor: "pointer", padding: "0 2px", lineHeight: 1 } }, "\xD7"))))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "agregar alimento al mazo"), searchQuery.trim() && /* @__PURE__ */ React.createElement("div", { style: { border: "1.5px dashed #111", borderRadius: 10, marginBottom: 8, overflow: "hidden", background: "#fff" } }, searchResults.map((food) => /* @__PURE__ */ React.createElement("div", { key: food.catKey + "-" + food.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("span", { onClick: () => openModal(food), style: { fontSize: 16, flexShrink: 0, cursor: "pointer" } }, food.emoji), /* @__PURE__ */ React.createElement("div", { onClick: () => openModal(food), style: { flex: 1, minWidth: 0, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333", fontWeight: 600 } }, food.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, food.kcal, "kcal \xB7 ", food.prot, "g / ", food.unit)))), apiLoading && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#aaa" } }, "buscando fuera de tu registro\u2026"), apiFoodResults.map((food) => /* @__PURE__ */ React.createElement("div", { key: food.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderTop: "1px dashed #f0f0f0", background: "#fcfcfc" } }, /* @__PURE__ */ React.createElement("span", { onClick: () => openModal(food), style: { fontSize: 16, flexShrink: 0, cursor: "pointer" } }, food.emoji), /* @__PURE__ */ React.createElement("div", { onClick: () => openModal(food), style: { flex: 1, minWidth: 0, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333", fontWeight: 600 } }, food.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#9aa" } }, food.kcal, "kcal \xB7 ", food.prot, "g \xB7 api")))), searchResults.length === 0 && apiFoodResults.length === 0 && !apiLoading && /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 14px", fontFamily: "'Caveat',cursive", fontSize: 14, color: "#bbb" } }, 'sin resultados \u2014 prob\xE1 desde "explorar por categor\xEDa"')), /* @__PURE__ */ React.createElement(
+      ), /* @__PURE__ */ React.createElement("div", { style: { background: "#111", borderRadius: 12, padding: "14px 16px", marginBottom: 16, display: "flex", gap: 20 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", lineHeight: 1 } }, deckKcal), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 } }, "kcal totales")), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", lineHeight: 1 } }, deckProt, "g"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 } }, "prote\xEDna"))), itemsByMeal.map((meal) => /* @__PURE__ */ React.createElement("div", { key: meal.id, style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: "#111", marginBottom: 6 } }, meal.emoji, " ", meal.label), meal.entries.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#ddd", fontStyle: "italic", padding: "4px 2px" } }, "sin alimentos") : meal.entries.map((e) => /* @__PURE__ */ React.createElement("div", { key: e.uid, style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16, flexShrink: 0 } }, e.emoji), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333", fontWeight: 600 } }, e.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, "\xD7", e.qty, " ", e.unit, " \xB7 ", Math.round(e.kcal * e.qty), "kcal")), /* @__PURE__ */ React.createElement(MoveMealButton, { uid: e.uid, currentMeal: meal.id, isOpen: moveMenuOpen === e.uid, onToggle: setMoveMenuOpen, onMove: moveDeckItemMeal }), /* @__PURE__ */ React.createElement("button", { onClick: () => removeDeckItem(e.uid), style: { background: "transparent", border: "none", color: "#ddd", fontSize: 16, cursor: "pointer", padding: "0 2px", lineHeight: 1 } }, "\xD7"))))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "agregar alimento al mazo"), searchQuery.trim() && /* @__PURE__ */ React.createElement("div", { style: { border: "1.5px dashed #111", borderRadius: 10, marginBottom: 8, overflow: "hidden", background: "#fff" } }, searchResults.map((food) => /* @__PURE__ */ React.createElement("div", { key: food.catKey + "-" + food.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("span", { onClick: () => openModal(food), style: { fontSize: 16, flexShrink: 0, cursor: "pointer" } }, food.emoji), /* @__PURE__ */ React.createElement("div", { onClick: () => openModal(food), style: { flex: 1, minWidth: 0, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333", fontWeight: 600 } }, food.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, food.kcal, "kcal \xB7 ", food.prot, "g / ", food.unit)))), apiLoading && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#aaa" } }, "buscando fuera de tu registro\u2026"), apiFoodResults.map((food) => /* @__PURE__ */ React.createElement("div", { key: food.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderTop: "1px dashed #f0f0f0", background: "#fcfcfc" } }, /* @__PURE__ */ React.createElement("span", { onClick: () => openModal(food), style: { fontSize: 16, flexShrink: 0, cursor: "pointer" } }, food.emoji), /* @__PURE__ */ React.createElement("div", { onClick: () => openModal(food), style: { flex: 1, minWidth: 0, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333", fontWeight: 600 } }, food.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#9aa" } }, food.kcal, "kcal \xB7 ", food.prot, "g \xB7 api")))), searchResults.length === 0 && apiFoodResults.length === 0 && !apiLoading && /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 14px", fontFamily: "'Caveat',cursive", fontSize: 14, color: "#bbb" } }, 'sin resultados \u2014 prob\xE1 desde "explorar por categor\xEDa"'), !usdaKey && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", borderTop: "1px dashed #f0f0f0", display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          value: usdaKeyInput,
+          onChange: (e) => setUsdaKeyInput(e.target.value),
+          placeholder: "API key de USDA FoodData Central",
+          style: { flex: 1, minWidth: 0, border: "1px solid #ddd", borderRadius: 8, padding: "6px 8px", fontFamily: "'DM Sans',sans-serif", fontSize: 11, outline: "none" }
+        }
+      ), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          onClick: () => {
+            if (usdaKeyInput.trim()) {
+              saveUsdaKey(usdaKeyInput.trim());
+              setUsdaKeyInput("");
+            }
+          },
+          style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, border: "none", borderRadius: 8, padding: "6px 10px", background: "#111", color: "#fff", cursor: "pointer" }
+        },
+        "guardar"
+      ))), /* @__PURE__ */ React.createElement(
         "input",
         {
           value: searchQuery,
@@ -5497,7 +5539,27 @@ var __angst = (() => {
       '+ agregar "',
       searchQuery.trim(),
       '" como nuevo alimento'
-    )), /* @__PURE__ */ React.createElement(
+    ), !usdaKey && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", borderTop: "1px dashed #f0f0f0", display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        value: usdaKeyInput,
+        onChange: (e) => setUsdaKeyInput(e.target.value),
+        placeholder: "API key de USDA FoodData Central",
+        style: { flex: 1, minWidth: 0, border: "1px solid #ddd", borderRadius: 8, padding: "6px 8px", fontFamily: "'DM Sans',sans-serif", fontSize: 11, outline: "none" }
+      }
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        onClick: () => {
+          if (usdaKeyInput.trim()) {
+            saveUsdaKey(usdaKeyInput.trim());
+            setUsdaKeyInput("");
+          }
+        },
+        style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, border: "none", borderRadius: 8, padding: "6px 10px", background: "#111", color: "#fff", cursor: "pointer" }
+      },
+      "guardar"
+    ))), /* @__PURE__ */ React.createElement(
       "input",
       {
         value: searchQuery,
