@@ -145,31 +145,42 @@ async function fetchPoke(url){
 }
 
 async function fetchTCGPrice(name, setName, number, setCode, apiKey){
-  if(!apiKey) return null;
-  // Normaliza un número de colección para comparar: pokemontcg.io y
-  // tcgpricelookup.com no siempre usan el mismo formato (ceros a la
-  // izquierda, sufijos "/122", letras de secret rare) — sacamos todo lo que
-  // no sea alfanumérico y los ceros iniciales, así "004" === "4" === "4/122".
-  function normNum(n){
-    return String(n||"").toLowerCase().replace(/[^a-z0-9]/g,"").replace(/^0+(?=\d)/,"");
-  }
-  // Mismo criterio para el nombre: pokemontcg.io y tcgpricelookup.com pueden
-  // diferir en espacios dobles, guiones (- vs – vs —), may/minúscula de "ex"/
-  // "EX", o acentos -- nada de eso debería impedir el match si el número ya
-  // lo ancla a la carta correcta. Se le saca todo signo de puntuación y
-  // espacios, y se le sacan acentos (NFD + strip de diacríticos).
-  function normName(s){
-    return String(s||"")
-      .normalize("NFD").replace(/[\u0300-\u036f]/g,"") // acentos
-      .toLowerCase().replace(/[^a-z0-9]/g,"");
-  }
+  const price = await fetchTCGPriceDiag(name, setName, number, setCode, apiKey);
+  return price?.match ? {market:price.market, low:price.low, high:price.high} : null;
+}
+
+// Normaliza un número de colección para comparar: pokemontcg.io y
+// tcgpricelookup.com no siempre usan el mismo formato (ceros a la
+// izquierda, sufijos "/122", letras de secret rare) — sacamos todo lo que
+// no sea alfanumérico y los ceros iniciales, así "004" === "4" === "4/122".
+function normNum(n){
+  return String(n||"").toLowerCase().replace(/[^a-z0-9]/g,"").replace(/^0+(?=\d)/,"");
+}
+// Mismo criterio para el nombre: pokemontcg.io y tcgpricelookup.com pueden
+// diferir en espacios dobles, guiones (- vs – vs —), may/minúscula de "ex"/
+// "EX", o acentos -- nada de eso debería impedir el match si el número ya
+// lo ancla a la carta correcta. Se le saca todo signo de puntuación y
+// espacios, y se le sacan acentos (NFD + strip de diacríticos).
+function normName(s){
+  return String(s||"")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"") // acentos
+    .toLowerCase().replace(/[^a-z0-9]/g,"");
+}
+
+// Versión con diagnóstico completo de fetchTCGPrice -- devuelve además la
+// query mandada, los candidatos que trajo tcgpricelookup.com, y por qué no
+// matcheó ninguno (si es el caso). fetchTCGPrice (arriba) es un wrapper
+// liviano de esto para no duplicar la lógica de búsqueda/match en dos
+// lugares -- antes de este cambio estaban duplicadas y podían divergir.
+async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey){
+  if(!apiKey) return {error:"sin API key"};
   try{
     let q = name;
     if(setCode && number) q = `${name} ${setCode} ${number}`;
     else if(number)       q = `${name} ${number}`;
     const r = await fetch(`${TCG_BASE}/cards/search?q=${encodeURIComponent(q)}&game=pokemon&limit=20`,
       {headers:{"X-API-Key":apiKey}, signal:AbortSignal.timeout(8000)});
-    if(!r.ok) return null;
+    if(!r.ok) return {error:`HTTP ${r.status}`, query:q};
     const data = await r.json();
     const cards = data.data||[];
     const nameNorm=normName(name), numNorm=normNum(number);
@@ -183,11 +194,19 @@ async function fetchTCGPrice(name, setName, number, setCode, apiKey){
     const match =
       (number && setCode && cards.find(c=>normName(c.name)===nameNorm&&normNum(c.number)===numNorm&&(c.set?.ptcgoCode?.toLowerCase()===setCodeLow||c.set?.id?.toLowerCase()===setCodeLow))) ||
       (number && cards.find(c=>normName(c.name)===nameNorm&&normNum(c.number)===numNorm));
-    if(!match) return null;
+    const candidatos = cards.slice(0,10).map(c=>({name:c.name, number:c.number, setId:c.set?.id, setCode:c.set?.ptcgoCode, tieneRaw: !!c.prices?.raw}));
+    if(!match) return {query:q, candidatos, matchEncontrado:false};
     const nm=match.prices?.raw?.near_mint?.tcgplayer, lp=match.prices?.raw?.lightly_played?.tcgplayer;
     const best=nm||lp;
-    return best?.market?{market:best.market,low:best.low||null,high:best.high||null}:null;
-  }catch(e){ return null; }
+    return {
+      query:q, candidatos, matchEncontrado:true,
+      matchNombre:match.name, matchNumero:match.number,
+      preciosDisponibles: Object.keys(match.prices||{}),
+      tienePrecioTcgplayer: !!best,
+      match: best?.market?true:false,
+      market: best?.market, low: best?.low||null, high: best?.high||null,
+    };
+  }catch(e){ return {error:e.message}; }
 }
 
 // ── Métricas de historial ──────────────────────────────────────────────────────
@@ -331,6 +350,8 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [schedProgress,  setSchedProgress]  = React.useState({done:0,total:0});
   const [schedLog,       setSchedLog]       = React.useState([]);
   const [apiKeyInput,    setApiKeyInput]    = React.useState("");
+  const [diagResult, setDiagResult] = React.useState(null);
+  const [diagLoading, setDiagLoading] = React.useState(false);
   const [showSchedLog,   setShowSchedLog]   = React.useState(false);
   const [darkPriceModal, setDarkPriceModal] = React.useState(null);
   const [darkPrecioInput,setDarkPrecioInput]= React.useState("");
@@ -996,12 +1017,55 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                 ?<div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"rgba(255,255,255,0.7)"}}>{fmtUSD(carta.tcgMarket)}</div>
                 :<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"rgba(255,255,255,0.3)"}}>sin precio</div>
               }
+              {!carta.tcgMarket && (
+                <button onClick={async()=>{
+                  setDiagLoading(true); setDiagResult(null);
+                  const d = await fetchTCGPriceDiag(carta.name, carta.set, carta.number, carta.setCode, apiKey);
+                  setDiagLoading(false); setDiagResult(d);
+                }} style={{marginTop:4,fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.25)",borderRadius:10,padding:"3px 8px",background:"transparent",color:"rgba(255,255,255,0.6)",cursor:"pointer"}}>
+                  {diagLoading?"buscando…":"🔍 diagnosticar"}
+                </button>
+              )}
               {(carta.tcgLow||carta.tcgHigh)&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:2}}>
                 rango {carta.tcgLow?fmtUSD(carta.tcgLow):"—"} – {carta.tcgHigh?fmtUSD(carta.tcgHigh):"—"}
               </div>}
             </div>
           </div>
         </div>
+
+        {diagResult && (
+          <div style={{background:"#fafafa",border:"1px dashed #ccc",borderRadius:10,padding:"10px 12px",marginBottom:12,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#444",lineHeight:1.6}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+              <span style={{fontWeight:700}}>diagnóstico tcgpricelookup.com</span>
+              <button onClick={()=>setDiagResult(null)} style={{background:"transparent",border:"none",color:"#999",cursor:"pointer",fontSize:14}}>✕</button>
+            </div>
+            {diagResult.error
+              ? <div>error: {diagResult.error}{diagResult.query?` (query: "${diagResult.query}")`:""}</div>
+              : <>
+                  <div>query: "{diagResult.query}"</div>
+                  {diagResult.matchEncontrado ? (
+                    <>
+                      <div>✓ match: "{diagResult.matchNombre}" #{diagResult.matchNumero}</div>
+                      <div>precios disponibles en la carta: {diagResult.preciosDisponibles?.length?diagResult.preciosDisponibles.join(", "):"ninguno"}</div>
+                      <div>{diagResult.tienePrecioTcgplayer?"✓":"✗"} tiene precio tcgplayer en raw/near_mint o lightly_played</div>
+                    </>
+                  ) : (
+                    <>
+                      <div>✗ ningún candidato matcheó por nombre+número</div>
+                      {diagResult.candidatos?.length ? (
+                        <div style={{marginTop:4}}>
+                          <div style={{color:"#888"}}>candidatos que trajo la búsqueda:</div>
+                          {diagResult.candidatos.map((c,i)=>(
+                            <div key={i} style={{marginLeft:8}}>· {c.name} #{c.number} ({c.setId||c.setCode||"sin set"}){c.tieneRaw?"":" — sin precio raw"}</div>
+                          ))}
+                        </div>
+                      ) : <div style={{color:"#888"}}>la búsqueda no devolvió ningún candidato</div>}
+                    </>
+                  )}
+                </>
+            }
+          </div>
+        )}
 
         {/* ATH / ATL / Volatilidad */}
         {hist.length>=2&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
