@@ -371,7 +371,7 @@
               : <div style={{ width: "100%", height: "100%", background: `linear-gradient(160deg, ${color}33, #0a0a0a)` }} />
             }
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.55))" }} />
-            <div style={{ position: "absolute", top: 16, left: 16, right: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+            <div style={{ position: "absolute", top: 16, left: 16, right: 58, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
               <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#111", background: color, borderRadius: 20, padding: "4px 12px", fontWeight: 700 }}>{item.categoria}</span>
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                 <button onClick={onOpenBuzon} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>📌 {buzonCount}</button>
@@ -702,7 +702,7 @@
       return (
         <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none" }}>
           <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ position: "absolute", top: 16, left: 16, right: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, zIndex: 5 }}>
+            <div style={{ position: "absolute", top: 16, left: 16, right: 58, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, zIndex: 5 }}>
               <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#111", background: color, borderRadius: 20, padding: "4px 12px", fontWeight: 700 }}>{item.categoria}</span>
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                 <button onClick={onOpenBuzon} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>📌 {buzonCount}</button>
