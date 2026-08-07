@@ -856,6 +856,42 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     );
   }
 
+  function renderDiagPanel(){
+    return (
+      <div style={{background:"#fafafa",border:"1px dashed #ccc",borderRadius:10,padding:"10px 12px",marginBottom:12,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#444",lineHeight:1.6}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+          <span style={{fontWeight:700}}>diagnóstico tcgpricelookup.com</span>
+          <button onClick={()=>setDiagResult(null)} style={{background:"transparent",border:"none",color:"#999",cursor:"pointer",fontSize:14}}>✕</button>
+        </div>
+        {diagResult.error
+          ? <div>error: {diagResult.error}{diagResult.query?` (query: "${diagResult.query}")`:""}</div>
+          : <>
+              <div>query: "{diagResult.query}"</div>
+              {diagResult.matchEncontrado ? (
+                <>
+                  <div>✓ match: "{diagResult.matchNombre}" #{diagResult.matchNumero}</div>
+                  <div>precios disponibles en la carta: {diagResult.preciosDisponibles?.length?diagResult.preciosDisponibles.join(", "):"ninguno"}</div>
+                  <div>{diagResult.tienePrecioTcgplayer?"✓":"✗"} tiene precio tcgplayer en raw/near_mint o lightly_played</div>
+                </>
+              ) : (
+                <>
+                  <div>✗ ningún candidato matcheó por nombre+número</div>
+                  {diagResult.candidatos?.length ? (
+                    <div style={{marginTop:4}}>
+                      <div style={{color:"#888"}}>candidatos que trajo la búsqueda:</div>
+                      {diagResult.candidatos.map((c,i)=>(
+                        <div key={i} style={{marginLeft:8}}>· {c.name} #{c.number} ({c.setId||c.setCode||"sin set"}){c.tieneRaw?"":" — sin precio raw"}</div>
+                      ))}
+                    </div>
+                  ) : <div style={{color:"#888"}}>la búsqueda no devolvió ningún candidato</div>}
+                </>
+              )}
+            </>
+        }
+      </div>
+    );
+  }
+
   function renderDarkDetailModal(){
     const catalogEntry=darkDetailId?darkCat.find(d=>d.cardId===darkDetailId):null;
     if(!catalogEntry) return null;
@@ -889,6 +925,15 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                 ?<div style={{fontFamily:"'Caveat',cursive",fontSize:26,fontWeight:700,color:"#5c9cff"}}>{fmtUSD(detalle.tcgMarket)}</div>
                 :<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"rgba(255,255,255,0.3)"}}>sin precio aún</div>
               }
+              {!detalle.tcgMarket && (
+                <button onClick={async()=>{
+                  setDiagLoading(true); setDiagResult(null);
+                  const d = await fetchTCGPriceDiag(detalle.name, detalle.set, detalle.number, detalle.setCode, apiKey);
+                  setDiagLoading(false); setDiagResult(d);
+                }} style={{marginTop:4,fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.25)",borderRadius:10,padding:"3px 8px",background:"transparent",color:"rgba(255,255,255,0.6)",cursor:"pointer"}}>
+                  {diagLoading?"buscando…":"🔍 diagnosticar"}
+                </button>
+              )}
               {(detalle.tcgLow||detalle.tcgHigh)&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.35)",marginTop:2}}>
                 rango {detalle.tcgLow?fmtUSD(detalle.tcgLow):"—"} – {detalle.tcgHigh?fmtUSD(detalle.tcgHigh):"—"}
               </div>}
@@ -898,6 +943,8 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               <div style={{fontFamily:"'Caveat',cursive",fontSize:18,fontWeight:700,color:"#fff"}}>{fmtUSD(detalle.precioUSD)}</div>
             </div>}
           </div>
+
+          {diagResult && renderDiagPanel()}
           {/* ATH / ATL / Volatilidad — mismo cálculo y nivel de detalle que la
               ficha de inventario, para cualquier carta que junte snapshots
               (Dark Collection o Hunting, da igual el origen). */}
@@ -1033,39 +1080,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           </div>
         </div>
 
-        {diagResult && (
-          <div style={{background:"#fafafa",border:"1px dashed #ccc",borderRadius:10,padding:"10px 12px",marginBottom:12,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#444",lineHeight:1.6}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-              <span style={{fontWeight:700}}>diagnóstico tcgpricelookup.com</span>
-              <button onClick={()=>setDiagResult(null)} style={{background:"transparent",border:"none",color:"#999",cursor:"pointer",fontSize:14}}>✕</button>
-            </div>
-            {diagResult.error
-              ? <div>error: {diagResult.error}{diagResult.query?` (query: "${diagResult.query}")`:""}</div>
-              : <>
-                  <div>query: "{diagResult.query}"</div>
-                  {diagResult.matchEncontrado ? (
-                    <>
-                      <div>✓ match: "{diagResult.matchNombre}" #{diagResult.matchNumero}</div>
-                      <div>precios disponibles en la carta: {diagResult.preciosDisponibles?.length?diagResult.preciosDisponibles.join(", "):"ninguno"}</div>
-                      <div>{diagResult.tienePrecioTcgplayer?"✓":"✗"} tiene precio tcgplayer en raw/near_mint o lightly_played</div>
-                    </>
-                  ) : (
-                    <>
-                      <div>✗ ningún candidato matcheó por nombre+número</div>
-                      {diagResult.candidatos?.length ? (
-                        <div style={{marginTop:4}}>
-                          <div style={{color:"#888"}}>candidatos que trajo la búsqueda:</div>
-                          {diagResult.candidatos.map((c,i)=>(
-                            <div key={i} style={{marginLeft:8}}>· {c.name} #{c.number} ({c.setId||c.setCode||"sin set"}){c.tieneRaw?"":" — sin precio raw"}</div>
-                          ))}
-                        </div>
-                      ) : <div style={{color:"#888"}}>la búsqueda no devolvió ningún candidato</div>}
-                    </>
-                  )}
-                </>
-            }
-          </div>
-        )}
+        {diagResult && renderDiagPanel()}
 
         {/* ATH / ATL / Volatilidad */}
         {hist.length>=2&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
