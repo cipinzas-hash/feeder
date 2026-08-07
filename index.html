@@ -1424,10 +1424,11 @@ var __angst = (() => {
     return price?.match ? { market: price.market, low: price.low, high: price.high } : null;
   }
   function normNum(n) {
-    return String(n || "").toLowerCase().replace(/[^a-z0-9]/g, "").replace(/^0+(?=\d)/, "");
+    const antesDeBarra = String(n || "").trim().split("/")[0];
+    return antesDeBarra.toLowerCase().replace(/[^a-z0-9]/g, "").replace(/^0+(?=\d)/, "");
   }
   function normName(s) {
-    return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    return String(s || "").replace(/\s*[-–—]\s*\d+\/\d+\s*$/, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
   }
   async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey) {
     if (!apiKey) return { error: "sin API key" };

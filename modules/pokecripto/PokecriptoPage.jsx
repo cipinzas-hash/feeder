@@ -149,20 +149,24 @@ async function fetchTCGPrice(name, setName, number, setCode, apiKey){
   return price?.match ? {market:price.market, low:price.low, high:price.high} : null;
 }
 
-// Normaliza un número de colección para comparar: pokemontcg.io y
-// tcgpricelookup.com no siempre usan el mismo formato (ceros a la
-// izquierda, sufijos "/122", letras de secret rare) — sacamos todo lo que
-// no sea alfanumérico y los ceros iniciales, así "004" === "4" === "4/122".
+// Normaliza un número de colección para comparar: pokemontcg.io da solo el
+// número ("116"), tcgpricelookup.com lo manda con el total del set pegado
+// ("116/084") -- nos quedamos solo con la parte antes de la barra. Después
+// sacamos ceros a la izquierda y cualquier caracter no alfanumérico
+// (letras de secret rare tipo "116a" quedan intactas).
 function normNum(n){
-  return String(n||"").toLowerCase().replace(/[^a-z0-9]/g,"").replace(/^0+(?=\d)/,"");
+  const antesDeBarra = String(n||"").trim().split("/")[0];
+  return antesDeBarra.toLowerCase().replace(/[^a-z0-9]/g,"").replace(/^0+(?=\d)/,"");
 }
 // Mismo criterio para el nombre: pokemontcg.io y tcgpricelookup.com pueden
 // diferir en espacios dobles, guiones (- vs – vs —), may/minúscula de "ex"/
 // "EX", o acentos -- nada de eso debería impedir el match si el número ya
-// lo ancla a la carta correcta. Se le saca todo signo de puntuación y
-// espacios, y se le sacan acentos (NFD + strip de diacríticos).
+// lo ancla a la carta correcta. tcgpricelookup.com además le pega el número
+// al nombre para distinguir variantes/alt-arts ("Mega Darkrai ex -
+// 116/084"), así que primero se saca ese sufijo antes de normalizar.
 function normName(s){
   return String(s||"")
+    .replace(/\s*[-–—]\s*\d+\/\d+\s*$/,"") // sufijo "- 116/084" al final
     .normalize("NFD").replace(/[\u0300-\u036f]/g,"") // acentos
     .toLowerCase().replace(/[^a-z0-9]/g,"");
 }
