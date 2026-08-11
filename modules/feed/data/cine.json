@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-11T04:57:17.677Z",
+  "generatedAt": "2026-08-11T10:43:05.606Z",
   "categories": [
     {
       "cat": "Películas",
@@ -858,10 +858,89 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "iTHRpc5-oWI",
+            "key": "0ulA1QnnW34",
             "site": "YouTube"
           },
           "cast": []
+        },
+        {
+          "guid": "tmdb-movie-1315772",
+          "title": "Minions & Monsters",
+          "link": "https://www.themoviedb.org/movie/1315772",
+          "summary": "Narra la historia de cómo los minions conquistaron la industria de Hollywood, se convirtieron en estrellas de cine, lo perdieron todo, desataron monstruos en el mundo y luego se unieron para intentar salvar al planeta del caos que acababan de crear.",
+          "image": "https://image.tmdb.org/t/p/w500/7DUzo8Ys7BfmZpqnzIwG4qA0egl.jpg",
+          "pubDate": "2026-06-24",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-08-11T10:42:55.304Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.6,
+            "rt": null,
+            "metascore": 69,
+            "tmdb": 6.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "ZSdOwt-G49w",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Christoph Waltz",
+              "character": "Max (voice)",
+              "order": 2
+            },
+            {
+              "name": "Allison Janney",
+              "character": "Olivia (voice)",
+              "order": 3
+            },
+            {
+              "name": "Jesse Eisenberg",
+              "character": "Dort (voice)",
+              "order": 4
+            },
+            {
+              "name": "Jeff Bridges",
+              "character": "Frank / Elwood (voice)",
+              "order": 5
+            },
+            {
+              "name": "Zoey Deutch",
+              "character": "Debbie (voice)",
+              "order": 6
+            },
+            {
+              "name": "Bobby Moynihan",
+              "character": "Phillips (voice)",
+              "order": 7
+            },
+            {
+              "name": "Phil LaMarr",
+              "character": "Howard (voice)",
+              "order": 8
+            },
+            {
+              "name": "Barbara Eve Harris",
+              "character": "Additional Voices (voice)",
+              "order": 10
+            },
+            {
+              "name": "Eric Bauza",
+              "character": "Additional Voices (voice)",
+              "order": 11
+            },
+            {
+              "name": "Aaron Hendry",
+              "character": "Additional Voices (voice)",
+              "order": 12
+            }
+          ]
         },
         {
           "guid": "tmdb-movie-1284041",
@@ -878,7 +957,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.7
+            "tmdb": 6.8
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -2300,6 +2379,45 @@
           ]
         },
         {
+          "guid": "tmdb-tv-59941",
+          "title": "The Tonight Show Starring Jimmy Fallon",
+          "link": "https://www.themoviedb.org/tv/59941",
+          "summary": "Después del segundo retiro de Jay Leno del programa, Jimmy Fallon intervino como su reemplazo permanente. Después de 42 años en Los Ángeles, el programa regresó a Nueva York.",
+          "image": "https://image.tmdb.org/t/p/w500/1N4o5PmmqhlVDrcdJ2RlCFWbLGX.jpg",
+          "pubDate": "2014-02-17",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-07-30T02:22:53.150Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 5.8
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-07-30",
+          "numberOfSeasons": 13,
+          "currentSeason": 13,
+          "reviews": null,
+          "trailer": {
+            "key": "q-0YafsWK_M",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Jimmy Fallon",
+              "character": "Self - Host",
+              "order": 0
+            },
+            {
+              "name": "Steve Higgins",
+              "character": "Self - Announcer",
+              "order": 1
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-108978",
           "title": "Reacher",
           "link": "https://www.themoviedb.org/tv/108978",
@@ -2441,45 +2559,6 @@
               "name": "Arthur",
               "character": "Arthur",
               "order": 233
-            }
-          ]
-        },
-        {
-          "guid": "tmdb-tv-59941",
-          "title": "The Tonight Show Starring Jimmy Fallon",
-          "link": "https://www.themoviedb.org/tv/59941",
-          "summary": "Después del segundo retiro de Jay Leno del programa, Jimmy Fallon intervino como su reemplazo permanente. Después de 42 años en Los Ángeles, el programa regresó a Nueva York.",
-          "image": "https://image.tmdb.org/t/p/w500/1N4o5PmmqhlVDrcdJ2RlCFWbLGX.jpg",
-          "pubDate": "2014-02-17",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-07-30T02:22:53.150Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 5.8
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-07-30",
-          "numberOfSeasons": 13,
-          "currentSeason": 13,
-          "reviews": null,
-          "trailer": {
-            "key": "q-0YafsWK_M",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Jimmy Fallon",
-              "character": "Self - Host",
-              "order": 0
-            },
-            {
-              "name": "Steve Higgins",
-              "character": "Self - Announcer",
-              "order": 1
             }
           ]
         },
@@ -4146,6 +4225,32 @@
           "cast": []
         },
         {
+          "guid": "mal-49233",
+          "title": "Youjo Senki II",
+          "link": "https://myanimelist.net/anime/49233/Youjo_Senki_II",
+          "summary": "Second season of Youjo Senki.",
+          "image": "https://cdn.myanimelist.net/images/anime/1917/158371l.jpg",
+          "pubDate": "2026-07-08T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:25:54.857Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.37
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "OyBzYKR6Mvk",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
           "guid": "mal-62076",
           "title": "Super no Ura de Yani Suu Futari",
           "link": "https://myanimelist.net/anime/62076/Super_no_Ura_de_Yani_Suu_Futari",
@@ -4167,32 +4272,6 @@
           "reviews": null,
           "trailer": {
             "key": "BJvW_SwQn3w",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-49233",
-          "title": "Youjo Senki II",
-          "link": "https://myanimelist.net/anime/49233/Youjo_Senki_II",
-          "summary": "Second season of Youjo Senki.",
-          "image": "https://cdn.myanimelist.net/images/anime/1917/158371l.jpg",
-          "pubDate": "2026-07-08T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:25:54.857Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.37
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "gn4rbzV-dvY",
             "site": "YouTube"
           },
           "cast": []
@@ -4302,6 +4381,84 @@
           "cast": []
         },
         {
+          "guid": "mal-63832",
+          "title": "Seihantai na Kimi to Boku 2nd Season",
+          "link": "https://myanimelist.net/anime/63832/Seihantai_na_Kimi_to_Boku_2nd_Season",
+          "summary": "Second season of Seihantai na Kimi to Boku.",
+          "image": "https://cdn.myanimelist.net/images/anime/1143/158409l.jpg",
+          "pubDate": "2026-07-05T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:26:02.093Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.35
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "o9eLX4W-gys",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-58929",
+          "title": "Koukaku Kidoutai (TV)",
+          "link": "https://myanimelist.net/anime/58929/Koukaku_Kidoutai_TV",
+          "summary": "In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetics, its citizens are able to replace their limbs with robotic parts. The world is now more interconnected than ever before, and the city's Public Security Section 9 is responsible for combating corruption, terrorism, and other dangerous threats following this shift toward globalization.\n\nThe strong-willed Major Motoko Kusanagi of Section 9 spearheads a case involving a mysterious hacker known only as the \"Puppet Master,\" who leaves a trail of victims stripped of their memories. Like many in this futuristic world, the Puppet Master's body is almost entirely robotic, giving them incredible power.\n\nAs Motoko and her subordinates follow the enigmatic criminal's trail, other parties—including Section 6—start to get involved, forcing her to confront the extremely complicated nature of the case. Pondering about various philosophical questions, such as her own life's meaning, Motoko soon realizes that the one who will provide these answers is none other than the Puppet Master themself.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1474/158937l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:26:03.147Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.02
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "ahZn4dVCbvs",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-61169",
+          "title": "Black Torch",
+          "link": "https://myanimelist.net/anime/61169/Black_Torch",
+          "summary": "Seventeen-year-old Jirou Azuma lives a quiet life with his grandfather, utilizing his supernatural ability to speak with animals to befriend and protect them. Both Jirou and his grandfather are descendants of a long-standing shinobi clan, training in combat to keep the art of battle alive within their family. Jirou's life is thrown into upheaval after rescuing a seemingly normal black cat, Ragou, only to discover that the cat is actually a mononoke—a demonic spirit that has long been at war with mankind. When a hostile mononoke comes looking for Ragou, Jirou uses his shinobi training to jump to the cat's defense, but immediately suffers a mortal wound.\n\nFaced with the decision of whether or not to devour Jirou's fading energy and restore himself to full power, Ragou instead chooses to give his remaining energy to Jirou. Reviving the boy, the transfer also grants him great supernatural powers that complement his own shinobi fighting style. This act is witnessed by Ryousuke Shiba, an officer in the Bureau of Espionage whose job revolves around dispatching aggressive mononoke. Shiba extends Jirou and his grandfather an offer: to join the Bureau's new squad, Black Torch, and help them battle powerful mononoke who seek to devour innocent people.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1965/158363l.jpg",
+          "pubDate": "2026-07-04T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:26:05.133Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.39
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "XL_biwm-hxU",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
           "guid": "mal-63403",
           "title": "Yani Neko",
           "link": "https://myanimelist.net/anime/63403/Yani_Neko",
@@ -4354,32 +4511,6 @@
           "cast": []
         },
         {
-          "guid": "mal-58929",
-          "title": "Koukaku Kidoutai (TV)",
-          "link": "https://myanimelist.net/anime/58929/Koukaku_Kidoutai_TV",
-          "summary": "In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetics, its citizens are able to replace their limbs with robotic parts. The world is now more interconnected than ever before, and the city's Public Security Section 9 is responsible for combating corruption, terrorism, and other dangerous threats following this shift toward globalization.\n\nThe strong-willed Major Motoko Kusanagi of Section 9 spearheads a case involving a mysterious hacker known only as the \"Puppet Master,\" who leaves a trail of victims stripped of their memories. Like many in this futuristic world, the Puppet Master's body is almost entirely robotic, giving them incredible power.\n\nAs Motoko and her subordinates follow the enigmatic criminal's trail, other parties—including Section 6—start to get involved, forcing her to confront the extremely complicated nature of the case. Pondering about various philosophical questions, such as her own life's meaning, Motoko soon realizes that the one who will provide these answers is none other than the Puppet Master themself.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1474/158937l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:26:03.147Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.02
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "7yE9MHlifmw",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
           "guid": "mal-62513",
           "title": "Clevatess II: Majuu no Ou to Itsuwari no Yuusha Denshou",
           "link": "https://myanimelist.net/anime/62513/Clevatess_II__Majuu_no_Ou_to_Itsuwari_no_Yuusha_Denshou",
@@ -4406,32 +4537,6 @@
           "cast": []
         },
         {
-          "guid": "mal-63832",
-          "title": "Seihantai na Kimi to Boku 2nd Season",
-          "link": "https://myanimelist.net/anime/63832/Seihantai_na_Kimi_to_Boku_2nd_Season",
-          "summary": "Second season of Seihantai na Kimi to Boku.",
-          "image": "https://cdn.myanimelist.net/images/anime/1143/158409l.jpg",
-          "pubDate": "2026-07-05T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:26:02.093Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.35
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "o9eLX4W-gys",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
           "guid": "mal-61126",
           "title": "Kimi ga Shinu made Koi wo Shitai",
           "link": "https://myanimelist.net/anime/61126/Kimi_ga_Shinu_made_Koi_wo_Shitai",
@@ -4453,32 +4558,6 @@
           "reviews": null,
           "trailer": {
             "key": "rSiaUuG1kpM",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-61169",
-          "title": "Black Torch",
-          "link": "https://myanimelist.net/anime/61169/Black_Torch",
-          "summary": "Seventeen-year-old Jirou Azuma lives a quiet life with his grandfather, utilizing his supernatural ability to speak with animals to befriend and protect them. Both Jirou and his grandfather are descendants of a long-standing shinobi clan, training in combat to keep the art of battle alive within their family. Jirou's life is thrown into upheaval after rescuing a seemingly normal black cat, Ragou, only to discover that the cat is actually a mononoke—a demonic spirit that has long been at war with mankind. When a hostile mononoke comes looking for Ragou, Jirou uses his shinobi training to jump to the cat's defense, but immediately suffers a mortal wound.\n\nFaced with the decision of whether or not to devour Jirou's fading energy and restore himself to full power, Ragou instead chooses to give his remaining energy to Jirou. Reviving the boy, the transfer also grants him great supernatural powers that complement his own shinobi fighting style. This act is witnessed by Ryousuke Shiba, an officer in the Bureau of Espionage whose job revolves around dispatching aggressive mononoke. Shiba extends Jirou and his grandfather an offer: to join the Bureau's new squad, Black Torch, and help them battle powerful mononoke who seek to devour innocent people.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1965/158363l.jpg",
-          "pubDate": "2026-07-04T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:26:05.133Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.39
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "XL_biwm-hxU",
             "site": "YouTube"
           },
           "cast": []
