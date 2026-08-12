@@ -723,15 +723,46 @@
         .map(e => e.item), [cineEstado, items]);
       const fullItems = exemptExtra.length ? [...items, ...exemptExtra] : items;
 
-      const total = fullItems.length;
+      // Orden y filtro del carrusel: por defecto el orden del catálogo tal
+      // cual llega; "próxima" prioriza lo que menos le queda en cartelera
+      // (lo sin firstSeenAt queda al final); "rating" prioriza mejor
+      // puntuado externo (IMDb/TMDb, lo sin rating al final). "ocultar
+      // descartadas" saca del loop lo marcado "no me interesa" sin borrar
+      // la marca -- es solo un filtro de vista.
+      const [sortBy, setSortBy] = useState("default"); // default | proxima | rating
+      const [ocultarDescartadas, setOcultarDescartadas] = useState(false);
+      const sortedItems = React.useMemo(() => {
+        let arr = fullItems;
+        if (ocultarDescartadas) {
+          arr = arr.filter(it => cineEstado[it.guid]?.estado !== "descartada");
+        }
+        if (sortBy === "proxima") {
+          arr = [...arr].sort((a, b) => {
+            const da = diasRestantesCartelera(a), db = diasRestantesCartelera(b);
+            if (da == null && db == null) return 0;
+            if (da == null) return 1;
+            if (db == null) return -1;
+            return da - db;
+          });
+        } else if (sortBy === "rating") {
+          arr = [...arr].sort((a, b) => {
+            const ra = a.rating?.imdb ?? a.rating?.tmdb ?? -1;
+            const rb = b.rating?.imdb ?? b.rating?.tmdb ?? -1;
+            return rb - ra;
+          });
+        }
+        return arr;
+      }, [fullItems, sortBy, ocultarDescartadas, cineEstado]);
+
+      const total = sortedItems.length;
       const lapWidth = total * ITEM_W;
 
       useEffect(() => {
-        if (containerRef.current && fullItems.length) {
+        if (containerRef.current && sortedItems.length) {
           containerRef.current.scrollLeft = lapWidth;
           setScrollX(lapWidth);
         }
-      }, [fullItems.length, lapWidth]);
+      }, [sortedItems.length, lapWidth, sortBy, ocultarDescartadas]);
 
       function onScroll(e) {
         const el = e.target;
@@ -741,14 +772,31 @@
         setScrollX(x);
       }
       function step(dir) {
-        if (!fullItems.length || !containerRef.current) return;
+        if (!sortedItems.length || !containerRef.current) return;
         containerRef.current.scrollTo({ left: containerRef.current.scrollLeft + dir * ITEM_W, behavior: "smooth" });
       }
 
-      if (!fullItems.length) {
+      const toolbarBtn = (active) => ({
+        fontFamily: "'DM Sans',sans-serif", fontSize: 11, padding: "5px 11px", borderRadius: 20,
+        border: "1px solid", cursor: "pointer", whiteSpace: "nowrap",
+        background: active ? "#fff" : "transparent", color: active ? "#111" : "#999",
+        borderColor: active ? "#fff" : "#333",
+      });
+      const toolbar = (
+        <div style={{ display: "flex", gap: 6, padding: "0 12px 8px", justifyContent: "center", flexWrap: "wrap" }}>
+          <button onClick={() => setSortBy(sortBy === "proxima" ? "default" : "proxima")} style={toolbarBtn(sortBy === "proxima")}>📅 próxima a salir</button>
+          <button onClick={() => setSortBy(sortBy === "rating" ? "default" : "rating")} style={toolbarBtn(sortBy === "rating")}>⭐ rating</button>
+          <button onClick={() => setOcultarDescartadas(v => !v)} style={toolbarBtn(ocultarDescartadas)}>🚫 ocultar no me interesa</button>
+        </div>
+      );
+
+      if (!sortedItems.length) {
         return (
-          <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" }}>
-            nada por acá todavía
+          <div>
+            {toolbar}
+            <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" }}>
+              nada por acá todavía
+            </div>
           </div>
         );
       }
@@ -762,11 +810,13 @@
 
       const center = scrollX / ITEM_W;
       const renderList = [0, 1, 2].flatMap(lap =>
-        fullItems.map((item, i) => ({ item, absIdx: lap * total + i }))
+        sortedItems.map((item, i) => ({ item, absIdx: lap * total + i }))
       );
 
       return (
-        <div style={{ position: "relative" }}>
+        <div>
+          {toolbar}
+          <div style={{ position: "relative" }}>
           <button onClick={() => step(-1)} style={{ ...arrowStyle, left: 6 }}>◀️</button>
           <button onClick={() => step(1)} style={{ ...arrowStyle, right: 6 }}>▶️</button>
           <div ref={containerRef} onScroll={onScroll} style={{
@@ -882,6 +932,7 @@
               );
             })}
           </div>
+        </div>
         </div>
       );
     }
