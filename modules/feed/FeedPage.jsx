@@ -565,7 +565,7 @@
             <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 }}>{item.source}</span>
             <a href={item.link} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>fuente ↗</a>
           </div>
-          <div style={{ flex: 1, overflowY: "auto", padding: "18px 20px 30px" }}>
+          <div style={{ flex: 1, overflowY: "auto", overscrollBehaviorY: "contain", padding: "18px 20px 30px" }}>
             {item.image && (
               <img src={item.image} alt="" style={{ width: 120, borderRadius: 10, float: "left", marginRight: 14, marginBottom: 10 }} onError={e => { e.target.style.display = "none"; }} />
             )}
@@ -573,6 +573,37 @@
             <div style={{ fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", marginBottom: 8, lineHeight: 1.2 }}>{item.title}</div>
             <div style={{ marginBottom: 12 }}><RatingBadges rating={item.rating} size="lg" /></div>
             <div style={{ clear: "both" }} />
+
+            {/* Mi reseña — justo debajo de la carátula, para que se vea sin
+                tener que bajar hasta el final del detalle. */}
+            <div style={{ marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #1a1a1a" }}>
+              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 }}>mi reseña</div>
+              {estado === "vista" && !reviewOpen ? (
+                <div onClick={() => setReviewOpen(true)} style={{ cursor: "pointer" }}>
+                  {(() => {
+                    const r = CINE_RATINGS.find(r => r.id === estadoItem.rating);
+                    return (
+                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", marginBottom: 4 }}>
+                        {r ? `${r.emoji} ${r.label}` : "sin calificar"}
+                      </div>
+                    );
+                  })()}
+                  {estadoItem.nota && (
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", fontStyle: "italic" }}>
+                      "{estadoItem.nota}"
+                    </div>
+                  )}
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 4 }}>tocar para editar</div>
+                </div>
+              ) : reviewOpen || estado !== "vista" ? (
+                reviewOpen && <MiniReviewForm onSave={guardarReview} onCancel={() => setReviewOpen(false)} inicial={estadoItem} />
+              ) : null}
+              {estado !== "vista" && !reviewOpen && (
+                <button onClick={() => setReviewOpen(true)} style={{ ...btnGhost, width: "100%" }}>
+                  <span style={{ fontSize: 17 }}>📝</span>marcar como vista
+                </button>
+              )}
+            </div>
 
             {item.trailer && (
               <div style={{ margin: "16px 0", borderRadius: 10, overflow: "hidden", aspectRatio: "16/9" }}>
@@ -617,52 +648,25 @@
                 sin reseñas de usuario disponibles para este título
               </div>
             )}
-
-            {/* Mi reseña — debajo de las reseñas de usuario, mismo lugar tanto
-                para escribirla como para verla después de guardada. */}
-            <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid #1a1a1a" }}>
-              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 }}>mi reseña</div>
-              {estado === "vista" && !reviewOpen ? (
-                <div onClick={() => setReviewOpen(true)} style={{ cursor: "pointer" }}>
-                  {(() => {
-                    const r = CINE_RATINGS.find(r => r.id === estadoItem.rating);
-                    return (
-                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", marginBottom: 4 }}>
-                        {r ? `${r.emoji} ${r.label}` : "sin calificar"}
-                      </div>
-                    );
-                  })()}
-                  {estadoItem.nota && (
-                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", fontStyle: "italic" }}>
-                      "{estadoItem.nota}"
-                    </div>
-                  )}
-                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 4 }}>tocar para editar</div>
-                </div>
-              ) : reviewOpen || estado !== "vista" ? (
-                reviewOpen && <MiniReviewForm onSave={guardarReview} onCancel={() => setReviewOpen(false)} inicial={estadoItem} />
-              ) : null}
-              {estado !== "vista" && !reviewOpen && (
-                <button onClick={() => setReviewOpen(true)} style={{ ...btnGhost, width: "100%" }}>
-                  <span style={{ fontSize: 17 }}>📝</span>marcar como vista
-                </button>
-              )}
-            </div>
           </div>
           {!hideActions && (
             <React.Fragment>
-              <div style={{ display: "flex", gap: 6, padding: "10px 10px 4px", background: "#111" }}>
-                <button
-                  onClick={() => marcar(estado === "interesa" ? "sin_marca" : "interesa")}
-                  style={{ ...btnGhost, background: estado === "interesa" ? "#2ecc71" : "transparent", color: estado === "interesa" ? "#111" : undefined, borderColor: estado === "interesa" ? "#2ecc71" : undefined }}>
-                  <span style={{ fontSize: 17 }}>👍</span>me interesa
-                </button>
-                <button
-                  onClick={() => marcar(estado === "descartada" ? "sin_marca" : "descartada")}
-                  style={{ ...btnGhost, background: estado === "descartada" ? "#e74c3c" : "transparent", color: estado === "descartada" ? "#111" : undefined, borderColor: estado === "descartada" ? "#e74c3c" : undefined }}>
-                  <span style={{ fontSize: 17 }}>👎</span>no me interesa
-                </button>
-              </div>
+              {/* Oculto mientras se escribe la reseña — está justo encima del
+                  formulario, y un toque accidental acá perdía el borrador. */}
+              {!reviewOpen && (
+                <div style={{ display: "flex", gap: 6, padding: "10px 10px 4px", background: "#111" }}>
+                  <button
+                    onClick={() => marcar(estado === "interesa" ? "sin_marca" : "interesa")}
+                    style={{ ...btnGhost, background: estado === "interesa" ? "#2ecc71" : "transparent", color: estado === "interesa" ? "#111" : undefined, borderColor: estado === "interesa" ? "#2ecc71" : undefined }}>
+                    <span style={{ fontSize: 17 }}>👍</span>me interesa
+                  </button>
+                  <button
+                    onClick={() => marcar(estado === "descartada" ? "sin_marca" : "descartada")}
+                    style={{ ...btnGhost, background: estado === "descartada" ? "#e74c3c" : "transparent", color: estado === "descartada" ? "#111" : undefined, borderColor: estado === "descartada" ? "#e74c3c" : undefined }}>
+                    <span style={{ fontSize: 17 }}>👎</span>no me interesa
+                  </button>
+                </div>
+              )}
               <div style={{ display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" }}>
                 <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
                 <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
@@ -782,9 +786,8 @@
               const itemEstado = estadoItem?.estado || "sin_marca";
               const descartada = itemEstado === "descartada";
               const vista = itemEstado === "vista";
-              const interesa = itemEstado === "interesa";
               const nuevo = itemEstado === "sin_marca" && esNuevo(item);
-              const restantes = interesa ? diasRestantesCartelera(item) : null;
+              const restantes = diasRestantesCartelera(item);
               const ratingVista = vista ? CINE_RATINGS.find(r => r.id === estadoItem.rating) : null;
               return (
                 <div key={absIdx} onClick={() => onOpen(item)} style={{
@@ -804,7 +807,9 @@
                         }} onError={e => { e.target.style.display = "none"; }} />
                       : <div style={{ width: "100%", aspectRatio: "2/3", background: "#1a1a1a" }} />
                     }
-                    {/* Franja diagonal "no me interesa" */}
+                    {/* Franja diagonal — misma posición para "no me interesa"
+                        y para la etiqueta de reseña de "vista" (una u otra,
+                        nunca ambas a la vez para el mismo ítem). */}
                     {descartada && (
                       <div style={{
                         position: "absolute", top: 14, left: -34, width: 140, transform: "rotate(-45deg)",
@@ -812,6 +817,14 @@
                         fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
                         padding: "3px 0", boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
                       }}>NO ME INTERESA</div>
+                    )}
+                    {vista && ratingVista && (
+                      <div style={{
+                        position: "absolute", top: 14, left: -34, width: 140, transform: "rotate(-45deg)",
+                        background: "#f5c518", color: "#111", textAlign: "center",
+                        fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 0.3,
+                        padding: "3px 0", boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                      }}>{ratingVista.emoji} {ratingVista.label.toUpperCase()}</div>
                     )}
                     {/* Badge "nuevo" — sin_marca, dentro de la ventana de 1 semana */}
                     {nuevo && (
@@ -821,19 +834,13 @@
                         borderRadius: 5, letterSpacing: 0.3,
                       }}>NUEVO</div>
                     )}
-                    {/* Días restantes en cartelera — solo si está marcada interesa */}
-                    {interesa && restantes != null && (
+                    {/* Días restantes en cartelera — en todas las películas
+                        con firstSeenAt, sin importar el estado */}
+                    {restantes != null && (
                       <div style={{
                         position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(46,204,113,0.9)", color: "#111",
                         fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, textAlign: "center", padding: "3px 0",
                       }}>{restantes > 0 ? `${restantes}d en cartelera` : "sale hoy"}</div>
-                    )}
-                    {/* Badge de rating — vista */}
-                    {vista && ratingVista && (
-                      <div style={{
-                        position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(17,17,17,0.85)",
-                        fontFamily: "'DM Sans',sans-serif", fontSize: 11, textAlign: "center", padding: "4px 0",
-                      }}>{ratingVista.emoji} {ratingVista.label}</div>
                     )}
                   </div>
                   {item.image && (
