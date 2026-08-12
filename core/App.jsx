@@ -901,6 +901,7 @@ function AngstApp() {
       feedMicrodocsVistos: readLocalJSON("angst-feed-microdocs-vistos-v1"),
       feedPodcastsEscuchados: readLocalJSON("angst-feed-podcasts-escuchados-v1"),
       feedConciertosVistos: readLocalJSON("angst-feed-conciertos-vistos-v1"),
+      feedCineEstado: readLocalJSON("angst-cine-estado-v1"),
     };
   }
   function readLocalJSON(key){
@@ -910,7 +911,7 @@ function AngstApp() {
   // Si agregás un campo de estado nuevo: sumalo en buildExportPayload,
   // en saveToStorage, acá, y en restoreFromPayload — las 4 ubicaciones
   // de la regla vital.
-  const REQUIRED_EXPORT_FIELDS = ['dayData','weekOffset','budgets','nutria','calMarks','cookingOpts','aseoOpts','routines','recurring','lastRollover','kidsHealth','custody','fadimanData','nutriLog','ejercicioLog','ejercicioDecks','customFoods','foodOverrides','customEjercicios','nutriDecks','pokeInventario','pokeCarpetas','pokeDarkCatalogo','pokePriceCache','feedState','feedMicrodocsVistos','feedPodcastsEscuchados','feedConciertosVistos'];
+  const REQUIRED_EXPORT_FIELDS = ['dayData','weekOffset','budgets','nutria','calMarks','cookingOpts','aseoOpts','routines','recurring','lastRollover','kidsHealth','custody','fadimanData','nutriLog','ejercicioLog','ejercicioDecks','customFoods','foodOverrides','customEjercicios','nutriDecks','pokeInventario','pokeCarpetas','pokeDarkCatalogo','pokePriceCache','feedState','feedMicrodocsVistos','feedPodcastsEscuchados','feedConciertosVistos','feedCineEstado'];
 
   function handleExport(){
     const fullPayload = buildExportPayload();
@@ -966,6 +967,7 @@ function AngstApp() {
     if(d.feedMicrodocsVistos!=null){ try{ localStorage.setItem("angst-feed-microdocs-vistos-v1", JSON.stringify(d.feedMicrodocsVistos)); }catch(e){} }
     if(d.feedPodcastsEscuchados!=null){ try{ localStorage.setItem("angst-feed-podcasts-escuchados-v1", JSON.stringify(d.feedPodcastsEscuchados)); }catch(e){} }
     if(d.feedConciertosVistos!=null){ try{ localStorage.setItem("angst-feed-conciertos-vistos-v1", JSON.stringify(d.feedConciertosVistos)); }catch(e){} }
+    if(d.feedCineEstado!=null){ try{ localStorage.setItem("angst-cine-estado-v1", JSON.stringify(d.feedCineEstado)); }catch(e){} }
     setLoadMsg(`✓ Restauración completa desde ${sourceLabel||"backup"}`);
     setTimeout(()=>setLoadMsg(null), 4000);
     return true;

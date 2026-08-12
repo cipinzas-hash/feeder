@@ -437,7 +437,124 @@
     }
 
     // ─── CineExtendedView — formato "cine" del detalle ──────────────────────────
+    // ─── Estado de Cine (interesa/descartada/vista) — decisión tomada en el
+    // detalle, después de tráiler/sinopsis (nunca desde el póster del carrusel,
+    // que es puramente de exhibición). Clave propia de localStorage, aislada
+    // del blob principal (mismo patrón que PODCASTS_ESCUCHADOS_KEY), pero se
+    // cose al export/import general (ver core/persistence.js) porque acá sí
+    // aplica la regla de "toda la info entra al export".
+    //   sin_marca  -> default, sin decisión tomada aún
+    //   interesa   -> guarda copia completa del item (título/imagen/sinopsis/
+    //                 trailer/rating) para sobrevivir a la poda de 30 días de
+    //                 build-cine.mjs, que no sabe nada de este estado
+    //   descartada -> no me interesa
+    //   vista      -> rating obligatorio (4 categorías) + nota opcional
+    const CINE_ESTADO_KEY = "angst-cine-estado-v1";
+    const CINE_NUEVO_MS = 7 * 86400000; // 1 semana desde firstSeenAt
+    const CINE_RATINGS = [
+      { id: "unwatchable", emoji: "💀", label: "unwatchable" },
+      { id: "forgettable", emoji: "😐", label: "forgettable" },
+      { id: "remarkable", emoji: "✨", label: "remarkable" },
+      { id: "outstanding", emoji: "🏆", label: "outstanding" },
+    ];
+    function loadCineEstado() {
+      try {
+        const raw = localStorage.getItem(CINE_ESTADO_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) { return {}; }
+    }
+    let cineEstadoCache = loadCineEstado();
+    const cineEstadoListeners = new Set();
+    function saveCineEstado(map) {
+      cineEstadoCache = map;
+      try { localStorage.setItem(CINE_ESTADO_KEY, JSON.stringify(map)); } catch (e) {}
+      cineEstadoListeners.forEach(fn => fn(map));
+    }
+    // patch=null borra la entrada (vuelve a sin_marca)
+    function setCineItemEstado(guid, patch) {
+      const next = { ...cineEstadoCache };
+      if (patch === null) delete next[guid];
+      else next[guid] = { ...(next[guid] || {}), ...patch };
+      saveCineEstado(next);
+    }
+    function useCineEstadoMap() {
+      const [map, setMap] = useState(cineEstadoCache);
+      useEffect(() => {
+        cineEstadoListeners.add(setMap);
+        return () => cineEstadoListeners.delete(setMap);
+      }, []);
+      return map;
+    }
+    function diasRestantesCartelera(item) {
+      if (!item.firstSeenAt) return null;
+      const RETENTION_MS = 30 * 86400000;
+      const elapsed = Date.now() - new Date(item.firstSeenAt).getTime();
+      return Math.max(0, Math.ceil((RETENTION_MS - elapsed) / 86400000));
+    }
+    function esNuevo(item) {
+      if (!item.firstSeenAt) return false;
+      return Date.now() - new Date(item.firstSeenAt).getTime() <= CINE_NUEVO_MS;
+    }
+
+    function MiniReviewForm({ onSave, onCancel, inicial }) {
+      const [ratingId, setRatingId] = useState(inicial?.rating || null);
+      const [nota, setNota] = useState(inicial?.nota || "");
+      return (
+        <div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+            {CINE_RATINGS.map(r => (
+              <button key={r.id} onClick={() => setRatingId(r.id)} style={{
+                fontFamily: "'DM Sans',sans-serif", fontSize: 11, padding: "8px 10px", borderRadius: 8,
+                border: "1px solid", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, flex: 1,
+                background: ratingId === r.id ? "#fff" : "transparent",
+                color: ratingId === r.id ? "#111" : "#ccc",
+                borderColor: ratingId === r.id ? "#fff" : "#333",
+              }}>
+                <span style={{ fontSize: 20 }}>{r.emoji}</span>
+                {r.label}
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={nota} onChange={e => setNota(e.target.value)} placeholder="nota (opcional)"
+            style={{
+              width: "100%", minHeight: 60, background: "#1a1a1a", border: "1px solid #333", borderRadius: 8,
+              color: "#fff", fontFamily: "'DM Sans',sans-serif", fontSize: 13, padding: 10, resize: "vertical", boxSizing: "border-box",
+            }}
+          />
+          <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+            <button onClick={onCancel} style={{ ...btnGhost, flex: 1 }}>cancelar</button>
+            <button
+              onClick={() => ratingId && onSave(ratingId, nota)}
+              disabled={!ratingId}
+              style={{ ...btnGhost, flex: 1, opacity: ratingId ? 1 : 0.4, background: ratingId ? "#fff" : "transparent", color: ratingId ? "#111" : undefined }}>
+              guardar reseña
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions, onExportImage }) {
+      const cineEstado = useCineEstadoMap();
+      const estadoItem = cineEstado[item.guid];
+      const estado = estadoItem?.estado || "sin_marca";
+      const [reviewOpen, setReviewOpen] = useState(false);
+      function marcar(nuevoEstado) {
+        if (nuevoEstado === "interesa") {
+          // Copia completa: tiene que sobrevivir a la poda de 30 días de
+          // build-cine.mjs, que no sabe que esto está marcado "interesa".
+          setCineItemEstado(item.guid, { estado: "interesa", item });
+        } else if (nuevoEstado === "sin_marca") {
+          setCineItemEstado(item.guid, null);
+        } else {
+          setCineItemEstado(item.guid, { estado: nuevoEstado });
+        }
+      }
+      function guardarReview(ratingId, nota) {
+        setCineItemEstado(item.guid, { estado: "vista", rating: ratingId, nota: nota || "" });
+        setReviewOpen(false);
+      }
       const color = CAT_COLORS[item.categoria] || "#e91e8c";
       const leads = (item.cast || []).filter(c => c.order < 4);
       const supporting = (item.cast || []).filter(c => c.order >= 4);
@@ -500,14 +617,59 @@
                 sin reseñas de usuario disponibles para este título
               </div>
             )}
+
+            {/* Mi reseña — debajo de las reseñas de usuario, mismo lugar tanto
+                para escribirla como para verla después de guardada. */}
+            <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid #1a1a1a" }}>
+              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 }}>mi reseña</div>
+              {estado === "vista" && !reviewOpen ? (
+                <div onClick={() => setReviewOpen(true)} style={{ cursor: "pointer" }}>
+                  {(() => {
+                    const r = CINE_RATINGS.find(r => r.id === estadoItem.rating);
+                    return (
+                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", marginBottom: 4 }}>
+                        {r ? `${r.emoji} ${r.label}` : "sin calificar"}
+                      </div>
+                    );
+                  })()}
+                  {estadoItem.nota && (
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", fontStyle: "italic" }}>
+                      "{estadoItem.nota}"
+                    </div>
+                  )}
+                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 4 }}>tocar para editar</div>
+                </div>
+              ) : reviewOpen || estado !== "vista" ? (
+                reviewOpen && <MiniReviewForm onSave={guardarReview} onCancel={() => setReviewOpen(false)} inicial={estadoItem} />
+              ) : null}
+              {estado !== "vista" && !reviewOpen && (
+                <button onClick={() => setReviewOpen(true)} style={{ ...btnGhost, width: "100%" }}>
+                  <span style={{ fontSize: 17 }}>📝</span>marcar como vista
+                </button>
+              )}
+            </div>
           </div>
           {!hideActions && (
-            <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
-              <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
-              <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
-              <button onClick={() => shareToWhatsApp(item)} style={btnGhost}><span style={{ fontSize: 17 }}>📤</span>compartir</button>
-              <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
-            </div>
+            <React.Fragment>
+              <div style={{ display: "flex", gap: 6, padding: "10px 10px 4px", background: "#111" }}>
+                <button
+                  onClick={() => marcar(estado === "interesa" ? "sin_marca" : "interesa")}
+                  style={{ ...btnGhost, background: estado === "interesa" ? "#2ecc71" : "transparent", color: estado === "interesa" ? "#111" : undefined, borderColor: estado === "interesa" ? "#2ecc71" : undefined }}>
+                  <span style={{ fontSize: 17 }}>👍</span>me interesa
+                </button>
+                <button
+                  onClick={() => marcar(estado === "descartada" ? "sin_marca" : "descartada")}
+                  style={{ ...btnGhost, background: estado === "descartada" ? "#e74c3c" : "transparent", color: estado === "descartada" ? "#111" : undefined, borderColor: estado === "descartada" ? "#e74c3c" : undefined }}>
+                  <span style={{ fontSize: 17 }}>👎</span>no me interesa
+                </button>
+              </div>
+              <div style={{ display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" }}>
+                <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
+                <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
+                <button onClick={() => shareToWhatsApp(item)} style={btnGhost}><span style={{ fontSize: 17 }}>📤</span>compartir</button>
+                <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
+              </div>
+            </React.Fragment>
           )}
           {hideActions && onExportImage && (
             <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
@@ -540,22 +702,32 @@
       }, []);
       const sidePad = Math.max(8, containerW / 2 - CARD_W / 2);
 
-      // Loop infinito real (estilo WiiFlow): se renderizan 3 vueltas seguidas
-      // del mismo catálogo (+ tarjeta "eso es todo" al final de cada una). En
-      // vez de tapar el final con un tope, apenas el scroll sale de la vuelta
-      // del medio se reposiciona de un salto sin animación exactamente una
-      // vuelta atrás/adelante -- como el contenido de cada vuelta es idéntico,
-      // el salto es invisible. Así "siguiente" (botón o swipe) nunca se topa
-      // con un final real.
-      const total = items.length + 1; // incluye la tarjeta "eso es todo"
+      // Loop infinito real (estilo WiiFlow), sin marcador de "fin de vuelta":
+      // se renderizan 3 vueltas seguidas del mismo catálogo. Apenas el scroll
+      // sale de la vuelta del medio se reposiciona de un salto sin animación
+      // exactamente una vuelta atrás/adelante -- como el contenido de cada
+      // vuelta es idéntico, el salto es invisible. Así "siguiente" (botón o
+      // swipe) nunca se topa con un final real, la última carta conecta
+      // directo con la primera.
+      const cineEstado = useCineEstadoMap();
+      // Las marcadas "interesa" llevan copia completa del item justamente para
+      // sobrevivir a la poda de 30 días de build-cine.mjs (que no sabe nada de
+      // este estado) — si build-cine ya la sacó de `items`, la reinyectamos acá
+      // desde la copia local para que no desaparezca del carrusel.
+      const exemptExtra = React.useMemo(() => Object.values(cineEstado)
+        .filter(e => e.estado === "interesa" && e.item && !items.some(it => it.guid === e.item.guid))
+        .map(e => e.item), [cineEstado, items]);
+      const fullItems = exemptExtra.length ? [...items, ...exemptExtra] : items;
+
+      const total = fullItems.length;
       const lapWidth = total * ITEM_W;
 
       useEffect(() => {
-        if (containerRef.current && items.length) {
+        if (containerRef.current && fullItems.length) {
           containerRef.current.scrollLeft = lapWidth;
           setScrollX(lapWidth);
         }
-      }, [items.length, lapWidth]);
+      }, [fullItems.length, lapWidth]);
 
       function onScroll(e) {
         const el = e.target;
@@ -565,11 +737,11 @@
         setScrollX(x);
       }
       function step(dir) {
-        if (!items.length || !containerRef.current) return;
+        if (!fullItems.length || !containerRef.current) return;
         containerRef.current.scrollTo({ left: containerRef.current.scrollLeft + dir * ITEM_W, behavior: "smooth" });
       }
 
-      if (!items.length) {
+      if (!fullItems.length) {
         return (
           <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" }}>
             nada por acá todavía
@@ -586,7 +758,7 @@
 
       const center = scrollX / ITEM_W;
       const renderList = [0, 1, 2].flatMap(lap =>
-        [...items.map((item, i) => ({ item, absIdx: lap * total + i })), { item: null, absIdx: lap * total + items.length }]
+        fullItems.map((item, i) => ({ item, absIdx: lap * total + i }))
       );
 
       return (
@@ -605,23 +777,15 @@
               const rotate = Math.max(-55, Math.min(55, dist * 55));
               const scale = 1 - Math.min(0.25, Math.abs(dist) * 0.15);
               const isCenter = Math.abs(dist) < 0.5;
-              if (!item) {
-                return (
-                  <div key={absIdx} style={{
-                    flexShrink: 0, width: CARD_W, marginRight: GAP, scrollSnapAlign: "center", display: "flex", flexDirection: "column",
-                    alignItems: "center", justifyContent: "center", aspectRatio: "2/3",
-                    border: "1px dashed #333", borderRadius: 8, padding: 12, textAlign: "center",
-                    transform: `rotateY(${-rotate}deg) scale(${scale})`, transformOrigin: "center center",
-                  }}>
-                    <div style={{ fontSize: 26, marginBottom: 8 }}>🔄</div>
-                    <div style={{ fontFamily: "'Caveat',cursive", fontSize: 17, color: "#999", lineHeight: 1.3 }}>eso es todo por ahora</div>
-                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 10 }}>
-                      {generatedAt ? `actualizado ${new Date(generatedAt).toLocaleString("es-CL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : ""}
-                    </div>
-                  </div>
-                );
-              }
               const temporada = seasonLabel(item);
+              const estadoItem = cineEstado[item.guid];
+              const itemEstado = estadoItem?.estado || "sin_marca";
+              const descartada = itemEstado === "descartada";
+              const vista = itemEstado === "vista";
+              const interesa = itemEstado === "interesa";
+              const nuevo = itemEstado === "sin_marca" && esNuevo(item);
+              const restantes = interesa ? diasRestantesCartelera(item) : null;
+              const ratingVista = vista ? CINE_RATINGS.find(r => r.id === estadoItem.rating) : null;
               return (
                 <div key={absIdx} onClick={() => onOpen(item)} style={{
                   flexShrink: 0, width: CARD_W, marginRight: GAP, scrollSnapAlign: "center", cursor: "pointer",
@@ -629,14 +793,48 @@
                   zIndex: Math.round(100 - Math.abs(dist) * 10),
                 }}>
                   <div style={{
-                    borderRadius: 8, overflow: "hidden",
+                    position: "relative", borderRadius: 8, overflow: "hidden",
                     boxShadow: isCenter ? "0 12px 32px rgba(0,0,0,0.7), 0 0 0 2px rgba(255,255,255,0.15)" : "0 10px 30px rgba(0,0,0,0.6)",
                     transition: "box-shadow 0.15s",
                   }}>
                     {item.image
-                      ? <img src={item.image} alt="" style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block" }} onError={e => { e.target.style.display = "none"; }} />
+                      ? <img src={item.image} alt="" style={{
+                          width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block",
+                          filter: descartada ? "grayscale(1)" : "none",
+                        }} onError={e => { e.target.style.display = "none"; }} />
                       : <div style={{ width: "100%", aspectRatio: "2/3", background: "#1a1a1a" }} />
                     }
+                    {/* Franja diagonal "no me interesa" */}
+                    {descartada && (
+                      <div style={{
+                        position: "absolute", top: 14, left: -34, width: 140, transform: "rotate(-45deg)",
+                        background: "#e74c3c", color: "#fff", textAlign: "center",
+                        fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
+                        padding: "3px 0", boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                      }}>NO ME INTERESA</div>
+                    )}
+                    {/* Badge "nuevo" — sin_marca, dentro de la ventana de 1 semana */}
+                    {nuevo && (
+                      <div style={{
+                        position: "absolute", top: 6, right: 6, background: "#2ecc71", color: "#111",
+                        fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, padding: "3px 7px",
+                        borderRadius: 5, letterSpacing: 0.3,
+                      }}>NUEVO</div>
+                    )}
+                    {/* Días restantes en cartelera — solo si está marcada interesa */}
+                    {interesa && restantes != null && (
+                      <div style={{
+                        position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(46,204,113,0.9)", color: "#111",
+                        fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, textAlign: "center", padding: "3px 0",
+                      }}>{restantes > 0 ? `${restantes}d en cartelera` : "sale hoy"}</div>
+                    )}
+                    {/* Badge de rating — vista */}
+                    {vista && ratingVista && (
+                      <div style={{
+                        position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(17,17,17,0.85)",
+                        fontFamily: "'DM Sans',sans-serif", fontSize: 11, textAlign: "center", padding: "4px 0",
+                      }}>{ratingVista.emoji} {ratingVista.label}</div>
+                    )}
                   </div>
                   {item.image && (
                     <div style={{ width: "100%", height: 42, overflow: "hidden", marginTop: 1 }}>
