@@ -1312,6 +1312,19 @@
       );
     }
 
+    // ─── vistos de clips del VOD permanente — mismo patrón que Microdocs
+    // (localStorage, clave propia y aislada).
+    const MELEE_VOD_VISTOS_KEY = "angst-feed-melee-vod-vistos-v1";
+    function loadMeleeVodVistos() {
+      try {
+        const raw = localStorage.getItem(MELEE_VOD_VISTOS_KEY);
+        return raw ? new Set(JSON.parse(raw)) : new Set();
+      } catch (e) { return new Set(); }
+    }
+    function saveMeleeVodVistos(set) {
+      try { localStorage.setItem(MELEE_VOD_VISTOS_KEY, JSON.stringify([...set])); } catch (e) {}
+    }
+
     function MeleeMatchup({ item }) {
       const g = item.ganador, p = item.perdedor;
       if (!g || !p) {
@@ -1343,6 +1356,15 @@
     // cuando está disponible, como resumen.
     function MeleeFeed({ items }) {
       const [openTournament, setOpenTournament] = useState(null);
+      const [vodVistos, setVodVistos] = useState(() => loadMeleeVodVistos());
+      function toggleVodVisto(guid) {
+        setVodVistos(prev => {
+          const next = new Set(prev);
+          if (next.has(guid)) next.delete(guid); else next.add(guid);
+          saveMeleeVodVistos(next);
+          return next;
+        });
+      }
       const torneos = {};
       for (const it of items) {
         (torneos[it.source] = torneos[it.source] || []).push(it);
@@ -1371,12 +1393,16 @@
           {nombres.map(nombre => {
             const grupo = torneos[nombre];
             const archivo = grupo.find(i => i.esArchivo);
+            const top16 = grupo.find(i => i.esTop16Preview);
             const top8 = grupo.find(i => i.esTop8Preview);
             const hype = grupo.find(i => i.esHype);
             const proyeccion = grupo.find(i => i.esProyeccion);
-            const upsets = grupo.filter(i => !i.esArchivo && !i.esTop8Preview && !i.esHype && !i.esProyeccion);
+            const upsets = grupo.filter(i => !i.esArchivo && !i.esTop16Preview && !i.esTop8Preview && !i.esHype && !i.esProyeccion);
             const open = openTournament === nombre;
-            const estado = archivo ? "finalizado" : top8 ? "en Top 8" : (upsets.length ? "en curso" : "próximamente");
+            const estado = archivo ? "finalizado" : top8 ? "en Top 8" : top16 ? "en Top 16" : (upsets.length ? "en curso" : "próximamente");
+            // Hora Chile del Top 8 + link de stream: puede venir de hype (pre-torneo)
+            // o de top16/top8 (torneo en curso) — el que esté disponible primero.
+            const liveInfo = top8 || top16 || hype;
             return (
               <div key={nombre} style={{ marginBottom: 10, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, overflow: "hidden" }}>
                 <button onClick={() => setOpenTournament(open ? null : nombre)} style={{
@@ -1388,6 +1414,20 @@
                 </button>
                 {open && (
                   <div style={{ padding: "14px 16px" }}>
+                    {!archivo && (liveInfo?.top8StartAt || liveInfo?.streamUrl) && (
+                      <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", flexWrap: "wrap", gap: 14, alignItems: "center" }}>
+                        {liveInfo.top8StartAt && (
+                          <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#ddd" }}>
+                            🕗 Top 8: {new Date(liveInfo.top8StartAt * 1000).toLocaleString("es-CL", { timeZone: "America/Santiago", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} (hora Chile)
+                          </div>
+                        )}
+                        {liveInfo.streamUrl && (
+                          <a href={liveInfo.streamUrl} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, color: "#ff6600" }}>
+                            📡 ver stream ↗
+                          </a>
+                        )}
+                      </div>
+                    )}
                     {!archivo && (hype || proyeccion) && (
                       <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                         <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 6 }}>PRÓXIMAMENTE</div>
@@ -1426,6 +1466,62 @@
                         )}
                       </div>
                     )}
+                    {archivo && archivo.vodClips && archivo.vodClips.length > 0 && (
+                      <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 8 }}>VOD DEL TORNEO</div>
+                        {archivo.vodClips.map((clip, i) => {
+                          const visto = vodVistos.has(clip.guid);
+                          return (
+                            <div key={clip.guid} style={{
+                              padding: "16px 0",
+                              borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                              opacity: visto ? 0.55 : 1,
+                            }}>
+                              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <MeleeMatchup item={clip} />
+                                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#777", marginTop: 4 }}>
+                                    {clip.ronda}{clip.esTop16 ? " · Top 16" : ""}{clip.esUpset ? " · upset" : ""}
+                                  </div>
+                                </div>
+                                <button onClick={() => toggleVodVisto(clip.guid)} style={{
+                                  flexShrink: 0, fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700,
+                                  border: "1px solid " + (visto ? "#333" : "#ff6600"), borderRadius: 14, padding: "4px 10px",
+                                  background: "transparent", color: visto ? "#666" : "#ff6600", cursor: "pointer",
+                                }}>
+                                  {visto ? "✓ visto" : "marcar visto"}
+                                </button>
+                              </div>
+                              {clip.videoId && (
+                                <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: 10, overflow: "hidden", background: "#000" }}>
+                                  <iframe
+                                    src={`https://www.youtube-nocookie.com/embed/${clip.videoId}${clip.startSeconds ? `?start=${clip.startSeconds}` : ""}`}
+                                    title={`${clip.ganador?.nombre} vs ${clip.perdedor?.nombre}`}
+                                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    referrerPolicy="strict-origin-when-cross-origin"
+                                    allowFullScreen
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {top16 && !archivo && (
+                      <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 8 }}>TOP 16</div>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                          {(top16.jugadores || []).map(j => (
+                            <div key={j.nombre} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 60 }}>
+                              <PlayerAvatar src={j.foto} size={44} />
+                              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ccc", textAlign: "center", marginTop: 4 }}>{j.nombre}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     {top8 && !archivo && (
                       <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                         <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 8 }}>TOP 8</div>
@@ -1441,22 +1537,51 @@
                     )}
                     {upsets.length > 0 && (
                       <div>
-                        {archivo || top8 ? (
+                        {archivo || top16 || top8 ? (
                           <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>UPSETS</div>
                         ) : null}
-                        {upsets.map((it, i) => (
-                          <div key={it.guid} style={{ padding: "10px 0", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
-                            <MeleeMatchup item={it} />
-                            {it.videoId && (
-                              <a href={`https://youtube.com/watch?v=${it.videoId}${it.startSeconds ? `&t=${it.startSeconds}s` : ""}`} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#ff6600", display: "inline-block", marginTop: 6 }}>
-                                ▶ ver clip
-                              </a>
-                            )}
-                          </div>
-                        ))}
+                        {(() => {
+                          // Agrupado por día (hora Chile) -- así se distingue de un
+                          // vistazo "los upsets de ayer" de "los de hoy" en majors
+                          // de varios días. Sin fecha (pubDate null) cae a un solo
+                          // grupo al final. La etiqueta de día solo se muestra si
+                          // hay más de un día presente -- en torneos de un día no
+                          // aporta nada, es ruido.
+                          const chileDayKey = iso => iso ? new Date(iso).toLocaleDateString("sv-SE", { timeZone: "America/Santiago" }) : "0000-00-00";
+                          const chileDayLabel = iso => {
+                            if (!iso) return "sin fecha";
+                            const s = new Date(iso).toLocaleDateString("es-CL", { timeZone: "America/Santiago", weekday: "long", day: "numeric", month: "long" });
+                            return s.charAt(0).toUpperCase() + s.slice(1);
+                          };
+                          const byDay = {};
+                          for (const it of upsets) {
+                            const key = chileDayKey(it.pubDate);
+                            (byDay[key] = byDay[key] || []).push(it);
+                          }
+                          const dayKeys = Object.keys(byDay).sort((a, b) => b.localeCompare(a));
+                          return dayKeys.map(dayKey => (
+                            <div key={dayKey} style={{ marginBottom: 8 }}>
+                              {dayKeys.length > 1 && (
+                                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, color: "#ff6600", opacity: 0.8, margin: "8px 0 4px" }}>
+                                  {chileDayLabel(byDay[dayKey][0].pubDate)}
+                                </div>
+                              )}
+                              {byDay[dayKey].map((it, i) => (
+                                <div key={it.guid} style={{ padding: "10px 0", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
+                                  <MeleeMatchup item={it} />
+                                  {it.videoId && (
+                                    <a href={`https://youtube.com/watch?v=${it.videoId}${it.startSeconds ? `&t=${it.startSeconds}s` : ""}`} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#ff6600", display: "inline-block", marginTop: 6 }}>
+                                      ▶ ver clip
+                                    </a>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ));
+                        })()}
                       </div>
                     )}
-                    {!archivo && !top8 && !hype && !proyeccion && upsets.length === 0 && (
+                    {!archivo && !top16 && !top8 && !hype && !proyeccion && upsets.length === 0 && (
                       <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#666" }}>sin novedades todavía</div>
                     )}
                   </div>

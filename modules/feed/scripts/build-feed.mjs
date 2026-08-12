@@ -224,9 +224,23 @@ const MELEEMAJORS_URL = "https://raw.githubusercontent.com/jtof-dev/meleemajors.
 const STARTGG_ENDPOINT = "https://api.start.gg/gql/alpha";
 const TOP_SEED_CUTOFF = 10;
 const UPSET_SEED_DIFF_THRESHOLD = 5;
+const VOD_UPSET_SEED_DIFF_THRESHOLD = 25; // umbral (más alto) para entrar al VOD permanente del archivo -- ver Fase 3b
 const HYPE_WINDOW_DAYS = 14; // cuántos días antes de que empiece un major se genera el aviso de "se viene"
 const PROJECTION_WINDOW_DAYS = 3; // el seeding suele cerrarse recién cerca del check-in, no 14 días antes
 const PROJECTION_TOP_CUTOFF = 8; // solo nos interesan choques proyectados entre seeds de este rango
+
+// Canales de producción conocidos para el VOD permanente del archivo (Fase 3b)
+// -- se busca en estos, EN ORDEN, restringido por channelId (no búsqueda
+// genérica): así el VOD que se cita es el de la empresa que efectivamente
+// transmitió el torneo, no un resultado aproximado de búsqueda por título.
+// Si ninguno tiene el torneo, no se arma vodClips (mejor nada que un video
+// equivocado con timestamps que no corresponden).
+const VOD_KNOWN_CHANNELS = [
+  { name: "VGBootCamp Melee", channelId: "UCGOP2bXVg04Jvbu8tuiPoNg" },
+  { name: "Galint Gaming VODs", channelId: "UCG-pxOMgCQ3AtsxVPWk3XuQ" },
+  { name: "Beyond the Summit - Smash", channelId: "UCKJi-4lbB3EwpLpC82OWFjA" },
+  { name: "Lucky 7s Melee", channelId: "UChVTbG58W1TpgoQZIDLyBqg" },
+];
 
 async function startggQuery(query, variables) {
   const res = await fetch(STARTGG_ENDPOINT, {
@@ -271,10 +285,107 @@ function parseSlugFromBracketUrl(bracketUrl) {
   return m ? `tournament/${m[1]}/event/${m[2]}` : null;
 }
 
+// Slug de TORNEO (a diferencia del de evento) -- timezone y streams viven en
+// el objeto Tournament de start.gg, no en Event.
+function parseTournamentSlugFromBracketUrl(bracketUrl) {
+  const m = (bracketUrl || "").match(/tournament\/([^/]+)/);
+  return m ? `tournament/${m[1]}` : null;
+}
+
 async function fetchEventInfo(slug) {
   const query = `query($slug: String){ event(slug:$slug){ id name state startAt tournament{ name } } }`;
   const data = await startggQuery(query, { slug });
   return data?.event || null;
+}
+
+// timezone (IANA) + streams del torneo -- mismos dos campos que usa
+// meleemajors.gg (confirmado contra su fuente: ssg/src/main.rs y
+// getTournamentInfo.gql) para renderizar hora local y el link de stream.
+// Se piden juntos porque "top8-start-time" de meleemajors.gg viene sin
+// timezone propio -- está pensado para interpretarse en el timezone del
+// torneo, no en uno fijo.
+async function fetchTournamentInfo(tournamentSlug) {
+  const query = `
+    query($slug: String){
+      tournament(slug:$slug){
+        timezone
+        streams{ streamName streamSource }
+      }
+    }`;
+  const data = await startggQuery(query, { slug: tournamentSlug });
+  return data?.tournament || null;
+}
+
+// Mismo criterio que resolve_stream_url() de meleemajors.gg: override manual
+// en tournaments.json gana si existe; si no, el primer stream de start.gg
+// que sea Twitch o YouTube (otras plataformas -- Hitbox, StreamMe, Mixer --
+// están deprecadas y se ignoran, igual que en la fuente).
+function resolveStreamUrl(streams, manualOverride) {
+  if (manualOverride) return manualOverride;
+  for (const s of streams || []) {
+    if (!s.streamName) continue;
+    if (s.streamSource === "TWITCH") return `https://www.twitch.tv/${s.streamName}`;
+    if (s.streamSource === "YOUTUBE") return `https://www.youtube.com/${s.streamName}`;
+  }
+  return null;
+}
+
+// ── Conversión de "top8-start-time" (hora de pared en el timezone del
+// torneo) a epoch UTC, sin librerías de timezone -- Intl.DateTimeFormat con
+// timeZoneName:"shortOffset" ya trae el offset real (con DST incluido) para
+// cualquier IANA tz soportado por el runtime de Node. Dos pasadas: la
+// primera adivina el offset tratando la hora de pared como si fuera UTC: la
+// segunda recalcula con el offset ya encontrado, por si la primera pasada
+// cayó justo en un borde de horario de verano.
+const TOP8_START_TIME_RE = /^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2})\s*(AM|PM)$/i;
+
+function tzOffsetMinutes(date, timeZone) {
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "shortOffset" }).formatToParts(date);
+  const tzPart = parts.find(p => p.type === "timeZoneName")?.value || "GMT+0";
+  const m = /GMT([+-]\d+)(?::(\d+))?/.exec(tzPart);
+  if (!m) return 0;
+  const h = parseInt(m[1], 10);
+  const min = m[2] ? parseInt(m[2], 10) : 0;
+  return h * 60 + (h < 0 ? -min : min);
+}
+
+function parseTop8StartTime(raw, timezone) {
+  if (!raw || !timezone) return null;
+  const m = TOP8_START_TIME_RE.exec(String(raw).trim());
+  if (!m) return null;
+  const [, y, mo, d, hRaw, mi, ap] = m;
+  let h = parseInt(hRaw, 10);
+  if (/pm/i.test(ap) && h !== 12) h += 12;
+  if (/am/i.test(ap) && h === 12) h = 0;
+  try {
+    const guessUTC = Date.UTC(+y, +mo - 1, +d, h, +mi);
+    let offsetMin = tzOffsetMinutes(new Date(guessUTC), timezone);
+    let utc = guessUTC - offsetMin * 60000;
+    offsetMin = tzOffsetMinutes(new Date(utc), timezone); // segunda pasada, refina cerca de bordes DST
+    utc = guessUTC - offsetMin * 60000;
+    return Math.floor(utc / 1000);
+  } catch (e) {
+    return null; // timezone inválido para Intl -- no debería pasar con datos de start.gg
+  }
+}
+
+// Junta timezone+streams (start.gg) con top8-start-time (meleemajors.gg) en
+// un solo objeto {top8StartAt, streamUrl} para pasarle a los builders de
+// hype/top8/top16. Un solo punto de entrada así no se repite la lógica en
+// cada fase que lo necesita.
+async function fetchLiveInfo(t) {
+  try {
+    const tournamentSlug = parseTournamentSlugFromBracketUrl(t.bracketUrl);
+    if (!tournamentSlug) return { top8StartAt: null, streamUrl: null };
+    const info = await fetchTournamentInfo(tournamentSlug);
+    return {
+      top8StartAt: parseTop8StartTime(t["top8-start-time"], info?.timezone),
+      streamUrl: resolveStreamUrl(info?.streams, t["stream-url"]),
+    };
+  } catch (e) {
+    console.error(`✗ Melee · info de torneo (timezone/streams) (${t.bracketUrl}): ${e.message}`);
+    return { top8StartAt: null, streamUrl: null };
+  }
 }
 
 async function fetchCompletedSets(eventId) {
@@ -284,6 +395,7 @@ async function fetchCompletedSets(eventId) {
         sets(perPage:60, page:1, sortType: RECENT){
           nodes{
             id fullRoundText winnerId
+            phaseGroup{ phase{ id name } }
             slots{
               entrant{
                 id name initialSeedNum
@@ -354,6 +466,7 @@ function detectUpsets(sets) {
           foto: entrantFace(loser),
         },
         esUpset: winner.initialSeedNum > loser.initialSeedNum,
+        seedDiff, // expuesto para el filtro de VOD_UPSET_SEED_DIFF_THRESHOLD en Fase 3b
       });
     }
   }
@@ -423,24 +536,96 @@ async function findVod(tournamentName, ganadorNombre, perdedorNombre) {
   }
 }
 
+// Búsqueda del VOD del torneo restringida a canales de producción conocidos
+// (VOD_KNOWN_CHANNELS), UNA sola búsqueda de YouTube en total (no por
+// partido) -- se prueba canal por canal en orden hasta encontrar un video,
+// se trae su descripción completa una sola vez, y de ahí se sacan localmente
+// todos los timestamps de los partidos del archivo permanente (ver
+// findTimestampForMatchup). Sin esto, cubrir Top 16 completo + upsets≥25
+// implicaría 15-20 búsquedas de YouTube por torneo -- inviable con la cuota
+// diaria (10.000 unidades, 100 por búsqueda).
+async function findTournamentVodDescription(tournamentName) {
+  if (!YOUTUBE_API_KEY) return null;
+  for (const ch of VOD_KNOWN_CHANNELS) {
+    try {
+      const q = encodeURIComponent(`${tournamentName} melee singles`);
+      const searchRes = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${ch.channelId}&q=${q}&type=video&maxResults=1&key=${YOUTUBE_API_KEY}`
+      );
+      const searchData = await searchRes.json();
+      const candidate = searchData?.items?.[0];
+      if (!candidate) continue;
+      const videoId = candidate.id.videoId;
+      const detailsRes = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${YOUTUBE_API_KEY}`
+      );
+      const detailsData = await detailsRes.json();
+      const description = detailsData?.items?.[0]?.snippet?.description || "";
+      return { videoId, description, channel: ch.name };
+    } catch (e) {
+      console.error(`✗ Melee · VOD en ${ch.name} (${tournamentName}): ${e.message}`);
+    }
+  }
+  return null; // ningún canal conocido tenía el torneo -- no se arma vodClips esta vez
+}
+
+function findTimestampForMatchup(description, nombreA, nombreB) {
+  const tsRegex = /(\d{1,2}:\d{2}(?::\d{2})?)/;
+  for (const line of description.split("\n")) {
+    const lower = line.toLowerCase();
+    if ((lower.includes(nombreA.toLowerCase()) || lower.includes(nombreB.toLowerCase())) && tsRegex.test(line)) {
+      return timestampToSeconds(line.match(tsRegex)[1]);
+    }
+  }
+  return 0;
+}
+
+// Candidatos al VOD permanente: unión de (a) sets de la fase Top 16 (todos,
+// sin importar seed) y (b) upsets con seedDiff >= VOD_UPSET_SEED_DIFF_THRESHOLD
+// en cualquier fase -- deduplicados por id de set (un mismo set puede
+// cumplir ambos criterios).
+function buildVodCandidateMatches(sets, top16PhaseId) {
+  const out = [];
+  for (const set of sets) {
+    if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
+    const [a, b] = set.slots.map(s => s.entrant);
+    if (!a || !b || !a.initialSeedNum || !b.initialSeedNum) continue;
+    const winner = a.id === set.winnerId ? a : b;
+    const loser = a.id === set.winnerId ? b : a;
+    const seedDiff = loser.initialSeedNum - winner.initialSeedNum;
+    const esTop16 = top16PhaseId != null && set.phaseGroup?.phase?.id === top16PhaseId;
+    const esBigUpset = seedDiff >= VOD_UPSET_SEED_DIFF_THRESHOLD;
+    if (!esTop16 && !esBigUpset) continue;
+    out.push({
+      setId: set.id,
+      ronda: set.fullRoundText,
+      ganador: { nombre: winner.name, seed: winner.initialSeedNum, pj: entrantCharacter(set.games, winner.id), foto: entrantFace(winner) },
+      perdedor: { nombre: loser.name, seed: loser.initialSeedNum, pj: entrantCharacter(set.games, loser.id), foto: entrantFace(loser) },
+      esUpset: winner.initialSeedNum > loser.initialSeedNum,
+      esTop16,
+    });
+  }
+  return out;
+}
+
 // Arma el item de "se viene tal torneo" para un evento que todavía no termina.
 // Sin video, sin upsets — es solo un aviso con cuenta regresiva. Se recalcula
 // desde cero en cada corrida (no se guarda entre corridas): el guid es estable
 // por torneo, así que simplemente se reemplaza a sí mismo con la cuenta
 // regresiva actualizada cada vez, y desaparece solo una vez que el torneo deja
 // de estar "por venir" (pasa a generar sus propios upsets en vez de esto).
-function buildHypeItem(slug, tournamentName, bracketUrl, startAtSeconds, entrants) {
+function buildHypeItem(slug, tournamentName, bracketUrl, startAtSeconds, entrants, liveInfo) {
   const daysUntil = (startAtSeconds * 1000 - Date.now()) / 86400000;
   const cuando = daysUntil <= 0 ? "¡ya está en curso!" : `empieza en ${Math.ceil(daysUntil)} día(s)`;
   const totalEntrants = entrants ? entrants.length : null;
-  // "Destacados" = los primeros 16 por seed. Si todavía no cerró el seeding
+  // "Destacados" = los primeros 32 por seed. Si todavía no cerró el seeding
   // (entrants sin initialSeedNum), simplemente no hay nada que mostrar acá
   // todavía — no es un error, es que es muy pronto.
   const notableEntrants = entrants
     ? entrants
         .filter(e => e.initialSeedNum != null)
         .sort((a, b) => a.initialSeedNum - b.initialSeedNum)
-        .slice(0, 16)
+        .slice(0, 32)
         .map(e => ({ nombre: e.name, seed: e.initialSeedNum }))
     : [];
   return {
@@ -457,6 +642,8 @@ function buildHypeItem(slug, tournamentName, bracketUrl, startAtSeconds, entrant
     startAt: startAtSeconds, // epoch segundos — el frontend lo formatea en horario local
     totalEntrants,
     notableEntrants,
+    top8StartAt: liveInfo?.top8StartAt ?? null, // epoch segundos, hora del Top 8/bracket final -- de meleemajors.gg + timezone real de start.gg
+    streamUrl: liveInfo?.streamUrl ?? null,
   };
 }
 
@@ -598,6 +785,7 @@ function buildBracketProjectionItem(slug, tournamentName, bracketUrl, entrants) 
 // escena para esto. Si un torneo nombra su fase distinto, simplemente no se
 // genera preview (no rompe nada, solo no hay ese aviso puntual).
 const TOP8_PHASE_NAME_RE = /top\s*8/i;
+const TOP16_PHASE_NAME_RE = /top\s*16/i;
 
 async function fetchEventPhases(eventId) {
   const query = `
@@ -605,7 +793,7 @@ async function fetchEventPhases(eventId) {
       event(id:$eventId){
         phases{
           id name state
-          seeds(query:{ page:1, perPage:8 }){
+          seeds(query:{ page:1, perPage:16 }){
             nodes{
               seedNum
               entrant{ name participants{ player{ user{ images{ url type } } } } }
@@ -622,11 +810,16 @@ function findTop8Phase(phases) {
   return phases.find(p => TOP8_PHASE_NAME_RE.test(p.name || "")) || null;
 }
 
-// Se regenera fresco cada corrida mientras la fase Top 8 exista y no haya
-// cerrado — mismo criterio que buildHypeItem/buildBracketProjectionItem, no
-// se acumula entre corridas.
-function buildTop8PreviewItem(slug, tournamentName, bracketUrl, top8Phase) {
-  const seeds = (top8Phase.seeds?.nodes || [])
+function findTop16Phase(phases) {
+  return phases.find(p => TOP16_PHASE_NAME_RE.test(p.name || "")) || null;
+}
+
+// Se regenera fresco cada corrida mientras la fase exista y no haya cerrado
+// — mismo criterio que buildHypeItem/buildBracketProjectionItem, no se
+// acumula entre corridas. guidPrefix/tituloFase/flagField parametrizan entre
+// Top 8 y Top 16, que comparten toda la lógica salvo esos tres valores.
+function buildPhasePreviewItem(slug, tournamentName, bracketUrl, phase, { guidPrefix, tituloFase, flagField }, liveInfo) {
+  const seeds = (phase.seeds?.nodes || [])
     .filter(s => s.entrant)
     .sort((a, b) => (a.seedNum ?? 99) - (b.seedNum ?? 99));
   if (seeds.length < 2) return null;
@@ -637,8 +830,8 @@ function buildTop8PreviewItem(slug, tournamentName, bracketUrl, top8Phase) {
   }));
   const lista = jugadores.map(j => `${j.nombre}${j.seed ? ` [${j.seed}]` : ""}`).join(", ");
   return {
-    guid: `melee-top8-${slug}`,
-    title: `Top 8 de ${tournamentName}`,
+    guid: `melee-${guidPrefix}-${slug}`,
+    title: `${tituloFase} de ${tournamentName}`,
     link: bracketUrl,
     summary: `Quedaron: ${lista}.`,
     image: null,
@@ -646,9 +839,19 @@ function buildTop8PreviewItem(slug, tournamentName, bracketUrl, top8Phase) {
     source: tournamentName,
     categoria: "Melee",
     fullText: null,
-    esTop8Preview: true,
+    [flagField]: true,
     jugadores,
+    top8StartAt: liveInfo?.top8StartAt ?? null,
+    streamUrl: liveInfo?.streamUrl ?? null,
   };
+}
+
+function buildTop8PreviewItem(slug, tournamentName, bracketUrl, top8Phase, liveInfo) {
+  return buildPhasePreviewItem(slug, tournamentName, bracketUrl, top8Phase, { guidPrefix: "top8", tituloFase: "Top 8", flagField: "esTop8Preview" }, liveInfo);
+}
+
+function buildTop16PreviewItem(slug, tournamentName, bracketUrl, top16Phase, liveInfo) {
+  return buildPhasePreviewItem(slug, tournamentName, bracketUrl, top16Phase, { guidPrefix: "top16", tituloFase: "Top 16", flagField: "esTop16Preview" }, liveInfo);
 }
 
 async function fetchFinalStandings(eventId) {
@@ -669,7 +872,7 @@ async function fetchFinalStandings(eventId) {
 // ver RETENTION_DAYS más abajo — este item queda exento para siempre (mismo
 // criterio que Podcasts): es el resumen final del torneo, no un aviso
 // puntual que pierde sentido con el tiempo.
-function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings, tournamentUpsets, vod) {
+function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings, tournamentUpsets, vod, vodClips) {
   if (!standings.length) return null;
   const top8Line = [...standings]
     .sort((a, b) => a.placement - b.placement)
@@ -692,6 +895,13 @@ function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings,
     videoId: vod?.videoId || null,
     startSeconds: vod?.startSeconds || 0,
     esArchivo: true,
+    // VOD permanente (Fase 3b): upsets de seedDiff>=25 + todos los sets de la
+    // fase Top 16, con timestamp dentro del VOD real de un canal de
+    // producción conocido (ver VOD_KNOWN_CHANNELS). Vacío si ninguno de esos
+    // canales tenía el torneo -- no se arma con una búsqueda genérica acá,
+    // a diferencia del `vod` de arriba (ese sí es de búsqueda genérica, pero
+    // es solo el clip de la final, mucho menor riesgo de un match erróneo).
+    vodClips: vodClips || [],
   };
 }
 
@@ -707,7 +917,7 @@ function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings,
 async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventIds, previousTrackedTournaments = []) {
   if (!STARTGG_API_KEY) {
     console.error("✗ Melee · falta STARTGG_API_KEY, se omite esta categoría esta corrida");
-    return { upsetItems: [], hypeItems: [], projectionItems: [], top8Items: [], archiveItems: [], processedEventIds: previousProcessedEventIds, trackedTournaments: previousTrackedTournaments };
+    return { upsetItems: [], hypeItems: [], projectionItems: [], top16Items: [], top8Items: [], archiveItems: [], processedEventIds: previousProcessedEventIds, trackedTournaments: previousTrackedTournaments };
   }
 
   let tournaments = [];
@@ -746,6 +956,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
   const upsetItems = [];
   const hypeItems = [];
   const projectionItems = [];
+  const top16Items = [];
   const top8Items = [];
   const archiveItems = [];
   const processedEventIds = new Set(previousProcessedEventIds);
@@ -784,7 +995,8 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
           }
         }
         if (daysUntil <= HYPE_WINDOW_DAYS) {
-          hypeItems.push(buildHypeItem(slug, tournamentName, t.bracketUrl, eventInfo.startAt, entrants));
+          const liveInfo = await fetchLiveInfo(t);
+          hypeItems.push(buildHypeItem(slug, tournamentName, t.bracketUrl, eventInfo.startAt, entrants, liveInfo));
         }
         if (entrants) {
           const projectionItem = buildBracketProjectionItem(slug, tournamentName, t.bracketUrl, entrants);
@@ -855,18 +1067,27 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
       });
     }
 
-    // Fase 3a: preview de Top 8, solo mientras el torneo sigue ACTIVE (una
-    // vez COMPLETED ya no aporta nada — el archivo permanente lo reemplaza).
+    // Fase 3a: preview de Top 16 y Top 8, solo mientras el torneo sigue
+    // ACTIVE (una vez COMPLETED ya no aportan nada — el archivo permanente
+    // los reemplaza). Se agrega hora Chile del Top 8 + link de stream a
+    // ambos, vía fetchLiveInfo (timezone/streams de start.gg + top8-start-time
+    // de meleemajors.gg).
     if (state === "ACTIVE") {
       try {
         const phases = await fetchEventPhases(eventInfo.id);
+        const liveInfo = await fetchLiveInfo(t);
+        const top16Phase = findTop16Phase(phases);
+        if (top16Phase && top16Phase.state !== "COMPLETED") {
+          const preview16 = buildTop16PreviewItem(slug, tournamentName, t.bracketUrl, top16Phase, liveInfo);
+          if (preview16) top16Items.push(preview16);
+        }
         const top8Phase = findTop8Phase(phases);
         if (top8Phase && top8Phase.state !== "COMPLETED") {
-          const preview = buildTop8PreviewItem(slug, tournamentName, t.bracketUrl, top8Phase);
-          if (preview) top8Items.push(preview);
+          const preview8 = buildTop8PreviewItem(slug, tournamentName, t.bracketUrl, top8Phase, liveInfo);
+          if (preview8) top8Items.push(preview8);
         }
       } catch (e) {
-        console.error(`✗ Melee · preview de Top 8 (${tournamentName}): ${e.message}`);
+        console.error(`✗ Melee · preview de Top 16/8 (${tournamentName}): ${e.message}`);
       }
     }
 
@@ -883,7 +1104,35 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
         const vod = finalistNames.length === 2
           ? await findVod(tournamentName, finalistNames[0], finalistNames[1])
           : { videoId: null, startSeconds: 0 };
-        const archiveItem = buildTournamentArchiveItem(slug, tournamentName, t.bracketUrl, standings, tournamentUpsets, vod);
+
+        // VOD permanente (Fase 3b): Top 16 completo + upsets≥25, buscado en
+        // los canales de producción conocidos -- ver buildVodCandidateMatches
+        // y findTournamentVodDescription más arriba.
+        let vodClips = [];
+        try {
+          const phasesForArchive = await fetchEventPhases(eventInfo.id);
+          const top16Phase = findTop16Phase(phasesForArchive);
+          const candidateMatches = buildVodCandidateMatches(sets, top16Phase?.id ?? null);
+          if (candidateMatches.length) {
+            const vodSource = await findTournamentVodDescription(tournamentName);
+            if (vodSource) {
+              vodClips = candidateMatches.map(m => ({
+                guid: `melee-vodclip-${slug}-${m.setId}`,
+                ronda: m.ronda,
+                ganador: m.ganador,
+                perdedor: m.perdedor,
+                esUpset: m.esUpset,
+                esTop16: m.esTop16,
+                videoId: vodSource.videoId,
+                startSeconds: findTimestampForMatchup(vodSource.description, m.ganador.nombre, m.perdedor.nombre),
+              }));
+            }
+          }
+        } catch (e) {
+          console.error(`✗ Melee · VOD permanente (${tournamentName}): ${e.message}`);
+        }
+
+        const archiveItem = buildTournamentArchiveItem(slug, tournamentName, t.bracketUrl, standings, tournamentUpsets, vod, vodClips);
         if (archiveItem) archiveItems.push(archiveItem);
       } catch (e) {
         console.error(`✗ Melee · archivo final (${tournamentName}): ${e.message}`);
@@ -900,7 +1149,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
     }
   }
 
-  return { upsetItems, hypeItems, projectionItems, top8Items, archiveItems, processedEventIds: Array.from(processedEventIds), trackedTournaments };
+  return { upsetItems, hypeItems, projectionItems, top16Items, top8Items, archiveItems, processedEventIds: Array.from(processedEventIds), trackedTournaments };
 }
 // ================= Fin módulo Melee =================
 
@@ -1046,23 +1295,23 @@ async function main() {
   // RETENTION_DAYS — es el registro final, no un aviso que caduca.
   console.log("Procesando Melee (meleemajors.gg + start.gg + YouTube)...");
   const previousUpsetItemsOnly = previousMeleeItems.filter(
-    i => !i.esHype && !i.esProyeccion && !i.esTop8Preview && !i.esArchivo
+    i => !i.esHype && !i.esProyeccion && !i.esTop16Preview && !i.esTop8Preview && !i.esArchivo
   );
   const previousArchiveItems = previousMeleeItems.filter(i => i.esArchivo);
   const previousUpsetItemsByGuid = new Map(previousUpsetItemsOnly.map(i => [i.guid, i]));
-  const { upsetItems: newUpsetItems, hypeItems, projectionItems, top8Items, archiveItems: newArchiveItems, processedEventIds, trackedTournaments } = await fetchMeleeItems(
+  const { upsetItems: newUpsetItems, hypeItems, projectionItems, top16Items, top8Items, archiveItems: newArchiveItems, processedEventIds, trackedTournaments } = await fetchMeleeItems(
     previousUpsetItemsByGuid,
     previousProcessedEventIds,
     previousTrackedTournaments
   );
-  console.log(`✓ Melee · ${newUpsetItems.length} upset(s) nuevo(s)/actualizado(s), ${hypeItems.length} torneo(s) generando hype, ${projectionItems.length} proyección(es) de bracket, ${top8Items.length} preview(s) de Top 8, ${newArchiveItems.length} archivo(s) final(es) nuevo(s) esta corrida`);
+  console.log(`✓ Melee · ${newUpsetItems.length} upset(s) nuevo(s)/actualizado(s), ${hypeItems.length} torneo(s) generando hype, ${projectionItems.length} proyección(es) de bracket, ${top16Items.length} preview(s) de Top 16, ${top8Items.length} preview(s) de Top 8, ${newArchiveItems.length} archivo(s) final(es) nuevo(s) esta corrida`);
   // newUpsetItems puede traer versiones actualizadas (VOD recién encontrado)
   // de items que ya estaban en previousUpsetItemsOnly — hay que reemplazarlos,
   // no duplicarlos.
   const newUpsetGuids = new Set(newUpsetItems.map(i => i.guid));
   const carriedUpsetItems = previousUpsetItemsOnly.filter(i => !newUpsetGuids.has(i.guid));
   const allArchiveItems = [...previousArchiveItems, ...newArchiveItems]; // permanente, sin filtro de cutoff
-  const cutoffFilteredMeleeItems = [...carriedUpsetItems, ...newUpsetItems, ...hypeItems, ...projectionItems, ...top8Items].filter(
+  const cutoffFilteredMeleeItems = [...carriedUpsetItems, ...newUpsetItems, ...hypeItems, ...projectionItems, ...top16Items, ...top8Items].filter(
     a => !a.pubDate || new Date(a.pubDate).getTime() >= cutoff
   );
   const allMeleeItems = [...cutoffFilteredMeleeItems, ...allArchiveItems];
