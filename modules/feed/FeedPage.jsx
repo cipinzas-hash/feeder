@@ -495,6 +495,31 @@
       if (!item.firstSeenAt) return false;
       return Date.now() - new Date(item.firstSeenAt).getTime() <= CINE_NUEVO_MS;
     }
+    // Ciclo de vida real de la película, independiente de cuándo Angst la
+    // descubrió (eso es "nuevo", basado en firstSeenAt). Estas tres van por
+    // pubDate (= release_date real de TMDb) y por el flag trending que arma
+    // build-cine.mjs -- no son excluyentes entre sí.
+    function esEstreno(item) {
+      // Recién en cine: se estrenó hace menos de 30 días, ya estrenada (no
+      // futura). Una peli vieja que resurge en trending no cuenta como
+      // estreno solo por eso -- esa es la etiqueta "trending", separada.
+      if (!item.pubDate) return false;
+      const t = new Date(item.pubDate).getTime();
+      if (Date.now() < t) return false;
+      return Date.now() - t <= 30 * 86400000;
+    }
+    function esEnProduccion(item) {
+      if (!item.pubDate) return false;
+      return new Date(item.pubDate).getTime() > Date.now();
+    }
+    function diasParaEstreno(item) {
+      if (!item.pubDate) return null;
+      const dias = Math.ceil((new Date(item.pubDate).getTime() - Date.now()) / 86400000);
+      return dias >= 0 ? dias : null;
+    }
+    function esTrending(item) {
+      return !!item.trending;
+    }
 
     function MiniReviewForm({ onSave, onCancel, inicial }) {
       const [ratingId, setRatingId] = useState(inicial?.rating || null);
@@ -592,36 +617,38 @@
 
             {/* Mi reseña — después de tráiler/sinopsis a propósito: la
                 decisión de marcar como vista viene después de repasar esa
-                info, no antes. */}
-            <div style={{ marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #1a1a1a" }}>
-              <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 }}>mi reseña</div>
-              {estado === "vista" && !reviewOpen ? (
-                <div onClick={() => setReviewOpen(true)} style={{ cursor: "pointer" }}>
-                  {(() => {
-                    const r = CINE_RATINGS.find(r => r.id === estadoItem.rating);
-                    return (
-                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", marginBottom: 4 }}>
-                        {r ? `${r.emoji} ${r.label}` : "sin calificar"}
+                info, no antes. Bloqueada mientras está en producción -- no
+                se puede haber visto algo que todavía no se estrenó. */}
+            {!esEnProduccion(item) && (
+              <div style={{ marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #1a1a1a" }}>
+                <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 }}>mi reseña</div>
+                {estado === "vista" && !reviewOpen ? (
+                  <div onClick={() => setReviewOpen(true)} style={{ cursor: "pointer" }}>
+                    {(() => {
+                      const r = CINE_RATINGS.find(r => r.id === estadoItem.rating);
+                      return (
+                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", marginBottom: 4 }}>
+                          {r ? `${r.emoji} ${r.label}` : "sin calificar"}
+                        </div>
+                      );
+                    })()}
+                    {estadoItem.nota && (
+                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", fontStyle: "italic" }}>
+                        "{estadoItem.nota}"
                       </div>
-                    );
-                  })()}
-                  {estadoItem.nota && (
-                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", fontStyle: "italic" }}>
-                      "{estadoItem.nota}"
-                    </div>
-                  )}
-                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 4 }}>tocar para editar</div>
-                </div>
-              ) : reviewOpen || estado !== "vista" ? (
-                reviewOpen && <MiniReviewForm onSave={guardarReview} onCancel={() => setReviewOpen(false)} inicial={estadoItem} />
-              ) : null}
-              {estado !== "vista" && !reviewOpen && (
-                <button onClick={() => setReviewOpen(true)} style={{ ...btnGhost, width: "100%" }}>
-                  <span style={{ fontSize: 17 }}>📝</span>marcar como vista
-                </button>
-              )}
-            </div>
-
+                    )}
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 4 }}>tocar para editar</div>
+                  </div>
+                ) : reviewOpen || estado !== "vista" ? (
+                  reviewOpen && <MiniReviewForm onSave={guardarReview} onCancel={() => setReviewOpen(false)} inicial={estadoItem} />
+                ) : null}
+                {estado !== "vista" && !reviewOpen && (
+                  <button onClick={() => setReviewOpen(true)} style={{ ...btnGhost, width: "100%" }}>
+                    <span style={{ fontSize: 17 }}>📝</span>marcar como vista
+                  </button>
+                )}
+              </div>
+            )}
             {leads.length > 0 && (
               <div style={{ marginBottom: 18 }}>
                 <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 6 }}>reparto principal</div>
@@ -742,11 +769,22 @@
       const [sortBy, setSortBy] = useState("default"); // default | proxima | rating
       // Ocultas por defecto -- el toggle las muestra si querés revisarlas.
       const [ocultarDescartadas, setOcultarDescartadas] = useState(true);
+      // Etiquetas de ciclo de vida (estreno/producción/trending) -- no son
+      // excluyentes entre sí, cada toggle "apaga" (oculta) independiente.
+      // Solo tienen sentido en Películas -- Series/Animación no traen pubDate
+      // ni trending del build todavía.
+      const [ocultarEstreno, setOcultarEstreno] = useState(false);
+      const [ocultarProduccion, setOcultarProduccion] = useState(false);
+      const [ocultarTrending, setOcultarTrending] = useState(false);
+      const esPelicula = categoria === "Películas";
       const sortedItems = React.useMemo(() => {
         let arr = fullItems;
         if (ocultarDescartadas) {
           arr = arr.filter(it => cineEstado[it.guid]?.estado !== "descartada");
         }
+        if (esPelicula && ocultarEstreno) arr = arr.filter(it => !esEstreno(it));
+        if (esPelicula && ocultarProduccion) arr = arr.filter(it => !esEnProduccion(it));
+        if (esPelicula && ocultarTrending) arr = arr.filter(it => !esTrending(it));
         if (sortBy === "proxima") {
           arr = [...arr].sort((a, b) => {
             const da = diasRestantesCartelera(a), db = diasRestantesCartelera(b);
@@ -765,7 +803,7 @@
           arr = [...puntuadas, ...sinPuntuar];
         }
         return arr;
-      }, [fullItems, sortBy, ocultarDescartadas, cineEstado]);
+      }, [fullItems, sortBy, ocultarDescartadas, ocultarEstreno, ocultarProduccion, ocultarTrending, esPelicula, cineEstado]);
 
       const total = sortedItems.length;
       const lapWidth = total * ITEM_W;
@@ -775,7 +813,7 @@
           containerRef.current.scrollLeft = lapWidth;
           setScrollX(lapWidth);
         }
-      }, [sortedItems.length, lapWidth, sortBy, ocultarDescartadas]);
+      }, [sortedItems.length, lapWidth, sortBy, ocultarDescartadas, ocultarEstreno, ocultarProduccion, ocultarTrending]);
 
       function onScroll(e) {
         const el = e.target;
@@ -800,6 +838,13 @@
           <button onClick={() => setSortBy(sortBy === "proxima" ? "default" : "proxima")} style={toolbarBtn(sortBy === "proxima")}>📅 próxima a salir</button>
           <button onClick={() => setSortBy(sortBy === "rating" ? "default" : "rating")} style={toolbarBtn(sortBy === "rating")}>⭐ rating</button>
           <button onClick={() => setOcultarDescartadas(v => !v)} style={toolbarBtn(ocultarDescartadas)}>🚫 ocultar no me interesa</button>
+          {esPelicula && (
+            <React.Fragment>
+              <button onClick={() => setOcultarEstreno(v => !v)} style={toolbarBtn(ocultarEstreno)}>🎬 ocultar estreno</button>
+              <button onClick={() => setOcultarProduccion(v => !v)} style={toolbarBtn(ocultarProduccion)}>🏗️ ocultar producción</button>
+              <button onClick={() => setOcultarTrending(v => !v)} style={toolbarBtn(ocultarTrending)}>🔥 ocultar trending</button>
+            </React.Fragment>
+          )}
         </div>
       );
 
@@ -851,6 +896,8 @@
               const vista = itemEstado === "vista";
               const nuevo = itemEstado === "sin_marca" && esNuevo(item);
               const restantes = diasRestantesCartelera(item);
+              const enProduccion = esEnProduccion(item);
+              const diasEstreno = enProduccion ? diasParaEstreno(item) : null;
               const ratingVista = vista ? CINE_RATINGS.find(r => r.id === estadoItem.rating) : null;
               return (
                 <div key={absIdx} onClick={() => onOpen(item)} style={{
@@ -906,9 +953,16 @@
                         borderRadius: 5, letterSpacing: 0.3,
                       }}>NUEVO</div>
                     )}
-                    {/* Días restantes en cartelera — en todas las películas
-                        con firstSeenAt, sin importar el estado */}
-                    {restantes != null && (
+                    {/* Franja inferior: cuenta regresiva al estreno si todavía
+                        no se estrenó, o días restantes en cartelera si ya
+                        se estrenó -- mutuamente excluyentes por definición
+                        (pubDate futura vs. pasada). */}
+                    {enProduccion && diasEstreno != null ? (
+                      <div style={{
+                        position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(52,152,219,0.9)", color: "#fff",
+                        fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, textAlign: "center", padding: "3px 0",
+                      }}>{diasEstreno > 0 ? `estrena en ${diasEstreno}d` : "estrena hoy"}</div>
+                    ) : restantes != null && (
                       <div style={{
                         position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(46,204,113,0.9)", color: "#111",
                         fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, textAlign: "center", padding: "3px 0",

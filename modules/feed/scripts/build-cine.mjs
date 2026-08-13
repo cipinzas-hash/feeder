@@ -332,18 +332,33 @@ async function enrichAnime(malId, cache, guid) {
 // ─── Descubrimiento ─────────────────────────────────────────────────────────
 
 async function discoverMovies() {
-  const [trending, nowPlaying] = await Promise.all([
+  const [trending, nowPlaying, upcoming] = await Promise.all([
     tmdb("/trending/movie/week"),
     tmdb("/movie/now_playing", { region: REGION }),
+    tmdb("/movie/upcoming", { region: REGION }),
   ]);
+  const trendingIds = new Set((trending.results || []).map(m => m.id));
+
   const seen = new Set();
   const out = [];
-  for (const m of [...(nowPlaying.results || []), ...(trending.results || [])]) {
-    if (seen.has(m.id)) continue;
+  function add(m) {
+    if (seen.has(m.id)) return;
     seen.add(m.id);
-    out.push(m);
+    out.push({ ...m, _trending: trendingIds.has(m.id) });
   }
-  return out.slice(0, 15); // límite razonable por corrida — no hace falta el catálogo completo
+
+  // Cupo reservado por fuente -- antes now_playing solo ya llenaba el límite
+  // de 15 antes de que trending tuviera oportunidad de aportar nada (bug
+  // real: así fue como Coyote vs. Acme, trending pero sin estrenar, nunca
+  // entraba al catálogo).
+  (nowPlaying.results || []).slice(0, 10).forEach(add);
+  (trending.results || []).slice(0, 10).forEach(add);
+  // Upcoming solo entra si ADEMÁS está en trending esta semana -- así se
+  // capta hype real de próximos estrenos, no cualquier estreno programado
+  // sin ruido detrás.
+  (upcoming.results || []).filter(m => trendingIds.has(m.id)).slice(0, 5).forEach(add);
+
+  return out.slice(0, 25);
 }
 
 async function discoverTv() {
@@ -376,13 +391,14 @@ function isFresh(item) {
 // Arrastra del cache lo que sigue vigente (dentro de RETENTION_DAYS) pero no
 // fue redescubierto esta corrida — ej. una peli que ya salió del top de
 // trending/now_playing pero todavía no cumple el mes en el catálogo.
+// trending:false explícito -- por definición no viene de la corrida fresca.
 function carryOverFresh(cache, guidPrefix, alreadyIncludedGuids) {
   const out = [];
   for (const [guid, item] of Object.entries(cache)) {
     if (!guid.startsWith(guidPrefix)) continue;
     if (alreadyIncludedGuids.has(guid)) continue;
     if (!isFresh(item)) continue;
-    out.push(item);
+    out.push({ ...item, trending: false });
   }
   return out;
 }
@@ -399,7 +415,7 @@ async function main() {
   for (const m of movies) {
     try {
       const enriched = await enrichMovieOrTv("movie", m.id, cache, `tmdb-movie-${m.id}`);
-      if (enriched) movieItems.push(enriched);
+      if (enriched) { enriched.trending = !!m._trending; movieItems.push(enriched); }
     } catch (e) { console.error(`movie ${m.id} falló:`, e.message); }
   }
   for (const t of tv) {
