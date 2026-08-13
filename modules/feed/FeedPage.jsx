@@ -915,6 +915,7 @@
               const itemEstado = estadoItem?.estado || "sin_marca";
               const descartada = itemEstado === "descartada";
               const vista = itemEstado === "vista";
+              const interesa = itemEstado === "interesa";
               const nuevo = itemEstado === "sin_marca" && esNuevo(item);
               const restantes = diasRestantesCartelera(item);
               const enProduccion = esEnProduccion(item);
@@ -928,7 +929,15 @@
                 }}>
                   <div style={{
                     position: "relative", borderRadius: 8, overflow: "hidden",
-                    boxShadow: isCenter ? "0 12px 32px rgba(0,0,0,0.7), 0 0 0 2px rgba(255,255,255,0.15)" : "0 10px 30px rgba(0,0,0,0.6)",
+                    // "interesa" se marca con un anillo verde -- es el único
+                    // de los tres estados de decisión que no tenía ninguna
+                    // señal visual propia en el póster (descartada tiene la
+                    // franja, vista el ribbon; interesa se veía igual que
+                    // sin marcar).
+                    boxShadow: [
+                      isCenter ? "0 12px 32px rgba(0,0,0,0.7)" : "0 10px 30px rgba(0,0,0,0.6)",
+                      interesa ? "0 0 0 3px #2ecc71" : isCenter ? "0 0 0 2px rgba(255,255,255,0.15)" : null,
+                    ].filter(Boolean).join(", "),
                     transition: "box-shadow 0.15s",
                   }}>
                     {item.image
