@@ -812,16 +812,35 @@
         if (containerRef.current && sortedItems.length) {
           containerRef.current.scrollLeft = lapWidth;
           setScrollX(lapWidth);
+          setPerspOriginX(lapWidth + containerW / 2);
         }
       }, [sortedItems.length, lapWidth, sortBy, ocultarDescartadas, ocultarEstreno, ocultarProduccion, ocultarTrending]);
 
       const scrollSettleTimer = useRef(null);
-      useEffect(() => () => clearTimeout(scrollSettleTimer.current), []);
+      const perspRafId = useRef(null);
+      const [perspOriginX, setPerspOriginX] = useState(lapWidth + containerW / 2);
+      useEffect(() => () => {
+        clearTimeout(scrollSettleTimer.current);
+        if (perspRafId.current != null) cancelAnimationFrame(perspRafId.current);
+      }, []);
       function onScroll(e) {
         const el = e.target;
         // Trackeo en vivo para el efecto de rotación/escala de las tarjetas
         // -- esto sí tiene que responder a cada evento, sin esperar.
         setScrollX(el.scrollLeft);
+
+        // El punto de fuga de la perspectiva 3D se recalcula con throttle de
+        // requestAnimationFrame, no en cada evento de scroll -- recalcularlo
+        // sin límite forzaba al navegador a recomputar la transformación 3D
+        // de las ~75 tarjetas renderizadas (3 vueltas) en cada tick, y eso
+        // se notaba como bugueo en las tarjetas más alejadas (más rotadas,
+        // más caras de recalcular) durante el scroll activo.
+        if (perspRafId.current == null) {
+          perspRafId.current = requestAnimationFrame(() => {
+            setPerspOriginX(el.scrollLeft + containerW / 2);
+            perspRafId.current = null;
+          });
+        }
 
         // El salto invisible de vuelta se corrige recién cuando el scroll
         // se asienta (nada de eventos nuevos por 120ms), no en cada evento
@@ -832,8 +851,8 @@
         clearTimeout(scrollSettleTimer.current);
         scrollSettleTimer.current = setTimeout(() => {
           const cur = el.scrollLeft;
-          if (cur < lapWidth * 0.5) { el.scrollLeft = cur + lapWidth; setScrollX(cur + lapWidth); }
-          else if (cur > lapWidth * 1.5) { el.scrollLeft = cur - lapWidth; setScrollX(cur - lapWidth); }
+          if (cur < lapWidth * 0.5) { el.scrollLeft = cur + lapWidth; setScrollX(cur + lapWidth); setPerspOriginX(cur + lapWidth + containerW / 2); }
+          else if (cur > lapWidth * 1.5) { el.scrollLeft = cur - lapWidth; setScrollX(cur - lapWidth); setPerspOriginX(cur - lapWidth + containerW / 2); }
         }, 120);
       }
       function step(dir) {
@@ -900,7 +919,7 @@
             // "central" se veía corrida, aunque el scroll estuviera bien
             // centrado. Se recalcula en cada scroll para que siempre apunte
             // al medio del viewport actual, no a un punto fijo del contenido.
-            perspectiveOrigin: `${scrollX + containerW / 2}px 50%`,
+            perspectiveOrigin: `${perspOriginX}px 50%`,
           }}>
             {renderList.map(({ item, absIdx }) => {
               const dist = absIdx - center;
