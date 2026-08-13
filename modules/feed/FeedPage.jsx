@@ -815,12 +815,26 @@
         }
       }, [sortedItems.length, lapWidth, sortBy, ocultarDescartadas, ocultarEstreno, ocultarProduccion, ocultarTrending]);
 
+      const scrollSettleTimer = useRef(null);
+      useEffect(() => () => clearTimeout(scrollSettleTimer.current), []);
       function onScroll(e) {
         const el = e.target;
-        let x = el.scrollLeft;
-        if (x < lapWidth * 0.5) { el.scrollLeft = x + lapWidth; x += lapWidth; }
-        else if (x > lapWidth * 1.5) { el.scrollLeft = x - lapWidth; x -= lapWidth; }
-        setScrollX(x);
+        // Trackeo en vivo para el efecto de rotación/escala de las tarjetas
+        // -- esto sí tiene que responder a cada evento, sin esperar.
+        setScrollX(el.scrollLeft);
+
+        // El salto invisible de vuelta se corrige recién cuando el scroll
+        // se asienta (nada de eventos nuevos por 120ms), no en cada evento
+        // en caliente -- corregir en medio de un fling táctil o de un
+        // scrollTo("smooth") peleaba contra la animación nativa del
+        // navegador y se notaba como un tranco justo al cruzar de la
+        // última tarjeta a la primera.
+        clearTimeout(scrollSettleTimer.current);
+        scrollSettleTimer.current = setTimeout(() => {
+          const cur = el.scrollLeft;
+          if (cur < lapWidth * 0.5) { el.scrollLeft = cur + lapWidth; setScrollX(cur + lapWidth); }
+          else if (cur > lapWidth * 1.5) { el.scrollLeft = cur - lapWidth; setScrollX(cur - lapWidth); }
+        }, 120);
       }
       function step(dir) {
         if (!sortedItems.length || !containerRef.current) return;
