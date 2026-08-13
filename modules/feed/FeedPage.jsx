@@ -652,9 +652,12 @@
           </div>
           {!hideActions && (
             <React.Fragment>
-              {/* Oculto mientras se escribe la reseña — está justo encima del
-                  formulario, y un toque accidental acá perdía el borrador. */}
-              {!reviewOpen && (
+              {/* Oculta si ya está vista -- interesa/no-interesa no tiene
+                  sentido una vez vista, la reseña ya la reemplaza. También
+                  oculta mientras se escribe la reseña: estaba justo encima
+                  del formulario y un toque accidental acá perdía el
+                  borrador. */}
+              {!reviewOpen && estado !== "vista" && (
                 <div style={{ display: "flex", gap: 6, padding: "10px 10px 4px", background: "#111" }}>
                   <button
                     onClick={() => marcar(estado === "interesa" ? "sin_marca" : "interesa")}
