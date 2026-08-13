@@ -999,7 +999,7 @@
                       }}>{restantes > 0 ? `${restantes}d en cartelera` : "sale hoy"}</div>
                     )}
                   </div>
-                  <div style={{ fontFamily: "'Caveat',cursive", fontWeight: 700, fontSize: 18, color: "#fff", marginTop: 6, textAlign: "center", lineHeight: 1.15, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.title}</div>
+                  <div style={{ fontFamily: "'Caveat',cursive", fontWeight: 700, fontSize: 18, color: "#fff", marginTop: 6, textAlign: "center", lineHeight: 1.15, minHeight: 42, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.title}</div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 2 }}>
                     {(() => {
                       const score = item.rating?.imdb ?? item.rating?.tmdb ?? null;
@@ -1013,16 +1013,27 @@
                       <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#999", borderLeft: "1px solid #444", paddingLeft: 6 }}>{temporada}</span>
                     )}
                   </div>
-                  {(() => {
-                    const badge = STATUS_BADGE[item.status];
-                    if (!badge) return null;
-                    return (
-                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, color: badge.color, textAlign: "center", marginTop: 2, letterSpacing: 0.3 }}>
-                        {badge.label}
-                        {item.status === "Returning Series" && item.nextEpisodeDate ? ` · ${item.nextEpisodeDate}` : ""}
-                      </div>
-                    );
-                  })()}
+                  {/* minHeight fijo -- antes esta fila desaparecía del todo
+                      cuando el ítem no tenía badge de estado, y eso corría
+                      verticalmente todo lo de abajo (el reflejo) respecto a
+                      las tarjetas vecinas que sí lo tenían. Sumado a que el
+                      título de arriba tampoco reservaba alto fijo entre 1 y
+                      2 líneas, las tarjetas de la fila terminaban con altos
+                      totales distintos y, con alignItems:"center", los
+                      pósters quedaban centrados en puntos verticales
+                      distintos entre sí -- eso era lo que se veía "corrido". */}
+                  <div style={{ minHeight: 13, marginTop: 2 }}>
+                    {(() => {
+                      const badge = STATUS_BADGE[item.status];
+                      if (!badge) return null;
+                      return (
+                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, color: badge.color, textAlign: "center", letterSpacing: 0.3 }}>
+                          {badge.label}
+                          {item.status === "Returning Series" && item.nextEpisodeDate ? ` · ${item.nextEpisodeDate}` : ""}
+                        </div>
+                      );
+                    })()}
+                  </div>
                   {item.image && (
                     <div style={{ width: "100%", height: 42, overflow: "hidden", marginTop: 4 }}>
                       <div style={{
