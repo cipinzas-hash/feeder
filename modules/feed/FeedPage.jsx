@@ -894,6 +894,13 @@
           <div ref={containerRef} onScroll={onScroll} style={{
             display: "flex", overflowX: "auto", scrollSnapType: "x mandatory",
             padding: `30px ${sidePad}px 40px`, alignItems: "center", perspective: 1000,
+            // El punto de fuga por defecto (50% 50%) se calcula sobre el
+            // ancho de TODO el contenido scrolleable (las 3 vueltas juntas),
+            // no sobre lo que se ve en pantalla -- por eso la tarjeta
+            // "central" se veía corrida, aunque el scroll estuviera bien
+            // centrado. Se recalcula en cada scroll para que siempre apunte
+            // al medio del viewport actual, no a un punto fijo del contenido.
+            perspectiveOrigin: `${scrollX + containerW / 2}px 50%`,
           }}>
             {renderList.map(({ item, absIdx }) => {
               const dist = absIdx - center;
