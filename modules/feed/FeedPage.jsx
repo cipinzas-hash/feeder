@@ -694,7 +694,7 @@
     // Buzón (filtrado a lo guardado) y en Vitrina (catálogo completo del mes).
     // Flechas ◀️▶️ a los costados + loop infinito (después del último vuelve
     // al primero, y viceversa) además del scroll táctil de siempre.
-    function CineCoverFlow({ items, onOpen, generatedAt }) {
+    function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
       const [scrollX, setScrollX] = useState(0);
       const [containerW, setContainerW] = useState(0);
       const containerRef = useRef(null);
@@ -721,10 +721,16 @@
       // Las marcadas "interesa" llevan copia completa del item justamente para
       // sobrevivir a la poda de 30 días de build-cine.mjs (que no sabe nada de
       // este estado) — si build-cine ya la sacó de `items`, la reinyectamos acá
-      // desde la copia local para que no desaparezca del carrusel.
+      // desde la copia local para que no desaparezca del carrusel. Filtra por
+      // `categoria` explícito, no solo por ausencia en `items` -- si no,
+      // cualquier "interesa" de Películas se colaba también en el carrusel de
+      // Series/Animación (bug real: no estaba en `items` de esa categoría por
+      // ser de otra, así que el chequeo de ausencia daba falso positivo).
       const exemptExtra = React.useMemo(() => Object.values(cineEstado)
-        .filter(e => e.estado === "interesa" && e.item && !items.some(it => it.guid === e.item.guid))
-        .map(e => e.item), [cineEstado, items]);
+        .filter(e => e.estado === "interesa" && e.item
+          && (!categoria || e.item.categoria === categoria)
+          && !items.some(it => it.guid === e.item.guid))
+        .map(e => e.item), [cineEstado, items, categoria]);
       const fullItems = exemptExtra.length ? [...items, ...exemptExtra] : items;
 
       // Orden y filtro del carrusel: por defecto el orden del catálogo tal
@@ -1223,7 +1229,7 @@
             ))}
           </div>
           {CINE_CATEGORIAS.includes(filterCat) && filtered.length > 0 ? (
-            <CineCoverFlow items={filtered} onOpen={onOpen} />
+            <CineCoverFlow items={filtered} onOpen={onOpen} categoria={filterCat} />
           ) : (
             <div style={{ flex: 1, overflowY: "auto", padding: "0 18px 30px" }}>
               {filtered.length === 0 && <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "40px 0" }}>vacío por ahora</div>}
@@ -1896,7 +1902,7 @@
             ? <MeleeFeed items={items} />
             : vitrinaCat === "Conciertos"
             ? <ConcertFeed items={items} />
-            : <CineCoverFlow items={items} onOpen={onOpen} generatedAt={generatedAt} />
+            : <CineCoverFlow items={items} onOpen={onOpen} generatedAt={generatedAt} categoria={vitrinaCat} />
           }
         </div>
       );
