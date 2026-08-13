@@ -872,8 +872,13 @@
                         padding: "3px 0", boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
                       }}>NO ME INTERESA</div>
                     )}
+                    {/* Ribbon de reseña ("vista") y badge "nuevo" comparten la
+                        misma esquina (arriba-derecha) -- son mutuamente
+                        excluyentes: nuevo solo aplica en sin_marca, y deja de
+                        aplicar apenas se marca vista, así que nunca compiten
+                        por el espacio al mismo tiempo. */}
                     {vista && ratingVista && (
-                      <div style={{ position: "absolute", top: 6, left: 8 }}>
+                      <div style={{ position: "absolute", top: 6, right: 6 }}>
                         <div style={{
                           width: 34, height: 34, borderRadius: "50%", background: "#f5c518",
                           display: "flex", alignItems: "center", justifyContent: "center",
@@ -885,7 +890,6 @@
                         </div>
                       </div>
                     )}
-                    {/* Badge "nuevo" — sin_marca, dentro de la ventana de 1 semana */}
                     {nuevo && (
                       <div style={{
                         position: "absolute", top: 6, right: 6, background: "#2ecc71", color: "#111",
