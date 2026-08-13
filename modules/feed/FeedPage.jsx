@@ -574,8 +574,25 @@
             <div style={{ marginBottom: 12 }}><RatingBadges rating={item.rating} size="lg" /></div>
             <div style={{ clear: "both" }} />
 
-            {/* Mi reseña — justo debajo de la carátula, para que se vea sin
-                tener que bajar hasta el final del detalle. */}
+            {item.trailer && (
+              <div style={{ margin: "16px 0", borderRadius: 10, overflow: "hidden", aspectRatio: "16/9" }}>
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${item.trailer.key}`}
+                  style={{ width: "100%", height: "100%", border: "none" }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              </div>
+            )}
+
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, marginBottom: 18 }}>
+              {item.summary}
+            </div>
+
+            {/* Mi reseña — después de tráiler/sinopsis a propósito: la
+                decisión de marcar como vista viene después de repasar esa
+                info, no antes. */}
             <div style={{ marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #1a1a1a" }}>
               <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 }}>mi reseña</div>
               {estado === "vista" && !reviewOpen ? (
@@ -603,22 +620,6 @@
                   <span style={{ fontSize: 17 }}>📝</span>marcar como vista
                 </button>
               )}
-            </div>
-
-            {item.trailer && (
-              <div style={{ margin: "16px 0", borderRadius: 10, overflow: "hidden", aspectRatio: "16/9" }}>
-                <iframe
-                  src={`https://www.youtube-nocookie.com/embed/${item.trailer.key}`}
-                  style={{ width: "100%", height: "100%", border: "none" }}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                />
-              </div>
-            )}
-
-            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, marginBottom: 18 }}>
-              {item.summary}
             </div>
 
             {leads.length > 0 && (
@@ -668,7 +669,7 @@
                 </div>
               )}
               <div style={{ display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" }}>
-                <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
+                <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>anterior</button>
                 <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
                 <button onClick={() => shareToWhatsApp(item)} style={btnGhost}><span style={{ fontSize: 17 }}>📤</span>compartir</button>
                 <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
@@ -730,7 +731,8 @@
       // descartadas" saca del loop lo marcado "no me interesa" sin borrar
       // la marca -- es solo un filtro de vista.
       const [sortBy, setSortBy] = useState("default"); // default | proxima | rating
-      const [ocultarDescartadas, setOcultarDescartadas] = useState(false);
+      // Ocultas por defecto -- el toggle las muestra si querés revisarlas.
+      const [ocultarDescartadas, setOcultarDescartadas] = useState(true);
       const sortedItems = React.useMemo(() => {
         let arr = fullItems;
         if (ocultarDescartadas) {
@@ -745,11 +747,13 @@
             return da - db;
           });
         } else if (sortBy === "rating") {
-          arr = [...arr].sort((a, b) => {
-            const ra = a.rating?.imdb ?? a.rating?.tmdb ?? -1;
-            const rb = b.rating?.imdb ?? b.rating?.tmdb ?? -1;
-            return rb - ra;
-          });
+          // De peor a mejor puntuada, y recién después las sin puntuar
+          // (las que quedaron en "me interesa" sin crítica externa todavía)
+          // -- no mezcladas entre las puntuadas.
+          const puntuadas = arr.filter(it => (it.rating?.imdb ?? it.rating?.tmdb) != null);
+          const sinPuntuar = arr.filter(it => (it.rating?.imdb ?? it.rating?.tmdb) == null);
+          puntuadas.sort((a, b) => (a.rating?.imdb ?? a.rating?.tmdb) - (b.rating?.imdb ?? b.rating?.tmdb));
+          arr = [...puntuadas, ...sinPuntuar];
         }
         return arr;
       }, [fullItems, sortBy, ocultarDescartadas, cineEstado]);
@@ -802,9 +806,9 @@
       }
 
       const arrowStyle = {
-        position: "absolute", top: "38%", transform: "translateY(-50%)", zIndex: 10,
+        position: "absolute", top: "38%", transform: "translateY(-50%)", zIndex: 300,
         background: "rgba(20,20,20,0.75)", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.12)",
-        color: "#fff", fontSize: 18, width: 38, height: 38, borderRadius: 19, cursor: "pointer",
+        color: "#fff", fontSize: 18, width: 52, height: 52, borderRadius: 26, cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "center",
       };
 
@@ -814,7 +818,7 @@
       );
 
       return (
-        <div>
+        <div style={{ touchAction: "pan-x", overscrollBehavior: "none", overflow: "hidden" }}>
           {toolbar}
           <div style={{ position: "relative" }}>
           <button onClick={() => step(-1)} style={{ ...arrowStyle, left: 6 }}>◀️</button>
@@ -869,12 +873,17 @@
                       }}>NO ME INTERESA</div>
                     )}
                     {vista && ratingVista && (
-                      <div style={{
-                        position: "absolute", top: 14, left: -34, width: 140, transform: "rotate(-45deg)",
-                        background: "#f5c518", color: "#111", textAlign: "center",
-                        fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 0.3,
-                        padding: "3px 0", boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
-                      }}>{ratingVista.emoji} {ratingVista.label.toUpperCase()}</div>
+                      <div style={{ position: "absolute", top: 6, left: 8 }}>
+                        <div style={{
+                          width: 34, height: 34, borderRadius: "50%", background: "#f5c518",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 18, boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                        }}>{ratingVista.emoji}</div>
+                        <div style={{ display: "flex", justifyContent: "center", marginTop: -2 }}>
+                          <div style={{ width: 0, height: 0, borderLeft: "7px solid transparent", borderRight: "1px solid transparent", borderTop: "9px solid #c9a30f", marginRight: 1 }} />
+                          <div style={{ width: 0, height: 0, borderLeft: "1px solid transparent", borderRight: "7px solid transparent", borderTop: "9px solid #c9a30f" }} />
+                        </div>
+                      </div>
                     )}
                     {/* Badge "nuevo" — sin_marca, dentro de la ventana de 1 semana */}
                     {nuevo && (
@@ -893,17 +902,6 @@
                       }}>{restantes > 0 ? `${restantes}d en cartelera` : "sale hoy"}</div>
                     )}
                   </div>
-                  {item.image && (
-                    <div style={{ width: "100%", height: 42, overflow: "hidden", marginTop: 1 }}>
-                      <div style={{
-                        width: "100%", aspectRatio: "2/3",
-                        backgroundImage: `url(${item.image})`, backgroundSize: "cover", backgroundPosition: "center",
-                        transform: "scaleY(-1)", opacity: 0.2,
-                        maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 85%)",
-                        WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 85%)",
-                      }} />
-                    </div>
-                  )}
                   <div style={{ fontFamily: "'Caveat',cursive", fontWeight: 700, fontSize: 18, color: "#fff", marginTop: 6, textAlign: "center", lineHeight: 1.15, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.title}</div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 2 }}>
                     {(() => {
@@ -928,6 +926,17 @@
                       </div>
                     );
                   })()}
+                  {item.image && (
+                    <div style={{ width: "100%", height: 42, overflow: "hidden", marginTop: 4 }}>
+                      <div style={{
+                        width: "100%", aspectRatio: "2/3",
+                        backgroundImage: `url(${item.image})`, backgroundSize: "cover", backgroundPosition: "center",
+                        transform: "scaleY(-1)", opacity: 0.2,
+                        maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 85%)",
+                        WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 85%)",
+                      }} />
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -2080,14 +2089,15 @@
         setVitrinaOpenItem(list[(idx + 1) % list.length]);
       }
 
-      // "⬅️ categoría" dentro de Vitrina: cicla Películas → Series → Animación →
-      // Películas y abre el primer ítem de la nueva subcategoría.
-      function handleVitrinaChangeCategory() {
-        const idx = CINE_CATEGORIAS.indexOf(vitrinaCat);
-        const nextCat = CINE_CATEGORIAS[(idx + 1) % CINE_CATEGORIAS.length];
-        setVitrinaCat(nextCat);
-        const list = vitrinaData[nextCat] || [];
-        setVitrinaOpenItem(list[0] || null);
+      // "⬅️ anterior" dentro del detalle de Cine: retrocede en la misma lista
+      // de la subcategoría actual, espejo de "siguiente". El cambio de
+      // subcategoría (Películas/Series/Animación) ya tiene su propio selector
+      // en la cabecera de VitrinaView -- no hace falta duplicarlo acá.
+      function handleVitrinaPrev(item) {
+        const list = vitrinaData[vitrinaCat] || [];
+        const idx = list.findIndex(i => i.guid === item.guid);
+        if (idx === -1 || !list.length) { setVitrinaOpenItem(null); return; }
+        setVitrinaOpenItem(list[(idx - 1 + list.length) % list.length]);
       }
 
       async function handleExportImage(item) {
@@ -2123,7 +2133,7 @@
             <CineExtendedView item={vitrinaOpenItem} onBack={() => setVitrinaOpenItem(null)}
               onNext={() => handleVitrinaNext(vitrinaOpenItem)}
               onSave={() => handleVitrinaSave(vitrinaOpenItem)}
-              onChangeCategory={handleVitrinaChangeCategory} />
+              onChangeCategory={() => handleVitrinaPrev(vitrinaOpenItem)} />
             <ExitBtn/>
           </>
         );
