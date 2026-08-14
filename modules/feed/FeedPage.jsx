@@ -726,7 +726,8 @@
       const [containerW, setContainerW] = useState(0);
       const containerRef = useRef(null);
       const CARD_W = 160; // antes 130 -- tarjetas más grandes
-      const GAP = 8; // antes 14 -- más juntas
+      const GAP = 20; // antes 8 -- muy juntas, el texto de las laterales
+      // se metía debajo de la tarjeta central al rotar (visible en captura)
       const ITEM_W = CARD_W + GAP;
 
       useEffect(() => {
@@ -926,9 +927,14 @@
               // Solo se renderiza el detalle si está cerca de lo visible --
               // 3 vueltas completas de posters con srcs reales sería pesado.
               if (Math.abs(dist) > 6) return <div key={absIdx} style={{ flexShrink: 0, width: CARD_W, marginRight: GAP }} />;
-              const rotate = Math.max(-55, Math.min(55, dist * 55));
+              const rotate = Math.max(-40, Math.min(40, dist * 40));
               const scale = 1 - Math.min(0.25, Math.abs(dist) * 0.15);
               const isCenter = Math.abs(dist) < 0.5;
+              // Resguardo extra sobre el GAP/ángulo ya corregidos: si igual
+              // queda algo de invasión visual por la rotación 3D, que no se
+              // note -- el texto de una tarjeta lateral no tiene que
+              // competir por lectura con el de la central de cualquier forma.
+              const textOpacity = Math.max(0.15, 1 - Math.abs(dist) * 0.5);
               const temporada = seasonLabel(item);
               const estadoItem = cineEstado[item.guid];
               const itemEstado = estadoItem?.estado || "sin_marca";
@@ -1018,6 +1024,7 @@
                       }}>{restantes > 0 ? `${restantes}d en cartelera` : "sale hoy"}</div>
                     )}
                   </div>
+                  <div style={{ opacity: textOpacity }}>
                   <div style={{ fontFamily: "'Caveat',cursive", fontWeight: 700, fontSize: 18, color: "#fff", marginTop: 6, textAlign: "center", lineHeight: 1.15, minHeight: 42, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.title}</div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 2 }}>
                     {(() => {
@@ -1052,6 +1059,7 @@
                         </div>
                       );
                     })()}
+                  </div>
                   </div>
                   {item.image && (
                     <div style={{ width: "100%", height: 42, overflow: "hidden", marginTop: 4 }}>
