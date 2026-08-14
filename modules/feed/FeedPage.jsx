@@ -722,29 +722,71 @@
     // Flechas ◀️▶️ a los costados + loop infinito (después del último vuelve
     // al primero, y viceversa) además del scroll táctil de siempre.
     function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
-      const [scrollX, setScrollX] = useState(0);
-      const [containerW, setContainerW] = useState(0);
-      const containerRef = useRef(null);
-      const CARD_W = 160; // antes 130 -- tarjetas más grandes
-      const GAP = 20; // antes 8 -- muy juntas, el texto de las laterales
-      // se metía debajo de la tarjeta central al rotar (visible en captura)
+      const CARD_W = 160;
+      const GAP = 20;
       const ITEM_W = CARD_W + GAP;
 
-      useEffect(() => {
-        function measure() { if (containerRef.current) setContainerW(containerRef.current.clientWidth); }
-        measure();
-        window.addEventListener("resize", measure);
-        return () => window.removeEventListener("resize", measure);
-      }, []);
-      const sidePad = Math.max(8, containerW / 2 - CARD_W / 2);
+      // pos = posición central continua, en "unidades de ítem" (puede tener
+      // decimales durante el arrastre). No se resetea NUNCA para el loop --
+      // crece o decrece sin límite; el wrap a un catálogo finito se resuelve
+      // con módulo recién al elegir qué ítem mostrar en cada franja, no
+      // reposicionando nada. Por eso no hay salto que corregir ni superficie
+      // para que el navegador pelee contra un scroll nativo: no hay scroll
+      // nativo, el carrusel entero lo maneja este componente.
+      const [pos, setPos] = useState(0);
+      const posRef = useRef(0);
+      const dragRef = useRef(null); // {startX, startPos, moved, pointerId} mientras se arrastra
+      const animRef = useRef(null); // id de la animación de snap/paso en curso
 
-      // Loop infinito real (estilo WiiFlow), sin marcador de "fin de vuelta":
-      // se renderizan 3 vueltas seguidas del mismo catálogo. Apenas el scroll
-      // sale de la vuelta del medio se reposiciona de un salto sin animación
-      // exactamente una vuelta atrás/adelante -- como el contenido de cada
-      // vuelta es idéntico, el salto es invisible. Así "siguiente" (botón o
-      // swipe) nunca se topa con un final real, la última carta conecta
-      // directo con la primera.
+      function setPosBoth(v) { posRef.current = v; setPos(v); }
+
+      function animateTo(target, ms = 260) {
+        if (animRef.current) cancelAnimationFrame(animRef.current);
+        const start = posRef.current;
+        const t0 = performance.now();
+        function tick(now) {
+          const p = Math.min(1, (now - t0) / ms);
+          const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+          setPosBoth(start + (target - start) * eased);
+          if (p < 1) animRef.current = requestAnimationFrame(tick);
+          else animRef.current = null;
+        }
+        animRef.current = requestAnimationFrame(tick);
+      }
+      useEffect(() => () => { if (animRef.current) cancelAnimationFrame(animRef.current); }, []);
+
+      function onPointerDown(e) {
+        if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
+        e.currentTarget.setPointerCapture?.(e.pointerId);
+        dragRef.current = { startX: e.clientX, startPos: posRef.current, moved: 0, pointerId: e.pointerId };
+      }
+      function onPointerMove(e) {
+        const d = dragRef.current;
+        if (!d) return;
+        const deltaPx = e.clientX - d.startX;
+        d.moved = Math.max(d.moved, Math.abs(deltaPx));
+        setPosBoth(d.startPos - deltaPx / ITEM_W);
+      }
+      function endDrag() {
+        const d = dragRef.current;
+        dragRef.current = null;
+        if (!d) return;
+        animateTo(Math.round(posRef.current));
+      }
+      function onCardClick(item) {
+        // Si el gesto que acaba de terminar movió más de un puñado de px,
+        // fue arrastre, no toque -- no abrir el detalle.
+        if (lastDragMoved.current > 6) return;
+        onOpen(item);
+      }
+      const lastDragMoved = useRef(0);
+      function onPointerUp(e) {
+        lastDragMoved.current = dragRef.current?.moved || 0;
+        endDrag();
+      }
+
+      function step(dir) { animateTo(Math.round(posRef.current) + dir); }
+
       const cineEstado = useCineEstadoMap();
       // Las marcadas "interesa" llevan copia completa del item justamente para
       // sobrevivir a la poda de 30 días de build-cine.mjs (que no sabe nada de
@@ -807,59 +849,10 @@
       }, [fullItems, sortBy, ocultarDescartadas, ocultarEstreno, ocultarProduccion, ocultarTrending, esPelicula, cineEstado]);
 
       const total = sortedItems.length;
-      const lapWidth = total * ITEM_W;
-
-      useEffect(() => {
-        if (containerRef.current && sortedItems.length) {
-          containerRef.current.scrollLeft = lapWidth;
-          setScrollX(lapWidth);
-          setPerspOriginX(lapWidth + containerW / 2);
-        }
-      }, [sortedItems.length, lapWidth, sortBy, ocultarDescartadas, ocultarEstreno, ocultarProduccion, ocultarTrending]);
-
-      const scrollSettleTimer = useRef(null);
-      const perspRafId = useRef(null);
-      const [perspOriginX, setPerspOriginX] = useState(lapWidth + containerW / 2);
-      useEffect(() => () => {
-        clearTimeout(scrollSettleTimer.current);
-        if (perspRafId.current != null) cancelAnimationFrame(perspRafId.current);
-      }, []);
-      function onScroll(e) {
-        const el = e.target;
-        // Trackeo en vivo para el efecto de rotación/escala de las tarjetas
-        // -- esto sí tiene que responder a cada evento, sin esperar.
-        setScrollX(el.scrollLeft);
-
-        // El punto de fuga de la perspectiva 3D se recalcula con throttle de
-        // requestAnimationFrame, no en cada evento de scroll -- recalcularlo
-        // sin límite forzaba al navegador a recomputar la transformación 3D
-        // de las ~75 tarjetas renderizadas (3 vueltas) en cada tick, y eso
-        // se notaba como bugueo en las tarjetas más alejadas (más rotadas,
-        // más caras de recalcular) durante el scroll activo.
-        if (perspRafId.current == null) {
-          perspRafId.current = requestAnimationFrame(() => {
-            setPerspOriginX(el.scrollLeft + containerW / 2);
-            perspRafId.current = null;
-          });
-        }
-
-        // El salto invisible de vuelta se corrige recién cuando el scroll
-        // se asienta (nada de eventos nuevos por 120ms), no en cada evento
-        // en caliente -- corregir en medio de un fling táctil o de un
-        // scrollTo("smooth") peleaba contra la animación nativa del
-        // navegador y se notaba como un tranco justo al cruzar de la
-        // última tarjeta a la primera.
-        clearTimeout(scrollSettleTimer.current);
-        scrollSettleTimer.current = setTimeout(() => {
-          const cur = el.scrollLeft;
-          if (cur < lapWidth * 0.5) { el.scrollLeft = cur + lapWidth; setScrollX(cur + lapWidth); setPerspOriginX(cur + lapWidth + containerW / 2); }
-          else if (cur > lapWidth * 1.5) { el.scrollLeft = cur - lapWidth; setScrollX(cur - lapWidth); setPerspOriginX(cur - lapWidth + containerW / 2); }
-        }, 120);
-      }
-      function step(dir) {
-        if (!sortedItems.length || !containerRef.current) return;
-        containerRef.current.scrollTo({ left: containerRef.current.scrollLeft + dir * ITEM_W, behavior: "smooth" });
-      }
+      // Al cambiar el catálogo filtrado/ordenado (o de categoría), volver al
+      // principio -- el `pos` anterior podía corresponder a un índice sin
+      // sentido en la lista nueva.
+      useEffect(() => { setPosBoth(0); }, [sortedItems.length, sortBy, ocultarDescartadas, ocultarEstreno, ocultarProduccion, ocultarTrending, categoria]);
 
       const toolbarBtn = (active) => ({
         fontFamily: "'DM Sans',sans-serif", fontSize: 11, padding: "5px 11px", borderRadius: 20,
@@ -900,38 +893,32 @@
         display: "flex", alignItems: "center", justifyContent: "center",
       };
 
-      const center = scrollX / ITEM_W;
-      const renderList = [0, 1, 2].flatMap(lap =>
-        sortedItems.map((item, i) => ({ item, absIdx: lap * total + i }))
-      );
+      // Ventana chica de tarjetas alrededor de la posición actual -- ya no
+      // hace falta triplicar el catálogo entero como con el scroll nativo,
+      // el módulo resuelve el loop directo en cada índice.
+      const baseIdx = Math.round(pos);
+      const WINDOW = 6;
+      const slots = [];
+      for (let o = -WINDOW; o <= WINDOW; o++) {
+        const rawIdx = baseIdx + o;
+        const realIdx = ((rawIdx % total) + total) % total;
+        slots.push({ offset: o, item: sortedItems[realIdx], dist: rawIdx - pos });
+      }
 
       return (
-        <div style={{ touchAction: "pan-x", overscrollBehavior: "none", overflow: "hidden" }}>
+        <div>
           {toolbar}
           <div style={{ position: "relative" }}>
           <button onClick={() => step(-1)} style={{ ...arrowStyle, left: 6 }}>◀️</button>
           <button onClick={() => step(1)} style={{ ...arrowStyle, right: 6 }}>▶️</button>
-          <div ref={containerRef} onScroll={onScroll} style={{
-            display: "flex", overflowX: "auto", scrollSnapType: "x mandatory",
-            padding: `30px ${sidePad}px 40px`, alignItems: "center", perspective: 2600,
-            // 1000 era una distancia corta para tarjetas de 160-180px --
-            // el borde que "se acerca" al rotar se agrandaba de forma
-            // exagerada (más notorio cuanto más lejos del centro, porque
-            // acumula más rotación). Con más distancia el efecto 3D de
-            // profundidad se conserva pero sin la exageración de tamaño.
-            // El punto de fuga por defecto (50% 50%) se calcula sobre el
-            // ancho de TODO el contenido scrolleable (las 3 vueltas juntas),
-            // no sobre lo que se ve en pantalla -- por eso la tarjeta
-            // "central" se veía corrida, aunque el scroll estuviera bien
-            // centrado. Se recalcula en cada scroll para que siempre apunte
-            // al medio del viewport actual, no a un punto fijo del contenido.
-            perspectiveOrigin: `${perspOriginX}px 50%`,
-          }}>
-            {renderList.map(({ item, absIdx }) => {
-              const dist = absIdx - center;
-              // Solo se renderiza el detalle si está cerca de lo visible --
-              // 3 vueltas completas de posters con srcs reales sería pesado.
-              if (Math.abs(dist) > 6) return <div key={absIdx} style={{ flexShrink: 0, width: CARD_W, marginRight: GAP }} />;
+          <div
+            onPointerDown={onPointerDown} onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
+            style={{
+              position: "relative", height: 400, touchAction: "pan-y", perspective: 2600, overflow: "hidden",
+              padding: "30px 0 40px", userSelect: "none", cursor: "grab",
+            }}>
+            {slots.map(({ offset, item, dist }) => {
               const rotate = Math.max(-40, Math.min(40, dist * 40));
               const scale = 1 - Math.min(0.25, Math.abs(dist) * 0.15);
               const isCenter = Math.abs(dist) < 0.5;
@@ -952,9 +939,11 @@
               const diasEstreno = enProduccion ? diasParaEstreno(item) : null;
               const ratingVista = vista ? CINE_RATINGS.find(r => r.id === estadoItem.rating) : null;
               return (
-                <div key={absIdx} onClick={() => onOpen(item)} style={{
-                  flexShrink: 0, width: CARD_W, marginRight: GAP, scrollSnapAlign: "center", cursor: "pointer",
-                  transform: `rotateY(${-rotate}deg) scale(${scale})`, transformOrigin: "center center",
+                <div key={offset} onClick={() => onCardClick(item)} style={{
+                  position: "absolute", top: 30, left: "50%", width: CARD_W,
+                  marginLeft: -CARD_W / 2, cursor: "pointer",
+                  transform: `translateX(${dist * ITEM_W}px) rotateY(${-rotate}deg) scale(${scale})`,
+                  transformOrigin: "center center",
                   zIndex: Math.round(100 - Math.abs(dist) * 10),
                 }}>
                   <div style={{
