@@ -989,16 +989,10 @@
                         aplicar apenas se marca vista, así que nunca compiten
                         por el espacio al mismo tiempo. */}
                     {vista && ratingVista && (
-                      <div style={{ position: "absolute", top: 6, right: 6 }}>
-                        <div style={{
-                          width: 34, height: 34, borderRadius: "50%", background: "#f5c518",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: 18, boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
-                        }}>{ratingVista.emoji}</div>
-                        <div style={{ display: "flex", justifyContent: "center", marginTop: -2 }}>
-                          <div style={{ width: 0, height: 0, borderLeft: "7px solid transparent", borderRight: "1px solid transparent", borderTop: "9px solid #c9a30f", marginRight: 1 }} />
-                          <div style={{ width: 0, height: 0, borderLeft: "1px solid transparent", borderRight: "7px solid transparent", borderTop: "9px solid #c9a30f" }} />
-                        </div>
+                      <div style={{ position: "absolute", top: 6, right: 6, width: 34, height: 34, borderRadius: "50%", background: "#f5c518",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 18, boxShadow: "0 2px 6px rgba(0,0,0,0.5)" }}>
+                        {ratingVista.emoji}
                       </div>
                     )}
                     {nuevo && (
