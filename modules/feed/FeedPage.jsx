@@ -913,7 +913,12 @@
           <button onClick={() => step(1)} style={{ ...arrowStyle, right: 6 }}>▶️</button>
           <div ref={containerRef} onScroll={onScroll} style={{
             display: "flex", overflowX: "auto", scrollSnapType: "x mandatory",
-            padding: `30px ${sidePad}px 40px`, alignItems: "center", perspective: 1000,
+            padding: `30px ${sidePad}px 40px`, alignItems: "center", perspective: 2600,
+            // 1000 era una distancia corta para tarjetas de 160-180px --
+            // el borde que "se acerca" al rotar se agrandaba de forma
+            // exagerada (más notorio cuanto más lejos del centro, porque
+            // acumula más rotación). Con más distancia el efecto 3D de
+            // profundidad se conserva pero sin la exageración de tamaño.
             // El punto de fuga por defecto (50% 50%) se calcula sobre el
             // ancho de TODO el contenido scrolleable (las 3 vueltas juntas),
             // no sobre lo que se ve en pantalla -- por eso la tarjeta
