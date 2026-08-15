@@ -437,7 +437,149 @@
     }
 
     // ─── CineExtendedView — formato "cine" del detalle ──────────────────────────
+    // ─── Estado de Cine (interesa/descartada/vista) — decisión tomada en el
+    // detalle, después de tráiler/sinopsis (nunca desde el póster del carrusel,
+    // que es puramente de exhibición). Clave propia de localStorage, aislada
+    // del blob principal (mismo patrón que PODCASTS_ESCUCHADOS_KEY), pero se
+    // cose al export/import general (ver core/persistence.js) porque acá sí
+    // aplica la regla de "toda la info entra al export".
+    //   sin_marca  -> default, sin decisión tomada aún
+    //   interesa   -> guarda copia completa del item (título/imagen/sinopsis/
+    //                 trailer/rating) para sobrevivir a la poda de 30 días de
+    //                 build-cine.mjs, que no sabe nada de este estado
+    //   descartada -> no me interesa
+    //   vista      -> rating obligatorio (4 categorías) + nota opcional
+    const CINE_ESTADO_KEY = "angst-cine-estado-v1";
+    const CINE_NUEVO_MS = 7 * 86400000; // 1 semana desde firstSeenAt
+    const CINE_RATINGS = [
+      { id: "unwatchable", emoji: "💀", label: "unwatchable" },
+      { id: "forgettable", emoji: "😐", label: "forgettable" },
+      { id: "remarkable", emoji: "✨", label: "remarkable" },
+      { id: "outstanding", emoji: "🏆", label: "outstanding" },
+    ];
+    function loadCineEstado() {
+      try {
+        const raw = localStorage.getItem(CINE_ESTADO_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) { return {}; }
+    }
+    let cineEstadoCache = loadCineEstado();
+    const cineEstadoListeners = new Set();
+    function saveCineEstado(map) {
+      cineEstadoCache = map;
+      try { localStorage.setItem(CINE_ESTADO_KEY, JSON.stringify(map)); } catch (e) {}
+      cineEstadoListeners.forEach(fn => fn(map));
+    }
+    // patch=null borra la entrada (vuelve a sin_marca)
+    function setCineItemEstado(guid, patch) {
+      const next = { ...cineEstadoCache };
+      if (patch === null) delete next[guid];
+      else next[guid] = { ...(next[guid] || {}), ...patch };
+      saveCineEstado(next);
+    }
+    function useCineEstadoMap() {
+      const [map, setMap] = useState(cineEstadoCache);
+      useEffect(() => {
+        cineEstadoListeners.add(setMap);
+        return () => cineEstadoListeners.delete(setMap);
+      }, []);
+      return map;
+    }
+    function diasRestantesCartelera(item) {
+      if (!item.firstSeenAt) return null;
+      const RETENTION_MS = 30 * 86400000;
+      const elapsed = Date.now() - new Date(item.firstSeenAt).getTime();
+      return Math.max(0, Math.ceil((RETENTION_MS - elapsed) / 86400000));
+    }
+    function esNuevo(item) {
+      if (!item.firstSeenAt) return false;
+      return Date.now() - new Date(item.firstSeenAt).getTime() <= CINE_NUEVO_MS;
+    }
+    // Ciclo de vida real de la película, independiente de cuándo Angst la
+    // descubrió (eso es "nuevo", basado en firstSeenAt). Estas tres van por
+    // pubDate (= release_date real de TMDb) y por el flag trending que arma
+    // build-cine.mjs -- no son excluyentes entre sí.
+    function esEstreno(item) {
+      // Recién en cine: se estrenó hace menos de 30 días, ya estrenada (no
+      // futura). Una peli vieja que resurge en trending no cuenta como
+      // estreno solo por eso -- esa es la etiqueta "trending", separada.
+      if (!item.pubDate) return false;
+      const t = new Date(item.pubDate).getTime();
+      if (Date.now() < t) return false;
+      return Date.now() - t <= 30 * 86400000;
+    }
+    function esEnProduccion(item) {
+      if (!item.pubDate) return false;
+      return new Date(item.pubDate).getTime() > Date.now();
+    }
+    function diasParaEstreno(item) {
+      if (!item.pubDate) return null;
+      const dias = Math.ceil((new Date(item.pubDate).getTime() - Date.now()) / 86400000);
+      return dias >= 0 ? dias : null;
+    }
+    function esTrending(item) {
+      return !!item.trending;
+    }
+
+    function MiniReviewForm({ onSave, onCancel, inicial }) {
+      const [ratingId, setRatingId] = useState(inicial?.rating || null);
+      const [nota, setNota] = useState(inicial?.nota || "");
+      return (
+        <div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+            {CINE_RATINGS.map(r => (
+              <button key={r.id} onClick={() => setRatingId(r.id)} style={{
+                fontFamily: "'DM Sans',sans-serif", fontSize: 11, padding: "8px 10px", borderRadius: 8,
+                border: "1px solid", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, flex: 1,
+                background: ratingId === r.id ? "#fff" : "transparent",
+                color: ratingId === r.id ? "#111" : "#ccc",
+                borderColor: ratingId === r.id ? "#fff" : "#333",
+              }}>
+                <span style={{ fontSize: 20 }}>{r.emoji}</span>
+                {r.label}
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={nota} onChange={e => setNota(e.target.value)} placeholder="nota (opcional)"
+            style={{
+              width: "100%", minHeight: 60, background: "#1a1a1a", border: "1px solid #333", borderRadius: 8,
+              color: "#fff", fontFamily: "'DM Sans',sans-serif", fontSize: 13, padding: 10, resize: "vertical", boxSizing: "border-box",
+            }}
+          />
+          <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+            <button onClick={onCancel} style={{ ...btnGhost, flex: 1 }}>cancelar</button>
+            <button
+              onClick={() => ratingId && onSave(ratingId, nota)}
+              disabled={!ratingId}
+              style={{ ...btnGhost, flex: 1, opacity: ratingId ? 1 : 0.4, background: ratingId ? "#fff" : "transparent", color: ratingId ? "#111" : undefined }}>
+              guardar reseña
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions, onExportImage }) {
+      const cineEstado = useCineEstadoMap();
+      const estadoItem = cineEstado[item.guid];
+      const estado = estadoItem?.estado || "sin_marca";
+      const [reviewOpen, setReviewOpen] = useState(false);
+      function marcar(nuevoEstado) {
+        if (nuevoEstado === "interesa") {
+          // Copia completa: tiene que sobrevivir a la poda de 30 días de
+          // build-cine.mjs, que no sabe que esto está marcado "interesa".
+          setCineItemEstado(item.guid, { estado: "interesa", item });
+        } else if (nuevoEstado === "sin_marca") {
+          setCineItemEstado(item.guid, null);
+        } else {
+          setCineItemEstado(item.guid, { estado: nuevoEstado });
+        }
+      }
+      function guardarReview(ratingId, nota) {
+        setCineItemEstado(item.guid, { estado: "vista", rating: ratingId, nota: nota || "" });
+        setReviewOpen(false);
+      }
       const color = CAT_COLORS[item.categoria] || "#e91e8c";
       const leads = (item.cast || []).filter(c => c.order < 4);
       const supporting = (item.cast || []).filter(c => c.order >= 4);
@@ -448,7 +590,7 @@
             <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 }}>{item.source}</span>
             <a href={item.link} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>fuente ↗</a>
           </div>
-          <div style={{ flex: 1, overflowY: "auto", padding: "18px 20px 30px" }}>
+          <div style={{ flex: 1, overflowY: "auto", overscrollBehaviorY: "contain", padding: "18px 20px 30px" }}>
             {item.image && (
               <img src={item.image} alt="" style={{ width: 120, borderRadius: 10, float: "left", marginRight: 14, marginBottom: 10 }} onError={e => { e.target.style.display = "none"; }} />
             )}
@@ -473,6 +615,40 @@
               {item.summary}
             </div>
 
+            {/* Mi reseña — después de tráiler/sinopsis a propósito: la
+                decisión de marcar como vista viene después de repasar esa
+                info, no antes. Bloqueada mientras está en producción -- no
+                se puede haber visto algo que todavía no se estrenó. */}
+            {!esEnProduccion(item) && (
+              <div style={{ marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #1a1a1a" }}>
+                <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 }}>mi reseña</div>
+                {estado === "vista" && !reviewOpen ? (
+                  <div onClick={() => setReviewOpen(true)} style={{ cursor: "pointer" }}>
+                    {(() => {
+                      const r = CINE_RATINGS.find(r => r.id === estadoItem.rating);
+                      return (
+                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", marginBottom: 4 }}>
+                          {r ? `${r.emoji} ${r.label}` : "sin calificar"}
+                        </div>
+                      );
+                    })()}
+                    {estadoItem.nota && (
+                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", fontStyle: "italic" }}>
+                        "{estadoItem.nota}"
+                      </div>
+                    )}
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 4 }}>tocar para editar</div>
+                  </div>
+                ) : reviewOpen || estado !== "vista" ? (
+                  reviewOpen && <MiniReviewForm onSave={guardarReview} onCancel={() => setReviewOpen(false)} inicial={estadoItem} />
+                ) : null}
+                {estado !== "vista" && !reviewOpen && (
+                  <button onClick={() => setReviewOpen(true)} style={{ ...btnGhost, width: "100%" }}>
+                    <span style={{ fontSize: 17 }}>📝</span>marcar como vista
+                  </button>
+                )}
+              </div>
+            )}
             {leads.length > 0 && (
               <div style={{ marginBottom: 18 }}>
                 <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 6 }}>reparto principal</div>
@@ -502,12 +678,33 @@
             )}
           </div>
           {!hideActions && (
-            <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
-              <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
-              <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
-              <button onClick={() => shareToWhatsApp(item)} style={btnGhost}><span style={{ fontSize: 17 }}>📤</span>compartir</button>
-              <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
-            </div>
+            <React.Fragment>
+              {/* Oculta si ya está vista -- interesa/no-interesa no tiene
+                  sentido una vez vista, la reseña ya la reemplaza. También
+                  oculta mientras se escribe la reseña: estaba justo encima
+                  del formulario y un toque accidental acá perdía el
+                  borrador. */}
+              {!reviewOpen && estado !== "vista" && (
+                <div style={{ display: "flex", gap: 6, padding: "10px 10px 4px", background: "#111" }}>
+                  <button
+                    onClick={() => marcar(estado === "interesa" ? "sin_marca" : "interesa")}
+                    style={{ ...btnGhost, background: estado === "interesa" ? "#2ecc71" : "transparent", color: estado === "interesa" ? "#111" : undefined, borderColor: estado === "interesa" ? "#2ecc71" : undefined }}>
+                    <span style={{ fontSize: 17 }}>👍</span>me interesa
+                  </button>
+                  <button
+                    onClick={() => marcar(estado === "descartada" ? "sin_marca" : "descartada")}
+                    style={{ ...btnGhost, background: estado === "descartada" ? "#e74c3c" : "transparent", color: estado === "descartada" ? "#111" : undefined, borderColor: estado === "descartada" ? "#e74c3c" : undefined }}>
+                    <span style={{ fontSize: 17 }}>👎</span>no me interesa
+                  </button>
+                </div>
+              )}
+              <div style={{ display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" }}>
+                <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>anterior</button>
+                <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
+                <button onClick={() => shareToWhatsApp(item)} style={btnGhost}><span style={{ fontSize: 17 }}>📤</span>compartir</button>
+                <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
+              </div>
+            </React.Fragment>
           )}
           {hideActions && onExportImage && (
             <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
@@ -524,132 +721,328 @@
     // Buzón (filtrado a lo guardado) y en Vitrina (catálogo completo del mes).
     // Flechas ◀️▶️ a los costados + loop infinito (después del último vuelve
     // al primero, y viceversa) además del scroll táctil de siempre.
-    function CineCoverFlow({ items, onOpen, generatedAt }) {
-      const [scrollX, setScrollX] = useState(0);
-      const [containerW, setContainerW] = useState(0);
-      const containerRef = useRef(null);
-      const CARD_W = 160; // antes 130 -- tarjetas más grandes
-      const GAP = 8; // antes 14 -- más juntas
+    function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
+      const CARD_W = 160;
+      const GAP = 20;
       const ITEM_W = CARD_W + GAP;
 
-      useEffect(() => {
-        function measure() { if (containerRef.current) setContainerW(containerRef.current.clientWidth); }
-        measure();
-        window.addEventListener("resize", measure);
-        return () => window.removeEventListener("resize", measure);
-      }, []);
-      const sidePad = Math.max(8, containerW / 2 - CARD_W / 2);
+      // pos = posición central continua, en "unidades de ítem" (puede tener
+      // decimales durante el arrastre). No se resetea NUNCA para el loop --
+      // crece o decrece sin límite; el wrap a un catálogo finito se resuelve
+      // con módulo recién al elegir qué ítem mostrar en cada franja, no
+      // reposicionando nada. Por eso no hay salto que corregir ni superficie
+      // para que el navegador pelee contra un scroll nativo: no hay scroll
+      // nativo, el carrusel entero lo maneja este componente.
+      const [pos, setPos] = useState(0);
+      const posRef = useRef(0);
+      const dragRef = useRef(null); // {startX, startPos, moved, pointerId} mientras se arrastra
+      const animRef = useRef(null); // id de la animación de snap/paso en curso
 
-      // Loop infinito real (estilo WiiFlow): se renderizan 3 vueltas seguidas
-      // del mismo catálogo (+ tarjeta "eso es todo" al final de cada una). En
-      // vez de tapar el final con un tope, apenas el scroll sale de la vuelta
-      // del medio se reposiciona de un salto sin animación exactamente una
-      // vuelta atrás/adelante -- como el contenido de cada vuelta es idéntico,
-      // el salto es invisible. Así "siguiente" (botón o swipe) nunca se topa
-      // con un final real.
-      const total = items.length + 1; // incluye la tarjeta "eso es todo"
-      const lapWidth = total * ITEM_W;
+      function setPosBoth(v) { posRef.current = v; setPos(v); }
 
-      useEffect(() => {
-        if (containerRef.current && items.length) {
-          containerRef.current.scrollLeft = lapWidth;
-          setScrollX(lapWidth);
+      function animateTo(target, ms = 260) {
+        if (animRef.current) cancelAnimationFrame(animRef.current);
+        const start = posRef.current;
+        const t0 = performance.now();
+        function tick(now) {
+          const p = Math.min(1, (now - t0) / ms);
+          const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+          setPosBoth(start + (target - start) * eased);
+          if (p < 1) animRef.current = requestAnimationFrame(tick);
+          else animRef.current = null;
         }
-      }, [items.length, lapWidth]);
-
-      function onScroll(e) {
-        const el = e.target;
-        let x = el.scrollLeft;
-        if (x < lapWidth * 0.5) { el.scrollLeft = x + lapWidth; x += lapWidth; }
-        else if (x > lapWidth * 1.5) { el.scrollLeft = x - lapWidth; x -= lapWidth; }
-        setScrollX(x);
+        animRef.current = requestAnimationFrame(tick);
       }
-      function step(dir) {
-        if (!items.length || !containerRef.current) return;
-        containerRef.current.scrollTo({ left: containerRef.current.scrollLeft + dir * ITEM_W, behavior: "smooth" });
+      useEffect(() => () => { if (animRef.current) cancelAnimationFrame(animRef.current); }, []);
+
+      function onPointerDown(e) {
+        if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
+        e.currentTarget.setPointerCapture?.(e.pointerId);
+        dragRef.current = { startX: e.clientX, startPos: posRef.current, moved: 0, pointerId: e.pointerId };
+      }
+      function onPointerMove(e) {
+        const d = dragRef.current;
+        if (!d) return;
+        const deltaPx = e.clientX - d.startX;
+        d.moved = Math.max(d.moved, Math.abs(deltaPx));
+        setPosBoth(d.startPos - deltaPx / ITEM_W);
+      }
+      function endDrag() {
+        const d = dragRef.current;
+        dragRef.current = null;
+        if (!d) return;
+        animateTo(Math.round(posRef.current));
+      }
+      function onCardClick(item) {
+        // Si el gesto que acaba de terminar movió más de un puñado de px,
+        // fue arrastre, no toque -- no abrir el detalle.
+        if (lastDragMoved.current > 6) return;
+        onOpen(item);
+      }
+      const lastDragMoved = useRef(0);
+      function onPointerUp(e) {
+        lastDragMoved.current = dragRef.current?.moved || 0;
+        endDrag();
       }
 
-      if (!items.length) {
+      function step(dir) { animateTo(Math.round(posRef.current) + dir); }
+
+      const cineEstado = useCineEstadoMap();
+      // Las marcadas "interesa" llevan copia completa del item justamente para
+      // sobrevivir a la poda de 30 días de build-cine.mjs (que no sabe nada de
+      // este estado) — si build-cine ya la sacó de `items`, la reinyectamos acá
+      // desde la copia local para que no desaparezca del carrusel. Filtra por
+      // `categoria` explícito, no solo por ausencia en `items` -- si no,
+      // cualquier "interesa" de Películas se colaba también en el carrusel de
+      // Series/Animación (bug real: no estaba en `items` de esa categoría por
+      // ser de otra, así que el chequeo de ausencia daba falso positivo).
+      const exemptExtra = React.useMemo(() => Object.values(cineEstado)
+        .filter(e => e.estado === "interesa" && e.item
+          && (!categoria || e.item.categoria === categoria)
+          && !items.some(it => it.guid === e.item.guid))
+        .map(e => e.item), [cineEstado, items, categoria]);
+      const fullItems = exemptExtra.length ? [...items, ...exemptExtra] : items;
+
+      // Orden y filtro del carrusel: por defecto el orden del catálogo tal
+      // cual llega; "próxima" prioriza lo que menos le queda en cartelera
+      // (lo sin firstSeenAt queda al final); "rating" prioriza mejor
+      // puntuado externo (IMDb/TMDb, lo sin rating al final). "ocultar
+      // descartadas" saca del loop lo marcado "no me interesa" sin borrar
+      // la marca -- es solo un filtro de vista.
+      const [sortBy, setSortBy] = useState("default"); // default | proxima | rating
+      // Ocultas por defecto -- el toggle las muestra si querés revisarlas.
+      const [ocultarDescartadas, setOcultarDescartadas] = useState(true);
+      // Etiquetas de ciclo de vida (estreno/producción/trending) -- no son
+      // excluyentes entre sí, cada toggle "apaga" (oculta) independiente.
+      // Solo tienen sentido en Películas -- Series/Animación no traen pubDate
+      // ni trending del build todavía.
+      const [ocultarEstreno, setOcultarEstreno] = useState(false);
+      const [ocultarProduccion, setOcultarProduccion] = useState(false);
+      const [ocultarTrending, setOcultarTrending] = useState(false);
+      const esPelicula = categoria === "Películas";
+      const sortedItems = React.useMemo(() => {
+        let arr = fullItems;
+        if (ocultarDescartadas) {
+          arr = arr.filter(it => cineEstado[it.guid]?.estado !== "descartada");
+        }
+        if (esPelicula && ocultarEstreno) arr = arr.filter(it => !esEstreno(it));
+        if (esPelicula && ocultarProduccion) arr = arr.filter(it => !esEnProduccion(it));
+        if (esPelicula && ocultarTrending) arr = arr.filter(it => !esTrending(it));
+        if (sortBy === "proxima") {
+          // "Próxima a salir" = solo lo que todavía no se estrenó (peli) o
+          // cuya próxima temporada todavía no se estrenó (serie/anime) --
+          // antes ordenaba TODO el catálogo por días-restantes-en-cartelera,
+          // que es otra cosa (cuánto le queda antes de salir de cartelera,
+          // no cuándo entra).
+          function diasHastaEstreno(it) {
+            if (esPelicula) return esEnProduccion(it) ? diasParaEstreno(it) : null;
+            if (!it.nextEpisodeDate) return null;
+            const dias = Math.ceil((new Date(it.nextEpisodeDate).getTime() - Date.now()) / 86400000);
+            return dias >= 0 ? dias : null;
+          }
+          arr = arr.filter(it => diasHastaEstreno(it) != null);
+          arr.sort((a, b) => diasHastaEstreno(a) - diasHastaEstreno(b));
+        } else if (sortBy === "rating") {
+          // De mejor a peor puntuada, y recién después las sin puntuar
+          // (las que quedaron en "me interesa" sin crítica externa todavía)
+          // -- no mezcladas entre las puntuadas.
+          const puntuadas = arr.filter(it => (it.rating?.imdb ?? it.rating?.tmdb) != null);
+          const sinPuntuar = arr.filter(it => (it.rating?.imdb ?? it.rating?.tmdb) == null);
+          puntuadas.sort((a, b) => (b.rating?.imdb ?? b.rating?.tmdb) - (a.rating?.imdb ?? a.rating?.tmdb));
+          arr = [...puntuadas, ...sinPuntuar];
+        }
+        return arr;
+      }, [fullItems, sortBy, ocultarDescartadas, ocultarEstreno, ocultarProduccion, ocultarTrending, esPelicula, cineEstado]);
+
+      const total = sortedItems.length;
+      // Al cambiar el catálogo filtrado/ordenado (o de categoría), volver al
+      // principio -- el `pos` anterior podía corresponder a un índice sin
+      // sentido en la lista nueva.
+      useEffect(() => { setPosBoth(0); }, [sortedItems.length, sortBy, ocultarDescartadas, ocultarEstreno, ocultarProduccion, ocultarTrending, categoria]);
+
+      const toolbarBtn = (active) => ({
+        fontFamily: "'DM Sans',sans-serif", fontSize: 11, padding: "5px 11px", borderRadius: 20,
+        border: "1px solid", cursor: "pointer", whiteSpace: "nowrap",
+        background: active ? "#fff" : "transparent", color: active ? "#111" : "#999",
+        borderColor: active ? "#fff" : "#333",
+      });
+      const toolbar = (
+        <div style={{ display: "flex", gap: 6, padding: "0 12px 8px", justifyContent: "center", flexWrap: "wrap" }}>
+          <button onClick={() => setSortBy(sortBy === "proxima" ? "default" : "proxima")} style={toolbarBtn(sortBy === "proxima")}>📅 próxima a salir</button>
+          <button onClick={() => setSortBy(sortBy === "rating" ? "default" : "rating")} style={toolbarBtn(sortBy === "rating")}>⭐ rating</button>
+          <button onClick={() => setOcultarDescartadas(v => !v)} style={toolbarBtn(ocultarDescartadas)}>🚫 ocultar no me interesa</button>
+          {esPelicula && (
+            <React.Fragment>
+              <button onClick={() => setOcultarEstreno(v => !v)} style={toolbarBtn(ocultarEstreno)}>🎬 ocultar estreno</button>
+              <button onClick={() => setOcultarProduccion(v => !v)} style={toolbarBtn(ocultarProduccion)}>🏗️ ocultar producción</button>
+              <button onClick={() => setOcultarTrending(v => !v)} style={toolbarBtn(ocultarTrending)}>🔥 ocultar trending</button>
+            </React.Fragment>
+          )}
+        </div>
+      );
+
+      if (!sortedItems.length) {
         return (
-          <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" }}>
-            nada por acá todavía
+          <div>
+            {toolbar}
+            <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" }}>
+              nada por acá todavía
+            </div>
           </div>
         );
       }
 
       const arrowStyle = {
-        position: "absolute", top: "38%", transform: "translateY(-50%)", zIndex: 10,
+        position: "absolute", top: "38%", transform: "translateY(-50%)", zIndex: 300,
         background: "rgba(20,20,20,0.75)", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.12)",
-        color: "#fff", fontSize: 18, width: 38, height: 38, borderRadius: 19, cursor: "pointer",
+        color: "#fff", fontSize: 18, width: 52, height: 52, borderRadius: 26, cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "center",
       };
 
-      const center = scrollX / ITEM_W;
-      const renderList = [0, 1, 2].flatMap(lap =>
-        [...items.map((item, i) => ({ item, absIdx: lap * total + i })), { item: null, absIdx: lap * total + items.length }]
-      );
+      // Ventana chica de tarjetas alrededor de la posición actual -- ya no
+      // hace falta triplicar el catálogo entero como con el scroll nativo,
+      // el módulo resuelve el loop directo en cada índice.
+      const baseIdx = Math.round(pos);
+      const WINDOW = 6;
+      const slots = [];
+      for (let o = -WINDOW; o <= WINDOW; o++) {
+        const rawIdx = baseIdx + o;
+        const realIdx = ((rawIdx % total) + total) % total;
+        slots.push({ offset: o, item: sortedItems[realIdx], dist: rawIdx - pos });
+      }
 
       return (
-        <div style={{ position: "relative" }}>
+        <div>
+          {toolbar}
+          <div style={{ position: "relative" }}>
           <button onClick={() => step(-1)} style={{ ...arrowStyle, left: 6 }}>◀️</button>
           <button onClick={() => step(1)} style={{ ...arrowStyle, right: 6 }}>▶️</button>
-          <div ref={containerRef} onScroll={onScroll} style={{
-            display: "flex", overflowX: "auto", scrollSnapType: "x mandatory",
-            padding: `30px ${sidePad}px 40px`, alignItems: "center", perspective: 1000,
-          }}>
-            {renderList.map(({ item, absIdx }) => {
-              const dist = absIdx - center;
-              // Solo se renderiza el detalle si está cerca de lo visible --
-              // 3 vueltas completas de posters con srcs reales sería pesado.
-              if (Math.abs(dist) > 6) return <div key={absIdx} style={{ flexShrink: 0, width: CARD_W, marginRight: GAP }} />;
-              const rotate = Math.max(-55, Math.min(55, dist * 55));
+          <div
+            onPointerDown={onPointerDown} onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
+            style={{
+              position: "relative", height: 380, touchAction: "none", perspective: 2600, overflow: "hidden",
+              padding: "16px 0 12px", userSelect: "none", cursor: "grab",
+            }}>
+            {slots.map(({ offset, item, dist }) => {
+              const rotate = Math.max(-40, Math.min(40, dist * 40));
               const scale = 1 - Math.min(0.25, Math.abs(dist) * 0.15);
               const isCenter = Math.abs(dist) < 0.5;
-              if (!item) {
-                return (
-                  <div key={absIdx} style={{
-                    flexShrink: 0, width: CARD_W, marginRight: GAP, scrollSnapAlign: "center", display: "flex", flexDirection: "column",
-                    alignItems: "center", justifyContent: "center", aspectRatio: "2/3",
-                    border: "1px dashed #333", borderRadius: 8, padding: 12, textAlign: "center",
-                    transform: `rotateY(${-rotate}deg) scale(${scale})`, transformOrigin: "center center",
-                  }}>
-                    <div style={{ fontSize: 26, marginBottom: 8 }}>🔄</div>
-                    <div style={{ fontFamily: "'Caveat',cursive", fontSize: 17, color: "#999", lineHeight: 1.3 }}>eso es todo por ahora</div>
-                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 10 }}>
-                      {generatedAt ? `actualizado ${new Date(generatedAt).toLocaleString("es-CL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : ""}
-                    </div>
-                  </div>
-                );
-              }
+              // Resguardo extra sobre el GAP/ángulo ya corregidos: si igual
+              // queda algo de invasión visual por la rotación 3D, que no se
+              // note -- el texto de una tarjeta lateral no tiene que
+              // competir por lectura con el de la central de cualquier forma.
+              const textOpacity = Math.max(0.15, 1 - Math.abs(dist) * 0.5);
               const temporada = seasonLabel(item);
+              const estadoItem = cineEstado[item.guid];
+              const itemEstado = estadoItem?.estado || "sin_marca";
+              const descartada = itemEstado === "descartada";
+              const vista = itemEstado === "vista";
+              const interesa = itemEstado === "interesa";
+              const nuevo = itemEstado === "sin_marca" && esNuevo(item);
+              const restantes = diasRestantesCartelera(item);
+              const enProduccion = esEnProduccion(item);
+              const diasEstreno = enProduccion ? diasParaEstreno(item) : null;
+              const ratingVista = vista ? CINE_RATINGS.find(r => r.id === estadoItem.rating) : null;
+              const trending = esTrending(item);
               return (
-                <div key={absIdx} onClick={() => onOpen(item)} style={{
-                  flexShrink: 0, width: CARD_W, marginRight: GAP, scrollSnapAlign: "center", cursor: "pointer",
-                  transform: `rotateY(${-rotate}deg) scale(${scale})`, transformOrigin: "center center",
+                <div key={offset} onClick={() => onCardClick(item)} style={{
+                  position: "absolute", top: 16, left: "50%", width: CARD_W,
+                  marginLeft: -CARD_W / 2, cursor: "pointer",
+                  transform: `translateX(${dist * ITEM_W}px) rotateY(${-rotate}deg) scale(${scale})`,
+                  transformOrigin: "center center",
                   zIndex: Math.round(100 - Math.abs(dist) * 10),
                 }}>
                   <div style={{
-                    borderRadius: 8, overflow: "hidden",
-                    boxShadow: isCenter ? "0 12px 32px rgba(0,0,0,0.7), 0 0 0 2px rgba(255,255,255,0.15)" : "0 10px 30px rgba(0,0,0,0.6)",
+                    position: "relative", borderRadius: 8, overflow: "hidden",
+                    // "interesa" se marca con un anillo verde -- es el único
+                    // de los tres estados de decisión que no tenía ninguna
+                    // señal visual propia en el póster (descartada tiene la
+                    // franja, vista el ribbon; interesa se veía igual que
+                    // sin marcar).
+                    boxShadow: [
+                      isCenter ? "0 12px 32px rgba(0,0,0,0.7)" : "0 10px 30px rgba(0,0,0,0.6)",
+                      interesa ? "0 0 0 3px #2ecc71" : isCenter ? "0 0 0 2px rgba(255,255,255,0.15)" : null,
+                    ].filter(Boolean).join(", "),
                     transition: "box-shadow 0.15s",
                   }}>
                     {item.image
-                      ? <img src={item.image} alt="" style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block" }} onError={e => { e.target.style.display = "none"; }} />
+                      ? <img src={item.image} alt="" style={{
+                          width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block",
+                          filter: descartada ? "grayscale(1)" : "none",
+                        }} onError={e => { e.target.style.display = "none"; }} />
                       : <div style={{ width: "100%", aspectRatio: "2/3", background: "#1a1a1a" }} />
                     }
-                  </div>
-                  {item.image && (
-                    <div style={{ width: "100%", height: 42, overflow: "hidden", marginTop: 1 }}>
+                    {/* Franja diagonal — misma posición para "no me interesa"
+                        y para la etiqueta de reseña de "vista" (una u otra,
+                        nunca ambas a la vez para el mismo ítem). */}
+                    {descartada && (
                       <div style={{
-                        width: "100%", aspectRatio: "2/3",
-                        backgroundImage: `url(${item.image})`, backgroundSize: "cover", backgroundPosition: "center",
-                        transform: "scaleY(-1)", opacity: 0.2,
-                        maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 85%)",
-                        WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 85%)",
-                      }} />
-                    </div>
-                  )}
-                  <div style={{ fontFamily: "'Caveat',cursive", fontWeight: 700, fontSize: 18, color: "#fff", marginTop: 6, textAlign: "center", lineHeight: 1.15, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.title}</div>
+                        position: "absolute", top: 14, left: -34, width: 140, transform: "rotate(-45deg)",
+                        background: "#e74c3c", color: "#fff", textAlign: "center",
+                        fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
+                        padding: "3px 0", boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                      }}>NO ME INTERESA</div>
+                    )}
+                    {/* Ribbon de reseña ("vista") y badge "nuevo" comparten la
+                        misma esquina (arriba-derecha) -- son mutuamente
+                        excluyentes: nuevo solo aplica en sin_marca, y deja de
+                        aplicar apenas se marca vista, así que nunca compiten
+                        por el espacio al mismo tiempo. */}
+                    {vista && ratingVista && (
+                      <div style={{ position: "absolute", top: 6, right: 6, width: 34, height: 34, borderRadius: "50%", background: "#f5c518",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 18, boxShadow: "0 2px 6px rgba(0,0,0,0.5)" }}>
+                        {ratingVista.emoji}
+                      </div>
+                    )}
+                    {nuevo && (
+                      <div style={{
+                        position: "absolute", top: 6, right: 6, background: "#2ecc71", color: "#111",
+                        fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, padding: "3px 7px",
+                        borderRadius: 5, letterSpacing: 0.3,
+                      }}>NUEVO</div>
+                    )}
+                    {/* "Interesa" -- además del anillo verde del póster, un
+                        ícono explícito arriba-izquierda (mutuamente excluyente
+                        con la franja de "no me interesa" que va en ese mismo
+                        lugar) para que se distinga de un ítem sin marcar de
+                        un vistazo, no solo por el borde. */}
+                    {interesa && (
+                      <div style={{
+                        position: "absolute", top: 6, left: 6, width: 26, height: 26, borderRadius: "50%",
+                        background: "#2ecc71", display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 14, boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                      }}>👍</div>
+                    )}
+                    {/* Trending -- esquina inferior izquierda, para que el
+                        toggle "ocultar trending" tenga algo visible que
+                        confirme qué se está ocultando/mostrando. */}
+                    {trending && (
+                      <div style={{
+                        position: "absolute", bottom: 22, left: 6, width: 24, height: 24, borderRadius: "50%",
+                        background: "rgba(230,80,20,0.92)", display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 13, boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                      }}>🔥</div>
+                    )}
+                    {/* Franja inferior: cuenta regresiva al estreno si todavía
+                        no se estrenó, o días restantes en cartelera si ya
+                        se estrenó -- mutuamente excluyentes por definición
+                        (pubDate futura vs. pasada). */}
+                    {enProduccion && diasEstreno != null ? (
+                      <div style={{
+                        position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(52,152,219,0.9)", color: "#fff",
+                        fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, textAlign: "center", padding: "3px 0",
+                      }}>{diasEstreno > 0 ? `estrena en ${diasEstreno}d` : "estrena hoy"}</div>
+                    ) : restantes != null && (
+                      <div style={{
+                        position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(46,204,113,0.9)", color: "#111",
+                        fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, textAlign: "center", padding: "3px 0",
+                      }}>{restantes > 0 ? `${restantes}d en cartelera` : "sale hoy"}</div>
+                    )}
+                  </div>
+                  <div style={{ opacity: textOpacity }}>
+                  <div style={{ fontFamily: "'Caveat',cursive", fontWeight: 700, fontSize: 18, color: "#fff", marginTop: 6, textAlign: "center", lineHeight: 1.15, minHeight: 42, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.title}</div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 2 }}>
                     {(() => {
                       const score = item.rating?.imdb ?? item.rating?.tmdb ?? null;
@@ -663,20 +1056,44 @@
                       <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#999", borderLeft: "1px solid #444", paddingLeft: 6 }}>{temporada}</span>
                     )}
                   </div>
-                  {(() => {
-                    const badge = STATUS_BADGE[item.status];
-                    if (!badge) return null;
-                    return (
-                      <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, color: badge.color, textAlign: "center", marginTop: 2, letterSpacing: 0.3 }}>
-                        {badge.label}
-                        {item.status === "Returning Series" && item.nextEpisodeDate ? ` · ${item.nextEpisodeDate}` : ""}
-                      </div>
-                    );
-                  })()}
+                  {/* minHeight fijo -- antes esta fila desaparecía del todo
+                      cuando el ítem no tenía badge de estado, y eso corría
+                      verticalmente todo lo de abajo (el reflejo) respecto a
+                      las tarjetas vecinas que sí lo tenían. Sumado a que el
+                      título de arriba tampoco reservaba alto fijo entre 1 y
+                      2 líneas, las tarjetas de la fila terminaban con altos
+                      totales distintos y, con alignItems:"center", los
+                      pósters quedaban centrados en puntos verticales
+                      distintos entre sí -- eso era lo que se veía "corrido". */}
+                  <div style={{ minHeight: 13, marginTop: 2 }}>
+                    {(() => {
+                      const badge = STATUS_BADGE[item.status];
+                      if (!badge) return null;
+                      return (
+                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, color: badge.color, textAlign: "center", letterSpacing: 0.3 }}>
+                          {badge.label}
+                          {item.status === "Returning Series" && item.nextEpisodeDate ? ` · ${item.nextEpisodeDate}` : ""}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                  </div>
+                  {item.image && (
+                    <div style={{ width: "100%", height: 42, overflow: "hidden", marginTop: 4 }}>
+                      <div style={{
+                        width: "100%", aspectRatio: "2/3",
+                        backgroundImage: `url(${item.image})`, backgroundSize: "cover", backgroundPosition: "center",
+                        transform: "scaleY(-1)", opacity: 0.2,
+                        maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 85%)",
+                        WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 85%)",
+                      }} />
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
+        </div>
         </div>
       );
     }
@@ -951,7 +1368,7 @@
             ))}
           </div>
           {CINE_CATEGORIAS.includes(filterCat) && filtered.length > 0 ? (
-            <CineCoverFlow items={filtered} onOpen={onOpen} />
+            <CineCoverFlow items={filtered} onOpen={onOpen} categoria={filterCat} />
           ) : (
             <div style={{ flex: 1, overflowY: "auto", padding: "0 18px 30px" }}>
               {filtered.length === 0 && <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "40px 0" }}>vacío por ahora</div>}
@@ -1624,7 +2041,7 @@
             ? <MeleeFeed items={items} />
             : vitrinaCat === "Conciertos"
             ? <ConcertFeed items={items} />
-            : <CineCoverFlow items={items} onOpen={onOpen} generatedAt={generatedAt} />
+            : <CineCoverFlow items={items} onOpen={onOpen} generatedAt={generatedAt} categoria={vitrinaCat} />
           }
         </div>
       );
@@ -1824,14 +2241,15 @@
         setVitrinaOpenItem(list[(idx + 1) % list.length]);
       }
 
-      // "⬅️ categoría" dentro de Vitrina: cicla Películas → Series → Animación →
-      // Películas y abre el primer ítem de la nueva subcategoría.
-      function handleVitrinaChangeCategory() {
-        const idx = CINE_CATEGORIAS.indexOf(vitrinaCat);
-        const nextCat = CINE_CATEGORIAS[(idx + 1) % CINE_CATEGORIAS.length];
-        setVitrinaCat(nextCat);
-        const list = vitrinaData[nextCat] || [];
-        setVitrinaOpenItem(list[0] || null);
+      // "⬅️ anterior" dentro del detalle de Cine: retrocede en la misma lista
+      // de la subcategoría actual, espejo de "siguiente". El cambio de
+      // subcategoría (Películas/Series/Animación) ya tiene su propio selector
+      // en la cabecera de VitrinaView -- no hace falta duplicarlo acá.
+      function handleVitrinaPrev(item) {
+        const list = vitrinaData[vitrinaCat] || [];
+        const idx = list.findIndex(i => i.guid === item.guid);
+        if (idx === -1 || !list.length) { setVitrinaOpenItem(null); return; }
+        setVitrinaOpenItem(list[(idx - 1 + list.length) % list.length]);
       }
 
       async function handleExportImage(item) {
@@ -1867,7 +2285,7 @@
             <CineExtendedView item={vitrinaOpenItem} onBack={() => setVitrinaOpenItem(null)}
               onNext={() => handleVitrinaNext(vitrinaOpenItem)}
               onSave={() => handleVitrinaSave(vitrinaOpenItem)}
-              onChangeCategory={handleVitrinaChangeCategory} />
+              onChangeCategory={() => handleVitrinaPrev(vitrinaOpenItem)} />
             <ExitBtn/>
           </>
         );
