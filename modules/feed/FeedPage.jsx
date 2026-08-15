@@ -1759,15 +1759,19 @@
         // estructurado — se cae al título plano para no romper nada.
         return <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#ccc" }}>{item.title}</div>;
       }
+      // Etiqueta: seed del torneo si existe, si no SSBMRank (upset detectado
+      // sin seeding local confiable), si no ninguna -- nunca "[null]".
+      const etiquetaJugador = (j) => j.seed != null ? `[${j.seed}]` : j.ssbmrank != null ? `[SSBMRank #${j.ssbmrank}]` : "";
       return (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <PlayerAvatar src={g.foto} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#fff" }}>
-              {g.nombre} <span style={{ color: "#999", fontWeight: 400 }}>[{g.seed}]{g.pj ? ` · ${g.pj}` : ""}</span>
+              {g.nombre} <span style={{ color: "#999", fontWeight: 400 }}>{etiquetaJugador(g)}{g.pj ? ` · ${g.pj}` : ""}</span>
             </div>
             <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#777", marginTop: 2 }}>
-              venció a {p.nombre} [{p.seed}]{p.pj ? ` · ${p.pj}` : ""}
+              venció a {p.nombre} {etiquetaJugador(p)}{p.pj ? ` · ${p.pj}` : ""}
+              {item.viaSSBMRank && <span style={{ color: "#ff6600" }}> · vía SSBMRank</span>}
             </div>
           </div>
           <PlayerAvatar src={p.foto} size={30} />

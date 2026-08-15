@@ -23,6 +23,7 @@ import Parser from "rss-parser";
 
 const FEEDS_PATH = new URL("../feeds.json", import.meta.url);
 const OUTPUT_PATH = new URL("../data/feed.json", import.meta.url);
+const SSBMRANK_PATH = new URL("../data/ssbmrank.json", import.meta.url);
 
 const RETENTION_DAYS = 30;              // no guardar items más viejos que esto
 const MAX_NEW_EXTRACTIONS_PER_RUN = 60; // tope de extracciones nuevas por corrida
@@ -242,6 +243,42 @@ const VOD_KNOWN_CHANNELS = [
   { name: "Lucky 7s Melee", channelId: "UChVTbG58W1TpgoQZIDLyBqg" },
 ];
 
+// ---- SSBMRank: criterio de upset combinado (seed local + ranking mundial) ----
+//
+// El seed de un torneo lo pone el TO en base a lo que sabe de la escena local
+// -- en un regional chico eso puede no significar nada (o directamente faltar,
+// ver el `continue` de abajo en detectUpsets cuando initialSeedNum es null).
+// SSBMRank es un panel de votación externo y anual, no una API en vivo: se
+// carga una vez del JSON estático en data/ssbmrank.json (mantenimiento manual,
+// ver comentario en ese archivo). Sirve como señal independiente de qué tan
+// fuerte es un jugador *en términos absolutos*, sin depender del seeding local.
+const SSBMRANK_TOP_CUTOFF = 50; // un rankeado top 50 mundial perdiendo ya es noticia, sin importar seed
+let ssbmrankByTag = null;
+
+function normalizeTag(name) {
+  if (!name) return "";
+  // "C9 | Zain" / "C9|Zain" -> "Zain" -- gamertags en start.gg suelen traer
+  // el tag del sponsor pegado adelante, SSBMRank lista solo el nombre solo.
+  const sinSponsor = name.includes("|") ? name.split("|").pop() : name;
+  return sinSponsor.trim().toLowerCase();
+}
+
+async function loadSSBMRank() {
+  if (ssbmrankByTag) return ssbmrankByTag;
+  try {
+    const raw = JSON.parse(await readFile(SSBMRANK_PATH, "utf-8"));
+    ssbmrankByTag = new Map(raw.jugadores.map(j => [normalizeTag(j.tag), j.rank]));
+  } catch (e) {
+    console.warn(`⚠ No se pudo cargar ssbmrank.json (${e.message}) -- upsets se detectan solo por seed esta corrida.`);
+    ssbmrankByTag = new Map();
+  }
+  return ssbmrankByTag;
+}
+
+function ssbmrankOf(entrantName) {
+  return ssbmrankByTag?.get(normalizeTag(entrantName)) ?? null;
+}
+
 async function startggQuery(query, variables) {
   const res = await fetch(STARTGG_ENDPOINT, {
     method: "POST",
@@ -444,31 +481,59 @@ function detectUpsets(sets) {
   for (const set of sets) {
     if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
     const [a, b] = set.slots.map(s => s.entrant);
-    if (!a || !b || !a.initialSeedNum || !b.initialSeedNum) continue;
+    if (!a || !b) continue;
     const winner = a.id === set.winnerId ? a : b;
     const loser = a.id === set.winnerId ? b : a;
-    const seedDiff = loser.initialSeedNum - winner.initialSeedNum;
-    const top10Involved = winner.initialSeedNum <= TOP_SEED_CUTOFF || loser.initialSeedNum <= TOP_SEED_CUTOFF;
-    const bigUpset = seedDiff >= UPSET_SEED_DIFF_THRESHOLD;
-    if (top10Involved || bigUpset) {
-      out.push({
-        ronda: set.fullRoundText,
-        ganador: {
-          nombre: winner.name,
-          seed: winner.initialSeedNum,
-          pj: entrantCharacter(set.games, winner.id),
-          foto: entrantFace(winner),
-        },
-        perdedor: {
-          nombre: loser.name,
-          seed: loser.initialSeedNum,
-          pj: entrantCharacter(set.games, loser.id),
-          foto: entrantFace(loser),
-        },
-        esUpset: winner.initialSeedNum > loser.initialSeedNum,
-        seedDiff, // expuesto para el filtro de VOD_UPSET_SEED_DIFF_THRESHOLD en Fase 3b
-      });
+
+    const winnerRank = ssbmrankOf(winner.name);
+    const loserRank = ssbmrankOf(loser.name);
+
+    // Criterio 1 (existente): diferencia de seed local. Requiere que ambos
+    // tengan seed asignado -- en regionales chicos esto suele faltar.
+    let seedDiff = null, seedUpset = false, top10Involved = false;
+    if (a.initialSeedNum && b.initialSeedNum) {
+      seedDiff = loser.initialSeedNum - winner.initialSeedNum;
+      top10Involved = winner.initialSeedNum <= TOP_SEED_CUTOFF || loser.initialSeedNum <= TOP_SEED_CUTOFF;
+      seedUpset = seedDiff >= UPSET_SEED_DIFF_THRESHOLD;
     }
+
+    // Criterio 2 (SSBMRank): señal independiente del seeding del torneo.
+    // Upset si el perdedor está rankeado top 50 mundial y el ganador no está
+    // rankeado (o está rankeado bastante peor). No depende de que el TO haya
+    // seedeado bien -- por eso corre incluso cuando initialSeedNum falta.
+    let rankDiff = null, rankUpset = false;
+    if (loserRank != null && loserRank <= SSBMRANK_TOP_CUTOFF) {
+      if (winnerRank == null) {
+        rankUpset = true; // ganador ni siquiera está en el top 100 mundial
+      } else if (winnerRank > loserRank) {
+        rankDiff = winnerRank - loserRank;
+        rankUpset = true;
+      }
+    }
+
+    if (!seedUpset && !top10Involved && !rankUpset) continue;
+
+    out.push({
+      ronda: set.fullRoundText,
+      ganador: {
+        nombre: winner.name,
+        seed: winner.initialSeedNum ?? null,
+        ssbmrank: winnerRank,
+        pj: entrantCharacter(set.games, winner.id),
+        foto: entrantFace(winner),
+      },
+      perdedor: {
+        nombre: loser.name,
+        seed: loser.initialSeedNum ?? null,
+        ssbmrank: loserRank,
+        pj: entrantCharacter(set.games, loser.id),
+        foto: entrantFace(loser),
+      },
+      esUpset: seedUpset ? winner.initialSeedNum > loser.initialSeedNum : rankUpset,
+      seedDiff, // null si no había seed en ambos -- ver VOD_UPSET_SEED_DIFF_THRESHOLD en Fase 3b
+      rankDiff, // diferencia de puestos SSBMRank cuando aplica (null si el ganador no estaba rankeado)
+      viaSSBMRank: rankUpset && !seedUpset, // para distinguir en el título/summary qué criterio disparó esto
+    });
   }
   return out;
 }
@@ -589,19 +654,31 @@ function buildVodCandidateMatches(sets, top16PhaseId) {
   for (const set of sets) {
     if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
     const [a, b] = set.slots.map(s => s.entrant);
-    if (!a || !b || !a.initialSeedNum || !b.initialSeedNum) continue;
+    if (!a || !b) continue;
     const winner = a.id === set.winnerId ? a : b;
     const loser = a.id === set.winnerId ? b : a;
-    const seedDiff = loser.initialSeedNum - winner.initialSeedNum;
     const esTop16 = top16PhaseId != null && set.phaseGroup?.phase?.id === top16PhaseId;
-    const esBigUpset = seedDiff >= VOD_UPSET_SEED_DIFF_THRESHOLD;
-    if (!esTop16 && !esBigUpset) continue;
+
+    let esBigUpset = false;
+    if (a.initialSeedNum && b.initialSeedNum) {
+      const seedDiff = loser.initialSeedNum - winner.initialSeedNum;
+      esBigUpset = seedDiff >= VOD_UPSET_SEED_DIFF_THRESHOLD;
+    }
+    // Mismo criterio SSBMRank que detectUpsets: un top 50 mundial cayendo
+    // ante alguien sin ranking (o muy por debajo) es VOD-worthy sin importar
+    // si el torneo tenía seeding confiable.
+    const loserRank = ssbmrankOf(loser.name);
+    const winnerRank = ssbmrankOf(winner.name);
+    const esBigUpsetPorRank = loserRank != null && loserRank <= SSBMRANK_TOP_CUTOFF
+      && (winnerRank == null || winnerRank > loserRank);
+
+    if (!esTop16 && !esBigUpset && !esBigUpsetPorRank) continue;
     out.push({
       setId: set.id,
       ronda: set.fullRoundText,
-      ganador: { nombre: winner.name, seed: winner.initialSeedNum, pj: entrantCharacter(set.games, winner.id), foto: entrantFace(winner) },
-      perdedor: { nombre: loser.name, seed: loser.initialSeedNum, pj: entrantCharacter(set.games, loser.id), foto: entrantFace(loser) },
-      esUpset: winner.initialSeedNum > loser.initialSeedNum,
+      ganador: { nombre: winner.name, seed: winner.initialSeedNum ?? null, ssbmrank: winnerRank, pj: entrantCharacter(set.games, winner.id), foto: entrantFace(winner) },
+      perdedor: { nombre: loser.name, seed: loser.initialSeedNum ?? null, ssbmrank: loserRank, pj: entrantCharacter(set.games, loser.id), foto: entrantFace(loser) },
+      esUpset: (a.initialSeedNum && b.initialSeedNum) ? winner.initialSeedNum > loser.initialSeedNum : esBigUpsetPorRank,
       esTop16,
     });
   }
@@ -920,6 +997,8 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
     return { upsetItems: [], hypeItems: [], projectionItems: [], top16Items: [], top8Items: [], archiveItems: [], processedEventIds: previousProcessedEventIds, trackedTournaments: previousTrackedTournaments };
   }
 
+  await loadSSBMRank();
+
   let tournaments = [];
   try {
     const res = await fetch(MELEEMAJORS_URL);
@@ -1047,12 +1126,19 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
       const vod = state === "COMPLETED" ? await findVod(tournamentName, u.ganador.nombre, u.perdedor.nombre) : { videoId: null, startSeconds: 0 };
       const pjGanador = u.ganador.pj ? ` (${u.ganador.pj})` : "";
       const pjPerdedor = u.perdedor.pj ? ` (${u.perdedor.pj})` : "";
+      // Etiqueta: seed si el torneo lo tenía, si no SSBMRank, si no nada --
+      // evita el "[null]" cuando el upset se detectó solo por SSBMRank en un
+      // torneo sin seeding cerrado.
+      const etiqueta = (seed, rank) => seed != null ? `[seed ${seed}]` : rank != null ? `[SSBMRank #${rank}]` : "";
+      const etGanador = etiqueta(u.ganador.seed, u.ganador.ssbmrank);
+      const etPerdedor = etiqueta(u.perdedor.seed, u.perdedor.ssbmrank);
+      const notaSSBMRank = u.viaSSBMRank ? " (upset por SSBMRank, seeding local no lo reflejaba)" : "";
 
       upsetItems.push({
         guid,
-        title: `${u.ganador.nombre}${pjGanador} [${u.ganador.seed}] venció a ${u.perdedor.nombre}${pjPerdedor} [${u.perdedor.seed}]`,
+        title: `${u.ganador.nombre}${pjGanador}${etGanador ? ` ${etGanador}` : ""} venció a ${u.perdedor.nombre}${pjPerdedor}${etPerdedor ? ` ${etPerdedor}` : ""}`,
         link: t.bracketUrl,
-        summary: `${u.ronda} de ${tournamentName}.`,
+        summary: `${u.ronda} de ${tournamentName}.${notaSSBMRank}`,
         image: null,
         pubDate: eventInfo.startAt ? new Date(eventInfo.startAt * 1000).toISOString() : null,
         source: tournamentName,
@@ -1062,8 +1148,9 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
         videoId: vod.videoId,
         startSeconds: vod.startSeconds, // opcional — el prototipo lo ignora si no lo usa todavía
         esUpset: u.esUpset,
-        ganador: { nombre: u.ganador.nombre, seed: u.ganador.seed, pj: u.ganador.pj, foto: u.ganador.foto },
-        perdedor: { nombre: u.perdedor.nombre, seed: u.perdedor.seed, pj: u.perdedor.pj, foto: u.perdedor.foto },
+        viaSSBMRank: u.viaSSBMRank,
+        ganador: { nombre: u.ganador.nombre, seed: u.ganador.seed, ssbmrank: u.ganador.ssbmrank, pj: u.ganador.pj, foto: u.ganador.foto },
+        perdedor: { nombre: u.perdedor.nombre, seed: u.perdedor.seed, ssbmrank: u.perdedor.ssbmrank, pj: u.perdedor.pj, foto: u.perdedor.foto },
       });
     }
 
