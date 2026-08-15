@@ -6679,11 +6679,144 @@ ${item.link}`);
   function ReviewBlock({ label, review, color }) {
     return /* @__PURE__ */ React.createElement("div", { style: { background: "#151515", borderRadius: 10, padding: "10px 12px", marginBottom: 8, borderLeft: `2px solid ${color}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" } }, label), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color, fontWeight: 700 } }, review.rating, "/10")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 } }, review.text), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 6 } }, "\u2014 ", review.author));
   }
+  var CINE_ESTADO_KEY = "angst-cine-estado-v1";
+  var CINE_NUEVO_MS = 7 * 864e5;
+  var CINE_RATINGS = [
+    { id: "unwatchable", emoji: "\u{1F480}", label: "unwatchable" },
+    { id: "forgettable", emoji: "\u{1F610}", label: "forgettable" },
+    { id: "remarkable", emoji: "\u2728", label: "remarkable" },
+    { id: "outstanding", emoji: "\u{1F3C6}", label: "outstanding" }
+  ];
+  function loadCineEstado() {
+    try {
+      const raw = localStorage.getItem(CINE_ESTADO_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  var cineEstadoCache = loadCineEstado();
+  var cineEstadoListeners = /* @__PURE__ */ new Set();
+  function saveCineEstado(map) {
+    cineEstadoCache = map;
+    try {
+      localStorage.setItem(CINE_ESTADO_KEY, JSON.stringify(map));
+    } catch (e) {
+    }
+    cineEstadoListeners.forEach((fn) => fn(map));
+  }
+  function setCineItemEstado(guid, patch) {
+    const next = { ...cineEstadoCache };
+    if (patch === null) delete next[guid];
+    else next[guid] = { ...next[guid] || {}, ...patch };
+    saveCineEstado(next);
+  }
+  function useCineEstadoMap() {
+    const [map, setMap] = useState7(cineEstadoCache);
+    useEffect7(() => {
+      cineEstadoListeners.add(setMap);
+      return () => cineEstadoListeners.delete(setMap);
+    }, []);
+    return map;
+  }
+  function diasRestantesCartelera(item) {
+    if (!item.firstSeenAt) return null;
+    const RETENTION_MS = 30 * 864e5;
+    const elapsed = Date.now() - new Date(item.firstSeenAt).getTime();
+    return Math.max(0, Math.ceil((RETENTION_MS - elapsed) / 864e5));
+  }
+  function esNuevo(item) {
+    if (!item.firstSeenAt) return false;
+    return Date.now() - new Date(item.firstSeenAt).getTime() <= CINE_NUEVO_MS;
+  }
+  function esEstreno(item) {
+    if (!item.pubDate) return false;
+    const t = new Date(item.pubDate).getTime();
+    if (Date.now() < t) return false;
+    return Date.now() - t <= 30 * 864e5;
+  }
+  function esEnProduccion(item) {
+    if (!item.pubDate) return false;
+    return new Date(item.pubDate).getTime() > Date.now();
+  }
+  function diasParaEstreno(item) {
+    if (!item.pubDate) return null;
+    const dias = Math.ceil((new Date(item.pubDate).getTime() - Date.now()) / 864e5);
+    return dias >= 0 ? dias : null;
+  }
+  function esTrending(item) {
+    return !!item.trending;
+  }
+  function MiniReviewForm({ onSave, onCancel, inicial }) {
+    const [ratingId, setRatingId] = useState7(inicial?.rating || null);
+    const [nota, setNota] = useState7(inicial?.nota || "");
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" } }, CINE_RATINGS.map((r) => /* @__PURE__ */ React.createElement("button", { key: r.id, onClick: () => setRatingId(r.id), style: {
+      fontFamily: "'DM Sans',sans-serif",
+      fontSize: 11,
+      padding: "8px 10px",
+      borderRadius: 8,
+      border: "1px solid",
+      cursor: "pointer",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 3,
+      flex: 1,
+      background: ratingId === r.id ? "#fff" : "transparent",
+      color: ratingId === r.id ? "#111" : "#ccc",
+      borderColor: ratingId === r.id ? "#fff" : "#333"
+    } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20 } }, r.emoji), r.label))), /* @__PURE__ */ React.createElement(
+      "textarea",
+      {
+        value: nota,
+        onChange: (e) => setNota(e.target.value),
+        placeholder: "nota (opcional)",
+        style: {
+          width: "100%",
+          minHeight: 60,
+          background: "#1a1a1a",
+          border: "1px solid #333",
+          borderRadius: 8,
+          color: "#fff",
+          fontFamily: "'DM Sans',sans-serif",
+          fontSize: 13,
+          padding: 10,
+          resize: "vertical",
+          boxSizing: "border-box"
+        }
+      }
+    ), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: onCancel, style: { ...btnGhost, flex: 1 } }, "cancelar"), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        onClick: () => ratingId && onSave(ratingId, nota),
+        disabled: !ratingId,
+        style: { ...btnGhost, flex: 1, opacity: ratingId ? 1 : 0.4, background: ratingId ? "#fff" : "transparent", color: ratingId ? "#111" : void 0 }
+      },
+      "guardar rese\xF1a"
+    )));
+  }
   function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions, onExportImage }) {
+    const cineEstado = useCineEstadoMap();
+    const estadoItem = cineEstado[item.guid];
+    const estado = estadoItem?.estado || "sin_marca";
+    const [reviewOpen, setReviewOpen] = useState7(false);
+    function marcar(nuevoEstado) {
+      if (nuevoEstado === "interesa") {
+        setCineItemEstado(item.guid, { estado: "interesa", item });
+      } else if (nuevoEstado === "sin_marca") {
+        setCineItemEstado(item.guid, null);
+      } else {
+        setCineItemEstado(item.guid, { estado: nuevoEstado });
+      }
+    }
+    function guardarReview(ratingId, nota) {
+      setCineItemEstado(item.guid, { estado: "vista", rating: ratingId, nota: nota || "" });
+      setReviewOpen(false);
+    }
     const color = CAT_COLORS[item.categoria] || "#e91e8c";
     const leads = (item.cast || []).filter((c) => c.order < 4);
     const supporting = (item.cast || []).filter((c) => c.order >= 4);
-    return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#0d0d0d", display: "flex", flexDirection: "column", zIndex: 50 } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #1a1a1a" } }, /* @__PURE__ */ React.createElement("button", { onClick: onBack, style: { background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 } }, item.source), /* @__PURE__ */ React.createElement("a", { href: item.link, target: "_blank", rel: "noopener", style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", textDecoration: "none" } }, "fuente \u2197")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "18px 20px 30px" } }, item.image && /* @__PURE__ */ React.createElement("img", { src: item.image, alt: "", style: { width: 120, borderRadius: 10, float: "left", marginRight: 14, marginBottom: 10 }, onError: (e) => {
+    return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#0d0d0d", display: "flex", flexDirection: "column", zIndex: 50 } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #1a1a1a" } }, /* @__PURE__ */ React.createElement("button", { onClick: onBack, style: { background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 } }, item.source), /* @__PURE__ */ React.createElement("a", { href: item.link, target: "_blank", rel: "noopener", style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", textDecoration: "none" } }, "fuente \u2197")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", overscrollBehaviorY: "contain", padding: "18px 20px 30px" } }, item.image && /* @__PURE__ */ React.createElement("img", { src: item.image, alt: "", style: { width: 120, borderRadius: 10, float: "left", marginRight: 14, marginBottom: 10 }, onError: (e) => {
       e.target.style.display = "none";
     } }), /* @__PURE__ */ React.createElement(FormatoTag, { item }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", marginBottom: 8, lineHeight: 1.2 } }, item.title), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement(RatingBadges, { rating: item.rating, size: "lg" })), /* @__PURE__ */ React.createElement("div", { style: { clear: "both" } }), item.trailer && /* @__PURE__ */ React.createElement("div", { style: { margin: "16px 0", borderRadius: 10, overflow: "hidden", aspectRatio: "16/9" } }, /* @__PURE__ */ React.createElement(
       "iframe",
@@ -6694,141 +6827,345 @@ ${item.link}`);
         referrerPolicy: "strict-origin-when-cross-origin",
         allowFullScreen: true
       }
-    )), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, marginBottom: 18 } }, item.summary), leads.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 6 } }, "reparto principal"), leads.map((c, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.7)", marginBottom: 2 } }, /* @__PURE__ */ React.createElement("b", { style: { color: "#fff" } }, c.name), c.character ? ` \u2014 ${c.character}` : "")), supporting.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6 } }, supporting.map((c) => c.name).join(" \xB7 "))), item.reviews ? /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 } }, "rese\xF1as de usuario"), /* @__PURE__ */ React.createElement(ReviewBlock, { label: "mejor valorada", review: item.reviews.top, color }), item.reviews.bottom && /* @__PURE__ */ React.createElement(ReviewBlock, { label: "peor valorada", review: item.reviews.bottom, color })) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#666", fontStyle: "italic" } }, "sin rese\xF1as de usuario disponibles para este t\xEDtulo")), !hideActions && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "categor\xEDa"), /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareToWhatsApp(item), style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4E4}"), "compartir"), /* @__PURE__ */ React.createElement("button", { onClick: onNext, style: { ...btnGhost, background: color, color: "#111", borderColor: color } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente")), hideActions && onExportImage && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onExportImage(item), style: { ...btnGhost, background: color, color: "#111", borderColor: color, flex: "none", width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4F8}"), "exportar imagen para compartir")));
+    )), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, marginBottom: 18 } }, item.summary), !esEnProduccion(item) && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #1a1a1a" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 } }, "mi rese\xF1a"), estado === "vista" && !reviewOpen ? /* @__PURE__ */ React.createElement("div", { onClick: () => setReviewOpen(true), style: { cursor: "pointer" } }, (() => {
+      const r = CINE_RATINGS.find((r2) => r2.id === estadoItem.rating);
+      return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", marginBottom: 4 } }, r ? `${r.emoji} ${r.label}` : "sin calificar");
+    })(), estadoItem.nota && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", fontStyle: "italic" } }, '"', estadoItem.nota, '"'), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 4 } }, "tocar para editar")) : reviewOpen || estado !== "vista" ? reviewOpen && /* @__PURE__ */ React.createElement(MiniReviewForm, { onSave: guardarReview, onCancel: () => setReviewOpen(false), inicial: estadoItem }) : null, estado !== "vista" && !reviewOpen && /* @__PURE__ */ React.createElement("button", { onClick: () => setReviewOpen(true), style: { ...btnGhost, width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4DD}"), "marcar como vista")), leads.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 6 } }, "reparto principal"), leads.map((c, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.7)", marginBottom: 2 } }, /* @__PURE__ */ React.createElement("b", { style: { color: "#fff" } }, c.name), c.character ? ` \u2014 ${c.character}` : "")), supporting.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6 } }, supporting.map((c) => c.name).join(" \xB7 "))), item.reviews ? /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 } }, "rese\xF1as de usuario"), /* @__PURE__ */ React.createElement(ReviewBlock, { label: "mejor valorada", review: item.reviews.top, color }), item.reviews.bottom && /* @__PURE__ */ React.createElement(ReviewBlock, { label: "peor valorada", review: item.reviews.bottom, color })) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#666", fontStyle: "italic" } }, "sin rese\xF1as de usuario disponibles para este t\xEDtulo")), !hideActions && /* @__PURE__ */ React.createElement(React.Fragment, null, !reviewOpen && estado !== "vista" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px 4px", background: "#111" } }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        onClick: () => marcar(estado === "interesa" ? "sin_marca" : "interesa"),
+        style: { ...btnGhost, background: estado === "interesa" ? "#2ecc71" : "transparent", color: estado === "interesa" ? "#111" : void 0, borderColor: estado === "interesa" ? "#2ecc71" : void 0 }
+      },
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F44D}"),
+      "me interesa"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        onClick: () => marcar(estado === "descartada" ? "sin_marca" : "descartada"),
+        style: { ...btnGhost, background: estado === "descartada" ? "#e74c3c" : "transparent", color: estado === "descartada" ? "#111" : void 0, borderColor: estado === "descartada" ? "#e74c3c" : void 0 }
+      },
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F44E}"),
+      "no me interesa"
+    )), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "anterior"), /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareToWhatsApp(item), style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4E4}"), "compartir"), /* @__PURE__ */ React.createElement("button", { onClick: onNext, style: { ...btnGhost, background: color, color: "#111", borderColor: color } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente"))), hideActions && onExportImage && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onExportImage(item), style: { ...btnGhost, background: color, color: "#111", borderColor: color, flex: "none", width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4F8}"), "exportar imagen para compartir")));
   }
-  function CineCoverFlow({ items, onOpen, generatedAt }) {
-    const [scrollX, setScrollX] = useState7(0);
-    const [containerW, setContainerW] = useState7(0);
-    const containerRef = useRef7(null);
+  function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
     const CARD_W = 160;
-    const GAP = 8;
+    const GAP = 20;
     const ITEM_W = CARD_W + GAP;
-    useEffect7(() => {
-      function measure() {
-        if (containerRef.current) setContainerW(containerRef.current.clientWidth);
+    const [pos, setPos] = useState7(0);
+    const posRef = useRef7(0);
+    const dragRef = useRef7(null);
+    const animRef = useRef7(null);
+    function setPosBoth(v) {
+      posRef.current = v;
+      setPos(v);
+    }
+    function animateTo(target, ms = 260) {
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+      const start = posRef.current;
+      const t0 = performance.now();
+      function tick(now) {
+        const p = Math.min(1, (now - t0) / ms);
+        const eased = 1 - Math.pow(1 - p, 3);
+        setPosBoth(start + (target - start) * eased);
+        if (p < 1) animRef.current = requestAnimationFrame(tick);
+        else animRef.current = null;
       }
-      measure();
-      window.addEventListener("resize", measure);
-      return () => window.removeEventListener("resize", measure);
+      animRef.current = requestAnimationFrame(tick);
+    }
+    useEffect7(() => () => {
+      if (animRef.current) cancelAnimationFrame(animRef.current);
     }, []);
-    const sidePad = Math.max(8, containerW / 2 - CARD_W / 2);
-    const total = items.length + 1;
-    const lapWidth = total * ITEM_W;
-    useEffect7(() => {
-      if (containerRef.current && items.length) {
-        containerRef.current.scrollLeft = lapWidth;
-        setScrollX(lapWidth);
+    function onPointerDown(e) {
+      if (animRef.current) {
+        cancelAnimationFrame(animRef.current);
+        animRef.current = null;
       }
-    }, [items.length, lapWidth]);
-    function onScroll(e) {
-      const el = e.target;
-      let x = el.scrollLeft;
-      if (x < lapWidth * 0.5) {
-        el.scrollLeft = x + lapWidth;
-        x += lapWidth;
-      } else if (x > lapWidth * 1.5) {
-        el.scrollLeft = x - lapWidth;
-        x -= lapWidth;
-      }
-      setScrollX(x);
+      e.currentTarget.setPointerCapture?.(e.pointerId);
+      dragRef.current = { startX: e.clientX, startPos: posRef.current, moved: 0, pointerId: e.pointerId };
+    }
+    function onPointerMove(e) {
+      const d = dragRef.current;
+      if (!d) return;
+      const deltaPx = e.clientX - d.startX;
+      d.moved = Math.max(d.moved, Math.abs(deltaPx));
+      setPosBoth(d.startPos - deltaPx / ITEM_W);
+    }
+    function endDrag() {
+      const d = dragRef.current;
+      dragRef.current = null;
+      if (!d) return;
+      animateTo(Math.round(posRef.current));
+    }
+    function onCardClick(item) {
+      if (lastDragMoved.current > 6) return;
+      onOpen(item);
+    }
+    const lastDragMoved = useRef7(0);
+    function onPointerUp(e) {
+      lastDragMoved.current = dragRef.current?.moved || 0;
+      endDrag();
     }
     function step(dir) {
-      if (!items.length || !containerRef.current) return;
-      containerRef.current.scrollTo({ left: containerRef.current.scrollLeft + dir * ITEM_W, behavior: "smooth" });
+      animateTo(Math.round(posRef.current) + dir);
     }
-    if (!items.length) {
-      return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" } }, "nada por ac\xE1 todav\xEDa");
+    const cineEstado = useCineEstadoMap();
+    const exemptExtra = React.useMemo(() => Object.values(cineEstado).filter((e) => e.estado === "interesa" && e.item && (!categoria || e.item.categoria === categoria) && !items.some((it) => it.guid === e.item.guid)).map((e) => e.item), [cineEstado, items, categoria]);
+    const fullItems = exemptExtra.length ? [...items, ...exemptExtra] : items;
+    const [sortBy, setSortBy] = useState7("default");
+    const [ocultarDescartadas, setOcultarDescartadas] = useState7(true);
+    const [ocultarEstreno, setOcultarEstreno] = useState7(false);
+    const [ocultarProduccion, setOcultarProduccion] = useState7(false);
+    const [ocultarTrending, setOcultarTrending] = useState7(false);
+    const esPelicula = categoria === "Pel\xEDculas";
+    const sortedItems = React.useMemo(() => {
+      let arr = fullItems;
+      if (ocultarDescartadas) {
+        arr = arr.filter((it) => cineEstado[it.guid]?.estado !== "descartada");
+      }
+      if (esPelicula && ocultarEstreno) arr = arr.filter((it) => !esEstreno(it));
+      if (esPelicula && ocultarProduccion) arr = arr.filter((it) => !esEnProduccion(it));
+      if (esPelicula && ocultarTrending) arr = arr.filter((it) => !esTrending(it));
+      if (sortBy === "proxima") {
+        let diasHastaEstreno = function(it) {
+          if (esPelicula) return esEnProduccion(it) ? diasParaEstreno(it) : null;
+          if (!it.nextEpisodeDate) return null;
+          const dias = Math.ceil((new Date(it.nextEpisodeDate).getTime() - Date.now()) / 864e5);
+          return dias >= 0 ? dias : null;
+        };
+        arr = arr.filter((it) => diasHastaEstreno(it) != null);
+        arr.sort((a, b) => diasHastaEstreno(a) - diasHastaEstreno(b));
+      } else if (sortBy === "rating") {
+        const puntuadas = arr.filter((it) => (it.rating?.imdb ?? it.rating?.tmdb) != null);
+        const sinPuntuar = arr.filter((it) => (it.rating?.imdb ?? it.rating?.tmdb) == null);
+        puntuadas.sort((a, b) => (b.rating?.imdb ?? b.rating?.tmdb) - (a.rating?.imdb ?? a.rating?.tmdb));
+        arr = [...puntuadas, ...sinPuntuar];
+      }
+      return arr;
+    }, [fullItems, sortBy, ocultarDescartadas, ocultarEstreno, ocultarProduccion, ocultarTrending, esPelicula, cineEstado]);
+    const total = sortedItems.length;
+    useEffect7(() => {
+      setPosBoth(0);
+    }, [sortedItems.length, sortBy, ocultarDescartadas, ocultarEstreno, ocultarProduccion, ocultarTrending, categoria]);
+    const toolbarBtn = (active) => ({
+      fontFamily: "'DM Sans',sans-serif",
+      fontSize: 11,
+      padding: "5px 11px",
+      borderRadius: 20,
+      border: "1px solid",
+      cursor: "pointer",
+      whiteSpace: "nowrap",
+      background: active ? "#fff" : "transparent",
+      color: active ? "#111" : "#999",
+      borderColor: active ? "#fff" : "#333"
+    });
+    const toolbar = /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "0 12px 8px", justifyContent: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setSortBy(sortBy === "proxima" ? "default" : "proxima"), style: toolbarBtn(sortBy === "proxima") }, "\u{1F4C5} pr\xF3xima a salir"), /* @__PURE__ */ React.createElement("button", { onClick: () => setSortBy(sortBy === "rating" ? "default" : "rating"), style: toolbarBtn(sortBy === "rating") }, "\u2B50 rating"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarDescartadas((v) => !v), style: toolbarBtn(ocultarDescartadas) }, "\u{1F6AB} ocultar no me interesa"), esPelicula && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarEstreno((v) => !v), style: toolbarBtn(ocultarEstreno) }, "\u{1F3AC} ocultar estreno"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarProduccion((v) => !v), style: toolbarBtn(ocultarProduccion) }, "\u{1F3D7}\uFE0F ocultar producci\xF3n"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarTrending((v) => !v), style: toolbarBtn(ocultarTrending) }, "\u{1F525} ocultar trending")));
+    if (!sortedItems.length) {
+      return /* @__PURE__ */ React.createElement("div", null, toolbar, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" } }, "nada por ac\xE1 todav\xEDa"));
     }
     const arrowStyle = {
       position: "absolute",
       top: "38%",
       transform: "translateY(-50%)",
-      zIndex: 10,
+      zIndex: 300,
       background: "rgba(20,20,20,0.75)",
       backdropFilter: "blur(4px)",
       border: "1px solid rgba(255,255,255,0.12)",
       color: "#fff",
       fontSize: 18,
-      width: 38,
-      height: 38,
-      borderRadius: 19,
+      width: 52,
+      height: 52,
+      borderRadius: 26,
       cursor: "pointer",
       display: "flex",
       alignItems: "center",
       justifyContent: "center"
     };
-    const center = scrollX / ITEM_W;
-    const renderList = [0, 1, 2].flatMap(
-      (lap) => [...items.map((item, i) => ({ item, absIdx: lap * total + i })), { item: null, absIdx: lap * total + items.length }]
-    );
-    return /* @__PURE__ */ React.createElement("div", { style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => step(-1), style: { ...arrowStyle, left: 6 } }, "\u25C0\uFE0F"), /* @__PURE__ */ React.createElement("button", { onClick: () => step(1), style: { ...arrowStyle, right: 6 } }, "\u25B6\uFE0F"), /* @__PURE__ */ React.createElement("div", { ref: containerRef, onScroll, style: {
-      display: "flex",
-      overflowX: "auto",
-      scrollSnapType: "x mandatory",
-      padding: `30px ${sidePad}px 40px`,
-      alignItems: "center",
-      perspective: 1e3
-    } }, renderList.map(({ item, absIdx }) => {
-      const dist = absIdx - center;
-      if (Math.abs(dist) > 6) return /* @__PURE__ */ React.createElement("div", { key: absIdx, style: { flexShrink: 0, width: CARD_W, marginRight: GAP } });
-      const rotate = Math.max(-55, Math.min(55, dist * 55));
-      const scale = 1 - Math.min(0.25, Math.abs(dist) * 0.15);
-      const isCenter = Math.abs(dist) < 0.5;
-      if (!item) {
-        return /* @__PURE__ */ React.createElement("div", { key: absIdx, style: {
-          flexShrink: 0,
+    const baseIdx = Math.round(pos);
+    const WINDOW = 6;
+    const slots = [];
+    for (let o = -WINDOW; o <= WINDOW; o++) {
+      const rawIdx = baseIdx + o;
+      const realIdx = (rawIdx % total + total) % total;
+      slots.push({ offset: o, item: sortedItems[realIdx], dist: rawIdx - pos });
+    }
+    return /* @__PURE__ */ React.createElement("div", null, toolbar, /* @__PURE__ */ React.createElement("div", { style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => step(-1), style: { ...arrowStyle, left: 6 } }, "\u25C0\uFE0F"), /* @__PURE__ */ React.createElement("button", { onClick: () => step(1), style: { ...arrowStyle, right: 6 } }, "\u25B6\uFE0F"), /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        onPointerDown,
+        onPointerMove,
+        onPointerUp,
+        onPointerCancel: onPointerUp,
+        style: {
+          position: "relative",
+          height: 380,
+          touchAction: "none",
+          perspective: 2600,
+          overflow: "hidden",
+          padding: "16px 0 12px",
+          userSelect: "none",
+          cursor: "grab"
+        }
+      },
+      slots.map(({ offset, item, dist }) => {
+        const rotate = Math.max(-40, Math.min(40, dist * 40));
+        const scale = 1 - Math.min(0.25, Math.abs(dist) * 0.15);
+        const isCenter = Math.abs(dist) < 0.5;
+        const textOpacity = Math.max(0.15, 1 - Math.abs(dist) * 0.5);
+        const temporada = seasonLabel(item);
+        const estadoItem = cineEstado[item.guid];
+        const itemEstado = estadoItem?.estado || "sin_marca";
+        const descartada = itemEstado === "descartada";
+        const vista = itemEstado === "vista";
+        const interesa = itemEstado === "interesa";
+        const nuevo = itemEstado === "sin_marca" && esNuevo(item);
+        const restantes = diasRestantesCartelera(item);
+        const enProduccion = esEnProduccion(item);
+        const diasEstreno = enProduccion ? diasParaEstreno(item) : null;
+        const ratingVista = vista ? CINE_RATINGS.find((r) => r.id === estadoItem.rating) : null;
+        const trending = esTrending(item);
+        return /* @__PURE__ */ React.createElement("div", { key: offset, onClick: () => onCardClick(item), style: {
+          position: "absolute",
+          top: 16,
+          left: "50%",
           width: CARD_W,
-          marginRight: GAP,
-          scrollSnapAlign: "center",
+          marginLeft: -CARD_W / 2,
+          cursor: "pointer",
+          transform: `translateX(${dist * ITEM_W}px) rotateY(${-rotate}deg) scale(${scale})`,
+          transformOrigin: "center center",
+          zIndex: Math.round(100 - Math.abs(dist) * 10)
+        } }, /* @__PURE__ */ React.createElement("div", { style: {
+          position: "relative",
+          borderRadius: 8,
+          overflow: "hidden",
+          // "interesa" se marca con un anillo verde -- es el único
+          // de los tres estados de decisión que no tenía ninguna
+          // señal visual propia en el póster (descartada tiene la
+          // franja, vista el ribbon; interesa se veía igual que
+          // sin marcar).
+          boxShadow: [
+            isCenter ? "0 12px 32px rgba(0,0,0,0.7)" : "0 10px 30px rgba(0,0,0,0.6)",
+            interesa ? "0 0 0 3px #2ecc71" : isCenter ? "0 0 0 2px rgba(255,255,255,0.15)" : null
+          ].filter(Boolean).join(", "),
+          transition: "box-shadow 0.15s"
+        } }, item.image ? /* @__PURE__ */ React.createElement("img", { src: item.image, alt: "", style: {
+          width: "100%",
+          aspectRatio: "2/3",
+          objectFit: "cover",
+          display: "block",
+          filter: descartada ? "grayscale(1)" : "none"
+        }, onError: (e) => {
+          e.target.style.display = "none";
+        } }) : /* @__PURE__ */ React.createElement("div", { style: { width: "100%", aspectRatio: "2/3", background: "#1a1a1a" } }), descartada && /* @__PURE__ */ React.createElement("div", { style: {
+          position: "absolute",
+          top: 14,
+          left: -34,
+          width: 140,
+          transform: "rotate(-45deg)",
+          background: "#e74c3c",
+          color: "#fff",
+          textAlign: "center",
+          fontFamily: "'DM Sans',sans-serif",
+          fontSize: 10,
+          fontWeight: 700,
+          letterSpacing: 0.5,
+          padding: "3px 0",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.5)"
+        } }, "NO ME INTERESA"), vista && ratingVista && /* @__PURE__ */ React.createElement("div", { style: {
+          position: "absolute",
+          top: 6,
+          right: 6,
+          width: 34,
+          height: 34,
+          borderRadius: "50%",
+          background: "#f5c518",
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          aspectRatio: "2/3",
-          border: "1px dashed #333",
-          borderRadius: 8,
-          padding: 12,
+          fontSize: 18,
+          boxShadow: "0 2px 6px rgba(0,0,0,0.5)"
+        } }, ratingVista.emoji), nuevo && /* @__PURE__ */ React.createElement("div", { style: {
+          position: "absolute",
+          top: 6,
+          right: 6,
+          background: "#2ecc71",
+          color: "#111",
+          fontFamily: "'DM Sans',sans-serif",
+          fontSize: 9,
+          fontWeight: 700,
+          padding: "3px 7px",
+          borderRadius: 5,
+          letterSpacing: 0.3
+        } }, "NUEVO"), interesa && /* @__PURE__ */ React.createElement("div", { style: {
+          position: "absolute",
+          top: 6,
+          left: 6,
+          width: 26,
+          height: 26,
+          borderRadius: "50%",
+          background: "#2ecc71",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 14,
+          boxShadow: "0 2px 6px rgba(0,0,0,0.5)"
+        } }, "\u{1F44D}"), trending && /* @__PURE__ */ React.createElement("div", { style: {
+          position: "absolute",
+          bottom: 22,
+          left: 6,
+          width: 24,
+          height: 24,
+          borderRadius: "50%",
+          background: "rgba(230,80,20,0.92)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 13,
+          boxShadow: "0 2px 6px rgba(0,0,0,0.5)"
+        } }, "\u{1F525}"), enProduccion && diasEstreno != null ? /* @__PURE__ */ React.createElement("div", { style: {
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: "rgba(52,152,219,0.9)",
+          color: "#fff",
+          fontFamily: "'DM Sans',sans-serif",
+          fontSize: 10,
+          fontWeight: 700,
           textAlign: "center",
-          transform: `rotateY(${-rotate}deg) scale(${scale})`,
-          transformOrigin: "center center"
-        } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 26, marginBottom: 8 } }, "\u{1F504}"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, color: "#999", lineHeight: 1.3 } }, "eso es todo por ahora"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 10 } }, generatedAt ? `actualizado ${new Date(generatedAt).toLocaleString("es-CL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : ""));
-      }
-      const temporada = seasonLabel(item);
-      return /* @__PURE__ */ React.createElement("div", { key: absIdx, onClick: () => onOpen(item), style: {
-        flexShrink: 0,
-        width: CARD_W,
-        marginRight: GAP,
-        scrollSnapAlign: "center",
-        cursor: "pointer",
-        transform: `rotateY(${-rotate}deg) scale(${scale})`,
-        transformOrigin: "center center",
-        zIndex: Math.round(100 - Math.abs(dist) * 10)
-      } }, /* @__PURE__ */ React.createElement("div", { style: {
-        borderRadius: 8,
-        overflow: "hidden",
-        boxShadow: isCenter ? "0 12px 32px rgba(0,0,0,0.7), 0 0 0 2px rgba(255,255,255,0.15)" : "0 10px 30px rgba(0,0,0,0.6)",
-        transition: "box-shadow 0.15s"
-      } }, item.image ? /* @__PURE__ */ React.createElement("img", { src: item.image, alt: "", style: { width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block" }, onError: (e) => {
-        e.target.style.display = "none";
-      } }) : /* @__PURE__ */ React.createElement("div", { style: { width: "100%", aspectRatio: "2/3", background: "#1a1a1a" } })), item.image && /* @__PURE__ */ React.createElement("div", { style: { width: "100%", height: 42, overflow: "hidden", marginTop: 1 } }, /* @__PURE__ */ React.createElement("div", { style: {
-        width: "100%",
-        aspectRatio: "2/3",
-        backgroundImage: `url(${item.image})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        transform: "scaleY(-1)",
-        opacity: 0.2,
-        maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 85%)",
-        WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 85%)"
-      } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontWeight: 700, fontSize: 18, color: "#fff", marginTop: 6, textAlign: "center", lineHeight: 1.15, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } }, item.title), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 2 } }, (() => {
-        const score = item.rating?.imdb ?? item.rating?.tmdb ?? null;
-        return /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: score != null ? "#f5c518" : "#666" } }, score != null ? `\u2605 ${score.toFixed(1)}` : "TBD");
-      })(), temporada && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#999", borderLeft: "1px solid #444", paddingLeft: 6 } }, temporada)), (() => {
-        const badge = STATUS_BADGE[item.status];
-        if (!badge) return null;
-        return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, color: badge.color, textAlign: "center", marginTop: 2, letterSpacing: 0.3 } }, badge.label, item.status === "Returning Series" && item.nextEpisodeDate ? ` \xB7 ${item.nextEpisodeDate}` : "");
-      })());
-    })));
+          padding: "3px 0"
+        } }, diasEstreno > 0 ? `estrena en ${diasEstreno}d` : "estrena hoy") : restantes != null && /* @__PURE__ */ React.createElement("div", { style: {
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: "rgba(46,204,113,0.9)",
+          color: "#111",
+          fontFamily: "'DM Sans',sans-serif",
+          fontSize: 10,
+          fontWeight: 700,
+          textAlign: "center",
+          padding: "3px 0"
+        } }, restantes > 0 ? `${restantes}d en cartelera` : "sale hoy")), /* @__PURE__ */ React.createElement("div", { style: { opacity: textOpacity } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontWeight: 700, fontSize: 18, color: "#fff", marginTop: 6, textAlign: "center", lineHeight: 1.15, minHeight: 42, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } }, item.title), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 2 } }, (() => {
+          const score = item.rating?.imdb ?? item.rating?.tmdb ?? null;
+          return /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: score != null ? "#f5c518" : "#666" } }, score != null ? `\u2605 ${score.toFixed(1)}` : "TBD");
+        })(), temporada && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#999", borderLeft: "1px solid #444", paddingLeft: 6 } }, temporada)), /* @__PURE__ */ React.createElement("div", { style: { minHeight: 13, marginTop: 2 } }, (() => {
+          const badge = STATUS_BADGE[item.status];
+          if (!badge) return null;
+          return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, color: badge.color, textAlign: "center", letterSpacing: 0.3 } }, badge.label, item.status === "Returning Series" && item.nextEpisodeDate ? ` \xB7 ${item.nextEpisodeDate}` : "");
+        })())), item.image && /* @__PURE__ */ React.createElement("div", { style: { width: "100%", height: 42, overflow: "hidden", marginTop: 4 } }, /* @__PURE__ */ React.createElement("div", { style: {
+          width: "100%",
+          aspectRatio: "2/3",
+          backgroundImage: `url(${item.image})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          transform: "scaleY(-1)",
+          opacity: 0.2,
+          maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 85%)",
+          WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 85%)"
+        } })));
+      })
+    )));
   }
   function MusicStoryCard({ item, onSkip, onExpand, onSave, onChangeCategory, onShuffle, onOpenBuzon, onOpenDiag, hasDiag, onRefresh, canRefresh, refreshing, buzonCount }) {
     const color = CAT_COLORS[item.categoria] || "#7b4fd4";
@@ -6951,7 +7288,7 @@ ${item.link}`);
       background: filterCat === c ? CAT_COLORS[c] || "#fff" : "transparent",
       color: filterCat === c ? "#111" : "#999",
       borderColor: filterCat === c ? CAT_COLORS[c] || "#fff" : "#333"
-    } }, c))), CINE_CATEGORIAS.includes(filterCat) && filtered.length > 0 ? /* @__PURE__ */ React.createElement(CineCoverFlow, { items: filtered, onOpen }) : /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "0 18px 30px" } }, filtered.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "40px 0" } }, "vac\xEDo por ahora"), filtered.map((item) => /* @__PURE__ */ React.createElement("div", { key: item.guid, style: { display: "flex", gap: 10, padding: "10px 0", borderBottom: "1px solid #1a1a1a", alignItems: "center" } }, item.image && /* @__PURE__ */ React.createElement("img", { src: item.image, style: { width: 48, height: 48, borderRadius: 8, objectFit: "cover", flexShrink: 0 }, onError: (e) => {
+    } }, c))), CINE_CATEGORIAS.includes(filterCat) && filtered.length > 0 ? /* @__PURE__ */ React.createElement(CineCoverFlow, { items: filtered, onOpen, categoria: filterCat }) : /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "0 18px 30px" } }, filtered.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "40px 0" } }, "vac\xEDo por ahora"), filtered.map((item) => /* @__PURE__ */ React.createElement("div", { key: item.guid, style: { display: "flex", gap: 10, padding: "10px 0", borderBottom: "1px solid #1a1a1a", alignItems: "center" } }, item.image && /* @__PURE__ */ React.createElement("img", { src: item.image, style: { width: 48, height: 48, borderRadius: 8, objectFit: "cover", flexShrink: 0 }, onError: (e) => {
       e.target.style.display = "none";
     } }), /* @__PURE__ */ React.createElement("div", { onClick: () => onOpen(item), style: { flex: 1, minWidth: 0, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, item.title), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, item.source, " \xB7 ", item.categoria)), /* @__PURE__ */ React.createElement("button", { onClick: () => onRemove(item.guid), style: { background: "transparent", border: "none", color: "#444", fontSize: 16, cursor: "pointer" } }, "\xD7")))));
   }
@@ -7310,7 +7647,7 @@ ${item.link}`);
       color: active ? "#111" : "#999",
       borderColor: active ? CAT_COLORS[vitrinaCat] || "#e91e8c" : "#333"
     });
-    return /* @__PURE__ */ React.createElement("div", { style: { paddingBottom: 70, background: "#111", minHeight: "100vh" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 18px 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff" } }, "\u{1F3AC} vitrina audiovisual")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "12px 18px" } }, VITRINA_CATEGORIAS.map((cat) => /* @__PURE__ */ React.createElement("button", { key: cat, onClick: () => onChangeCat(cat), title: cat, style: segBtn(cat === vitrinaCat) }, VITRINA_ICONS[cat] || cat))), vitrinaCat === "Microdocumentales" ? /* @__PURE__ */ React.createElement(MicrodocFeed, { items }) : vitrinaCat === "Podcasts" ? /* @__PURE__ */ React.createElement(PodcastFeed, { items }) : vitrinaCat === "Melee" ? /* @__PURE__ */ React.createElement(MeleeFeed, { items }) : vitrinaCat === "Conciertos" ? /* @__PURE__ */ React.createElement(ConcertFeed, { items }) : /* @__PURE__ */ React.createElement(CineCoverFlow, { items, onOpen, generatedAt }));
+    return /* @__PURE__ */ React.createElement("div", { style: { paddingBottom: 70, background: "#111", minHeight: "100vh" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 18px 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff" } }, "\u{1F3AC} vitrina audiovisual")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "12px 18px" } }, VITRINA_CATEGORIAS.map((cat) => /* @__PURE__ */ React.createElement("button", { key: cat, onClick: () => onChangeCat(cat), title: cat, style: segBtn(cat === vitrinaCat) }, VITRINA_ICONS[cat] || cat))), vitrinaCat === "Microdocumentales" ? /* @__PURE__ */ React.createElement(MicrodocFeed, { items }) : vitrinaCat === "Podcasts" ? /* @__PURE__ */ React.createElement(PodcastFeed, { items }) : vitrinaCat === "Melee" ? /* @__PURE__ */ React.createElement(MeleeFeed, { items }) : vitrinaCat === "Conciertos" ? /* @__PURE__ */ React.createElement(ConcertFeed, { items }) : /* @__PURE__ */ React.createElement(CineCoverFlow, { items, onOpen, generatedAt, categoria: vitrinaCat }));
   }
   function FeedPage({ onExit }) {
     const ExitBtn = () => /* @__PURE__ */ React.createElement("button", { onClick: onExit, title: "Volver a Angst", style: { position: "fixed", top: "calc(10px + env(safe-area-inset-top))", right: 12, zIndex: 999, background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", borderRadius: 20, width: 34, height: 34, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, "\u2715");
@@ -7494,12 +7831,14 @@ ${item.link}`);
       }
       setVitrinaOpenItem(list[(idx + 1) % list.length]);
     }
-    function handleVitrinaChangeCategory() {
-      const idx = CINE_CATEGORIAS.indexOf(vitrinaCat);
-      const nextCat = CINE_CATEGORIAS[(idx + 1) % CINE_CATEGORIAS.length];
-      setVitrinaCat(nextCat);
-      const list = vitrinaData[nextCat] || [];
-      setVitrinaOpenItem(list[0] || null);
+    function handleVitrinaPrev(item) {
+      const list = vitrinaData[vitrinaCat] || [];
+      const idx = list.findIndex((i) => i.guid === item.guid);
+      if (idx === -1 || !list.length) {
+        setVitrinaOpenItem(null);
+        return;
+      }
+      setVitrinaOpenItem(list[(idx - 1 + list.length) % list.length]);
     }
     async function handleExportImage(item) {
       showToast("generando imagen\u2026");
@@ -7531,7 +7870,7 @@ ${item.link}`);
           onBack: () => setVitrinaOpenItem(null),
           onNext: () => handleVitrinaNext(vitrinaOpenItem),
           onSave: () => handleVitrinaSave(vitrinaOpenItem),
-          onChangeCategory: handleVitrinaChangeCategory
+          onChangeCategory: () => handleVitrinaPrev(vitrinaOpenItem)
         }
       ), /* @__PURE__ */ React.createElement(ExitBtn, null));
     }
@@ -8529,7 +8868,8 @@ ${item.link}`);
         feedState: readLocalJSON("angst-feed-proto-v1"),
         feedMicrodocsVistos: readLocalJSON("angst-feed-microdocs-vistos-v1"),
         feedPodcastsEscuchados: readLocalJSON("angst-feed-podcasts-escuchados-v1"),
-        feedConciertosVistos: readLocalJSON("angst-feed-conciertos-vistos-v1")
+        feedConciertosVistos: readLocalJSON("angst-feed-conciertos-vistos-v1"),
+        feedCineEstado: readLocalJSON("angst-cine-estado-v1")
       };
     }
     function readLocalJSON(key) {
@@ -8540,7 +8880,7 @@ ${item.link}`);
         return null;
       }
     }
-    const REQUIRED_EXPORT_FIELDS = ["dayData", "weekOffset", "budgets", "nutria", "calMarks", "cookingOpts", "aseoOpts", "routines", "recurring", "lastRollover", "kidsHealth", "custody", "fadimanData", "nutriLog", "ejercicioLog", "ejercicioDecks", "customFoods", "foodOverrides", "customEjercicios", "nutriDecks", "pokeInventario", "pokeCarpetas", "pokeDarkCatalogo", "pokePriceCache", "feedState", "feedMicrodocsVistos", "feedPodcastsEscuchados", "feedConciertosVistos"];
+    const REQUIRED_EXPORT_FIELDS = ["dayData", "weekOffset", "budgets", "nutria", "calMarks", "cookingOpts", "aseoOpts", "routines", "recurring", "lastRollover", "kidsHealth", "custody", "fadimanData", "nutriLog", "ejercicioLog", "ejercicioDecks", "customFoods", "foodOverrides", "customEjercicios", "nutriDecks", "pokeInventario", "pokeCarpetas", "pokeDarkCatalogo", "pokePriceCache", "feedState", "feedMicrodocsVistos", "feedPodcastsEscuchados", "feedConciertosVistos", "feedCineEstado"];
     function handleExport() {
       const fullPayload = buildExportPayload();
       const missing = REQUIRED_EXPORT_FIELDS.filter((k) => fullPayload[k] === void 0);
@@ -8677,6 +9017,12 @@ ${item.link}`);
       if (d.feedConciertosVistos != null) {
         try {
           localStorage.setItem("angst-feed-conciertos-vistos-v1", JSON.stringify(d.feedConciertosVistos));
+        } catch (e) {
+        }
+      }
+      if (d.feedCineEstado != null) {
+        try {
+          localStorage.setItem("angst-cine-estado-v1", JSON.stringify(d.feedCineEstado));
         } catch (e) {
         }
       }
