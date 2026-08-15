@@ -758,7 +758,11 @@
       function onPointerDown(e) {
         if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
         e.currentTarget.setPointerCapture?.(e.pointerId);
-        dragRef.current = { startX: e.clientX, startPos: posRef.current, moved: 0, pointerId: e.pointerId };
+        const tapEl = e.target.closest?.("[data-cine-tap]");
+        dragRef.current = {
+          startX: e.clientX, startPos: posRef.current, moved: 0,
+          tapOffset: tapEl ? Number(tapEl.dataset.cineTap) : null,
+        };
       }
       function onPointerMove(e) {
         const d = dragRef.current;
@@ -773,15 +777,21 @@
         if (!d) return;
         animateTo(Math.round(posRef.current));
       }
-      function onCardClick(item) {
-        // Si el gesto que acaba de terminar movió más de un puñado de px,
-        // fue arrastre, no toque -- no abrir el detalle.
-        if (lastDragMoved.current > 6) return;
-        onOpen(item);
-      }
-      const lastDragMoved = useRef(0);
+      // El tap se resuelve acá, no con onClick en cada tarjeta -- con
+      // setPointerCapture + touchAction:none activos, el click sintético
+      // que dispara el navegador después de un toque en pantallas táctiles
+      // no es confiable (dejó de abrir el detalle en la versión final).
+      // Guardamos qué tarjeta (por offset) se tocó al bajar el dedo, y si
+      // el gesto no se movió más de un puñado de px, la abrimos acá.
       function onPointerUp(e) {
-        lastDragMoved.current = dragRef.current?.moved || 0;
+        const d = dragRef.current;
+        const moved = d?.moved || 0;
+        if (d && moved <= 6 && d.tapOffset != null) {
+          const rawIdx = Math.round(d.startPos) + d.tapOffset;
+          const realIdx = ((rawIdx % total) + total) % total;
+          const item = sortedItems[realIdx];
+          if (item) onOpen(item);
+        }
         endDrag();
       }
 
@@ -946,7 +956,7 @@
               const ratingVista = vista ? CINE_RATINGS.find(r => r.id === estadoItem.rating) : null;
               const trending = esTrending(item);
               return (
-                <div key={offset} onClick={() => onCardClick(item)} style={{
+                <div key={offset} data-cine-tap={offset} style={{
                   position: "absolute", top: 16, left: "50%", width: CARD_W,
                   marginLeft: -CARD_W / 2, cursor: "pointer",
                   transform: `translateX(${dist * ITEM_W}px) rotateY(${-rotate}deg) scale(${scale})`,

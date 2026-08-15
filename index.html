@@ -6882,7 +6882,13 @@ ${item.link}`);
         animRef.current = null;
       }
       e.currentTarget.setPointerCapture?.(e.pointerId);
-      dragRef.current = { startX: e.clientX, startPos: posRef.current, moved: 0, pointerId: e.pointerId };
+      const tapEl = e.target.closest?.("[data-cine-tap]");
+      dragRef.current = {
+        startX: e.clientX,
+        startPos: posRef.current,
+        moved: 0,
+        tapOffset: tapEl ? Number(tapEl.dataset.cineTap) : null
+      };
     }
     function onPointerMove(e) {
       const d = dragRef.current;
@@ -6897,13 +6903,15 @@ ${item.link}`);
       if (!d) return;
       animateTo(Math.round(posRef.current));
     }
-    function onCardClick(item) {
-      if (lastDragMoved.current > 6) return;
-      onOpen(item);
-    }
-    const lastDragMoved = useRef7(0);
     function onPointerUp(e) {
-      lastDragMoved.current = dragRef.current?.moved || 0;
+      const d = dragRef.current;
+      const moved = d?.moved || 0;
+      if (d && moved <= 6 && d.tapOffset != null) {
+        const rawIdx = Math.round(d.startPos) + d.tapOffset;
+        const realIdx = (rawIdx % total + total) % total;
+        const item = sortedItems[realIdx];
+        if (item) onOpen(item);
+      }
       endDrag();
     }
     function step(dir) {
@@ -7024,7 +7032,7 @@ ${item.link}`);
         const diasEstreno = enProduccion ? diasParaEstreno(item) : null;
         const ratingVista = vista ? CINE_RATINGS.find((r) => r.id === estadoItem.rating) : null;
         const trending = esTrending(item);
-        return /* @__PURE__ */ React.createElement("div", { key: offset, onClick: () => onCardClick(item), style: {
+        return /* @__PURE__ */ React.createElement("div", { key: offset, "data-cine-tap": offset, style: {
           position: "absolute",
           top: 16,
           left: "50%",
