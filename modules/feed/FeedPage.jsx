@@ -829,20 +829,26 @@
         if (esPelicula && ocultarProduccion) arr = arr.filter(it => !esEnProduccion(it));
         if (esPelicula && ocultarTrending) arr = arr.filter(it => !esTrending(it));
         if (sortBy === "proxima") {
-          arr = [...arr].sort((a, b) => {
-            const da = diasRestantesCartelera(a), db = diasRestantesCartelera(b);
-            if (da == null && db == null) return 0;
-            if (da == null) return 1;
-            if (db == null) return -1;
-            return da - db;
-          });
+          // "Próxima a salir" = solo lo que todavía no se estrenó (peli) o
+          // cuya próxima temporada todavía no se estrenó (serie/anime) --
+          // antes ordenaba TODO el catálogo por días-restantes-en-cartelera,
+          // que es otra cosa (cuánto le queda antes de salir de cartelera,
+          // no cuándo entra).
+          function diasHastaEstreno(it) {
+            if (esPelicula) return esEnProduccion(it) ? diasParaEstreno(it) : null;
+            if (!it.nextEpisodeDate) return null;
+            const dias = Math.ceil((new Date(it.nextEpisodeDate).getTime() - Date.now()) / 86400000);
+            return dias >= 0 ? dias : null;
+          }
+          arr = arr.filter(it => diasHastaEstreno(it) != null);
+          arr.sort((a, b) => diasHastaEstreno(a) - diasHastaEstreno(b));
         } else if (sortBy === "rating") {
-          // De peor a mejor puntuada, y recién después las sin puntuar
+          // De mejor a peor puntuada, y recién después las sin puntuar
           // (las que quedaron en "me interesa" sin crítica externa todavía)
           // -- no mezcladas entre las puntuadas.
           const puntuadas = arr.filter(it => (it.rating?.imdb ?? it.rating?.tmdb) != null);
           const sinPuntuar = arr.filter(it => (it.rating?.imdb ?? it.rating?.tmdb) == null);
-          puntuadas.sort((a, b) => (a.rating?.imdb ?? a.rating?.tmdb) - (b.rating?.imdb ?? b.rating?.tmdb));
+          puntuadas.sort((a, b) => (b.rating?.imdb ?? b.rating?.tmdb) - (a.rating?.imdb ?? a.rating?.tmdb));
           arr = [...puntuadas, ...sinPuntuar];
         }
         return arr;
@@ -915,8 +921,8 @@
             onPointerDown={onPointerDown} onPointerMove={onPointerMove}
             onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
             style={{
-              position: "relative", height: 400, touchAction: "pan-y", perspective: 2600, overflow: "hidden",
-              padding: "30px 0 40px", userSelect: "none", cursor: "grab",
+              position: "relative", height: 380, touchAction: "none", perspective: 2600, overflow: "hidden",
+              padding: "16px 0 12px", userSelect: "none", cursor: "grab",
             }}>
             {slots.map(({ offset, item, dist }) => {
               const rotate = Math.max(-40, Math.min(40, dist * 40));
@@ -938,9 +944,10 @@
               const enProduccion = esEnProduccion(item);
               const diasEstreno = enProduccion ? diasParaEstreno(item) : null;
               const ratingVista = vista ? CINE_RATINGS.find(r => r.id === estadoItem.rating) : null;
+              const trending = esTrending(item);
               return (
                 <div key={offset} onClick={() => onCardClick(item)} style={{
-                  position: "absolute", top: 30, left: "50%", width: CARD_W,
+                  position: "absolute", top: 16, left: "50%", width: CARD_W,
                   marginLeft: -CARD_W / 2, cursor: "pointer",
                   transform: `translateX(${dist * ITEM_W}px) rotateY(${-rotate}deg) scale(${scale})`,
                   transformOrigin: "center center",
@@ -995,6 +1002,28 @@
                         fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, padding: "3px 7px",
                         borderRadius: 5, letterSpacing: 0.3,
                       }}>NUEVO</div>
+                    )}
+                    {/* "Interesa" -- además del anillo verde del póster, un
+                        ícono explícito arriba-izquierda (mutuamente excluyente
+                        con la franja de "no me interesa" que va en ese mismo
+                        lugar) para que se distinga de un ítem sin marcar de
+                        un vistazo, no solo por el borde. */}
+                    {interesa && (
+                      <div style={{
+                        position: "absolute", top: 6, left: 6, width: 26, height: 26, borderRadius: "50%",
+                        background: "#2ecc71", display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 14, boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                      }}>👍</div>
+                    )}
+                    {/* Trending -- esquina inferior izquierda, para que el
+                        toggle "ocultar trending" tenga algo visible que
+                        confirme qué se está ocultando/mostrando. */}
+                    {trending && (
+                      <div style={{
+                        position: "absolute", bottom: 22, left: 6, width: 24, height: 24, borderRadius: "50%",
+                        background: "rgba(230,80,20,0.92)", display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 13, boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                      }}>🔥</div>
                     )}
                     {/* Franja inferior: cuenta regresiva al estreno si todavía
                         no se estrenó, o días restantes en cartelera si ya
