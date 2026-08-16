@@ -279,50 +279,55 @@ function ssbmrankOf(entrantName) {
   return ssbmrankByTag?.get(normalizeTag(entrantName)) ?? null;
 }
 
-// ── Fase 2a: reporte de seeds en curso ──────────────────────────────────
-//
-// Esto es lo que reemplaza al "quién le ganó a quién" genérico una vez que
-// arranca el torneo. La pregunta real no es "qué sets se jugaron" sino "¿los
-// 32 mejores seedeados siguen sosteniendo su seed o ya cayeron?" -- que es la
-// misma lista de Destacados que se mostraba en Fase 1 (hype), pero ahora con
-// estado.
-//
-// Elegibilidad: un set cuenta como derrota de X si X perdió (winnerId !=
-// X.id) en cualquier fase del evento -- no distingue winners/losers bracket
-// porque fetchCompletedSets no trae bracketType por set, así que "eliminado"
-// acá es "tiene al menos una derrota registrada". En doble eliminación eso
-// sub-cuenta eliminaciones reales (hace falta 2 derrotas), pero como señal
-// de "¿le está costando sostener el seed?" ya es información útil, y evita
-// inventar lógica de bracket que no se puede validar sin datos reales.
+// Elegibilidad de "eliminado": doble eliminación real, no "al menos una
+// derrota". Se cuentan derrotas SOLO en phaseGroups de bracketType
+// SINGLE_ELIMINATION o DOUBLE_ELIMINATION -- una derrota en ROUND_ROBIN o
+// SWISS (fases de pools, comunes antes del bracket final) no elimina a
+// nadie, solo afecta el seeding hacia la siguiente fase, así que esas se
+// ignoran a propósito. Umbral: 1 derrota en SINGLE_ELIMINATION, 2 en
+// DOUBLE_ELIMINATION (la segunda caída es la que saca del bracket).
 function buildSeedReportItem(slug, tournamentName, bracketUrl, top32Entrants, sets, liveInfo) {
   if (!top32Entrants.length) return null;
 
-  // Última derrota registrada de cada entrant (si tiene más de una, la más
-  // reciente es la que probablemente lo sacó del bracket).
-  const derrotaPorEntrant = new Map();
+  // Por entrant: lista de derrotas "que cuentan" (fuera de pools), en orden
+  // de aparición en `sets` (que viene sortType: RECENT, o sea más reciente
+  // primero) -- la primera de la lista es la derrota más reciente.
+  const derrotasPorEntrant = new Map();
   for (const set of sets) {
     if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
+    const bracketType = set.phaseGroup?.bracketType;
+    if (bracketType !== "SINGLE_ELIMINATION" && bracketType !== "DOUBLE_ELIMINATION") continue; // pools no eliminan
     const [a, b] = set.slots.map(s => s.entrant);
     if (!a || !b) continue;
     const winner = a.id === set.winnerId ? a : b;
     const loser = a.id === set.winnerId ? b : a;
-    derrotaPorEntrant.set(loser.id, { rival: winner, ronda: set.fullRoundText, set });
+    const umbral = bracketType === "SINGLE_ELIMINATION" ? 1 : 2;
+    const lista = derrotasPorEntrant.get(loser.id) || [];
+    lista.push({ rival: winner, ronda: set.fullRoundText, umbral });
+    derrotasPorEntrant.set(loser.id, lista);
   }
 
   const jugadores = top32Entrants.map(e => {
-    const derrota = derrotaPorEntrant.get(e.id);
-    const rivalRank = derrota ? ssbmrankOf(derrota.rival.name) : null;
-    const cayoAnteMenorSeed = derrota && derrota.rival.initialSeedNum != null
-      ? derrota.rival.initialSeedNum > e.initialSeedNum
-      : derrota && rivalRank == null; // sin seed del rival, pero tampoco rankeado -> asumible que es sorpresa
+    const derrotas = derrotasPorEntrant.get(e.id) || [];
+    // Umbral del bracket en el que está: si tiene alguna derrota, todas
+    // deberían compartir el mismo bracketType (un entrant no cambia de
+    // SE a DE a mitad de evento en la práctica), así que basta mirar la
+    // primera.
+    const eliminado = derrotas.length > 0 && derrotas.length >= derrotas[0].umbral;
+    const ultimaDerrota = derrotas[0] ?? null; // sets viene RECENT-first
+    const rivalRank = ultimaDerrota ? ssbmrankOf(ultimaDerrota.rival.name) : null;
+    const cayoAnteMenorSeed = ultimaDerrota && ultimaDerrota.rival.initialSeedNum != null
+      ? ultimaDerrota.rival.initialSeedNum > e.initialSeedNum
+      : ultimaDerrota && rivalRank == null;
     return {
       nombre: e.name,
       seed: e.initialSeedNum,
       foto: entrantFace(e),
-      sostiene: !derrota,
-      eliminadoPor: derrota ? { nombre: derrota.rival.name, seed: derrota.rival.initialSeedNum ?? null, ssbmrank: rivalRank } : null,
-      ronda: derrota?.ronda ?? null,
-      esUpset: derrota ? !!cayoAnteMenorSeed : false,
+      sostiene: !eliminado,
+      derrotas: derrotas.length, // 0, o 1 de 2 si va perdiendo en losers pero sigue vivo
+      eliminadoPor: eliminado && ultimaDerrota ? { nombre: ultimaDerrota.rival.name, seed: ultimaDerrota.rival.initialSeedNum ?? null, ssbmrank: rivalRank } : null,
+      ronda: eliminado ? ultimaDerrota?.ronda ?? null : null,
+      esUpset: eliminado ? !!cayoAnteMenorSeed : false,
     };
   });
 
@@ -506,7 +511,7 @@ async function fetchCompletedSets(eventId) {
           sets(perPage:$perPage, page:$page, sortType: RECENT){
             nodes{
               id fullRoundText winnerId
-              phaseGroup{ phase{ id name } }
+              phaseGroup{ bracketType phase{ id name } }
               slots{
                 entrant{
                   id name initialSeedNum

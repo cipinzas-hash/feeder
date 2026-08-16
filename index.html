@@ -7635,7 +7635,12 @@ ${item.link}`);
         fontSize: 12,
         color: j.sostiene ? "#ddd" : "#777",
         textDecoration: j.sostiene ? "none" : "line-through"
-      } }, /* @__PURE__ */ React.createElement("span", { style: { color: j.sostiene ? "#ff6600" : "#666", fontWeight: 700, textDecoration: "none" } }, "[", j.seed, "]"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, j.nombre), !j.sostiene && /* @__PURE__ */ React.createElement("span", { style: { color: j.esUpset ? "#ff6600" : "#666", fontSize: 10, textDecoration: "none", flexShrink: 0 } }, j.esUpset ? "\u26A1" : "\u2715", " vs ", j.eliminadoPor?.nombre))))), upsets.length > 0 && /* @__PURE__ */ React.createElement("div", null, archivo || top16 || top8 || seedReport ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 } }, "UPSETS") : null, (() => {
+      } }, /* @__PURE__ */ React.createElement("span", { style: { color: j.sostiene ? "#ff6600" : "#666", fontWeight: 700, textDecoration: "none" } }, "[", j.seed, "]"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, j.nombre), !j.sostiene ? /* @__PURE__ */ React.createElement("span", { style: { color: j.esUpset ? "#ff6600" : "#666", fontSize: 10, textDecoration: "none", flexShrink: 0 } }, j.esUpset ? "\u26A1" : "\u2715", " vs ", j.eliminadoPor?.nombre) : j.derrotas > 0 ? (
+        // Sigue vivo pero ya perdió una en el bracket (va en
+        // losers) -- distinto de "sigue limpio", vale la pena
+        // marcarlo sin tratarlo como eliminado.
+        /* @__PURE__ */ React.createElement("span", { style: { color: "#888", fontSize: 10, textDecoration: "none", flexShrink: 0 } }, "en losers")
+      ) : null)))), upsets.length > 0 && /* @__PURE__ */ React.createElement("div", null, archivo || top16 || top8 || seedReport ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 } }, "UPSETS") : null, (() => {
         const chileDayKey = (iso) => iso ? new Date(iso).toLocaleDateString("sv-SE", { timeZone: "America/Santiago" }) : "0000-00-00";
         const chileDayLabel = (iso) => {
           if (!iso) return "sin fecha";

@@ -1982,11 +1982,18 @@
                             }}>
                               <span style={{ color: j.sostiene ? "#ff6600" : "#666", fontWeight: 700, textDecoration: "none" }}>[{j.seed}]</span>
                               <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{j.nombre}</span>
-                              {!j.sostiene && (
+                              {!j.sostiene ? (
                                 <span style={{ color: j.esUpset ? "#ff6600" : "#666", fontSize: 10, textDecoration: "none", flexShrink: 0 }}>
                                   {j.esUpset ? "⚡" : "✕"} vs {j.eliminadoPor?.nombre}
                                 </span>
-                              )}
+                              ) : j.derrotas > 0 ? (
+                                // Sigue vivo pero ya perdió una en el bracket (va en
+                                // losers) -- distinto de "sigue limpio", vale la pena
+                                // marcarlo sin tratarlo como eliminado.
+                                <span style={{ color: "#888", fontSize: 10, textDecoration: "none", flexShrink: 0 }}>
+                                  en losers
+                                </span>
+                              ) : null}
                             </div>
                           ))}
                         </div>
