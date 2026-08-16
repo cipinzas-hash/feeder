@@ -500,11 +500,19 @@ async function fetchLiveInfo(t) {
 // Todos los sets jugados del evento -- pagina completo (no solo los últimos
 // 60) porque el reporte de seeds (Fase 2a) necesita el historial completo de
 // cada uno de los top 32 para saber si siguen en pie, no solo lo más reciente.
+// Todos los sets jugados del evento -- pagina bastante más que antes (era
+// solo perPage 60/page 1) porque el reporte de seeds (Fase 2a) necesita
+// historial, no solo lo último. Tope de 8 páginas (480 sets): la primera
+// versión de esto paginaba sin tope (hasta 20 páginas) y en un major real
+// (CEO 2026, cientos de entrants) el pipeline completo se pasó del timeout
+// de 20 min del workflow y el run se canceló sin commitear nada -- 480
+// alcanza para trackear el top 32 en la inmensa mayoría de brackets sin
+// volver a reventar el timeout.
 async function fetchCompletedSets(eventId) {
   const perPage = 60;
   let page = 1;
   let all = [];
-  while (page <= 20) { // salvaguarda: 1200 sets tope, cubre cualquier major
+  while (page <= 8) {
     const query = `
       query($eventId: ID!, $page: Int!, $perPage: Int!){
         event(id:$eventId){
