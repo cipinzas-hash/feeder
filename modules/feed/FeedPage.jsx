@@ -1828,12 +1828,13 @@
             const top8 = grupo.find(i => i.esTop8Preview);
             const hype = grupo.find(i => i.esHype);
             const proyeccion = grupo.find(i => i.esProyeccion);
-            const upsets = grupo.filter(i => !i.esArchivo && !i.esTop16Preview && !i.esTop8Preview && !i.esHype && !i.esProyeccion);
+            const seedReport = grupo.find(i => i.esSeedReport);
+            const upsets = grupo.filter(i => !i.esArchivo && !i.esTop16Preview && !i.esTop8Preview && !i.esHype && !i.esProyeccion && !i.esSeedReport);
             const open = openTournament === nombre;
-            const estado = archivo ? "finalizado" : top8 ? "en Top 8" : top16 ? "en Top 16" : (upsets.length ? "en curso" : "próximamente");
+            const estado = archivo ? "finalizado" : top8 ? "en Top 8" : top16 ? "en Top 16" : (seedReport ? "en curso" : (upsets.length ? "en curso" : "próximamente"));
             // Hora Chile del Top 8 + link de stream: puede venir de hype (pre-torneo)
-            // o de top16/top8 (torneo en curso) — el que esté disponible primero.
-            const liveInfo = top8 || top16 || hype;
+            // o de top16/top8/seedReport (torneo en curso) — el que esté disponible primero.
+            const liveInfo = top8 || top16 || seedReport || hype;
             return (
               <div key={nombre} style={{ marginBottom: 10, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, overflow: "hidden" }}>
                 <button onClick={() => setOpenTournament(open ? null : nombre)} style={{
@@ -1966,9 +1967,34 @@
                         </div>
                       </div>
                     )}
+                    {seedReport && !archivo && (
+                      <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 6 }}>
+                          REPORTE DE SEEDS · {seedReport.summary}
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px" }}>
+                          {seedReport.jugadores.map(j => (
+                            <div key={j.seed} style={{
+                              display: "flex", alignItems: "center", gap: 6,
+                              fontFamily: "'DM Sans',sans-serif", fontSize: 12,
+                              color: j.sostiene ? "#ddd" : "#777",
+                              textDecoration: j.sostiene ? "none" : "line-through",
+                            }}>
+                              <span style={{ color: j.sostiene ? "#ff6600" : "#666", fontWeight: 700, textDecoration: "none" }}>[{j.seed}]</span>
+                              <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{j.nombre}</span>
+                              {!j.sostiene && (
+                                <span style={{ color: j.esUpset ? "#ff6600" : "#666", fontSize: 10, textDecoration: "none", flexShrink: 0 }}>
+                                  {j.esUpset ? "⚡" : "✕"} vs {j.eliminadoPor?.nombre}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     {upsets.length > 0 && (
                       <div>
-                        {archivo || top16 || top8 ? (
+                        {archivo || top16 || top8 || seedReport ? (
                           <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>UPSETS</div>
                         ) : null}
                         {(() => {
@@ -1997,22 +2023,46 @@
                                   {chileDayLabel(byDay[dayKey][0].pubDate)}
                                 </div>
                               )}
-                              {byDay[dayKey].map((it, i) => (
-                                <div key={it.guid} style={{ padding: "10px 0", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
-                                  <MeleeMatchup item={it} />
-                                  {it.videoId && (
-                                    <a href={`https://youtube.com/watch?v=${it.videoId}${it.startSeconds ? `&t=${it.startSeconds}s` : ""}`} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#ff6600", display: "inline-block", marginTop: 6 }}>
-                                      ▶ ver clip
-                                    </a>
-                                  )}
-                                </div>
-                              ))}
+                              {byDay[dayKey].map((it, i) => {
+                                const visto = vodVistos.has(it.guid);
+                                return (
+                                  <div key={it.guid} style={{ padding: "10px 0", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
+                                    <MeleeMatchup item={it} />
+                                    {it.videoId ? (
+                                      // Microdoc: mismo tratamiento que los clips del
+                                      // archivo permanente (embed inline + marcar visto),
+                                      // en vez del link plano de antes.
+                                      <div style={{ marginTop: 8 }}>
+                                        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 6 }}>
+                                          <button onClick={() => toggleVodVisto(it.guid)} style={{
+                                            fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700,
+                                            border: "1px solid " + (visto ? "#333" : "#ff6600"), borderRadius: 14, padding: "4px 10px",
+                                            background: "transparent", color: visto ? "#666" : "#ff6600", cursor: "pointer",
+                                          }}>
+                                            {visto ? "✓ visto" : "marcar visto"}
+                                          </button>
+                                        </div>
+                                        <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: 10, overflow: "hidden", background: "#000" }}>
+                                          <iframe
+                                            src={`https://www.youtube-nocookie.com/embed/${it.videoId}${it.startSeconds ? `?start=${it.startSeconds}` : ""}`}
+                                            title={`${it.ganador?.nombre} vs ${it.perdedor?.nombre}`}
+                                            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            referrerPolicy="strict-origin-when-cross-origin"
+                                            allowFullScreen
+                                          />
+                                        </div>
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                );
+                              })}
                             </div>
                           ));
                         })()}
                       </div>
                     )}
-                    {!archivo && !top16 && !top8 && !hype && !proyeccion && upsets.length === 0 && (
+                    {!archivo && !top16 && !top8 && !hype && !proyeccion && !seedReport && upsets.length === 0 && (
                       <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#666" }}>sin novedades todavía</div>
                     )}
                   </div>

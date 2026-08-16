@@ -7584,10 +7584,11 @@ ${item.link}`);
       const top8 = grupo.find((i) => i.esTop8Preview);
       const hype = grupo.find((i) => i.esHype);
       const proyeccion = grupo.find((i) => i.esProyeccion);
-      const upsets = grupo.filter((i) => !i.esArchivo && !i.esTop16Preview && !i.esTop8Preview && !i.esHype && !i.esProyeccion);
+      const seedReport = grupo.find((i) => i.esSeedReport);
+      const upsets = grupo.filter((i) => !i.esArchivo && !i.esTop16Preview && !i.esTop8Preview && !i.esHype && !i.esProyeccion && !i.esSeedReport);
       const open = openTournament === nombre;
-      const estado = archivo ? "finalizado" : top8 ? "en Top 8" : top16 ? "en Top 16" : upsets.length ? "en curso" : "pr\xF3ximamente";
-      const liveInfo = top8 || top16 || hype;
+      const estado = archivo ? "finalizado" : top8 ? "en Top 8" : top16 ? "en Top 16" : seedReport ? "en curso" : upsets.length ? "en curso" : "pr\xF3ximamente";
+      const liveInfo = top8 || top16 || seedReport || hype;
       return /* @__PURE__ */ React.createElement("div", { key: nombre, style: { marginBottom: 10, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setOpenTournament(open ? null : nombre), style: {
         width: "100%",
         display: "flex",
@@ -7626,7 +7627,15 @@ ${item.link}`);
             allowFullScreen: true
           }
         )));
-      })), top16 && !archivo && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 8 } }, "TOP 16"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 10 } }, (top16.jugadores || []).map((j) => /* @__PURE__ */ React.createElement("div", { key: j.nombre, style: { display: "flex", flexDirection: "column", alignItems: "center", width: 60 } }, /* @__PURE__ */ React.createElement(PlayerAvatar, { src: j.foto, size: 44 }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ccc", textAlign: "center", marginTop: 4 } }, j.nombre))))), top8 && !archivo && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 8 } }, "TOP 8"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 10 } }, (top8.jugadores || []).map((j) => /* @__PURE__ */ React.createElement("div", { key: j.nombre, style: { display: "flex", flexDirection: "column", alignItems: "center", width: 60 } }, /* @__PURE__ */ React.createElement(PlayerAvatar, { src: j.foto, size: 44 }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ccc", textAlign: "center", marginTop: 4 } }, j.nombre))))), upsets.length > 0 && /* @__PURE__ */ React.createElement("div", null, archivo || top16 || top8 ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 } }, "UPSETS") : null, (() => {
+      })), top16 && !archivo && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 8 } }, "TOP 16"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 10 } }, (top16.jugadores || []).map((j) => /* @__PURE__ */ React.createElement("div", { key: j.nombre, style: { display: "flex", flexDirection: "column", alignItems: "center", width: 60 } }, /* @__PURE__ */ React.createElement(PlayerAvatar, { src: j.foto, size: 44 }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ccc", textAlign: "center", marginTop: 4 } }, j.nombre))))), top8 && !archivo && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 8 } }, "TOP 8"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 10 } }, (top8.jugadores || []).map((j) => /* @__PURE__ */ React.createElement("div", { key: j.nombre, style: { display: "flex", flexDirection: "column", alignItems: "center", width: 60 } }, /* @__PURE__ */ React.createElement(PlayerAvatar, { src: j.foto, size: 44 }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ccc", textAlign: "center", marginTop: 4 } }, j.nombre))))), seedReport && !archivo && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 6 } }, "REPORTE DE SEEDS \xB7 ", seedReport.summary), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px" } }, seedReport.jugadores.map((j) => /* @__PURE__ */ React.createElement("div", { key: j.seed, style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        fontFamily: "'DM Sans',sans-serif",
+        fontSize: 12,
+        color: j.sostiene ? "#ddd" : "#777",
+        textDecoration: j.sostiene ? "none" : "line-through"
+      } }, /* @__PURE__ */ React.createElement("span", { style: { color: j.sostiene ? "#ff6600" : "#666", fontWeight: 700, textDecoration: "none" } }, "[", j.seed, "]"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, j.nombre), !j.sostiene && /* @__PURE__ */ React.createElement("span", { style: { color: j.esUpset ? "#ff6600" : "#666", fontSize: 10, textDecoration: "none", flexShrink: 0 } }, j.esUpset ? "\u26A1" : "\u2715", " vs ", j.eliminadoPor?.nombre))))), upsets.length > 0 && /* @__PURE__ */ React.createElement("div", null, archivo || top16 || top8 || seedReport ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 } }, "UPSETS") : null, (() => {
         const chileDayKey = (iso) => iso ? new Date(iso).toLocaleDateString("sv-SE", { timeZone: "America/Santiago" }) : "0000-00-00";
         const chileDayLabel = (iso) => {
           if (!iso) return "sin fecha";
@@ -7639,8 +7648,36 @@ ${item.link}`);
           (byDay[key] = byDay[key] || []).push(it);
         }
         const dayKeys = Object.keys(byDay).sort((a, b) => b.localeCompare(a));
-        return dayKeys.map((dayKey) => /* @__PURE__ */ React.createElement("div", { key: dayKey, style: { marginBottom: 8 } }, dayKeys.length > 1 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, color: "#ff6600", opacity: 0.8, margin: "8px 0 4px" } }, chileDayLabel(byDay[dayKey][0].pubDate)), byDay[dayKey].map((it, i) => /* @__PURE__ */ React.createElement("div", { key: it.guid, style: { padding: "10px 0", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none" } }, /* @__PURE__ */ React.createElement(MeleeMatchup, { item: it }), it.videoId && /* @__PURE__ */ React.createElement("a", { href: `https://youtube.com/watch?v=${it.videoId}${it.startSeconds ? `&t=${it.startSeconds}s` : ""}`, target: "_blank", rel: "noopener", style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#ff6600", display: "inline-block", marginTop: 6 } }, "\u25B6 ver clip")))));
-      })()), !archivo && !top16 && !top8 && !hype && !proyeccion && upsets.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#666" } }, "sin novedades todav\xEDa")));
+        return dayKeys.map((dayKey) => /* @__PURE__ */ React.createElement("div", { key: dayKey, style: { marginBottom: 8 } }, dayKeys.length > 1 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, color: "#ff6600", opacity: 0.8, margin: "8px 0 4px" } }, chileDayLabel(byDay[dayKey][0].pubDate)), byDay[dayKey].map((it, i) => {
+          const visto = vodVistos.has(it.guid);
+          return /* @__PURE__ */ React.createElement("div", { key: it.guid, style: { padding: "10px 0", borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none" } }, /* @__PURE__ */ React.createElement(MeleeMatchup, { item: it }), it.videoId ? (
+            // Microdoc: mismo tratamiento que los clips del
+            // archivo permanente (embed inline + marcar visto),
+            // en vez del link plano de antes.
+            /* @__PURE__ */ React.createElement("div", { style: { marginTop: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: 6 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => toggleVodVisto(it.guid), style: {
+              fontFamily: "'DM Sans',sans-serif",
+              fontSize: 10,
+              fontWeight: 700,
+              border: "1px solid " + (visto ? "#333" : "#ff6600"),
+              borderRadius: 14,
+              padding: "4px 10px",
+              background: "transparent",
+              color: visto ? "#666" : "#ff6600",
+              cursor: "pointer"
+            } }, visto ? "\u2713 visto" : "marcar visto")), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", paddingTop: "56.25%", borderRadius: 10, overflow: "hidden", background: "#000" } }, /* @__PURE__ */ React.createElement(
+              "iframe",
+              {
+                src: `https://www.youtube-nocookie.com/embed/${it.videoId}${it.startSeconds ? `?start=${it.startSeconds}` : ""}`,
+                title: `${it.ganador?.nombre} vs ${it.perdedor?.nombre}`,
+                style: { position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" },
+                allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+                referrerPolicy: "strict-origin-when-cross-origin",
+                allowFullScreen: true
+              }
+            )))
+          ) : null);
+        })));
+      })()), !archivo && !top16 && !top8 && !hype && !proyeccion && !seedReport && upsets.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#666" } }, "sin novedades todav\xEDa")));
     }));
   }
   function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, generatedAt }) {

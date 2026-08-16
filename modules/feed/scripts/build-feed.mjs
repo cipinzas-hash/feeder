@@ -279,6 +279,73 @@ function ssbmrankOf(entrantName) {
   return ssbmrankByTag?.get(normalizeTag(entrantName)) ?? null;
 }
 
+// ── Fase 2a: reporte de seeds en curso ──────────────────────────────────
+//
+// Esto es lo que reemplaza al "quién le ganó a quién" genérico una vez que
+// arranca el torneo. La pregunta real no es "qué sets se jugaron" sino "¿los
+// 32 mejores seedeados siguen sosteniendo su seed o ya cayeron?" -- que es la
+// misma lista de Destacados que se mostraba en Fase 1 (hype), pero ahora con
+// estado.
+//
+// Elegibilidad: un set cuenta como derrota de X si X perdió (winnerId !=
+// X.id) en cualquier fase del evento -- no distingue winners/losers bracket
+// porque fetchCompletedSets no trae bracketType por set, así que "eliminado"
+// acá es "tiene al menos una derrota registrada". En doble eliminación eso
+// sub-cuenta eliminaciones reales (hace falta 2 derrotas), pero como señal
+// de "¿le está costando sostener el seed?" ya es información útil, y evita
+// inventar lógica de bracket que no se puede validar sin datos reales.
+function buildSeedReportItem(slug, tournamentName, bracketUrl, top32Entrants, sets, liveInfo) {
+  if (!top32Entrants.length) return null;
+
+  // Última derrota registrada de cada entrant (si tiene más de una, la más
+  // reciente es la que probablemente lo sacó del bracket).
+  const derrotaPorEntrant = new Map();
+  for (const set of sets) {
+    if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
+    const [a, b] = set.slots.map(s => s.entrant);
+    if (!a || !b) continue;
+    const winner = a.id === set.winnerId ? a : b;
+    const loser = a.id === set.winnerId ? b : a;
+    derrotaPorEntrant.set(loser.id, { rival: winner, ronda: set.fullRoundText, set });
+  }
+
+  const jugadores = top32Entrants.map(e => {
+    const derrota = derrotaPorEntrant.get(e.id);
+    const rivalRank = derrota ? ssbmrankOf(derrota.rival.name) : null;
+    const cayoAnteMenorSeed = derrota && derrota.rival.initialSeedNum != null
+      ? derrota.rival.initialSeedNum > e.initialSeedNum
+      : derrota && rivalRank == null; // sin seed del rival, pero tampoco rankeado -> asumible que es sorpresa
+    return {
+      nombre: e.name,
+      seed: e.initialSeedNum,
+      foto: entrantFace(e),
+      sostiene: !derrota,
+      eliminadoPor: derrota ? { nombre: derrota.rival.name, seed: derrota.rival.initialSeedNum ?? null, ssbmrank: rivalRank } : null,
+      ronda: derrota?.ronda ?? null,
+      esUpset: derrota ? !!cayoAnteMenorSeed : false,
+    };
+  });
+
+  const sostienen = jugadores.filter(j => j.sostiene).length;
+  const caidos = jugadores.length - sostienen;
+
+  return {
+    guid: `melee-seedreport-${slug}`,
+    title: `Reporte de seeds — ${tournamentName}`,
+    link: bracketUrl,
+    summary: `${sostienen}/${jugadores.length} del top ${jugadores.length} sostienen su seed. ${caidos} ya cayeron.`,
+    image: null,
+    pubDate: new Date().toISOString(), // se regenera cada corrida, no se acumula (mismo criterio que hype/top16/top8)
+    source: tournamentName,
+    categoria: "Melee",
+    fullText: null,
+    esSeedReport: true,
+    jugadores,
+    top8StartAt: liveInfo?.top8StartAt ?? null,
+    streamUrl: liveInfo?.streamUrl ?? null,
+  };
+}
+
 async function startggQuery(query, variables) {
   const res = await fetch(STARTGG_ENDPOINT, {
     method: "POST",
@@ -425,27 +492,39 @@ async function fetchLiveInfo(t) {
   }
 }
 
+// Todos los sets jugados del evento -- pagina completo (no solo los últimos
+// 60) porque el reporte de seeds (Fase 2a) necesita el historial completo de
+// cada uno de los top 32 para saber si siguen en pie, no solo lo más reciente.
 async function fetchCompletedSets(eventId) {
-  const query = `
-    query($eventId: ID!){
-      event(id:$eventId){
-        sets(perPage:60, page:1, sortType: RECENT){
-          nodes{
-            id fullRoundText winnerId
-            phaseGroup{ phase{ id name } }
-            slots{
-              entrant{
-                id name initialSeedNum
-                participants{ player{ user{ images{ url type } } } }
+  const perPage = 60;
+  let page = 1;
+  let all = [];
+  while (page <= 20) { // salvaguarda: 1200 sets tope, cubre cualquier major
+    const query = `
+      query($eventId: ID!, $page: Int!, $perPage: Int!){
+        event(id:$eventId){
+          sets(perPage:$perPage, page:$page, sortType: RECENT){
+            nodes{
+              id fullRoundText winnerId
+              phaseGroup{ phase{ id name } }
+              slots{
+                entrant{
+                  id name initialSeedNum
+                  participants{ player{ user{ images{ url type } } } }
+                }
               }
+              games{ selections{ entrant{ id } character{ name } } }
             }
-            games{ selections{ entrant{ id } character{ name } } }
           }
         }
-      }
-    }`;
-  const data = await startggQuery(query, { eventId });
-  return data?.event?.sets?.nodes || [];
+      }`;
+    const data = await startggQuery(query, { eventId, page, perPage });
+    const nodes = data?.event?.sets?.nodes || [];
+    all = all.concat(nodes);
+    if (nodes.length < perPage) break;
+    page++;
+  }
+  return all;
 }
 
 // De un entrant saca la primera foto de perfil "profile" que haya subido el
@@ -994,7 +1073,7 @@ function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings,
 async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventIds, previousTrackedTournaments = []) {
   if (!STARTGG_API_KEY) {
     console.error("✗ Melee · falta STARTGG_API_KEY, se omite esta categoría esta corrida");
-    return { upsetItems: [], hypeItems: [], projectionItems: [], top16Items: [], top8Items: [], archiveItems: [], processedEventIds: previousProcessedEventIds, trackedTournaments: previousTrackedTournaments };
+    return { upsetItems: [], hypeItems: [], projectionItems: [], seedReportItems: [], top16Items: [], top8Items: [], archiveItems: [], processedEventIds: previousProcessedEventIds, trackedTournaments: previousTrackedTournaments };
   }
 
   await loadSSBMRank();
@@ -1035,6 +1114,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
   const upsetItems = [];
   const hypeItems = [];
   const projectionItems = [];
+  const seedReportItems = [];
   const top16Items = [];
   const top8Items = [];
   const archiveItems = [];
@@ -1163,6 +1243,21 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
       try {
         const phases = await fetchEventPhases(eventInfo.id);
         const liveInfo = await fetchLiveInfo(t);
+        // Fase 2a: reporte de seeds -- reemplaza al "quién le ganó a quién"
+        // genérico como vista principal mientras el torneo está en curso.
+        // Usa los mismos entrants/orden que Fase 1 (hype), pero cruzados
+        // contra los sets ya jugados para saber quién sostiene y quién cayó.
+        try {
+          const entrants = await fetchAllEntrants(eventInfo.id);
+          const top32 = entrants
+            .filter(e => e.initialSeedNum != null)
+            .sort((a, b) => a.initialSeedNum - b.initialSeedNum)
+            .slice(0, 32);
+          const seedReport = buildSeedReportItem(slug, tournamentName, t.bracketUrl, top32, sets, liveInfo);
+          if (seedReport) seedReportItems.push(seedReport);
+        } catch (e) {
+          console.error(`✗ Melee · reporte de seeds (${tournamentName}): ${e.message}`);
+        }
         const top16Phase = findTop16Phase(phases);
         if (top16Phase && top16Phase.state !== "COMPLETED") {
           const preview16 = buildTop16PreviewItem(slug, tournamentName, t.bracketUrl, top16Phase, liveInfo);
@@ -1236,7 +1331,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
     }
   }
 
-  return { upsetItems, hypeItems, projectionItems, top16Items, top8Items, archiveItems, processedEventIds: Array.from(processedEventIds), trackedTournaments };
+  return { upsetItems, hypeItems, projectionItems, seedReportItems, top16Items, top8Items, archiveItems, processedEventIds: Array.from(processedEventIds), trackedTournaments };
 }
 // ================= Fin módulo Melee =================
 
@@ -1382,23 +1477,23 @@ async function main() {
   // RETENTION_DAYS — es el registro final, no un aviso que caduca.
   console.log("Procesando Melee (meleemajors.gg + start.gg + YouTube)...");
   const previousUpsetItemsOnly = previousMeleeItems.filter(
-    i => !i.esHype && !i.esProyeccion && !i.esTop16Preview && !i.esTop8Preview && !i.esArchivo
+    i => !i.esHype && !i.esProyeccion && !i.esSeedReport && !i.esTop16Preview && !i.esTop8Preview && !i.esArchivo
   );
   const previousArchiveItems = previousMeleeItems.filter(i => i.esArchivo);
   const previousUpsetItemsByGuid = new Map(previousUpsetItemsOnly.map(i => [i.guid, i]));
-  const { upsetItems: newUpsetItems, hypeItems, projectionItems, top16Items, top8Items, archiveItems: newArchiveItems, processedEventIds, trackedTournaments } = await fetchMeleeItems(
+  const { upsetItems: newUpsetItems, hypeItems, projectionItems, seedReportItems, top16Items, top8Items, archiveItems: newArchiveItems, processedEventIds, trackedTournaments } = await fetchMeleeItems(
     previousUpsetItemsByGuid,
     previousProcessedEventIds,
     previousTrackedTournaments
   );
-  console.log(`✓ Melee · ${newUpsetItems.length} upset(s) nuevo(s)/actualizado(s), ${hypeItems.length} torneo(s) generando hype, ${projectionItems.length} proyección(es) de bracket, ${top16Items.length} preview(s) de Top 16, ${top8Items.length} preview(s) de Top 8, ${newArchiveItems.length} archivo(s) final(es) nuevo(s) esta corrida`);
+  console.log(`✓ Melee · ${newUpsetItems.length} upset(s) nuevo(s)/actualizado(s), ${hypeItems.length} torneo(s) generando hype, ${projectionItems.length} proyección(es) de bracket, ${seedReportItems.length} reporte(s) de seeds en curso, ${top16Items.length} preview(s) de Top 16, ${top8Items.length} preview(s) de Top 8, ${newArchiveItems.length} archivo(s) final(es) nuevo(s) esta corrida`);
   // newUpsetItems puede traer versiones actualizadas (VOD recién encontrado)
   // de items que ya estaban en previousUpsetItemsOnly — hay que reemplazarlos,
   // no duplicarlos.
   const newUpsetGuids = new Set(newUpsetItems.map(i => i.guid));
   const carriedUpsetItems = previousUpsetItemsOnly.filter(i => !newUpsetGuids.has(i.guid));
   const allArchiveItems = [...previousArchiveItems, ...newArchiveItems]; // permanente, sin filtro de cutoff
-  const cutoffFilteredMeleeItems = [...carriedUpsetItems, ...newUpsetItems, ...hypeItems, ...projectionItems, ...top16Items, ...top8Items].filter(
+  const cutoffFilteredMeleeItems = [...carriedUpsetItems, ...newUpsetItems, ...hypeItems, ...projectionItems, ...seedReportItems, ...top16Items, ...top8Items].filter(
     a => !a.pubDate || new Date(a.pubDate).getTime() >= cutoff
   );
   const allMeleeItems = [...cutoffFilteredMeleeItems, ...allArchiveItems];
