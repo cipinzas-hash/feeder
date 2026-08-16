@@ -18,7 +18,10 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20   # red de seguridad: con el fix del abort, el peor caso ronda ~5-6 min
+    timeout-minutes: 25   # Melee tiene su propio presupuesto interno de 12 min
+                          # (se corta solo y commitea lo parcial); esto es margen
+                          # extra para el resto del pipeline (RSS, cine, git push)
+                          # después de eso -- ver meleeDeadline en build-feed.mjs
     steps:
       - uses: actions/checkout@v4
 

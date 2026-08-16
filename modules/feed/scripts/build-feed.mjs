@@ -351,15 +351,27 @@ function buildSeedReportItem(slug, tournamentName, bracketUrl, top32Entrants, se
   };
 }
 
+// Timeout por request: sin esto, si start.gg queda lento/colgado en un
+// momento de tráfico alto (justo lo que pasa DURANTE un torneo real en
+// vivo, que es cuando más importa que esto funcione), un solo fetch puede
+// quedarse esperando indefinidamente y arrastrar todo el job al timeout
+// externo de 20 min del workflow sin que se llegue a commitear nada.
 async function startggQuery(query, variables) {
-  const res = await fetch(STARTGG_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${STARTGG_API_KEY}` },
-    body: JSON.stringify({ query, variables }),
-  });
-  const json = await res.json();
-  if (json.errors) throw new Error(JSON.stringify(json.errors));
-  return json.data;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(STARTGG_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${STARTGG_API_KEY}` },
+      body: JSON.stringify({ query, variables }),
+      signal: controller.signal,
+    });
+    const json = await res.json();
+    if (json.errors) throw new Error(JSON.stringify(json.errors));
+    return json.data;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 // Trae todos los entrants con seed de un evento, paginando (los majors grandes
@@ -1134,7 +1146,20 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
   const processedEventIds = new Set(previousProcessedEventIds);
   const trackedTournaments = [];
 
+  // Presupuesto de tiempo global: el workflow externo mata el job entero a
+  // los 20 min sin commitear nada si se pasa (root cause real de los runs
+  // "cancelled" -- no es un tope de páginas, es que start.gg se pone lento
+  // bajo tráfico real de torneo en vivo, justo cuando más importa que esto
+  // corra). Con esto, si ya vamos gastados 12 min, se corta el procesamiento
+  // de torneos NUEVOS y se devuelve lo que se alcanzó a juntar -- degradado
+  // pero real, en vez de nada.
+  const meleeDeadline = Date.now() + 12 * 60 * 1000;
+
   for (const t of combinedTournaments) {
+    if (Date.now() > meleeDeadline) {
+      console.warn(`⚠ Melee · presupuesto de 12 min agotado, se corta acá (${combinedTournaments.indexOf(t)}/${combinedTournaments.length} torneos procesados) -- se commitea lo juntado hasta ahora`);
+      break;
+    }
     const slug = parseSlugFromBracketUrl(t.bracketUrl);
     if (!slug) continue;
 
