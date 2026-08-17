@@ -709,32 +709,51 @@ async function findVod(tournamentName, ganadorNombre, perdedorNombre) {
       `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=3&key=${YOUTUBE_API_KEY}`
     );
     const searchData = await searchRes.json();
-    const candidate = searchData?.items?.[0];
-    if (!candidate) return { videoId: null, startSeconds: 0 };
-    const videoId = candidate.id.videoId;
-
-    const detailsRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${YOUTUBE_API_KEY}`
-    );
-    const detailsData = await detailsRes.json();
-    const description = detailsData?.items?.[0]?.snippet?.description || "";
-    const tsRegex = /(\d{1,2}:\d{2}(?::\d{2})?)/;
-    let startSeconds = 0;
-    for (const line of description.split("\n")) {
-      const lower = line.toLowerCase();
-      if (
-        (lower.includes(ganadorNombre.toLowerCase()) || lower.includes(perdedorNombre.toLowerCase())) &&
-        tsRegex.test(line)
-      ) {
-        startSeconds = timestampToSeconds(line.match(tsRegex)[1]);
-        break;
-      }
-    }
-    return { videoId, startSeconds };
+    const items = searchData?.items || [];
+    if (!items.length) return { videoId: null, startSeconds: 0 };
+    const best = await pickBestVodCandidate(items);
+    if (!best) return { videoId: null, startSeconds: 0 };
+    return { videoId: best.videoId, startSeconds: findTimestampForMatchup(best.description, ganadorNombre, perdedorNombre) };
   } catch (e) {
     console.error(`✗ Melee · búsqueda de VOD (${tournamentName}): ${e.message}`);
     return { videoId: null, startSeconds: 0 };
   }
+}
+
+// Convierte duración ISO8601 de YouTube (PT1H30M5S) a segundos, para el
+// filtro de "esto es un VOD completo, no un short/highlight".
+function isoDurationToSeconds(iso) {
+  const m = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso || "");
+  if (!m) return 0;
+  return (parseInt(m[1] || 0) * 3600) + (parseInt(m[2] || 0) * 60) + parseInt(m[3] || 0);
+}
+
+// De varios candidatos de video (misma búsqueda, maxResults>1), elige el que
+// más pinta de VOD completo tiene: duración larga (>=30 min -- un bracket
+// real dura horas, un short/highlight no) y título con palabras que sugieren
+// stream completo ("top 8", "bracket", "vod", "full", "stream") por sobre
+// uno que sugiera recorte ("highlights", "recap", "hype"). Sin esto, se
+// tomaba ciegamente el primer resultado de la búsqueda -- podía ser
+// perfectamente un highlight de 3 minutos en vez del stream real.
+const VOD_TITLE_BONUS = /top ?8|top ?16|bracket|vod|full|stream|day ?\d/i;
+const VOD_TITLE_PENALTY = /highlight|recap|hype|trailer|announcement|short/i;
+async function pickBestVodCandidate(items) {
+  if (!items.length) return null;
+  const ids = items.map(it => it.id.videoId).join(",");
+  const detailsRes = await fetch(
+    `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${ids}&key=${YOUTUBE_API_KEY}`
+  );
+  const detailsData = await detailsRes.json();
+  const candidatos = (detailsData?.items || []).map(v => {
+    const seconds = isoDurationToSeconds(v.contentDetails?.duration);
+    const title = v.snippet?.title || "";
+    let score = seconds >= 1800 ? 2 : seconds >= 300 ? 0 : -3; // corto de verdad = descartar casi seguro
+    if (VOD_TITLE_BONUS.test(title)) score += 2;
+    if (VOD_TITLE_PENALTY.test(title)) score -= 2;
+    return { videoId: v.id, description: v.snippet?.description || "", score };
+  });
+  candidatos.sort((a, b) => b.score - a.score);
+  return candidatos[0] || null;
 }
 
 // Búsqueda del VOD del torneo restringida a canales de producción conocidos
@@ -751,18 +770,14 @@ async function findTournamentVodDescription(tournamentName) {
     try {
       const q = encodeURIComponent(`${tournamentName} melee singles`);
       const searchRes = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${ch.channelId}&q=${q}&type=video&maxResults=1&key=${YOUTUBE_API_KEY}`
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${ch.channelId}&q=${q}&type=video&maxResults=3&key=${YOUTUBE_API_KEY}`
       );
       const searchData = await searchRes.json();
-      const candidate = searchData?.items?.[0];
-      if (!candidate) continue;
-      const videoId = candidate.id.videoId;
-      const detailsRes = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${YOUTUBE_API_KEY}`
-      );
-      const detailsData = await detailsRes.json();
-      const description = detailsData?.items?.[0]?.snippet?.description || "";
-      return { videoId, description, channel: ch.name };
+      const items = searchData?.items || [];
+      if (!items.length) continue;
+      const best = await pickBestVodCandidate(items);
+      if (!best || best.score < -1) continue; // ningún candidato de este canal pinta a VOD real -- probar el siguiente canal
+      return { videoId: best.videoId, description: best.description, channel: ch.name };
     } catch (e) {
       console.error(`✗ Melee · VOD en ${ch.name} (${tournamentName}): ${e.message}`);
     }
@@ -775,29 +790,39 @@ async function findTournamentVodDescription(tournamentName) {
   try {
     const q = encodeURIComponent(`${tournamentName} melee singles bracket VOD`);
     const searchRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=1&key=${YOUTUBE_API_KEY}`
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=3&key=${YOUTUBE_API_KEY}`
     );
     const searchData = await searchRes.json();
-    const candidate = searchData?.items?.[0];
-    if (!candidate) return null;
-    const videoId = candidate.id.videoId;
-    const detailsRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${YOUTUBE_API_KEY}`
-    );
-    const detailsData = await detailsRes.json();
-    const description = detailsData?.items?.[0]?.snippet?.description || "";
-    return { videoId, description, channel: candidate.snippet?.channelTitle || "desconocido" };
+    const items = searchData?.items || [];
+    if (!items.length) return null;
+    const best = await pickBestVodCandidate(items);
+    if (!best) return null;
+    return { videoId: best.videoId, description: best.description, channel: "desconocido" };
   } catch (e) {
     console.error(`✗ Melee · VOD búsqueda general (${tournamentName}): ${e.message}`);
     return null;
   }
 }
 
+// Dos pasadas: primero busca una línea con AMBOS nombres (mucho más
+// confiable -- una línea de setlist tipo "1:23:45 - Zain vs Hungrybox" es
+// inconfundible), y solo si no hay ninguna cae a "cualquiera de los dos"
+// (antes era directo la segunda pasada, y eso agarraba falsos positivos si
+// un nombre aparecía suelto en otro contexto -- créditos, agradecimientos,
+// comentaristas -- antes que la línea real del matchup).
 function findTimestampForMatchup(description, nombreA, nombreB) {
   const tsRegex = /(\d{1,2}:\d{2}(?::\d{2})?)/;
-  for (const line of description.split("\n")) {
+  const a = nombreA.toLowerCase(), b = nombreB.toLowerCase();
+  const lineas = description.split("\n");
+  for (const line of lineas) {
     const lower = line.toLowerCase();
-    if ((lower.includes(nombreA.toLowerCase()) || lower.includes(nombreB.toLowerCase())) && tsRegex.test(line)) {
+    if (lower.includes(a) && lower.includes(b) && tsRegex.test(line)) {
+      return timestampToSeconds(line.match(tsRegex)[1]);
+    }
+  }
+  for (const line of lineas) {
+    const lower = line.toLowerCase();
+    if ((lower.includes(a) || lower.includes(b)) && tsRegex.test(line)) {
       return timestampToSeconds(line.match(tsRegex)[1]);
     }
   }
