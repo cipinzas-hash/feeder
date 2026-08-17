@@ -253,6 +253,7 @@ const VOD_KNOWN_CHANNELS = [
 // ver comentario en ese archivo). Sirve como señal independiente de qué tan
 // fuerte es un jugador *en términos absolutos*, sin depender del seeding local.
 const SSBMRANK_TOP_CUTOFF = 50; // un rankeado top 50 mundial perdiendo ya es noticia, sin importar seed
+const RANK_DIFF_THRESHOLD = 15; // diferencia mínima de puestos SSBMRank para contar como upset -- sin esto, "#3 vence a #2" contaba como sorpresa
 let ssbmrankByTag = null;
 
 function normalizeTag(name) {
@@ -632,13 +633,17 @@ function detectUpsets(sets) {
 
     // Criterio 2 (SSBMRank): señal independiente del seeding del torneo.
     // Upset si el perdedor está rankeado top 50 mundial y el ganador no está
-    // rankeado (o está rankeado bastante peor). No depende de que el TO haya
-    // seedeado bien -- por eso corre incluso cuando initialSeedNum falta.
+    // rankeado, o está rankeado con una diferencia real (>= 15 puestos) --
+    // sin este piso, "rank #3 vence a rank #2" contaba como upset (técnicamente
+    // el ganador "estaba peor rankeado", pero eso es prácticamente un empate
+    // entre los dos mejores del mundo, no una sorpresa). No depende de que el
+    // TO haya seedeado bien -- por eso corre incluso cuando initialSeedNum
+    // falta.
     let rankDiff = null, rankUpset = false;
     if (loserRank != null && loserRank <= SSBMRANK_TOP_CUTOFF) {
       if (winnerRank == null) {
         rankUpset = true; // ganador ni siquiera está en el top 100 mundial
-      } else if (winnerRank > loserRank) {
+      } else if (winnerRank - loserRank >= RANK_DIFF_THRESHOLD) {
         rankDiff = winnerRank - loserRank;
         rankUpset = true;
       }
@@ -1144,13 +1149,26 @@ async function fetchFinalStandings(eventId) {
 // Corre UNA sola vez por torneo (justo cuando pasa a archivo permanente,
 // nunca se regenera después), así que el costo real es de pocos calls/mes,
 // no algo recurrente cada 4h.
+function topUpsets(tournamentUpsets, n = 5) {
+  const vistosPar = new Set();
+  return tournamentUpsets
+    .filter(u => {
+      const par = `${u.ganador.nombre}|${u.perdedor.nombre}`;
+      if (vistosPar.has(par)) return false;
+      vistosPar.add(par);
+      return true;
+    })
+    .sort((a, b) => (Math.abs(b.seedDiff ?? b.rankDiff ?? 0)) - (Math.abs(a.seedDiff ?? a.rankDiff ?? 0)))
+    .slice(0, n);
+}
+
 async function narrateArchiveSummary(tournamentName, standings, upsets) {
   if (!ANTHROPIC_API_KEY) return null;
   const top8Line = [...standings]
     .sort((a, b) => a.placement - b.placement)
     .map(s => `${s.placement}° ${s.entrant.name}`)
     .join(" · ");
-  const upsetsData = upsets.slice(0, 8).map(u =>
+  const upsetsData = topUpsets(upsets, 8).map(u =>
     `${u.ganador.nombre}${u.ganador.seed != null ? ` (seed ${u.ganador.seed})` : u.ganador.ssbmrank != null ? ` (SSBMRank #${u.ganador.ssbmrank})` : ""} venció a ${u.perdedor.nombre}${u.perdedor.seed != null ? ` (seed ${u.perdedor.seed})` : u.perdedor.ssbmrank != null ? ` (SSBMRank #${u.perdedor.ssbmrank})` : ""} -- ${u.ronda}`
   ).join("\n");
 
@@ -1217,8 +1235,13 @@ function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings,
     .sort((a, b) => a.placement - b.placement)
     .map(s => `${s.placement}° ${s.entrant.name}`)
     .join(" · ");
-  const upsetsLine = tournamentUpsets.length
-    ? ` Upsets destacados: ${tournamentUpsets.slice(0, 5).map(u => u.title).join("; ")}.`
+  // topUpsets: dedupe por par (Gran Final + reset son dos sets reales entre
+  // los mismos jugadores, redundante mostrarlos dos veces) + orden por
+  // magnitud real del upset -- misma lista curada que ve el prompt de
+  // narración.
+  const upsetsSignificativos = topUpsets(tournamentUpsets, 5);
+  const upsetsLine = upsetsSignificativos.length
+    ? ` Upsets destacados: ${upsetsSignificativos.map(u => u.title).join("; ")}.`
     : "";
   // Si Claude generó narrativa con contexto real, se usa esa; si no (sin
   // ANTHROPIC_API_KEY, falló la llamada, etc.) cae al resumen mecánico de
@@ -1530,6 +1553,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
 
           for (const [etapa, matches] of grupos) {
             const vodSource = await findTournamentVodDescription(tournamentName, etapaQuery[etapa]);
+            meleeDebug.push({ slug, tournamentName, vodEtapa: etapaLabel[etapa], vodMatchesEnEtapa: matches.length, vodEncontrado: !!vodSource, vodVideoId: vodSource?.videoId ?? null, vodChannel: vodSource?.channel ?? null });
             if (!vodSource) {
               console.warn(`⚠ Melee · sin VOD para etapa "${etapaLabel[etapa]}" de ${tournamentName}`);
               continue;
