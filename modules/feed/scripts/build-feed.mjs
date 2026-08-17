@@ -620,11 +620,13 @@ function detectUpsets(sets) {
     const winnerRank = ssbmrankOf(winner.name);
     const loserRank = ssbmrankOf(loser.name);
 
-    // Criterio 1: diferencia de seed local. Requiere que ambos tengan seed
-    // asignado -- en regionales chicos esto suele faltar.
+    // Criterio 1: diferencia de seed local. Positivo = el ganador tenía peor
+    // seed (número más alto) que el perdedor -- eso SÍ es upset. Requiere
+    // que ambos tengan seed asignado -- en regionales chicos esto suele
+    // faltar.
     let seedDiff = null, seedUpset = false;
     if (a.initialSeedNum && b.initialSeedNum) {
-      seedDiff = loser.initialSeedNum - winner.initialSeedNum;
+      seedDiff = winner.initialSeedNum - loser.initialSeedNum;
       seedUpset = seedDiff >= UPSET_SEED_DIFF_THRESHOLD;
     }
 
@@ -665,7 +667,7 @@ function detectUpsets(sets) {
         pj: entrantCharacter(set.games, loser.id),
         foto: entrantFace(loser),
       },
-      esUpset: seedUpset ? winner.initialSeedNum > loser.initialSeedNum : rankUpset,
+      esUpset: seedUpset || rankUpset, // con seedDiff ya bien orientado, seedUpset por sí solo ya implica que el ganador tenía peor seed
       seedDiff, // null si no había seed en ambos -- ver VOD_UPSET_SEED_DIFF_THRESHOLD en Fase 3b
       rankDiff, // diferencia de puestos SSBMRank cuando aplica (null si el ganador no estaba rankeado)
       viaSSBMRank: rankUpset && !seedUpset, // para distinguir en el título/summary qué criterio disparó esto
@@ -847,7 +849,7 @@ function buildVodCandidateMatches(sets, top16PhaseId, top8PhaseId) {
 
     let esBigUpset = false;
     if (a.initialSeedNum && b.initialSeedNum) {
-      const seedDiff = loser.initialSeedNum - winner.initialSeedNum;
+      const seedDiff = winner.initialSeedNum - loser.initialSeedNum; // positivo = ganador con peor seed = upset real
       esBigUpset = seedDiff >= VOD_UPSET_SEED_DIFF_THRESHOLD;
     }
     // Mismo criterio SSBMRank que detectUpsets: un top 50 mundial cayendo
