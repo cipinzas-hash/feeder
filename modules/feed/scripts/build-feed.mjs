@@ -357,9 +357,16 @@ function buildSeedReportItem(slug, tournamentName, bracketUrl, top32Entrants, se
 // vivo, que es cuando más importa que esto funcione), un solo fetch puede
 // quedarse esperando indefinidamente y arrastrar todo el job al timeout
 // externo de 20 min del workflow sin que se llegue a commitear nada.
+//
+// 25s, no 15s: con perPage 40 (ver fetchCompletedSets) cada request es más
+// pesado, y 15s resultó demasiado ajustado en la práctica -- CEO/Supernova
+// perdieron una corrida entera por "This operation was aborted" en la
+// primera página. fetchCompletedSets ahora además es resiliente a esto
+// (se queda con lo ya juntado en vez de perder el torneo), pero mejor
+// evitar el abort en primer lugar cuando es solo cuestión de margen.
 async function startggQuery(query, variables) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeoutId = setTimeout(() => controller.abort(), 25000);
   try {
     const res = await fetch(STARTGG_ENDPOINT, {
       method: "POST",
@@ -568,6 +575,15 @@ async function fetchCompletedSets(eventId) {
         perPage = Math.max(2, Math.floor(perPage / 2));
         console.warn(`⚠ Melee · complejidad excedida, bajando perPage a ${perPage} y reintentando página ${page}`);
         continue;
+      }
+      // Un timeout de request (abort) en una página NO debería tirar todo
+      // el torneo -- antes esto se propagaba hasta el catch de más arriba y
+      // se perdía TODO (incluido lo ya juntado en páginas anteriores). Mejor
+      // quedarse con lo que se alcanzó a traer hasta acá que perderlo todo
+      // por una sola página lenta.
+      if (/abort/i.test(e.message)) {
+        console.warn(`⚠ Melee · timeout en página ${page} de sets (eventId ${eventId}), se sigue con los ${all.length} sets ya juntados`);
+        break;
       }
       throw e;
     }
