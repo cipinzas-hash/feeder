@@ -1913,7 +1913,7 @@
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <MeleeMatchup item={clip} />
                                   <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#777", marginTop: 4 }}>
-                                    {clip.ronda}{clip.esTop16 ? " · Top 16" : ""}{clip.esUpset ? " · upset" : ""}
+                                    {clip.ronda}{clip.esTop8 ? " · Top 8" : clip.esTop16 ? " · Top 16" : ""}{clip.esUpset ? " · upset" : ""}
                                   </div>
                                 </div>
                                 <button onClick={() => toggleVodVisto(clip.guid)} style={{

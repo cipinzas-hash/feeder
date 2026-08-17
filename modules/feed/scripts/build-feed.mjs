@@ -223,7 +223,6 @@ const STARTGG_API_KEY = process.env.STARTGG_API_KEY;
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const MELEEMAJORS_URL = "https://raw.githubusercontent.com/jtof-dev/meleemajors.gg/main/ssg/src/tournaments.json";
 const STARTGG_ENDPOINT = "https://api.start.gg/gql/alpha";
-const TOP_SEED_CUTOFF = 10;
 const UPSET_SEED_DIFF_THRESHOLD = 5;
 const VOD_UPSET_SEED_DIFF_THRESHOLD = 25; // umbral (más alto) para entrar al VOD permanente del archivo -- ver Fase 3b
 const HYPE_WINDOW_DAYS = 14; // cuántos días antes de que empiece un major se genera el aviso de "se viene"
@@ -509,29 +508,25 @@ async function fetchLiveInfo(t) {
   }
 }
 
-// Todos los sets jugados del evento -- pagina completo (no solo los últimos
-// 60) porque el reporte de seeds (Fase 2a) necesita el historial completo de
-// cada uno de los top 32 para saber si siguen en pie, no solo lo más reciente.
-// Todos los sets jugados del evento -- pagina bastante más que antes (era
-// solo perPage 60/page 1) porque el reporte de seeds (Fase 2a) necesita
-// historial, no solo lo último.
+// Todos los sets jugados del evento -- pagina bastante más que la versión
+// original (que era perPage 60/page 1 nada más) porque el reporte de seeds
+// (Fase 2a) necesita historial, no solo lo último.
 //
-// perPage bajo a propósito (20, no 60): start.gg cobra "complejidad" por
-// objeto anidado devuelto (participants→images, games→selections), no solo
-// por set. Con perPage:60 un major grande como CEO/Supernova se pasa del
-// límite de 1000 objetos por request ("query complexity too high") y la
-// llamada entera falla -- eso es lo que estaba pasando en la práctica,
-// confirmado con el error real: "actual: 1916" / "actual: 1541" contra el
-// límite de 1000. Con perPage:20 (~32 objetos/set según ese ratio) queda
-// con margen. Tope de 24 páginas (480 sets) para cubrir el mismo total que
-// antes, ahora en más requests más chicos en vez de menos requests grandes
-// que revientan.
+// perPage: se había bajado a 20 por un límite real de complejidad de
+// start.gg ("query complexity too high", máximo 1000 objetos anidados por
+// request) que reventaba en majors grandes como CEO/Supernova -- el costo
+// venía sobre todo de participants→player→user→images (varias fotos por
+// jugador, anidado 4 niveles). Como esas fotos ya no se piden (ver
+// entrantFace), la complejidad bajó bastante y perPage vuelve a subir a 40
+// como punto medio -- ni el 60 original (que sí reventaba) ni el 20 de
+// máxima cautela. El reintento adaptativo de abajo sigue como red de
+// seguridad por si algún evento igual se pasa.
 async function fetchCompletedSets(eventId) {
-  let perPage = 20;
+  let perPage = 40;
   let page = 1;
   let all = [];
   let totalFetched = 0;
-  while (page <= 24 && totalFetched < 480) {
+  while (page <= 15 && totalFetched < 600) {
     const query = `
       query($eventId: ID!, $page: Int!, $perPage: Int!){
         event(id:$eventId){
@@ -542,7 +537,6 @@ async function fetchCompletedSets(eventId) {
               slots{
                 entrant{
                   id name initialSeedNum
-                  participants{ player{ user{ images{ url type } } } }
                 }
               }
               games{ selections{ entrant{ id } character{ name } } }
@@ -585,12 +579,13 @@ async function fetchCompletedSets(eventId) {
 }
 
 // De un entrant saca la primera foto de perfil "profile" que haya subido el
-// jugador a start.gg. No todos tienen — muchos amateurs nunca la suben, y
-// ahí queda null (el frontend muestra un placeholder genérico).
+// Ya no se piden las fotos de perfil (participants→images) en las queries de
+// sets/standings -- eran una parte grande del costo de complejidad de
+// start.gg (ver fetchCompletedSets) y a Cristopher no le importan. Queda la
+// función para no tener que tocar cada call site, pero ahora siempre null;
+// el frontend ya muestra un placeholder genérico cuando no hay foto.
 function entrantFace(entrant) {
-  const images = entrant?.participants?.[0]?.player?.user?.images || [];
-  const profile = images.find(img => img.type === "profile") || images[0];
-  return profile?.url || null;
+  return null;
 }
 
 // El personaje "representativo" del set: el más jugado entre los games
@@ -624,12 +619,11 @@ function detectUpsets(sets) {
     const winnerRank = ssbmrankOf(winner.name);
     const loserRank = ssbmrankOf(loser.name);
 
-    // Criterio 1 (existente): diferencia de seed local. Requiere que ambos
-    // tengan seed asignado -- en regionales chicos esto suele faltar.
-    let seedDiff = null, seedUpset = false, top10Involved = false;
+    // Criterio 1: diferencia de seed local. Requiere que ambos tengan seed
+    // asignado -- en regionales chicos esto suele faltar.
+    let seedDiff = null, seedUpset = false;
     if (a.initialSeedNum && b.initialSeedNum) {
       seedDiff = loser.initialSeedNum - winner.initialSeedNum;
-      top10Involved = winner.initialSeedNum <= TOP_SEED_CUTOFF || loser.initialSeedNum <= TOP_SEED_CUTOFF;
       seedUpset = seedDiff >= UPSET_SEED_DIFF_THRESHOLD;
     }
 
@@ -647,7 +641,12 @@ function detectUpsets(sets) {
       }
     }
 
-    if (!seedUpset && !top10Involved && !rankUpset) continue;
+    // Antes existía un tercer criterio ("top10Involved": cualquier set que
+    // involucrara un seed top 10, ganara o perdiera) que metía ruido real --
+    // un top 10 ganando limpio contra alguien peor seedeado NO es upset, y
+    // así se estaba mostrando. Sacado: solo cuentan seedUpset y rankUpset,
+    // que son sorpresas de verdad.
+    if (!seedUpset && !rankUpset) continue;
 
     out.push({
       ronda: set.fullRoundText,
@@ -785,7 +784,7 @@ function findTimestampForMatchup(description, nombreA, nombreB) {
 // sin importar seed) y (b) upsets con seedDiff >= VOD_UPSET_SEED_DIFF_THRESHOLD
 // en cualquier fase -- deduplicados por id de set (un mismo set puede
 // cumplir ambos criterios).
-function buildVodCandidateMatches(sets, top16PhaseId) {
+function buildVodCandidateMatches(sets, top16PhaseId, top8PhaseId) {
   const out = [];
   for (const set of sets) {
     if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
@@ -794,6 +793,7 @@ function buildVodCandidateMatches(sets, top16PhaseId) {
     const winner = a.id === set.winnerId ? a : b;
     const loser = a.id === set.winnerId ? b : a;
     const esTop16 = top16PhaseId != null && set.phaseGroup?.phase?.id === top16PhaseId;
+    const esTop8 = top8PhaseId != null && set.phaseGroup?.phase?.id === top8PhaseId;
 
     let esBigUpset = false;
     if (a.initialSeedNum && b.initialSeedNum) {
@@ -808,7 +808,7 @@ function buildVodCandidateMatches(sets, top16PhaseId) {
     const esBigUpsetPorRank = loserRank != null && loserRank <= SSBMRANK_TOP_CUTOFF
       && (winnerRank == null || winnerRank > loserRank);
 
-    if (!esTop16 && !esBigUpset && !esBigUpsetPorRank) continue;
+    if (!esTop16 && !esTop8 && !esBigUpset && !esBigUpsetPorRank) continue;
     out.push({
       setId: set.id,
       ronda: set.fullRoundText,
@@ -816,6 +816,7 @@ function buildVodCandidateMatches(sets, top16PhaseId) {
       perdedor: { nombre: loser.name, seed: loser.initialSeedNum ?? null, ssbmrank: loserRank, pj: entrantCharacter(set.games, loser.id), foto: entrantFace(loser) },
       esUpset: (a.initialSeedNum && b.initialSeedNum) ? winner.initialSeedNum > loser.initialSeedNum : esBigUpsetPorRank,
       esTop16,
+      esTop8,
     });
   }
   return out;
@@ -1009,7 +1010,7 @@ async function fetchEventPhases(eventId) {
           seeds(query:{ page:1, perPage:16 }){
             nodes{
               seedNum
-              entrant{ name participants{ player{ user{ images{ url type } } } } }
+              entrant{ name }
             }
           }
         }
@@ -1368,14 +1369,15 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
           ? await findVod(tournamentName, finalistNames[0], finalistNames[1])
           : { videoId: null, startSeconds: 0 };
 
-        // VOD permanente (Fase 3b): Top 16 completo + upsets≥25, buscado en
-        // los canales de producción conocidos -- ver buildVodCandidateMatches
-        // y findTournamentVodDescription más arriba.
+        // VOD permanente (Fase 3b): Top 16 completo + Top 8 completo +
+        // upsets≥25, buscado en los canales de producción conocidos -- ver
+        // buildVodCandidateMatches y findTournamentVodDescription más arriba.
         let vodClips = [];
         try {
           const phasesForArchive = await fetchEventPhases(eventInfo.id);
           const top16Phase = findTop16Phase(phasesForArchive);
-          const candidateMatches = buildVodCandidateMatches(sets, top16Phase?.id ?? null);
+          const top8Phase = findTop8Phase(phasesForArchive);
+          const candidateMatches = buildVodCandidateMatches(sets, top16Phase?.id ?? null, top8Phase?.id ?? null);
           if (candidateMatches.length) {
             const vodSource = await findTournamentVodDescription(tournamentName);
             if (vodSource) {
@@ -1386,6 +1388,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
                 perdedor: m.perdedor,
                 esUpset: m.esUpset,
                 esTop16: m.esTop16,
+                esTop8: m.esTop8,
                 videoId: vodSource.videoId,
                 startSeconds: findTimestampForMatchup(vodSource.description, m.ganador.nombre, m.perdedor.nombre),
               }));
