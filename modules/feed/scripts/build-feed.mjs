@@ -764,11 +764,12 @@ async function pickBestVodCandidate(items) {
 // findTimestampForMatchup). Sin esto, cubrir Top 16 completo + upsets≥25
 // implicaría 15-20 búsquedas de YouTube por torneo -- inviable con la cuota
 // diaria (10.000 unidades, 100 por búsqueda).
-async function findTournamentVodDescription(tournamentName) {
+async function findTournamentVodDescription(tournamentName, etapaQuery) {
   if (!YOUTUBE_API_KEY) return null;
+  const terminoEtapa = etapaQuery ? ` ${etapaQuery}` : "";
   for (const ch of VOD_KNOWN_CHANNELS) {
     try {
-      const q = encodeURIComponent(`${tournamentName} melee singles`);
+      const q = encodeURIComponent(`${tournamentName} melee singles${terminoEtapa}`);
       const searchRes = await fetch(
         `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${ch.channelId}&q=${q}&type=video&maxResults=3&key=${YOUTUBE_API_KEY}`
       );
@@ -779,7 +780,7 @@ async function findTournamentVodDescription(tournamentName) {
       if (!best || best.score < -1) continue; // ningún candidato de este canal pinta a VOD real -- probar el siguiente canal
       return { videoId: best.videoId, description: best.description, channel: ch.name };
     } catch (e) {
-      console.error(`✗ Melee · VOD en ${ch.name} (${tournamentName}): ${e.message}`);
+      console.error(`✗ Melee · VOD en ${ch.name} (${tournamentName}${terminoEtapa}): ${e.message}`);
     }
   }
   // Respaldo: ningún canal conocido tenía el torneo (pasó con GOML 2026,
@@ -788,7 +789,7 @@ async function findTournamentVodDescription(tournamentName) {
   // verificada que ninguno. Se sigue gastando solo 1 búsqueda extra (100
   // unidades de cuota), no una por canal.
   try {
-    const q = encodeURIComponent(`${tournamentName} melee singles bracket VOD`);
+    const q = encodeURIComponent(`${tournamentName} melee singles${terminoEtapa} VOD`);
     const searchRes = await fetch(
       `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=3&key=${YOUTUBE_API_KEY}`
     );
@@ -799,7 +800,7 @@ async function findTournamentVodDescription(tournamentName) {
     if (!best) return null;
     return { videoId: best.videoId, description: best.description, channel: "desconocido" };
   } catch (e) {
-    console.error(`✗ Melee · VOD búsqueda general (${tournamentName}): ${e.message}`);
+    console.error(`✗ Melee · VOD búsqueda general (${tournamentName}${terminoEtapa}): ${e.message}`);
     return null;
   }
 }
@@ -1498,16 +1499,41 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
         // VOD permanente (Fase 3b): Top 16 completo + Top 8 completo +
         // upsets≥25, buscado en los canales de producción conocidos -- ver
         // buildVodCandidateMatches y findTournamentVodDescription más arriba.
+        //
+        // Los majors grandes NO suben un video único para todo el torneo --
+        // suben VODs separados por etapa (Pools, Bracket, Top 8), cada uno
+        // con su propio setlist en la descripción. Buscar "una vez para todo
+        // el torneo" hacía que un upset de la fase temprana casi seguro
+        // devolviera timestamp 0 si el video encontrado resultaba ser el de
+        // Top 8. Se agrupa por etapa REAL (esTop8/esTop16, ya vienen de
+        // phaseGroup.id de start.gg, no de adivinar texto) y se busca UNA
+        // vez por etapa presente -- como mucho 3 búsquedas (Top 8 / Top 16 /
+        // resto), no 1 fija ni una por set.
         let vodClips = [];
         try {
           const phasesForArchive = await fetchEventPhases(eventInfo.id);
           const top16Phase = findTop16Phase(phasesForArchive);
           const top8Phase = findTop8Phase(phasesForArchive);
           const candidateMatches = buildVodCandidateMatches(sets, top16Phase?.id ?? null, top8Phase?.id ?? null);
-          if (candidateMatches.length) {
-            const vodSource = await findTournamentVodDescription(tournamentName);
-            if (vodSource) {
-              vodClips = candidateMatches.map(m => ({
+
+          const etapaDe = m => m.esTop8 ? "top8" : m.esTop16 ? "top16" : "resto";
+          const etapaQuery = { top8: "top 8", top16: "top 16", resto: "bracket" };
+          const etapaLabel = { top8: "Top 8", top16: "Top 16", resto: "bracket temprano" };
+          const grupos = new Map(); // etapa -> matches[]
+          for (const m of candidateMatches) {
+            const etapa = etapaDe(m);
+            if (!grupos.has(etapa)) grupos.set(etapa, []);
+            grupos.get(etapa).push(m);
+          }
+
+          for (const [etapa, matches] of grupos) {
+            const vodSource = await findTournamentVodDescription(tournamentName, etapaQuery[etapa]);
+            if (!vodSource) {
+              console.warn(`⚠ Melee · sin VOD para etapa "${etapaLabel[etapa]}" de ${tournamentName}`);
+              continue;
+            }
+            for (const m of matches) {
+              vodClips.push({
                 guid: `melee-vodclip-${slug}-${m.setId}`,
                 ronda: m.ronda,
                 ganador: m.ganador,
@@ -1517,7 +1543,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
                 esTop8: m.esTop8,
                 videoId: vodSource.videoId,
                 startSeconds: findTimestampForMatchup(vodSource.description, m.ganador.nombre, m.perdedor.nombre),
-              }));
+              });
             }
           }
         } catch (e) {
