@@ -221,6 +221,7 @@ async function extractFullText(url) {
 
 const STARTGG_API_KEY = process.env.STARTGG_API_KEY;
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY; // narrativa del archivo permanente (ver narrateArchiveSummary) -- opcional, sin ella cae al resumen mecánico
 const MELEEMAJORS_URL = "https://raw.githubusercontent.com/jtof-dev/meleemajors.gg/main/ssg/src/tournaments.json";
 const STARTGG_ENDPOINT = "https://api.start.gg/gql/alpha";
 const UPSET_SEED_DIFF_THRESHOLD = 5;
@@ -766,7 +767,30 @@ async function findTournamentVodDescription(tournamentName) {
       console.error(`✗ Melee · VOD en ${ch.name} (${tournamentName}): ${e.message}`);
     }
   }
-  return null; // ningún canal conocido tenía el torneo -- no se arma vodClips esta vez
+  // Respaldo: ningún canal conocido tenía el torneo (pasó con GOML 2026,
+  // una organización más chica que no está en VOD_KNOWN_CHANNELS) -- UNA
+  // búsqueda general sin restricción de canal, mejor un VOD de fuente no
+  // verificada que ninguno. Se sigue gastando solo 1 búsqueda extra (100
+  // unidades de cuota), no una por canal.
+  try {
+    const q = encodeURIComponent(`${tournamentName} melee singles bracket VOD`);
+    const searchRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=1&key=${YOUTUBE_API_KEY}`
+    );
+    const searchData = await searchRes.json();
+    const candidate = searchData?.items?.[0];
+    if (!candidate) return null;
+    const videoId = candidate.id.videoId;
+    const detailsRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${YOUTUBE_API_KEY}`
+    );
+    const detailsData = await detailsRes.json();
+    const description = detailsData?.items?.[0]?.snippet?.description || "";
+    return { videoId, description, channel: candidate.snippet?.channelTitle || "desconocido" };
+  } catch (e) {
+    console.error(`✗ Melee · VOD búsqueda general (${tournamentName}): ${e.message}`);
+    return null;
+  }
 }
 
 function findTimestampForMatchup(description, nombreA, nombreB) {
@@ -1079,6 +1103,79 @@ async function fetchFinalStandings(eventId) {
   return (data?.event?.standings?.nodes || []).filter(n => n.entrant);
 }
 
+// ── Narrativa del archivo permanente (Claude API + búsqueda web) ───────────
+//
+// El resumen mecánico ("1° X · 2° Y ... Upsets destacados: A venció a B")
+// nunca tuvo contexto histórico -- para algo como "primera victoria de lloD
+// sobre Hungrybox" hace falta saber qué pasó ANTES de este torneo, dato que
+// no viene en la data de start.gg de un solo evento. Se le pide a Claude que
+// busque ese contexto (head-to-head, rachas, personajes) y redacte al estilo
+// del resumen de GOML -- con instrucción explícita de NO inventar
+// superlativos que no pueda confirmar con la búsqueda.
+//
+// Corre UNA sola vez por torneo (justo cuando pasa a archivo permanente,
+// nunca se regenera después), así que el costo real es de pocos calls/mes,
+// no algo recurrente cada 4h.
+async function narrateArchiveSummary(tournamentName, standings, upsets) {
+  if (!ANTHROPIC_API_KEY) return null;
+  const top8Line = [...standings]
+    .sort((a, b) => a.placement - b.placement)
+    .map(s => `${s.placement}° ${s.entrant.name}`)
+    .join(" · ");
+  const upsetsData = upsets.slice(0, 8).map(u =>
+    `${u.ganador.nombre}${u.ganador.seed != null ? ` (seed ${u.ganador.seed})` : u.ganador.ssbmrank != null ? ` (SSBMRank #${u.ganador.ssbmrank})` : ""} venció a ${u.perdedor.nombre}${u.perdedor.seed != null ? ` (seed ${u.perdedor.seed})` : u.perdedor.ssbmrank != null ? ` (SSBMRank #${u.perdedor.ssbmrank})` : ""} -- ${u.ronda}`
+  ).join("\n");
+
+  const prompt = `Redactá el resumen de resultado final de un torneo de Super Smash Bros. Melee, en español, en el mismo estilo que este ejemplo real (una sola oración de standings + una oración de upsets destacados con contexto):
+
+"1° lloD · 2° RapMonster · 3° Zain · 4° Hungrybox · 5° moky · 5° Soonsay · 7° n0ne · 7° Aklo. Upsets destacados: lloD venció a Hungrybox en un reverse 3-0 para entrar a Top 8 (su primera victoria sobre él); Soonsay venció a Zain 3-0 mandándolo a losers (primer jugador de Fox aparte de Cody Schwab en vencerlo); Kola (seed 72) llegó hasta 9° derrotando a Maher, Drephen, Zuppy y SluG en el camino."
+
+Torneo: ${tournamentName}
+Standings finales: ${top8Line}
+Upsets detectados (por seed o SSBMRank, no necesariamente en orden de importancia):
+${upsetsData || "(ninguno detectado por el criterio automático)"}
+
+Usá la búsqueda web para confirmar contexto real: rachas, primera vez que X le gana a Y, importancia de un resultado dentro de la temporada, etc. -- SOLO si lo podés confirmar con una fuente real. Si no encontrás contexto verificable para un upset, simplemente describilo sin inventar superlativos ("primera vez", "el único", "el más joven en...") sin haberlo confirmado. Es preferible un resumen más plano y correcto que uno rico pero con datos inventados.
+
+Devolvé SOLO el texto del resumen final (el formato del ejemplo: standings + upsets), sin preámbulo, sin markdown, sin comillas.`;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000); // deja margen a varias vueltas de búsqueda
+    let res;
+    try {
+      res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-5",
+          max_tokens: 1024,
+          messages: [{ role: "user", content: prompt }],
+          tools: [{ type: "web_search_20250305", name: "web_search" }],
+        }),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+    const data = await res.json();
+    if (data.error) throw new Error(JSON.stringify(data.error));
+    const texto = (data.content || [])
+      .filter(b => b.type === "text")
+      .map(b => b.text)
+      .join("\n")
+      .trim();
+    return texto || null;
+  } catch (e) {
+    console.error(`✗ Melee · narración con Claude API (${tournamentName}): ${e.message}`);
+    return null; // cae al resumen mecánico en buildTournamentArchiveItem
+  }
+}
+
 // El registro permanente del torneo: se arma UNA sola vez, en la misma
 // corrida en la que el evento pasa a COMPLETED por primera vez (justo antes
 // de que processedEventIds lo excluya de futuros escaneos). A diferencia de
@@ -1086,7 +1183,7 @@ async function fetchFinalStandings(eventId) {
 // ver RETENTION_DAYS más abajo — este item queda exento para siempre (mismo
 // criterio que Podcasts): es el resumen final del torneo, no un aviso
 // puntual que pierde sentido con el tiempo.
-function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings, tournamentUpsets, vod, vodClips) {
+function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings, tournamentUpsets, vod, vodClips, narracion) {
   if (!standings.length) return null;
   const top8Line = [...standings]
     .sort((a, b) => a.placement - b.placement)
@@ -1095,11 +1192,15 @@ function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings,
   const upsetsLine = tournamentUpsets.length
     ? ` Upsets destacados: ${tournamentUpsets.slice(0, 5).map(u => u.title).join("; ")}.`
     : "";
+  // Si Claude generó narrativa con contexto real, se usa esa; si no (sin
+  // ANTHROPIC_API_KEY, falló la llamada, etc.) cae al resumen mecánico de
+  // siempre -- nunca se queda sin resumen por esto.
+  const summary = narracion || `${top8Line}.${upsetsLine}`;
   return {
     guid: `melee-archivo-${slug}`,
     title: `Resultado final: ${tournamentName}`,
     link: bracketUrl,
-    summary: `${top8Line}.${upsetsLine}`,
+    summary,
     image: null,
     pubDate: new Date().toISOString(),
     source: tournamentName,
@@ -1398,7 +1499,19 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
           console.error(`✗ Melee · VOD permanente (${tournamentName}): ${e.message}`);
         }
 
-        const archiveItem = buildTournamentArchiveItem(slug, tournamentName, t.bracketUrl, standings, tournamentUpsets, vod, vodClips);
+        // Narrativa con contexto real (Claude API + búsqueda web) -- best
+        // effort, con su propio try/catch adentro (narrateArchiveSummary
+        // nunca tira, devuelve null si algo falla). No se deja que un
+        // problema acá tumbe el archivo permanente entero: si falla, el
+        // resumen mecánico de siempre sigue funcionando.
+        let narracion = null;
+        try {
+          narracion = await narrateArchiveSummary(tournamentName, standings, tournamentUpsets);
+        } catch (e) {
+          console.error(`✗ Melee · narración (${tournamentName}): ${e.message}`);
+        }
+
+        const archiveItem = buildTournamentArchiveItem(slug, tournamentName, t.bracketUrl, standings, tournamentUpsets, vod, vodClips, narracion);
         if (archiveItem) archiveItems.push(archiveItem);
       } catch (e) {
         console.error(`✗ Melee · archivo final (${tournamentName}): ${e.message}`);
