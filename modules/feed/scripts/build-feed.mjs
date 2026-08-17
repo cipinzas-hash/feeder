@@ -514,17 +514,24 @@ async function fetchLiveInfo(t) {
 // cada uno de los top 32 para saber si siguen en pie, no solo lo más reciente.
 // Todos los sets jugados del evento -- pagina bastante más que antes (era
 // solo perPage 60/page 1) porque el reporte de seeds (Fase 2a) necesita
-// historial, no solo lo último. Tope de 8 páginas (480 sets): la primera
-// versión de esto paginaba sin tope (hasta 20 páginas) y en un major real
-// (CEO 2026, cientos de entrants) el pipeline completo se pasó del timeout
-// de 20 min del workflow y el run se canceló sin commitear nada -- 480
-// alcanza para trackear el top 32 en la inmensa mayoría de brackets sin
-// volver a reventar el timeout.
+// historial, no solo lo último.
+//
+// perPage bajo a propósito (20, no 60): start.gg cobra "complejidad" por
+// objeto anidado devuelto (participants→images, games→selections), no solo
+// por set. Con perPage:60 un major grande como CEO/Supernova se pasa del
+// límite de 1000 objetos por request ("query complexity too high") y la
+// llamada entera falla -- eso es lo que estaba pasando en la práctica,
+// confirmado con el error real: "actual: 1916" / "actual: 1541" contra el
+// límite de 1000. Con perPage:20 (~32 objetos/set según ese ratio) queda
+// con margen. Tope de 24 páginas (480 sets) para cubrir el mismo total que
+// antes, ahora en más requests más chicos en vez de menos requests grandes
+// que revientan.
 async function fetchCompletedSets(eventId) {
-  const perPage = 60;
+  let perPage = 20;
   let page = 1;
   let all = [];
-  while (page <= 8) {
+  let totalFetched = 0;
+  while (page <= 24 && totalFetched < 480) {
     const query = `
       query($eventId: ID!, $page: Int!, $perPage: Int!){
         event(id:$eventId){
@@ -543,9 +550,34 @@ async function fetchCompletedSets(eventId) {
           }
         }
       }`;
-    const data = await startggQuery(query, { eventId, page, perPage });
+    let data;
+    try {
+      data = await startggQuery(query, { eventId, page, perPage });
+    } catch (e) {
+      // Adaptativo: si igual nos pasamos del límite de complejidad de
+      // start.gg (formato del mensaje: "query complexity too high"), no
+      // hay forma de calcular el número exacto de antemano porque depende
+      // de cuántos objetos anidados trae CADA set (participants/images,
+      // games/selections varía según el evento) -- se corta perPage a la
+      // mitad y se reintenta esta misma página en vez de perder el evento
+      // entero. Tope de 3 reintentos: si con perPage 2-3 sigue fallando, es
+      // otra cosa y no vale la pena seguir insistiendo.
+      //
+      // Imprecisión conocida y aceptada: al bajar perPage a mitad de
+      // camino, la numeración de "página" cambia de tamaño, así que puede
+      // quedar un pequeño hueco o solape en los sets más viejos de esa
+      // franja. No importa para el uso real (reporte de seeds/upsets es
+      // best-effort sobre lo más reciente, no un registro exacto).
+      if (/complexity/i.test(e.message) && perPage > 2) {
+        perPage = Math.max(2, Math.floor(perPage / 2));
+        console.warn(`⚠ Melee · complejidad excedida, bajando perPage a ${perPage} y reintentando página ${page}`);
+        continue;
+      }
+      throw e;
+    }
     const nodes = data?.event?.sets?.nodes || [];
     all = all.concat(nodes);
+    totalFetched += nodes.length;
     if (nodes.length < perPage) break;
     page++;
   }
