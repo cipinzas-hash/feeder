@@ -1098,11 +1098,16 @@ function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings,
 async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventIds, previousTrackedTournaments = []) {
   if (!STARTGG_API_KEY) {
     console.error("✗ Melee · falta STARTGG_API_KEY, se omite esta categoría esta corrida");
-    return { upsetItems: [], hypeItems: [], projectionItems: [], seedReportItems: [], top16Items: [], top8Items: [], archiveItems: [], processedEventIds: previousProcessedEventIds, trackedTournaments: previousTrackedTournaments };
+    return { upsetItems: [], hypeItems: [], projectionItems: [], seedReportItems: [], top16Items: [], top8Items: [], archiveItems: [], processedEventIds: previousProcessedEventIds, trackedTournaments: previousTrackedTournaments, meleeDebug: [] };
   }
 
   await loadSSBMRank();
 
+  const meleeDebug = []; // temporal: no puedo leer logs de Actions desde el
+                          // sandbox (host de Azure bloqueado), así que esto
+                          // deja rastro directo en feed.json -- borrar una vez
+                          // diagnosticado por qué CEO/Supernova no generan
+                          // reporte de seeds.
   let tournaments = [];
   try {
     const res = await fetch(MELEEMAJORS_URL);
@@ -1111,6 +1116,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
     console.error(`✗ Melee · no se pudo leer meleemajors.gg: ${e.message}`);
     tournaments = []; // seguir igual con lo rastreado de corridas anteriores (ver abajo)
   }
+  meleeDebug.push({ meleemajorsCount: tournaments.length, meleemajorsSlugs: tournaments.map(t => parseSlugFromBracketUrl(t.bracketUrl)) });
 
   // meleemajors.gg deja de listar un torneo apenas termina (o incluso antes,
   // por su propia lógica de retención). Si eso pasa justo antes de que esta
@@ -1135,6 +1141,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
   if (recoveredCount > 0) {
     console.log(`✓ Melee · ${recoveredCount} torneo(s) ya no listado(s) en meleemajors.gg pero recuperado(s) del rastreo previo`);
   }
+  meleeDebug.push({ combinedCount: combinedTournaments.length, combinedSlugs: combinedTournaments.map(t => parseSlugFromBracketUrl(t.bracketUrl)), previousTrackedCount: previousTrackedTournaments.length, previousProcessedCount: previousProcessedEventIds.length });
 
   const upsetItems = [];
   const hypeItems = [];
@@ -1168,11 +1175,13 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
       eventInfo = await fetchEventInfo(slug);
     } catch (e) {
       console.error(`✗ Melee · ${slug}: ${e.message}`);
+      meleeDebug.push({ slug, error: `fetchEventInfo: ${e.message}` });
       continue;
     }
-    if (!eventInfo) continue;
+    if (!eventInfo) { meleeDebug.push({ slug, error: "eventInfo null" }); continue; }
     const tournamentName = t.name || eventInfo.tournament?.name || eventInfo.name;
     const state = eventInfo.state;
+    meleeDebug.push({ slug, tournamentName, state, eventId: eventInfo.id, yaProcesado: previousProcessedEventIds.includes(eventInfo.id) });
 
     // Fase 1 (hype): el torneo todavía no arrancó (CREATED/READY/QUEUED/etc).
     // Nada de sets todavía — solo countdown + proyección de bracket cerca de
@@ -1369,7 +1378,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
     }
   }
 
-  return { upsetItems, hypeItems, projectionItems, seedReportItems, top16Items, top8Items, archiveItems, processedEventIds: Array.from(processedEventIds), trackedTournaments };
+  return { upsetItems, hypeItems, projectionItems, seedReportItems, top16Items, top8Items, archiveItems, processedEventIds: Array.from(processedEventIds), trackedTournaments, meleeDebug };
 }
 // ================= Fin módulo Melee =================
 
@@ -1519,7 +1528,7 @@ async function main() {
   );
   const previousArchiveItems = previousMeleeItems.filter(i => i.esArchivo);
   const previousUpsetItemsByGuid = new Map(previousUpsetItemsOnly.map(i => [i.guid, i]));
-  const { upsetItems: newUpsetItems, hypeItems, projectionItems, seedReportItems, top16Items, top8Items, archiveItems: newArchiveItems, processedEventIds, trackedTournaments } = await fetchMeleeItems(
+  const { upsetItems: newUpsetItems, hypeItems, projectionItems, seedReportItems, top16Items, top8Items, archiveItems: newArchiveItems, processedEventIds, trackedTournaments, meleeDebug } = await fetchMeleeItems(
     previousUpsetItemsByGuid,
     previousProcessedEventIds,
     previousTrackedTournaments
@@ -1553,6 +1562,7 @@ async function main() {
     categories,
     meleeProcessedEvents: processedEventIds, // solo control interno, la app no necesita leer esto
     meleeTrackedTournaments: trackedTournaments, // idem -- torneos ACTIVE/COMPLETED aún sin archivo, se re-consultan aunque desaparezcan de meleemajors.gg
+    meleeDebug, // temporal -- borrar después de diagnosticar por qué CEO/Supernova no generan reporte de seeds
   };
   await mkdir(new URL("../data/", import.meta.url), { recursive: true });
   await writeFile(OUTPUT_PATH, JSON.stringify(output, null, 2));
