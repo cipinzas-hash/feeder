@@ -1226,8 +1226,10 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
       sets = await fetchCompletedSets(eventInfo.id);
     } catch (e) {
       console.error(`✗ Melee · sets de ${tournamentName}: ${e.message}`);
+      meleeDebug.push({ slug, tournamentName, error: `fetchCompletedSets: ${e.message}` });
       continue;
     }
+    meleeDebug.push({ slug, tournamentName, setsCount: sets.length });
 
     const upsets = detectUpsets(sets);
     for (const u of upsets) {
