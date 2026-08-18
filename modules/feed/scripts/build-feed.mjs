@@ -779,7 +779,15 @@ async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre) {
     return { videoId: best.videoId, startSeconds: 0 }; // el clip ES el partido -- no hace falta timestamp
   } catch (e) {
     console.error(`✗ Melee · clip de ${ganadorNombre} vs ${perdedorNombre} (${tournamentName}): ${e.message}`);
-    if (/quota/i.test(e.message)) throw e; // cuota agotada: no tiene sentido seguir buscando clip por clip
+    // Nunca relanzar -- esta función se llama desde varios puntos del loop
+    // de upsets que NO tienen su propio try/catch (a diferencia de la
+    // sección de VOD del archivo, que sí). Un throw acá (como había antes
+    // para cuota agotada, pensando en cortar más intentos) se propaga sin
+    // capturar y mata el pipeline ENTERO -- no solo Melee, todo (Noticias,
+    // Podcasts, Cine), porque main() no tiene un try/catch global, solo el
+    // .catch() final que ya para el proceso. Mejor perder la optimización
+    // de "parar de intentar" que arriesgar esto -- reintentar con cuota
+    // agotada simplemente falla rápido cada vez, no es costoso.
     return null;
   }
 }
@@ -1316,6 +1324,16 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
     const state = eventInfo.state;
     meleeDebug.push({ slug, tournamentName, state, eventId: eventInfo.id, yaProcesado: previousProcessedEventIds.includes(eventInfo.id) });
 
+    // Red de seguridad estructural: TODO el procesamiento de este torneo
+    // (hype/active/completed, upsets, archivo, VOD) queda envuelto en un
+    // solo try/catch. Antes un error sin capturar en cualquier punto de acá
+    // adentro se propagaba hasta main().catch() y mataba el pipeline
+    // ENTERO -- no solo Melee, también Noticias/Podcasts/Cine, porque
+    // main() no tiene ningún try/catch intermedio. Pasó de verdad (ver
+    // fix de findMatchClip más arriba). Con esto, en el peor caso se pierde
+    // el procesamiento de ESTE torneo puntual, nunca el resto del feed.
+    try {
+
     // Fase 1 (hype): el torneo todavía no arrancó (CREATED/READY/QUEUED/etc).
     // Nada de sets todavía — solo countdown + proyección de bracket cerca de
     // la fecha.
@@ -1534,6 +1552,10 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
     // falta, el bloque de arriba (línea ~779) lo salta directo la próxima vez.
     if (!processedEventIds.has(eventInfo.id)) {
       trackedTournaments.push({ bracketUrl: t.bracketUrl, name: tournamentName });
+    }
+    } catch (e) {
+      console.error(`✗ Melee · error no capturado procesando ${tournamentName} (${slug}): ${e.message}`);
+      meleeDebug.push({ slug, tournamentName, errorNoCapturado: e.message });
     }
   }
 
