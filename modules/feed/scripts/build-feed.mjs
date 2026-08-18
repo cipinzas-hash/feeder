@@ -224,6 +224,12 @@ const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY; // narrativa del archivo permanente (ver narrateArchiveSummary) -- opcional, sin ella cae al resumen mecánico
 const MELEEMAJORS_URL = "https://raw.githubusercontent.com/jtof-dev/meleemajors.gg/main/ssg/src/tournaments.json";
 const STARTGG_ENDPOINT = "https://api.start.gg/gql/alpha";
+// Debug temporal de búsquedas de clip individual -- findMatchClip vive fuera
+// de fetchMeleeItems, así que no tiene acceso directo al meleeDebug local de
+// ahí. Se junta acá (module-level) y se mezcla al final. Sacar junto con el
+// resto de meleeDebug una vez diagnosticado por qué vodClipsEncontrados
+// venía en 0 sin ningún error explícito.
+const vodClipDebug = [];
 const UPSET_SEED_DIFF_THRESHOLD = 5;
 const VOD_UPSET_SEED_DIFF_THRESHOLD = 25; // umbral (más alto) para entrar al VOD permanente del archivo -- ver Fase 3b
 const HYPE_WINDOW_DAYS = 14; // cuántos días antes de que empiece un major se genera el aviso de "se viene"
@@ -765,20 +771,25 @@ async function pickBestMatchClip(items, nombreA, nombreB) {
 // agrupar o limitar a qué partidos se les busca clip individual.
 async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre) {
   if (!YOUTUBE_API_KEY) return null;
+  const q = encodeURIComponent(`${ganadorNombre} vs ${perdedorNombre} ${tournamentName}`);
   try {
-    const q = encodeURIComponent(`${ganadorNombre} vs ${perdedorNombre} ${tournamentName}`);
     const searchRes = await fetch(
       `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=5&key=${YOUTUBE_API_KEY}`
     );
     const searchData = await searchRes.json();
     if (searchData?.error) throw new Error(`YouTube API: ${searchData.error.message || JSON.stringify(searchData.error)}`);
     const items = searchData?.items || [];
-    if (!items.length) return null;
+    if (!items.length) {
+      if (vodClipDebug.length < 20) vodClipDebug.push({ q: decodeURIComponent(q), itemsFound: 0 });
+      return null;
+    }
     const best = await pickBestMatchClip(items, ganadorNombre, perdedorNombre);
+    if (vodClipDebug.length < 20) vodClipDebug.push({ q: decodeURIComponent(q), itemsFound: items.length, bestScore: best?.score ?? null, primerTitulo: items[0]?.snippet?.title ?? null });
     if (!best || best.score < 1) return null; // nada que pinte lo bastante bien a que sea el clip correcto
     return { videoId: best.videoId, startSeconds: 0 }; // el clip ES el partido -- no hace falta timestamp
   } catch (e) {
     console.error(`✗ Melee · clip de ${ganadorNombre} vs ${perdedorNombre} (${tournamentName}): ${e.message}`);
+    if (vodClipDebug.length < 20) vodClipDebug.push({ q: decodeURIComponent(q), error: e.message });
     // Nunca relanzar -- esta función se llama desde varios puntos del loop
     // de upsets que NO tienen su propio try/catch (a diferencia de la
     // sección de VOD del archivo, que sí). Un throw acá (como había antes
@@ -1744,6 +1755,7 @@ async function main() {
     meleeProcessedEvents: processedEventIds, // solo control interno, la app no necesita leer esto
     meleeTrackedTournaments: trackedTournaments, // idem -- torneos ACTIVE/COMPLETED aún sin archivo, se re-consultan aunque desaparezcan de meleemajors.gg
     meleeDebug, // temporal -- borrar después de diagnosticar por qué CEO/Supernova no generan reporte de seeds
+    vodClipDebug, // temporal -- borrar después de diagnosticar por qué findMatchClip no encuentra clips (cap 20 entradas)
   };
   await mkdir(new URL("../data/", import.meta.url), { recursive: true });
   await writeFile(OUTPUT_PATH, JSON.stringify(output, null, 2));
