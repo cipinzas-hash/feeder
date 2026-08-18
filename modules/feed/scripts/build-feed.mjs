@@ -789,14 +789,76 @@ async function pickBestVodCandidate(items) {
   return candidatos[0] || null;
 }
 
-// Búsqueda del VOD del torneo restringida a canales de producción conocidos
-// (VOD_KNOWN_CHANNELS), UNA sola búsqueda de YouTube en total (no por
-// partido) -- se prueba canal por canal en orden hasta encontrar un video,
-// se trae su descripción completa una sola vez, y de ahí se sacan localmente
-// todos los timestamps de los partidos del archivo permanente (ver
+// Scoring inverso para clips individuales por partido: acá SÍ queremos algo
+// corto (un set real dura minutos, no horas -- si sale algo de más de 40 min
+// es casi seguro el stream completo del día, no un clip del partido puntual)
+// y con AMBOS nombres en el título, que es la señal más fuerte posible de
+// que el clip es justo de ese matchup. Sin timestamp que buscar después: si
+// encontramos esto, el video ENTERO es el partido.
+const CLIP_TITLE_PENALTY = /highlight|recap|hype|trailer|announcement|top ?8|top ?16|day ?\d|full (bracket|stream|vod)/i;
+async function pickBestMatchClip(items, nombreA, nombreB) {
+  if (!items.length) return null;
+  const ids = items.map(it => it.id.videoId).join(",");
+  const detailsRes = await fetch(
+    `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${ids}&key=${YOUTUBE_API_KEY}`
+  );
+  const detailsData = await detailsRes.json();
+  const a = nombreA.toLowerCase(), b = nombreB.toLowerCase();
+  const candidatos = (detailsData?.items || []).map(v => {
+    const seconds = isoDurationToSeconds(v.contentDetails?.duration);
+    const title = v.snippet?.title || "";
+    const titleLower = title.toLowerCase();
+    let score = 0;
+    if (titleLower.includes(a) && titleLower.includes(b)) score += 4; // ambos nombres en el título = señal fuerte de clip real
+    else if (titleLower.includes(a) || titleLower.includes(b)) score += 1;
+    else score -= 2; // ni un nombre en el título -- dudoso que sea el clip correcto
+    if (seconds >= 30 && seconds <= 2400) score += 2; // rango típico de un set real (30s a 40min, bo5 largo incluido)
+    else if (seconds > 2400) score -= 3; // probablemente el stream completo, no un clip
+    if (CLIP_TITLE_PENALTY.test(title)) score -= 3;
+    return { videoId: v.id, seconds, score };
+  });
+  candidatos.sort((x, y) => y.score - x.score);
+  return candidatos[0] || null;
+}
+
+// Búsqueda de VOD por partido individual: en vez de un stream largo +
+// timestamp adivinado dentro de la descripción, busca directamente el clip
+// del set (muchas producciones, incluida Beyond the Summit, suben cada set
+// destacado por separado además del stream completo). Costo de cuota más
+// alto que la versión por etapa (una búsqueda por partido en vez de una por
+// etapa) -- si en la práctica se acerca al límite diario, hay que volver a
+// agrupar o limitar a qué partidos se les busca clip individual.
+async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre) {
+  if (!YOUTUBE_API_KEY) return null;
+  try {
+    const q = encodeURIComponent(`${ganadorNombre} vs ${perdedorNombre} ${tournamentName}`);
+    const searchRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=5&key=${YOUTUBE_API_KEY}`
+    );
+    const searchData = await searchRes.json();
+    if (searchData?.error) throw new Error(`YouTube API: ${searchData.error.message || JSON.stringify(searchData.error)}`);
+    const items = searchData?.items || [];
+    if (!items.length) return null;
+    const best = await pickBestMatchClip(items, ganadorNombre, perdedorNombre);
+    if (!best || best.score < 1) return null; // nada que pinte lo bastante bien a que sea el clip correcto
+    return { videoId: best.videoId, startSeconds: 0 }; // el clip ES el partido -- no hace falta timestamp
+  } catch (e) {
+    console.error(`✗ Melee · clip de ${ganadorNombre} vs ${perdedorNombre} (${tournamentName}): ${e.message}`);
+    if (/quota/i.test(e.message)) throw e; // cuota agotada: no tiene sentido seguir buscando clip por clip
+    return null;
+  }
+}
+
+
 // findTimestampForMatchup). Sin esto, cubrir Top 16 completo + upsets≥25
 // implicaría 15-20 búsquedas de YouTube por torneo -- inviable con la cuota
 // diaria (10.000 unidades, 100 por búsqueda).
+//
+// NOTA: desde que existe findMatchClip (clip individual por partido, sin
+// necesidad de timestamp), esta función queda como respaldo -- se usa solo
+// si findMatchClip no encuentra nada para un partido puntual. Sigue siendo
+// útil ahí porque un stream completo + timestamp adivinado es mejor que
+// nada.
 async function findTournamentVodDescription(tournamentName, etapaQuery) {
   if (!YOUTUBE_API_KEY) return null;
   const terminoEtapa = etapaQuery ? ` ${etapaQuery}` : "";
@@ -1560,17 +1622,24 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
 
         // VOD permanente (Fase 3b): Top 16 completo + Top 8 completo +
         // upsets≥25, buscado en los canales de producción conocidos -- ver
-        // buildVodCandidateMatches y findTournamentVodDescription más arriba.
+        // buildVodCandidateMatches más arriba.
         //
-        // Los majors grandes NO suben un video único para todo el torneo --
-        // suben VODs separados por etapa (Pools, Bracket, Top 8), cada uno
-        // con su propio setlist en la descripción. Buscar "una vez para todo
-        // el torneo" hacía que un upset de la fase temprana casi seguro
-        // devolviera timestamp 0 si el video encontrado resultaba ser el de
-        // Top 8. Se agrupa por etapa REAL (esTop8/esTop16, ya vienen de
-        // phaseGroup.id de start.gg, no de adivinar texto) y se busca UNA
-        // vez por etapa presente -- como mucho 3 búsquedas (Top 8 / Top 16 /
-        // resto), no 1 fija ni una por set.
+        // Estrategia: clip individual por partido primero (findMatchClip --
+        // muchas producciones, Beyond the Summit incluida, suben cada set
+        // destacado aparte del stream completo; si existe, es mejor porque
+        // el video ENTERO es el partido, sin adivinar timestamp). Si no hay
+        // clip individual, cae al stream por etapa + timestamp adivinado en
+        // la descripción (findTournamentVodDescription) -- ese fallback se
+        // busca una sola vez por etapa y se cachea, no una vez por partido
+        // que cae a él.
+        //
+        // Costo de cuota: en el peor caso (ningún partido tiene clip
+        // individual) esto es 1 búsqueda por partido + hasta 3 de respaldo
+        // por etapa -- más caro que la versión anterior (solo 3 por
+        // torneo). Si en la práctica se acerca al límite diario de 10.000
+        // unidades, hay que volver a la versión solo-por-etapa o limitar
+        // qué partidos reciben búsqueda individual (por ejemplo, solo
+        // esUpset).
         let vodClips = [];
         try {
           const phasesForArchive = await fetchEventPhases(eventInfo.id);
@@ -1581,34 +1650,44 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
           const etapaDe = m => m.esTop8 ? "top8" : m.esTop16 ? "top16" : "resto";
           const etapaQuery = { top8: "top 8", top16: "top 16", resto: "bracket" };
           const etapaLabel = { top8: "Top 8", top16: "Top 16", resto: "bracket temprano" };
-          const grupos = new Map(); // etapa -> matches[]
-          for (const m of candidateMatches) {
-            const etapa = etapaDe(m);
-            if (!grupos.has(etapa)) grupos.set(etapa, []);
-            grupos.get(etapa).push(m);
-          }
+          const fallbackPorEtapa = new Map(); // etapa -> vodSource | null, cacheado para no repetir la búsqueda
 
-          for (const [etapa, matches] of grupos) {
-            const vodSource = await findTournamentVodDescription(tournamentName, etapaQuery[etapa]);
-            meleeDebug.push({ slug, tournamentName, vodEtapa: etapaLabel[etapa], vodMatchesEnEtapa: matches.length, vodEncontrado: !!vodSource, vodVideoId: vodSource?.videoId ?? null, vodChannel: vodSource?.channel ?? null });
-            if (!vodSource) {
-              console.warn(`⚠ Melee · sin VOD para etapa "${etapaLabel[etapa]}" de ${tournamentName}`);
-              continue;
+          let clipsIndividuales = 0, fallbacksUsados = 0;
+          for (const m of candidateMatches) {
+            let videoId = null, startSeconds = 0;
+            const clip = await findMatchClip(tournamentName, m.ganador.nombre, m.perdedor.nombre);
+            if (clip) {
+              videoId = clip.videoId;
+              startSeconds = 0;
+              clipsIndividuales++;
+            } else {
+              const etapa = etapaDe(m);
+              if (!fallbackPorEtapa.has(etapa)) {
+                const vodSource = await findTournamentVodDescription(tournamentName, etapaQuery[etapa]);
+                fallbackPorEtapa.set(etapa, vodSource);
+                meleeDebug.push({ slug, tournamentName, vodEtapaFallback: etapaLabel[etapa], vodEncontrado: !!vodSource, vodVideoId: vodSource?.videoId ?? null, vodChannel: vodSource?.channel ?? null });
+              }
+              const vodSource = fallbackPorEtapa.get(etapa);
+              if (vodSource) {
+                videoId = vodSource.videoId;
+                startSeconds = findTimestampForMatchup(vodSource.description, m.ganador.nombre, m.perdedor.nombre);
+                fallbacksUsados++;
+              }
             }
-            for (const m of matches) {
-              vodClips.push({
-                guid: `melee-vodclip-${slug}-${m.setId}`,
-                ronda: m.ronda,
-                ganador: m.ganador,
-                perdedor: m.perdedor,
-                esUpset: m.esUpset,
-                esTop16: m.esTop16,
-                esTop8: m.esTop8,
-                videoId: vodSource.videoId,
-                startSeconds: findTimestampForMatchup(vodSource.description, m.ganador.nombre, m.perdedor.nombre),
-              });
-            }
+            if (!videoId) continue; // ni clip individual ni fallback por etapa -- este partido queda sin VOD
+            vodClips.push({
+              guid: `melee-vodclip-${slug}-${m.setId}`,
+              ronda: m.ronda,
+              ganador: m.ganador,
+              perdedor: m.perdedor,
+              esUpset: m.esUpset,
+              esTop16: m.esTop16,
+              esTop8: m.esTop8,
+              videoId,
+              startSeconds,
+            });
           }
+          meleeDebug.push({ slug, tournamentName, vodClipsIndividuales: clipsIndividuales, vodFallbacksUsados: fallbacksUsados, vodSinNada: candidateMatches.length - vodClips.length });
         } catch (e) {
           console.error(`✗ Melee · VOD permanente (${tournamentName}): ${e.message}`);
           meleeDebug.push({ slug, tournamentName, vodError: e.message });
