@@ -254,6 +254,7 @@ const VOD_KNOWN_CHANNELS = [
 // fuerte es un jugador *en términos absolutos*, sin depender del seeding local.
 const SSBMRANK_TOP_CUTOFF = 50; // un rankeado top 50 mundial perdiendo ya es noticia, sin importar seed
 const RANK_DIFF_THRESHOLD = 15; // diferencia mínima de puestos SSBMRank para contar como upset -- sin esto, "#3 vence a #2" contaba como sorpresa
+const UPSET_LOSER_SEED_CUTOFF = 32; // solo interesan upsets contra alguien seedeado top 32 -- perder ante peor seed en rondas tempranas del bracket es ruido
 let ssbmrankByTag = null;
 
 function normalizeTag(name) {
@@ -672,6 +673,15 @@ function detectUpsets(sets) {
     // que son sorpresas de verdad.
     if (!seedUpset && !rankUpset) continue;
 
+    // Filtro adicional: solo interesa si el PERDEDOR estaba seedeado top 32
+    // -- perder contra alguien peor seedeado en las rondas tempranas del
+    // bracket (seed 90 cae ante seed 96, diferencia real pero irrelevante)
+    // es ruido, no una sorpresa que valga la pena destacar. Solo se aplica
+    // cuando el dato de seed existe: si no hay seed (torneo sin seeding
+    // cerrado, por eso existe rankUpset en primer lugar) no hay forma de
+    // filtrar por esto, así que no se descarta solo por falta de dato.
+    if (loser.initialSeedNum != null && loser.initialSeedNum > UPSET_LOSER_SEED_CUTOFF) continue;
+
     out.push({
       ronda: set.fullRoundText,
       ganador: {
@@ -880,15 +890,17 @@ function buildVodCandidateMatches(sets, top16PhaseId, top8PhaseId) {
     let esBigUpset = false;
     if (a.initialSeedNum && b.initialSeedNum) {
       const seedDiff = winner.initialSeedNum - loser.initialSeedNum; // positivo = ganador con peor seed = upset real
-      esBigUpset = seedDiff >= VOD_UPSET_SEED_DIFF_THRESHOLD;
+      esBigUpset = seedDiff >= VOD_UPSET_SEED_DIFF_THRESHOLD && loser.initialSeedNum <= UPSET_LOSER_SEED_CUTOFF;
     }
     // Mismo criterio SSBMRank que detectUpsets: un top 50 mundial cayendo
     // ante alguien sin ranking (o muy por debajo) es VOD-worthy sin importar
-    // si el torneo tenía seeding confiable.
+    // si el torneo tenía seeding confiable. Mismo filtro de "perdedor top
+    // 32" que en detectUpsets -- solo si el dato de seed existe, ver ahí.
     const loserRank = ssbmrankOf(loser.name);
     const winnerRank = ssbmrankOf(winner.name);
     const esBigUpsetPorRank = loserRank != null && loserRank <= SSBMRANK_TOP_CUTOFF
-      && (winnerRank == null || winnerRank > loserRank);
+      && (winnerRank == null || winnerRank > loserRank)
+      && (loser.initialSeedNum == null || loser.initialSeedNum <= UPSET_LOSER_SEED_CUTOFF);
 
     if (!esTop16 && !esTop8 && !esBigUpset && !esBigUpsetPorRank) continue;
     out.push({
