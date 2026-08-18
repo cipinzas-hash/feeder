@@ -797,6 +797,13 @@ async function findTournamentVodDescription(tournamentName, etapaQuery) {
         `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${ch.channelId}&q=${q}&type=video&maxResults=3&key=${YOUTUBE_API_KEY}`
       );
       const searchData = await searchRes.json();
+      // searchData?.items || [] antes no distinguía "sin resultados" de "la
+      // API devolvió un error" (cuota agotada -- 403 quotaExceeded es lo más
+      // probable dado el volumen de pruebas de hoy -- key inválida, etc.) --
+      // en ambos casos caía a [] en silencio y quedaba indistinguible de
+      // "este canal no tenía el torneo". Ahora se tira explícito para que
+      // quede en meleeDebug en vez de perderse.
+      if (searchData?.error) throw new Error(`YouTube API: ${searchData.error.message || JSON.stringify(searchData.error)}`);
       const items = searchData?.items || [];
       if (!items.length) continue;
       const best = await pickBestVodCandidate(items);
@@ -804,6 +811,7 @@ async function findTournamentVodDescription(tournamentName, etapaQuery) {
       return { videoId: best.videoId, description: best.description, channel: ch.name };
     } catch (e) {
       console.error(`✗ Melee · VOD en ${ch.name} (${tournamentName}${terminoEtapa}): ${e.message}`);
+      if (/quota/i.test(e.message)) throw e; // cuota agotada: no tiene sentido seguir probando canales, va a fallar igual en todos
     }
   }
   // Respaldo: ningún canal conocido tenía el torneo (pasó con GOML 2026,
@@ -817,6 +825,7 @@ async function findTournamentVodDescription(tournamentName, etapaQuery) {
       `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=3&key=${YOUTUBE_API_KEY}`
     );
     const searchData = await searchRes.json();
+    if (searchData?.error) throw new Error(`YouTube API: ${searchData.error.message || JSON.stringify(searchData.error)}`);
     const items = searchData?.items || [];
     if (!items.length) return null;
     const best = await pickBestVodCandidate(items);
@@ -1590,6 +1599,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
           }
         } catch (e) {
           console.error(`✗ Melee · VOD permanente (${tournamentName}): ${e.message}`);
+          meleeDebug.push({ slug, tournamentName, vodError: e.message });
         }
 
         // Narrativa con contexto real (Claude API + búsqueda web) -- best
