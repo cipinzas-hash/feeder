@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-18T01:33:45.843Z",
+  "generatedAt": "2026-08-18T04:44:59.582Z",
   "categories": [
     {
       "cat": "Películas",
@@ -719,7 +719,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1318413",
@@ -882,6 +882,83 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1084244",
+          "title": "Toy Story 5",
+          "link": "https://www.themoviedb.org/movie/1084244",
+          "summary": "Los juguetes de Bonnie se enfrentan a otra amenaza cuando la niña recibe una tableta llamada Lilypad, la cual absorbe toda su atención y pone en peligro el juego tradicional. Todos deben unirse para competir contra la tecnología y recuperar su lugar.",
+          "image": "https://image.tmdb.org/t/p/w500/pTjZfbFVWUIwUM5OzX3LVh84ejU.jpg",
+          "pubDate": "2026-06-17",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-07-28T17:13:05.053Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.5,
+            "rt": 92,
+            "metascore": 73,
+            "tmdb": 7.4
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": null,
+          "cast": [
+            {
+              "name": "Tom Hanks",
+              "character": "Woody (voice)",
+              "order": 0
+            },
+            {
+              "name": "Tim Allen",
+              "character": "Buzz Lightyear (voice)",
+              "order": 1
+            },
+            {
+              "name": "Joan Cusack",
+              "character": "Jessie (voice)",
+              "order": 2
+            },
+            {
+              "name": "Conan O'Brien",
+              "character": "Smarty Pants (voice)",
+              "order": 3
+            },
+            {
+              "name": "Scarlett Spears",
+              "character": "Bonnie (voice)",
+              "order": 4
+            },
+            {
+              "name": "Greta Lee",
+              "character": "Lilypad (voice)",
+              "order": 5
+            },
+            {
+              "name": "Shelby Rabara",
+              "character": "Snappy (voice)",
+              "order": 6
+            },
+            {
+              "name": "Mykal-Michelle Harris",
+              "character": "Blaze (voice)",
+              "order": 7
+            },
+            {
+              "name": "Craig Robinson",
+              "character": "Atlas (voice)",
+              "order": 8
+            },
+            {
+              "name": "Jay Hernandez",
+              "character": "Bonnie’s Dad (voice)",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1339713",
           "title": "Obsession",
           "link": "https://www.themoviedb.org/movie/1339713",
@@ -956,6 +1033,86 @@
             {
               "name": "Anthony Casabianca",
               "character": "Chris",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1003596",
+          "title": "Vengadores: Doomsday",
+          "link": "https://www.themoviedb.org/movie/1003596",
+          "summary": "Quinta entrega de la saga 'Vengadores' incluida en el Universo Cinematográfico Marvel (UCM). Sinopsis desconocido.",
+          "image": "https://image.tmdb.org/t/p/w500/rQKabpeIewLLNStFr3anEXI0xqu.jpg",
+          "pubDate": "2026-12-16",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-08-16T01:24:32.363Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Post Production",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "gcjnEYJ4OB8",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Robert Downey Jr.",
+              "character": "Victor von Doom  / Doctor Doom",
+              "order": 0
+            },
+            {
+              "name": "Chris Evans",
+              "character": "Steve Rogers",
+              "order": 1
+            },
+            {
+              "name": "Chris Hemsworth",
+              "character": "Thor",
+              "order": 2
+            },
+            {
+              "name": "Pedro Pascal",
+              "character": "Reed Richards / Mister Fantastic",
+              "order": 3
+            },
+            {
+              "name": "Paul Rudd",
+              "character": "Scott Lang / Ant-Man",
+              "order": 4
+            },
+            {
+              "name": "Anthony Mackie",
+              "character": "Sam Wilson / Captain America",
+              "order": 5
+            },
+            {
+              "name": "Florence Pugh",
+              "character": "Yelena Belova",
+              "order": 6
+            },
+            {
+              "name": "Vanessa Kirby",
+              "character": "Sue Storm / Invisible Woman",
+              "order": 7
+            },
+            {
+              "name": "Ebon Moss-Bachrach",
+              "character": "Ben Grimm / The Thing",
+              "order": 8
+            },
+            {
+              "name": "Wyatt Russell",
+              "character": "John Walker",
               "order": 9
             }
           ],
@@ -1116,163 +1273,6 @@
             {
               "name": "Ava Jean",
               "character": "Madison",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1003596",
-          "title": "Vengadores: Doomsday",
-          "link": "https://www.themoviedb.org/movie/1003596",
-          "summary": "Quinta entrega de la saga 'Vengadores' incluida en el Universo Cinematográfico Marvel (UCM). Sinopsis desconocido.",
-          "image": "https://image.tmdb.org/t/p/w500/rQKabpeIewLLNStFr3anEXI0xqu.jpg",
-          "pubDate": "2026-12-16",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-08-16T01:24:32.363Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Post Production",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "gcjnEYJ4OB8",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Robert Downey Jr.",
-              "character": "Victor von Doom  / Doctor Doom",
-              "order": 0
-            },
-            {
-              "name": "Chris Evans",
-              "character": "Steve Rogers",
-              "order": 1
-            },
-            {
-              "name": "Chris Hemsworth",
-              "character": "Thor",
-              "order": 2
-            },
-            {
-              "name": "Pedro Pascal",
-              "character": "Reed Richards / Mister Fantastic",
-              "order": 3
-            },
-            {
-              "name": "Paul Rudd",
-              "character": "Scott Lang / Ant-Man",
-              "order": 4
-            },
-            {
-              "name": "Anthony Mackie",
-              "character": "Sam Wilson / Captain America",
-              "order": 5
-            },
-            {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova",
-              "order": 6
-            },
-            {
-              "name": "Vanessa Kirby",
-              "character": "Sue Storm / Invisible Woman",
-              "order": 7
-            },
-            {
-              "name": "Ebon Moss-Bachrach",
-              "character": "Ben Grimm / The Thing",
-              "order": 8
-            },
-            {
-              "name": "Wyatt Russell",
-              "character": "John Walker",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1084244",
-          "title": "Toy Story 5",
-          "link": "https://www.themoviedb.org/movie/1084244",
-          "summary": "Los juguetes de Bonnie se enfrentan a otra amenaza cuando la niña recibe una tableta llamada Lilypad, la cual absorbe toda su atención y pone en peligro el juego tradicional. Todos deben unirse para competir contra la tecnología y recuperar su lugar.",
-          "image": "https://image.tmdb.org/t/p/w500/pTjZfbFVWUIwUM5OzX3LVh84ejU.jpg",
-          "pubDate": "2026-06-17",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-07-28T17:13:05.053Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.5,
-            "rt": 92,
-            "metascore": 73,
-            "tmdb": 7.4
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": null,
-          "cast": [
-            {
-              "name": "Tom Hanks",
-              "character": "Woody (voice)",
-              "order": 0
-            },
-            {
-              "name": "Tim Allen",
-              "character": "Buzz Lightyear (voice)",
-              "order": 1
-            },
-            {
-              "name": "Joan Cusack",
-              "character": "Jessie (voice)",
-              "order": 2
-            },
-            {
-              "name": "Conan O'Brien",
-              "character": "Smarty Pants (voice)",
-              "order": 3
-            },
-            {
-              "name": "Scarlett Spears",
-              "character": "Bonnie (voice)",
-              "order": 4
-            },
-            {
-              "name": "Greta Lee",
-              "character": "Lilypad (voice)",
-              "order": 5
-            },
-            {
-              "name": "Shelby Rabara",
-              "character": "Snappy (voice)",
-              "order": 6
-            },
-            {
-              "name": "Mykal-Michelle Harris",
-              "character": "Blaze (voice)",
-              "order": 7
-            },
-            {
-              "name": "Craig Robinson",
-              "character": "Atlas (voice)",
-              "order": 8
-            },
-            {
-              "name": "Jay Hernandez",
-              "character": "Bonnie’s Dad (voice)",
               "order": 9
             }
           ],
@@ -2870,6 +2870,60 @@
           ]
         },
         {
+          "guid": "tmdb-tv-95350",
+          "title": "Linternas",
+          "link": "https://www.themoviedb.org/tv/95350",
+          "summary": "Sigue al nuevo recluta John Stewart y al legendario Linterna Hal Jordan, dos policías intergalácticos que se ven envueltos en un oscuro misterio terrestre mientras investigan un asesinato en el corazón de Estados Unidos. Esto les lleva a misterios y ajustes de cuentas más oscuros.",
+          "image": "https://image.tmdb.org/t/p/w500/onBO4v52N3ikLaajwzOZ6AbXlNJ.jpg",
+          "pubDate": "2026-08-16",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-08-18T04:44:49.133Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.9
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-08-23",
+          "numberOfSeasons": 1,
+          "currentSeason": 1,
+          "reviews": null,
+          "trailer": {
+            "key": "-b78KhjNeHQ",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Kyle Chandler",
+              "character": "Hal Jordan",
+              "order": 0
+            },
+            {
+              "name": "Aaron Pierre",
+              "character": "John Stewart",
+              "order": 1
+            },
+            {
+              "name": "Kelly Macdonald",
+              "character": "Sheriff Kerry Kane",
+              "order": 2
+            },
+            {
+              "name": "Garret Dillahunt",
+              "character": "William 'Will' Macon",
+              "order": 3
+            },
+            {
+              "name": "Poorna Jagannathan",
+              "character": "Zoe Macon",
+              "order": 4
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-37528",
           "title": "Gran hermano",
           "link": "https://www.themoviedb.org/tv/37528",
@@ -3227,6 +3281,35 @@
           "cast": []
         },
         {
+          "guid": "tmdb-tv-4656",
+          "title": "Raw",
+          "link": "https://www.themoviedb.org/tv/4656",
+          "summary": "A regularly scheduled, live, year-round program featuring some of the biggest WWE Superstars.",
+          "image": "https://image.tmdb.org/t/p/w500/26v1iP77K6PySQRV0jBSnh3GtRc.jpg",
+          "pubDate": "1993-01-11",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-07-28T14:25:52.689Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.8,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.8
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-08-17",
+          "numberOfSeasons": 34,
+          "currentSeason": 34,
+          "reviews": null,
+          "trailer": {
+            "key": "tYZaNnnK2_E",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
           "guid": "tmdb-tv-94664",
           "title": "Mushoku Tensei Jobless Reincarnation",
           "link": "https://www.themoviedb.org/tv/94664",
@@ -3482,35 +3565,6 @@
               "order": 4
             }
           ]
-        },
-        {
-          "guid": "tmdb-tv-4656",
-          "title": "Raw",
-          "link": "https://www.themoviedb.org/tv/4656",
-          "summary": "A regularly scheduled, live, year-round program featuring some of the biggest WWE Superstars.",
-          "image": "https://image.tmdb.org/t/p/w500/26v1iP77K6PySQRV0jBSnh3GtRc.jpg",
-          "pubDate": "1993-01-11",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-07-28T14:25:52.689Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.8,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.8
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-08-17",
-          "numberOfSeasons": 34,
-          "currentSeason": 34,
-          "reviews": null,
-          "trailer": {
-            "key": "tYZaNnnK2_E",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
         },
         {
           "guid": "tmdb-tv-30984",
@@ -4986,23 +5040,23 @@
           "cast": []
         },
         {
-          "guid": "mal-62542",
-          "title": "Grand Blue Season 3",
-          "link": "https://myanimelist.net/anime/62542/Grand_Blue_Season_3",
-          "summary": "Third season of Grand Blue.",
-          "image": "https://cdn.myanimelist.net/images/anime/1615/158194l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
+          "guid": "mal-48820",
+          "title": "Mahou Shoujo Madoka★Magica Movie 4: Walpurgis no Kaiten",
+          "link": "https://myanimelist.net/anime/48820/Mahou_Shoujo_Madoka★Magica_Movie_4__Walpurgis_no_Kaiten",
+          "summary": "",
+          "image": "https://cdn.myanimelist.net/images/anime/1784/151057l.jpg",
+          "pubDate": "2026-08-28T00:00:00+00:00",
           "source": "MyAnimeList",
           "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:25:59.404Z",
+          "firstSeenAt": "2026-07-28T14:26:00.351Z",
           "fullText": null,
           "rating": {
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 8.41
+            "tmdb": null
           },
-          "status": "Currently Airing",
+          "status": "Not yet aired",
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": null,
@@ -5029,7 +5083,8 @@
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": null,
-          "cast": []
+          "cast": [],
+          "trending": false
         },
         {
           "guid": "mal-62513",
@@ -5049,29 +5104,6 @@
             "tmdb": 7.68
           },
           "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": null,
-          "cast": []
-        },
-        {
-          "guid": "mal-48820",
-          "title": "Mahou Shoujo Madoka★Magica Movie 4: Walpurgis no Kaiten",
-          "link": "https://myanimelist.net/anime/48820/Mahou_Shoujo_Madoka★Magica_Movie_4__Walpurgis_no_Kaiten",
-          "summary": "",
-          "image": "https://cdn.myanimelist.net/images/anime/1784/151057l.jpg",
-          "pubDate": "2026-08-28T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:26:00.351Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Not yet aired",
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": null,
