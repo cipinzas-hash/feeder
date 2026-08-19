@@ -1,0 +1,40 @@
+name: Angst Planner migration
+
+on:
+  push:
+    branches:
+      - angst-architecture-0.0
+    paths:
+      - scripts/migrate-planner-week-offset.mjs
+      - .github/workflows/migrate-planner.yml
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: angst-architecture-0.0
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Migrate Planner weekOffset ownership
+        run: node scripts/migrate-planner-week-offset.mjs
+
+      - name: Commit migration
+        run: |
+          if git diff --quiet -- core/LegacyApp.jsx; then
+            echo "No migration changes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add core/LegacyApp.jsx
+          git commit -m "refactor: move weekOffset ownership to Planner"
+          git push origin HEAD:angst-architecture-0.0
