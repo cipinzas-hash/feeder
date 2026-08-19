@@ -1,5 +1,6 @@
 export { default as manifest } from "./manifest.js";
 export { default as PlannerPage } from "./PlannerPage.jsx";
+export { PlannerProvider, usePlanner } from "./PlannerProvider.jsx";
 
 export {
   BASE_DATE,
@@ -27,4 +28,4 @@ export {
 } from "./actions.js";
 
 export { loadPlannerState, savePlannerState, getPlannerStorageFields } from "./storage.js";
-export { fromLegacyState, mergePlannerIntoLegacy, getPlannerLegacyFields } from "./legacyAdapter.js";
+export { fromLegacyState, toLegacyState } from "./legacyAdapter.js";
