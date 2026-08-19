@@ -38,6 +38,7 @@ export function PlannerProvider({ children }) {
 
   const actions = useMemo(() => ({
     setWeekOffset: (value) => setState((current) => setWeekOffset(current, value)),
+    applyStateAction: (action) => setState((current) => action(current)),
     updateDay: (dateKey, fields) => setState((current) => updateDay(current, dateKey, fields)),
     setCalendarMarks: (marks) => setState((current) => setCalendarMarks(current, marks)),
     setCustody: (custody) => setState((current) => setCustody(current, custody)),
