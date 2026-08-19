@@ -117,9 +117,17 @@ function weekDatesFor(dateKey) {
 }
 
 function computeWeeklyMuscleEffort(ejercicioLog, allExercicios, todayKey) {
+  return computeWeekMuscleEffortFor(ejercicioLog, allExercicios, weekDatesFor(todayKey));
+}
+
+// Generaliza computeWeeklyMuscleEffort a CUALQUIER semana (no solo la
+// actual) -- recibe directo las 7 fechas en vez de derivarlas de todayKey,
+// así se puede reusar para la vista de historial semanal sin duplicar la
+// lógica de sumar factor×pct por grupo muscular.
+function computeWeekMuscleEffortFor(ejercicioLog, allExercicios, weekDates) {
   const totals = {};
   MUSCLE_GROUPS.forEach(g=>totals[g.k]=0);
-  weekDatesFor(todayKey).forEach(dk=>{
+  weekDates.forEach(dk=>{
     const dayLog = ejercicioLog[dk];
     if(!dayLog) return;
     Object.keys(dayLog).forEach(key=>{
@@ -133,6 +141,43 @@ function computeWeeklyMuscleEffort(ejercicioLog, allExercicios, todayKey) {
     });
   });
   return totals;
+}
+
+// Ejercicios + series (reps/peso/fecha) realizados en una semana puntual,
+// combinando las sesiones de todos los días de esa semana -- para el
+// archivo semanal (vista "semanas"). Devuelve solo lo que efectivamente se
+// hizo (series marcadas done), agrupado por ejercicio.
+function computeWeekExerciseSummary(ejercicioLog, allExercicios, weekDates) {
+  const porEjercicio = new Map(); // exId -> { ex, series: [{reps,peso,date}] }
+  weekDates.forEach(dk=>{
+    const dayLog = ejercicioLog[dk];
+    if(!dayLog) return;
+    Object.keys(dayLog).forEach(key=>{
+      const sv = getSerieValue(dayLog[key]);
+      if(!sv?.done) return;
+      const exId = key.split("_").slice(0,-1).join("_") || key.split("_")[0];
+      const ex = allExercicios.find(e=>e.id===exId);
+      if(!ex) return;
+      if(!porEjercicio.has(exId)) porEjercicio.set(exId, { ex, series: [] });
+      porEjercicio.get(exId).series.push({ reps: sv.reps||0, peso: sv.peso||null, date: dk });
+    });
+  });
+  return Array.from(porEjercicio.values());
+}
+
+// Lunes de todas las semanas que tienen al menos una serie hecha en
+// ejercicioLog, más recientes primero -- para poblar el selector de la
+// vista "semanas". No hace falta guardar nada aparte: ejercicioLog ya
+// conserva el historial completo (no se poda), así que esto se recalcula
+// al vuelo cada vez.
+function weeksWithData(ejercicioLog) {
+  const mondays = new Set();
+  Object.keys(ejercicioLog).forEach(dk=>{
+    const hasSomething = Object.values(ejercicioLog[dk]||{}).some(v=>isSerieDone(v));
+    if(!hasSomething) return;
+    mondays.add(weekDatesFor(dk)[0]);
+  });
+  return Array.from(mondays).sort((a,b)=>b.localeCompare(a));
 }
 
 function BodyHeatmap({ totals, onTap }) {
@@ -255,6 +300,7 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
   const [timerActive,  setTimerActive]  = useState(false);
   const [editEx,       setEditEx]       = useState(null);
   const [histExId,     setHistExId]     = useState(null);
+  const [histWeek,      setHistWeek]     = useState(null); // lunes de la semana elegida en la vista "semanas"
   const [repsInput,    setRepsInput]    = useState({});
   const [pesoUnit,     setPesoUnit]     = useState("kg"); // "kg" | "lb" — UI only, storage always kg
   const [deckMenuOpen, setDeckMenuOpen] = useState(false);
@@ -564,6 +610,82 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
     );
   }
 
+  // ═══ VISTA: SEMANAS (archivo semanal -- muñeco + ejercicios/reps/pesos
+  // combinados de esa semana, calculado al vuelo desde ejercicioLog, que ya
+  // guarda todo el historial sin podar) ═══
+  if(view === "semanas") {
+    const DARK = {background:"#1a1a1a",borderRadius:12,padding:"14px 16px",color:"#fff",marginBottom:12};
+    const SL   = {fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:2,textTransform:"uppercase",marginBottom:8};
+    const MONTHS = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+    const fmtD = dk => { const [,m,d] = dk.split("-").map(Number); return `${d} ${MONTHS[m-1]}`; };
+    const semanas = weeksWithData(ejercicioLog);
+    const monday = histWeek || semanas[0] || null;
+    const weekDates = monday ? weekDatesFor(monday) : [];
+    const sunday = weekDates[6];
+    const weekTotals = monday ? computeWeekMuscleEffortFor(ejercicioLog, allExercicios, weekDates) : {};
+    const weekEx = monday ? computeWeekExerciseSummary(ejercicioLog, allExercicios, weekDates) : [];
+    return (
+      <div style={{padding:"16px",maxWidth:480,margin:"0 auto"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
+          <button onClick={()=>setView("session")} style={{background:"transparent",border:"none",fontSize:20,color:"#bbb",cursor:"pointer",padding:0,lineHeight:1}}>←</button>
+          <span style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#111"}}>🗓️ semanas</span>
+        </div>
+        {semanas.length===0 ? (
+          <div style={{padding:"60px 0",textAlign:"center"}}>
+            <div style={{fontFamily:"'Caveat',cursive",fontSize:18,color:"#ccc",marginBottom:6}}>sin semanas registradas aún</div>
+          </div>
+        ) : (<>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:20}}>
+            {semanas.map(m=>{
+              const s = weekDatesFor(m)[6];
+              const activa = m===monday;
+              return (
+                <button key={m} onClick={()=>setHistWeek(m)}
+                  style={{padding:"6px 12px",borderRadius:20,border:"1.5px solid",cursor:"pointer",
+                    background:activa?"#111":"transparent",color:activa?"#fff":"#555",borderColor:activa?"#111":"#ddd"}}>
+                  <span style={{fontFamily:"'Caveat',cursive",fontSize:14,fontWeight:700}}>{fmtD(m)}–{fmtD(s)}</span>
+                </button>
+              );
+            })}
+          </div>
+          {monday && (
+            <div style={DARK}>
+              <div style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:"#fff",marginBottom:14}}>
+                semana del {fmtD(monday)} al {fmtD(sunday)}
+              </div>
+              <BodyHeatmap totals={weekTotals} onTap={()=>{}}/>
+              {weekEx.length===0 ? (
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"rgba(255,255,255,0.35)",textAlign:"center",padding:"12px 0"}}>sin series marcadas esa semana</div>
+              ) : (<>
+                <div style={SL}>ejercicios de la semana</div>
+                <div style={{display:"flex",flexDirection:"column",gap:2}}>
+                  {weekEx.map(({ex,series})=>{
+                    const hasPeso = series.some(s=>s.peso);
+                    return (
+                      <div key={ex.id} style={{padding:"9px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                          <span style={{fontSize:15}}>{ex.emoji}</span>
+                          <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:600,color:"#fff",flex:1}}>{ex.name}</span>
+                          <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.35)"}}>{series.length} series</span>
+                        </div>
+                        <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"rgba(255,255,255,0.55)",paddingLeft:23}}>
+                          {series.map((s,i)=>(
+                            <span key={i}>{i>0?" · ":""}{s.reps}{hasPeso&&s.peso?`×${s.peso}kg`:"r"}</span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>)}
+            </div>
+          )}
+        </>)}
+        <div style={{height:32}}/>
+      </div>
+    );
+  }
+
   // ═══ VISTA: STATS ═══
   if(view === "stats") {
     const {sessionDates, streak, maxStreak, thisWeekSessions, rank, avgPerWeek, muscleCount, totalSeriesRecent, dowCount} = buildStats();
@@ -822,7 +944,7 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
       {/* Nav */}
       <div style={{display:"flex",gap:0,marginBottom:16,background:"#fff",border:"1px solid #eee",borderRadius:10,overflow:"hidden"}}>
         <div style={{flex:1,fontFamily:"'Caveat',cursive",fontSize:18,padding:"10px",background:"#111",color:"#fff",textAlign:"center"}}>🏋️ sesión</div>
-        {[["historial","📈"],["stats","📊"],["editor","✎"]].map(([v,icon])=>(
+        {[["historial","📈"],["semanas","🗓️"],["stats","📊"],["editor","✎"]].map(([v,icon])=>(
           <button key={v} onClick={()=>setView(v)} style={{padding:"10px 14px",background:"transparent",color:"#aaa",border:"none",borderLeft:"1px solid #eee",cursor:"pointer",fontSize:14,lineHeight:1}}>{icon}</button>
         ))}
       </div>
