@@ -207,9 +207,9 @@ function ProgresionChart({ history, compact }) {
   );
 }
 
-function FloatingRestTimer({ secs, maxSecs }) {
+function FloatingRestTimer({ secs, maxSecs, onSkip, onAddTime }) {
   return (
-    <div style={{position:"fixed",inset:0,zIndex:2000,background:"rgba(0,0,0,0.92)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+    <div onClick={onSkip} style={{position:"fixed",inset:0,zIndex:2000,background:"rgba(0,0,0,0.92)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
       <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"rgba(255,255,255,0.4)",letterSpacing:3,textTransform:"uppercase",marginBottom:18}}>descansando</div>
       <div style={{position:"relative",width:220,height:220,marginBottom:14}}>
         <svg width="220" height="220" style={{position:"absolute",top:0,left:0,transform:"rotate(-90deg)"}}>
@@ -222,7 +222,16 @@ function FloatingRestTimer({ secs, maxSecs }) {
           <span style={{fontFamily:"'Caveat',cursive",fontSize:64,fontWeight:700,color:"#fff"}}>{secs}</span>
         </div>
       </div>
-      <div style={{fontFamily:"'Caveat',cursive",fontSize:16,color:"rgba(255,255,255,0.4)"}}>concentrate en la próxima serie</div>
+      <div style={{fontFamily:"'Caveat',cursive",fontSize:16,color:"rgba(255,255,255,0.4)",marginBottom:22}}>concentrate en la próxima serie</div>
+      {/* Sin esto quedabas atrapado en pantalla completa los 90-120s
+          enteros aunque ya estuvieras listo antes -- tocar afuera de los
+          botones también saltea (onClick en el overlay), +15s para cuando
+          hace falta más. stopPropagation en los botones para que no
+          disparen el skip del overlay por accidente. */}
+      <div style={{display:"flex",gap:10}}>
+        <button onClick={e=>{e.stopPropagation();onAddTime(15);}} style={{padding:"10px 18px",borderRadius:20,border:"1px solid rgba(255,255,255,0.25)",background:"transparent",color:"rgba(255,255,255,0.7)",fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:600,cursor:"pointer"}}>+15s</button>
+        <button onClick={e=>{e.stopPropagation();onSkip();}} style={{padding:"10px 22px",borderRadius:20,border:"none",background:"#fff",color:"#111",fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,cursor:"pointer"}}>saltar →</button>
+      </div>
     </div>
   );
 }
@@ -282,6 +291,17 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
         return s - 1;
       });
     }, 1000);
+  }
+
+  function skipTimer() {
+    clearInterval(timerRef.current);
+    setTimerActive(false);
+    setTimerSecs(0);
+  }
+
+  function addTimerSecs(extra) {
+    setTimerSecs(s => s + extra);
+    setTimerMax(m => m + extra); // si no, el anillo de progreso se ve raro al agregar tiempo
   }
 
   function groupProgress(g) {
@@ -797,7 +817,7 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
 
   return (
     <div style={{padding:"16px",maxWidth:720,margin:"0 auto"}}>
-      {timerActive && <FloatingRestTimer secs={timerSecs} maxSecs={timerMax}/>}
+      {timerActive && <FloatingRestTimer secs={timerSecs} maxSecs={timerMax} onSkip={skipTimer} onAddTime={addTimerSecs}/>}
 
       {/* Nav */}
       <div style={{display:"flex",gap:0,marginBottom:16,background:"#fff",border:"1px solid #eee",borderRadius:10,overflow:"hidden"}}>
