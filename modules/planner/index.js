@@ -25,3 +25,5 @@ export {
   setRecurring,
   setLastRollover,
 } from "./actions.js";
+
+export { loadPlannerState, savePlannerState, getPlannerStorageFields } from "./storage.js";
