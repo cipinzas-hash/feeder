@@ -72,6 +72,16 @@ const CYNICAL_SUBTITLES = [
 function AngstApp() {
   const { state: plannerState, actions: plannerActions } = usePlanner();
   const weekOffset = plannerState.weekOffset ?? 0;
+  const calMarks = plannerState.calMarks ?? {};
+  // Transitional adapter: existing Legacy handlers can keep calling
+  // setCalMarks(), but Planner is the authoritative owner.
+  const setCalMarks = (updater) => {
+    const current = calMarksRef.current || {};
+    const next = typeof updater === "function" ? updater(current) : updater;
+    plannerActions.setCalendarMarks(next);
+    calMarksRef.current = next;
+    return next;
+  };
   const [page, setPage] = useState(0);
   // dayData: flat dict keyed by "YYYY-MM-DD" → individual day object
   // This ensures each calendar date is fully independent
@@ -94,7 +104,7 @@ function AngstApp() {
   const ejercicioLogRef = useRef({});
   const [ejercicioDecks, setEjercicioDecks] = useState([]);
   const ejercicioDecksRef = useRef([]);
-  const [calMarks, setCalMarks] = useState({});
+  // Planner 0.0 owns calMarks; Legacy accesses it through the adapter above.
   const [semanaTab, setSemanaTab] = useState("semana");
   const [meleeMajors, setMeleeMajors] = useState([]);
   const [custody, setCustody] = useState({ baseDate:"2026-04-28", withKids:true, overrides:{} });
