@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-19T16:41:43.740Z",
+  "generatedAt": "2026-08-19T20:38:07.095Z",
   "categories": [
     {
       "cat": "Películas",
@@ -899,7 +899,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 9.8
+            "tmdb": 8.6
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1045,86 +1045,6 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1339713",
-          "title": "Obsession",
-          "link": "https://www.themoviedb.org/movie/1339713",
-          "summary": "El anhelo romántico desesperado de un chico por su amor platónico de toda la vida desencadena un siniestro hechizo: Niki se vuelve irracionalmente obsesiva hasta convertirse en la sombra de Bear. Una fantasía aparentemente inofensiva que se convertirá en una perturbadora pesadilla.",
-          "image": "https://image.tmdb.org/t/p/w500/wnyUBssII8ZRDjDRlUyXt6tX9rt.jpg",
-          "pubDate": "2026-05-13",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-07-28T14:25:50.947Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8,
-            "rt": 94,
-            "metascore": 77,
-            "tmdb": 8.3
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "5MBu6Xhuj38",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Michael Johnston",
-              "character": "Bear",
-              "order": 0
-            },
-            {
-              "name": "Inde Navarrette",
-              "character": "Nikki",
-              "order": 1
-            },
-            {
-              "name": "Cooper Tomlinson",
-              "character": "Ian",
-              "order": 2
-            },
-            {
-              "name": "Megan Lawless",
-              "character": "Sarah",
-              "order": 3
-            },
-            {
-              "name": "Andy Richter",
-              "character": "Carter",
-              "order": 4
-            },
-            {
-              "name": "Haley Fitzgerald",
-              "character": "Viola",
-              "order": 5
-            },
-            {
-              "name": "Darin Toonder",
-              "character": "Harry",
-              "order": 6
-            },
-            {
-              "name": "Anthony Pavone",
-              "character": "Reggie",
-              "order": 7
-            },
-            {
-              "name": "Justice",
-              "character": "Joe",
-              "order": 8
-            },
-            {
-              "name": "Anthony Casabianca",
-              "character": "Chris",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
           "guid": "tmdb-movie-1003596",
           "title": "Vengadores: Doomsday",
           "link": "https://www.themoviedb.org/movie/1003596",
@@ -1199,6 +1119,86 @@
             {
               "name": "Wyatt Russell",
               "character": "John Walker",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1339713",
+          "title": "Obsession",
+          "link": "https://www.themoviedb.org/movie/1339713",
+          "summary": "El anhelo romántico desesperado de un chico por su amor platónico de toda la vida desencadena un siniestro hechizo: Niki se vuelve irracionalmente obsesiva hasta convertirse en la sombra de Bear. Una fantasía aparentemente inofensiva que se convertirá en una perturbadora pesadilla.",
+          "image": "https://image.tmdb.org/t/p/w500/wnyUBssII8ZRDjDRlUyXt6tX9rt.jpg",
+          "pubDate": "2026-05-13",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-07-28T14:25:50.947Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8,
+            "rt": 94,
+            "metascore": 77,
+            "tmdb": 8.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "5MBu6Xhuj38",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Michael Johnston",
+              "character": "Bear",
+              "order": 0
+            },
+            {
+              "name": "Inde Navarrette",
+              "character": "Nikki",
+              "order": 1
+            },
+            {
+              "name": "Cooper Tomlinson",
+              "character": "Ian",
+              "order": 2
+            },
+            {
+              "name": "Megan Lawless",
+              "character": "Sarah",
+              "order": 3
+            },
+            {
+              "name": "Andy Richter",
+              "character": "Carter",
+              "order": 4
+            },
+            {
+              "name": "Haley Fitzgerald",
+              "character": "Viola",
+              "order": 5
+            },
+            {
+              "name": "Darin Toonder",
+              "character": "Harry",
+              "order": 6
+            },
+            {
+              "name": "Anthony Pavone",
+              "character": "Reggie",
+              "order": 7
+            },
+            {
+              "name": "Justice",
+              "character": "Joe",
+              "order": 8
+            },
+            {
+              "name": "Anthony Casabianca",
+              "character": "Chris",
               "order": 9
             }
           ],
@@ -3201,7 +3201,7 @@
           "title": "Linternas",
           "link": "https://www.themoviedb.org/tv/95350",
           "summary": "Sigue al nuevo recluta John Stewart y al legendario Linterna Hal Jordan, dos policías intergalácticos que se ven envueltos en un oscuro misterio terrestre mientras investigan un asesinato en el corazón de Estados Unidos. Esto les lleva a misterios y ajustes de cuentas más oscuros.",
-          "image": "https://image.tmdb.org/t/p/w500/onBO4v52N3ikLaajwzOZ6AbXlNJ.jpg",
+          "image": "https://image.tmdb.org/t/p/w500/20ZcwtRQ4zMczKg3eBcIpC3FAuW.jpg",
           "pubDate": "2026-08-16",
           "source": "TMDb",
           "categoria": "Series",
@@ -3211,7 +3211,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 8.2
+            "tmdb": 8.1
           },
           "status": "Returning Series",
           "nextEpisodeDate": "2026-08-23",
@@ -3247,95 +3247,6 @@
               "name": "Poorna Jagannathan",
               "character": "Zoe Macon",
               "order": 4
-            }
-          ]
-        },
-        {
-          "guid": "tmdb-tv-59941",
-          "title": "The Tonight Show Starring Jimmy Fallon",
-          "link": "https://www.themoviedb.org/tv/59941",
-          "summary": "Después del segundo retiro de Jay Leno del programa, Jimmy Fallon intervino como su reemplazo permanente. Después de 42 años en Los Ángeles, el programa regresó a Nueva York.",
-          "image": "https://image.tmdb.org/t/p/w500/1N4o5PmmqhlVDrcdJ2RlCFWbLGX.jpg",
-          "pubDate": "2014-02-17",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-07-30T02:22:53.150Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 5.8
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-07-30",
-          "numberOfSeasons": 13,
-          "currentSeason": 13,
-          "reviews": null,
-          "trailer": {
-            "key": "q-0YafsWK_M",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Jimmy Fallon",
-              "character": "Self - Host",
-              "order": 0
-            },
-            {
-              "name": "Steve Higgins",
-              "character": "Self - Announcer",
-              "order": 1
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-37528",
-          "title": "Gran hermano",
-          "link": "https://www.themoviedb.org/tv/37528",
-          "summary": "Esta serie de telerrealidad argentina forma parte de la franquicia Big Brother desarrollada por primera vez en Holanda.",
-          "image": "https://image.tmdb.org/t/p/w500/snIRCY6Qhei08YUNQjjZI2gc4CK.jpg",
-          "pubDate": "2001-03-10",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-08-11T19:52:42.424Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 4,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 4.5
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-08-11",
-          "numberOfSeasons": 13,
-          "currentSeason": 13,
-          "reviews": null,
-          "trailer": {
-            "key": "h8n7XFeDgJk",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Santiago del Moro",
-              "character": "Host",
-              "order": 0
-            },
-            {
-              "name": "Gastón Trezeguet",
-              "character": "Panelist",
-              "order": 3
-            },
-            {
-              "name": "Ceferino Reato",
-              "character": "Panelist",
-              "order": 4
-            },
-            {
-              "name": "Maria Sol Perez",
-              "character": "Panelist",
-              "order": 5
             }
           ]
         },
@@ -3424,6 +3335,95 @@
               "order": 11
             }
           ]
+        },
+        {
+          "guid": "tmdb-tv-37528",
+          "title": "Gran hermano",
+          "link": "https://www.themoviedb.org/tv/37528",
+          "summary": "Esta serie de telerrealidad argentina forma parte de la franquicia Big Brother desarrollada por primera vez en Holanda.",
+          "image": "https://image.tmdb.org/t/p/w500/snIRCY6Qhei08YUNQjjZI2gc4CK.jpg",
+          "pubDate": "2001-03-10",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-08-11T19:52:42.424Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 4,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 4.5
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-08-11",
+          "numberOfSeasons": 13,
+          "currentSeason": 13,
+          "reviews": null,
+          "trailer": {
+            "key": "h8n7XFeDgJk",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Santiago del Moro",
+              "character": "Host",
+              "order": 0
+            },
+            {
+              "name": "Gastón Trezeguet",
+              "character": "Panelist",
+              "order": 3
+            },
+            {
+              "name": "Ceferino Reato",
+              "character": "Panelist",
+              "order": 4
+            },
+            {
+              "name": "Maria Sol Perez",
+              "character": "Panelist",
+              "order": 5
+            }
+          ]
+        },
+        {
+          "guid": "tmdb-tv-59941",
+          "title": "The Tonight Show Starring Jimmy Fallon",
+          "link": "https://www.themoviedb.org/tv/59941",
+          "summary": "Después del segundo retiro de Jay Leno del programa, Jimmy Fallon intervino como su reemplazo permanente. Después de 42 años en Los Ángeles, el programa regresó a Nueva York.",
+          "image": "https://image.tmdb.org/t/p/w500/1N4o5PmmqhlVDrcdJ2RlCFWbLGX.jpg",
+          "pubDate": "2014-02-17",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-07-30T02:22:53.150Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 5.8
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-07-30",
+          "numberOfSeasons": 13,
+          "currentSeason": 13,
+          "reviews": null,
+          "trailer": {
+            "key": "q-0YafsWK_M",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Jimmy Fallon",
+              "character": "Self - Host",
+              "order": 0
+            },
+            {
+              "name": "Steve Higgins",
+              "character": "Self - Announcer",
+              "order": 1
+            }
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-tv-46271",
@@ -3585,73 +3585,32 @@
           "trending": false
         },
         {
-          "guid": "tmdb-tv-2661",
-          "title": "Kamen Rider",
-          "link": "https://www.themoviedb.org/tv/2661",
-          "summary": "Cada temporada de Kamen Rider presenta una historia diferente con personajes y tramas independientes, aunque todas siguen un esquema similar. El protagonista suele ser un motorista que por diversos medios, la mayor de las veces tecnológicos y a veces mágicos o combinación de ambos según la temporada, se transforma, siempre utilizando la frase Henshin (\"transformación\") en un superhéroe llamado Kamen Rider con un traje blindado y una máscara que generalmente está decorada recordando a un insecto.En unas temporadas hay un solo Kamen Rider, mientras que en otras hay dos o más, habiendo algunas que presentan más de diez Riders diferentes. Estos Riders luchan contra enemigos diversos o incluso a veces entre ellos. Los poderes del Kamen Rider siempre tienen un origen estrechamente relacionado con  los villanos, pero usa esos poderes para el bien en lugar de para el mal, y esta relación se convierte en fuente de conflictos argumentales según la temporada.",
-          "image": "https://image.tmdb.org/t/p/w500/fIJNVBa6MJStPiOvhLV69nAdu0e.jpg",
-          "pubDate": "1971-04-03",
+          "guid": "tmdb-tv-91555",
+          "title": "All Elite Wrestling: Dynamite",
+          "link": "https://www.themoviedb.org/tv/91555",
+          "summary": "A world-class roster of diverse male and female wrestlers give fans a new wrestling experience for the first time in 20 years.",
+          "image": "https://image.tmdb.org/t/p/w500/gPNWVCp0zrHRmwfovUpUQO44sts.jpg",
+          "pubDate": "2019-10-02",
           "source": "TMDb",
           "categoria": "Series",
-          "firstSeenAt": "2026-07-31T23:43:22.835Z",
+          "firstSeenAt": "2026-07-28T14:25:51.781Z",
           "fullText": null,
           "rating": {
-            "imdb": 7.5,
+            "imdb": 8.3,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.4
+            "tmdb": 8
           },
           "status": "Returning Series",
-          "nextEpisodeDate": "2026-08-02",
-          "numberOfSeasons": 37,
-          "currentSeason": 36,
+          "nextEpisodeDate": "2026-08-05",
+          "numberOfSeasons": 8,
+          "currentSeason": 8,
           "reviews": null,
           "trailer": {
-            "key": "zqTtexrg914",
+            "key": "25QEr4zrTrA",
             "site": "YouTube"
           },
-          "cast": [
-            {
-              "name": "今井竜太郎",
-              "character": "Baku Yorozu / Kamen Rider ZEZTZ",
-              "order": 398
-            },
-            {
-              "name": "堀口真帆",
-              "character": "Nem",
-              "order": 399
-            },
-            {
-              "name": "三嶋健太",
-              "character": "Tetsuya Fujimi",
-              "order": 400
-            },
-            {
-              "name": "小貫莉奈",
-              "character": "Nasuka Nagumo",
-              "order": 401
-            },
-            {
-              "name": "八木美樹",
-              "character": "Minami Yorozu",
-              "order": 402
-            },
-            {
-              "name": "古川雄輝",
-              "character": "NOX",
-              "order": 403
-            },
-            {
-              "name": "川平慈英",
-              "character": "Zero (voice)",
-              "order": 404
-            },
-            {
-              "name": "Koichi Yamadera",
-              "character": "ZEZTZ Driver (voice)",
-              "order": 405
-            }
-          ]
+          "cast": []
         },
         {
           "guid": "tmdb-tv-97546",
@@ -3729,33 +3688,73 @@
           ]
         },
         {
-          "guid": "tmdb-tv-4656",
-          "title": "Raw",
-          "link": "https://www.themoviedb.org/tv/4656",
-          "summary": "A regularly scheduled, live, year-round program featuring some of the biggest WWE Superstars.",
-          "image": "https://image.tmdb.org/t/p/w500/26v1iP77K6PySQRV0jBSnh3GtRc.jpg",
-          "pubDate": "1993-01-11",
+          "guid": "tmdb-tv-2661",
+          "title": "Kamen Rider",
+          "link": "https://www.themoviedb.org/tv/2661",
+          "summary": "Cada temporada de Kamen Rider presenta una historia diferente con personajes y tramas independientes, aunque todas siguen un esquema similar. El protagonista suele ser un motorista que por diversos medios, la mayor de las veces tecnológicos y a veces mágicos o combinación de ambos según la temporada, se transforma, siempre utilizando la frase Henshin (\"transformación\") en un superhéroe llamado Kamen Rider con un traje blindado y una máscara que generalmente está decorada recordando a un insecto.En unas temporadas hay un solo Kamen Rider, mientras que en otras hay dos o más, habiendo algunas que presentan más de diez Riders diferentes. Estos Riders luchan contra enemigos diversos o incluso a veces entre ellos. Los poderes del Kamen Rider siempre tienen un origen estrechamente relacionado con  los villanos, pero usa esos poderes para el bien en lugar de para el mal, y esta relación se convierte en fuente de conflictos argumentales según la temporada.",
+          "image": "https://image.tmdb.org/t/p/w500/fIJNVBa6MJStPiOvhLV69nAdu0e.jpg",
+          "pubDate": "1971-04-03",
           "source": "TMDb",
           "categoria": "Series",
-          "firstSeenAt": "2026-07-28T14:25:52.689Z",
+          "firstSeenAt": "2026-07-31T23:43:22.835Z",
           "fullText": null,
           "rating": {
-            "imdb": 7.8,
+            "imdb": 7.5,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.8
+            "tmdb": 6.4
           },
           "status": "Returning Series",
-          "nextEpisodeDate": "2026-08-17",
-          "numberOfSeasons": 34,
-          "currentSeason": 34,
+          "nextEpisodeDate": "2026-08-02",
+          "numberOfSeasons": 37,
+          "currentSeason": 36,
           "reviews": null,
           "trailer": {
-            "key": "tYZaNnnK2_E",
+            "key": "zqTtexrg914",
             "site": "YouTube"
           },
-          "cast": [],
-          "trending": false
+          "cast": [
+            {
+              "name": "今井竜太郎",
+              "character": "Baku Yorozu / Kamen Rider ZEZTZ",
+              "order": 398
+            },
+            {
+              "name": "堀口真帆",
+              "character": "Nem",
+              "order": 399
+            },
+            {
+              "name": "三嶋健太",
+              "character": "Tetsuya Fujimi",
+              "order": 400
+            },
+            {
+              "name": "小貫莉奈",
+              "character": "Nasuka Nagumo",
+              "order": 401
+            },
+            {
+              "name": "八木美樹",
+              "character": "Minami Yorozu",
+              "order": 402
+            },
+            {
+              "name": "古川雄輝",
+              "character": "NOX",
+              "order": 403
+            },
+            {
+              "name": "川平慈英",
+              "character": "Zero (voice)",
+              "order": 404
+            },
+            {
+              "name": "Koichi Yamadera",
+              "character": "ZEZTZ Driver (voice)",
+              "order": 405
+            }
+          ]
         },
         {
           "guid": "tmdb-tv-94664",
@@ -3812,63 +3811,6 @@
           ]
         },
         {
-          "guid": "tmdb-tv-91555",
-          "title": "All Elite Wrestling: Dynamite",
-          "link": "https://www.themoviedb.org/tv/91555",
-          "summary": "A world-class roster of diverse male and female wrestlers give fans a new wrestling experience for the first time in 20 years.",
-          "image": "https://image.tmdb.org/t/p/w500/gPNWVCp0zrHRmwfovUpUQO44sts.jpg",
-          "pubDate": "2019-10-02",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-07-28T14:25:51.781Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.3,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-08-05",
-          "numberOfSeasons": 8,
-          "currentSeason": 8,
-          "reviews": null,
-          "trailer": {
-            "key": "25QEr4zrTrA",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "tmdb-tv-291",
-          "title": "Coronation Street",
-          "link": "https://www.themoviedb.org/tv/291",
-          "summary": "Esta serie británica sigue las vidas de los residentes de la ficticia calle Coronation, situada en el gran Manchester, y que está conformada principalmente por gente de clase obrera.",
-          "image": "https://image.tmdb.org/t/p/w500/5x1HXqYqPyYw7oc7Isu1lvVmwRP.jpg",
-          "pubDate": "1960-12-09",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-08-12T11:19:17.505Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 5.6,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 5.3
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-08-13",
-          "numberOfSeasons": 67,
-          "currentSeason": 67,
-          "reviews": null,
-          "trailer": {
-            "key": "y0HPARy6mfU",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
           "guid": "tmdb-tv-45140",
           "title": "Los Jóvenes Titanes en Acción",
           "link": "https://www.themoviedb.org/tv/45140",
@@ -3921,6 +3863,64 @@
               "order": 4
             }
           ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-tv-4656",
+          "title": "Raw",
+          "link": "https://www.themoviedb.org/tv/4656",
+          "summary": "A regularly scheduled, live, year-round program featuring some of the biggest WWE Superstars.",
+          "image": "https://image.tmdb.org/t/p/w500/26v1iP77K6PySQRV0jBSnh3GtRc.jpg",
+          "pubDate": "1993-01-11",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-07-28T14:25:52.689Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.8,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.8
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-08-17",
+          "numberOfSeasons": 34,
+          "currentSeason": 34,
+          "reviews": null,
+          "trailer": {
+            "key": "tYZaNnnK2_E",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-tv-291",
+          "title": "Coronation Street",
+          "link": "https://www.themoviedb.org/tv/291",
+          "summary": "Esta serie británica sigue las vidas de los residentes de la ficticia calle Coronation, situada en el gran Manchester, y que está conformada principalmente por gente de clase obrera.",
+          "image": "https://image.tmdb.org/t/p/w500/5x1HXqYqPyYw7oc7Isu1lvVmwRP.jpg",
+          "pubDate": "1960-12-09",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-08-12T11:19:17.505Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 5.6,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 5.3
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-08-13",
+          "numberOfSeasons": 67,
+          "currentSeason": 67,
+          "reviews": null,
+          "trailer": {
+            "key": "y0HPARy6mfU",
+            "site": "YouTube"
+          },
+          "cast": [],
           "trending": false
         },
         {
@@ -5289,45 +5289,6 @@
           ]
         },
         {
-          "guid": "tmdb-tv-91768",
-          "title": "Ascendance of a Bookworm",
-          "link": "https://www.themoviedb.org/tv/91768",
-          "summary": "Urano Motuso es una joven amante de los libros que va a cumplir su sueño de trabajar como bibliotecaria. Sin embargo, durante un terremoto, muere aplastada por el colapso de una estantería de la biblioteca. Cuando recupera la consciencia, descubre que se ha reencarnado en otro mundo en el cuerpo de Myne, una niña hija de un pobre soldado en la ciudad de Ehrenfest, donde los libros son escasos y solo están accesibles para los nobles. Así que decide imprimir y crear sus propios libros para poder leer de nuevo.",
-          "image": "https://image.tmdb.org/t/p/w500/cBgA4PdYNr0EqXB1naRe1ndrC33.jpg",
-          "pubDate": "2019-10-03",
-          "source": "TMDb",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-18T21:33:38.565Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.8,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.1
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-08-22",
-          "numberOfSeasons": 2,
-          "currentSeason": 2,
-          "reviews": null,
-          "trailer": {
-            "key": "Wo28IopG2WE",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Yuka Iguchi",
-              "character": "Main (voice)",
-              "order": 0
-            },
-            {
-              "name": "Show Hayami",
-              "character": "Ferdinand (voice)",
-              "order": 1
-            }
-          ]
-        },
-        {
           "guid": "mal-59193",
           "title": "Mushoku Tensei III: Isekai Ittara Honki Dasu",
           "link": "https://myanimelist.net/anime/59193/Mushoku_Tensei_III__Isekai_Ittara_Honki_Dasu",
@@ -5370,11 +5331,48 @@
           "status": "Currently Airing",
           "nextEpisodeDate": null,
           "reviews": null,
+          "trailer": null,
+          "cast": []
+        },
+        {
+          "guid": "tmdb-tv-91768",
+          "title": "Ascendance of a Bookworm",
+          "link": "https://www.themoviedb.org/tv/91768",
+          "summary": "Urano Motuso es una joven amante de los libros que va a cumplir su sueño de trabajar como bibliotecaria. Sin embargo, durante un terremoto, muere aplastada por el colapso de una estantería de la biblioteca. Cuando recupera la consciencia, descubre que se ha reencarnado en otro mundo en el cuerpo de Myne, una niña hija de un pobre soldado en la ciudad de Ehrenfest, donde los libros son escasos y solo están accesibles para los nobles. Así que decide imprimir y crear sus propios libros para poder leer de nuevo.",
+          "image": "https://image.tmdb.org/t/p/w500/cBgA4PdYNr0EqXB1naRe1ndrC33.jpg",
+          "pubDate": "2019-10-03",
+          "source": "TMDb",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-18T21:33:38.565Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.8,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.1
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-08-22",
+          "numberOfSeasons": 2,
+          "currentSeason": 2,
+          "reviews": null,
           "trailer": {
-            "key": "gn4rbzV-dvY",
+            "key": "Wo28IopG2WE",
             "site": "YouTube"
           },
-          "cast": []
+          "cast": [
+            {
+              "name": "Yuka Iguchi",
+              "character": "Main (voice)",
+              "order": 0
+            },
+            {
+              "name": "Show Hayami",
+              "character": "Ferdinand (voice)",
+              "order": 1
+            }
+          ],
+          "trending": false
         },
         {
           "guid": "mal-62076",
@@ -5397,7 +5395,8 @@
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": null,
-          "cast": []
+          "cast": [],
+          "trending": false
         },
         {
           "guid": "mal-60636",
@@ -5420,7 +5419,8 @@
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": null,
-          "cast": []
+          "cast": [],
+          "trending": false
         },
         {
           "guid": "mal-54000",
@@ -5443,7 +5443,8 @@
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": null,
-          "cast": []
+          "cast": [],
+          "trending": false
         },
         {
           "guid": "mal-62542",
@@ -5466,30 +5467,8 @@
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": null,
-          "cast": []
-        },
-        {
-          "guid": "mal-62542",
-          "title": "Grand Blue Season 3",
-          "link": "https://myanimelist.net/anime/62542/Grand_Blue_Season_3",
-          "summary": "Third season of Grand Blue.",
-          "image": "https://cdn.myanimelist.net/images/anime/1615/158194l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:25:59.404Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.41
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": null,
-          "cast": []
+          "cast": [],
+          "trending": false
         },
         {
           "guid": "mal-48820",
