@@ -74,6 +74,20 @@ function AngstApp() {
   const weekOffset = plannerState.weekOffset ?? 0;
   const calMarks = plannerState.calMarks ?? {};
   const custody = plannerState.custody ?? { baseDate: "2026-04-28", withKids: true, overrides: {} };
+  const routines = plannerState.routines ?? [];
+  const recurring = plannerState.recurring ?? [];
+  // Transitional adapters: Legacy handlers continue to use their old names,
+  // but Planner owns the authoritative collections.
+  const setRoutines = (value) => {
+    plannerActions.setRoutines(value);
+    routinesRef.current = value;
+    return value;
+  };
+  const setRecurring = (value) => {
+    plannerActions.setRecurring(value);
+    recurringRef.current = value;
+    return value;
+  };
   // Transitional adapter: Legacy may still call setCustody(), but Planner
   // owns the authoritative custody state during the migration.
   const setCustody = (value) => {
@@ -149,8 +163,8 @@ function AngstApp() {
   const routinesRef  = useRef([]);
   const recurringRef  = useRef([]);
   const lastRolloverRef = useRef(null);
-  const [routines, setRoutines] = useState([]);
-  const [recurring, setRecurring] = useState([]);
+  // Planner 0.0 owns routines; Legacy accesses them through the adapter above.
+  // Planner 0.0 owns recurring; Legacy accesses them through the adapter above.
   const [lastRollover, setLastRollover] = useState(null);
   const [cookingOpts, setCookingOpts] = useState([...DEFAULT_COOKING_OPTS]);
   const [aseoOpts, setAseoOpts] = useState([...DEFAULT_ASEO_OPTS]);
