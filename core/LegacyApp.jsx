@@ -71,6 +71,16 @@ const CYNICAL_SUBTITLES = [
 
 function AngstApp() {
   const { state: plannerState, actions: plannerActions } = usePlanner();
+  const dayData = plannerState.dayData ?? {};
+  // Transitional adapter: Legacy keeps its historical setDayData API,
+  // but Planner owns the authoritative dayData object.
+  const setDayData = (updater) => {
+    const current = plannerState.dayData ?? {};
+    const next = typeof updater === "function" ? updater(current) : updater;
+    plannerActions.replaceDayData(next);
+    dayDataRef.current = next;
+    return next;
+  };
   const weekOffset = plannerState.weekOffset ?? 0;
   const calMarks = plannerState.calMarks ?? {};
   const custody = plannerState.custody ?? { baseDate: "2026-04-28", withKids: true, overrides: {} };
@@ -106,7 +116,7 @@ function AngstApp() {
   const [page, setPage] = useState(0);
   // dayData: flat dict keyed by "YYYY-MM-DD" → individual day object
   // This ensures each calendar date is fully independent
-  const [dayData, setDayData] = useState({});
+  // Planner 0.0 owns dayData; Legacy accesses it through the adapter above.
   // Planner 0.0 owns weekOffset. Legacy keeps a local ref only for async-compatible reads.
 
   const [budgets, setBudgets] = useState({});  // keyed "YYYY-MM"
