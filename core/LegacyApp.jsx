@@ -84,6 +84,12 @@ function AngstApp() {
   const weekOffset = plannerState.weekOffset ?? 0;
   const calMarks = plannerState.calMarks ?? {};
   const custody = plannerState.custody ?? { baseDate: "2026-04-28", withKids: true, overrides: {} };
+  const cookingOpts = plannerState.cookingOpts ?? [];
+  const aseoOpts = plannerState.aseoOpts ?? [];
+  const lastRollover = plannerState.lastRollover ?? null;
+  const setCookingOpts = (value) => plannerActions.setCookingOptions(value);
+  const setAseoOpts = (value) => plannerActions.setAseoOptions(value);
+  const setLastRollover = (value) => plannerActions.setLastRollover(value);
   const routines = plannerState.routines ?? [];
   const recurring = plannerState.recurring ?? [];
   // Transitional adapters: Legacy handlers continue to use their old names,
@@ -175,9 +181,9 @@ function AngstApp() {
   const lastRolloverRef = useRef(null);
   // Planner 0.0 owns routines; Legacy accesses them through the adapter above.
   // Planner 0.0 owns recurring; Legacy accesses them through the adapter above.
-  const [lastRollover, setLastRollover] = useState(null);
-  const [cookingOpts, setCookingOpts] = useState([...DEFAULT_COOKING_OPTS]);
-  const [aseoOpts, setAseoOpts] = useState([...DEFAULT_ASEO_OPTS]);
+  // Planner 0.0 owns lastRollover; Legacy accesses it through the adapter above.
+  // Planner 0.0 owns cookingOpts; Legacy accesses them through the adapter above.
+  // Planner 0.0 owns aseoOpts; Legacy accesses them through the adapter above.
   const [comprasOpen, setComprasOpen] = useState(null); // dateKey
   const [searchOpen, setSearchOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(null); // dateKey
