@@ -18,3 +18,5 @@ jobs:
         run: node tests/module-registry.mjs
       - name: Validate Planner domain
         run: node tests/planner-domain.mjs
+      - name: Validate Planner state
+        run: node tests/planner-state.mjs
