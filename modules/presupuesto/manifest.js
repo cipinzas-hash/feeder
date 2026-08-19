@@ -1,10 +1,10 @@
 export default {
   id: "presupuesto",
+  version: "0.0",
   tabLabel: "Presupuesto",
   state: {
-    budgets: { default: {} }, // keyed "YYYY-MM"
+    budgets: { default: {} },
   },
 };
 
-// NOTA: NutriaPage (ya migrado) también recibe budgets/onSaveBudget como
-// props — integración declarada del lado de Nutria, no acá.
+// Nutria may consume budget data only through explicit shell integration.
