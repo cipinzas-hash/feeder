@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// Arma el HTML único de Angst a partir de los módulos separados del repo.
+// Arma el HTML único de Angst a partir de los módulos del repositorio.
 //
-// Entry point real: core/App.jsx (AngstApp) — bundlea los 9 módulos +
-// core/ui.jsx + core/stress.js + core/notifications.js + core/dates.js +
-// core/persistence.js en un solo archivo.
+// El entry point de la aplicación vive ahora en app/App.jsx. Durante Angst 0.0
+// ese archivo sigue delegando en core/App.jsx, lo que permite mover la frontera
+// del shell sin alterar todavía la lógica de producto.
 
 import { build } from "esbuild";
 import { writeFileSync, mkdirSync } from "fs";
@@ -38,7 +38,7 @@ try {
 
 async function main() {
   const result = await build({
-    entryPoints: ["core/App.jsx"],
+    entryPoints: ["app/App.jsx"],
     bundle: true,
     write: false,
     format: "iife",
@@ -49,8 +49,6 @@ async function main() {
   });
 
   const bundledJS = result.outputFiles[0].text;
-  // El bundle IIFE deja AngstApp adentro de __angst.default (export default).
-  // Lo exponemos como global simple para el bootstrap de arriba.
   const expose = `\nwindow.AngstApp = __angst.default;\n`;
   const html = HTML_HEAD + bundledJS + expose + HTML_TAIL;
   mkdirSync("dist", { recursive: true });
@@ -62,4 +60,3 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-
