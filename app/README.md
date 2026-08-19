@@ -1,19 +1,23 @@
 # Angst App Shell — v0.0
 
-This directory is the target home for the application composition layer.
+This directory owns the application composition layer.
 
-The current implementation still lives in `core/App.jsx`. During migration, `App.jsx` remains the runtime entry point so behavior is not changed prematurely.
+`app/App.jsx` is the build entry point and delegates to `app/Shell.jsx`. The Shell currently mounts `core/LegacyApp.jsx` through the compatibility boundary in `core/App.jsx`, so the product keeps its existing behavior while modules are extracted.
 
 ## Responsibilities
 
-The Shell will eventually:
+The Shell owns:
 
-- register available modules;
-- decide top-level navigation;
-- mount module pages;
-- provide explicit cross-module integration contracts;
-- coordinate application-wide lifecycle events.
+- the top-level application composition;
+- the module registry;
+- top-level navigation and module mounting;
+- explicit cross-module integration contracts;
+- application-wide lifecycle coordination.
 
 ## Non-responsibilities
 
-The Shell should not permanently own a module's domain state, business rules, or persistence implementation.
+The Shell must not permanently own a module's domain state, business rules, or persistence implementation.
+
+## Migration rule
+
+Legacy behavior stays behind `core/LegacyApp.jsx`. New functionality belongs in `modules/` or `core/` infrastructure and must be introduced through the Shell boundary rather than added to the legacy application.
