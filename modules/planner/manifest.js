@@ -14,6 +14,7 @@ export default {
   id: "planner",
   version: "0.0",
   tabLabel: "Semana",
+  entry: "./PlannerPage.jsx",
   state: {
     dayData: { default: {} },
     weekOffset: { default: 0 },
