@@ -1,0 +1,49 @@
+name: Angst migrate custody
+
+on:
+  push:
+    branches:
+      - angst-architecture-0.0
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: ${{ !contains(github.event.head_commit.message, 'move custody ownership to Planner') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Migrate custody ownership
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('core/LegacyApp.jsx')
+          text = path.read_text(encoding='utf-8')
+          state_line = '  const [custody, setCustody] = useState({ baseDate:"2026-04-28", withKids:true, overrides:{} });'
+          if state_line not in text:
+              print('custody migration already applied or source changed; nothing to do')
+              raise SystemExit(0)
+          anchor = '  const calMarks = plannerState.calMarks ?? {};\n'
+          replacement = anchor + '''  const custody = plannerState.custody ?? { baseDate: "2026-04-28", withKids: true, overrides: {} };\n  // Transitional adapter: Legacy may still call setCustody(), but Planner\n  // owns the authoritative custody state during the migration.\n  const setCustody = (value) => {\n    plannerActions.setCustody(value);\n    return value;\n  };\n'''
+          if text.count(anchor) != 1:
+              raise SystemExit('expected exactly one Planner anchor')
+          text = text.replace(anchor, replacement, 1)
+          text = text.replace(state_line + '\n', '  // Planner 0.0 owns custody; Legacy accesses it through the adapter above.\n', 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Validate migration
+        run: |
+          grep -q 'const custody = plannerState.custody' core/LegacyApp.jsx
+          ! grep -q 'const \[custody, setCustody\] = useState' core/LegacyApp.jsx
+      - name: Commit migration and remove one-shot workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add core/LegacyApp.jsx .github/workflows/migrate-custody.yml
+          git rm .github/workflows/migrate-custody.yml
+          git commit -m 'refactor: move custody ownership to Planner'
+          git push
