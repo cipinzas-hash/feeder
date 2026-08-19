@@ -18,6 +18,8 @@ export {
   createInitialState,
   updateDay,
   setWeekOffset,
+  previousWeek,
+  nextWeek,
   setCalendarMarks,
   setCustody,
   setCookingOptions,
@@ -30,3 +32,4 @@ export {
 export { loadPlannerState, savePlannerState, getPlannerStorageFields } from "./storage.js";
 export { fromLegacyState, mergePlannerIntoLegacy, getPlannerLegacyFields } from "./legacyAdapter.js";
 export { PLANNER_OWNED_FIELDS, PLANNER_PRIMARY_FIELD, isPlannerOwnedField, assertPlannerOwnership } from "./ownership.js";
+export { previousWeekOffset, nextWeekOffset, normalizeWeekOffset } from "./navigation.js";
