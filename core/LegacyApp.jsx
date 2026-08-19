@@ -14,6 +14,7 @@ import NutricionPage from "../modules/nutricion/NutricionPage.jsx";
 import BudgetPage from "../modules/presupuesto/BudgetPage.jsx";
 import EspritPage from "../modules/espiritu/EspritPage.jsx";
 import FeedPage from "../modules/feed/FeedPage.jsx";
+import { usePlanner } from "../modules/planner/PlannerProvider.jsx";
 
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
@@ -69,11 +70,14 @@ const CYNICAL_SUBTITLES = [
 
 
 function AngstApp() {
+  const { state: plannerState, actions: plannerActions } = usePlanner();
+  const weekOffset = plannerState.weekOffset ?? 0;
   const [page, setPage] = useState(0);
   // dayData: flat dict keyed by "YYYY-MM-DD" → individual day object
   // This ensures each calendar date is fully independent
   const [dayData, setDayData] = useState({});
-  const [weekOffset, setWeekOffset] = useState(0);
+  // Planner 0.0 owns weekOffset. Legacy keeps a local ref only for async-compatible reads.
+
   const [budgets, setBudgets] = useState({});  // keyed "YYYY-MM"
   const [nutria, setNutria] = useState(makeDefaultNutria());
   const [fadimanData, setFadimanData] = useState({});
@@ -361,7 +365,7 @@ function AngstApp() {
             console.log("Migrating legacy week array to dayData format");
             // We can't know which week it was for, skip migration
           }
-          if(d.weekOffset!==undefined){ setWeekOffset(d.weekOffset); weekOffsetRef.current=d.weekOffset; }
+          if(d.weekOffset!==undefined){ plannerActions.setWeekOffset(d.weekOffset); weekOffsetRef.current=d.weekOffset; }
           if(d.budgets && typeof d.budgets==='object'){
             setBudgets(d.budgets); budgetRef.current=d.budgets;
           } else if(d.budget){
@@ -435,7 +439,7 @@ function AngstApp() {
       const today = new Date();
       const msPerWeek = 7*24*60*60*1000;
       const diff = Math.floor((new Date(today.getFullYear(),today.getMonth(),today.getDate()) - new Date(2026,1,21)) / msPerWeek);
-      setWeekOffset(diff);
+      plannerActions.setWeekOffset(diff);
       weekOffsetRef.current = diff;
       // Minimize all days in that week except today
       const weekStartDate = new Date(2026,1,21);
@@ -675,7 +679,7 @@ function AngstApp() {
   }
 
   function updateWeekOffset(off){
-    setWeekOffset(off);
+    plannerActions.setWeekOffset(off);
     weekOffsetRef.current = off;
     saveToStorage({weekOffset: off});
     // Minimizar todos los días de la nueva semana excepto hoy
@@ -926,7 +930,7 @@ function AngstApp() {
   function restoreFromPayload(d, sourceLabel){
     if(!d || typeof d !== "object") return false;
     if(d.dayData){ setDayData(d.dayData); dayDataRef.current=d.dayData; }
-    if(d.weekOffset!==undefined){ setWeekOffset(d.weekOffset); weekOffsetRef.current=d.weekOffset; }
+    if(d.weekOffset!==undefined){ plannerActions.setWeekOffset(d.weekOffset); weekOffsetRef.current=d.weekOffset; }
     if(d.budgets){ setBudgets(d.budgets); budgetRef.current=d.budgets; }
     if(d.nutria){ updateNutria(d.nutria); }
     if(d.calMarks){ setCalMarks(d.calMarks); calMarksRef.current=d.calMarks; }
