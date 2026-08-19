@@ -4336,25 +4336,22 @@ var __angst = (() => {
     return !!v.done;
   }
   function serieFactor(sv) {
-    if (!sv?.done) return 0;
-    const reps = sv.reps || 0;
-    const peso = sv.peso || 0;
-    return peso > 0 ? reps * peso : reps * 8;
+    return sv?.done ? 1 : 0;
   }
-  var WEEKLY_MUSCLE_TARGET = 900;
+  var WEEKLY_MUSCLE_TARGET = 15;
   function colorForPct(pct) {
-    const p = Math.max(0, Math.min(1, pct));
+    const p = Math.max(0, pct);
     if (p <= 0) return "#2a2a2a";
-    if (p < 0.5) {
-      const t2 = p / 0.5;
+    if (p < 0.35) {
+      const t2 = p / 0.35;
       return `rgb(${Math.round(42 + (230 - 42) * t2)},${Math.round(42 + (200 - 42) * t2)},${Math.round(42 + (40 - 42) * t2)})`;
     }
-    if (p < 1) {
-      const t2 = (p - 0.5) / 0.5;
-      return `rgb(${Math.round(230 + (230 - 230) * t2)},${Math.round(200 - (200 - 110) * t2)},40)`;
+    if (p < 0.7) {
+      const t2 = (p - 0.35) / 0.35;
+      return `rgb(230,${Math.round(200 - (200 - 140) * t2)},40)`;
     }
-    const t = Math.min(1, (p - 1) / 0.5);
-    return `rgb(${230},${Math.round(110 - (110 - 30) * t)},${Math.round(40 - (40 - 30) * t)})`;
+    const t = Math.min(1, (p - 0.7) / 0.3);
+    return `rgb(230,${Math.round(140 - (140 - 30) * t)},${Math.round(40 - (40 - 30) * t)})`;
   }
   function weekDatesFor(dateKey) {
     const d = /* @__PURE__ */ new Date(dateKey + "T12:00:00");

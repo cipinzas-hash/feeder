@@ -80,30 +80,57 @@ function isSerieDone(v) {
 }
 
 // Factor de esfuerzo de una serie para el heatmap semanal.
-// Calistenia (weightStep:0, sin peso): se usa reps×8 como proxy conservador
-// de carga relativa al peso corporal.
+//
+// Antes era reps×peso (tonelaje) -- se cambió porque favorecía
+// desproporcionadamente a los ejercicios de carga externa pesada: una serie
+// al fallo en sentadilla (8×60kg=480) pesaba 5 veces más que una serie
+// igual de al fallo en curl en polea (12×8kg=96) pese a ser, en términos de
+// estímulo, ambas "una serie dura". Contar 1 por serie marcada (sin
+// ponderar por peso) se acerca mucho más al marco de "series efectivas por
+// semana" que usa la literatura de hipertrofia/fuerza (~10-20/semana/grupo)
+// -- ver WEEKLY_MUSCLE_TARGET.
+//
+// SUPUESTO IMPORTANTE: esto asume que cada serie marcada se hizo cerca del
+// fallo (así entrena Cristopher). Si en algún momento se registran series
+// muy lejos del fallo (calentamiento, técnica, etc.) van a contar igual que
+// una serie dura y van a inflar el número artificialmente -- no hay forma
+// de distinguirlas con los datos que se guardan hoy (solo reps/peso/done).
 function serieFactor(sv) {
-  if(!sv?.done) return 0;
-  const reps = sv.reps || 0;
-  const peso = sv.peso || 0;
-  return peso > 0 ? reps * peso : reps * 8;
+  return sv?.done ? 1 : 0;
 }
 
-const WEEKLY_MUSCLE_TARGET = 900;
+// 15 series efectivas/semana/grupo = punto medio del rango ~10-20 que cita
+// la literatura de hipertrofia para gente ya entrenada (ej. revisiones de
+// Schoenfeld et al.) -- se usa como el "100%" (naranjo) del heatmap.
+// Rojo (150%+, ver colorForPct) marca por encima de ese rango, no
+// necesariamente mejor -- ahí empiezan los retornos decrecientes según la
+// misma literatura, así que rojo profundo es más "estás en el límite alto"
+// que "esto es lo óptimo".
+const WEEKLY_MUSCLE_TARGET = 15;
 
+// Umbrales elegidos para que el color diga lo que Cristopher quiere leer:
+// amarillo = apenas empecé, naranjo = medio camino, rojo = cumplí el
+// objetivo de la semana. Antes el rojo recién aparecía SUPERANDO el 100%
+// del objetivo (y encima había un bug -- `Math.min(1,pct)` capaba p a 1
+// antes de llegar a esa rama, así que el rojo profundo nunca se veía en la
+// práctica). Ahora: <35% amarillo, 35-70% naranjo, llegar al 100% del
+// objetivo (15 series) = rojo pleno. Superar el 100% se sigue viendo (no
+// se clampea), pero no hay un color "más allá del rojo" -- según la misma
+// literatura de WEEKLY_MUSCLE_TARGET, pasar el rango no es "mejor", así que
+// no tiene sentido premiarlo visualmente con más intensidad todavía.
 function colorForPct(pct) {
-  const p = Math.max(0, Math.min(1, pct));
+  const p = Math.max(0, pct);
   if(p <= 0) return "#2a2a2a";
-  if(p < 0.5) {
-    const t = p / 0.5;
+  if(p < 0.35) {
+    const t = p / 0.35;
     return `rgb(${Math.round(42+(230-42)*t)},${Math.round(42+(200-42)*t)},${Math.round(42+(40-42)*t)})`;
   }
-  if(p < 1) {
-    const t = (p-0.5)/0.5;
-    return `rgb(${Math.round(230+(230-230)*t)},${Math.round(200-(200-110)*t)},40)`;
+  if(p < 0.7) {
+    const t = (p-0.35)/0.35;
+    return `rgb(230,${Math.round(200-(200-140)*t)},40)`;
   }
-  const t = Math.min(1, (p-1)/0.5);
-  return `rgb(${230},${Math.round(110-(110-30)*t)},${Math.round(40-(40-30)*t)})`;
+  const t = Math.min(1, (p-0.7)/0.3); // satura en rojo pleno al llegar al 100% del objetivo
+  return `rgb(230,${Math.round(140-(140-30)*t)},${Math.round(40-(40-30)*t)})`;
 }
 
 function weekDatesFor(dateKey) {
