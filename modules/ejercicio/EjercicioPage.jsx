@@ -15,9 +15,9 @@ const MUSCLE_GROUPS = [
 const EJERCICIOS_DEFAULT = [
   // ── GYM ──────────────────────────────────────────────────────────────────
   // Pecho
-  {id:"press-banca",    name:"Press banca",             emoji:"🏋️", muscles:[{g:"pecho",pct:0.7},{g:"triceps",pct:0.2},{g:"hombro",pct:0.1}],   series:4, repMin:8,  repMax:12, weightStep:2.5, restSecs:90,  how:"Acostado en el banco de press. Agarre al ancho de hombros, baja controlado hasta el pecho, empuja explosivo."},
+  {id:"press-banca",    name:"Press banca",             emoji:"🏋️", muscles:[{g:"pecho",pct:0.7},{g:"triceps",pct:0.2},{g:"hombro",pct:0.1}],   series:4, repMin:8,  repMax:12, weightStep:2.5, restSecs:90,  plateUnit:"lb", barWeightKg:20, how:"Acostado en el banco de press. Agarre al ancho de hombros, baja controlado hasta el pecho, empuja explosivo."},
   {id:"apertura-cable", name:"Aperturas en cable",      emoji:"🦅", muscles:[{g:"pecho",pct:0.8},{g:"hombro",pct:0.2}],                          series:3, repMin:10, repMax:15, weightStep:2.5, restSecs:60,  how:"Torre de cable dual a la altura del pecho. Brazos semi-extendidos, junta las manos al frente en arco."},
-  {id:"press-cerrado",  name:"Press cerrado",            emoji:"🤏", muscles:[{g:"pecho",pct:0.3},{g:"triceps",pct:0.6},{g:"hombro",pct:0.1}],   series:3, repMin:8,  repMax:12, weightStep:2.5, restSecs:75,  how:"Banco de press, agarre angosto (manos casi juntas). Codos pegados al cuerpo al bajar."},
+  {id:"press-cerrado",  name:"Press cerrado",            emoji:"🤏", muscles:[{g:"pecho",pct:0.3},{g:"triceps",pct:0.6},{g:"hombro",pct:0.1}],   series:3, repMin:8,  repMax:12, weightStep:2.5, restSecs:75,  plateUnit:"lb", barWeightKg:20, how:"Banco de press, agarre angosto (manos casi juntas). Codos pegados al cuerpo al bajar."},
   // Espalda
   {id:"dominadas",      name:"Dominadas asistidas",      emoji:"🧗", muscles:[{g:"espalda",pct:0.7},{g:"biceps",pct:0.3}],                       series:3, repMin:6,  repMax:10, weightStep:-2.5,restSecs:90,  how:"Máquina de asistencia — menos peso de asistencia = más difícil. Jala el pecho hacia la barra, controla la bajada."},
   {id:"jalon-pecho",    name:"Jalón al pecho",           emoji:"⬇️", muscles:[{g:"espalda",pct:0.75},{g:"biceps",pct:0.25}],                     series:3, repMin:10, repMax:15, weightStep:2.5, restSecs:75,  how:"Torre de cable dual con barra alta. Jala hacia el pecho apretando omóplatos, sube controlado."},
@@ -37,8 +37,8 @@ const EJERCICIOS_DEFAULT = [
   {id:"ext-triceps",    name:"Extensión en polea",       emoji:"🦾", muscles:[{g:"triceps",pct:0.9},{g:"hombro",pct:0.1}],                       series:3, repMin:10, repMax:15, weightStep:1,   restSecs:60,  how:"Torre de cable dual, polea alta con cuerda. Codos pegados al torso, extiende hacia abajo."},
   {id:"dip-asistido",   name:"Dip asistido",             emoji:"🪑", muscles:[{g:"triceps",pct:0.7},{g:"pecho",pct:0.2},{g:"hombro",pct:0.1}],  series:3, repMin:8,  repMax:12, weightStep:-2.5,restSecs:90,  how:"Misma máquina de asistencia que dominadas — menos peso de asistencia = más difícil. Baja hasta 90° en los codos, empuja arriba controlado."},
   // Piernas
-  {id:"sentadilla",     name:"Sentadilla con barra",     emoji:"🏋️", muscles:[{g:"cuadriceps",pct:0.5},{g:"gluteo",pct:0.35},{g:"isquio",pct:0.15}], series:4, repMin:8, repMax:12, weightStep:5, restSecs:120, how:"Módulo de sentadilla, barra en hombros. Pies al ancho de hombros, baja controlado, empuja desde los talones."},
-  {id:"prensa",         name:"Prensa de piernas",        emoji:"🦵", muscles:[{g:"cuadriceps",pct:0.55},{g:"gluteo",pct:0.3},{g:"isquio",pct:0.15}],  series:3, repMin:10, repMax:15, weightStep:5, restSecs:90, how:"Máquina de prensa — acostado, empujás la plataforma con las piernas hacia arriba."},
+  {id:"sentadilla",     name:"Sentadilla con barra",     emoji:"🏋️", muscles:[{g:"cuadriceps",pct:0.5},{g:"gluteo",pct:0.35},{g:"isquio",pct:0.15}], series:4, repMin:8, repMax:12, weightStep:5, restSecs:120, plateUnit:"lb", barWeightKg:20, how:"Módulo de sentadilla, barra en hombros. Pies al ancho de hombros, baja controlado, empuja desde los talones."},
+  {id:"prensa",         name:"Prensa de piernas",        emoji:"🦵", muscles:[{g:"cuadriceps",pct:0.55},{g:"gluteo",pct:0.3},{g:"isquio",pct:0.15}],  series:3, repMin:10, repMax:15, weightStep:5, restSecs:90, plateUnit:"lb", barWeightKg:0, how:"Máquina de prensa — acostado, empujás la plataforma con las piernas hacia arriba. Peso base del carro desconocido, se cuenta solo lo agregado (ver nota en discos)."},
   {id:"ext-cuadriceps", name:"Extensión de cuádriceps",  emoji:"🦵", muscles:[{g:"cuadriceps",pct:0.95},{g:"gluteo",pct:0.05}],                  series:3, repMin:10, repMax:15, weightStep:2.5, restSecs:60,  how:"Máquina sentado, extiende las piernas contra la resistencia hasta casi estirar del todo."},
   {id:"peso-muerto",    name:"Peso muerto con KB",       emoji:"🏋️", muscles:[{g:"isquio",pct:0.5},{g:"gluteo",pct:0.3},{g:"espalda",pct:0.2}], series:3, repMin:8,  repMax:12, weightStep:2.5, restSecs:90,  how:"Kettlebell o mancuernas frente a los muslos. Inclina el torso bajando por las piernas, espalda recta."},
   {id:"zancadas",       name:"Zancadas",                 emoji:"🚶", muscles:[{g:"cuadriceps",pct:0.45},{g:"gluteo",pct:0.4},{g:"isquio",pct:0.15}], series:3, repMin:10, repMax:14, weightStep:2.5, restSecs:75, how:"Kettlebells a los costados. Paso largo adelante, baja la rodilla trasera casi al suelo."},
@@ -956,17 +956,50 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
                                   <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb",marginRight:4}}>r</span>
                                   {usePeso && (
                                     <div style={{display:"flex",alignItems:"center",gap:3,marginLeft:4}}>
-                                      <input type="number" step={pesoUnit==="lb"?"5":"2.5"} min="0"
-                                        value={displayPeso}
-                                        onChange={e=>{
-                                          const raw = e.target.value!=="" ? parseFloat(e.target.value) : null;
-                                          const kg  = raw!=null ? toKg(raw, pesoUnit) : null;
-                                          setRepsInput(r=>({...r,[rKey]:{...r[rKey],peso:kg}}));
-                                        }}
-                                        disabled={isDone||locked2}
-                                        placeholder={defaultPesoKg!=null ? String(toDisplay(defaultPesoKg,pesoUnit)) : pesoUnit}
-                                        style={{width:50,border:"1px dashed #ddd",borderRadius:6,padding:"3px 5px",fontSize:12,fontFamily:"'DM Sans',sans-serif",textAlign:"right",outline:"none",background:isDone?"#f0faf4":"#fff",color:"#333"}}/>
-                                      <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>{pesoUnit}</span>
+                                      {ex.plateUnit==="lb" ? (() => {
+                                        // Modo discos: la barra/base tiene su propio peso fijo en kg
+                                        // (barWeightKg) y lo que se carga son discos en libras -- el
+                                        // selector kg/lb global no alcanza acá porque son DOS unidades
+                                        // mezcladas en el mismo objeto físico, no una elección de una
+                                        // sola. Se tipea solo lo que se ve físicamente (libras de
+                                        // discos, sumando ambos lados), y la app suma la base y
+                                        // convierte sola -- el kg total sigue siendo lo que se guarda
+                                        // (mismo storage canónico de siempre, no cambia nada del
+                                        // historial/progresión).
+                                        const base = ex.barWeightKg || 0;
+                                        const curDiscosLb = curPesoKg!=null ? Math.round(toDisplay(Math.max(0,curPesoKg-base),"lb")) : "";
+                                        const defaultDiscosLb = defaultPesoKg!=null ? Math.round(toDisplay(Math.max(0,defaultPesoKg-base),"lb")) : null;
+                                        return (
+                                          <>
+                                            <input type="number" step="5" min="0"
+                                              value={curDiscosLb}
+                                              onChange={e=>{
+                                                const rawLb = e.target.value!=="" ? parseFloat(e.target.value) : null;
+                                                const kg = rawLb!=null ? parseFloat((base + toKg(rawLb,"lb")).toFixed(2)) : null;
+                                                setRepsInput(r=>({...r,[rKey]:{...r[rKey],peso:kg}}));
+                                              }}
+                                              disabled={isDone||locked2}
+                                              placeholder={defaultDiscosLb!=null ? String(defaultDiscosLb) : "lb"}
+                                              title={base>0 ? `+ ${base}kg de barra = ${curPesoKg!=null?curPesoKg.toFixed(1):"?"}kg total` : "peso base del carro no cargado, solo discos"}
+                                              style={{width:46,border:"1px dashed #ddd",borderRadius:6,padding:"3px 5px",fontSize:12,fontFamily:"'DM Sans',sans-serif",textAlign:"right",outline:"none",background:isDone?"#f0faf4":"#fff",color:"#333"}}/>
+                                            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>lb discos</span>
+                                          </>
+                                        );
+                                      })() : (
+                                        <>
+                                          <input type="number" step={pesoUnit==="lb"?"5":"2.5"} min="0"
+                                            value={displayPeso}
+                                            onChange={e=>{
+                                              const raw = e.target.value!=="" ? parseFloat(e.target.value) : null;
+                                              const kg  = raw!=null ? toKg(raw, pesoUnit) : null;
+                                              setRepsInput(r=>({...r,[rKey]:{...r[rKey],peso:kg}}));
+                                            }}
+                                            disabled={isDone||locked2}
+                                            placeholder={defaultPesoKg!=null ? String(toDisplay(defaultPesoKg,pesoUnit)) : pesoUnit}
+                                            style={{width:50,border:"1px dashed #ddd",borderRadius:6,padding:"3px 5px",fontSize:12,fontFamily:"'DM Sans',sans-serif",textAlign:"right",outline:"none",background:isDone?"#f0faf4":"#fff",color:"#333"}}/>
+                                          <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>{pesoUnit}</span>
+                                        </>
+                                      )}
                                     </div>
                                   )}
                                   <button onClick={()=>{
