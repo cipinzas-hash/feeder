@@ -1,0 +1,52 @@
+name: Angst migrate Planner config
+
+on:
+  push:
+    branches:
+      - angst-architecture-0.0
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: ${{ !contains(github.event.head_commit.message, 'move Planner config ownership to Planner') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Migrate Planner config ownership
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('core/LegacyApp.jsx')
+          text = path.read_text(encoding='utf-8')
+          anchor = '  const custody = plannerState.custody ?? { baseDate: "2026-04-28", withKids: true, overrides: {} };\n'
+          if text.count(anchor) != 1:
+              raise SystemExit('expected exactly one Planner anchor')
+          if 'const cookingOpts = plannerState.cookingOpts' not in text:
+              replacement = anchor + '''  const cookingOpts = plannerState.cookingOpts ?? [];\n  const aseoOpts = plannerState.aseoOpts ?? [];\n  const lastRollover = plannerState.lastRollover ?? null;\n  const setCookingOpts = (value) => plannerActions.setCookingOptions(value);\n  const setAseoOpts = (value) => plannerActions.setAseoOptions(value);\n  const setLastRollover = (value) => plannerActions.setLastRollover(value);\n'''
+              text = text.replace(anchor, replacement, 1)
+          text = text.replace('  const [lastRollover, setLastRollover] = useState(null);\n', '  // Planner 0.0 owns lastRollover; Legacy accesses it through the adapter above.\n', 1)
+          text = text.replace('  const [cookingOpts, setCookingOpts] = useState([...DEFAULT_COOKING_OPTS]);\n', '  // Planner 0.0 owns cookingOpts; Legacy accesses them through the adapter above.\n', 1)
+          text = text.replace('  const [aseoOpts, setAseoOpts] = useState([...DEFAULT_ASEO_OPTS]);\n', '  // Planner 0.0 owns aseoOpts; Legacy accesses them through the adapter above.\n', 1)
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Validate migration
+        run: |
+          grep -q 'const cookingOpts = plannerState.cookingOpts' core/LegacyApp.jsx
+          grep -q 'const aseoOpts = plannerState.aseoOpts' core/LegacyApp.jsx
+          grep -q 'const lastRollover = plannerState.lastRollover' core/LegacyApp.jsx
+          ! grep -q 'const \[cookingOpts, setCookingOpts\] = useState' core/LegacyApp.jsx
+          ! grep -q 'const \[aseoOpts, setAseoOpts\] = useState' core/LegacyApp.jsx
+          ! grep -q 'const \[lastRollover, setLastRollover\] = useState' core/LegacyApp.jsx
+      - name: Commit migration and remove one-shot workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add core/LegacyApp.jsx .github/workflows/migrate-planner-config.yml
+          git rm .github/workflows/migrate-planner-config.yml
+          git commit -m 'refactor: move Planner config ownership to Planner'
+          git push
