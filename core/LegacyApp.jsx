@@ -73,6 +73,13 @@ function AngstApp() {
   const { state: plannerState, actions: plannerActions } = usePlanner();
   const weekOffset = plannerState.weekOffset ?? 0;
   const calMarks = plannerState.calMarks ?? {};
+  const custody = plannerState.custody ?? { baseDate: "2026-04-28", withKids: true, overrides: {} };
+  // Transitional adapter: Legacy may still call setCustody(), but Planner
+  // owns the authoritative custody state during the migration.
+  const setCustody = (value) => {
+    plannerActions.setCustody(value);
+    return value;
+  };
   // Transitional adapter: existing Legacy handlers can keep calling
   // setCalMarks(), but Planner is the authoritative owner.
   const setCalMarks = (updater) => {
@@ -107,7 +114,7 @@ function AngstApp() {
   // Planner 0.0 owns calMarks; Legacy accesses it through the adapter above.
   const [semanaTab, setSemanaTab] = useState("semana");
   const [meleeMajors, setMeleeMajors] = useState([]);
-  const [custody, setCustody] = useState({ baseDate:"2026-04-28", withKids:true, overrides:{} });
+  // Planner 0.0 owns custody; Legacy accesses it through the adapter above.
 
   const POKEMON_EVENTS = [
     { name:"Lima Special Championships 🇵🇪", start:"2026-05-23", end:"2026-05-24", url:"https://www.pokemon.com/us/play-pokemon/pokemon-events/find-a-pokemon-event/" },
