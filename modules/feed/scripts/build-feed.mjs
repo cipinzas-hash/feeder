@@ -231,7 +231,6 @@ const STARTGG_ENDPOINT = "https://api.start.gg/gql/alpha";
 // venía en 0 sin ningún error explícito.
 const vodClipDebug = [];
 const UPSET_SEED_DIFF_THRESHOLD = 5;
-const VOD_UPSET_SEED_DIFF_THRESHOLD = 25; // umbral (más alto) para entrar al VOD permanente del archivo -- ver Fase 3b
 const HYPE_WINDOW_DAYS = 14; // cuántos días antes de que empiece un major se genera el aviso de "se viene"
 const PROJECTION_WINDOW_DAYS = 3; // el seeding suele cerrarse recién cerca del check-in, no 14 días antes
 const PROJECTION_TOP_CUTOFF = 8; // solo nos interesan choques proyectados entre seeds de este rango
@@ -692,7 +691,7 @@ function detectUpsets(sets) {
         foto: entrantFace(loser),
       },
       esUpset: seedUpset || rankUpset, // con seedDiff ya bien orientado, seedUpset por sí solo ya implica que el ganador tenía peor seed
-      seedDiff, // null si no había seed en ambos -- ver VOD_UPSET_SEED_DIFF_THRESHOLD en Fase 3b
+      seedDiff, // null si no había seed en ambos
       rankDiff, // diferencia de puestos SSBMRank cuando aplica (null si el ganador no estaba rankeado)
       viaSSBMRank: rankUpset && !seedUpset, // para distinguir en el título/summary qué criterio disparó esto
     });
@@ -801,50 +800,6 @@ async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre) {
     // agotada simplemente falla rápido cada vez, no es costoso.
     return null;
   }
-}
-
-// Candidatos al VOD permanente: unión de (a) sets de la fase Top 16 (todos,
-// sin importar seed) y (b) upsets con seedDiff >= VOD_UPSET_SEED_DIFF_THRESHOLD
-// en cualquier fase -- deduplicados por id de set (un mismo set puede
-// cumplir ambos criterios).
-function buildVodCandidateMatches(sets, top16PhaseId, top8PhaseId) {
-  const out = [];
-  for (const set of sets) {
-    if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
-    const [a, b] = set.slots.map(s => s.entrant);
-    if (!a || !b) continue;
-    const winner = a.id === set.winnerId ? a : b;
-    const loser = a.id === set.winnerId ? b : a;
-    const esTop16 = top16PhaseId != null && set.phaseGroup?.phase?.id === top16PhaseId;
-    const esTop8 = top8PhaseId != null && set.phaseGroup?.phase?.id === top8PhaseId;
-
-    let esBigUpset = false;
-    if (a.initialSeedNum && b.initialSeedNum) {
-      const seedDiff = winner.initialSeedNum - loser.initialSeedNum; // positivo = ganador con peor seed = upset real
-      esBigUpset = seedDiff >= VOD_UPSET_SEED_DIFF_THRESHOLD && loser.initialSeedNum <= UPSET_LOSER_SEED_CUTOFF;
-    }
-    // Mismo criterio SSBMRank que detectUpsets: un top 50 mundial cayendo
-    // ante alguien sin ranking (o muy por debajo) es VOD-worthy sin importar
-    // si el torneo tenía seeding confiable. Mismo filtro de "perdedor top
-    // 32" que en detectUpsets -- solo si el dato de seed existe, ver ahí.
-    const loserRank = ssbmrankOf(loser.name);
-    const winnerRank = ssbmrankOf(winner.name);
-    const esBigUpsetPorRank = loserRank != null && loserRank <= SSBMRANK_TOP_CUTOFF
-      && (winnerRank == null || winnerRank > loserRank)
-      && (loser.initialSeedNum == null || loser.initialSeedNum <= UPSET_LOSER_SEED_CUTOFF);
-
-    if (!esTop16 && !esTop8 && !esBigUpset && !esBigUpsetPorRank) continue;
-    out.push({
-      setId: set.id,
-      ronda: set.fullRoundText,
-      ganador: { nombre: winner.name, seed: winner.initialSeedNum ?? null, ssbmrank: winnerRank, pj: entrantCharacter(set.games, winner.id), foto: entrantFace(winner) },
-      perdedor: { nombre: loser.name, seed: loser.initialSeedNum ?? null, ssbmrank: loserRank, pj: entrantCharacter(set.games, loser.id), foto: entrantFace(loser) },
-      esUpset: (a.initialSeedNum && b.initialSeedNum) ? winner.initialSeedNum > loser.initialSeedNum : esBigUpsetPorRank,
-      esTop16,
-      esTop8,
-    });
-  }
-  return out;
 }
 
 // Arma el item de "se viene tal torneo" para un evento que todavía no termina.
@@ -1197,7 +1152,76 @@ Devolvé SOLO el texto del resumen final (el formato del ejemplo: standings + up
 // ver RETENTION_DAYS más abajo — este item queda exento para siempre (mismo
 // criterio que Podcasts): es el resumen final del torneo, no un aviso
 // puntual que pierde sentido con el tiempo.
-function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings, tournamentUpsets, vod, vodClips, narracion) {
+// Orden real de juego del Top 8 (según lo que se ve en el broadcast, no el
+// orden "teórico" de bracket): Losers Quarters, Winners Quarters, Losers
+// Semis, Winners Semis, Winners Final, Losers Final, Grand Final(s).
+const TOP8_ROUND_ORDER = [
+  { rank: 1, re: /losers?.*quarter/i },
+  { rank: 2, re: /winners?.*quarter/i },
+  { rank: 3, re: /losers?.*semi/i },
+  { rank: 4, re: /winners?.*semi/i },
+  { rank: 5, re: /winners?\s*final/i },
+  { rank: 6, re: /losers?\s*final/i },
+  { rank: 7, re: /grand\s*final(?!.*reset)/i },
+  { rank: 8, re: /grand\s*final.*reset/i },
+];
+function top8RoundOrder(fullRoundText) {
+  for (const { rank, re } of TOP8_ROUND_ORDER) if (re.test(fullRoundText || "")) return rank;
+  return 99; // ronda no reconocida -- al final, no se pierde el set, solo queda sin orden claro
+}
+
+// Todos los sets de la fase Top 8, ordenados por orden real de juego (no por
+// el orden en que vinieron en `sets`, que es RECENT-first).
+function buildTop8Ordered(sets, top8PhaseId) {
+  if (top8PhaseId == null) return [];
+  const matches = [];
+  for (const set of sets) {
+    if (set.phaseGroup?.phase?.id !== top8PhaseId) continue;
+    if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
+    const [a, b] = set.slots.map(s => s.entrant);
+    if (!a || !b) continue;
+    const winner = a.id === set.winnerId ? a : b;
+    const loser = a.id === set.winnerId ? b : a;
+    matches.push({
+      setId: set.id,
+      ronda: set.fullRoundText,
+      orden: top8RoundOrder(set.fullRoundText),
+      ganador: { nombre: winner.name, seed: winner.initialSeedNum ?? null, ssbmrank: ssbmrankOf(winner.name), pj: entrantCharacter(set.games, winner.id), foto: entrantFace(winner) },
+      perdedor: { nombre: loser.name, seed: loser.initialSeedNum ?? null, ssbmrank: ssbmrankOf(loser.name), pj: entrantCharacter(set.games, loser.id), foto: entrantFace(loser) },
+    });
+  }
+  matches.sort((x, y) => x.orden - y.orden);
+  return matches;
+}
+
+// Todos los sets del torneo donde CUALQUIERA de los dos jugadores usó Dr.
+// Mario -- para revisión personal, no filtrado por seed ni por si fue upset.
+// Tope defensivo de 40: fetchCompletedSets ya viene acotado (~600 sets tope),
+// así que en la práctica no debería ni acercarse, pero por las dudas.
+const DOC_CHARACTER_RE = /dr\.?\s*mario/i;
+function docSetsFrom(sets, max = 40) {
+  const out = [];
+  for (const set of sets) {
+    if (out.length >= max) break;
+    if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
+    const [a, b] = set.slots.map(s => s.entrant);
+    if (!a || !b) continue;
+    const winner = a.id === set.winnerId ? a : b;
+    const loser = a.id === set.winnerId ? b : a;
+    const pjGanador = entrantCharacter(set.games, winner.id);
+    const pjPerdedor = entrantCharacter(set.games, loser.id);
+    if (!DOC_CHARACTER_RE.test(pjGanador || "") && !DOC_CHARACTER_RE.test(pjPerdedor || "")) continue;
+    out.push({
+      setId: set.id,
+      ronda: set.fullRoundText,
+      ganador: { nombre: winner.name, seed: winner.initialSeedNum ?? null, pj: pjGanador, foto: entrantFace(winner) },
+      perdedor: { nombre: loser.name, seed: loser.initialSeedNum ?? null, pj: pjPerdedor, foto: entrantFace(loser) },
+    });
+  }
+  return out;
+}
+
+function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings, tournamentUpsets, vod, top8Clips, upsetClips, docClips, narracion) {
   if (!standings.length) return null;
   const top8Line = [...standings]
     .sort((a, b) => a.placement - b.placement)
@@ -1229,12 +1253,13 @@ function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings,
     videoId: vod?.videoId || null,
     startSeconds: vod?.startSeconds || 0,
     esArchivo: true,
-    // VOD permanente (Fase 3b): un clip cortado individual por partido
-    // (findMatchClip) para cada set de Top 16/Top 8 + upsets≥25. Vacío si
-    // un partido puntual no tiene clip cortado -- no hay fallback a stream
-    // completo con timestamp adivinado, se prefiere quedarse sin VOD para
-    // ese partido antes que un timestamp poco confiable.
-    vodClips: vodClips || [],
+    // Fase 3b, tres secciones -- cada una con clip cortado individual por
+    // partido (findMatchClip), SIN fallback a stream completo con timestamp
+    // adivinado. Un partido sin clip cortado disponible simplemente no
+    // aparece.
+    top8Clips: top8Clips || [], // Top 8 completo, en orden real de juego (ver top8RoundOrder)
+    upsetClips: upsetClips || [], // upsets contra seed top 32, deduplicados
+    docClips: docClips || [], // TODOS los sets del torneo con Dr. Mario, para revisión personal
   };
 }
 
@@ -1430,6 +1455,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
         title: `${u.ganador.nombre}${pjGanador}${etGanador ? ` ${etGanador}` : ""} venció a ${u.perdedor.nombre}${pjPerdedor}${etPerdedor ? ` ${etPerdedor}` : ""}`,
         link: t.bracketUrl,
         summary: `${u.ronda} de ${tournamentName}.${notaSSBMRank}`,
+        ronda: u.ronda, // como campo separado -- topUpsets/buildTop8Ordered lo necesitan, antes solo estaba mezclado en summary
         image: null,
         pubDate: eventInfo.startAt ? new Date(eventInfo.startAt * 1000).toISOString() : null,
         source: tournamentName,
@@ -1440,6 +1466,8 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
         startSeconds: vod.startSeconds, // opcional — el prototipo lo ignora si no lo usa todavía
         esUpset: u.esUpset,
         viaSSBMRank: u.viaSSBMRank,
+        seedDiff: u.seedDiff, // como campo separado -- topUpsets ordena por esto, antes quedaba undefined siempre (bug: nunca ordenaba de verdad)
+        rankDiff: u.rankDiff,
         ganador: { nombre: u.ganador.nombre, seed: u.ganador.seed, ssbmrank: u.ganador.ssbmrank, pj: u.ganador.pj, foto: u.ganador.foto },
         perdedor: { nombre: u.perdedor.nombre, seed: u.perdedor.seed, ssbmrank: u.perdedor.ssbmrank, pj: u.perdedor.pj, foto: u.perdedor.foto },
       });
@@ -1498,40 +1526,50 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
           ? (await findMatchClip(tournamentName, finalistNames[0], finalistNames[1])) || { videoId: null, startSeconds: 0 }
           : { videoId: null, startSeconds: 0 };
 
-        // VOD permanente (Fase 3b): Top 16 completo + Top 8 completo +
-        // upsets≥25, buscado en los canales de producción conocidos -- ver
-        // buildVodCandidateMatches más arriba.
-        //
-        // Solo clips individuales cortados (findMatchClip) -- SIN fallback
-        // al stream completo con timestamp adivinado. Los canales de
-        // producción suben clips cortados desde pools, así que la inmensa
-        // mayoría de upsets reales deberían tener uno. Si un partido puntual
-        // no tiene clip cortado, se queda sin VOD -- mejor eso que un
-        // timestamp adivinado que puede caer en cualquier lado de un stream
-        // de horas.
-        let vodClips = [];
+        // Tres secciones, cada una con clip cortado individual (findMatchClip,
+        // SIN fallback a stream+timestamp) -- ver top8Clips/upsetClips/docClips
+        // en buildTournamentArchiveItem. Caché compartido por par de nombres:
+        // el mismo matchup puede aparecer en más de una sección (un upset
+        // real de Top 8 cae en top8Clips Y en upsetClips) y no tiene sentido
+        // pagar la búsqueda de YouTube dos veces por lo mismo.
+        const clipCache = new Map(); // "ganador|perdedor" -> clip | null
+        async function clipCached(ganadorNombre, perdedorNombre) {
+          const key = `${ganadorNombre}|${perdedorNombre}`;
+          if (clipCache.has(key)) return clipCache.get(key);
+          const clip = await findMatchClip(tournamentName, ganadorNombre, perdedorNombre);
+          clipCache.set(key, clip);
+          return clip;
+        }
+
+        let top8Clips = [], upsetClips = [], docClips = [];
         try {
           const phasesForArchive = await fetchEventPhases(eventInfo.id);
-          const top16Phase = findTop16Phase(phasesForArchive);
           const top8Phase = findTop8Phase(phasesForArchive);
-          const candidateMatches = buildVodCandidateMatches(sets, top16Phase?.id ?? null, top8Phase?.id ?? null);
+          const top8Matches = buildTop8Ordered(sets, top8Phase?.id ?? null);
+          const upsetMatches = topUpsets(tournamentUpsets, 999); // dedupe por par, sin cap de cantidad (el cap de 5 es solo para el resumen de texto)
+          const docMatches = docSetsFrom(sets);
 
-          for (const m of candidateMatches) {
-            const clip = await findMatchClip(tournamentName, m.ganador.nombre, m.perdedor.nombre);
-            if (!clip) continue; // sin clip cortado -- este partido queda sin VOD, no se adivina timestamp en un stream
-            vodClips.push({
-              guid: `melee-vodclip-${slug}-${m.setId}`,
-              ronda: m.ronda,
-              ganador: m.ganador,
-              perdedor: m.perdedor,
-              esUpset: m.esUpset,
-              esTop16: m.esTop16,
-              esTop8: m.esTop8,
-              videoId: clip.videoId,
-              startSeconds: 0,
-            });
+          for (const m of top8Matches) {
+            const clip = await clipCached(m.ganador.nombre, m.perdedor.nombre);
+            if (!clip) continue;
+            top8Clips.push({ guid: `melee-top8clip-${slug}-${m.setId}`, ronda: m.ronda, orden: m.orden, ganador: m.ganador, perdedor: m.perdedor, videoId: clip.videoId, startSeconds: 0 });
           }
-          meleeDebug.push({ slug, tournamentName, vodClipsEncontrados: vodClips.length, vodCandidatosTotales: candidateMatches.length });
+          for (const m of upsetMatches) {
+            const clip = await clipCached(m.ganador.nombre, m.perdedor.nombre);
+            if (!clip) continue;
+            upsetClips.push({ guid: `melee-upsetclip-${slug}-${m.guid}`, ronda: m.ronda, ganador: m.ganador, perdedor: m.perdedor, videoId: clip.videoId, startSeconds: 0 });
+          }
+          for (const m of docMatches) {
+            const clip = await clipCached(m.ganador.nombre, m.perdedor.nombre);
+            if (!clip) continue;
+            docClips.push({ guid: `melee-docclip-${slug}-${m.setId}`, ronda: m.ronda, ganador: m.ganador, perdedor: m.perdedor, videoId: clip.videoId, startSeconds: 0 });
+          }
+          meleeDebug.push({
+            slug, tournamentName,
+            top8ClipsEncontrados: top8Clips.length, top8Candidatos: top8Matches.length,
+            upsetClipsEncontrados: upsetClips.length, upsetCandidatos: upsetMatches.length,
+            docClipsEncontrados: docClips.length, docCandidatos: docMatches.length,
+          });
         } catch (e) {
           console.error(`✗ Melee · VOD permanente (${tournamentName}): ${e.message}`);
           meleeDebug.push({ slug, tournamentName, vodError: e.message });
@@ -1549,7 +1587,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
           console.error(`✗ Melee · narración (${tournamentName}): ${e.message}`);
         }
 
-        const archiveItem = buildTournamentArchiveItem(slug, tournamentName, t.bracketUrl, standings, tournamentUpsets, vod, vodClips, narracion);
+        const archiveItem = buildTournamentArchiveItem(slug, tournamentName, t.bracketUrl, standings, tournamentUpsets, vod, top8Clips, upsetClips, docClips, narracion);
         if (archiveItem) archiveItems.push(archiveItem);
       } catch (e) {
         console.error(`✗ Melee · archivo final (${tournamentName}): ${e.message}`);

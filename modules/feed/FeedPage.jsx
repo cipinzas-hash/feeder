@@ -1898,49 +1898,62 @@
                         )}
                       </div>
                     )}
-                    {archivo && archivo.vodClips && archivo.vodClips.length > 0 && (
-                      <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 8 }}>VOD DEL TORNEO</div>
-                        {archivo.vodClips.map((clip, i) => {
-                          const visto = vodVistos.has(clip.guid);
-                          return (
-                            <div key={clip.guid} style={{
-                              padding: "16px 0",
-                              borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none",
-                              opacity: visto ? 0.55 : 1,
-                            }}>
-                              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <MeleeMatchup item={clip} />
-                                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#777", marginTop: 4 }}>
-                                    {clip.ronda}{clip.esTop8 ? " · Top 8" : clip.esTop16 ? " · Top 16" : ""}{clip.esUpset ? " · upset" : ""}
+                    {archivo && (() => {
+                      // Tres secciones en el orden pedido: Top 8 completo (ya
+                      // viene ordenado por orden real de juego desde el
+                      // backend -- ver top8RoundOrder), Upsets (contra seed
+                      // top 32), y Doc (todos los sets de Dr. Mario del
+                      // torneo, para revisión personal). Mismo renderizado
+                      // para las tres, solo cambia el título de sección.
+                      const secciones = [
+                        { key: "top8", titulo: "TOP 8", clips: archivo.top8Clips || [] },
+                        { key: "upsets", titulo: "UPSETS (SEED TOP 32)", clips: archivo.upsetClips || [] },
+                        { key: "doc", titulo: "SETS DE DR. MARIO", clips: archivo.docClips || [] },
+                      ];
+                      return secciones.map(sec => sec.clips.length > 0 && (
+                        <div key={sec.key} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                          <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 8 }}>{sec.titulo}</div>
+                          {sec.clips.map((clip, i) => {
+                            const visto = vodVistos.has(clip.guid);
+                            return (
+                              <div key={clip.guid} style={{
+                                padding: "16px 0",
+                                borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                                opacity: visto ? 0.55 : 1,
+                              }}>
+                                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <MeleeMatchup item={clip} />
+                                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#777", marginTop: 4 }}>
+                                      {clip.ronda}
+                                    </div>
                                   </div>
+                                  <button onClick={() => toggleVodVisto(clip.guid)} style={{
+                                    flexShrink: 0, fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700,
+                                    border: "1px solid " + (visto ? "#333" : "#ff6600"), borderRadius: 14, padding: "4px 10px",
+                                    background: "transparent", color: visto ? "#666" : "#ff6600", cursor: "pointer",
+                                  }}>
+                                    {visto ? "✓ visto" : "marcar visto"}
+                                  </button>
                                 </div>
-                                <button onClick={() => toggleVodVisto(clip.guid)} style={{
-                                  flexShrink: 0, fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700,
-                                  border: "1px solid " + (visto ? "#333" : "#ff6600"), borderRadius: 14, padding: "4px 10px",
-                                  background: "transparent", color: visto ? "#666" : "#ff6600", cursor: "pointer",
-                                }}>
-                                  {visto ? "✓ visto" : "marcar visto"}
-                                </button>
+                                {clip.videoId && (
+                                  <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: 10, overflow: "hidden", background: "#000" }}>
+                                    <iframe
+                                      src={`https://www.youtube-nocookie.com/embed/${clip.videoId}${clip.startSeconds ? `?start=${clip.startSeconds}` : ""}`}
+                                      title={`${clip.ganador?.nombre} vs ${clip.perdedor?.nombre}`}
+                                      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                      referrerPolicy="strict-origin-when-cross-origin"
+                                      allowFullScreen
+                                    />
+                                  </div>
+                                )}
                               </div>
-                              {clip.videoId && (
-                                <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: 10, overflow: "hidden", background: "#000" }}>
-                                  <iframe
-                                    src={`https://www.youtube-nocookie.com/embed/${clip.videoId}${clip.startSeconds ? `?start=${clip.startSeconds}` : ""}`}
-                                    title={`${clip.ganador?.nombre} vs ${clip.perdedor?.nombre}`}
-                                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    referrerPolicy="strict-origin-when-cross-origin"
-                                    allowFullScreen
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                            );
+                          })}
+                        </div>
+                      ));
+                    })()}
                     {top16 && !archivo && (
                       <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                         <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 8 }}>TOP 16</div>
