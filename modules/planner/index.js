@@ -1,4 +1,5 @@
 export { default as manifest } from "./manifest.js";
+export { default as PlannerPage } from "./PlannerPage.jsx";
 
 export {
   BASE_DATE,
