@@ -1,3 +1,3 @@
-// Transitional shell entry point for Angst 0.0.
-// The implementation still lives in core/App.jsx while domain extraction proceeds.
-export { default } from "../core/App.jsx";
+// Angst 0.0 application entry point.
+// The shell owns composition; legacy remains the compatibility implementation.
+export { default } from "./Shell.jsx";
