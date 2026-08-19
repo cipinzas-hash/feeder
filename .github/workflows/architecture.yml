@@ -16,3 +16,5 @@ jobs:
           node-version: 20
       - name: Validate module registry
         run: node tests/module-registry.mjs
+      - name: Validate Planner domain
+        run: node tests/planner-domain.mjs
