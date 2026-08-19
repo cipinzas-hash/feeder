@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Arma el HTML único de Angst a partir de los módulos del repositorio.
 //
-// El entry point de la aplicación vive ahora en app/App.jsx. Durante Angst 0.0
-// ese archivo sigue delegando en core/App.jsx, lo que permite mover la frontera
-// del shell sin alterar todavía la lógica de producto.
+// El entry point de la aplicación vive en app/App.jsx. Angst 0.0 lo compone
+// mediante app/Shell.jsx; el shell mantiene LegacyApp como implementación de
+// compatibilidad mientras los módulos van reemplazando sus dominios.
 
 import { build } from "esbuild";
 import { writeFileSync, mkdirSync } from "fs";
