@@ -1330,14 +1330,19 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
   const processedEventIds = new Set(previousProcessedEventIds);
   const trackedTournaments = [];
 
-  // Presupuesto de tiempo global: el workflow externo mata el job entero a
-  // los 20 min sin commitear nada si se pasa (root cause real de los runs
-  // "cancelled" -- no es un tope de páginas, es que start.gg se pone lento
-  // bajo tráfico real de torneo en vivo, justo cuando más importa que esto
-  // corra). Con esto, si ya vamos gastados 12 min, se corta el procesamiento
-  // de torneos NUEVOS y se devuelve lo que se alcanzó a juntar -- degradado
-  // pero real, en vez de nada.
-  const meleeDeadline = Date.now() + 12 * 60 * 1000;
+  // Presupuesto de tiempo global: el workflow externo mata el job entero
+  // (25 min, ver update-feed.yml) sin commitear nada si se pasa. Con esto,
+  // si ya vamos gastados, se corta el procesamiento (de torneos nuevos ENTRE
+  // torneos, y de clips individuales DENTRO de cada torneo -- ver el chequeo
+  // en los loops de top8Clips/upsetClips/docClips) y se devuelve lo que se
+  // alcanzó a juntar -- degradado pero real, en vez de nada.
+  //
+  // 15 min, no 12: la búsqueda de clip individual por partido (findMatchClip,
+  // una búsqueda de YouTube por cada set de Top 8 + cada upset + cada set de
+  // Doc) es bastante más pesada que la versión anterior por etapa. Deja ~10
+  // min de margen para el resto del pipeline (RSS, Cine, git push) dentro
+  // del tope de 25 min del job.
+  const meleeDeadline = Date.now() + 15 * 60 * 1000;
 
   for (const t of combinedTournaments) {
     if (Date.now() > meleeDeadline) {
@@ -1549,23 +1554,36 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
           const upsetMatches = topUpsets(tournamentUpsets, 999); // dedupe por par, sin cap de cantidad (el cap de 5 es solo para el resumen de texto)
           const docMatches = docSetsFrom(sets);
 
+          // El presupuesto de 12 min (meleeDeadline) antes solo se chequeaba
+          // ENTRE torneos -- si un solo torneo grande se ponía a buscar
+          // decenas de clips individuales (top8+upsets+doc, uno por
+          // partido), nada lo cortaba a mitad de camino y terminaba
+          // reventando el timeout de 25 min del workflow entero. Ahora se
+          // chequea acá también, dentro de cada uno de los tres loops --
+          // en el peor caso se pierden los clips que faltaban de ESTE
+          // torneo, nunca el resto del pipeline.
+          let presupuestoAgotado = false;
           for (const m of top8Matches) {
+            if (Date.now() > meleeDeadline) { presupuestoAgotado = true; break; }
             const clip = await clipCached(m.ganador.nombre, m.perdedor.nombre);
             if (!clip) continue;
             top8Clips.push({ guid: `melee-top8clip-${slug}-${m.setId}`, ronda: m.ronda, orden: m.orden, ganador: m.ganador, perdedor: m.perdedor, videoId: clip.videoId, startSeconds: 0 });
           }
-          for (const m of upsetMatches) {
+          if (!presupuestoAgotado) for (const m of upsetMatches) {
+            if (Date.now() > meleeDeadline) { presupuestoAgotado = true; break; }
             const clip = await clipCached(m.ganador.nombre, m.perdedor.nombre);
             if (!clip) continue;
             upsetClips.push({ guid: `melee-upsetclip-${slug}-${m.guid}`, ronda: m.ronda, ganador: m.ganador, perdedor: m.perdedor, videoId: clip.videoId, startSeconds: 0 });
           }
-          for (const m of docMatches) {
+          if (!presupuestoAgotado) for (const m of docMatches) {
+            if (Date.now() > meleeDeadline) { presupuestoAgotado = true; break; }
             const clip = await clipCached(m.ganador.nombre, m.perdedor.nombre);
             if (!clip) continue;
             docClips.push({ guid: `melee-docclip-${slug}-${m.setId}`, ronda: m.ronda, ganador: m.ganador, perdedor: m.perdedor, videoId: clip.videoId, startSeconds: 0 });
           }
+          if (presupuestoAgotado) console.warn(`⚠ Melee · presupuesto agotado buscando clips de ${tournamentName}, se sigue con lo encontrado hasta acá`);
           meleeDebug.push({
-            slug, tournamentName,
+            slug, tournamentName, presupuestoAgotado,
             top8ClipsEncontrados: top8Clips.length, top8Candidatos: top8Matches.length,
             upsetClipsEncontrados: upsetClips.length, upsetCandidatos: upsetMatches.length,
             docClipsEncontrados: docClips.length, docCandidatos: docMatches.length,
