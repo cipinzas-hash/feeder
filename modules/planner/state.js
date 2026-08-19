@@ -21,6 +21,10 @@ export function getDay(state, dateKey) {
   return state?.dayData?.[dateKey] || makeEmptyDay();
 }
 
+export function replaceDayData(state, dayData) {
+  return { ...state, dayData: { ...(dayData || {}) } };
+}
+
 export function updateDay(state, dateKey, updater) {
   const current = getDay(state, dateKey);
   const nextDay = typeof updater === "function" ? updater(current) : updater;
@@ -37,14 +41,8 @@ export function setWeekOffset(state, weekOffset) {
   return { ...state, weekOffset };
 }
 
-export function setCalendarMarks(state, dateKey, marks) {
-  return {
-    ...state,
-    calMarks: {
-      ...(state?.calMarks || {}),
-      [dateKey]: marks,
-    },
-  };
+export function replaceCalendarMarks(state, calMarks) {
+  return { ...state, calMarks: { ...(calMarks || {}) } };
 }
 
 export function setCustody(state, custody) {
