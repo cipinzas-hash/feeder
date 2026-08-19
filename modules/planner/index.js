@@ -1,5 +1,6 @@
 export { default as manifest } from "./manifest.js";
 export { default as PlannerPage } from "./PlannerPage.jsx";
+export { default as PlannerDayCard } from "./PlannerDayCard.jsx";
 export { PlannerProvider, usePlanner } from "./PlannerProvider.jsx";
 
 export {
@@ -16,11 +17,13 @@ export {
 
 export {
   createInitialState,
+  replaceDayData,
   updateDay,
   setWeekOffset,
   previousWeek,
   nextWeek,
   setCalendarMarks,
+  replaceCalendarMarks,
   setCustody,
   setCookingOptions,
   setAseoOptions,
@@ -33,3 +36,4 @@ export { loadPlannerState, savePlannerState, getPlannerStorageFields } from "./s
 export { fromLegacyState, mergePlannerIntoLegacy, getPlannerLegacyFields } from "./legacyAdapter.js";
 export { PLANNER_OWNED_FIELDS, PLANNER_PRIMARY_FIELD, isPlannerOwnedField, assertPlannerOwnership } from "./ownership.js";
 export { previousWeekOffset, nextWeekOffset, normalizeWeekOffset } from "./navigation.js";
+export { getWeekStart, getWeekDates, getWeekDays, formatWeekRange, toDateKey } from "./weekView.js";
