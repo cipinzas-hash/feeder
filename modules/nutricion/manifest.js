@@ -1,5 +1,6 @@
 export default {
   id: "nutricion",
+  version: "0.0",
   tabLabel: "Nutrición",
   state: {
     nutriLog: { default: {} },
@@ -9,6 +10,4 @@ export default {
   },
 };
 
-// NOTA: recibe getStressScore como prop (callback), no como estado propio —
-// es la integración con computeStressScore de Semana/core. Declarada acá,
-// del lado del módulo que integra, como corresponde.
+// Integration: receives getStressScore as a callback from the application shell.
