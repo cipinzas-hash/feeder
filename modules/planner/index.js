@@ -27,3 +27,4 @@ export {
 } from "./actions.js";
 
 export { loadPlannerState, savePlannerState, getPlannerStorageFields } from "./storage.js";
+export { fromLegacyState, mergePlannerIntoLegacy, getPlannerLegacyFields } from "./legacyAdapter.js";
