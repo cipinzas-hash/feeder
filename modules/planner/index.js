@@ -28,4 +28,5 @@ export {
 } from "./actions.js";
 
 export { loadPlannerState, savePlannerState, getPlannerStorageFields } from "./storage.js";
-export { fromLegacyState, toLegacyState } from "./legacyAdapter.js";
+export { fromLegacyState, mergePlannerIntoLegacy, getPlannerLegacyFields } from "./legacyAdapter.js";
+export { PLANNER_OWNED_FIELDS, PLANNER_PRIMARY_FIELD, isPlannerOwnedField, assertPlannerOwnership } from "./ownership.js";
