@@ -8,6 +8,7 @@ import {
   setCalendarMarks,
   setCustody,
 } from "./state.js";
+import { previousWeekOffset, nextWeekOffset } from "./navigation.js";
 
 export {
   createInitialState,
@@ -16,6 +17,14 @@ export {
   setCalendarMarks,
   setCustody,
 };
+
+export function previousWeek(state) {
+  return setWeekOffset(state, previousWeekOffset(state.weekOffset));
+}
+
+export function nextWeek(state) {
+  return setWeekOffset(state, nextWeekOffset(state.weekOffset));
+}
 
 export function setCookingOptions(state, options) {
   return { ...state, cookingOpts: [...(options || [])] };
