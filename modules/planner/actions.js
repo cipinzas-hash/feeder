@@ -3,18 +3,20 @@
 
 import {
   createInitialState,
+  replaceDayData,
   updateDay,
   setWeekOffset,
-  setCalendarMarks,
+  replaceCalendarMarks,
   setCustody,
 } from "./state.js";
 import { previousWeekOffset, nextWeekOffset } from "./navigation.js";
 
 export {
   createInitialState,
+  replaceDayData,
   updateDay,
   setWeekOffset,
-  setCalendarMarks,
+  replaceCalendarMarks,
   setCustody,
 };
 
