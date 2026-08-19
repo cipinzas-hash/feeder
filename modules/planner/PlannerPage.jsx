@@ -1,8 +1,9 @@
 const React = globalThis.React;
 import PlannerDayCard from "./PlannerDayCard.jsx";
+import PlannerCalendar from "./PlannerCalendar.jsx";
 import { DAY_NAMES, isWithKids } from "./domain.js";
 import { previousWeek, nextWeek } from "./actions.js";
-import { getWeekDays, formatWeekRange, toDateKey } from "./weekView.js";
+import { getWeekDays, formatWeekRange, toDateKey, getWeekStart } from "./weekView.js";
 
 function applyWeekAction(actions, action, fallback) {
   if (actions.applyStateAction) actions.applyStateAction(action);
@@ -13,6 +14,7 @@ export default function PlannerPage({ state = {}, actions = {}, integrations = {
   const weekOffset = state.weekOffset || 0;
   const todayKey = integrations.todayKey || toDateKey(new Date());
   const holidayLookup = integrations.holidayLookup || (() => "");
+  const [calendarOpen, setCalendarOpen] = React.useState(false);
 
   const goPreviousWeek = () => applyWeekAction(
     actions,
@@ -26,6 +28,7 @@ export default function PlannerPage({ state = {}, actions = {}, integrations = {
   );
 
   const weekDays = getWeekDays(weekOffset);
+  const weekStart = getWeekStart(weekOffset);
 
   return React.createElement(
     "section",
@@ -35,6 +38,7 @@ export default function PlannerPage({ state = {}, actions = {}, integrations = {
       { className: "planner-week-nav" },
       React.createElement("button", { type: "button", onClick: goPreviousWeek, "aria-label": "semana anterior" }, "‹"),
       React.createElement("div", { className: "planner-week-nav__range" }, formatWeekRange(weekOffset)),
+      React.createElement("button", { type: "button", onClick: () => setCalendarOpen(true), "aria-label": "abrir calendario" }, "📅"),
       React.createElement("button", { type: "button", onClick: goNextWeek, "aria-label": "semana siguiente" }, "›"),
     ),
     React.createElement(
@@ -56,5 +60,6 @@ export default function PlannerPage({ state = {}, actions = {}, integrations = {
       )),
     ),
     React.createElement("div", { className: "planner-page__meta" }, `semana ${weekOffset >= 0 ? "+" : ""}${weekOffset} · ${DAY_NAMES.length} días`),
+    calendarOpen ? React.createElement(PlannerCalendar, { state, actions, weekStart, onClose: () => setCalendarOpen(false) }) : null,
   );
 }
