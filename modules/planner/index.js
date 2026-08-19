@@ -11,3 +11,16 @@ export {
   isWithKids,
   fmtTime,
 } from "./domain.js";
+
+export {
+  createInitialState,
+  updateDay,
+  setWeekOffset,
+  setCalendarMarks,
+  setCustody,
+  setCookingOptions,
+  setAseoOptions,
+  setRoutines,
+  setRecurring,
+  setLastRollover,
+} from "./actions.js";
