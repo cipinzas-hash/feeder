@@ -1,5 +1,6 @@
 const React = globalThis.React;
 import { getDay } from "./state.js";
+import { previousWeek, nextWeek } from "./actions.js";
 
 /**
  * Transitional Planner view.
@@ -13,8 +14,14 @@ export default function PlannerPage({ state, actions = {}, integrations = {} }) 
   const todayKey = integrations.todayKey || new Date().toISOString().slice(0, 10);
   const today = getDay(plannerState, todayKey);
 
-  const changeWeek = (delta) => {
-    if (actions.setWeekOffset) actions.setWeekOffset(weekOffset + delta);
+  const goPreviousWeek = () => {
+    if (actions.applyStateAction) actions.applyStateAction(previousWeek);
+    else if (actions.setWeekOffset) actions.setWeekOffset(weekOffset - 1);
+  };
+
+  const goNextWeek = () => {
+    if (actions.applyStateAction) actions.applyStateAction(nextWeek);
+    else if (actions.setWeekOffset) actions.setWeekOffset(weekOffset + 1);
   };
 
   return React.createElement(
@@ -32,12 +39,12 @@ export default function PlannerPage({ state, actions = {}, integrations = {} }) 
       null,
       React.createElement(
         "button",
-        { type: "button", onClick: () => changeWeek(-1) },
+        { type: "button", onClick: goPreviousWeek },
         "← semana anterior",
       ),
       React.createElement(
         "button",
-        { type: "button", onClick: () => changeWeek(1) },
+        { type: "button", onClick: goNextWeek },
         "semana siguiente →",
       ),
     ),
