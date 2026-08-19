@@ -3,9 +3,10 @@ const { createContext, useContext, useEffect, useMemo, useState } = React;
 
 import {
   createInitialState,
+  replaceDayData,
   setWeekOffset,
   updateDay,
-  setCalendarMarks,
+  replaceCalendarMarks,
   setCustody,
   setCookingOptions,
   setAseoOptions,
@@ -39,8 +40,9 @@ export function PlannerProvider({ children }) {
   const actions = useMemo(() => ({
     setWeekOffset: (value) => setState((current) => setWeekOffset(current, value)),
     applyStateAction: (action) => setState((current) => action(current)),
+    replaceDayData: (value) => setState((current) => replaceDayData(current, value)),
     updateDay: (dateKey, fields) => setState((current) => updateDay(current, dateKey, fields)),
-    setCalendarMarks: (marks) => setState((current) => setCalendarMarks(current, marks)),
+    setCalendarMarks: (marks) => setState((current) => replaceCalendarMarks(current, marks)),
     setCustody: (custody) => setState((current) => setCustody(current, custody)),
     setCookingOptions: (options) => setState((current) => setCookingOptions(current, options)),
     setAseoOptions: (options) => setState((current) => setAseoOptions(current, options)),
