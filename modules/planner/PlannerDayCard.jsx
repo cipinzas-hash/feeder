@@ -2,6 +2,7 @@ const React = globalThis.React;
 import { getDay } from "./state.js";
 import PlannerTaskList from "./PlannerTaskList.jsx";
 import PlannerDayUtilities from "./PlannerDayUtilities.jsx";
+import PlannerDayReflection from "./PlannerDayReflection.jsx";
 
 const DEFAULT_DAY = { tasks: [], abasto: "", cookingMode: "", aseoMode: "", menu: "", summary: "", humors: [], humorCustom: [], compras: [], schedule: [] };
 
@@ -45,8 +46,10 @@ export default function PlannerDayCard({
       holidayLabel ? React.createElement("small", null, holidayLabel) : null,
     ),
     React.createElement(PlannerTaskList, {
+      state,
+      dateKey,
       tasks: day.tasks || [],
-      actions: { updateTasks },
+      actions: { ...actions, updateTasks },
       integrations,
     }),
     React.createElement(PlannerDayUtilities, {
@@ -56,12 +59,11 @@ export default function PlannerDayCard({
       actions: { updateDay },
       integrations,
     }),
-    React.createElement(
-      "section",
-      { className: "planner-day-card__fields" },
-      React.createElement("label", null, "Menú", React.createElement("textarea", { value: day.menu || "", onChange: (event) => updateDay({ menu: event.target.value }) })),
-      React.createElement("label", null, "Cierre", React.createElement("textarea", { value: day.summary || "", onChange: (event) => updateDay({ summary: event.target.value }) })),
-    ),
+    React.createElement(PlannerDayReflection, {
+      day,
+      actions: { updateDay },
+      integrations,
+    }),
     React.createElement(
       "footer",
       null,
