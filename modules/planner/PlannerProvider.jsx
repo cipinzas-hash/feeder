@@ -19,8 +19,16 @@ import {
   loadPlannerState,
   savePlannerState,
 } from "./index.js";
+import { applyAutomaticRollover } from "./domain/autoRollover.js";
 
 const PlannerContext = createContext(null);
+
+function localDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 export function PlannerProvider({ children }) {
   const [state, setState] = useState(() => createInitialState());
@@ -30,7 +38,7 @@ export function PlannerProvider({ children }) {
     let cancelled = false;
     loadPlannerState().then((stored) => {
       if (cancelled) return;
-      setState(stored);
+      setState(applyAutomaticRollover(stored, localDateKey()));
       setLoaded(true);
     });
     return () => { cancelled = true; };
