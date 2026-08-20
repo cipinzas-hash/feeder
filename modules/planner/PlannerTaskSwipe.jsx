@@ -1,8 +1,8 @@
 const React = globalThis.React;
 
 /**
- * Touch/pointer adapter for moving a flexible task to the next day.
- * State mutation remains in taskTransfer.js via the injected callback.
+ * Touch/pointer adapter for postponing a task to the next day.
+ * It never mutates Planner state directly; it delegates to onPostpone.
  */
 export default function PlannerTaskSwipe({ taskId, disabled = false, onPostpone, children }) {
   const startX = React.useRef(null);
@@ -24,7 +24,7 @@ export default function PlannerTaskSwipe({ taskId, disabled = false, onPostpone,
     const dy = event.clientY - (startY.current ?? event.clientY);
     startX.current = null;
     startY.current = null;
-    if (dx < 60 && Math.abs(dx) <= Math.abs(dy)) return;
+    if (dx < 60 || Math.abs(dx) <= Math.abs(dy)) return;
     onPostpone?.(taskId);
   };
 
