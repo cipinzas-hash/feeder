@@ -16,6 +16,7 @@ import {
   loadPlannerState,
   savePlannerState,
 } from "./index.js";
+import { postponeTask, completeCarriedTask } from "./taskTransfer.js";
 
 const PlannerContext = createContext(null);
 
@@ -49,6 +50,8 @@ export function PlannerProvider({ children }) {
     setRoutines: (routines) => setState((current) => setRoutines(current, routines)),
     setRecurring: (recurring) => setState((current) => setRecurring(current, recurring)),
     setLastRollover: (value) => setState((current) => setLastRollover(current, value)),
+    postponeTask: (dateKey, taskId) => setState((current) => postponeTask(current, dateKey, taskId)),
+    completeCarriedTask: (dateKey, taskId) => setState((current) => completeCarriedTask(current, dateKey, taskId)),
   }), []);
 
   const value = useMemo(() => ({ state, actions, loaded }), [state, actions, loaded]);
