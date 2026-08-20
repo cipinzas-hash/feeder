@@ -2,6 +2,7 @@ const React = globalThis.React;
 import { reorderFlexibleTasks } from "./taskOrdering.js";
 import PlannerTaskDrag from "./PlannerTaskDrag.jsx";
 import PlannerTaskTransfer from "./PlannerTaskTransfer.jsx";
+import PlannerTaskSwipe from "./PlannerTaskSwipe.jsx";
 
 function cloneTasks(tasks) {
   return Array.isArray(tasks) ? [...tasks] : [];
@@ -45,6 +46,9 @@ export default function PlannerTaskList({ tasks = [], actions = {}, integrations
     ) : null,
     !task.fixed ? React.createElement("button", { type: "button", onClick: () => moveTask(task.id, -1), disabled: flexibleIndex <= 0, "aria-label": "subir tarea", title: "subir" }, "↑") : null,
     !task.fixed ? React.createElement("button", { type: "button", onClick: () => moveTask(task.id, 1), disabled: flexibleIndex < 0 || flexibleIndex >= flexibleCount - 1, "aria-label": "bajar tarea", title: "bajar" }, "↓") : null,
+    !task.fixed && !task.done ? React.createElement(PlannerTaskSwipe, { taskId: task.id, disabled: task.done, onPostpone: (taskId) => integrations.postponeTask?.(taskId) },
+      React.createElement("span", { "aria-hidden": true, style: { fontSize: 12, padding: "0 4px" } }, "→"),
+    ) : null,
     !task.fixed && !task.done ? React.createElement(PlannerTaskTransfer, { state, dateKey, task, actions },
       ({ postpone }) => React.createElement("button", { type: "button", onClick: postpone, title: "postergar al día siguiente", "aria-label": "postergar tarea" }, "→ mañana"),
     ) : null,
