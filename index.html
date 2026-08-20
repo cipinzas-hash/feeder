@@ -200,6 +200,31 @@ var __angst = (() => {
   function fmtFull(date) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   }
+  function makeDefaultBudget2() {
+    const empty = {
+      ingresos: { trabajo: 0, emprendimiento: 0, reventa: 0, otros: 0 },
+      gastos_base: [],
+      personales: [],
+      propositos: []
+    };
+    try {
+      const raw = localStorage.getItem("angst-v12");
+      const data = raw ? JSON.parse(raw) : null;
+      const budgets = data && data.budgets && typeof data.budgets === "object" ? data.budgets : {};
+      const keys = Object.keys(budgets).sort();
+      if (!keys.length) return empty;
+      const previous = budgets[keys[keys.length - 1]];
+      if (!previous || typeof previous !== "object") return empty;
+      const copy = JSON.parse(JSON.stringify(previous));
+      ["gastos_base", "personales", "propositos"].forEach((sec) => {
+        if (Array.isArray(copy[sec])) copy[sec] = copy[sec].map((row) => ({ ...row, checked: false }));
+      });
+      return copy;
+    } catch (e) {
+      return empty;
+    }
+  }
+  if (typeof globalThis !== "undefined") globalThis.makeDefaultBudget = makeDefaultBudget2;
   var CL_HOLIDAYS = { "01-01": "A\xF1o Nuevo", "04-03": "Viernes Santo", "04-04": "S\xE1bado Santo", "05-01": "D\xEDa del Trabajo", "05-21": "Glorias Navales", "06-29": "San Pedro y San Pablo", "07-16": "Virgen del Carmen", "08-15": "Asunci\xF3n de la Virgen", "09-18": "Independencia", "09-19": "Glorias del Ej\xE9rcito", "10-12": "D\xEDa del Encuentro", "10-31": "Iglesias Evang\xE9licas", "11-01": "Todos los Santos", "12-08": "Inmaculada Concepci\xF3n", "12-25": "Navidad" };
   var US_HOLIDAYS = { "01-01": "New Year's Day", "01-20": "MLK Day", "02-16": "Presidents' Day", "05-25": "Memorial Day", "06-19": "Juneteenth", "07-04": "Independence Day", "09-07": "Labor Day", "10-13": "Columbus Day", "11-11": "Veterans Day", "11-26": "Thanksgiving", "12-25": "Christmas" };
   function getHoliday(date) {
@@ -5701,6 +5726,29 @@ var __angst = (() => {
 
   // modules/presupuesto/BudgetPage.jsx
   var { useState: useState6, useEffect: useEffect6, useRef: useRef6, useMemo: useMemo6, useCallback: useCallback6 } = React;
+  function cloneBudgetForNextPeriod(source) {
+    if (!source || typeof source !== "object") return null;
+    return {
+      ...source,
+      ingresos: { ...source.ingresos || { trabajo: 0, emprendimiento: 0, reventa: 0, otros: 0 } },
+      gastos_base: (source.gastos_base || []).map((r) => ({ ...r, checked: false })),
+      personales: (source.personales || []).map((r) => ({ ...r, checked: false })),
+      propositos: (source.propositos || []).map((r) => ({ ...r, checked: false }))
+    };
+  }
+  function makeDefaultBudget3() {
+    return { ingresos: { trabajo: 0, emprendimiento: 0, reventa: 0, otros: 0 }, gastos_base: [], personales: [], propositos: [] };
+  }
+  function getPreviousPeriodKey(monthKey) {
+    const [year, month] = monthKey.split("-").map(Number);
+    const d = new Date(year, month - 2, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }
+  function getBudgetForPeriod(budgets, monthKey) {
+    if (budgets && budgets[monthKey]) return budgets[monthKey];
+    const previous = budgets && budgets[getPreviousPeriodKey(monthKey)];
+    return cloneBudgetForNextPeriod(previous) || makeDefaultBudget3();
+  }
   function PieChart({ data, total, annual }) {
     const CX = 100, CY = 100, R = 76;
     const GRAYS = ["#111", "#333", "#555", "#777", "#888", "#999", "#aaa", "#bbb", "#222", "#444", "#666", "#ccc"];
@@ -5712,29 +5760,14 @@ var __angst = (() => {
       const mid = cum + angle / 2;
       cum += angle;
       const x2 = CX + R * Math.cos(cum), y2 = CY + R * Math.sin(cum);
-      return {
-        path: `M${CX},${CY} L${x1.toFixed(2)},${y1.toFixed(2)} A${R},${R} 0 ${angle > Math.PI ? 1 : 0},1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`,
-        color: GRAYS[i % GRAYS.length],
-        label: d.label,
-        emoji: d.emoji || "",
-        pct: (pct * 100).toFixed(1),
-        monto: annual ? d.monto * 12 : d.monto,
-        ex: CX + R * 0.63 * Math.cos(mid),
-        ey: CY + R * 0.63 * Math.sin(mid),
-        big: pct >= 0.07
-      };
+      return { path: `M${CX},${CY} L${x1.toFixed(2)},${y1.toFixed(2)} A${R},${R} 0 ${angle > Math.PI ? 1 : 0},1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`, color: GRAYS[i % GRAYS.length], label: d.label, emoji: d.emoji || "", pct: (pct * 100).toFixed(1), monto: annual ? d.monto * 12 : d.monto, ex: CX + R * 0.63 * Math.cos(mid), ey: CY + R * 0.63 * Math.sin(mid), big: pct >= 0.07 };
     });
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("svg", { width: "200", height: "200", viewBox: "0 0 200 200" }, slices.map((s, i) => /* @__PURE__ */ React.createElement("path", { key: i, d: s.path, fill: s.color, stroke: "#fff", strokeWidth: "1.5" })), slices.map((s, i) => s.big && /* @__PURE__ */ React.createElement("text", { key: `em${i}`, x: s.ex.toFixed(1), y: s.ey.toFixed(1), textAnchor: "middle", dominantBaseline: "middle", fontSize: "12" }, s.emoji)), /* @__PURE__ */ React.createElement("circle", { cx: CX, cy: CY, r: 34, fill: "#fff" }), /* @__PURE__ */ React.createElement("text", { x: CX, y: CY - 5, textAnchor: "middle", dominantBaseline: "middle", fontFamily: "'Caveat',cursive", fontSize: "12", fill: "#111", fontWeight: "700" }, annual ? "anual" : "mensual"), /* @__PURE__ */ React.createElement("text", { x: CX, y: CY + 10, textAnchor: "middle", dominantBaseline: "middle", fontFamily: "'DM Sans',sans-serif", fontSize: "9", fill: "#555" }, fmtCLP(annual ? total * 12 : total))), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", display: "flex", flexDirection: "column", gap: 4, padding: "0 4px" } }, slices.map((s, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 6 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 9, height: 9, borderRadius: 2, background: s.color, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#444" } }, s.emoji, " ", s.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#111", fontWeight: 600 } }, fmtCLP(s.monto)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", width: 32, textAlign: "right" } }, s.pct, "%")))));
   }
   function IngresoChartModal({ budgets, selYear, selMonth, onClose }) {
     const [view, setView] = useState6(0);
     const GRAYS = ["#111", "#333", "#555", "#777", "#aaa", "#ccc"];
-    const sources = [
-      { k: "trabajo", l: "Trabajo", e: "\u{1F3E2}" },
-      { k: "emprendimiento", l: "Emprend.", e: "\u{1F6E0}\uFE0F" },
-      { k: "reventa", l: "Reventa", e: "\u{1F504}" },
-      { k: "otros", l: "Otros", e: "\u2728" }
-    ];
+    const sources = [{ k: "trabajo", l: "Trabajo", e: "\u{1F3E2}" }, { k: "emprendimiento", l: "Emprend.", e: "\u{1F6E0}\uFE0F" }, { k: "reventa", l: "Reventa", e: "\u{1F504}" }, { k: "otros", l: "Otros", e: "\u2728" }];
     const monthKey = `${selYear}-${String(selMonth + 1).padStart(2, "0")}`;
     const bud = budgets[monthKey] || { ingresos: { trabajo: 0, emprendimiento: 0, reventa: 0, otros: 0 } };
     const ing = bud.ingresos;
@@ -5747,7 +5780,7 @@ var __angst = (() => {
       return { label: MONTH_NAMES[i].slice(0, 3), total, mk };
     });
     const maxBar = Math.max(...months.map((m) => m.total), 1);
-    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 12, width: "min(96vw,420px)", maxHeight: "80vh", overflow: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", borderRadius: "10px 10px 0 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700 } }, "\u{1F4B5} Ingresos"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#555", fontSize: 20, cursor: "pointer" } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", borderBottom: "1px solid #eee" } }, ["Mensual", "Anual"].map((lbl, idx) => /* @__PURE__ */ React.createElement("button", { key: idx, onClick: () => setView(idx), style: { flex: 1, padding: "10px", fontFamily: "'Caveat',cursive", fontSize: 15, background: "transparent", border: "none", borderBottom: view === idx ? "2px solid #111" : "2px solid transparent", cursor: "pointer", color: view === idx ? "#111" : "#aaa" } }, lbl))), /* @__PURE__ */ React.createElement("div", { style: { padding: "16px" } }, view === 0 && /* @__PURE__ */ React.createElement(PieChart, { data: pieRows, total: pieTotal, annual: false }), view === 1 && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#555", marginBottom: 12, textAlign: "center" } }, selYear, " \u2014 total anual ", fmtCLP(months.reduce((s, m) => s + m.total, 0))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, months.map((m, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#888", width: 30, textAlign: "right" } }, m.label), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, background: "#f5f5f5", borderRadius: 4, height: 20, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${maxBar > 0 ? m.total / maxBar * 100 : 0}%`, height: "100%", background: i === selMonth ? "#111" : "#bbb", transition: "width 0.3s", borderRadius: 4 } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#555", width: 70, textAlign: "right" } }, m.total > 0 ? fmtCLP(m.total) : "\u2014")))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16, display: "flex", flexDirection: "column", gap: 4 } }, sources.map((s) => {
+    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 12, width: "min(96vw,420px)", maxHeight: "80vh", overflow: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", borderRadius: "10px 10px 0 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700 } }, "\u{1F4B5} Ingresos"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#555", fontSize: 20, cursor: "pointer" } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", borderBottom: "1px solid #eee" } }, ["Mensual", "Anual"].map((lbl, idx) => /* @__PURE__ */ React.createElement("button", { key: idx, onClick: () => setView(idx), style: { flex: 1, padding: "10px", fontFamily: "'Caveat',cursive", fontSize: 15, background: "transparent", border: "none", borderBottom: view === idx ? "2px solid #111" : "2px solid transparent", cursor: "pointer", color: view === idx ? "#111" : "#aaa" } }, lbl))), /* @__PURE__ */ React.createElement("div", { style: { padding: "16px" } }, view === 0 && /* @__PURE__ */ React.createElement(PieChart, { data: pieRows, total: pieTotal, annual: false }), " ", view === 1 && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#555", marginBottom: 12, textAlign: "center" } }, selYear, " \u2014 total anual ", fmtCLP(months.reduce((s, m) => s + m.total, 0))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, months.map((m, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#888", width: 30, textAlign: "right" } }, m.label), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, background: "#f5f5f5", borderRadius: 4, height: 20, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${maxBar > 0 ? m.total / maxBar * 100 : 0}%`, height: "100%", background: i === selMonth ? "#111" : "#bbb", transition: "width 0.3s", borderRadius: 4 } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#555", width: 70, textAlign: "right" } }, m.total > 0 ? fmtCLP(m.total) : "\u2014")))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 16, display: "flex", flexDirection: "column", gap: 4 } }, sources.map((s) => {
       const annual = months.reduce((sum, m) => {
         const b = budgets[m.mk];
         return sum + (b ? b.ingresos[s.k] || 0 : 0);
@@ -5782,13 +5815,7 @@ var __angst = (() => {
       onSave(Math.max(0, value + d));
     }
     const btnStyle = { background: "transparent", border: "1px dashed #e0e0e0", borderRadius: 4, color: "#bbb", fontSize: 13, width: 22, height: 26, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontWeight: 700, lineHeight: 1, padding: 0, transition: "all 0.12s" };
-    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 2, justifyContent: "flex-end" } }, /* @__PURE__ */ React.createElement("button", { style: btnStyle, onClick: () => nudge(-1e3), onMouseEnter: (e) => {
-      e.currentTarget.style.borderColor = "#888";
-      e.currentTarget.style.color = "#555";
-    }, onMouseLeave: (e) => {
-      e.currentTarget.style.borderColor = "#e0e0e0";
-      e.currentTarget.style.color = "#bbb";
-    } }, "\u2039"), ed ? /* @__PURE__ */ React.createElement("input", { autoFocus: true, value: txt, onChange: (e) => {
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 2, justifyContent: "flex-end" } }, /* @__PURE__ */ React.createElement("button", { style: btnStyle, onClick: () => nudge(-1e3) }, "\u2039"), ed ? /* @__PURE__ */ React.createElement("input", { autoFocus: true, value: txt, onChange: (e) => {
       const v = e.target.value;
       setTxt(v);
       onSave(parseInt(v.replace(/\D/g, "")) || 0);
@@ -5797,13 +5824,7 @@ var __angst = (() => {
     }, style: { width: 82, border: "1px dashed #aaa", background: "#fafafa", borderRadius: 4, padding: "2px 5px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", color: "#111", outline: "none", textAlign: "right" } }) : /* @__PURE__ */ React.createElement("div", { onClick: () => {
       setTxt(String(value));
       setEd(true);
-    }, style: { width: 82, cursor: "pointer", fontSize: 13, color: "#333", fontFamily: "'DM Sans',sans-serif", textAlign: "right", padding: "2px 5px", border: "1px solid transparent", borderRadius: 4 }, onMouseEnter: (e) => e.currentTarget.style.borderColor = "#ddd", onMouseLeave: (e) => e.currentTarget.style.borderColor = "transparent" }, fmtCLP(value)), /* @__PURE__ */ React.createElement("button", { style: btnStyle, onClick: () => nudge(1e3), onMouseEnter: (e) => {
-      e.currentTarget.style.borderColor = "#888";
-      e.currentTarget.style.color = "#555";
-    }, onMouseLeave: (e) => {
-      e.currentTarget.style.borderColor = "#e0e0e0";
-      e.currentTarget.style.color = "#bbb";
-    } }, "\u203A"));
+    }, style: { width: 82, cursor: "pointer", fontSize: 13, color: "#333", fontFamily: "'DM Sans',sans-serif", textAlign: "right", padding: "2px 5px", border: "1px solid transparent", borderRadius: 4 } }, fmtCLP(value)), /* @__PURE__ */ React.createElement("button", { style: btnStyle, onClick: () => nudge(1e3) }, "\u203A"));
   }
   var COL = "minmax(90px,1fr) 130px 46px 82px 26px";
   function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit, checkable, onRowSave, onRowAdd, onRowDelete, onRowCheck, onChartOpen }) {
@@ -5822,19 +5843,10 @@ var __angst = (() => {
       setNewEmoji("\u{1F4CC}");
       setAdding(false);
     }
-    return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 20 } }, /* @__PURE__ */ React.createElement(
-      "div",
-      {
-        onMouseEnter: () => setHover(true),
-        onMouseLeave: () => setHover(false),
-        style: { background: hover ? "#222" : "#111", padding: "10px 14px", borderRadius: "8px 8px 0 0", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", transition: "background 0.15s" }
-      },
-      /* @__PURE__ */ React.createElement("div", { onClick: () => onChartOpen({ title, emoji, rows, total: subtotal }), style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700, flex: 1 } }, emoji, " ", title),
-      /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#666" }, onClick: () => onChartOpen({ title, emoji, rows, total: subtotal }) }, pct, "% \xB7 ", fmtCLP(subtotal)), canEdit && /* @__PURE__ */ React.createElement("button", { onClick: (e) => {
-        e.stopPropagation();
-        setAdding((a) => !a);
-      }, style: { background: "transparent", border: "1px dashed #555", borderRadius: 4, color: "#aaa", fontSize: 11, padding: "2px 8px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", letterSpacing: 1 } }, "+ agregar"))
-    ), /* @__PURE__ */ React.createElement("div", { style: { border: "1px solid #eee", borderTop: "none", borderRadius: "0 0 8px 8px", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: checkable ? "24px " + COL : COL, gap: 4, padding: "6px 12px", background: "#f8f8f8", borderBottom: "1px solid #eee" } }, checkable && /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 2, textTransform: "uppercase" } }, "Fondo"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 1, textAlign: "right", paddingRight: 24 } }, "$ Mensual"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 1, textAlign: "center" } }, "%"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 1, textAlign: "right" } }, "Proy. anual"), /* @__PURE__ */ React.createElement("div", null)), rows.map((row, i) => {
+    return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 20 } }, /* @__PURE__ */ React.createElement("div", { onMouseEnter: () => setHover(true), onMouseLeave: () => setHover(false), style: { background: hover ? "#222" : "#111", padding: "10px 14px", borderRadius: "8px 8px 0 0", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", transition: "background 0.15s" } }, /* @__PURE__ */ React.createElement("div", { onClick: () => onChartOpen({ title, emoji, rows, total: subtotal }), style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700, flex: 1 } }, emoji, " ", title), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#666" }, onClick: () => onChartOpen({ title, emoji, rows, total: subtotal }) }, pct, "% \xB7 ", fmtCLP(subtotal)), canEdit && /* @__PURE__ */ React.createElement("button", { onClick: (e) => {
+      e.stopPropagation();
+      setAdding((a) => !a);
+    }, style: { background: "transparent", border: "1px dashed #555", borderRadius: 4, color: "#aaa", fontSize: 11, padding: "2px 8px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", letterSpacing: 1 } }, "+ agregar"))), /* @__PURE__ */ React.createElement("div", { style: { border: "1px solid #eee", borderTop: "none", borderRadius: "0 0 8px 8px", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: checkable ? "24px " + COL : COL, gap: 4, padding: "6px 12px", background: "#f8f8f8", borderBottom: "1px solid #eee" } }, checkable && /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 2, textTransform: "uppercase" } }, "Fondo"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 1, textAlign: "right", paddingRight: 24 } }, "$ Mensual"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 1, textAlign: "center" } }, "%"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 1, textAlign: "right" } }, "Proy. anual"), /* @__PURE__ */ React.createElement("div", null)), rows.map((row, i) => {
       const rp = T > 0 ? (row.monto / T * 100).toFixed(1) : "-";
       return /* @__PURE__ */ React.createElement("div", { key: row.id, style: { display: "grid", gridTemplateColumns: checkable ? "24px " + COL : COL, gap: 4, padding: "9px 12px", borderBottom: i < rows.length - 1 ? "1px dashed #f0f0f0" : "none", alignItems: "center", background: i % 2 === 0 ? "#fff" : "#fafafa" } }, checkable && /* @__PURE__ */ React.createElement("div", { onClick: () => onRowCheck && onRowCheck(secKey, row.id, !row.checked), style: { display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 16, height: 16, borderRadius: 3, border: row.checked ? "none" : "1.5px dashed #ccc", background: row.checked ? "#111" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", flexShrink: 0 } }, row.checked && /* @__PURE__ */ React.createElement("span", { style: { color: "#fff", fontSize: 10, fontWeight: 700, lineHeight: 1 } }, "\u2713"))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: row.checked ? "#bbb" : "#333", textDecoration: row.checked ? "line-through" : "none", display: "flex", alignItems: "center", gap: 5, minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { style: { flexShrink: 0 } }, row.emoji), editId === row.id ? /* @__PURE__ */ React.createElement("input", { autoFocus: true, value: editLabel, onChange: (e) => {
         const v = e.target.value;
@@ -5866,7 +5878,7 @@ var __angst = (() => {
     const [selYear, setSelYear] = useState6(now.getFullYear());
     const [selMonth, setSelMonth] = useState6(now.getDate() >= 25 ? now.getMonth() : (now.getMonth() - 1 + 12) % 12);
     const monthKey = `${selYear}-${String(selMonth + 1).padStart(2, "0")}`;
-    const budget = budgets && budgets[monthKey] ? budgets[monthKey] : makeDefaultBudget();
+    const budget = getBudgetForPeriod(budgets, monthKey);
     const periodLabel = `25 ${MONTH_NAMES[selMonth].slice(0, 3)} \u2014 24 ${MONTH_NAMES[(selMonth + 1) % 12].slice(0, 3)} ${selYear}`;
     const ing = budget.ingresos;
     const totalIngreso = ing.trabajo + ing.emprendimiento + ing.reventa + ing.otros;
@@ -5894,7 +5906,7 @@ var __angst = (() => {
     const totalGasto = sumBase + sumPers + sumProp;
     const remainder = totalIngreso - totalGasto;
     const T = totalIngreso;
-    return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 720, margin: "0 auto" } }, ingChart && /* @__PURE__ */ React.createElement(IngresoChartModal, { budgets, selYear, selMonth, onClose: () => setIngChart(false) }), chartData && /* @__PURE__ */ React.createElement(ChartModal, { title: chartData.title, emoji: chartData.emoji, rows: chartData.rows, total: chartData.total, onClose: () => setChartData(null) }), monthModal && /* @__PURE__ */ React.createElement(MonthSelectorModal, { currentYear: selYear, currentMonth: selMonth, onSelect: (y, m) => {
+    return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 720, margin: "0 auto" } }, ingChart && /* @__PURE__ */ React.createElement(IngresoChartModal, { budgets, selYear, selMonth, onClose: () => setIngChart(false) }), " ", chartData && /* @__PURE__ */ React.createElement(ChartModal, { title: chartData.title, emoji: chartData.emoji, rows: chartData.rows, total: chartData.total, onClose: () => setChartData(null) }), " ", monthModal && /* @__PURE__ */ React.createElement(MonthSelectorModal, { currentYear: selYear, currentMonth: selMonth, onSelect: (y, m) => {
       setSelYear(y);
       setSelMonth(m);
     }, onClose: () => setMonthModal(false) }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 8, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 4 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => {
