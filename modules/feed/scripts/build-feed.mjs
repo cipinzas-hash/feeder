@@ -24,6 +24,13 @@ import Parser from "rss-parser";
 const FEEDS_PATH = new URL("../feeds.json", import.meta.url);
 const OUTPUT_PATH = new URL("../data/feed.json", import.meta.url);
 const SSBMRANK_PATH = new URL("../data/ssbmrank.json", import.meta.url);
+const PODCAST_LATEST_PATH = new URL("../data/podcast-latest.json", import.meta.url);
+
+// Fuentes de podcast que se siguen para el aviso de "episodio nuevo" (banner
+// global + reproductor paralelo en core/App.jsx). Archivo aparte y liviano
+// -- feed.json pesa 50MB, no es fetcheable en cada carga de la app solo para
+// chequear si hay un episodio nuevo.
+const TRACKED_PODCAST_SOURCES = ["Meta Pod"];
 
 const RETENTION_DAYS = 30;              // no guardar items más viejos que esto
 const MAX_NEW_EXTRACTIONS_PER_RUN = 60; // tope de extracciones nuevas por corrida
@@ -1804,6 +1811,19 @@ async function main() {
     cat,
     items: items.sort((a, b) => (b.pubDate || "").localeCompare(a.pubDate || "")),
   }));
+
+  // Archivo liviano aparte para el aviso de episodio nuevo (ver
+  // TRACKED_PODCAST_SOURCES arriba). No leer esto de feed.json completo.
+  const podcastItems = (byCat["Podcasts"] || []);
+  const tracked = {};
+  for (const source of TRACKED_PODCAST_SOURCES) {
+    const ofSource = podcastItems.filter(i => i.source === source).sort((a, b) => (b.pubDate || "").localeCompare(a.pubDate || ""));
+    if (ofSource.length) {
+      const latest = ofSource[0];
+      tracked[source] = { guid: latest.guid, title: latest.title, pubDate: latest.pubDate, audioUrl: latest.audioUrl, link: latest.link };
+    }
+  }
+  await writeFile(PODCAST_LATEST_PATH, JSON.stringify({ generatedAt: new Date().toISOString(), tracked }, null, 2));
 
   const output = {
     generatedAt: new Date().toISOString(),

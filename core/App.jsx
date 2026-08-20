@@ -119,6 +119,29 @@ function AngstApp() {
   const [exportOk, setExportOk] = useState(null);
   const [loadMsg, setLoadMsg] = useState(null);
 
+  // ── Podcast global: aviso de episodio nuevo + reproductor que corre en
+  // paralelo a Angst (sobrevive cambio de pestaña porque vive acá, en
+  // core, no adentro de FeedPage que se desmonta al salir de esa página).
+  const [podcastLatest, setPodcastLatest] = useState(null);
+  const [podcastSeen, setPodcastSeen] = useState(()=>{
+    try { const v = localStorage.getItem("angst-podcast-seen-v1"); return v ? JSON.parse(v) : {}; } catch(e) { return {}; }
+  });
+  const [nowPlaying, setNowPlaying] = useState(null);
+  useEffect(()=>{
+    fetch("https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/podcast-latest.json", { cache: "no-store" })
+      .then(r=>r.ok?r.json():null)
+      .then(d=>{ if(d) setPodcastLatest(d); })
+      .catch(()=>{});
+  }, []);
+  function markPodcastSeen(source, guid){
+    setPodcastSeen(prev=>{
+      const next = {...prev, [source]: guid};
+      try { localStorage.setItem("angst-podcast-seen-v1", JSON.stringify(next)); } catch(e){}
+      return next;
+    });
+  }
+
+
   // Refs for async-safe access
   const dayDataRef  = useRef({});
   const weekOffsetRef = useRef(0);
@@ -902,6 +925,7 @@ function AngstApp() {
       feedPodcastsEscuchados: readLocalJSON("angst-feed-podcasts-escuchados-v1"),
       feedConciertosVistos: readLocalJSON("angst-feed-conciertos-vistos-v1"),
       feedCineEstado: readLocalJSON("angst-cine-estado-v1"),
+      feedPodcastSeen: readLocalJSON("angst-podcast-seen-v1"),
     };
   }
   function readLocalJSON(key){
@@ -911,7 +935,7 @@ function AngstApp() {
   // Si agregás un campo de estado nuevo: sumalo en buildExportPayload,
   // en saveToStorage, acá, y en restoreFromPayload — las 4 ubicaciones
   // de la regla vital.
-  const REQUIRED_EXPORT_FIELDS = ['dayData','weekOffset','budgets','nutria','calMarks','cookingOpts','aseoOpts','routines','recurring','lastRollover','kidsHealth','custody','fadimanData','nutriLog','ejercicioLog','ejercicioDecks','customFoods','foodOverrides','customEjercicios','nutriDecks','pokeInventario','pokeCarpetas','pokeDarkCatalogo','pokePriceCache','feedState','feedMicrodocsVistos','feedPodcastsEscuchados','feedConciertosVistos','feedCineEstado'];
+  const REQUIRED_EXPORT_FIELDS = ['dayData','weekOffset','budgets','nutria','calMarks','cookingOpts','aseoOpts','routines','recurring','lastRollover','kidsHealth','custody','fadimanData','nutriLog','ejercicioLog','ejercicioDecks','customFoods','foodOverrides','customEjercicios','nutriDecks','pokeInventario','pokeCarpetas','pokeDarkCatalogo','pokePriceCache','feedState','feedMicrodocsVistos','feedPodcastsEscuchados','feedConciertosVistos','feedCineEstado','feedPodcastSeen'];
 
   function handleExport(){
     const fullPayload = buildExportPayload();
@@ -968,6 +992,7 @@ function AngstApp() {
     if(d.feedPodcastsEscuchados!=null){ try{ localStorage.setItem("angst-feed-podcasts-escuchados-v1", JSON.stringify(d.feedPodcastsEscuchados)); }catch(e){} }
     if(d.feedConciertosVistos!=null){ try{ localStorage.setItem("angst-feed-conciertos-vistos-v1", JSON.stringify(d.feedConciertosVistos)); }catch(e){} }
     if(d.feedCineEstado!=null){ try{ localStorage.setItem("angst-cine-estado-v1", JSON.stringify(d.feedCineEstado)); }catch(e){} }
+    if(d.feedPodcastSeen!=null){ try{ localStorage.setItem("angst-podcast-seen-v1", JSON.stringify(d.feedPodcastSeen)); }catch(e){} }
     setLoadMsg(`✓ Restauración completa desde ${sourceLabel||"backup"}`);
     setTimeout(()=>setLoadMsg(null), 4000);
     return true;
@@ -1197,7 +1222,7 @@ function AngstApp() {
       }}/>}
       {calOpen&&<CalendarModal weekStart={weekStart} marks={calMarks} onMark={handleMark} dayData={dayData} calMarks={calMarks} kidsHealth={kidsHealth} onWeekSelect={date=>{const dow=date.getDay();const mon=addDays(date,-(dow===0?6:dow-1));const diff=Math.round((mon-BASE_DATE)/(7*86400000));updateWeekOffset(diff);}} onClose={()=>setCalOpen(false)}/>}
 
-      <div className="app">
+      <div className="app" style={nowPlaying?{paddingBottom:64}:undefined}>
         <div className="hdr">
           <div className="hdr-title" style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{["Mi semana día a día","Presupuesto mensual","Emprendimientos","🧠 mindfulness","🩺 salud","🍄 Fadiman","🥗 Nutrición","🏋️ Ejercicio","🃏 Pokécripto"][page]}</div>
           <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
@@ -1233,6 +1258,22 @@ function AngstApp() {
         })()}
 
         <div className="sub-bar"><div className="sub-text">{CYNICAL_SUBTITLES[subIdx]}</div></div>
+
+        {(()=>{
+          const metaPodLatest = podcastLatest?.tracked?.["Meta Pod"];
+          const hasNewMetaPod = metaPodLatest && podcastSeen["Meta Pod"] !== metaPodLatest.guid;
+          if(!hasNewMetaPod) return null;
+          return (
+            <div style={{background:"#ffcc00",padding:"5px 20px",display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:13,flexShrink:0}}>🎙️</span>
+              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#111",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>Nuevo Meta Pod: {metaPodLatest.title}</span>
+              <button onClick={()=>{setNowPlaying({title:metaPodLatest.title,source:"Meta Pod",audioUrl:metaPodLatest.audioUrl});markPodcastSeen("Meta Pod",metaPodLatest.guid);}}
+                style={{background:"#111",color:"#fff",border:"none",borderRadius:4,padding:"3px 10px",fontSize:11,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",flexShrink:0}}>▶ escuchar</button>
+              <button onClick={()=>markPodcastSeen("Meta Pod",metaPodLatest.guid)}
+                style={{background:"transparent",border:"none",color:"#111",fontSize:15,cursor:"pointer",opacity:0.5,lineHeight:1,flexShrink:0}}>×</button>
+            </div>
+          );
+        })()}
 
         {/* ── PLANNER ── */}
         {page===0&&(
@@ -1650,6 +1691,16 @@ function AngstApp() {
         </div>
         {searchOpen&&<SearchModal dayData={dayData} nutria={nutria} kidsHealth={kidsHealth} routines={routines} onClose={()=>setSearchOpen(false)}/>}
         {scheduleOpen&&<ScheduleModal dateKey={scheduleOpen} day={dayData[scheduleOpen]||makeEmptyDay()} isWork={Array.isArray(calMarks[scheduleOpen])?(calMarks[scheduleOpen].includes("work")):(calMarks[scheduleOpen]==="work")} isColegio={Array.isArray(calMarks[scheduleOpen])?(calMarks[scheduleOpen].includes("colegio")):(calMarks[scheduleOpen]==="colegio")} onSave={sched=>updateDay(scheduleOpen,{schedule:sched})} onClose={()=>setScheduleOpen(null)} onNavigate={dk=>setScheduleOpen(dk)}/>}
+        {nowPlaying&&(
+          <div style={{position:"fixed",bottom:0,left:0,right:0,background:"#111",borderTop:"1px dashed #444",padding:"8px 14px",display:"flex",alignItems:"center",gap:10,zIndex:500}}>
+            <span style={{fontSize:16,flexShrink:0}}>🎧</span>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontFamily:"'Caveat',cursive",fontSize:14,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{nowPlaying.title}</div>
+              <audio controls autoPlay src={nowPlaying.audioUrl} style={{width:"100%",height:28,colorScheme:"dark"}}/>
+            </div>
+            <button onClick={()=>setNowPlaying(null)} style={{background:"transparent",border:"none",color:"#888",fontSize:18,cursor:"pointer",flexShrink:0,lineHeight:1}} title="cerrar reproductor">×</button>
+          </div>
+        )}
       </div>
     </>
   );
