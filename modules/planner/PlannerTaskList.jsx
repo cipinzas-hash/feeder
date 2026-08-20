@@ -1,5 +1,6 @@
 const React = globalThis.React;
 import { reorderFlexibleTasks } from "./taskOrdering.js";
+import PlannerTaskDrag from "./PlannerTaskDrag.jsx";
 
 function cloneTasks(tasks) {
   return Array.isArray(tasks) ? [...tasks] : [];
@@ -11,7 +12,6 @@ export default function PlannerTaskList({ tasks = [], actions = {}, integrations
   const toggleDone = (id) => update((current) => current.map((task) => task.id === id ? { ...task, done: !task.done } : task));
   const toggleUrgent = (id) => update((current) => current.map((task) => task.id === id ? { ...task, urgent: !task.urgent } : task));
   const updateText = (id, text) => update((current) => current.map((task) => task.id === id ? { ...task, text } : task));
-  const updateDeadline = (id, deadline) => update((current) => current.map((task) => task.id === id ? { ...task, deadline } : task));
   const addTask = (fixed = false) => update((current) => [...cloneTasks(current), { id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, text: "", done: false, fixed }]);
   const removeTask = (id) => update((current) => current.filter((task) => task.id !== id));
 
@@ -39,6 +39,9 @@ export default function PlannerTaskList({ tasks = [], actions = {}, integrations
     }),
     React.createElement("button", { type: "button", onClick: () => toggleUrgent(task.id), "aria-label": task.urgent ? "quitar urgencia" : "marcar urgente", title: "urgencia" }, "🚨"),
     React.createElement("button", { type: "button", onClick: () => chooseDeadline?.(task), title: "hora límite" }, formatDeadline(task.deadline)),
+    !task.fixed ? React.createElement(PlannerTaskDrag, { taskId: task.id, disabled: task.done, onReorder: moveTask },
+      React.createElement("span", { "aria-hidden": true, style: { fontSize: 14, padding: "0 4px" } }, "⋮⋮"),
+    ) : null,
     !task.fixed ? React.createElement("button", { type: "button", onClick: () => moveTask(task.id, -1), disabled: flexibleIndex <= 0, "aria-label": "subir tarea", title: "subir" }, "↑") : null,
     !task.fixed ? React.createElement("button", { type: "button", onClick: () => moveTask(task.id, 1), disabled: flexibleIndex < 0 || flexibleIndex >= flexibleCount - 1, "aria-label": "bajar tarea", title: "bajar" }, "↓") : null,
     React.createElement("button", { type: "button", onClick: () => removeTask(task.id), "aria-label": "eliminar tarea" }, "×"),
