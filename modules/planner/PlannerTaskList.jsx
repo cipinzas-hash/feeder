@@ -1,12 +1,13 @@
 const React = globalThis.React;
 import { reorderFlexibleTasks } from "./taskOrdering.js";
 import PlannerTaskDrag from "./PlannerTaskDrag.jsx";
+import PlannerTaskTransfer from "./PlannerTaskTransfer.jsx";
 
 function cloneTasks(tasks) {
   return Array.isArray(tasks) ? [...tasks] : [];
 }
 
-export default function PlannerTaskList({ tasks = [], actions = {}, integrations = {} }) {
+export default function PlannerTaskList({ tasks = [], actions = {}, integrations = {}, state = {}, dateKey = "" }) {
   const update = (updater) => actions.updateTasks?.(updater);
 
   const toggleDone = (id) => update((current) => current.map((task) => task.id === id ? { ...task, done: !task.done } : task));
@@ -44,6 +45,12 @@ export default function PlannerTaskList({ tasks = [], actions = {}, integrations
     ) : null,
     !task.fixed ? React.createElement("button", { type: "button", onClick: () => moveTask(task.id, -1), disabled: flexibleIndex <= 0, "aria-label": "subir tarea", title: "subir" }, "↑") : null,
     !task.fixed ? React.createElement("button", { type: "button", onClick: () => moveTask(task.id, 1), disabled: flexibleIndex < 0 || flexibleIndex >= flexibleCount - 1, "aria-label": "bajar tarea", title: "bajar" }, "↓") : null,
+    !task.fixed && !task.done ? React.createElement(PlannerTaskTransfer, { state, dateKey, task, actions },
+      ({ postpone }) => React.createElement("button", { type: "button", onClick: postpone, title: "postergar al día siguiente", "aria-label": "postergar tarea" }, "→ mañana"),
+    ) : null,
+    task.carried ? React.createElement(PlannerTaskTransfer, { state, dateKey, task, actions },
+      ({ completeOnTime }) => React.createElement("button", { type: "button", onClick: completeOnTime, title: "marcar cumplida a tiempo" }, "✓ a tiempo"),
+    ) : null,
     React.createElement("button", { type: "button", onClick: () => removeTask(task.id), "aria-label": "eliminar tarea" }, "×"),
   );
 
