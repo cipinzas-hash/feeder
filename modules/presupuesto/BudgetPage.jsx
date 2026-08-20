@@ -25,8 +25,12 @@ function getPreviousPeriodKey(monthKey) {
 
 function getBudgetForPeriod(budgets, monthKey) {
   if (budgets && budgets[monthKey]) return budgets[monthKey];
-  const previous = budgets && budgets[getPreviousPeriodKey(monthKey)];
-  return cloneBudgetForNextPeriod(previous) || makeDefaultBudget();
+  let searchKey = monthKey;
+  for (let i = 0; i < 24; i++) {
+    searchKey = getPreviousPeriodKey(searchKey);
+    if (budgets && budgets[searchKey]) return cloneBudgetForNextPeriod(budgets[searchKey]);
+  }
+  return makeDefaultBudget();
 }
 
 function PieChart({ data, total, annual }) {

@@ -5747,8 +5747,12 @@ var __angst = (() => {
   }
   function getBudgetForPeriod(budgets, monthKey) {
     if (budgets && budgets[monthKey]) return budgets[monthKey];
-    const previous = budgets && budgets[getPreviousPeriodKey(monthKey)];
-    return cloneBudgetForNextPeriod(previous) || makeDefaultBudget3();
+    let searchKey = monthKey;
+    for (let i = 0; i < 24; i++) {
+      searchKey = getPreviousPeriodKey(searchKey);
+      if (budgets && budgets[searchKey]) return cloneBudgetForNextPeriod(budgets[searchKey]);
+    }
+    return makeDefaultBudget3();
   }
   function PieChart({ data, total, annual }) {
     const CX = 100, CY = 100, R = 76;
