@@ -11,6 +11,7 @@ on:
 permissions:
   contents: write
 
+# Migration checkpoint: Planner 0.0 becomes the Semana renderer.
 jobs:
   migrate:
     if: github.ref == 'refs/heads/angst-architecture-0.0'
