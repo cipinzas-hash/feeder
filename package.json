@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node build/assemble.mjs",
     "test:architecture": "node tests/module-registry.mjs && node tests/planner-module-boundary.mjs && node tests/planner-ownership.mjs && node tests/planner-calendar-boundary.mjs && node tests/planner-task-list-boundary.mjs",
-    "test:planner": "node tests/planner-domain.mjs && node tests/planner-state.mjs && node tests/planner-actions.mjs && node tests/planner-storage.mjs && node tests/planner-legacy-adapter.mjs && node tests/planner-navigation.mjs && node tests/planner-week-view.mjs"
+    "test:planner": "node tests/planner-domain.mjs && node tests/planner-state.mjs && node tests/planner-actions.mjs && node tests/planner-storage.mjs && node tests/planner-legacy-adapter.mjs && node tests/planner-navigation.mjs && node tests/planner-week-view.mjs && node tests/planner-task-interactions.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"
