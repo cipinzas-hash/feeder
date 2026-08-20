@@ -29,6 +29,8 @@ export default function PlannerPage({ state = {}, actions = {}, integrations = {
 
   const weekDays = getWeekDays(weekOffset);
   const weekStart = getWeekStart(weekOffset);
+  const cookingOptions = state.cookingOpts || [];
+  const aseoOptions = state.aseoOpts || [];
 
   return React.createElement(
     "section",
@@ -55,6 +57,9 @@ export default function PlannerPage({ state = {}, actions = {}, integrations = {
           isWeekend,
           isToday: dateKey === todayKey,
           holidayLabel: holidayLookup(dateKey) || "",
+          cookingOptions,
+          aseoOptions,
+          integrations,
           withKids: isWithKids(dateKey, state.custody),
         },
       )),
