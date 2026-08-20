@@ -13,10 +13,11 @@ import {
   setRoutines,
   setRecurring,
   setLastRollover,
+  postponeTask,
+  completeCarriedTask,
   loadPlannerState,
   savePlannerState,
 } from "./index.js";
-import { postponeTask, completeCarriedTask } from "./taskTransfer.js";
 
 const PlannerContext = createContext(null);
 
@@ -60,6 +61,6 @@ export function PlannerProvider({ children }) {
 
 export function usePlanner() {
   const value = useContext(PlannerContext);
-  if (!value) throw new Error("usePlanner debe usarse dentro de PlannerProvider");
+  if (!value) throw new Error("usePlanner debe usarse dentro PlannerProvider");
   return value;
 }
