@@ -15,10 +15,10 @@ import {
   setLastRollover,
   postponeTask,
   completeCarriedTask,
-  rolloverState,
   loadPlannerState,
   savePlannerState,
 } from "./index.js";
+import { rolloverState } from "./actions.js";
 import { applyAutomaticRollover } from "./domain/autoRollover.js";
 
 const PlannerContext = createContext(null);
