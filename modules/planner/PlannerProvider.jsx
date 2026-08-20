@@ -15,6 +15,7 @@ import {
   setLastRollover,
   postponeTask,
   completeCarriedTask,
+  rolloverState,
   loadPlannerState,
   savePlannerState,
 } from "./index.js";
@@ -53,6 +54,7 @@ export function PlannerProvider({ children }) {
     setLastRollover: (value) => setState((current) => setLastRollover(current, value)),
     postponeTask: (dateKey, taskId) => setState((current) => postponeTask(current, dateKey, taskId)),
     completeCarriedTask: (dateKey, taskId) => setState((current) => completeCarriedTask(current, dateKey, taskId)),
+    rolloverDay: (dateKey) => setState((current) => rolloverState(current, dateKey)),
   }), []);
 
   const value = useMemo(() => ({ state, actions, loaded }), [state, actions, loaded]);
