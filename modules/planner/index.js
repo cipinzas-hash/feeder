@@ -2,6 +2,7 @@ export { default as manifest } from "./manifest.js";
 export { default as PlannerPage } from "./PlannerPage.jsx";
 export { default as PlannerDayCard } from "./PlannerDayCard.jsx";
 export { default as PlannerTaskList } from "./PlannerTaskList.jsx";
+export { default as PlannerDayUtilities } from "./PlannerDayUtilities.jsx";
 export { default as PlannerCalendar } from "./PlannerCalendar.jsx";
 export { PlannerProvider, usePlanner } from "./PlannerProvider.jsx";
 
