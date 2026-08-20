@@ -32,6 +32,13 @@ export default function PlannerDayCard({
     updateDay({ tasks: updater(day.tasks || []) });
   };
 
+  const taskActions = {
+    ...actions,
+    updateTasks,
+    postponeTask: (taskId) => actions.postponeTask?.(dateKey, taskId),
+    completeCarriedTask: (taskId) => actions.completeCarriedTask?.(dateKey, taskId),
+  };
+
   return React.createElement(
     "article",
     {
@@ -46,10 +53,8 @@ export default function PlannerDayCard({
       holidayLabel ? React.createElement("small", null, holidayLabel) : null,
     ),
     React.createElement(PlannerTaskList, {
-      state,
-      dateKey,
       tasks: day.tasks || [],
-      actions: { ...actions, updateTasks },
+      actions: taskActions,
       integrations,
     }),
     React.createElement(PlannerDayUtilities, {
