@@ -45,7 +45,7 @@ export default function PlannerTaskList({ tasks = [], actions = {}, integrations
     ) : null,
     !task.fixed ? React.createElement("button", { type: "button", onClick: () => moveTask(task.id, -1), disabled: flexibleIndex <= 0, "aria-label": "subir tarea", title: "subir" }, "↑") : null,
     !task.fixed ? React.createElement("button", { type: "button", onClick: () => moveTask(task.id, 1), disabled: flexibleIndex < 0 || flexibleIndex >= flexibleCount - 1, "aria-label": "bajar tarea", title: "bajar" }, "↓") : null,
-    !task.fixed && !task.done ? React.createElement(PlannerTaskSwipe, { taskId: task.id, disabled: task.done, onPostpone: (taskId) => integrations.postponeTask?.(taskId) },
+    !task.fixed && !task.done ? React.createElement(PlannerTaskSwipe, { taskId: task.id, disabled: task.done, onPostpone: (taskId) => actions.postponeTask?.(taskId) },
       React.createElement("span", { "aria-hidden": true, style: { fontSize: 12, padding: "0 4px" } }, "→"),
     ) : null,
     !task.fixed && !task.done ? React.createElement("button", { type: "button", onClick: () => actions.postponeTask?.(task.id), title: "postergar al día siguiente", "aria-label": "postergar tarea" }, "→ mañana") : null,
