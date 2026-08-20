@@ -16,15 +16,27 @@ function clone(value) {
 export function rolloverDay(day = {}, nextDay = {}) {
   const current = { ...day };
   const target = { ...nextDay };
-
-  const pending = Array.isArray(current.tasks) ? current.tasks.filter((task) => !task.done && !task.fixed) : [];
+  const targetIds = new Set((Array.isArray(target.tasks) ? target.tasks : []).map((task) => task.id));
+  const pending = Array.isArray(current.tasks)
+    ? current.tasks.filter((task) => !task.done && !task.fixed && !targetIds.has(task.id))
+    : [];
   const carried = pending.map((task) => ({ ...clone(task), carried: true, carriedFrom: current.dateKey || null }));
+  const pendingIds = new Set(pending.map((task) => task.id));
 
   return {
-    source: { ...current, tasks: Array.isArray(current.tasks) ? current.tasks.map((task) => pending.some((p) => p.id === task.id) ? { ...task, carried: true } : task) : [] },
+    source: {
+      ...current,
+      tasks: Array.isArray(current.tasks)
+        ? current.tasks.map((task) => pendingIds.has(task.id) ? { ...task, carried: true } : task)
+        : [],
+    },
     target: {
       ...target,
-      ...Object.fromEntries(COPY_FIELDS.filter((key) => target[key] == null && current[key] != null).map((key) => [key, clone(current[key])])),
+      ...Object.fromEntries(
+        COPY_FIELDS
+          .filter((key) => target[key] == null && current[key] != null)
+          .map((key) => [key, clone(current[key])]),
+      ),
       tasks: [...(Array.isArray(target.tasks) ? target.tasks : []), ...carried],
     },
   };
