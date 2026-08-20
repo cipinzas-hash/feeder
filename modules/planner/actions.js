@@ -10,6 +10,7 @@ import {
   setCustody,
 } from "./state.js";
 import { previousWeekOffset, nextWeekOffset } from "./navigation.js";
+import { postponeTask, completeCarriedTask, nextDateKey } from "./taskTransfer.js";
 
 export {
   createInitialState,
@@ -18,6 +19,9 @@ export {
   setWeekOffset,
   replaceCalendarMarks,
   setCustody,
+  postponeTask,
+  completeCarriedTask,
+  nextDateKey,
 };
 
 export function previousWeek(state) {
