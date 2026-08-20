@@ -46,15 +46,13 @@ export default function PlannerTaskList({ tasks = [], actions = {}, integrations
     ) : null,
     !task.fixed ? React.createElement("button", { type: "button", onClick: () => moveTask(task.id, -1), disabled: flexibleIndex <= 0, "aria-label": "subir tarea", title: "subir" }, "↑") : null,
     !task.fixed ? React.createElement("button", { type: "button", onClick: () => moveTask(task.id, 1), disabled: flexibleIndex < 0 || flexibleIndex >= flexibleCount - 1, "aria-label": "bajar tarea", title: "bajar" }, "↓") : null,
-    !task.fixed && !task.done ? React.createElement(PlannerTaskSwipe, { taskId: task.id, disabled: task.done, onPostpone: (taskId) => integrations.postponeTask?.(taskId) },
+    !task.fixed && !task.done ? React.createElement(PlannerTaskSwipe, { taskId: task.id, disabled: task.done, onPostpone: (taskId) => actions.postponeTask?.(dateKey, taskId) },
       React.createElement("span", { "aria-hidden": true, style: { fontSize: 12, padding: "0 4px" } }, "→"),
     ) : null,
     !task.fixed && !task.done ? React.createElement(PlannerTaskTransfer, { state, dateKey, task, actions },
       ({ postpone }) => React.createElement("button", { type: "button", onClick: postpone, title: "postergar al día siguiente", "aria-label": "postergar tarea" }, "→ mañana"),
     ) : null,
-    task.carried ? React.createElement(PlannerTaskTransfer, { state, dateKey, task, actions },
-      ({ completeOnTime }) => React.createElement("button", { type: "button", onClick: completeOnTime, title: "marcar cumplida a tiempo" }, "✓ a tiempo"),
-    ) : null,
+    task.carried ? React.createElement("button", { type: "button", onClick: () => actions.completeCarriedTask?.(dateKey, task.id), title: "marcar cumplida a tiempo" }, "✓ a tiempo") : null,
     React.createElement("button", { type: "button", onClick: () => removeTask(task.id), "aria-label": "eliminar tarea" }, "×"),
   );
 
