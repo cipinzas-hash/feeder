@@ -1,0 +1,47 @@
+name: Migrate Legacy Semana render to Planner
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - core/LegacyApp.jsx
+      - scripts/migrate-planner-render.mjs
+      - .github/workflows/migrate-planner-render.yml
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.ref == 'refs/heads/angst-architecture-0.0'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: angst-architecture-0.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Apply deterministic migration
+        run: node scripts/migrate-planner-render.mjs
+
+      - name: Verify migration marker
+        run: |
+          grep -q 'import PlannerPage from "../modules/planner/PlannerPage.jsx";' core/LegacyApp.jsx
+          grep -q 'semanaTab==="semana"&&<PlannerPage' core/LegacyApp.jsx
+          ! grep -q 'semanaTab==="semana"&&<>$' core/LegacyApp.jsx
+
+      - name: Commit migration
+        run: |
+          if git diff --quiet; then
+            echo "No migration changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add core/LegacyApp.jsx
+          git commit -m "refactor: Legacy Semana delegates to Planner 0.0"
+          git push origin HEAD:angst-architecture-0.0
