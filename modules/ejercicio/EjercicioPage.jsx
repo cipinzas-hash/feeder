@@ -19,7 +19,7 @@ const EJERCICIOS_DEFAULT = [
   {id:"apertura-cable", name:"Aperturas en cable",      emoji:"🦅", muscles:[{g:"pecho",pct:0.8},{g:"hombro",pct:0.2}],                          series:3, repMin:10, repMax:15, weightStep:2.5, restSecs:60,  how:"Torre de cable dual a la altura del pecho. Brazos semi-extendidos, junta las manos al frente en arco."},
   {id:"press-cerrado",  name:"Press cerrado",            emoji:"🤏", muscles:[{g:"pecho",pct:0.3},{g:"triceps",pct:0.6},{g:"hombro",pct:0.1}],   series:3, repMin:8,  repMax:12, weightStep:2.5, restSecs:75,  plateUnit:"lb", barWeightKg:20, how:"Banco de press, agarre angosto (manos casi juntas). Codos pegados al cuerpo al bajar."},
   // Espalda
-  {id:"dominadas",      name:"Dominadas asistidas",      emoji:"🧗", muscles:[{g:"espalda",pct:0.7},{g:"biceps",pct:0.3}],                       series:3, repMin:6,  repMax:10, weightStep:-2.5,restSecs:90,  how:"Máquina de asistencia — menos peso de asistencia = más difícil. Jala el pecho hacia la barra, controla la bajada."},
+  {id:"dominadas",      name:"Dominadas asistidas",      emoji:"🧗", muscles:[{g:"espalda",pct:0.7},{g:"biceps",pct:0.3}],                       series:3, repMin:6,  repMax:10, weightStep:-2.5,restSecs:90,  variantes:["Neutro","Supino","Prono"], how:"Máquina de asistencia — menos peso de asistencia = más difícil. Jala el pecho hacia la barra, controla la bajada. La máquina tiene 3 posiciones de agarre (elegir arriba) -- no ejercitan exactamente igual, neutro suele sentirse más cómodo, supino carga algo más bíceps, prono suele ser el más duro de dorsal."},
   {id:"jalon-pecho",    name:"Jalón al pecho",           emoji:"⬇️", muscles:[{g:"espalda",pct:0.75},{g:"biceps",pct:0.25}],                     series:3, repMin:10, repMax:15, weightStep:2.5, restSecs:75,  how:"Torre de cable dual con barra alta. Jala hacia el pecho apretando omóplatos, sube controlado."},
   {id:"remo-polea",     name:"Remo en polea",            emoji:"🚣", muscles:[{g:"espalda",pct:0.6},{g:"biceps",pct:0.2},{g:"hombro",pct:0.2}],  series:3, repMin:10, repMax:15, weightStep:2.5, restSecs:75,  how:"Torre de cable dual a la altura media. Jala hacia el abdomen, codos pegados."},
   {id:"remo-manc",      name:"Remo a un brazo",          emoji:"🏋️", muscles:[{g:"espalda",pct:0.65},{g:"biceps",pct:0.25},{g:"abdominales",pct:0.1}], series:3, repMin:8, repMax:12, weightStep:2.5, restSecs:75, how:"Apoyo en banco con una mano y rodilla. Mancuerna o kettlebell, jala hacia la cadera."},
@@ -322,6 +322,7 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
   const [view,         setView]         = useState("session");
   const [openGroup,    setOpenGroup]    = useState(null);
   const [openEx,       setOpenEx]       = useState(null);
+  const [varianteElegida, setVarianteElegida] = useState({}); // exId -> variante elegida hoy (se resetea al recargar, no persiste entre días -- se guarda por serie al marcarla, ver markSerie)
   const [timerSecs,    setTimerSecs]    = useState(0);
   const [timerMax,     setTimerMax]     = useState(90);
   const [timerActive,  setTimerActive]  = useState(false);
@@ -334,20 +335,30 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
   const [newDeckName,  setNewDeckName]  = useState("");
   const timerRef = useRef(null);
 
-  const allExercicios = [...EJERCICIOS_DEFAULT, ...Object.values(customEjercicios||{})];
+  // allExercicios: los overrides de customEjercicios tienen que GANAR sobre
+  // el default con el mismo id (edición o archivado de un ejercicio
+  // default), no solo agregarse aparte -- antes [...DEFAULT,...custom] sin
+  // deduplicar hacía que cualquier .find()/.filter() por id se quedara con
+  // el default original sin editar (find() devuelve el primer match), y en
+  // el editor aparecían dos filas duplicadas para el mismo ejercicio.
+  const customOverrides = customEjercicios || {};
+  const allExercicios = [
+    ...EJERCICIOS_DEFAULT.map(e => customOverrides[e.id] || e),
+    ...Object.values(customOverrides).filter(e => !EJERCICIOS_DEFAULT.some(d=>d.id===e.id)),
+  ];
   const todaySeries    = ejercicioLog[todayKey] || {};
   const decks = ejercicioDecks || [];
 
   const groupedExercises = MUSCLE_GROUPS
-    .map(g => ({...g, exercises: allExercicios.filter(e => (e.muscles||[]).some(m=>m.g===g.k))}))
+    .map(g => ({...g, exercises: allExercicios.filter(e => !e.archivado && (e.muscles||[]).some(m=>m.g===g.k))}))
     .filter(g => g.exercises.length > 0);
 
   useEffect(() => () => clearInterval(timerRef.current), []);
 
-  function markSerie(exId, si, reps, pesoKg, restSecs) {
+  function markSerie(exId, si, reps, pesoKg, restSecs, variante) {
     const key = `${exId}_${si}`;
     if(isSerieDone(todaySeries[key])) return;
-    const entry = {done:true, reps: reps||null, peso: pesoKg||null};
+    const entry = {done:true, reps: reps||null, peso: pesoKg||null, ...(variante?{variante}:{})};
     saveEjercicioLog({...ejercicioLog, [todayKey]: {...todaySeries, [key]: entry}});
     const t = restSecs || 90;
     setTimerMax(t);
@@ -938,16 +949,21 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
           return (
             <div key={g.k} style={{marginBottom:16}}>
               <div style={{fontFamily:"'Caveat',cursive",fontSize:16,fontWeight:700,color:"#111",marginBottom:6}}>{g.emoji} {g.label}</div>
-              {gExs.map(ex=>(
-                <div key={ex.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px dashed #f0f0f0"}}>
+              {gExs.map(ex=>{
+                const hist = getExHistory(ex.id);
+                const lastDate = hist.length ? hist[hist.length-1].date : null;
+                return (
+                <div key={ex.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px dashed #f0f0f0",opacity:ex.archivado?0.45:1}}>
                   <span style={{fontSize:16}}>{ex.emoji}</span>
                   <div style={{flex:1}}>
-                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:600,color:"#333"}}>{ex.name}{ex.weightStep===0?<span style={{fontSize:9,color:"#aaa",marginLeft:6}}>calistenia</span>:null}</div>
-                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>{ex.series||3} series · {ex.repMin}-{ex.repMax} reps · {ex.restSecs||90}s descanso</div>
+                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:600,color:"#333"}}>{ex.name}{ex.weightStep===0?<span style={{fontSize:9,color:"#aaa",marginLeft:6}}>calistenia</span>:null}{ex.archivado?<span style={{fontSize:9,color:"#e53935",marginLeft:6}}>archivado</span>:null}</div>
+                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>{ex.series||3} series · {ex.repMin}-{ex.repMax} reps · {ex.restSecs||90}s descanso{lastDate?` · último: ${lastDate}`:" · nunca registrado"}</div>
                   </div>
+                  <button onClick={()=>saveExercise({...ex, archivado: !ex.archivado})} title={ex.archivado?"Desarchivar":"Archivar (saca de la lista activa, el historial queda intacto)"}
+                    style={{background:"transparent",border:"none",color:ex.archivado?"#2e7d52":"#bbb",fontSize:14,cursor:"pointer",padding:"4px 6px"}}>{ex.archivado?"↩":"🗄"}</button>
                   <button onClick={()=>setEditEx({...ex})} style={{background:"transparent",border:"none",color:"#bbb",fontSize:14,cursor:"pointer",padding:"4px 6px"}}>✎</button>
                 </div>
-              ))}
+              );})}
             </div>
           );
         })}
@@ -1085,6 +1101,22 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
                       {isOpenE && (
                         <div style={{padding:"10px 14px 14px",background:"#fafafa"}}>
                           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#666",lineHeight:1.6,marginBottom:10,padding:"10px 12px",background:"#fff",borderRadius:8,border:"1px dashed #eee"}}>{ex.how}</div>
+                          {ex.variantes && ex.variantes.length>0 && (
+                            <div style={{marginBottom:10}}>
+                              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:5}}>agarre/variante de hoy</div>
+                              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                                {ex.variantes.map(v=>{
+                                  const activa = (varianteElegida[ex.id]||ex.variantes[0])===v;
+                                  return (
+                                    <button key={v} onClick={()=>setVarianteElegida(s=>({...s,[ex.id]:v}))}
+                                      style={{padding:"5px 11px",borderRadius:14,border:"1px solid "+(activa?"#111":"#ddd"),background:activa?"#111":"#fff",color:activa?"#fff":"#777",fontFamily:"'DM Sans',sans-serif",fontSize:11,cursor:"pointer"}}>
+                                      {v}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                           <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10,alignItems:"center"}}>
                             <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>rango {ex.repMin}-{ex.repMax} reps · descanso {ex.restSecs||90}s</span>
                           </div>
@@ -1174,7 +1206,7 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
                                   <button onClick={()=>{
                                     if(locked2||isDone) return;
                                     const ri = repsInput[rKey];
-                                    markSerie(ex.id, si, ri?.reps!==undefined?ri.reps:curReps, ri?.peso!==undefined?ri.peso:(curPesoKg||null), ex.restSecs);
+                                    markSerie(ex.id, si, ri?.reps!==undefined?ri.reps:curReps, ri?.peso!==undefined?ri.peso:(curPesoKg||null), ex.restSecs, varianteElegida[ex.id]||ex.variantes?.[0]);
                                   }} disabled={locked2||isDone}
                                     style={{marginLeft:"auto",width:36,height:36,borderRadius:8,border:isDone?"none":"1px dashed #bbb",background:isDone?"#2e7d52":locked2?"#f5f5f5":"#111",color:isDone?"#fff":locked2?"#ddd":"#fff",cursor:locked2||isDone?"default":"pointer",fontSize:isDone?15:12,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s"}}>
                                     {isDone?"✓":"→"}
