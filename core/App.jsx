@@ -1556,6 +1556,7 @@ function AngstApp() {
                             </div>
                           </div>
                           <div className="brow"><div className="slbl">Menú del día</div><EF key={`menu-${dateKey}`} value={day.menu} placeholder="qué vas a comer..." multiline onSave={v=>updateDay(dateKey,{menu:v})}/></div>
+                          <div className="brow"><div className="slbl">Nota random</div><EF key={`randomNote-${dateKey}`} value={day.randomNote||""} placeholder="algo que pasó, una idea, lo que sea..." multiline onSave={v=>updateDay(dateKey,{randomNote:v})} small/></div>
                           <div className="brow"><div className="slbl">Cierre del día</div><EF key={`summary-${dateKey}`} value={day.summary||""} placeholder="cómo fue el día..." multiline onSave={v=>updateDay(dateKey,{summary:v})} small/></div>
                           <HumorSelector value={Array.isArray(day.humors)&&day.humors.length>0?day.humors:(day.humor?[day.humor]:[])} custom={day.humorCustom||[]} onSave={(h,c)=>updateDay(dateKey,{humors:h,humorCustom:c})}/>
                           {/* Energía y concentración rápida */}
@@ -1582,7 +1583,7 @@ function AngstApp() {
                               <div className="brow">
                                 <div className="slbl" style={{marginBottom:8}}>Trabajo</div>
                                 <div style={{display:"flex",gap:8}}>
-                                  {[{k:"relajado",icon:"😌"},{k:"normal",icon:"😐"},{k:"duro",icon:"😤"}].map(({k,icon})=>(
+                                  {[{k:"relajado",icon:"😌"},{k:"normal",icon:"😐"},{k:"duro",icon:"😤"},{k:"libre",icon:"🏖️"}].map(({k,icon})=>(
                                     <button key={k} onClick={()=>updateDay(dateKey,{workLevel:k===wl?"normal":k})}
                                       style={{flex:1,background:wl===k?"#fff":"transparent",border:wl===k?"none":"1px dashed #555",borderRadius:8,padding:"8px 4px",cursor:"pointer",fontSize:20,opacity:wl===k?1:0.35,transition:"all 0.15s"}}>
                                       {icon}

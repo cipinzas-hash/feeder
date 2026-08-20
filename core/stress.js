@@ -53,7 +53,7 @@ function computeStressScore(dk, dayData, calMarks, kidsHealth) {
   const isWorkDay = marks.includes("work");
   if(isWorkDay) {
     const wl = d.workLevel||"normal";
-    if(wl==="duro") s+=4; else if(wl==="relajado") s+=2; else s+=3;
+    if(wl==="duro") s+=4; else if(wl==="relajado") s+=2; else if(wl==="libre") s+=0; else s+=3;
   }
   if(marks.includes("colegio")) s+=1.5;
   if(isWorkDay && marks.includes("colegio")) s+=1;
