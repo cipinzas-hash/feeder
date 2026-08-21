@@ -18,6 +18,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { JSDOM } from "jsdom";
 import { Readability } from "@mozilla/readability";
+import { callGemini } from "./lib/gemini.mjs";
 import createDOMPurify from "dompurify";
 import Parser from "rss-parser";
 
@@ -228,7 +229,6 @@ async function extractFullText(url) {
 
 const STARTGG_API_KEY = process.env.STARTGG_API_KEY;
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY; // narrativa del archivo permanente (ver narrateArchiveSummary) -- opcional, sin ella cae al resumen mecánico
 const MELEEMAJORS_URL = "https://raw.githubusercontent.com/jtof-dev/meleemajors.gg/main/ssg/src/tournaments.json";
 const STARTGG_ENDPOINT = "https://api.start.gg/gql/alpha";
 // Debug temporal de búsquedas de clip individual -- findMatchClip vive fuera
@@ -1093,7 +1093,6 @@ function topUpsets(tournamentUpsets, n = 5) {
 }
 
 async function narrateArchiveSummary(tournamentName, standings, upsets) {
-  if (!ANTHROPIC_API_KEY) return null;
   const top8Line = [...standings]
     .sort((a, b) => a.placement - b.placement)
     .map(s => `${s.placement}° ${s.entrant.name}`)
@@ -1115,41 +1114,8 @@ Usá la búsqueda web para confirmar contexto real: rachas, primera vez que X le
 
 Devolvé SOLO el texto del resumen final (el formato del ejemplo: standings + upsets), sin preámbulo, sin markdown, sin comillas.`;
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 90000); // deja margen a varias vueltas de búsqueda
-    let res;
-    try {
-      res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-5",
-          max_tokens: 1024,
-          messages: [{ role: "user", content: prompt }],
-          tools: [{ type: "web_search_20250305", name: "web_search" }],
-        }),
-        signal: controller.signal,
-      });
-    } finally {
-      clearTimeout(timeoutId);
-    }
-    const data = await res.json();
-    if (data.error) throw new Error(JSON.stringify(data.error));
-    const texto = (data.content || [])
-      .filter(b => b.type === "text")
-      .map(b => b.text)
-      .join("\n")
-      .trim();
-    return texto || null;
-  } catch (e) {
-    console.error(`✗ Melee · narración con Claude API (${tournamentName}): ${e.message}`);
-    return null; // cae al resumen mecánico en buildTournamentArchiveItem
-  }
+  const texto = await callGemini(prompt, { useSearch: true, maxOutputTokens: 1024, timeoutMs: 90000 });
+  return texto ? texto.trim() : null; // cae al resumen mecánico en buildTournamentArchiveItem si Gemini no responde
 }
 
 // El registro permanente del torneo: se arma UNA sola vez, en la misma
@@ -1242,8 +1208,8 @@ function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings,
   const upsetsLine = upsetsSignificativos.length
     ? ` Upsets destacados: ${upsetsSignificativos.map(u => u.title).join("; ")}.`
     : "";
-  // Si Claude generó narrativa con contexto real, se usa esa; si no (sin
-  // ANTHROPIC_API_KEY, falló la llamada, etc.) cae al resumen mecánico de
+  // Si Gemini generó narrativa con contexto real, se usa esa; si no (sin
+  // GEMINI_API_KEY, falló la llamada, etc.) cae al resumen mecánico de
   // siempre -- nunca se queda sin resumen por esto.
   const summary = narracion || `${top8Line}.${upsetsLine}`;
   return {
