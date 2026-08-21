@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-21T02:05:44.044Z",
+  "generatedAt": "2026-08-21T04:49:55.849Z",
   "categories": [
     {
       "cat": "Películas",
@@ -722,7 +722,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1240889",
@@ -805,6 +805,86 @@
           "trending": false
         },
         {
+          "guid": "tmdb-movie-1288445",
+          "title": "El motín",
+          "link": "https://www.themoviedb.org/movie/1288445",
+          "summary": "Después de que su jefe, un industrial multimillonario, sea asesinado delante de él, Cole Reed se ve obligado a cargar con la culpa del crimen, lo que le obliga a huir mientras trabaja para descubrir una conspiración internacional.",
+          "image": "https://image.tmdb.org/t/p/w500/6PwLfI2qpRZIIwN63XnNMYAqj87.jpg",
+          "pubDate": "2026-08-19",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-08-19T16:41:32.625Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "YsOEfdoH-QY",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Jason Statham",
+              "character": "Cole Reed",
+              "order": 0
+            },
+            {
+              "name": "Annabelle Wallis",
+              "character": "Angie Ellis",
+              "order": 1
+            },
+            {
+              "name": "Roland Møller",
+              "character": "Captain Marko Madsen",
+              "order": 2
+            },
+            {
+              "name": "Ramon Tikaram",
+              "character": "Tibu Campallo",
+              "order": 3
+            },
+            {
+              "name": "Arnas Fedaravičius",
+              "character": "Mateo Pineda",
+              "order": 4
+            },
+            {
+              "name": "Jason Wong",
+              "character": "Taran",
+              "order": 5
+            },
+            {
+              "name": "Adrian Lester",
+              "character": "Captain Adam Spencer",
+              "order": 6
+            },
+            {
+              "name": "Chaneil Kular",
+              "character": "Kameron Campallo",
+              "order": 7
+            },
+            {
+              "name": "Andrew John Tait",
+              "character": "BK Lobby Businessman",
+              "order": 8
+            },
+            {
+              "name": "Simon Kluth",
+              "character": "Jaran Daniles",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1084244",
           "title": "Toy Story 5",
           "link": "https://www.themoviedb.org/movie/1084244",
@@ -880,86 +960,6 @@
               "name": "Jay Hernandez",
               "character": "Bonnie’s Dad (voice)",
               "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1315772",
-          "title": "Minions & Monsters",
-          "link": "https://www.themoviedb.org/movie/1315772",
-          "summary": "Narra la historia de cómo los minions conquistaron la industria de Hollywood, se convirtieron en estrellas de cine, lo perdieron todo, desataron monstruos en el mundo y luego se unieron para intentar salvar al planeta del caos que acababan de crear.",
-          "image": "https://image.tmdb.org/t/p/w500/7DUzo8Ys7BfmZpqnzIwG4qA0egl.jpg",
-          "pubDate": "2026-06-24",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-08-11T10:42:55.304Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.6,
-            "rt": null,
-            "metascore": 69,
-            "tmdb": 6.3
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "ZSdOwt-G49w",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Christoph Waltz",
-              "character": "Max (voice)",
-              "order": 2
-            },
-            {
-              "name": "Allison Janney",
-              "character": "Olivia (voice)",
-              "order": 3
-            },
-            {
-              "name": "Jesse Eisenberg",
-              "character": "Dort (voice)",
-              "order": 4
-            },
-            {
-              "name": "Jeff Bridges",
-              "character": "Frank / Elwood (voice)",
-              "order": 5
-            },
-            {
-              "name": "Zoey Deutch",
-              "character": "Debbie (voice)",
-              "order": 6
-            },
-            {
-              "name": "Bobby Moynihan",
-              "character": "Phillips (voice)",
-              "order": 7
-            },
-            {
-              "name": "Phil LaMarr",
-              "character": "Howard (voice)",
-              "order": 8
-            },
-            {
-              "name": "Barbara Eve Harris",
-              "character": "Additional Voices (voice)",
-              "order": 10
-            },
-            {
-              "name": "Eric Bauza",
-              "character": "Additional Voices (voice)",
-              "order": 11
-            },
-            {
-              "name": "Aaron Hendry",
-              "character": "Additional Voices (voice)",
-              "order": 12
             }
           ],
           "trending": true
@@ -1045,21 +1045,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1288445",
-          "title": "El motín",
-          "link": "https://www.themoviedb.org/movie/1288445",
-          "summary": "Después de que su jefe, un industrial multimillonario, sea asesinado delante de él, Cole Reed se ve obligado a cargar con la culpa del crimen, lo que le obliga a huir mientras trabaja para descubrir una conspiración internacional.",
-          "image": "https://image.tmdb.org/t/p/w500/6PwLfI2qpRZIIwN63XnNMYAqj87.jpg",
-          "pubDate": "2026-08-19",
+          "guid": "tmdb-movie-1315772",
+          "title": "Minions & Monsters",
+          "link": "https://www.themoviedb.org/movie/1315772",
+          "summary": "Narra la historia de cómo los minions conquistaron la industria de Hollywood, se convirtieron en estrellas de cine, lo perdieron todo, desataron monstruos en el mundo y luego se unieron para intentar salvar al planeta del caos que acababan de crear.",
+          "image": "https://image.tmdb.org/t/p/w500/7DUzo8Ys7BfmZpqnzIwG4qA0egl.jpg",
+          "pubDate": "2026-06-24",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-08-19T16:41:32.625Z",
+          "firstSeenAt": "2026-08-11T10:42:55.304Z",
           "fullText": null,
           "rating": {
-            "imdb": null,
+            "imdb": 6.6,
             "rt": null,
-            "metascore": null,
-            "tmdb": 7
+            "metascore": 69,
+            "tmdb": 6.3
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1067,146 +1067,59 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "YsOEfdoH-QY",
+            "key": "ZSdOwt-G49w",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Jason Statham",
-              "character": "Cole Reed",
-              "order": 0
-            },
-            {
-              "name": "Annabelle Wallis",
-              "character": "Angie Ellis",
-              "order": 1
-            },
-            {
-              "name": "Roland Møller",
-              "character": "Captain Marko Madsen",
+              "name": "Christoph Waltz",
+              "character": "Max (voice)",
               "order": 2
             },
             {
-              "name": "Ramon Tikaram",
-              "character": "Tibu Campallo",
+              "name": "Allison Janney",
+              "character": "Olivia (voice)",
               "order": 3
             },
             {
-              "name": "Arnas Fedaravičius",
-              "character": "Mateo Pineda",
+              "name": "Jesse Eisenberg",
+              "character": "Dort (voice)",
               "order": 4
             },
             {
-              "name": "Jason Wong",
-              "character": "Taran",
+              "name": "Jeff Bridges",
+              "character": "Frank / Elwood (voice)",
               "order": 5
             },
             {
-              "name": "Adrian Lester",
-              "character": "Captain Adam Spencer",
+              "name": "Zoey Deutch",
+              "character": "Debbie (voice)",
               "order": 6
             },
             {
-              "name": "Chaneil Kular",
-              "character": "Kameron Campallo",
+              "name": "Bobby Moynihan",
+              "character": "Phillips (voice)",
               "order": 7
             },
             {
-              "name": "Andrew John Tait",
-              "character": "BK Lobby Businessman",
+              "name": "Phil LaMarr",
+              "character": "Howard (voice)",
               "order": 8
             },
             {
-              "name": "Simon Kluth",
-              "character": "Jaran Daniles",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1284041",
-          "title": "La última casa",
-          "link": "https://www.themoviedb.org/movie/1284041",
-          "summary": "Una familia encerrada en su casa misteriosamente tendrá que unirse para sobrevivir a la escasez de recursos y a la siniestra amenaza que no los deja salir.",
-          "image": "https://image.tmdb.org/t/p/w500/CIGQ7ONbNaSDK3KGkXjBILcj1d.jpg",
-          "pubDate": "2026-08-06",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-08-07T15:17:06.074Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.9
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "currentSeason": null,
-          "reviews": {
-            "top": {
-              "rating": 6,
-              "text": "(CASTELLANO) *La última casa* parte de una idea sencilla pero eficaz: convertir el lugar que debería ofrecer seguridad en un espacio del que no se puede escapar. Louis Leterrier utiliza ese encierro para construir primero una película de tensión psicológica, centrada en una familia obligada a convivir con la incertidumbre y con unos recursos cada vez más limitados.\r\n\r\nEsa primera parte funciona especialmente bien porque la amenaza no necesita mostrarse demasiado para hacerse presente. Importa lo que sucede fuera, pero también lo que el aislamiento provoca dentro: el miedo, el desgaste y la necesidad de adaptarse a una situación que nadie comprende. La casa va dejando de ser hogar para convertirse en una especie de frontera, y ahí la película encuentra algunos de sus mejores momentos.\r\n\r\nGr",
-              "author": "Marco-Hugo Landeta Vacas"
-            },
-            "bottom": null
-          },
-          "trailer": {
-            "key": "4I2bcxL8Wxw",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Greta Lee",
-              "character": "Ann",
-              "order": 0
+              "name": "Barbara Eve Harris",
+              "character": "Additional Voices (voice)",
+              "order": 10
             },
             {
-              "name": "Wagner Moura",
-              "character": "Jason",
-              "order": 1
+              "name": "Eric Bauza",
+              "character": "Additional Voices (voice)",
+              "order": 11
             },
             {
-              "name": "Riley Chung",
-              "character": "Ruth (8 Years Old)",
-              "order": 2
-            },
-            {
-              "name": "Noah Alexander Sosnowski",
-              "character": "Graham (12 Years Old)",
-              "order": 3
-            },
-            {
-              "name": "Emma Ho",
-              "character": "Ruth (13 Years Old)",
-              "order": 4
-            },
-            {
-              "name": "Gabriel Barbosa",
-              "character": "Graham (17 Years Old)",
-              "order": 5
-            },
-            {
-              "name": "Arden Cho",
-              "character": "Adult Ruth",
-              "order": 6
-            },
-            {
-              "name": "Audrey Anderson",
-              "character": "Susan",
-              "order": 7
-            },
-            {
-              "name": "Sid Edwards",
-              "character": "Max Richardson",
-              "order": 8
-            },
-            {
-              "name": "Eveline Reynolds-Boison",
-              "character": "Marcia Richardson",
-              "order": 9
+              "name": "Aaron Hendry",
+              "character": "Additional Voices (voice)",
+              "order": 12
             }
           ],
           "trending": true
@@ -1367,6 +1280,93 @@
             }
           ],
           "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1284041",
+          "title": "La última casa",
+          "link": "https://www.themoviedb.org/movie/1284041",
+          "summary": "Una familia encerrada en su casa misteriosamente tendrá que unirse para sobrevivir a la escasez de recursos y a la siniestra amenaza que no los deja salir.",
+          "image": "https://image.tmdb.org/t/p/w500/CIGQ7ONbNaSDK3KGkXjBILcj1d.jpg",
+          "pubDate": "2026-08-06",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-08-07T15:17:06.074Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.9
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "currentSeason": null,
+          "reviews": {
+            "top": {
+              "rating": 6,
+              "text": "(CASTELLANO) *La última casa* parte de una idea sencilla pero eficaz: convertir el lugar que debería ofrecer seguridad en un espacio del que no se puede escapar. Louis Leterrier utiliza ese encierro para construir primero una película de tensión psicológica, centrada en una familia obligada a convivir con la incertidumbre y con unos recursos cada vez más limitados.\r\n\r\nEsa primera parte funciona especialmente bien porque la amenaza no necesita mostrarse demasiado para hacerse presente. Importa lo que sucede fuera, pero también lo que el aislamiento provoca dentro: el miedo, el desgaste y la necesidad de adaptarse a una situación que nadie comprende. La casa va dejando de ser hogar para convertirse en una especie de frontera, y ahí la película encuentra algunos de sus mejores momentos.\r\n\r\nGr",
+              "author": "Marco-Hugo Landeta Vacas"
+            },
+            "bottom": null
+          },
+          "trailer": {
+            "key": "4I2bcxL8Wxw",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Greta Lee",
+              "character": "Ann",
+              "order": 0
+            },
+            {
+              "name": "Wagner Moura",
+              "character": "Jason",
+              "order": 1
+            },
+            {
+              "name": "Riley Chung",
+              "character": "Ruth (8 Years Old)",
+              "order": 2
+            },
+            {
+              "name": "Noah Alexander Sosnowski",
+              "character": "Graham (12 Years Old)",
+              "order": 3
+            },
+            {
+              "name": "Emma Ho",
+              "character": "Ruth (13 Years Old)",
+              "order": 4
+            },
+            {
+              "name": "Gabriel Barbosa",
+              "character": "Graham (17 Years Old)",
+              "order": 5
+            },
+            {
+              "name": "Arden Cho",
+              "character": "Adult Ruth",
+              "order": 6
+            },
+            {
+              "name": "Audrey Anderson",
+              "character": "Susan",
+              "order": 7
+            },
+            {
+              "name": "Sid Edwards",
+              "character": "Max Richardson",
+              "order": 8
+            },
+            {
+              "name": "Eveline Reynolds-Boison",
+              "character": "Marcia Richardson",
+              "order": 9
+            }
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1318413",
@@ -5763,32 +5763,6 @@
           "cast": []
         },
         {
-          "guid": "mal-63832",
-          "title": "Seihantai na Kimi to Boku 2nd Season",
-          "link": "https://myanimelist.net/anime/63832/Seihantai_na_Kimi_to_Boku_2nd_Season",
-          "summary": "Second season of Seihantai na Kimi to Boku.",
-          "image": "https://cdn.myanimelist.net/images/anime/1143/158409l.jpg",
-          "pubDate": "2026-07-05T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:26:02.093Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.35
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "o9eLX4W-gys",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
           "guid": "mal-60522",
           "title": "Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu II",
           "link": "https://myanimelist.net/anime/60522/Gaikotsu_Kishi-sama_Tadaima_Isekai_e_Odekakechuu_II",
@@ -5835,33 +5809,7 @@
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": {
-            "key": "ahZn4dVCbvs",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-61126",
-          "title": "Kimi ga Shinu made Koi wo Shitai",
-          "link": "https://myanimelist.net/anime/61126/Kimi_ga_Shinu_made_Koi_wo_Shitai",
-          "summary": "The death of Sheena Totsuki's roommate is casually announced at the start of class, and the day carries on as usual. In an orphanage that raises children as soldiers, death is nothing new to the residents. With their home country embroiled in a war that has dragged on for too many years and shows no signs of stopping, the institution's children are sent off to die in battle every day. In contrast to the other orphans, Sheena is deeply disturbed by the ongoing conflict and wishes for it to end.\n\nOn the night of her roommate's death, Sheena met a blood-covered girl who remained jubilant despite the condition she was in. The next day, the girl appears as a new student in Sheena's class and introduces herself as Mimi Kagari. Initially thought to be a school myth, Mimi is said to be the secret weapon of the orphanage—a girl who cannot die. Assigned as Sheena's new roommate, Mimi hopes to get along with her and get accustomed to school life.\n\nHowever, unsettled by Mimi's carefree attitude toward the war, Sheena struggles to accept the world they live in, all while their unusual friendship flourishes amid the bleak situation.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1096/158712l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:26:04.078Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.81
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "rSiaUuG1kpM",
+            "key": "7yE9MHlifmw",
             "site": "YouTube"
           },
           "cast": []
@@ -5887,33 +5835,7 @@
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": {
-            "key": "CrfQChqpPNU",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-61169",
-          "title": "Black Torch",
-          "link": "https://myanimelist.net/anime/61169/Black_Torch",
-          "summary": "Seventeen-year-old Jirou Azuma lives a quiet life with his grandfather, utilizing his supernatural ability to speak with animals to befriend and protect them. Both Jirou and his grandfather are descendants of a long-standing shinobi clan, training in combat to keep the art of battle alive within their family. Jirou's life is thrown into upheaval after rescuing a seemingly normal black cat, Ragou, only to discover that the cat is actually a mononoke—a demonic spirit that has long been at war with mankind. When a hostile mononoke comes looking for Ragou, Jirou uses his shinobi training to jump to the cat's defense, but immediately suffers a mortal wound.\n\nFaced with the decision of whether or not to devour Jirou's fading energy and restore himself to full power, Ragou instead chooses to give his remaining energy to Jirou. Reviving the boy, the transfer also grants him great supernatural powers that complement his own shinobi fighting style. This act is witnessed by Ryousuke Shiba, an officer in the Bureau of Espionage whose job revolves around dispatching aggressive mononoke. Shiba extends Jirou and his grandfather an offer: to join the Bureau's new squad, Black Torch, and help them battle powerful mononoke who seek to devour innocent people.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1965/158363l.jpg",
-          "pubDate": "2026-07-04T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:26:05.133Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.39
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "XL_biwm-hxU",
+            "key": "qsbyAix6lUY",
             "site": "YouTube"
           },
           "cast": []
@@ -5956,6 +5878,87 @@
               "order": 1
             }
           ],
+          "trending": false
+        },
+        {
+          "guid": "mal-63832",
+          "title": "Seihantai na Kimi to Boku 2nd Season",
+          "link": "https://myanimelist.net/anime/63832/Seihantai_na_Kimi_to_Boku_2nd_Season",
+          "summary": "Second season of Seihantai na Kimi to Boku.",
+          "image": "https://cdn.myanimelist.net/images/anime/1143/158409l.jpg",
+          "pubDate": "2026-07-05T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:26:02.093Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.35
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "o9eLX4W-gys",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-61126",
+          "title": "Kimi ga Shinu made Koi wo Shitai",
+          "link": "https://myanimelist.net/anime/61126/Kimi_ga_Shinu_made_Koi_wo_Shitai",
+          "summary": "The death of Sheena Totsuki's roommate is casually announced at the start of class, and the day carries on as usual. In an orphanage that raises children as soldiers, death is nothing new to the residents. With their home country embroiled in a war that has dragged on for too many years and shows no signs of stopping, the institution's children are sent off to die in battle every day. In contrast to the other orphans, Sheena is deeply disturbed by the ongoing conflict and wishes for it to end.\n\nOn the night of her roommate's death, Sheena met a blood-covered girl who remained jubilant despite the condition she was in. The next day, the girl appears as a new student in Sheena's class and introduces herself as Mimi Kagari. Initially thought to be a school myth, Mimi is said to be the secret weapon of the orphanage—a girl who cannot die. Assigned as Sheena's new roommate, Mimi hopes to get along with her and get accustomed to school life.\n\nHowever, unsettled by Mimi's carefree attitude toward the war, Sheena struggles to accept the world they live in, all while their unusual friendship flourishes amid the bleak situation.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1096/158712l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:26:04.078Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.81
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "rSiaUuG1kpM",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-61169",
+          "title": "Black Torch",
+          "link": "https://myanimelist.net/anime/61169/Black_Torch",
+          "summary": "Seventeen-year-old Jirou Azuma lives a quiet life with his grandfather, utilizing his supernatural ability to speak with animals to befriend and protect them. Both Jirou and his grandfather are descendants of a long-standing shinobi clan, training in combat to keep the art of battle alive within their family. Jirou's life is thrown into upheaval after rescuing a seemingly normal black cat, Ragou, only to discover that the cat is actually a mononoke—a demonic spirit that has long been at war with mankind. When a hostile mononoke comes looking for Ragou, Jirou uses his shinobi training to jump to the cat's defense, but immediately suffers a mortal wound.\n\nFaced with the decision of whether or not to devour Jirou's fading energy and restore himself to full power, Ragou instead chooses to give his remaining energy to Jirou. Reviving the boy, the transfer also grants him great supernatural powers that complement his own shinobi fighting style. This act is witnessed by Ryousuke Shiba, an officer in the Bureau of Espionage whose job revolves around dispatching aggressive mononoke. Shiba extends Jirou and his grandfather an offer: to join the Bureau's new squad, Black Torch, and help them battle powerful mononoke who seek to devour innocent people.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1965/158363l.jpg",
+          "pubDate": "2026-07-04T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:26:05.133Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.39
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "XL_biwm-hxU",
+            "site": "YouTube"
+          },
+          "cast": [],
           "trending": false
         }
       ]
