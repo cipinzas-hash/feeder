@@ -127,6 +127,11 @@ function AngstApp() {
     try { const v = localStorage.getItem("angst-podcast-seen-v1"); return v ? JSON.parse(v) : {}; } catch(e) { return {}; }
   });
   const [nowPlaying, setNowPlaying] = useState(null);
+  const [podcastProgress, setPodcastProgress] = useState(()=>{
+    try { const v = localStorage.getItem("angst-podcast-progress-v1"); return v ? JSON.parse(v) : {}; } catch(e) { return {}; }
+  });
+  const podcastAudioRef = useRef(null);
+  const podcastLastSaveRef = useRef(0);
   useEffect(()=>{
     fetch("https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/podcast-latest.json", { cache: "no-store" })
       .then(r=>r.ok?r.json():null)
@@ -139,6 +144,19 @@ function AngstApp() {
       try { localStorage.setItem("angst-podcast-seen-v1", JSON.stringify(next)); } catch(e){}
       return next;
     });
+  }
+  function savePodcastProgress(guid, time, duration, done){
+    setPodcastProgress(prev=>{
+      const next = {...prev, [guid]: {time, duration, done}};
+      try { localStorage.setItem("angst-podcast-progress-v1", JSON.stringify(next)); } catch(e){}
+      return next;
+    });
+  }
+  function closePodcastPlayer(){
+    if(podcastAudioRef.current && nowPlaying){
+      savePodcastProgress(nowPlaying.guid, podcastAudioRef.current.currentTime||0, podcastAudioRef.current.duration||0, false);
+    }
+    setNowPlaying(null);
   }
 
 
@@ -926,6 +944,7 @@ function AngstApp() {
       feedConciertosVistos: readLocalJSON("angst-feed-conciertos-vistos-v1"),
       feedCineEstado: readLocalJSON("angst-cine-estado-v1"),
       feedPodcastSeen: readLocalJSON("angst-podcast-seen-v1"),
+      feedPodcastProgress: readLocalJSON("angst-podcast-progress-v1"),
     };
   }
   function readLocalJSON(key){
@@ -935,7 +954,7 @@ function AngstApp() {
   // Si agregás un campo de estado nuevo: sumalo en buildExportPayload,
   // en saveToStorage, acá, y en restoreFromPayload — las 4 ubicaciones
   // de la regla vital.
-  const REQUIRED_EXPORT_FIELDS = ['dayData','weekOffset','budgets','nutria','calMarks','cookingOpts','aseoOpts','routines','recurring','lastRollover','kidsHealth','custody','fadimanData','nutriLog','ejercicioLog','ejercicioDecks','customFoods','foodOverrides','customEjercicios','nutriDecks','pokeInventario','pokeCarpetas','pokeDarkCatalogo','pokePriceCache','feedState','feedMicrodocsVistos','feedPodcastsEscuchados','feedConciertosVistos','feedCineEstado','feedPodcastSeen'];
+  const REQUIRED_EXPORT_FIELDS = ['dayData','weekOffset','budgets','nutria','calMarks','cookingOpts','aseoOpts','routines','recurring','lastRollover','kidsHealth','custody','fadimanData','nutriLog','ejercicioLog','ejercicioDecks','customFoods','foodOverrides','customEjercicios','nutriDecks','pokeInventario','pokeCarpetas','pokeDarkCatalogo','pokePriceCache','feedState','feedMicrodocsVistos','feedPodcastsEscuchados','feedConciertosVistos','feedCineEstado','feedPodcastSeen','feedPodcastProgress'];
 
   function handleExport(){
     const fullPayload = buildExportPayload();
@@ -993,6 +1012,7 @@ function AngstApp() {
     if(d.feedConciertosVistos!=null){ try{ localStorage.setItem("angst-feed-conciertos-vistos-v1", JSON.stringify(d.feedConciertosVistos)); }catch(e){} }
     if(d.feedCineEstado!=null){ try{ localStorage.setItem("angst-cine-estado-v1", JSON.stringify(d.feedCineEstado)); }catch(e){} }
     if(d.feedPodcastSeen!=null){ try{ localStorage.setItem("angst-podcast-seen-v1", JSON.stringify(d.feedPodcastSeen)); }catch(e){} }
+    if(d.feedPodcastProgress!=null){ try{ localStorage.setItem("angst-podcast-progress-v1", JSON.stringify(d.feedPodcastProgress)); }catch(e){} }
     setLoadMsg(`✓ Restauración completa desde ${sourceLabel||"backup"}`);
     setTimeout(()=>setLoadMsg(null), 4000);
     return true;
@@ -1261,18 +1281,37 @@ function AngstApp() {
 
         {(()=>{
           const metaPodLatest = podcastLatest?.tracked?.["Meta Pod"];
-          const hasNewMetaPod = metaPodLatest && podcastSeen["Meta Pod"] !== metaPodLatest.guid;
-          if(!hasNewMetaPod) return null;
-          return (
+          if(!metaPodLatest) return null;
+          const hasNewMetaPod = podcastSeen["Meta Pod"] !== metaPodLatest.guid;
+          const progress = podcastProgress[metaPodLatest.guid];
+          const playThis = ()=>{setNowPlaying({title:metaPodLatest.title,source:"Meta Pod",audioUrl:metaPodLatest.audioUrl,guid:metaPodLatest.guid});markPodcastSeen("Meta Pod",metaPodLatest.guid);};
+
+          if(hasNewMetaPod) return (
             <div style={{background:"#ffcc00",padding:"5px 20px",display:"flex",alignItems:"center",gap:8}}>
               <span style={{fontSize:13,flexShrink:0}}>🎙️</span>
               <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#111",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>Nuevo Meta Pod: {metaPodLatest.title}</span>
-              <button onClick={()=>{setNowPlaying({title:metaPodLatest.title,source:"Meta Pod",audioUrl:metaPodLatest.audioUrl});markPodcastSeen("Meta Pod",metaPodLatest.guid);}}
+              <button onClick={playThis}
                 style={{background:"#111",color:"#fff",border:"none",borderRadius:4,padding:"3px 10px",fontSize:11,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",flexShrink:0}}>▶ escuchar</button>
               <button onClick={()=>markPodcastSeen("Meta Pod",metaPodLatest.guid)}
                 style={{background:"transparent",border:"none",color:"#111",fontSize:15,cursor:"pointer",opacity:0.5,lineHeight:1,flexShrink:0}}>×</button>
             </div>
           );
+
+          // Episodio ya visto pero quedó a medias (cerrado con avance
+          // guardado, todavía no llega a onEnded) y el player no está
+          // abierto ahora mismo: chip chico para retomar, no vuelve a
+          // tapar la pantalla con la barra completa hasta que lo toques.
+          if(progress && !progress.done && !nowPlaying){
+            const pct = progress.duration>0 ? Math.round(progress.time/progress.duration*100) : null;
+            return (
+              <div style={{background:"#222",padding:"4px 20px",display:"flex",alignItems:"center",gap:8}}>
+                <button onClick={playThis} style={{background:"transparent",border:"none",color:"#fff",fontSize:11,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",gap:6,padding:0}}>
+                  <span>▶</span><span style={{opacity:0.7}}>reanudar Meta Pod{pct!=null?` — ${pct}%`:""}</span>
+                </button>
+              </div>
+            );
+          }
+          return null;
         })()}
 
         {/* ── PLANNER ── */}
@@ -1696,9 +1735,21 @@ function AngstApp() {
             <span style={{fontSize:16,flexShrink:0}}>🎧</span>
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontFamily:"'Caveat',cursive",fontSize:14,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{nowPlaying.title}</div>
-              <audio controls autoPlay src={nowPlaying.audioUrl} style={{width:"100%",height:28,colorScheme:"dark"}}/>
+              <audio ref={podcastAudioRef} controls autoPlay src={nowPlaying.audioUrl} style={{width:"100%",height:28,colorScheme:"dark"}}
+                onLoadedMetadata={e=>{
+                  const p = podcastProgress[nowPlaying.guid];
+                  if(p && !p.done && p.time>0 && p.time<e.target.duration-5) e.target.currentTime = p.time;
+                }}
+                onTimeUpdate={e=>{
+                  const now = Date.now();
+                  if(now - podcastLastSaveRef.current < 5000) return;
+                  podcastLastSaveRef.current = now;
+                  savePodcastProgress(nowPlaying.guid, e.target.currentTime, e.target.duration||0, false);
+                }}
+                onEnded={()=>savePodcastProgress(nowPlaying.guid, 0, 0, true)}
+              />
             </div>
-            <button onClick={()=>setNowPlaying(null)} style={{background:"transparent",border:"none",color:"#888",fontSize:18,cursor:"pointer",flexShrink:0,lineHeight:1}} title="cerrar reproductor">×</button>
+            <button onClick={closePodcastPlayer} style={{background:"transparent",border:"none",color:"#888",fontSize:18,cursor:"pointer",flexShrink:0,lineHeight:1}} title="cerrar reproductor (guarda el avance)">×</button>
           </div>
         )}
       </div>

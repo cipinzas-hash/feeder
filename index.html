@@ -8237,6 +8237,16 @@ ${item.link}`);
       }
     });
     const [nowPlaying, setNowPlaying] = useState8(null);
+    const [podcastProgress, setPodcastProgress] = useState8(() => {
+      try {
+        const v = localStorage.getItem("angst-podcast-progress-v1");
+        return v ? JSON.parse(v) : {};
+      } catch (e) {
+        return {};
+      }
+    });
+    const podcastAudioRef = useRef8(null);
+    const podcastLastSaveRef = useRef8(0);
     useEffect8(() => {
       fetch("https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/podcast-latest.json", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((d) => {
         if (d) setPodcastLatest(d);
@@ -8252,6 +8262,22 @@ ${item.link}`);
         }
         return next;
       });
+    }
+    function savePodcastProgress(guid, time, duration, done) {
+      setPodcastProgress((prev) => {
+        const next = { ...prev, [guid]: { time, duration, done } };
+        try {
+          localStorage.setItem("angst-podcast-progress-v1", JSON.stringify(next));
+        } catch (e) {
+        }
+        return next;
+      });
+    }
+    function closePodcastPlayer() {
+      if (podcastAudioRef.current && nowPlaying) {
+        savePodcastProgress(nowPlaying.guid, podcastAudioRef.current.currentTime || 0, podcastAudioRef.current.duration || 0, false);
+      }
+      setNowPlaying(null);
     }
     const dayDataRef = useRef8({});
     const weekOffsetRef = useRef8(0);
@@ -9104,7 +9130,8 @@ ${item.link}`);
         feedPodcastsEscuchados: readLocalJSON("angst-feed-podcasts-escuchados-v1"),
         feedConciertosVistos: readLocalJSON("angst-feed-conciertos-vistos-v1"),
         feedCineEstado: readLocalJSON("angst-cine-estado-v1"),
-        feedPodcastSeen: readLocalJSON("angst-podcast-seen-v1")
+        feedPodcastSeen: readLocalJSON("angst-podcast-seen-v1"),
+        feedPodcastProgress: readLocalJSON("angst-podcast-progress-v1")
       };
     }
     function readLocalJSON(key) {
@@ -9115,7 +9142,7 @@ ${item.link}`);
         return null;
       }
     }
-    const REQUIRED_EXPORT_FIELDS = ["dayData", "weekOffset", "budgets", "nutria", "calMarks", "cookingOpts", "aseoOpts", "routines", "recurring", "lastRollover", "kidsHealth", "custody", "fadimanData", "nutriLog", "ejercicioLog", "ejercicioDecks", "customFoods", "foodOverrides", "customEjercicios", "nutriDecks", "pokeInventario", "pokeCarpetas", "pokeDarkCatalogo", "pokePriceCache", "feedState", "feedMicrodocsVistos", "feedPodcastsEscuchados", "feedConciertosVistos", "feedCineEstado", "feedPodcastSeen"];
+    const REQUIRED_EXPORT_FIELDS = ["dayData", "weekOffset", "budgets", "nutria", "calMarks", "cookingOpts", "aseoOpts", "routines", "recurring", "lastRollover", "kidsHealth", "custody", "fadimanData", "nutriLog", "ejercicioLog", "ejercicioDecks", "customFoods", "foodOverrides", "customEjercicios", "nutriDecks", "pokeInventario", "pokeCarpetas", "pokeDarkCatalogo", "pokePriceCache", "feedState", "feedMicrodocsVistos", "feedPodcastsEscuchados", "feedConciertosVistos", "feedCineEstado", "feedPodcastSeen", "feedPodcastProgress"];
     function handleExport() {
       const fullPayload = buildExportPayload();
       const missing = REQUIRED_EXPORT_FIELDS.filter((k) => fullPayload[k] === void 0);
@@ -9264,6 +9291,12 @@ ${item.link}`);
       if (d.feedPodcastSeen != null) {
         try {
           localStorage.setItem("angst-podcast-seen-v1", JSON.stringify(d.feedPodcastSeen));
+        } catch (e) {
+        }
+      }
+      if (d.feedPodcastProgress != null) {
+        try {
+          localStorage.setItem("angst-podcast-progress-v1", JSON.stringify(d.feedPodcastProgress));
         } catch (e) {
         }
       }
@@ -9525,15 +9558,17 @@ ${item.link}`);
       }));
     })(), /* @__PURE__ */ React.createElement("div", { className: "sub-bar" }, /* @__PURE__ */ React.createElement("div", { className: "sub-text" }, CYNICAL_SUBTITLES[subIdx])), (() => {
       const metaPodLatest = podcastLatest?.tracked?.["Meta Pod"];
-      const hasNewMetaPod = metaPodLatest && podcastSeen["Meta Pod"] !== metaPodLatest.guid;
-      if (!hasNewMetaPod) return null;
-      return /* @__PURE__ */ React.createElement("div", { style: { background: "#ffcc00", padding: "5px 20px", display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, flexShrink: 0 } }, "\u{1F399}\uFE0F"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#111", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, "Nuevo Meta Pod: ", metaPodLatest.title), /* @__PURE__ */ React.createElement(
+      if (!metaPodLatest) return null;
+      const hasNewMetaPod = podcastSeen["Meta Pod"] !== metaPodLatest.guid;
+      const progress = podcastProgress[metaPodLatest.guid];
+      const playThis = () => {
+        setNowPlaying({ title: metaPodLatest.title, source: "Meta Pod", audioUrl: metaPodLatest.audioUrl, guid: metaPodLatest.guid });
+        markPodcastSeen("Meta Pod", metaPodLatest.guid);
+      };
+      if (hasNewMetaPod) return /* @__PURE__ */ React.createElement("div", { style: { background: "#ffcc00", padding: "5px 20px", display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, flexShrink: 0 } }, "\u{1F399}\uFE0F"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#111", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, "Nuevo Meta Pod: ", metaPodLatest.title), /* @__PURE__ */ React.createElement(
         "button",
         {
-          onClick: () => {
-            setNowPlaying({ title: metaPodLatest.title, source: "Meta Pod", audioUrl: metaPodLatest.audioUrl });
-            markPodcastSeen("Meta Pod", metaPodLatest.guid);
-          },
+          onClick: playThis,
           style: { background: "#111", color: "#fff", border: "none", borderRadius: 4, padding: "3px 10px", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", flexShrink: 0 }
         },
         "\u25B6 escuchar"
@@ -9545,6 +9580,11 @@ ${item.link}`);
         },
         "\xD7"
       ));
+      if (progress && !progress.done && !nowPlaying) {
+        const pct = progress.duration > 0 ? Math.round(progress.time / progress.duration * 100) : null;
+        return /* @__PURE__ */ React.createElement("div", { style: { background: "#222", padding: "4px 20px", display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: playThis, style: { background: "transparent", border: "none", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", gap: 6, padding: 0 } }, /* @__PURE__ */ React.createElement("span", null, "\u25B6"), /* @__PURE__ */ React.createElement("span", { style: { opacity: 0.7 } }, "reanudar Meta Pod", pct != null ? ` \u2014 ${pct}%` : "")));
+      }
+      return null;
     })(), page === 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 0, padding: "8px 16px 0", background: "#fff", borderBottom: "1px solid #eee" } }, [{ k: "semana", label: "\u{1F4C5} semana" }, { k: "rutinas", label: "\u{1F331} pr\xE1cticas" }].map(({ k, label }) => /* @__PURE__ */ React.createElement("button", { key: k, onClick: () => setSemanaTab(k), style: { fontFamily: "'Caveat',cursive", fontSize: 15, padding: "6px 16px", background: "transparent", border: "none", borderBottom: semanaTab === k ? "2px solid #111" : "2px solid transparent", color: semanaTab === k ? "#111" : "#aaa", cursor: "pointer", transition: "all 0.15s" } }, label))), semanaTab === "rutinas" && /* @__PURE__ */ React.createElement(RoutinesPage_default, { routines, onSave: saveRoutines, onAddToDay: (name, emoji) => {
       const tk = fmtFull(/* @__PURE__ */ new Date());
       const nid = Date.now();
@@ -9934,7 +9974,27 @@ ${item.link}`);
         apiKey: pokeApiKey,
         saveApiKey: savePokeApiKey
       }
-    ), page === 9 && /* @__PURE__ */ React.createElement(FeedPage_default, { onExit: () => setPage(0) }), /* @__PURE__ */ React.createElement("div", { className: "ftr" }, /* @__PURE__ */ React.createElement("div", { className: "ftr-copy" }, STOIC_PHRASES[footerIdx]), /* @__PURE__ */ React.createElement("button", { onClick: () => setSearchOpen(true), style: { background: "transparent", border: "none", cursor: "pointer", fontSize: 16, opacity: 0.4, padding: "0 4px", lineHeight: 1 }, title: "buscar" }, "\u{1F50D}"), /* @__PURE__ */ React.createElement("div", { className: "ftr-logo" }, "ANGST")), searchOpen && /* @__PURE__ */ React.createElement(SearchModal, { dayData, nutria, kidsHealth, routines, onClose: () => setSearchOpen(false) }), scheduleOpen && /* @__PURE__ */ React.createElement(ScheduleModal, { dateKey: scheduleOpen, day: dayData[scheduleOpen] || makeEmptyDay(), isWork: Array.isArray(calMarks[scheduleOpen]) ? calMarks[scheduleOpen].includes("work") : calMarks[scheduleOpen] === "work", isColegio: Array.isArray(calMarks[scheduleOpen]) ? calMarks[scheduleOpen].includes("colegio") : calMarks[scheduleOpen] === "colegio", onSave: (sched) => updateDay(scheduleOpen, { schedule: sched }), onClose: () => setScheduleOpen(null), onNavigate: (dk) => setScheduleOpen(dk) }), nowPlaying && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", bottom: 0, left: 0, right: 0, background: "#111", borderTop: "1px dashed #444", padding: "8px 14px", display: "flex", alignItems: "center", gap: 10, zIndex: 500 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16, flexShrink: 0 } }, "\u{1F3A7}"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 14, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nowPlaying.title), /* @__PURE__ */ React.createElement("audio", { controls: true, autoPlay: true, src: nowPlaying.audioUrl, style: { width: "100%", height: 28, colorScheme: "dark" } })), /* @__PURE__ */ React.createElement("button", { onClick: () => setNowPlaying(null), style: { background: "transparent", border: "none", color: "#888", fontSize: 18, cursor: "pointer", flexShrink: 0, lineHeight: 1 }, title: "cerrar reproductor" }, "\xD7"))));
+    ), page === 9 && /* @__PURE__ */ React.createElement(FeedPage_default, { onExit: () => setPage(0) }), /* @__PURE__ */ React.createElement("div", { className: "ftr" }, /* @__PURE__ */ React.createElement("div", { className: "ftr-copy" }, STOIC_PHRASES[footerIdx]), /* @__PURE__ */ React.createElement("button", { onClick: () => setSearchOpen(true), style: { background: "transparent", border: "none", cursor: "pointer", fontSize: 16, opacity: 0.4, padding: "0 4px", lineHeight: 1 }, title: "buscar" }, "\u{1F50D}"), /* @__PURE__ */ React.createElement("div", { className: "ftr-logo" }, "ANGST")), searchOpen && /* @__PURE__ */ React.createElement(SearchModal, { dayData, nutria, kidsHealth, routines, onClose: () => setSearchOpen(false) }), scheduleOpen && /* @__PURE__ */ React.createElement(ScheduleModal, { dateKey: scheduleOpen, day: dayData[scheduleOpen] || makeEmptyDay(), isWork: Array.isArray(calMarks[scheduleOpen]) ? calMarks[scheduleOpen].includes("work") : calMarks[scheduleOpen] === "work", isColegio: Array.isArray(calMarks[scheduleOpen]) ? calMarks[scheduleOpen].includes("colegio") : calMarks[scheduleOpen] === "colegio", onSave: (sched) => updateDay(scheduleOpen, { schedule: sched }), onClose: () => setScheduleOpen(null), onNavigate: (dk) => setScheduleOpen(dk) }), nowPlaying && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", bottom: 0, left: 0, right: 0, background: "#111", borderTop: "1px dashed #444", padding: "8px 14px", display: "flex", alignItems: "center", gap: 10, zIndex: 500 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16, flexShrink: 0 } }, "\u{1F3A7}"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 14, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, nowPlaying.title), /* @__PURE__ */ React.createElement(
+      "audio",
+      {
+        ref: podcastAudioRef,
+        controls: true,
+        autoPlay: true,
+        src: nowPlaying.audioUrl,
+        style: { width: "100%", height: 28, colorScheme: "dark" },
+        onLoadedMetadata: (e) => {
+          const p = podcastProgress[nowPlaying.guid];
+          if (p && !p.done && p.time > 0 && p.time < e.target.duration - 5) e.target.currentTime = p.time;
+        },
+        onTimeUpdate: (e) => {
+          const now = Date.now();
+          if (now - podcastLastSaveRef.current < 5e3) return;
+          podcastLastSaveRef.current = now;
+          savePodcastProgress(nowPlaying.guid, e.target.currentTime, e.target.duration || 0, false);
+        },
+        onEnded: () => savePodcastProgress(nowPlaying.guid, 0, 0, true)
+      }
+    )), /* @__PURE__ */ React.createElement("button", { onClick: closePodcastPlayer, style: { background: "transparent", border: "none", color: "#888", fontSize: 18, cursor: "pointer", flexShrink: 0, lineHeight: 1 }, title: "cerrar reproductor (guarda el avance)" }, "\xD7"))));
   }
   var App_default = AngstApp;
   return __toCommonJS(App_exports);
