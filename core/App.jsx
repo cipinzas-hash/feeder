@@ -158,6 +158,13 @@ function AngstApp() {
     }
     setNowPlaying(null);
   }
+  // Otros módulos (ej. la barra Noticias/Vitrina/Buzón en FeedPage, fixed
+  // bottom:0 propia) no reciben props de App.jsx -- avisamos vía variable
+  // CSS en :root en vez de acoplarlos, para que puedan correrse hacia
+  // arriba y no quedar tapados por este reproductor fijo.
+  useEffect(()=>{
+    document.documentElement.style.setProperty("--angst-podcast-h", nowPlaying ? "64px" : "0px");
+  }, [nowPlaying]);
 
 
   // Refs for async-safe access

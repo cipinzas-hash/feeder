@@ -37,13 +37,18 @@ function extractNutrient(foodNutrients, names, numbers) {
 }
 
 async function fetchPage(pageNumber) {
-  const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/list?api_key=${USDA_KEY}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ dataType: DATA_TYPES, pageSize: PAGE_SIZE, pageNumber }),
-  });
-  if (!res.ok) throw new Error(`USDA foods/list falló (página ${pageNumber}): ${res.status}`);
-  return res.json();
+  const params = new URLSearchParams();
+  params.set("api_key", USDA_KEY);
+  params.set("pageSize", String(PAGE_SIZE));
+  params.set("pageNumber", String(pageNumber));
+  for (const dt of DATA_TYPES) params.append("dataType", dt);
+  const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/list?${params.toString()}`);
+  const raw = await res.text();
+  if (!res.ok) throw new Error(`USDA foods/list falló (página ${pageNumber}): ${res.status} -- ${raw.slice(0, 300)}`);
+  let page;
+  try { page = JSON.parse(raw); } catch (e) { throw new Error(`USDA foods/list devolvió algo no-JSON (página ${pageNumber}): ${raw.slice(0, 300)}`); }
+  if (!Array.isArray(page)) throw new Error(`USDA foods/list devolvió forma inesperada (página ${pageNumber}, no es array): ${raw.slice(0, 300)}`);
+  return page;
 }
 
 async function main() {

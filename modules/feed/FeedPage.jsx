@@ -1442,7 +1442,7 @@
         color: active ? "#fff" : "#666", borderTop: active ? "2px solid #e91e8c" : "2px solid transparent",
       });
       return (
-        <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, display: "flex", background: "#111", zIndex: 40, paddingBottom: "env(safe-area-inset-bottom)" }}>
+        <div style={{ position: "fixed", left: 0, right: 0, bottom: "var(--angst-podcast-h, 0px)", display: "flex", background: "#111", zIndex: 40, paddingBottom: "env(safe-area-inset-bottom)" }}>
           <button onClick={() => onChange("noticias")} style={tabBtn(area === "noticias")}>📰 Noticias</button>
           <button onClick={() => onChange("vitrina")} style={tabBtn(area === "vitrina")}>🎬 Vitrina</button>
           <button onClick={onOpenBuzon} style={tabBtn(false)}>📌 {buzonCount}</button>

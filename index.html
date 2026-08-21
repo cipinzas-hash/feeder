@@ -7468,7 +7468,7 @@ ${item.link}`);
       color: active ? "#fff" : "#666",
       borderTop: active ? "2px solid #e91e8c" : "2px solid transparent"
     });
-    return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", left: 0, right: 0, bottom: 0, display: "flex", background: "#111", zIndex: 40, paddingBottom: "env(safe-area-inset-bottom)" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onChange("noticias"), style: tabBtn(area === "noticias") }, "\u{1F4F0} Noticias"), /* @__PURE__ */ React.createElement("button", { onClick: () => onChange("vitrina"), style: tabBtn(area === "vitrina") }, "\u{1F3AC} Vitrina"), /* @__PURE__ */ React.createElement("button", { onClick: onOpenBuzon, style: tabBtn(false) }, "\u{1F4CC} ", buzonCount));
+    return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", left: 0, right: 0, bottom: "var(--angst-podcast-h, 0px)", display: "flex", background: "#111", zIndex: 40, paddingBottom: "env(safe-area-inset-bottom)" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onChange("noticias"), style: tabBtn(area === "noticias") }, "\u{1F4F0} Noticias"), /* @__PURE__ */ React.createElement("button", { onClick: () => onChange("vitrina"), style: tabBtn(area === "vitrina") }, "\u{1F3AC} Vitrina"), /* @__PURE__ */ React.createElement("button", { onClick: onOpenBuzon, style: tabBtn(false) }, "\u{1F4CC} ", buzonCount));
   }
   var MICRODOCS_VISTOS_KEY = "angst-feed-microdocs-vistos-v1";
   function loadMicrodocsVistos() {
@@ -8279,6 +8279,9 @@ ${item.link}`);
       }
       setNowPlaying(null);
     }
+    useEffect8(() => {
+      document.documentElement.style.setProperty("--angst-podcast-h", nowPlaying ? "64px" : "0px");
+    }, [nowPlaying]);
     const dayDataRef = useRef8({});
     const weekOffsetRef = useRef8(0);
     const budgetRef = useRef8({});
