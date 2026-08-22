@@ -625,6 +625,20 @@ function entrantCharacter(games, entrantId) {
   return entries[0][0];
 }
 
+// Distinto de entrantCharacter (que devuelve solo el personaje MAYORITARIO
+// del set): esto chequea si el personaje aparece en CUALQUIER juego del set,
+// aunque haya sido un solo game de contrapick y no el main del set. Necesario
+// para docSetsFrom -- "todos los sets que se jugaron con Doc" incluye un
+// solo game de contrapick, no solo cuando Doc fue el personaje principal.
+function entrantUsedCharacterMatching(games, entrantId, re) {
+  for (const g of games || []) {
+    for (const sel of g.selections || []) {
+      if (sel.entrant?.id === entrantId && re.test(sel.character?.name || "")) return true;
+    }
+  }
+  return false;
+}
+
 function detectUpsets(sets) {
   const out = [];
   for (const set of sets) {
@@ -1263,14 +1277,16 @@ function docSetsFrom(sets, max = 40) {
     if (!a || !b) continue;
     const winner = a.id === set.winnerId ? a : b;
     const loser = a.id === set.winnerId ? b : a;
-    const pjGanador = entrantCharacter(set.games, winner.id);
-    const pjPerdedor = entrantCharacter(set.games, loser.id);
-    if (!DOC_CHARACTER_RE.test(pjGanador || "") && !DOC_CHARACTER_RE.test(pjPerdedor || "")) continue;
+    // Cualquier juego del set, no solo el personaje mayoritario -- un solo
+    // game de contrapick con Doc cuenta igual que si fue el main del set.
+    const docJugado = entrantUsedCharacterMatching(set.games, winner.id, DOC_CHARACTER_RE)
+      || entrantUsedCharacterMatching(set.games, loser.id, DOC_CHARACTER_RE);
+    if (!docJugado) continue;
     out.push({
       setId: set.id,
       ronda: set.fullRoundText,
-      ganador: { nombre: winner.name, seed: winner.initialSeedNum ?? null, pj: pjGanador, foto: entrantFace(winner) },
-      perdedor: { nombre: loser.name, seed: loser.initialSeedNum ?? null, pj: pjPerdedor, foto: entrantFace(loser) },
+      ganador: { nombre: winner.name, seed: winner.initialSeedNum ?? null, pj: entrantCharacter(set.games, winner.id), foto: entrantFace(winner) },
+      perdedor: { nombre: loser.name, seed: loser.initialSeedNum ?? null, pj: entrantCharacter(set.games, loser.id), foto: entrantFace(loser) },
     });
   }
   return out;
