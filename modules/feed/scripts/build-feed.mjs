@@ -1523,6 +1523,14 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
         try {
           const phasesForArchive = await fetchEventPhases(eventInfo.id);
           const top8Phase = findTop8Phase(phasesForArchive);
+          if (!top8Phase) {
+            // No adivinar por qué -- loguear los nombres de fase reales que
+            // sí llegaron, para poder ajustar TOP8_PHASE_NAME_RE con el
+            // nombre correcto en vez de tantear a ciegas (pasó con
+            // Supernova: 0 candidatos, sin ningún rastro de si la fase no
+            // existía o solo se llamaba distinto).
+            meleeDebug.push({ slug, tournamentName, top8PhaseNotFound: true, phasesDisponibles: phasesForArchive.map(p => p.name) });
+          }
           const top8Matches = buildTop8Ordered(sets, top8Phase?.id ?? null);
           const upsetMatches = topUpsets(tournamentUpsets, 999); // dedupe por par, sin cap de cantidad (el cap de 5 es solo para el resumen de texto)
           const docMatches = docSetsFrom(sets);
