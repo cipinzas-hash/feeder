@@ -742,7 +742,15 @@ function isoDurationToSeconds(iso) {
 // AMBOS nombres en el título, que es la señal más fuerte posible de que el
 // clip es justo de ese matchup. Sin timestamp que buscar después: si
 // encontramos esto, el video ENTERO es el partido.
-const CLIP_TITLE_PENALTY = /highlight|recap|hype|trailer|announcement|top ?8|top ?16|day ?\d|full (bracket|stream|vod)/i;
+//
+// OJO: "top 8"/"top 16" NO está en esta lista aunque suene a preview/hype --
+// varias producciones (VGBootCamp confirmado) titulan así los clips REALES
+// de sets individuales de esa etapa ("CEO 2026 TOP 8 - Hungrybox Vs. Axe
+// Smash Melee - SSBM"), así que excluirlo penalizaba justo lo que
+// buscábamos. Si en el futuro esto empieza a matchear videos de preview con
+// nombres de jugadores de casualidad, hay que resolverlo por duración
+// (los preview son cortos) antes que reintroducir esto acá.
+const CLIP_TITLE_PENALTY = /highlight|recap|hype|trailer|announcement|day ?\d|full (bracket|stream|vod)/i;
 async function pickBestMatchClip(items, nombreA, nombreB) {
   if (!items.length) return null;
   const ids = items.map(it => it.id.videoId).join(",");
@@ -768,6 +776,20 @@ async function pickBestMatchClip(items, nombreA, nombreB) {
   return candidatos[0] || null;
 }
 
+// Canales de producción confirmados por torneo -- restringe la búsqueda de
+// YouTube a ese canal en vez de texto libre por todo YouTube. Necesario
+// porque el nombre de varios majors colisiona con vocabulario genérico de
+// altísimo volumen (ver caso "CEO": búsqueda de texto libre devolvía dramas
+// românticos/de negocios con "CEO" en el título, nunca los sets reales del
+// torneo, aunque SÍ existen subidos individualmente por set en YouTube).
+// Solo mapear acá lo que esté confirmado -- si un torneo no está en este
+// mapa, se usa búsqueda de texto libre sin restricción (comportamiento
+// anterior), no asumir que todos comparten productora.
+const KNOWN_PRODUCTION_CHANNEL = {
+  "CEO 2026": "UCj1J3QuIftjOq9iv_rr7Egw", // VGBootCamp -- confirmado (transmite CEO)
+  "Supernova 2026": "UCj1J3QuIftjOq9iv_rr7Egw", // VGBootCamp -- organizador directo de Supernova
+};
+
 // Búsqueda de VOD por partido individual: en vez de un stream largo +
 // timestamp adivinado dentro de la descripción, busca directamente el clip
 // del set (muchas producciones, incluida Beyond the Summit, suben cada set
@@ -775,15 +797,32 @@ async function pickBestMatchClip(items, nombreA, nombreB) {
 // alto que la versión por etapa (una búsqueda por partido en vez de una por
 // etapa) -- si en la práctica se acerca al límite diario, hay que volver a
 // agrupar o limitar a qué partidos se les busca clip individual.
+//
+// Corte por cuota agotada: una vez que la API devuelve "quota exceeded" una
+// vez en la corrida, TODAS las búsquedas restantes van a fallar igual (la
+// cuota diaria no se recupera a mitad de corrida) -- youtubeQuotaExhausted
+// corta el resto sin seguir gastando tiempo en llamadas que ya sabemos que
+// van a fallar.
+let youtubeQuotaExhausted = false;
 async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre) {
   if (!YOUTUBE_API_KEY) return null;
+  if (youtubeQuotaExhausted) return null;
+  const channelId = KNOWN_PRODUCTION_CHANNEL[tournamentName];
   const q = encodeURIComponent(`${ganadorNombre} vs ${perdedorNombre} ${tournamentName}`);
   try {
-    const searchRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=5&key=${YOUTUBE_API_KEY}`
-    );
-    const searchData = await searchRes.json();
-    if (searchData?.error) throw new Error(`YouTube API: ${searchData.error.message || JSON.stringify(searchData.error)}`);
+    let searchData = await runClipSearch(q, channelId);
+    // Si la búsqueda restringida al canal no devolvió nada, probar sin
+    // restricción antes de rendirse -- puede que el video exista pero esté
+    // subido a un canal secundario (ej. "VGBootCamp Clips" en vez del
+    // principal) que no está en el mapa.
+    if (channelId && (!searchData?.items || !searchData.items.length)) {
+      searchData = await runClipSearch(q, null);
+    }
+    if (searchData?.error) {
+      const msg = searchData.error.message || JSON.stringify(searchData.error);
+      if (/quota/i.test(msg)) youtubeQuotaExhausted = true;
+      throw new Error(`YouTube API: ${msg}`);
+    }
     const items = searchData?.items || [];
     if (!items.length) {
       if (vodClipDebug.length < 20) vodClipDebug.push({ q: decodeURIComponent(q), itemsFound: 0 });
@@ -807,6 +846,14 @@ async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre) {
     // agotada simplemente falla rápido cada vez, no es costoso.
     return null;
   }
+}
+
+async function runClipSearch(q, channelId) {
+  const channelParam = channelId ? `&channelId=${channelId}` : "";
+  const searchRes = await fetch(
+    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=5${channelParam}&key=${YOUTUBE_API_KEY}`
+  );
+  return searchRes.json();
 }
 
 // Arma el item de "se viene tal torneo" para un evento que todavía no termina.
