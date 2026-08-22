@@ -790,6 +790,32 @@ const KNOWN_PRODUCTION_CHANNEL = {
   "Supernova 2026": "UCj1J3QuIftjOq9iv_rr7Egw", // VGBootCamp -- organizador directo de Supernova
 };
 
+// Mapea el fullRoundText de start.gg (ej. "Grand Final", "Winners
+// Quarter-Final") a la etiqueta que VGBootCamp usa como prefijo real del
+// título del video (confirmado por captura de pantalla del usuario: "GRAND
+// FINALS DE CEO 2026 - Hungrybox (Jigglypuff) Vs. Cody Schwab (Fox)...").
+// Agregar esta etiqueta a la query de búsqueda es mucho más específico que
+// solo nombres de jugadores + nombre del torneo -- "TOP 8"/"GRAND FINALS"
+// junto con los nombres reduce drásticamente el ruido de resultados
+// genéricos con "CEO" en el título.
+//
+// Solo devuelve etiqueta para rondas que son genuinamente parte de la fase
+// Top 8 (finales y quarter/semi de winners/losers) -- para cualquier otra
+// ronda (Winners/Losers Round N temprano, pools) devuelve null, porque no
+// hay evidencia de que esas lleven alguna etiqueta especial en el título
+// (el primer ejemplo real que vimos, "CEO 2026 - JChu Vs. Cappuccino...",
+// no tenía ninguna). Inventar una acá sería peor que no ponerla: rompería
+// la búsqueda en vez de ayudarla.
+const TOP8_ROUND_RE = /grand final|winners final|losers final|winners semi.?final|losers semi.?final|winners quarter.?final|losers quarter.?final/i;
+function productionRoundLabel(fullRoundText) {
+  if (!fullRoundText || !TOP8_ROUND_RE.test(fullRoundText)) return null;
+  const r = fullRoundText.toLowerCase();
+  if (r.includes("grand final")) return "GRAND FINALS";
+  if (r.includes("winners final")) return "WINNERS FINALS";
+  if (r.includes("losers final")) return "LOSERS FINALS";
+  return "TOP 8"; // winners/losers quarter-final o semi-final
+}
+
 // Búsqueda de VOD por partido individual: en vez de un stream largo +
 // timestamp adivinado dentro de la descripción, busca directamente el clip
 // del set (muchas producciones, incluida Beyond the Summit, suben cada set
@@ -804,11 +830,20 @@ const KNOWN_PRODUCTION_CHANNEL = {
 // corta el resto sin seguir gastando tiempo en llamadas que ya sabemos que
 // van a fallar.
 let youtubeQuotaExhausted = false;
-async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre) {
+async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roundLabel) {
   if (!YOUTUBE_API_KEY) return null;
   if (youtubeQuotaExhausted) return null;
   const channelId = KNOWN_PRODUCTION_CHANNEL[tournamentName];
-  const q = encodeURIComponent(`${ganadorNombre} vs ${perdedorNombre} ${tournamentName}`);
+  // Con etiqueta de ronda: imita el orden real del título de VGBootCamp
+  // (TORNEO ETIQUETA - Ganador vs Perdedor), mucho más específico que solo
+  // nombres + torneo. Sin ronda conocida (upsets fuera de Top 8, docClips):
+  // se mantiene la forma anterior, sin inventar una etiqueta que no sabemos
+  // si existe para esos sets.
+  const q = encodeURIComponent(
+    roundLabel
+      ? `${tournamentName} ${roundLabel} ${ganadorNombre} vs ${perdedorNombre}`
+      : `${ganadorNombre} vs ${perdedorNombre} ${tournamentName}`
+  );
   try {
     let searchData = await runClipSearch(q, channelId);
     // Si la búsqueda restringida al canal no devolvió nada, probar sin
@@ -1455,7 +1490,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
         // ACTIVE, sin VOD todavía). Si ahora el torneo está COMPLETED y
         // sigue sin VOD, se reintenta la búsqueda; si no, se deja tal cual.
         if (state === "COMPLETED" && !already.videoId) {
-          const vod = (await findMatchClip(tournamentName, u.ganador.nombre, u.perdedor.nombre)) || { videoId: null, startSeconds: 0 };
+          const vod = (await findMatchClip(tournamentName, u.ganador.nombre, u.perdedor.nombre, productionRoundLabel(u.ronda))) || { videoId: null, startSeconds: 0 };
           if (vod.videoId) upsetItems.push({ ...already, videoId: vod.videoId, startSeconds: vod.startSeconds });
         }
         continue;
@@ -1464,7 +1499,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
       // Durante ACTIVE no se busca VOD — el video de top 8 normalmente sube
       // recién terminado el torneo, así que sería gastar cuota de YouTube
       // buscando algo que casi seguro no existe todavía.
-      const vod = state === "COMPLETED" ? ((await findMatchClip(tournamentName, u.ganador.nombre, u.perdedor.nombre)) || { videoId: null, startSeconds: 0 }) : { videoId: null, startSeconds: 0 };
+      const vod = state === "COMPLETED" ? ((await findMatchClip(tournamentName, u.ganador.nombre, u.perdedor.nombre, productionRoundLabel(u.ronda))) || { videoId: null, startSeconds: 0 }) : { videoId: null, startSeconds: 0 };
       const pjGanador = u.ganador.pj ? ` (${u.ganador.pj})` : "";
       const pjPerdedor = u.perdedor.pj ? ` (${u.perdedor.pj})` : "";
       // Etiqueta: seed si el torneo lo tenía, si no SSBMRank, si no nada --
@@ -1548,7 +1583,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
         );
         const finalistNames = [...standings].sort((a, b) => a.placement - b.placement).slice(0, 2).map(s => s.entrant.name);
         const vod = finalistNames.length === 2
-          ? (await findMatchClip(tournamentName, finalistNames[0], finalistNames[1])) || { videoId: null, startSeconds: 0 }
+          ? (await findMatchClip(tournamentName, finalistNames[0], finalistNames[1], "GRAND FINALS")) || { videoId: null, startSeconds: 0 }
           : { videoId: null, startSeconds: 0 };
 
         // Tres secciones, cada una con clip cortado individual (findMatchClip,
@@ -1558,10 +1593,10 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
         // real de Top 8 cae en top8Clips Y en upsetClips) y no tiene sentido
         // pagar la búsqueda de YouTube dos veces por lo mismo.
         const clipCache = new Map(); // "ganador|perdedor" -> clip | null
-        async function clipCached(ganadorNombre, perdedorNombre) {
+        async function clipCached(ganadorNombre, perdedorNombre, roundLabel) {
           const key = `${ganadorNombre}|${perdedorNombre}`;
           if (clipCache.has(key)) return clipCache.get(key);
-          const clip = await findMatchClip(tournamentName, ganadorNombre, perdedorNombre);
+          const clip = await findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roundLabel);
           clipCache.set(key, clip);
           return clip;
         }
@@ -1593,7 +1628,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
           let presupuestoAgotado = false;
           for (const m of top8Matches) {
             if (Date.now() > meleeDeadline) { presupuestoAgotado = true; break; }
-            const clip = await clipCached(m.ganador.nombre, m.perdedor.nombre);
+            const clip = await clipCached(m.ganador.nombre, m.perdedor.nombre, productionRoundLabel(m.ronda));
             if (!clip) continue;
             top8Clips.push({ guid: `melee-top8clip-${slug}-${m.setId}`, ronda: m.ronda, orden: m.orden, ganador: m.ganador, perdedor: m.perdedor, videoId: clip.videoId, startSeconds: 0 });
           }
