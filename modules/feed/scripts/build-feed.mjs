@@ -844,6 +844,19 @@ function productionRoundLabel(fullRoundText) {
 // corta el resto sin seguir gastando tiempo en llamadas que ya sabemos que
 // van a fallar.
 let youtubeQuotaExhausted = false;
+// start.gg permite "Equipo/Sponsor | Tag" como nombre de entrant (ej.
+// "BrockoSpotify | sethibuns", "SBG | CharCharRealSmooth"). Las producciones
+// titulan los videos solo con el tag del jugador, sin el equipo -- y de
+// paso, meter el sponsor en la query de YouTube ensucia la búsqueda con un
+// término extra que no aparece en el título real. Se queda con lo que hay
+// después de la ÚLTIMA barra vertical (por si hubiera más de una, poco
+// común pero posible), o el nombre completo si no tiene barra.
+function stripSponsorTag(name) {
+  if (!name) return name;
+  const idx = name.lastIndexOf("|");
+  return idx === -1 ? name.trim() : name.slice(idx + 1).trim();
+}
+
 async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roundLabel) {
   if (!YOUTUBE_API_KEY) return null;
   if (youtubeQuotaExhausted) return null;
@@ -853,10 +866,12 @@ async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roun
   // nombres + torneo. Sin ronda conocida (upsets fuera de Top 8, docClips):
   // se mantiene la forma anterior, sin inventar una etiqueta que no sabemos
   // si existe para esos sets.
+  const ganadorLimpio = stripSponsorTag(ganadorNombre);
+  const perdedorLimpio = stripSponsorTag(perdedorNombre);
   const q = encodeURIComponent(
     roundLabel
-      ? `${tournamentName} ${roundLabel} ${ganadorNombre} vs ${perdedorNombre}`
-      : `${ganadorNombre} vs ${perdedorNombre} ${tournamentName}`
+      ? `${tournamentName} ${roundLabel} ${ganadorLimpio} vs ${perdedorLimpio}`
+      : `${ganadorLimpio} vs ${perdedorLimpio} ${tournamentName}`
   );
   try {
     let searchData = await runClipSearch(q, channelId);
@@ -1654,11 +1669,22 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
             if (!clip) continue;
             upsetClips.push({ guid: `melee-upsetclip-${slug}-${m.guid}`, ronda: m.ronda, ganador: m.ganador, perdedor: m.perdedor, videoId: clip.videoId, startSeconds: 0 });
           }
-          if (!presupuestoAgotado) for (const m of docMatches) {
-            if (Date.now() > meleeDeadline) { presupuestoAgotado = true; break; }
-            const clip = await clipCached(m.ganador.nombre, m.perdedor.nombre);
-            if (!clip) continue;
-            docClips.push({ guid: `melee-docclip-${slug}-${m.setId}`, ronda: m.ronda, ganador: m.ganador, perdedor: m.perdedor, videoId: clip.videoId, startSeconds: 0 });
+          // A diferencia de top8Clips/upsetClips (que solo listan sets con
+          // VOD encontrado, pensados como destacados curados para el feed
+          // público), acá se quiere el listado COMPLETO de sets jugados con
+          // Doc para repaso personal -- con o sin video encontrado. Por eso
+          // este loop NO se saltea aunque presupuestoAgotado ya sea true por
+          // los loops anteriores: la LISTA siempre se arma completa, solo
+          // que sin intentar buscar clip (videoId null) para lo que ya no
+          // entra en el presupuesto de tiempo.
+          for (const m of docMatches) {
+            let clip = null;
+            if (!presupuestoAgotado && Date.now() <= meleeDeadline) {
+              clip = await clipCached(m.ganador.nombre, m.perdedor.nombre);
+            } else {
+              presupuestoAgotado = true;
+            }
+            docClips.push({ guid: `melee-docclip-${slug}-${m.setId}`, ronda: m.ronda, ganador: m.ganador, perdedor: m.perdedor, videoId: clip?.videoId ?? null, startSeconds: 0 });
           }
           if (presupuestoAgotado) console.warn(`⚠ Melee · presupuesto agotado buscando clips de ${tournamentName}, se sigue con lo encontrado hasta acá`);
           meleeDebug.push({

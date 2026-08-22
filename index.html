@@ -7702,6 +7702,15 @@ ${item.link}`);
   function MeleeFeed({ items }) {
     const [openTournament, setOpenTournament] = useState7(null);
     const [vodVistos, setVodVistos] = useState7(() => loadMeleeVodVistos());
+    const [collapsedSections, setCollapsedSections] = useState7(() => /* @__PURE__ */ new Set());
+    function toggleSection(key) {
+      setCollapsedSections((prev) => {
+        const next = new Set(prev);
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+        return next;
+      });
+    }
     function toggleVodVisto(guid) {
       setVodVistos((prev) => {
         const next = new Set(prev);
@@ -7755,35 +7764,49 @@ ${item.link}`);
           { key: "upsets", titulo: "UPSETS (SEED TOP 32)", clips: archivo.upsetClips || [] },
           { key: "doc", titulo: "SETS DE DR. MARIO", clips: archivo.docClips || [] }
         ];
-        return secciones.map((sec) => sec.clips.length > 0 && /* @__PURE__ */ React.createElement("div", { key: sec.key, style: { marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 8 } }, sec.titulo), sec.clips.map((clip, i) => {
-          const visto = vodVistos.has(clip.guid);
-          return /* @__PURE__ */ React.createElement("div", { key: clip.guid, style: {
-            padding: "16px 0",
-            borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none",
-            opacity: visto ? 0.55 : 1
-          } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement(MeleeMatchup, { item: clip }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#777", marginTop: 4 } }, clip.ronda)), /* @__PURE__ */ React.createElement("button", { onClick: () => toggleVodVisto(clip.guid), style: {
-            flexShrink: 0,
-            fontFamily: "'DM Sans',sans-serif",
-            fontSize: 10,
-            fontWeight: 700,
-            border: "1px solid " + (visto ? "#333" : "#ff6600"),
-            borderRadius: 14,
-            padding: "4px 10px",
+        return secciones.map((sec) => sec.clips.length > 0 && (() => {
+          const sectionKey = `${nombre}-${sec.key}`;
+          const colapsada = collapsedSections.has(sectionKey);
+          return /* @__PURE__ */ React.createElement("div", { key: sec.key, style: { marginBottom: 16, paddingBottom: colapsada ? 0 : 16, borderBottom: "1px solid rgba(255,255,255,0.08)" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => toggleSection(sectionKey), style: {
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            width: "100%",
             background: "transparent",
-            color: visto ? "#666" : "#ff6600",
+            border: "none",
+            padding: 0,
+            marginBottom: colapsada ? 0 : 8,
             cursor: "pointer"
-          } }, visto ? "\u2713 visto" : "marcar visto")), clip.videoId && /* @__PURE__ */ React.createElement("div", { style: { position: "relative", paddingTop: "56.25%", borderRadius: 10, overflow: "hidden", background: "#000" } }, /* @__PURE__ */ React.createElement(
-            "iframe",
-            {
-              src: `https://www.youtube-nocookie.com/embed/${clip.videoId}${clip.startSeconds ? `?start=${clip.startSeconds}` : ""}`,
-              title: `${clip.ganador?.nombre} vs ${clip.perdedor?.nombre}`,
-              style: { position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" },
-              allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
-              referrerPolicy: "strict-origin-when-cross-origin",
-              allowFullScreen: true
-            }
-          )));
-        })));
+          } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ff6600", transform: colapsada ? "rotate(-90deg)" : "none", transition: "transform 0.15s", display: "inline-block" } }, "\u25BC"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600" } }, sec.titulo), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#777" } }, "(", sec.clips.length, ")")), !colapsada && sec.clips.map((clip, i) => {
+            const visto = vodVistos.has(clip.guid);
+            return /* @__PURE__ */ React.createElement("div", { key: clip.guid, style: {
+              padding: "16px 0",
+              borderTop: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none",
+              opacity: visto ? 0.55 : 1
+            } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement(MeleeMatchup, { item: clip }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#777", marginTop: 4 } }, clip.ronda)), /* @__PURE__ */ React.createElement("button", { onClick: () => toggleVodVisto(clip.guid), style: {
+              flexShrink: 0,
+              fontFamily: "'DM Sans',sans-serif",
+              fontSize: 10,
+              fontWeight: 700,
+              border: "1px solid " + (visto ? "#333" : "#ff6600"),
+              borderRadius: 14,
+              padding: "4px 10px",
+              background: "transparent",
+              color: visto ? "#666" : "#ff6600",
+              cursor: "pointer"
+            } }, visto ? "\u2713 visto" : "marcar visto")), clip.videoId && /* @__PURE__ */ React.createElement("div", { style: { position: "relative", paddingTop: "56.25%", borderRadius: 10, overflow: "hidden", background: "#000" } }, /* @__PURE__ */ React.createElement(
+              "iframe",
+              {
+                src: `https://www.youtube-nocookie.com/embed/${clip.videoId}${clip.startSeconds ? `?start=${clip.startSeconds}` : ""}`,
+                title: `${clip.ganador?.nombre} vs ${clip.perdedor?.nombre}`,
+                style: { position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" },
+                allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+                referrerPolicy: "strict-origin-when-cross-origin",
+                allowFullScreen: true
+              }
+            )));
+          }));
+        })());
       })(), top16 && !archivo && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 8 } }, "TOP 16"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 10 } }, (top16.jugadores || []).map((j) => /* @__PURE__ */ React.createElement("div", { key: j.nombre, style: { display: "flex", flexDirection: "column", alignItems: "center", width: 60 } }, /* @__PURE__ */ React.createElement(PlayerAvatar, { src: j.foto, size: 44 }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ccc", textAlign: "center", marginTop: 4 } }, j.nombre))))), top8 && !archivo && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 8 } }, "TOP 8"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 10 } }, (top8.jugadores || []).map((j) => /* @__PURE__ */ React.createElement("div", { key: j.nombre, style: { display: "flex", flexDirection: "column", alignItems: "center", width: 60 } }, /* @__PURE__ */ React.createElement(PlayerAvatar, { src: j.foto, size: 44 }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ccc", textAlign: "center", marginTop: 4 } }, j.nombre))))), seedReport && !archivo && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 6 } }, "REPORTE DE SEEDS \xB7 ", seedReport.summary), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px" } }, seedReport.jugadores.map((j) => /* @__PURE__ */ React.createElement("div", { key: j.seed, style: {
         display: "flex",
         alignItems: "center",

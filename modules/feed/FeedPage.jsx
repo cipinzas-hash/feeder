@@ -1788,6 +1788,14 @@
     function MeleeFeed({ items }) {
       const [openTournament, setOpenTournament] = useState(null);
       const [vodVistos, setVodVistos] = useState(() => loadMeleeVodVistos());
+      const [collapsedSections, setCollapsedSections] = useState(() => new Set());
+      function toggleSection(key) {
+        setCollapsedSections(prev => {
+          const next = new Set(prev);
+          if (next.has(key)) next.delete(key); else next.add(key);
+          return next;
+        });
+      }
       function toggleVodVisto(guid) {
         setVodVistos(prev => {
           const next = new Set(prev);
@@ -1910,10 +1918,20 @@
                         { key: "upsets", titulo: "UPSETS (SEED TOP 32)", clips: archivo.upsetClips || [] },
                         { key: "doc", titulo: "SETS DE DR. MARIO", clips: archivo.docClips || [] },
                       ];
-                      return secciones.map(sec => sec.clips.length > 0 && (
-                        <div key={sec.key} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                          <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600", marginBottom: 8 }}>{sec.titulo}</div>
-                          {sec.clips.map((clip, i) => {
+                      return secciones.map(sec => sec.clips.length > 0 && (() => {
+                        const sectionKey = `${nombre}-${sec.key}`;
+                        const colapsada = collapsedSections.has(sectionKey);
+                        return (
+                        <div key={sec.key} style={{ marginBottom: 16, paddingBottom: colapsada ? 0 : 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                          <button onClick={() => toggleSection(sectionKey)} style={{
+                            display: "flex", alignItems: "center", gap: 6, width: "100%",
+                            background: "transparent", border: "none", padding: 0, marginBottom: colapsada ? 0 : 8, cursor: "pointer",
+                          }}>
+                            <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ff6600", transform: colapsada ? "rotate(-90deg)" : "none", transition: "transform 0.15s", display: "inline-block" }}>▼</span>
+                            <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600" }}>{sec.titulo}</span>
+                            <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#777" }}>({sec.clips.length})</span>
+                          </button>
+                          {!colapsada && sec.clips.map((clip, i) => {
                             const visto = vodVistos.has(clip.guid);
                             return (
                               <div key={clip.guid} style={{
@@ -1952,7 +1970,8 @@
                             );
                           })}
                         </div>
-                      ));
+                        );
+                      })());
                     })()}
                     {top16 && !archivo && (
                       <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
