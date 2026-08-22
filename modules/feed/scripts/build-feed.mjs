@@ -1695,9 +1695,19 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
             docClips.push({ guid: `melee-docclip-${slug}-${m.setId}`, ronda: m.ronda, ganador: m.ganador, perdedor: m.perdedor, videoId: clip?.videoId ?? null, startSeconds: 0 });
           }
           if (presupuestoAgotado) console.warn(`⚠ Melee · presupuesto agotado buscando clips de ${tournamentName}, se sigue con lo encontrado hasta acá`);
-          if (presupuestoAgotado || youtubeQuotaExhausted) clipSearchIncompleta = true;
+          // Criterio de "completo" = Top 8 entero con video encontrado, no
+          // presupuesto/cuota en general. Motivo (explicado por el usuario):
+          // los clips de Top 8 son los ÚLTIMOS en subir, con retraso real
+          // después de terminado el torneo -- vale la pena seguir
+          // reintentando hasta encontrarlos todos. Upsets/doc en cambio: si
+          // el streamer no subió ese set individual, por lo general ya no
+          // va a aparecer después -- reintentar esas dos secciones
+          // indefinidamente no cambia nada, así que NO bloquean marcar el
+          // torneo como completado.
+          const top8Completo = !!top8Phase && top8Matches.length > 0 && top8Clips.length === top8Matches.length;
+          if (!top8Completo) clipSearchIncompleta = true;
           meleeDebug.push({
-            slug, tournamentName, presupuestoAgotado, reintentaraProximaCorrida: clipSearchIncompleta,
+            slug, tournamentName, presupuestoAgotado, top8Completo, reintentaraProximaCorrida: clipSearchIncompleta,
             top8ClipsEncontrados: top8Clips.length, top8Candidatos: top8Matches.length,
             upsetClipsEncontrados: upsetClips.length, upsetCandidatos: upsetMatches.length,
             docClipsEncontrados: docClips.length, docCandidatos: docMatches.length,
