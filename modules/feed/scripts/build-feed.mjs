@@ -1606,6 +1606,14 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
     // Fase 3b: archivo permanente — se arma una sola vez, justo en la corrida
     // donde el torneo pasa a COMPLETED por primera vez (antes de que
     // processedEventIds lo excluya de futuros escaneos).
+    // Si la búsqueda de clips queda a medias (presupuesto de tiempo o cuota
+    // de YouTube agotada a mitad de camino) o el armado del archivo falla
+    // por completo, este torneo NO se marca como procesado -- así se
+    // reintenta completo en la próxima corrida en vez de congelar para
+    // siempre los videoId:null que quedaron sin buscar. Ver dedupe de
+    // allArchiveItems más abajo: al reintentar, el archiveItem parcial
+    // anterior se descarta a favor del nuevo, no se acumulan duplicados.
+    let clipSearchIncompleta = false;
     if (state === "COMPLETED" && !previousProcessedEventIds.includes(eventInfo.id)) {
       try {
         const standings = await fetchFinalStandings(eventInfo.id);
@@ -1687,8 +1695,9 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
             docClips.push({ guid: `melee-docclip-${slug}-${m.setId}`, ronda: m.ronda, ganador: m.ganador, perdedor: m.perdedor, videoId: clip?.videoId ?? null, startSeconds: 0 });
           }
           if (presupuestoAgotado) console.warn(`⚠ Melee · presupuesto agotado buscando clips de ${tournamentName}, se sigue con lo encontrado hasta acá`);
+          if (presupuestoAgotado || youtubeQuotaExhausted) clipSearchIncompleta = true;
           meleeDebug.push({
-            slug, tournamentName, presupuestoAgotado,
+            slug, tournamentName, presupuestoAgotado, reintentaraProximaCorrida: clipSearchIncompleta,
             top8ClipsEncontrados: top8Clips.length, top8Candidatos: top8Matches.length,
             upsetClipsEncontrados: upsetClips.length, upsetCandidatos: upsetMatches.length,
             docClipsEncontrados: docClips.length, docCandidatos: docMatches.length,
@@ -1696,6 +1705,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
         } catch (e) {
           console.error(`✗ Melee · VOD permanente (${tournamentName}): ${e.message}`);
           meleeDebug.push({ slug, tournamentName, vodError: e.message });
+          clipSearchIncompleta = true; // no se pudo ni empezar a buscar -- reintentar, no congelar sin clips
         }
 
         // Narrativa con contexto real (Claude API + búsqueda web) -- best
@@ -1714,10 +1724,11 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
         if (archiveItem) archiveItems.push(archiveItem);
       } catch (e) {
         console.error(`✗ Melee · archivo final (${tournamentName}): ${e.message}`);
+        clipSearchIncompleta = true; // el archivo ni se terminó de armar -- reintentar, no marcar como cerrado
       }
     }
 
-    if (state === "COMPLETED") processedEventIds.add(eventInfo.id);
+    if (state === "COMPLETED" && !clipSearchIncompleta) processedEventIds.add(eventInfo.id);
 
     // Se sigue rastreando mientras no quede completamente cerrado -- una vez
     // en processedEventIds (COMPLETED + archivo ya construido) ya no hace
@@ -1892,7 +1903,14 @@ async function main() {
   // no duplicarlos.
   const newUpsetGuids = new Set(newUpsetItems.map(i => i.guid));
   const carriedUpsetItems = previousUpsetItemsOnly.filter(i => !newUpsetGuids.has(i.guid));
-  const allArchiveItems = [...previousArchiveItems, ...newArchiveItems]; // permanente, sin filtro de cutoff
+  // Mismo patrón que carriedUpsetItems arriba: si un torneo se reintenta
+  // (clipSearchIncompleta la corrida anterior -- ver processedEventIds.add
+  // más arriba), newArchiveItems trae una versión nueva con el MISMO guid
+  // que la parcial que ya estaba en previousArchiveItems. Sin este filtro
+  // quedarían duplicados en la salida final.
+  const newArchiveGuids = new Set(newArchiveItems.map(i => i.guid));
+  const carriedArchiveItems = previousArchiveItems.filter(i => !newArchiveGuids.has(i.guid));
+  const allArchiveItems = [...carriedArchiveItems, ...newArchiveItems]; // permanente, sin filtro de cutoff
   const cutoffFilteredMeleeItems = [...carriedUpsetItems, ...newUpsetItems, ...hypeItems, ...projectionItems, ...seedReportItems, ...top16Items, ...top8Items].filter(
     a => !a.pubDate || new Date(a.pubDate).getTime() >= cutoff
   );
