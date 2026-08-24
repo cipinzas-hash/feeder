@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-24T01:44:10.922Z",
+  "generatedAt": "2026-08-24T11:04:18.055Z",
   "categories": [
     {
       "cat": "Películas",
@@ -1125,6 +1125,86 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1621552",
+          "title": "La captura",
+          "link": "https://www.themoviedb.org/movie/1621552",
+          "summary": "2016, estado de Sinaloa. Dos policías mexicanos, durante un control rutinario en las últimas horas de su turno, detienen un coche robado y se encuentran cara a cara con uno de los delincuentes más peligrosos del mundo: el Chapó Guzmán, patrón del temible Cártel de Sinaloa.",
+          "image": "https://image.tmdb.org/t/p/w500/iwCeOpuBtuTP1kLosqgniey5OvX.jpg",
+          "pubDate": "2026-08-21",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-08-24T11:04:08.166Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.6
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "uIaPDKA0-Y4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Alfonso Herrera",
+              "character": "Carmona",
+              "order": 0
+            },
+            {
+              "name": "Noé Hernández",
+              "character": "Rosales",
+              "order": 1
+            },
+            {
+              "name": "Héctor Kotsifakis",
+              "character": "El Chapo Guzmán",
+              "order": 2
+            },
+            {
+              "name": "Juan Pablo Cruz García",
+              "character": "Cholo Iván",
+              "order": 3
+            },
+            {
+              "name": "Paola Fernández",
+              "character": "Isaura",
+              "order": 4
+            },
+            {
+              "name": "Antonio Fortier",
+              "character": "Barraza",
+              "order": 5
+            },
+            {
+              "name": "Allan Durell",
+              "character": "Ortega",
+              "order": 6
+            },
+            {
+              "name": "Gerardo Trejoluna",
+              "character": "Valladares",
+              "order": 7
+            },
+            {
+              "name": "Isaac Bravo",
+              "character": "Foco",
+              "order": 8
+            },
+            {
+              "name": "Fernando Cuautle",
+              "character": "Lagarto",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1083381",
           "title": "Backrooms",
           "link": "https://www.themoviedb.org/movie/1083381",
@@ -1282,7 +1362,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1433367",
@@ -3358,6 +3438,85 @@
           ]
         },
         {
+          "guid": "tmdb-tv-113962",
+          "title": "Operaciones Especiales: Lioness",
+          "link": "https://www.themoviedb.org/tv/113962",
+          "summary": "Cruz Manuelos, una joven infante de marina ruda pero apasionada, es reclutada para unirse al Equipo Lioness Engagement de la CIA para ayudar a acabar con una organización terrorista desde adentro. Joe, el jefe de estación del programa Lioness, tiene la tarea de capacitar, administrar y liderar a sus agentes encubiertos.",
+          "image": "https://image.tmdb.org/t/p/w500/d0r0rxI9UjMVvD5Krc5oET2O0gU.jpg",
+          "pubDate": "2023-07-23",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-08-01T11:58:45.453Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.8,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-08-02",
+          "numberOfSeasons": 3,
+          "currentSeason": 2,
+          "reviews": null,
+          "trailer": {
+            "key": "7YunYBwleJM",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Zoe Saldaña",
+              "character": "Joe McNamara",
+              "order": 0
+            },
+            {
+              "name": "Laysla De Oliveira",
+              "character": "Cruz Manuelos",
+              "order": 1
+            },
+            {
+              "name": "Dave Annable",
+              "character": "Neal McNamara",
+              "order": 2
+            },
+            {
+              "name": "Jill Wagner",
+              "character": "Bobby",
+              "order": 3
+            },
+            {
+              "name": "LaMonica Garrett",
+              "character": "Tucker",
+              "order": 4
+            },
+            {
+              "name": "James Jordan",
+              "character": "Two Cups",
+              "order": 5
+            },
+            {
+              "name": "Genesis Rodriguez",
+              "character": "Captain Josephina 'Josie' Carrillo",
+              "order": 6
+            },
+            {
+              "name": "Michael Kelly",
+              "character": "Byron Westfield",
+              "order": 7
+            },
+            {
+              "name": "Austin Hébert",
+              "character": "Randy",
+              "order": 8
+            },
+            {
+              "name": "Jonah Wharton",
+              "character": "Tex",
+              "order": 10
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-125988",
           "title": "Silo",
           "link": "https://www.themoviedb.org/tv/125988",
@@ -3444,85 +3603,6 @@
           ]
         },
         {
-          "guid": "tmdb-tv-113962",
-          "title": "Operaciones Especiales: Lioness",
-          "link": "https://www.themoviedb.org/tv/113962",
-          "summary": "Cruz Manuelos, una joven infante de marina ruda pero apasionada, es reclutada para unirse al Equipo Lioness Engagement de la CIA para ayudar a acabar con una organización terrorista desde adentro. Joe, el jefe de estación del programa Lioness, tiene la tarea de capacitar, administrar y liderar a sus agentes encubiertos.",
-          "image": "https://image.tmdb.org/t/p/w500/d0r0rxI9UjMVvD5Krc5oET2O0gU.jpg",
-          "pubDate": "2023-07-23",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-08-01T11:58:45.453Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.8,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-08-02",
-          "numberOfSeasons": 3,
-          "currentSeason": 2,
-          "reviews": null,
-          "trailer": {
-            "key": "7YunYBwleJM",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Zoe Saldaña",
-              "character": "Joe McNamara",
-              "order": 0
-            },
-            {
-              "name": "Laysla De Oliveira",
-              "character": "Cruz Manuelos",
-              "order": 1
-            },
-            {
-              "name": "Dave Annable",
-              "character": "Neal McNamara",
-              "order": 2
-            },
-            {
-              "name": "Jill Wagner",
-              "character": "Bobby",
-              "order": 3
-            },
-            {
-              "name": "LaMonica Garrett",
-              "character": "Tucker",
-              "order": 4
-            },
-            {
-              "name": "James Jordan",
-              "character": "Two Cups",
-              "order": 5
-            },
-            {
-              "name": "Genesis Rodriguez",
-              "character": "Captain Josephina 'Josie' Carrillo",
-              "order": 6
-            },
-            {
-              "name": "Michael Kelly",
-              "character": "Byron Westfield",
-              "order": 7
-            },
-            {
-              "name": "Austin Hébert",
-              "character": "Randy",
-              "order": 8
-            },
-            {
-              "name": "Jonah Wharton",
-              "character": "Tex",
-              "order": 10
-            }
-          ]
-        },
-        {
           "guid": "tmdb-tv-95350",
           "title": "Linternas",
           "link": "https://www.themoviedb.org/tv/95350",
@@ -3575,6 +3655,34 @@
               "order": 4
             }
           ]
+        },
+        {
+          "guid": "tmdb-tv-67707",
+          "title": "Paradise Hotel",
+          "link": "https://www.themoviedb.org/tv/67707",
+          "summary": "A group of hot singles check into a luxury hotel in Mexico. Prepare for love, partying, betrayal and tears. Half a million kronor is at stake and anything can happen in paradise.",
+          "image": "https://image.tmdb.org/t/p/w500/aeU8fC5JaG2BkWqgMX7yPfX7dfW.jpg",
+          "pubDate": "2005-01-17",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-08-24T11:04:08.599Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 4.1,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 5
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-08-31",
+          "numberOfSeasons": 21,
+          "currentSeason": 20,
+          "reviews": null,
+          "trailer": {
+            "key": "U4wNh4Bl1Sk",
+            "site": "YouTube"
+          },
+          "cast": []
         },
         {
           "guid": "tmdb-tv-37528",
@@ -3730,6 +3838,116 @@
           "trending": false
         },
         {
+          "guid": "tmdb-tv-94664",
+          "title": "Mushoku Tensei Jobless Reincarnation",
+          "link": "https://www.themoviedb.org/tv/94664",
+          "summary": "Un joven virgen \"nini\" de 34 años es echado de casa cuando se queda sin dinero. Él se arrepiente de su vida cuando muere en un accidente de tráfico. Tras el accidente, se reencarna en un bebé en un mundo fantástico de espada y brujería. Tras la decisión de hacer lo mejor que pueda con el conocimiento adquirido en su anterior mundo, él decide aprovechar la oportunidad y aprender a usar magia desde su nueva juventud.",
+          "image": "https://image.tmdb.org/t/p/w500/sviEqFIPJW5gFtuYy8XyE0Uscid.jpg",
+          "pubDate": "2021-01-11",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-07-28T17:13:10.476Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.2,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.5
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-08-03",
+          "numberOfSeasons": 3,
+          "currentSeason": 3,
+          "reviews": null,
+          "trailer": {
+            "key": "k5VxfJpzy1Q",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Yumi Uchiyama",
+              "character": "Rudeus Greyrat (voice)",
+              "order": 0
+            },
+            {
+              "name": "Tomokazu Sugita",
+              "character": "Rudeus Greyrat's Former Self (voice)",
+              "order": 1
+            },
+            {
+              "name": "Ai Kakuma",
+              "character": "Eris Boreas Greyrat (voice)",
+              "order": 2
+            },
+            {
+              "name": "Ai Kayano",
+              "character": "Sylphiette (voice)",
+              "order": 3
+            },
+            {
+              "name": "Konomi Kohara",
+              "character": "Roxy Migurdia (voice)",
+              "order": 5
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-tv-30984",
+          "title": "Bleach",
+          "link": "https://www.themoviedb.org/tv/30984",
+          "summary": "La serie narra las aventuras de Ichigo Kurosaki, un adolescente que tiene la facultad de interactuar con los espíritus. Una noche, Ichigo se encuentra con una shinigami —personificación japonesa del Dios de la muerte— llamada Rukia Kuchiki, quien se sorprende que pueda verla. Sin embargo, su conversación es interrumpida por la aparición de un hollow, un espíritu maligno. Después de que Rukia fuera gravemente herida al tratar de proteger a Ichigo, esta intenta traspasarle parte de sus poderes a Ichigo para que pueda enfrentarse al hollow en igualdad de condiciones. No obstante, Ichigo sin darse cuenta los absorbe casi por completo y logra vencer con facilidad al espíritu.",
+          "image": "https://image.tmdb.org/t/p/w500/rsv116o9M983WvInXztEiwc6WRD.jpg",
+          "pubDate": "2004-10-05",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-07-31T10:10:19.297Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.2,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.4
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-08-01",
+          "numberOfSeasons": 2,
+          "currentSeason": 2,
+          "reviews": null,
+          "trailer": {
+            "key": "mnFXQUq-7ks",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Masakazu Morita",
+              "character": "Ichigo Kurosaki (voice)",
+              "order": 0
+            },
+            {
+              "name": "Fumiko Orikasa",
+              "character": "Rukia Kuchiki (voice)",
+              "order": 1
+            },
+            {
+              "name": "Hiroki Yasumoto",
+              "character": "Yasutora Sado (voice)",
+              "order": 2
+            },
+            {
+              "name": "松岡由貴",
+              "character": "Orihime Inoue (voice)",
+              "order": 3
+            },
+            {
+              "name": "Noriaki Sugiyama",
+              "character": "Uryu Ishida (voice)",
+              "order": 4
+            }
+          ],
+          "trending": false
+        },
+        {
           "guid": "tmdb-tv-2661",
           "title": "Kamen Rider",
           "link": "https://www.themoviedb.org/tv/2661",
@@ -3869,61 +4087,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-tv-94664",
-          "title": "Mushoku Tensei Jobless Reincarnation",
-          "link": "https://www.themoviedb.org/tv/94664",
-          "summary": "Un joven virgen \"nini\" de 34 años es echado de casa cuando se queda sin dinero. Él se arrepiente de su vida cuando muere en un accidente de tráfico. Tras el accidente, se reencarna en un bebé en un mundo fantástico de espada y brujería. Tras la decisión de hacer lo mejor que pueda con el conocimiento adquirido en su anterior mundo, él decide aprovechar la oportunidad y aprender a usar magia desde su nueva juventud.",
-          "image": "https://image.tmdb.org/t/p/w500/sviEqFIPJW5gFtuYy8XyE0Uscid.jpg",
-          "pubDate": "2021-01-11",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-07-28T17:13:10.476Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.2,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.5
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-08-03",
-          "numberOfSeasons": 3,
-          "currentSeason": 3,
-          "reviews": null,
-          "trailer": {
-            "key": "k5VxfJpzy1Q",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Yumi Uchiyama",
-              "character": "Rudeus Greyrat (voice)",
-              "order": 0
-            },
-            {
-              "name": "Tomokazu Sugita",
-              "character": "Rudeus Greyrat's Former Self (voice)",
-              "order": 1
-            },
-            {
-              "name": "Ai Kakuma",
-              "character": "Eris Boreas Greyrat (voice)",
-              "order": 2
-            },
-            {
-              "name": "Ai Kayano",
-              "character": "Sylphiette (voice)",
-              "order": 3
-            },
-            {
-              "name": "Konomi Kohara",
-              "character": "Roxy Migurdia (voice)",
-              "order": 5
-            }
-          ],
-          "trending": false
-        },
-        {
           "guid": "tmdb-tv-13945",
           "title": "Gute Zeiten, schlechte Zeiten",
           "link": "https://www.themoviedb.org/tv/13945",
@@ -4028,61 +4191,6 @@
               "name": "Izette Blignaut",
               "character": "Petro van Zyl",
               "order": 87
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-30984",
-          "title": "Bleach",
-          "link": "https://www.themoviedb.org/tv/30984",
-          "summary": "La serie narra las aventuras de Ichigo Kurosaki, un adolescente que tiene la facultad de interactuar con los espíritus. Una noche, Ichigo se encuentra con una shinigami —personificación japonesa del Dios de la muerte— llamada Rukia Kuchiki, quien se sorprende que pueda verla. Sin embargo, su conversación es interrumpida por la aparición de un hollow, un espíritu maligno. Después de que Rukia fuera gravemente herida al tratar de proteger a Ichigo, esta intenta traspasarle parte de sus poderes a Ichigo para que pueda enfrentarse al hollow en igualdad de condiciones. No obstante, Ichigo sin darse cuenta los absorbe casi por completo y logra vencer con facilidad al espíritu.",
-          "image": "https://image.tmdb.org/t/p/w500/rsv116o9M983WvInXztEiwc6WRD.jpg",
-          "pubDate": "2004-10-05",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-07-31T10:10:19.297Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.2,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.4
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-08-01",
-          "numberOfSeasons": 2,
-          "currentSeason": 2,
-          "reviews": null,
-          "trailer": {
-            "key": "mnFXQUq-7ks",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Masakazu Morita",
-              "character": "Ichigo Kurosaki (voice)",
-              "order": 0
-            },
-            {
-              "name": "Fumiko Orikasa",
-              "character": "Rukia Kuchiki (voice)",
-              "order": 1
-            },
-            {
-              "name": "Hiroki Yasumoto",
-              "character": "Yasutora Sado (voice)",
-              "order": 2
-            },
-            {
-              "name": "松岡由貴",
-              "character": "Orihime Inoue (voice)",
-              "order": 3
-            },
-            {
-              "name": "Noriaki Sugiyama",
-              "character": "Uryu Ishida (voice)",
-              "order": 4
             }
           ],
           "trending": false
@@ -5630,7 +5738,7 @@
           "guid": "mal-59193",
           "title": "Mushoku Tensei III: Isekai Ittara Honki Dasu",
           "link": "https://myanimelist.net/anime/59193/Mushoku_Tensei_III__Isekai_Ittara_Honki_Dasu",
-          "summary": "Mushoku Tensei: Isekai Ittara Honki Dasu , también conocida como Mushoku Tensei: Jobless Reencarnation o como Mushoku Tensei: Reencarnación desde cero en Latinoamérica, es una novela web japonesa escrita por Rifujin na Magonote, publicada originalmente en el sitio web Shōsetsuka ni Narō entre el 22 de noviembre de 2012 y el 3 de abril de 2015. Una serie de novelas ligeras comenzó su publicación el 23 de enero de 2014 bajo el sello MF Books de Media Factory con ilustraciones realizadas por un usuario de Pixiv llamado ShiroTaka.",
+          "summary": "Third season of Mushoku Tensei: Isekai Ittara Honki Dasu.",
           "image": "https://cdn.myanimelist.net/images/anime/1527/158340l.jpg",
           "pubDate": "2026-07-06T00:00:00+00:00",
           "source": "MyAnimeList",
@@ -5656,7 +5764,7 @@
           "guid": "mal-49233",
           "title": "Youjo Senki II",
           "link": "https://myanimelist.net/anime/49233/Youjo_Senki_II",
-          "summary": "Yōjo Senki , también conocida como Saga of Tanya the Evil en inglés y Diario de guerra en España, es una novela ligera escrita por Carlo Zen e ilustrada por Shinobu Shinotsuki. Ha dado origen a un manga, una serie de anime, dos OVA y un especial de TV.",
+          "summary": "Second season of Youjo Senki.",
           "image": "https://cdn.myanimelist.net/images/anime/1917/158371l.jpg",
           "pubDate": "2026-07-08T00:00:00+00:00",
           "source": "MyAnimeList",
@@ -5679,27 +5787,183 @@
           "cast": []
         },
         {
-          "guid": "mal-62076",
-          "title": "Super no Ura de Yani Suu Futari",
-          "link": "https://myanimelist.net/anime/62076/Super_no_Ura_de_Yani_Suu_Futari",
-          "summary": "The sole thing that gets the middle-aged Sasaki through his soul-sucking job is a cheerful smile from Yamada—the young woman who works at a nearby 24-hour supermarket he frequents. After every tiring day of getting berated by his boss, Sasaki stops by the store to have his spirit healed by his favorite cashier.\n\nAfter a particularly grueling day, Sasaki shows up at the supermarket, only to find that Yamada's shift has already ended. Disappointed, he searches for a place to smoke when a woman from behind the store calls him over to join her. The bold and dangerously playful Tayama is quick to call out Sasaki's peculiar habit of always seeking out her coworker—even going as far as telling Yamada about Sasaki's vested interest in her.\n\nNow, in addition to seeing his adored cashier Yamada, Sasaki also visits the store to see if his new smoking partner Tayama is around. But there is more to Tayama's mischievousness than she initially lets on. With every cigarette, an unlikely friendship begins to blossom.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1768/156339l.jpg",
-          "pubDate": "2026-07-09T00:00:00+00:00",
+          "guid": "mal-60636",
+          "title": "Bleach: Sennen Kessen-hen - Kashin-tan",
+          "link": "https://myanimelist.net/anime/60636/Bleach__Sennen_Kessen-hen_-_Kashin-tan",
+          "summary": "Final part of Bleach: Sennen Kessen-hen.",
+          "image": "https://cdn.myanimelist.net/images/anime/1275/158595l.jpg",
+          "pubDate": "2026-07-25T00:00:00+00:00",
           "source": "MyAnimeList",
           "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:25:55.914Z",
+          "firstSeenAt": "2026-07-28T14:25:56.743Z",
           "fullText": null,
           "rating": {
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 8.44
+            "tmdb": null
+          },
+          "status": "Not yet aired",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "DKKZ10FsSBM",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-62542",
+          "title": "Grand Blue Season 3",
+          "link": "https://myanimelist.net/anime/62542/Grand_Blue_Season_3",
+          "summary": "Third season of Grand Blue.",
+          "image": "https://cdn.myanimelist.net/images/anime/1615/158194l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:25:59.404Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.41
           },
           "status": "Currently Airing",
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": {
-            "key": "BJvW_SwQn3w",
+            "key": "KJw6ZZaMOWA",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-62542",
+          "title": "Grand Blue Season 3",
+          "link": "https://myanimelist.net/anime/62542/Grand_Blue_Season_3",
+          "summary": "Third season of Grand Blue.",
+          "image": "https://cdn.myanimelist.net/images/anime/1615/158194l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:25:59.404Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.41
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "KJw6ZZaMOWA",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-63403",
+          "title": "Yani Neko",
+          "link": "https://myanimelist.net/anime/63403/Yani_Neko",
+          "summary": "Yani is a catgirl with a seriously bad smoking habit. She smokes so much that her apartment smells like ash and is littered with cigarette butts—and plenty of other trash! Every time she tries to quit, she becomes weak to the cravings and gives in almost instantly. Will she ever get her life together, or is she doomed to live as a chainsmoking slob forever?\n\n(Source: Seven Seas Entertainment)",
+          "image": "https://cdn.myanimelist.net/images/anime/1281/156496l.jpg",
+          "pubDate": "2026-07-03T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:26:01.168Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.13
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "0e-tPUjYkvA",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-63832",
+          "title": "Seihantai na Kimi to Boku 2nd Season",
+          "link": "https://myanimelist.net/anime/63832/Seihantai_na_Kimi_to_Boku_2nd_Season",
+          "summary": "Second season of Seihantai na Kimi to Boku.",
+          "image": "https://cdn.myanimelist.net/images/anime/1143/158409l.jpg",
+          "pubDate": "2026-07-05T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:26:02.093Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.35
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "o9eLX4W-gys",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-61126",
+          "title": "Kimi ga Shinu made Koi wo Shitai",
+          "link": "https://myanimelist.net/anime/61126/Kimi_ga_Shinu_made_Koi_wo_Shitai",
+          "summary": "The death of Sheena Totsuki's roommate is casually announced at the start of class, and the day carries on as usual. In an orphanage that raises children as soldiers, death is nothing new to the residents. With their home country embroiled in a war that has dragged on for too many years and shows no signs of stopping, the institution's children are sent off to die in battle every day. In contrast to the other orphans, Sheena is deeply disturbed by the ongoing conflict and wishes for it to end.\n\nOn the night of her roommate's death, Sheena met a blood-covered girl who remained jubilant despite the condition she was in. The next day, the girl appears as a new student in Sheena's class and introduces herself as Mimi Kagari. Initially thought to be a school myth, Mimi is said to be the secret weapon of the orphanage—a girl who cannot die. Assigned as Sheena's new roommate, Mimi hopes to get along with her and get accustomed to school life.\n\nHowever, unsettled by Mimi's carefree attitude toward the war, Sheena struggles to accept the world they live in, all while their unusual friendship flourishes amid the bleak situation.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1096/158712l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-28T14:26:04.078Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.81
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "rSiaUuG1kpM",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-62513",
+          "title": "Clevatess II: Majuu no Ou to Itsuwari no Yuusha Denshou",
+          "link": "https://myanimelist.net/anime/62513/Clevatess_II__Majuu_no_Ou_to_Itsuwari_no_Yuusha_Denshou",
+          "summary": "Second season of Clevatess.",
+          "image": "https://cdn.myanimelist.net/images/anime/1741/157105l.jpg",
+          "pubDate": "2026-07-08T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-07-29T11:02:25.970Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.68
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "qsbyAix6lUY",
             "site": "YouTube"
           },
           "cast": []
@@ -5800,27 +6064,27 @@
           "trending": false
         },
         {
-          "guid": "mal-60636",
-          "title": "Bleach: Sennen Kessen-hen - Kashin-tan",
-          "link": "https://myanimelist.net/anime/60636/Bleach__Sennen_Kessen-hen_-_Kashin-tan",
-          "summary": "Final part of Bleach: Sennen Kessen-hen.",
-          "image": "https://cdn.myanimelist.net/images/anime/1275/158595l.jpg",
-          "pubDate": "2026-07-25T00:00:00+00:00",
+          "guid": "mal-62076",
+          "title": "Super no Ura de Yani Suu Futari",
+          "link": "https://myanimelist.net/anime/62076/Super_no_Ura_de_Yani_Suu_Futari",
+          "summary": "The sole thing that gets the middle-aged Sasaki through his soul-sucking job is a cheerful smile from Yamada—the young woman who works at a nearby 24-hour supermarket he frequents. After every tiring day of getting berated by his boss, Sasaki stops by the store to have his spirit healed by his favorite cashier.\n\nAfter a particularly grueling day, Sasaki shows up at the supermarket, only to find that Yamada's shift has already ended. Disappointed, he searches for a place to smoke when a woman from behind the store calls him over to join her. The bold and dangerously playful Tayama is quick to call out Sasaki's peculiar habit of always seeking out her coworker—even going as far as telling Yamada about Sasaki's vested interest in her.\n\nNow, in addition to seeing his adored cashier Yamada, Sasaki also visits the store to see if his new smoking partner Tayama is around. But there is more to Tayama's mischievousness than she initially lets on. With every cigarette, an unlikely friendship begins to blossom.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1768/156339l.jpg",
+          "pubDate": "2026-07-09T00:00:00+00:00",
           "source": "MyAnimeList",
           "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:25:56.743Z",
+          "firstSeenAt": "2026-07-28T14:25:55.914Z",
           "fullText": null,
           "rating": {
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": null
+            "tmdb": 8.44
           },
-          "status": "Not yet aired",
+          "status": "Currently Airing",
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": {
-            "key": "DKKZ10FsSBM",
+            "key": "BJvW_SwQn3w",
             "site": "YouTube"
           },
           "cast": [],
@@ -5854,33 +6118,6 @@
           "trending": false
         },
         {
-          "guid": "mal-62542",
-          "title": "Grand Blue Season 3",
-          "link": "https://myanimelist.net/anime/62542/Grand_Blue_Season_3",
-          "summary": "Third season of Grand Blue.",
-          "image": "https://cdn.myanimelist.net/images/anime/1615/158194l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:25:59.404Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.41
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "KJw6ZZaMOWA",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
           "guid": "mal-48820",
           "title": "Mahou Shoujo Madoka★Magica Movie 4: Walpurgis no Kaiten",
           "link": "https://myanimelist.net/anime/48820/Mahou_Shoujo_Madoka★Magica_Movie_4__Walpurgis_no_Kaiten",
@@ -5902,60 +6139,6 @@
           "reviews": null,
           "trailer": {
             "key": "rSe4mqP1Mj0",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-63403",
-          "title": "Yani Neko",
-          "link": "https://myanimelist.net/anime/63403/Yani_Neko",
-          "summary": "Yani is a catgirl with a seriously bad smoking habit. She smokes so much that her apartment smells like ash and is littered with cigarette butts—and plenty of other trash! Every time she tries to quit, she becomes weak to the cravings and gives in almost instantly. Will she ever get her life together, or is she doomed to live as a chainsmoking slob forever?\n\n(Source: Seven Seas Entertainment)",
-          "image": "https://cdn.myanimelist.net/images/anime/1281/156496l.jpg",
-          "pubDate": "2026-07-03T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:26:01.168Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.13
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "0e-tPUjYkvA",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-63832",
-          "title": "Seihantai na Kimi to Boku 2nd Season",
-          "link": "https://myanimelist.net/anime/63832/Seihantai_na_Kimi_to_Boku_2nd_Season",
-          "summary": "Second season of Seihantai na Kimi to Boku.",
-          "image": "https://cdn.myanimelist.net/images/anime/1143/158409l.jpg",
-          "pubDate": "2026-07-05T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:26:02.093Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.35
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "o9eLX4W-gys",
             "site": "YouTube"
           },
           "cast": [],
@@ -6016,33 +6199,6 @@
           "trending": false
         },
         {
-          "guid": "mal-61126",
-          "title": "Kimi ga Shinu made Koi wo Shitai",
-          "link": "https://myanimelist.net/anime/61126/Kimi_ga_Shinu_made_Koi_wo_Shitai",
-          "summary": "The death of Sheena Totsuki's roommate is casually announced at the start of class, and the day carries on as usual. In an orphanage that raises children as soldiers, death is nothing new to the residents. With their home country embroiled in a war that has dragged on for too many years and shows no signs of stopping, the institution's children are sent off to die in battle every day. In contrast to the other orphans, Sheena is deeply disturbed by the ongoing conflict and wishes for it to end.\n\nOn the night of her roommate's death, Sheena met a blood-covered girl who remained jubilant despite the condition she was in. The next day, the girl appears as a new student in Sheena's class and introduces herself as Mimi Kagari. Initially thought to be a school myth, Mimi is said to be the secret weapon of the orphanage—a girl who cannot die. Assigned as Sheena's new roommate, Mimi hopes to get along with her and get accustomed to school life.\n\nHowever, unsettled by Mimi's carefree attitude toward the war, Sheena struggles to accept the world they live in, all while their unusual friendship flourishes amid the bleak situation.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1096/158712l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-28T14:26:04.078Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.81
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "rSiaUuG1kpM",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
           "guid": "mal-61169",
           "title": "Black Torch",
           "link": "https://myanimelist.net/anime/61169/Black_Torch",
@@ -6064,33 +6220,6 @@
           "reviews": null,
           "trailer": {
             "key": "XL_biwm-hxU",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-62513",
-          "title": "Clevatess II: Majuu no Ou to Itsuwari no Yuusha Denshou",
-          "link": "https://myanimelist.net/anime/62513/Clevatess_II__Majuu_no_Ou_to_Itsuwari_no_Yuusha_Denshou",
-          "summary": "Second season of Clevatess.",
-          "image": "https://cdn.myanimelist.net/images/anime/1741/157105l.jpg",
-          "pubDate": "2026-07-08T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-07-29T11:02:25.970Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.68
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "qsbyAix6lUY",
             "site": "YouTube"
           },
           "cast": [],
