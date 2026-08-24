@@ -45,8 +45,18 @@ jobs:
         run: |
           git config user.name "angst-feed-bot"
           git config user.email "actions@users.noreply.github.com"
+          # Diagnóstico temporal (borrar cuando se confirme por qué feed.json
+          # no generaba commits desde el 20 de agosto pese a reportar
+          # "success"): archivo chico, se commitea SIEMPRE, sin pasar por el
+          # chequeo de diff de acá abajo -- si esto deja de actualizarse
+          # también, el problema es que build-feed.mjs no corre/escribe de
+          # verdad; si esto SÍ se actualiza pero feed.json no, el problema
+          # está en el "git diff --staged --quiet" de abajo, no en el script.
+          echo "{\"generatedAt\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"feedJsonBytes\":$(wc -c < modules/feed/data/feed.json),\"feedJsonSha256\":\"$(sha256sum modules/feed/data/feed.json | cut -d' ' -f1)\"}" > modules/feed/data/.diag-last-run.json
+          git add modules/feed/data/.diag-last-run.json
+          git diff --staged --quiet -- modules/feed/data/.diag-last-run.json || git commit -m "diag: last run $(date -u +%Y-%m-%dT%H:%MZ)"
           git add modules/feed/data/feed.json
-          git diff --staged --quiet || git commit -m "Actualizar feed $(date -u +%Y-%m-%dT%H:%MZ)"
+          git diff --staged --quiet -- modules/feed/data/feed.json || git commit -m "Actualizar feed $(date -u +%Y-%m-%dT%H:%MZ)"
           for i in 1 2 3; do
             git pull --rebase origin main && git push && break
             echo "push falló, reintentando ($i/3)..."
