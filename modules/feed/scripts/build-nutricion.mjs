@@ -36,19 +36,48 @@ function extractNutrient(foodNutrients, names, numbers) {
   return hit ? hit.value : null;
 }
 
-async function fetchPage(pageNumber) {
+async function fetchPage(pageNumber, retries = 3) {
   const params = new URLSearchParams();
   params.set("api_key", USDA_KEY);
   params.set("pageSize", String(PAGE_SIZE));
   params.set("pageNumber", String(pageNumber));
   for (const dt of DATA_TYPES) params.append("dataType", dt);
-  const res = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/list?${params.toString()}`);
-  const raw = await res.text();
-  if (!res.ok) throw new Error(`USDA foods/list falló (página ${pageNumber}): ${res.status} -- ${raw.slice(0, 300)}`);
-  let page;
-  try { page = JSON.parse(raw); } catch (e) { throw new Error(`USDA foods/list devolvió algo no-JSON (página ${pageNumber}): ${raw.slice(0, 300)}`); }
-  if (!Array.isArray(page)) throw new Error(`USDA foods/list devolvió forma inesperada (página ${pageNumber}, no es array): ${raw.slice(0, 300)}`);
-  return page;
+  const url = `https://api.nal.usda.gov/fdc/v1/foods/list?${params.toString()}`;
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    let res, raw;
+    try {
+      res = await fetch(url);
+      raw = await res.text();
+    } catch (networkErr) {
+      // Fallo de red (DNS, conexión, timeout) -- transitorio, se reintenta.
+      if (attempt === retries) throw new Error(`USDA foods/list falló de red (página ${pageNumber}) tras ${retries} intentos: ${networkErr.message}`);
+      const waitMs = 1000 * 3 ** (attempt - 1);
+      console.warn(`  [reintento ${attempt}/${retries}] fallo de red en página ${pageNumber}, reintentando en ${waitMs}ms: ${networkErr.message}`);
+      await sleep(waitMs);
+      continue;
+    }
+
+    if (res.ok) {
+      let page;
+      try { page = JSON.parse(raw); } catch (e) { throw new Error(`USDA foods/list devolvió algo no-JSON (página ${pageNumber}): ${raw.slice(0, 300)}`); }
+      if (!Array.isArray(page)) throw new Error(`USDA foods/list devolvió forma inesperada (página ${pageNumber}, no es array): ${raw.slice(0, 300)}`);
+      return page;
+    }
+
+    // 429 (rate limit) y 5xx (error del lado de USDA) son transitorios y
+    // vale la pena reintentar -- esto es justo lo que paso el 22/8 y 24/8
+    // (fallos de ~1-4s, mucho antes de completar ni la primera pagina).
+    // Cualquier otro codigo (401/403/400, ej. key invalida o mal formada)
+    // NO se reintenta: reintentar eso solo demora un fallo inevitable.
+    const transient = res.status === 429 || res.status >= 500;
+    if (!transient || attempt === retries) {
+      throw new Error(`USDA foods/list falló (página ${pageNumber}): ${res.status} -- ${raw.slice(0, 300)}`);
+    }
+    const waitMs = 1000 * 3 ** (attempt - 1);
+    console.warn(`  [reintento ${attempt}/${retries}] USDA devolvió ${res.status} en página ${pageNumber}, reintentando en ${waitMs}ms`);
+    await sleep(waitMs);
+  }
 }
 
 async function main() {
