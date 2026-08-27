@@ -457,7 +457,13 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
   }
 
   function applyProgression(ex, newPeso) {
-    saveCustomEjercicios({...(customEjercicios||{}), [ex.id]: {...(customEjercicios?.[ex.id]||{}), id:ex.id, pesoActual:newPeso}});
+    // ex ya es el objeto fusionado completo (via allExercicios) - hay que
+    // preservarlo entero en el override, igual que hace el toggle de
+    // archivado (`{...ex, archivado:...}`). Antes solo se guardaba
+    // {id, pesoActual}, lo que BORRABA muscles/name/etc del override y
+    // hacia que el ejercicio desapareciera de toda la UI (ambas vistas
+    // filtran por muscles). Ver issue #1.
+    saveCustomEjercicios({...(customEjercicios||{}), [ex.id]: {...ex, pesoActual:newPeso}});
   }
 
   function buildStats() {
