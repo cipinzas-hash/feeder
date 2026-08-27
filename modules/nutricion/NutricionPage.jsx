@@ -1,3 +1,4 @@
+import { normalizeSearchText } from "../../core/format.js";
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
 const NUTRI_FOODS = {
@@ -424,7 +425,7 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
   const trackStyle = {height:6,background:"#eee",borderRadius:99,overflow:"hidden",marginTop:6};
 
   const searchResults = searchQuery.trim()
-    ? allFoodsFlat().filter(f=>f.name.toLowerCase().includes(searchQuery.trim().toLowerCase())).slice(0,6)
+    ? allFoodsFlat().filter(f=>normalizeSearchText(f.name).includes(normalizeSearchText(searchQuery))).slice(0,6)
     : [];
 
   function normalizeApiFood(item, idx){
@@ -434,13 +435,13 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
   useEffect(()=>{
     const q = searchQuery.trim();
     if(q.length < 3 || !foodsDb){ setApiFoodResults([]); setApiLoading(false); return; }
-    const localLower = allFoodsFlat().map(f=>f.name.toLowerCase());
-    const localMatch = localLower.some(n=>n.includes(q.toLowerCase()));
+    const localNorm = allFoodsFlat().map(f=>normalizeSearchText(f.name));
+    const qNorm = normalizeSearchText(q);
+    const localMatch = localNorm.some(n=>n.includes(qNorm));
     if(localMatch && searchResults.length >= 3){ setApiFoodResults([]); setApiLoading(false); return; }
     setApiLoading(true);
-    const qLower = q.toLowerCase();
-    const hits = foodsDb.filter(f => f.name.toLowerCase().includes(qLower));
-    const normalized = hits.map(normalizeApiFood).filter(f=>f.name && !localLower.includes(f.name.toLowerCase())).slice(0,6);
+    const hits = foodsDb.filter(f => normalizeSearchText(f.name).includes(qNorm));
+    const normalized = hits.map(normalizeApiFood).filter(f=>f.name && !localNorm.includes(normalizeSearchText(f.name))).slice(0,6);
     setApiFoodResults(normalized);
     setApiLoading(false);
   }, [searchQuery, dateKey, foodsDb]);
