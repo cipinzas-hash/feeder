@@ -253,6 +253,7 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
   const [view, setView] = useState("hoy"); // hoy | ficha | stats | deck
   const [fichaFoodId, setFichaFoodId] = useState(null);
   const [modal, setModal] = useState(null); // {food}
+  const [estimateModal, setEstimateModal] = useState(null); // {descripcion,certainty,kcalMin,kcalMax,protMin,protMax} -- issue #5
   const [qty, setQty] = useState(1);
   const [fraction, setFraction] = useState(1);   // for fraction / calibre / size
   const [sizeKey, setSizeKey] = useState("M");    // for size / calibre
@@ -306,6 +307,11 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
   const log = nutriLog[dateKey] || [];
   const totalKcal = Math.round(log.reduce((a,e)=>a+e.kcal*e.qty,0));
   const totalProt = parseFloat(log.reduce((a,e)=>a+e.prot*e.qty,0).toFixed(1));
+  // issue #5: el total sigue sumando igual (usa el punto medio de las
+  // entradas estimadas, 0 para desconocidas) para no tocar cascada/bonus,
+  // pero se marca visualmente cuando el dia incluye incertidumbre -- para
+  // no mostrar falsa precision.
+  const hasUncertain = log.some(e=>e.certainty);
   // Ajuste por carga del día (sesión angst-57): getStressScore es una función
   // que AngstApp pasa como prop (envuelve computeStressScore con dayData/
   // calMarks/kidsHealth ya en su closure) — si no está disponible por algún
@@ -397,7 +403,37 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
     setModal(null);
     setSearchQuery("");
   }
+  function addEstimateEntry() {
+    if(!estimateModal) return;
+    const { descripcion, certainty, kcalMin, kcalMax, protMin, protMax } = estimateModal;
+    if(!descripcion?.trim() || !certainty) return;
+
+    // 🔴 desconocido: nunca lleva numeros (issue #5 -- no inventar precision falsa).
+    // 🟡 estimado: rango opcional; si se completa, kcal/prot guardan el punto
+    // medio (para que dTotals/cascada semanal sigan sumando sin tocar esa
+    // logica), y el rango se conserva aparte para mostrarlo tal cual.
+    const kMin = parseFloat(kcalMin), kMax = parseFloat(kcalMax);
+    const pMin = parseFloat(protMin), pMax = parseFloat(protMax);
+    const kcalRange = (certainty==="estimado" && !isNaN(kMin) && !isNaN(kMax)) ? [kMin,kMax] : null;
+    const protRange = (certainty==="estimado" && !isNaN(pMin) && !isNaN(pMax)) ? [pMin,pMax] : null;
+
+    const entry = {
+      uid: Date.now()+Math.random(),
+      meal: mealSel,
+      certainty, // "estimado" | "desconocido" -- ausente en entradas exactas normales
+      name: descripcion.trim(), // se conserva tal cual el texto original del usuario
+      emoji: certainty==="desconocido" ? "🔴" : "🟡",
+      kcal: kcalRange ? (kcalRange[0]+kcalRange[1])/2 : 0,
+      prot: protRange ? (protRange[0]+protRange[1])/2 : 0,
+      kcalRange, protRange,
+      qty: 1,
+      unit: "",
+    };
+    saveNutriLog({...nutriLog, [dateKey]: [...log, entry]});
+    setEstimateModal(null);
+  }
   function removeEntry(uid) { saveNutriLog({...nutriLog, [dateKey]: log.filter(e=>e.uid!==uid)}); }
+
   function moveEntryMeal(uid, newMealId) {
     saveNutriLog({...nutriLog, [dateKey]: log.map(e=>e.uid===uid?{...e,meal:newMealId}:e)});
     setMoveMenuOpen(null);
@@ -997,8 +1033,8 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
         <div style={{display:"flex",gap:20}}>
           <div style={{flex:1}}>
             <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:8}}>
-              <span style={{fontFamily:"'Caveat',cursive",fontSize:34,fontWeight:700,color:over?"#ff7b7b":"#fff",lineHeight:1}}>{totalKcal}</span>
-              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"rgba(255,255,255,0.3)"}}>/ {metaEfectivaDia} kcal</span>
+              <span style={{fontFamily:"'Caveat',cursive",fontSize:34,fontWeight:700,color:over?"#ff7b7b":"#fff",lineHeight:1}}>{hasUncertain?"~":""}{totalKcal}</span>
+              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"rgba(255,255,255,0.3)"}}>/ {metaEfectivaDia} kcal{hasUncertain?" (incluye estimaciones)":""}</span>
             </div>
             <div style={{height:6,background:"rgba(255,255,255,0.1)",borderRadius:99,overflow:"hidden"}}>
               <div style={{height:"100%",width:`${pctK}%`,background:over?"#ff7b7b":"#fff",borderRadius:99,transition:"width 0.4s"}}/>
@@ -1074,13 +1110,19 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
                     {entries.map((e,i)=>(
                       <div key={e.uid} style={foodView==="list"?{display:"flex",alignItems:"center",gap:8,padding:"9px 12px",borderBottom:i<entries.length-1?"1px dashed #f0f0f0":"none",background:i%2===0?"#fff":"#fafafa"}:{background:i%2===0?"#fff":"#fafafa",border:"1px dashed #e5e5e5",borderRadius:foodView==="grid-sm"?10:12,padding:foodView==="grid-sm"?10:12,minHeight:foodView==="grid-sm"?90:112,display:"flex",flexDirection:"column",justifyContent:"space-between",position:"relative"}}>
                         {foodView==="list" ? <span style={{fontSize:16,flexShrink:0}}>{e.emoji}</span> : <span style={{fontSize:foodView==="grid-sm"?18:24,lineHeight:1,marginBottom:6}}>{e.emoji}</span>}
-                        <div onClick={()=>{setFichaFoodId(e.id);setView("ficha");}} style={foodView==="list"?{flex:1,minWidth:0,cursor:"pointer"}:{flex:1,width:"100%",cursor:"pointer"}}>
+                        <div onClick={()=>{if(!e.certainty){setFichaFoodId(e.id);setView("ficha");}}} style={foodView==="list"?{flex:1,minWidth:0,cursor:e.certainty?"default":"pointer"}:{flex:1,width:"100%",cursor:e.certainty?"default":"pointer"}}>
                           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:foodView==="grid-sm"?11:13,color:"#333",fontWeight:600,lineHeight:1.25}}>{e.name}</div>
-                          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>×{e.qty} {e.unit}</div>
+                          {e.certainty
+                            ? <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#c9a227"}}>{e.certainty==="desconocido"?"sin datos nutricionales":"estimado"}</div>
+                            : <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>×{e.qty} {e.unit}</div>}
                         </div>
                         <div style={foodView==="list"?{textAlign:"right",flexShrink:0}:{display:"flex",justifyContent:"space-between",alignItems:"baseline",width:"100%",marginTop:8}}>
-                          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:foodView==="grid-sm"?10:12,color:"#111",fontWeight:700}}>{Math.round(e.kcal*e.qty)} kcal</div>
-                          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#888"}}>{(e.prot*e.qty).toFixed(1)}g</div>
+                          {e.certainty
+                            ? (e.kcalRange
+                                ? <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:foodView==="grid-sm"?10:12,color:"#c9a227",fontWeight:700}}>{e.kcalRange[0]}–{e.kcalRange[1]} kcal</div>
+                                : <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:foodView==="grid-sm"?10:12,color:"#c9a227",fontWeight:700}}>{e.certainty==="desconocido"?"🔴 sin estimar":"🟡 sin rango"}</div>)
+                            : <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:foodView==="grid-sm"?10:12,color:"#111",fontWeight:700}}>{Math.round(e.kcal*e.qty)} kcal</div>}
+                          {!e.certainty && <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#888"}}>{(e.prot*e.qty).toFixed(1)}g</div>}
                         </div>
                         {foodView==="list"
                           ? <>
@@ -1186,9 +1228,83 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
         )}
         <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="escribe lo que comiste..."
           style={{width:"100%",border:"1.5px solid #111",borderRadius:10,padding:"12px 14px",fontFamily:"'Caveat',cursive",fontSize:16,outline:"none",boxSizing:"border-box",color:"#111"}}/>
+        <div onClick={()=>{setEstimateModal({descripcion:searchQuery.trim(),certainty:null,kcalMin:"",kcalMax:"",protMin:"",protMax:""});setSearchQuery("");}}
+          style={{marginTop:6,textAlign:"center",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#bbb",cursor:"pointer",padding:"4px"}}>
+          ¿no sabes las calorías exactas? registrar una estimación de todos modos
+        </div>
       </div>
 
-      {/* Explorar por categoría */}
+      {/* Modal de registro estimado/desconocido -- issue #5 */}
+      {estimateModal&&(
+        <div onClick={()=>setEstimateModal(null)} style={{position:"fixed",inset:0,zIndex:500,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+          <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,480px)",background:"#fff",borderRadius:"16px 16px 0 0",padding:"24px 24px 40px",maxHeight:"90vh",overflowY:"auto"}}>
+            <div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#111",marginBottom:20}}>Registrar sin datos exactos</div>
+
+            <div style={{marginBottom:18}}>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>qué comiste</div>
+              <textarea value={estimateModal.descripcion} onChange={e=>setEstimateModal(m=>({...m,descripcion:e.target.value}))}
+                placeholder="ej: 3 completos italianos / picoteo de cumpleaños, no sé cuánto"
+                rows={2}
+                style={{width:"100%",border:"1.5px solid #111",borderRadius:10,padding:"10px 12px",fontFamily:"'Caveat',cursive",fontSize:15,outline:"none",boxSizing:"border-box",color:"#111",resize:"vertical"}}/>
+            </div>
+
+            <div style={{marginBottom:18}}>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>nivel de certeza</div>
+              <div style={{display:"flex",gap:6}}>
+                <button onClick={()=>setEstimateModal(m=>({...m,certainty:"estimado"}))}
+                  style={{flex:1,padding:"10px 4px",borderRadius:8,border:"1.5px solid",borderColor:estimateModal.certainty==="estimado"?"#c9a227":"#eee",background:estimateModal.certainty==="estimado"?"#c9a227":"transparent",color:estimateModal.certainty==="estimado"?"#fff":"#999",fontFamily:"'Caveat',cursive",fontSize:14,fontWeight:700,cursor:"pointer"}}>
+                  🟡 estimado
+                </button>
+                <button onClick={()=>setEstimateModal(m=>({...m,certainty:"desconocido"}))}
+                  style={{flex:1,padding:"10px 4px",borderRadius:8,border:"1.5px solid",borderColor:estimateModal.certainty==="desconocido"?"#e53935":"#eee",background:estimateModal.certainty==="desconocido"?"#e53935":"transparent",color:estimateModal.certainty==="desconocido"?"#fff":"#999",fontFamily:"'Caveat',cursive",fontSize:14,fontWeight:700,cursor:"pointer"}}>
+                  🔴 no sé / desconocido
+                </button>
+              </div>
+            </div>
+
+            {estimateModal.certainty==="estimado" && (
+              <div style={{marginBottom:18}}>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>rango estimado (opcional)</div>
+                <div style={{display:"flex",gap:8,marginBottom:8,alignItems:"center"}}>
+                  <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888",width:32,flexShrink:0}}>kcal</span>
+                  <input value={estimateModal.kcalMin} onChange={e=>setEstimateModal(m=>({...m,kcalMin:e.target.value}))} placeholder="min" type="number"
+                    style={{flex:1,border:"1px solid #ddd",borderRadius:8,padding:"8px 10px",fontFamily:"'DM Sans',sans-serif",fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  <span style={{color:"#ccc"}}>–</span>
+                  <input value={estimateModal.kcalMax} onChange={e=>setEstimateModal(m=>({...m,kcalMax:e.target.value}))} placeholder="max" type="number"
+                    style={{flex:1,border:"1px solid #ddd",borderRadius:8,padding:"8px 10px",fontFamily:"'DM Sans',sans-serif",fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                </div>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888",width:32,flexShrink:0}}>prot</span>
+                  <input value={estimateModal.protMin} onChange={e=>setEstimateModal(m=>({...m,protMin:e.target.value}))} placeholder="min" type="number"
+                    style={{flex:1,border:"1px solid #ddd",borderRadius:8,padding:"8px 10px",fontFamily:"'DM Sans',sans-serif",fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  <span style={{color:"#ccc"}}>–</span>
+                  <input value={estimateModal.protMax} onChange={e=>setEstimateModal(m=>({...m,protMax:e.target.value}))} placeholder="max" type="number"
+                    style={{flex:1,border:"1px solid #ddd",borderRadius:8,padding:"8px 10px",fontFamily:"'DM Sans',sans-serif",fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                </div>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#ccc",marginTop:6}}>dejalo en blanco si no tenés ni una idea aproximada</div>
+              </div>
+            )}
+
+            <div style={{marginBottom:18}}>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>comida</div>
+              <div style={{display:"flex",gap:6}}>
+                {MEALS.map(m=>(
+                  <button key={m.id} onClick={()=>setMealSel(m.id)}
+                    style={{flex:1,padding:"8px 4px",borderRadius:8,border:"1.5px solid",borderColor:mealSel===m.id?"#111":"#eee",background:mealSel===m.id?"#111":"transparent",color:mealSel===m.id?"#fff":"#999",fontFamily:"'Caveat',cursive",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                    {m.emoji} {m.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button onClick={addEstimateEntry} disabled={!estimateModal.descripcion?.trim()||!estimateModal.certainty}
+              style={{width:"100%",background:(estimateModal.descripcion?.trim()&&estimateModal.certainty)?"#111":"#eee",color:(estimateModal.descripcion?.trim()&&estimateModal.certainty)?"#fff":"#aaa",border:"none",borderRadius:8,padding:"14px",fontFamily:"'Caveat',cursive",fontSize:18,cursor:"pointer",marginBottom:10}}>
+              registrar
+            </button>
+            <button onClick={()=>setEstimateModal(null)} style={{width:"100%",background:"transparent",color:"#bbb",border:"none",padding:"8px",fontFamily:"'DM Sans',sans-serif",fontSize:12,cursor:"pointer"}}>cancelar</button>
+          </div>
+        </div>
+      )}
       <button onClick={()=>setExploreOpen(o=>!o)} style={{width:"100%",background:"transparent",border:"none",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#bbb",cursor:"pointer",padding:"6px 0 14px",textAlign:"center"}}>
         {exploreOpen?"▴ ocultar categorías":"▾ explorar por categoría"}
       </button>
