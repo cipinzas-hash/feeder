@@ -31,9 +31,20 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 function extractNutrient(foodNutrients, names, numbers) {
   const list = foodNutrients || [];
-  let hit = list.find(n => names.includes(n.nutrientName));
-  if (!hit) hit = list.find(n => numbers.includes(String(n.nutrientNumber)));
-  return hit ? hit.value : null;
+  // USDA FDC no es consistente entre endpoints: /food/{id} usa forma anidada
+  // (nutrient:{name,number}, valor en "amount"), /foods/search suele usar
+  // forma plana (nutrientName, nutrientNumber, valor en "value"). /foods/list
+  // no está documentado con certeza -- en vez de asumir una, se reconocen
+  // ambas (mismo enfoque que clientes de esta API ya probados en producción).
+  function nameOf(n) { return n.nutrient?.name ?? n.nutrientName ?? n.name; }
+  function numberOf(n) { return n.nutrient?.number ?? n.nutrientNumber; }
+  function valueOf(n) { return n.amount ?? n.value; }
+
+  let hit = list.find(n => names.includes(nameOf(n)));
+  if (!hit) hit = list.find(n => numbers.includes(String(numberOf(n))));
+  if (!hit) return null;
+  const v = valueOf(hit);
+  return v == null ? null : v;
 }
 
 async function fetchPage(pageNumber, retries = 3) {
@@ -92,6 +103,9 @@ async function main() {
   while (true) {
     const page = await fetchPage(pageNumber);
     if (!Array.isArray(page) || page.length === 0) break;
+    if (pageNumber === 1 && page[0]) {
+      console.log("  [diagnóstico] forma cruda del primer item:", JSON.stringify(page[0]).slice(0, 500));
+    }
     for (const item of page) {
       const kcal = extractNutrient(item.foodNutrients, ["Energy"], ["208", "957"]);
       const prot = extractNutrient(item.foodNutrients, ["Protein"], ["203"]);
