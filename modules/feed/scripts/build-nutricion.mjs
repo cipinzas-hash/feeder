@@ -41,7 +41,7 @@ async function fetchPage(pageNumber, retries = 3) {
   params.set("api_key", USDA_KEY);
   params.set("pageSize", String(PAGE_SIZE));
   params.set("pageNumber", String(pageNumber));
-  for (const dt of DATA_TYPES) params.append("dataType", dt);
+  params.set("dataType", DATA_TYPES.join(","));
   const url = `https://api.nal.usda.gov/fdc/v1/foods/list?${params.toString()}`;
 
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -111,6 +111,11 @@ async function main() {
     if (page.length < PAGE_SIZE) break; // última página
     pageNumber++;
     await sleep(150); // cortesía -- 1000/hr de límite, esto pesa ~45 llamadas
+  }
+
+  if (foods.length === 0) {
+    console.error("✗ La base quedó en 0 alimentos -- esto es anómalo (la API respondió pero sin items utilizables). Se aborta SIN escribir data/nutricion.json, para no publicar un archivo vacío como si fuera un éxito.");
+    process.exit(1);
   }
 
   const output = { generatedAt: new Date().toISOString(), count: foods.length, foods };
