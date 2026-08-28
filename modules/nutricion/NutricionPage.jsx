@@ -214,8 +214,9 @@ function LoadingScreen({ onDone }) {
 
 // ─── MoveMealButton — mover un alimento registrado entre comidas ───────────
 // (sesión angst-57) Botón 🔀 + popover compacto con las otras 3 comidas.
-// Reutilizado por la vista "hoy" (onMove=moveEntryMeal) y por el
-// planificador de mazos (onMove=moveDeckItemMeal) — misma UI, distinto handler.
+// Reutilizado por la vista "hoy" (onMove=moveEntryMeal). Ya NO por el
+// planificador de mazos -- desde issue #4 fase 1 un mazo es una sola
+// comida, no tiene sentido mover items individuales entre comidas ahi.
 function MoveMealButton({ uid, currentMeal, isOpen, onToggle, onMove, compact }) {
   const otras = MEALS.filter(m=>m.id!==currentMeal);
   return (
@@ -392,7 +393,7 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
       prot: parseFloat((prot/qty).toFixed(2)),
       qty,
       unit: displayQty,
-      meal: mealSel,
+      meal: deckEditor ? (deckEditor.meal||"snack") : mealSel, // issue #4 fase 1: item de mazo hereda la unica comida del mazo, no el mealSel global de la pantalla principal
       uid: Date.now()+Math.random()
     };
     if(deckEditor){
@@ -483,11 +484,23 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
   }, [searchQuery, dateKey, foodsDb]);
 
 
+  function inferDeckMeal(items){
+    // Mazos guardados antes de Fase 1 (issue #4) tenian meal por item, no
+    // por mazo. Se infiere el mas frecuente entre sus items, sin borrar
+    // nada del mazo original -- se re-persiste como single-meal recien
+    // cuando el usuario guarda de nuevo.
+    const counts = {};
+    (items||[]).forEach(it=>{ const m=it.meal||"snack"; counts[m]=(counts[m]||0)+1; });
+    const entries = Object.entries(counts);
+    if(!entries.length) return "snack";
+    return entries.sort((a,b)=>b[1]-a[1])[0][0];
+  }
+
   function openDeckPlanner(existingDeck){
     if(existingDeck){
-      setDeckEditor({id:existingDeck.id, name:existingDeck.name, items:(existingDeck.items||[]).map(it=>({...it})), isNew:false});
+      setDeckEditor({id:existingDeck.id, name:existingDeck.name, items:(existingDeck.items||[]).map(it=>({...it})), isNew:false, meal:existingDeck.meal||inferDeckMeal(existingDeck.items)});
     } else {
-      setDeckEditor({id:"deck-"+Date.now(), name:"", items:[], isNew:true});
+      setDeckEditor({id:"deck-"+Date.now(), name:"", items:[], isNew:true, meal:mealSel||"snack"});
     }
     setDeckMenuOpen(false);
     setView("deck");
@@ -496,19 +509,17 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
   function removeDeckItem(uid){
     setDeckEditor(de=>de?{...de, items:de.items.filter(i=>i.uid!==uid)}:de);
   }
-  function moveDeckItemMeal(uid, newMealId){
-    setDeckEditor(de=>de?{...de, items:de.items.map(i=>i.uid===uid?{...i,meal:newMealId}:i)}:de);
-    setMoveMenuOpen(null);
-  }
 
   function saveDeckEditor(){
     if(!deckEditor || !deckEditor.name.trim() || !deckEditor.items.length) return;
+    const finalMeal = deckEditor.meal || "snack";
     const finalDeck = {
       id: deckEditor.id,
       name: deckEditor.name.trim(),
+      meal: finalMeal, // issue #4 fase 1: un mazo = una comida, no una por item
       createdFrom: deckEditor.createdFrom || null,
       items: deckEditor.items.map(e=>({
-        id:e.id, emoji:e.emoji, name:e.name, kcal:e.kcal, prot:e.prot, qty:e.qty, unit:e.unit, meal:e.meal || "snack", prep:e.prep || ""
+        id:e.id, emoji:e.emoji, name:e.name, kcal:e.kcal, prot:e.prot, qty:e.qty, unit:e.unit, meal:finalMeal, prep:e.prep || ""
       }))
     };
     const exists = savedDecks.some(d=>d.id===finalDeck.id);
@@ -529,8 +540,13 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
 
   function applyDeck(deck){
     if(!deck?.items?.length) return;
-    const mapped = deck.items.map(e=>({...e, uid: Date.now()+Math.random()}));
-    saveNutriLog({...nutriLog, [dateKey]: mapped});
+    // issue #4 fase 1: antes esto SOBRESCRIBIA el registro del dia entero
+    // ([dateKey]: mapped) -- si ya habias registrado otras comidas, se
+    // perdian sin aviso. Ahora AGREGA los items del mazo a la comida que
+    // el mazo declara, preservando todo lo demas del dia.
+    const deckMeal = deck.meal || inferDeckMeal(deck.items);
+    const mapped = deck.items.map(e=>({...e, meal:deckMeal, uid: Date.now()+Math.random()}));
+    saveNutriLog({...nutriLog, [dateKey]: [...log, ...mapped]});
     setDeckMenuOpen(false);
   }
 
@@ -844,7 +860,6 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
     const de = deckEditor;
     const deckKcal = Math.round(de.items.reduce((s,e)=>s+e.kcal*e.qty,0));
     const deckProt = parseFloat(de.items.reduce((s,e)=>s+e.prot*e.qty,0).toFixed(1));
-    const itemsByMeal = MEALS.map(m=>({...m, entries: de.items.filter(e=>(e.meal||"snack")===m.id)}));
     const canSave = de.name.trim().length>0 && de.items.length>0;
     return (
       <div style={{padding:"16px",maxWidth:720,margin:"0 auto"}}>
@@ -883,26 +898,35 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
           </div>
         </div>
 
-        {/* Items por comida */}
-        {itemsByMeal.map(meal=>(
-          <div key={meal.id} style={{marginBottom:12}}>
-            <div style={{fontFamily:"'Caveat',cursive",fontSize:16,fontWeight:700,color:"#111",marginBottom:6}}>{meal.emoji} {meal.label}</div>
-            {meal.entries.length===0
-              ? <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#ddd",fontStyle:"italic",padding:"4px 2px"}}>sin alimentos</div>
-              : meal.entries.map(e=>(
-                  <div key={e.uid} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",borderBottom:"1px dashed #f0f0f0"}}>
-                    <span style={{fontSize:16,flexShrink:0}}>{e.emoji}</span>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#333",fontWeight:600}}>{e.name}</div>
-                      <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>×{e.qty} {e.unit} · {Math.round(e.kcal*e.qty)}kcal</div>
-                    </div>
-                    <MoveMealButton uid={e.uid} currentMeal={meal.id} isOpen={moveMenuOpen===e.uid} onToggle={setMoveMenuOpen} onMove={moveDeckItemMeal}/>
-                    <button onClick={()=>removeDeckItem(e.uid)} style={{background:"transparent",border:"none",color:"#ddd",fontSize:16,cursor:"pointer",padding:"0 2px",lineHeight:1}}>×</button>
-                  </div>
-                ))
-            }
+        {/* Comida del mazo -- issue #4 fase 1: un mazo = una sola comida */}
+        <div style={{marginBottom:16}}>
+          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>comida</div>
+          <div style={{display:"flex",gap:6}}>
+            {MEALS.map(m=>(
+              <button key={m.id} onClick={()=>setDeckEditor(prev=>({...prev,meal:m.id}))}
+                style={{flex:1,padding:"8px 4px",borderRadius:8,border:"1.5px solid",borderColor:de.meal===m.id?"#111":"#eee",background:de.meal===m.id?"#111":"transparent",color:de.meal===m.id?"#fff":"#999",fontFamily:"'Caveat',cursive",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                {m.emoji} {m.label}
+              </button>
+            ))}
           </div>
-        ))}
+        </div>
+
+        {/* Items del mazo (lista plana, todos comparten la misma comida) */}
+        <div style={{marginBottom:12}}>
+          {de.items.length===0
+            ? <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#ddd",fontStyle:"italic",padding:"4px 2px"}}>sin alimentos todavía</div>
+            : de.items.map(e=>(
+                <div key={e.uid} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",borderBottom:"1px dashed #f0f0f0"}}>
+                  <span style={{fontSize:16,flexShrink:0}}>{e.emoji}</span>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#333",fontWeight:600}}>{e.name}</div>
+                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>×{e.qty} {e.unit} · {Math.round(e.kcal*e.qty)}kcal</div>
+                  </div>
+                  <button onClick={()=>removeDeckItem(e.uid)} style={{background:"transparent",border:"none",color:"#ddd",fontSize:16,cursor:"pointer",padding:"0 2px",lineHeight:1}}>×</button>
+                </div>
+              ))
+          }
+        </div>
 
         {/* Buscador para agregar */}
         <div style={{marginTop:18,marginBottom:10}}>
@@ -1006,7 +1030,7 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
               <div key={deck.id} style={{display:"flex",alignItems:"center",gap:6,width:"100%",background:"linear-gradient(180deg,#f8f8f8 0%,#efefef 100%)",border:"1.5px solid #d8d8d8",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.8)",borderRadius:10,padding:"10px 12px"}}>
                 <button onClick={()=>applyDeck(deck)} style={{flex:1,minWidth:0,background:"transparent",border:"none",cursor:"pointer",textAlign:"left",padding:0}}>
                   <div style={{fontFamily:"'Caveat',cursive",fontSize:18,color:"#111",fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{deck.name}</div>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa"}}>{(deck.items||[]).length} cartas · cargar</div>
+                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa"}}>{MEALS.find(m=>m.id===(deck.meal||inferDeckMeal(deck.items)))?.emoji||""} {(deck.items||[]).length} cartas · agregar a hoy</div>
                 </button>
                 <button onClick={()=>openDeckPlanner(deck)} style={{background:"transparent",border:"none",color:"#999",fontSize:14,cursor:"pointer",padding:"4px 6px",flexShrink:0}}>✎</button>
                 <button onClick={()=>{if(window.confirm(`¿Eliminar el mazo "${deck.name}"?`))deleteDeck(deck.id);}} style={{background:"transparent",border:"none",color:"#ccc",fontSize:17,cursor:"pointer",padding:"4px 6px",flexShrink:0,lineHeight:1}}>×</button>
