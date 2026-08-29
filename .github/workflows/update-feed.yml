@@ -18,10 +18,17 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 25   # Melee tiene su propio presupuesto interno de 12 min
-                          # (se corta solo y commitea lo parcial); esto es margen
-                          # extra para el resto del pipeline (RSS, cine, git push)
-                          # después de eso -- ver meleeDeadline en build-feed.mjs
+    timeout-minutes: 35   # Melee tiene su propio presupuesto interno de 15 min
+                          # (se corta solo y commitea lo parcial, ver
+                          # meleeDeadline en build-feed.mjs); el resto del
+                          # pipeline (setup, RSS general, cine, git push)
+                          # suele rondar 3-5 min más. 25 quedaba demasiado
+                          # ajustado contra ese peor caso combinado -- varias
+                          # corridas post-torneo (muchos sets de Top 8/upsets
+                          # buscando clip por clip, secuencial) pegaban justo
+                          # en el techo y se cancelaban antes de llegar al
+                          # commit/push (confirmado: 5 corridas "cancelled"
+                          # entre el 26-29 ago, todas a ~25.3min exactos).
     steps:
       - uses: actions/checkout@v4
 
