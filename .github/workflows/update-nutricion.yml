@@ -37,8 +37,11 @@ jobs:
           git diff --staged --quiet -- modules/feed/data/nutricion.json || { git commit -m "Actualizar base de nutrición $(date -u +%Y-%m-%dT%H:%MZ)"; committed=1; }
           pushed=0
           for i in 1 2 3; do
-            git pull --rebase origin main && git push && pushed=1 && break
+            git push && pushed=1 && break
             echo "push falló, reintentando ($i/3)..."
+            git fetch origin main
+            git reset --soft origin/main
+            git diff --staged --quiet || git commit -m "Actualizar base de nutrición $(date -u +%Y-%m-%dT%H:%MZ)"
             sleep 5
           done
           if [ "${committed:-0}" -eq 1 ] && [ "$pushed" -ne 1 ]; then
