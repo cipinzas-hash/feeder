@@ -99,6 +99,20 @@ function serieFactor(sv) {
   return sv?.done ? 1 : 0;
 }
 
+// Métrica de progreso de una serie, no el peso real registrado (ese se
+// sigue mostrando tal cual en toda la UI). En carga directa más peso =
+// más difícil = progreso; en carga de asistencia (weightStep<0, dominadas/
+// dip asistido) es al revés -- menos peso de asistencia = más carga
+// efectiva = progreso. Se invierte el signo del peso acá, en un solo
+// lugar, para que "mejor sesión"/"PR"/deltaPct/el gráfico comparen todos
+// en la misma dirección sin tener que duplicar la condición en cada sitio
+// que hoy compara volumen (issue #11).
+function volEfectivo(reps, peso, ex) {
+  if (!peso) return reps || 0;
+  const p = (ex && ex.weightStep < 0) ? -peso : peso;
+  return (reps || 0) * p;
+}
+
 // 15 series efectivas/semana/grupo = punto medio del rango ~10-20 que cita
 // la literatura de hipertrofia para gente ya entrenada (ej. revisiones de
 // Schoenfeld et al.) -- se usa como el "100%" (naranjo) del heatmap.
@@ -247,11 +261,11 @@ function BodyHeatmap({ totals, onTap }) {
   );
 }
 
-function ProgresionChart({ history, compact }) {
+function ProgresionChart({ history, compact, ex }) {
   if(!history || history.length < 2) return null;
   const W = compact ? 200 : 290, H = compact ? 48 : 72, pad = 8;
   const hasPeso = history.some(h => h.peso);
-  const vals = history.map(h => hasPeso ? ((h.reps||0) * (h.peso||0)) : (h.reps||0));
+  const vals = history.map(h => volEfectivo(h.reps, h.peso, ex));
   const minV = Math.min(...vals) * 0.88, maxV = Math.max(...vals) * 1.12;
   const range = maxV - minV || 1;
   const px = i => pad + (i / (history.length - 1)) * (W - pad * 2);
@@ -260,7 +274,7 @@ function ProgresionChart({ history, compact }) {
   const last = vals[vals.length - 1], first = vals[0];
   const up = last >= first;
   const color = up ? "#2e7d52" : "#e53935";
-  const deltaPct = first > 0 ? ((last - first) / first * 100).toFixed(0) : null;
+  const deltaPct = first !== 0 ? ((last - first) / Math.abs(first) * 100).toFixed(0) : null;
   const lastEntry = history[history.length - 1];
   const label = hasPeso ? `${lastEntry.reps}r×${lastEntry.peso}kg` : `${lastEntry.reps}r`;
   return (
@@ -425,8 +439,8 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
         const r = sv.reps || 0;
         const p = sv.peso || null;
         if(ex && r < ex.repMax) allTop = false;
-        const vol = p ? r*p : r;
-        const bVol = bestPeso ? bestReps*bestPeso : bestReps;
+        const vol = volEfectivo(r, p, ex);
+        const bVol = volEfectivo(bestReps, bestPeso, ex);
         if(vol > bVol){ bestReps = r; bestPeso = p; }
       });
       if(hasDone) result.push({date: dk, reps: bestReps, peso: bestPeso, allTop});
@@ -560,12 +574,12 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
     const selEx   = histExId ? allExercicios.find(e=>e.id===histExId) : null;
     const hist    = histExId ? getExHistory(histExId) : [];
     const hasPeso = hist.some(h=>h.peso);
-    const bestVol = hist.length ? Math.max(...hist.map(h => hasPeso ? (h.reps||0)*(h.peso||0) : (h.reps||0))) : 0;
+    const bestVol = hist.length ? Math.max(...hist.map(h => volEfectivo(h.reps, h.peso, selEx))) : 0;
     const lastEntry  = hist.length ? hist[hist.length-1] : null;
     const firstEntry = hist.length ? hist[0] : null;
-    const lastVol  = lastEntry  ? (hasPeso ? (lastEntry.reps||0)*(lastEntry.peso||0)  : (lastEntry.reps||0))  : 0;
-    const firstVol = firstEntry ? (hasPeso ? (firstEntry.reps||0)*(firstEntry.peso||1) : (firstEntry.reps||0)) : 0;
-    const deltaPct = firstVol > 0 ? Math.round((lastVol-firstVol)/firstVol*100) : null;
+    const lastVol  = lastEntry  ? volEfectivo(lastEntry.reps, lastEntry.peso, selEx)  : 0;
+    const firstVol = firstEntry ? volEfectivo(firstEntry.reps, firstEntry.peso, selEx) : 0;
+    const deltaPct = firstVol !== 0 ? Math.round((lastVol-firstVol)/Math.abs(firstVol)*100) : null;
     return (
       <div style={{padding:"16px",maxWidth:480,margin:"0 auto"}}>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
@@ -608,7 +622,7 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:14}}>
                 {[
                   {label:"última sesión", val:lastEntry?.reps?(hasPeso?`${lastEntry.reps}r×${lastEntry.peso}kg`:`${lastEntry.reps}r`):"—", sub:lastEntry?fmtD(lastEntry.date):""},
-                  {label:"PR volumen",    val:(()=>{ const pr=hist.find(h=>(hasPeso?(h.reps||0)*(h.peso||0):(h.reps||0))===bestVol); return pr?(hasPeso?`${pr.reps}r×${pr.peso}kg`:`${bestVol}r`):"—"; })(), gold:true},
+                  {label:"PR volumen",    val:(()=>{ const pr=hist.find(h=>volEfectivo(h.reps,h.peso,selEx)===bestVol); return pr?(hasPeso?`${pr.reps}r×${pr.peso}kg`:`${bestVol}r`):"—"; })(), gold:true},
                   {label:"sesiones",      val:hist.length, sub:firstEntry?`desde ${fmtD(firstEntry.date)}`:""},
                 ].map(({label,val,sub,gold})=>(
                   <div key={label} style={{background:"rgba(255,255,255,0.06)",borderRadius:8,padding:"10px"}}>
@@ -621,13 +635,13 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
               {hist.length>=2 && (
                 <div style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:12,marginBottom:14}}>
                   <div style={SL}>progresión</div>
-                  <ProgresionChart history={hist}/>
+                  <ProgresionChart history={hist} ex={selEx}/>
                 </div>
               )}
               <div style={SL}>sesiones recientes</div>
               <div style={{display:"flex",flexDirection:"column",gap:2}}>
                 {[...hist].reverse().slice(0,12).map(h=>{
-                  const vol = hasPeso ? (h.reps||0)*(h.peso||0) : (h.reps||0);
+                  const vol = volEfectivo(h.reps, h.peso, selEx);
                   const isPR = vol===bestVol && vol>0;
                   return (
                     <div key={h.date} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
@@ -1140,7 +1154,7 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
                               <div style={{fontFamily:"'Caveat',cursive",fontSize:16,color:"#1b5e20",fontWeight:700}}>⬆ {calSuggestion}</div>
                             </div>
                           )}
-                          {exHist.length>=2 && <div style={{background:"#fff",border:"1px solid #f0f0f0",borderRadius:8,padding:"8px 10px",marginBottom:10}}><ProgresionChart history={exHist} compact/></div>}
+                          {exHist.length>=2 && <div style={{background:"#fff",border:"1px solid #f0f0f0",borderRadius:8,padding:"8px 10px",marginBottom:10}}><ProgresionChart history={exHist} compact ex={ex}/></div>}
 
                           <div style={{display:"flex",flexDirection:"column",gap:6}}>
                             {Array.from({length:nS},(_,si)=>{
