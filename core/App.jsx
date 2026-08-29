@@ -119,45 +119,53 @@ function AngstApp() {
   const [exportOk, setExportOk] = useState(null);
   const [loadMsg, setLoadMsg] = useState(null);
 
-  // ── Podcast global: aviso de episodio nuevo + reproductor que corre en
-  // paralelo a Angst (sobrevive cambio de pestaña porque vive acá, en
+  // ── Podcast global: aviso de episodios pendientes + reproductor que corre
+  // en paralelo a Angst (sobrevive cambio de pestaña porque vive acá, en
   // core, no adentro de FeedPage que se desmonta al salir de esa página).
-  const [podcastLatest, setPodcastLatest] = useState(null);
-  const [podcastSeen, setPodcastSeen] = useState(()=>{
-    try { const v = localStorage.getItem("angst-podcast-seen-v1"); return v ? JSON.parse(v) : {}; } catch(e) { return {}; }
+  // Solo Meta Pod. Sin resumen de posición ni "visto/no visto" persistente
+  // -- no hace falta volver a escuchar un episodio, así que "pendiente" es
+  // binario: está en la ventana de los últimos 5 del servidor y no está en
+  // el set de despachados. Al despachar uno (tocar play) se poda además
+  // contra la ventana actual -- nada que ya haya salido de los últimos 5
+  // se queda dando vueltas en localStorage para siempre.
+  const [podcastLatest, setPodcastLatest] = useState(null); // {generatedAt, episodes:[...]}
+  const [podcastDispatched, setPodcastDispatched] = useState(()=>{
+    try { const v = localStorage.getItem("angst-podcast-dispatched-v1"); return v ? JSON.parse(v) : []; } catch(e) { return []; }
   });
   const [nowPlaying, setNowPlaying] = useState(null);
-  const [podcastProgress, setPodcastProgress] = useState(()=>{
-    try { const v = localStorage.getItem("angst-podcast-progress-v1"); return v ? JSON.parse(v) : {}; } catch(e) { return {}; }
-  });
+  const [podcastMenuOpen, setPodcastMenuOpen] = useState(false);
   const podcastAudioRef = useRef(null);
-  const podcastLastSaveRef = useRef(0);
   useEffect(()=>{
     fetch("https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/podcast-latest.json", { cache: "no-store" })
       .then(r=>r.ok?r.json():null)
-      .then(d=>{ if(d) setPodcastLatest(d); })
+      .then(d=>{
+        if(!d) return;
+        setPodcastLatest(d);
+        // Poda: cualquier guid despachado que ya no esté en la ventana
+        // actual nunca va a volver a aparecer -- se saca, así el set no
+        // crece más allá del tamaño de la ventana del servidor.
+        const windowGuids = new Set((d.episodes||[]).map(e=>e.guid));
+        setPodcastDispatched(prev=>{
+          const next = prev.filter(g=>windowGuids.has(g));
+          if(next.length === prev.length) return prev;
+          try { localStorage.setItem("angst-podcast-dispatched-v1", JSON.stringify(next)); } catch(e){}
+          return next;
+        });
+      })
       .catch(()=>{});
   }, []);
-  function markPodcastSeen(source, guid){
-    setPodcastSeen(prev=>{
-      const next = {...prev, [source]: guid};
-      try { localStorage.setItem("angst-podcast-seen-v1", JSON.stringify(next)); } catch(e){}
-      return next;
-    });
-  }
-  function savePodcastProgress(guid, time, duration, done){
-    setPodcastProgress(prev=>{
-      const next = {...prev, [guid]: {time, duration, done}};
-      try { localStorage.setItem("angst-podcast-progress-v1", JSON.stringify(next)); } catch(e){}
+  function markPodcastDispatched(guid){
+    setPodcastDispatched(prev=>{
+      if(prev.includes(guid)) return prev;
+      const next = [...prev, guid];
+      try { localStorage.setItem("angst-podcast-dispatched-v1", JSON.stringify(next)); } catch(e){}
       return next;
     });
   }
   function closePodcastPlayer(){
-    if(podcastAudioRef.current && nowPlaying){
-      savePodcastProgress(nowPlaying.guid, podcastAudioRef.current.currentTime||0, podcastAudioRef.current.duration||0, false);
-    }
     setNowPlaying(null);
   }
+  const podcastPending = (podcastLatest?.episodes||[]).filter(e=>!podcastDispatched.includes(e.guid));
   // Otros módulos (ej. la barra Noticias/Vitrina/Buzón en FeedPage, fixed
   // bottom:0 propia) no reciben props de App.jsx -- avisamos vía variable
   // CSS en :root en vez de acoplarlos, para que puedan correrse hacia
@@ -950,8 +958,7 @@ function AngstApp() {
       feedPodcastsEscuchados: readLocalJSON("angst-feed-podcasts-escuchados-v1"),
       feedConciertosVistos: readLocalJSON("angst-feed-conciertos-vistos-v1"),
       feedCineEstado: readLocalJSON("angst-cine-estado-v1"),
-      feedPodcastSeen: readLocalJSON("angst-podcast-seen-v1"),
-      feedPodcastProgress: readLocalJSON("angst-podcast-progress-v1"),
+      feedPodcastDispatched: readLocalJSON("angst-podcast-dispatched-v1"),
     };
   }
   function readLocalJSON(key){
@@ -961,7 +968,7 @@ function AngstApp() {
   // Si agregás un campo de estado nuevo: sumalo en buildExportPayload,
   // en saveToStorage, acá, y en restoreFromPayload — las 4 ubicaciones
   // de la regla vital.
-  const REQUIRED_EXPORT_FIELDS = ['dayData','weekOffset','budgets','nutria','calMarks','cookingOpts','aseoOpts','routines','recurring','lastRollover','kidsHealth','custody','fadimanData','nutriLog','ejercicioLog','ejercicioDecks','customFoods','foodOverrides','customEjercicios','nutriDecks','pokeInventario','pokeCarpetas','pokeDarkCatalogo','pokePriceCache','feedState','feedMicrodocsVistos','feedPodcastsEscuchados','feedConciertosVistos','feedCineEstado','feedPodcastSeen','feedPodcastProgress'];
+  const REQUIRED_EXPORT_FIELDS = ['dayData','weekOffset','budgets','nutria','calMarks','cookingOpts','aseoOpts','routines','recurring','lastRollover','kidsHealth','custody','fadimanData','nutriLog','ejercicioLog','ejercicioDecks','customFoods','foodOverrides','customEjercicios','nutriDecks','pokeInventario','pokeCarpetas','pokeDarkCatalogo','pokePriceCache','feedState','feedMicrodocsVistos','feedPodcastsEscuchados','feedConciertosVistos','feedCineEstado','feedPodcastDispatched'];
 
   function handleExport(){
     const fullPayload = buildExportPayload();
@@ -1018,8 +1025,7 @@ function AngstApp() {
     if(d.feedPodcastsEscuchados!=null){ try{ localStorage.setItem("angst-feed-podcasts-escuchados-v1", JSON.stringify(d.feedPodcastsEscuchados)); }catch(e){} }
     if(d.feedConciertosVistos!=null){ try{ localStorage.setItem("angst-feed-conciertos-vistos-v1", JSON.stringify(d.feedConciertosVistos)); }catch(e){} }
     if(d.feedCineEstado!=null){ try{ localStorage.setItem("angst-cine-estado-v1", JSON.stringify(d.feedCineEstado)); }catch(e){} }
-    if(d.feedPodcastSeen!=null){ try{ localStorage.setItem("angst-podcast-seen-v1", JSON.stringify(d.feedPodcastSeen)); }catch(e){} }
-    if(d.feedPodcastProgress!=null){ try{ localStorage.setItem("angst-podcast-progress-v1", JSON.stringify(d.feedPodcastProgress)); }catch(e){} }
+    if(d.feedPodcastDispatched!=null){ try{ localStorage.setItem("angst-podcast-dispatched-v1", JSON.stringify(d.feedPodcastDispatched)); }catch(e){} }
     setLoadMsg(`✓ Restauración completa desde ${sourceLabel||"backup"}`);
     setTimeout(()=>setLoadMsg(null), 4000);
     return true;
@@ -1286,39 +1292,42 @@ function AngstApp() {
 
         <div className="sub-bar"><div className="sub-text">{CYNICAL_SUBTITLES[subIdx]}</div></div>
 
-        {(()=>{
-          const metaPodLatest = podcastLatest?.tracked?.["Meta Pod"];
-          if(!metaPodLatest) return null;
-          const hasNewMetaPod = podcastSeen["Meta Pod"] !== metaPodLatest.guid;
-          const progress = podcastProgress[metaPodLatest.guid];
-          const playThis = ()=>{setNowPlaying({title:metaPodLatest.title,source:"Meta Pod",audioUrl:metaPodLatest.audioUrl,guid:metaPodLatest.guid});markPodcastSeen("Meta Pod",metaPodLatest.guid);};
-
-          if(hasNewMetaPod) return (
-            <div style={{background:"#ffcc00",padding:"5px 20px",display:"flex",alignItems:"center",gap:8}}>
-              <span style={{fontSize:13,flexShrink:0}}>🎙️</span>
-              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#111",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>Nuevo Meta Pod: {metaPodLatest.title}</span>
-              <button onClick={playThis}
-                style={{background:"#111",color:"#fff",border:"none",borderRadius:4,padding:"3px 10px",fontSize:11,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",flexShrink:0}}>▶ escuchar</button>
-              <button onClick={()=>markPodcastSeen("Meta Pod",metaPodLatest.guid)}
-                style={{background:"transparent",border:"none",color:"#111",fontSize:15,cursor:"pointer",opacity:0.5,lineHeight:1,flexShrink:0}}>×</button>
+        {podcastLatest&&(()=>{
+          const playEpisode = (ep)=>{
+            setNowPlaying({title:ep.title,source:"Meta Pod",audioUrl:ep.audioUrl,guid:ep.guid});
+            markPodcastDispatched(ep.guid);
+            setPodcastMenuOpen(false);
+          };
+          if(!podcastPending.length) return (
+            <div style={{padding:"4px 20px",display:"flex",alignItems:"center"}}>
+              <span style={{fontSize:13,opacity:0.35}} title="Meta Pod: al día">🎙️</span>
             </div>
           );
-
-          // Episodio ya visto pero quedó a medias (cerrado con avance
-          // guardado, todavía no llega a onEnded) y el player no está
-          // abierto ahora mismo: chip chico para retomar, no vuelve a
-          // tapar la pantalla con la barra completa hasta que lo toques.
-          if(progress && !progress.done && !nowPlaying){
-            const pct = progress.duration>0 ? Math.round(progress.time/progress.duration*100) : null;
-            return (
-              <div style={{background:"#222",padding:"4px 20px",display:"flex",alignItems:"center",gap:8}}>
-                <button onClick={playThis} style={{background:"transparent",border:"none",color:"#fff",fontSize:11,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",gap:6,padding:0}}>
-                  <span>▶</span><span style={{opacity:0.7}}>reanudar Meta Pod{pct!=null?` — ${pct}%`:""}</span>
-                </button>
+          return (
+            <div style={{position:"relative"}}>
+              <div style={{background:"#ffcc00",padding:"5px 20px",display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}
+                onClick={()=>setPodcastMenuOpen(o=>!o)}>
+                <span style={{fontSize:13,flexShrink:0}}>🎙️</span>
+                <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#111",flex:1}}>
+                  Meta Pod: {podcastPending.length} episodio{podcastPending.length>1?"s":""} pendiente{podcastPending.length>1?"s":""}
+                </span>
+                <span style={{fontSize:10,color:"#111",flexShrink:0}}>{podcastMenuOpen?"▲":"▼"}</span>
               </div>
-            );
-          }
-          return null;
+              {podcastMenuOpen&&(
+                <div style={{background:"#222",padding:"6px 0"}}>
+                  {podcastPending.map(ep=>(
+                    <div key={ep.guid} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 20px"}}>
+                      <button onClick={()=>playEpisode(ep)}
+                        style={{background:"#fff",color:"#111",border:"none",borderRadius:4,padding:"3px 10px",fontSize:11,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",flexShrink:0}}>▶</button>
+                      <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#fff",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ep.title}</span>
+                      <button onClick={()=>markPodcastDispatched(ep.guid)}
+                        style={{background:"transparent",border:"none",color:"#888",fontSize:14,cursor:"pointer",flexShrink:0}} title="descartar sin escuchar">×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
         })()}
 
         {/* ── PLANNER ── */}
@@ -1743,17 +1752,7 @@ function AngstApp() {
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontFamily:"'Caveat',cursive",fontSize:14,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{nowPlaying.title}</div>
               <audio ref={podcastAudioRef} controls autoPlay src={nowPlaying.audioUrl} style={{width:"100%",height:28,colorScheme:"dark"}}
-                onLoadedMetadata={e=>{
-                  const p = podcastProgress[nowPlaying.guid];
-                  if(p && !p.done && p.time>0 && p.time<e.target.duration-5) e.target.currentTime = p.time;
-                }}
-                onTimeUpdate={e=>{
-                  const now = Date.now();
-                  if(now - podcastLastSaveRef.current < 5000) return;
-                  podcastLastSaveRef.current = now;
-                  savePodcastProgress(nowPlaying.guid, e.target.currentTime, e.target.duration||0, false);
-                }}
-                onEnded={()=>savePodcastProgress(nowPlaying.guid, 0, 0, true)}
+                onEnded={closePodcastPlayer}
               />
             </div>
             <button onClick={closePodcastPlayer} style={{background:"transparent",border:"none",color:"#888",fontSize:18,cursor:"pointer",flexShrink:0,lineHeight:1}} title="cerrar reproductor (guarda el avance)">×</button>
