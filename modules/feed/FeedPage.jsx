@@ -806,11 +806,16 @@
       // cualquier "interesa" de Películas se colaba también en el carrusel de
       // Series/Animación (bug real: no estaba en `items` de esa categoría por
       // ser de otra, así que el chequeo de ausencia daba falso positivo).
+      // _fueraDeCartelera marca justamente eso -- issue #12: la fuente activa
+      // (cine.json, `items`) nunca es la única verdad para lo que el usuario
+      // ya marcó, y lo que cayó de ahí se agrupa aparte, no se pierde ni se
+      // mezcla sin distinción con lo que sigue vigente.
+      const itemGuidsEnCartelera = React.useMemo(() => new Set(items.map(it => it.guid)), [items]);
       const exemptExtra = React.useMemo(() => Object.values(cineEstado)
         .filter(e => e.estado === "interesa" && e.item
           && (!categoria || e.item.categoria === categoria)
-          && !items.some(it => it.guid === e.item.guid))
-        .map(e => e.item), [cineEstado, items, categoria]);
+          && !itemGuidsEnCartelera.has(e.item.guid))
+        .map(e => ({ ...e.item, _fueraDeCartelera: true })), [cineEstado, itemGuidsEnCartelera, categoria]);
       const fullItems = exemptExtra.length ? [...items, ...exemptExtra] : items;
 
       // Orden y filtro del carrusel: por defecto el orden del catálogo tal
@@ -861,7 +866,11 @@
           puntuadas.sort((a, b) => (b.rating?.imdb ?? b.rating?.tmdb) - (a.rating?.imdb ?? a.rating?.tmdb));
           arr = [...puntuadas, ...sinPuntuar];
         }
-        return arr;
+        // Fuera de cartelera agrupado al final, cualquiera sea el orden
+        // elegido arriba -- issue #12: agrupado aparte, no mezclado.
+        const enCartelera = arr.filter(it => !it._fueraDeCartelera);
+        const fueraDeCartelera = arr.filter(it => it._fueraDeCartelera);
+        return fueraDeCartelera.length ? [...enCartelera, ...fueraDeCartelera] : arr;
       }, [fullItems, sortBy, ocultarDescartadas, ocultarEstreno, ocultarProduccion, ocultarTrending, esPelicula, cineEstado]);
 
       const total = sortedItems.length;
@@ -955,6 +964,7 @@
               const diasEstreno = enProduccion ? diasParaEstreno(item) : null;
               const ratingVista = vista ? CINE_RATINGS.find(r => r.id === estadoItem.rating) : null;
               const trending = esTrending(item);
+              const fueraDeCartelera = !!item._fueraDeCartelera;
               return (
                 <div key={offset} data-cine-tap={offset} style={{
                   position: "absolute", top: 16, left: "50%", width: CARD_W,
@@ -1012,6 +1022,19 @@
                         fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, padding: "3px 7px",
                         borderRadius: 5, letterSpacing: 0.3,
                       }}>NUEVO</div>
+                    )}
+                    {/* "Fuera de cartelera" -- issue #12: la marca "interesa"
+                        sobrevive a que build-cine.mjs deje de traer el ítem
+                        (cartelera activa se le pasó, catálogo cumplió los 30
+                        días). Mismo lugar que "nuevo"/"vista": mutuamente
+                        excluyente con ambos (esto solo se pinta si el estado
+                        es "interesa", nunca "sin_marca" ni "vista" a la vez). */}
+                    {fueraDeCartelera && !nuevo && !vista && (
+                      <div style={{
+                        position: "absolute", top: 6, right: 6, background: "#333", color: "#ccc",
+                        fontFamily: "'DM Sans',sans-serif", fontSize: 8, fontWeight: 700, padding: "3px 6px",
+                        borderRadius: 5, letterSpacing: 0.2, textAlign: "right", lineHeight: 1.3,
+                      }}>FUERA DE<br/>CARTELERA</div>
                     )}
                     {/* "Interesa" -- además del anillo verde del póster, un
                         ícono explícito arriba-izquierda (mutuamente excluyente
