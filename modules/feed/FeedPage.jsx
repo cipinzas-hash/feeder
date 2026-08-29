@@ -500,13 +500,14 @@
     // pubDate (= release_date real de TMDb) y por el flag trending que arma
     // build-cine.mjs -- no son excluyentes entre sí.
     function esEstreno(item) {
-      // Recién en cine: se estrenó hace menos de 30 días, ya estrenada (no
-      // futura). Una peli vieja que resurge en trending no cuenta como
-      // estreno solo por eso -- esa es la etiqueta "trending", separada.
+      // "Solo estrenos": todavía la puedo ver en cine -- se estrenó hace
+      // menos de 15 días, ya estrenada (no futura). Una peli vieja que
+      // resurge en trending no cuenta como estreno solo por eso -- esa es
+      // la etiqueta "trending", separada.
       if (!item.pubDate) return false;
       const t = new Date(item.pubDate).getTime();
       if (Date.now() < t) return false;
-      return Date.now() - t <= 30 * 86400000;
+      return Date.now() - t <= 15 * 86400000;
     }
     function esEnProduccion(item) {
       if (!item.pubDate) return false;
@@ -820,28 +821,37 @@
 
       // Orden y filtro del carrusel: por defecto el orden del catálogo tal
       // cual llega; "próxima" prioriza lo que menos le queda en cartelera
-      // (lo sin firstSeenAt queda al final); "rating" prioriza mejor
-      // puntuado externo (IMDb/TMDb, lo sin rating al final). "ocultar
-      // descartadas" saca del loop lo marcado "no me interesa" sin borrar
-      // la marca -- es solo un filtro de vista.
-      const [sortBy, setSortBy] = useState("default"); // default | proxima | rating
+      // (lo sin firstSeenAt queda al final). "ocultar descartadas"/"ocultar
+      // vistas" sacan del loop lo ya resuelto (visto o descartado) sin
+      // borrar la marca -- son solo filtros de vista. "solo me interesa"
+      // es la vía para revisar el acumulado sin que se pierda entre lo
+      // demás (issue: "cómo se van a acumular sin ver").
+      const [sortBy, setSortBy] = useState("default"); // default | proxima
       // Ocultas por defecto -- el toggle las muestra si querés revisarlas.
       const [ocultarDescartadas, setOcultarDescartadas] = useState(true);
-      // Etiquetas de ciclo de vida (estreno/producción/trending) -- no son
-      // excluyentes entre sí, cada toggle "apaga" (oculta) independiente.
-      // Solo tienen sentido en Películas -- Series/Animación no traen pubDate
-      // ni trending del build todavía.
-      const [ocultarEstreno, setOcultarEstreno] = useState(false);
-      const [ocultarProduccion, setOcultarProduccion] = useState(false);
+      const [ocultarVistas, setOcultarVistas] = useState(true);
+      const [soloInteresa, setSoloInteresa] = useState(false);
+      // Estreno pasó de "ocultar" a "solo" -- como filtro negativo casi no
+      // se notaba (13/32 en un carrusel no es un cambio visible claro);
+      // como filtro positivo sí sirve para "qué puedo ver todavía en el
+      // cine" (15 días desde pubDate). Producción se sacó entera -- con
+      // 1-2 ítems en producción a la vez el toggle no tenía nada real que
+      // mostrar/ocultar.
+      const [soloEstrenos, setSoloEstrenos] = useState(false);
       const [ocultarTrending, setOcultarTrending] = useState(false);
       const esPelicula = categoria === "Películas";
       const sortedItems = React.useMemo(() => {
         let arr = fullItems;
-        if (ocultarDescartadas) {
-          arr = arr.filter(it => cineEstado[it.guid]?.estado !== "descartada");
+        if (soloInteresa) {
+          // Mutuamente excluyente con descartada/vista por construcción
+          // (un ítem tiene un solo estado a la vez) -- no hace falta
+          // aplicar esos dos filtros encima.
+          arr = arr.filter(it => cineEstado[it.guid]?.estado === "interesa");
+        } else {
+          if (ocultarDescartadas) arr = arr.filter(it => cineEstado[it.guid]?.estado !== "descartada");
+          if (ocultarVistas) arr = arr.filter(it => cineEstado[it.guid]?.estado !== "vista");
         }
-        if (esPelicula && ocultarEstreno) arr = arr.filter(it => !esEstreno(it));
-        if (esPelicula && ocultarProduccion) arr = arr.filter(it => !esEnProduccion(it));
+        if (esPelicula && soloEstrenos) arr = arr.filter(it => esEstreno(it));
         if (esPelicula && ocultarTrending) arr = arr.filter(it => !esTrending(it));
         if (sortBy === "proxima") {
           // "Próxima a salir" = solo lo que todavía no se estrenó (peli) o
@@ -857,27 +867,26 @@
           }
           arr = arr.filter(it => diasHastaEstreno(it) != null);
           arr.sort((a, b) => diasHastaEstreno(a) - diasHastaEstreno(b));
-        } else if (sortBy === "rating") {
-          // De mejor a peor puntuada, y recién después las sin puntuar
-          // (las que quedaron en "me interesa" sin crítica externa todavía)
-          // -- no mezcladas entre las puntuadas.
-          const puntuadas = arr.filter(it => (it.rating?.imdb ?? it.rating?.tmdb) != null);
-          const sinPuntuar = arr.filter(it => (it.rating?.imdb ?? it.rating?.tmdb) == null);
-          puntuadas.sort((a, b) => (b.rating?.imdb ?? b.rating?.tmdb) - (a.rating?.imdb ?? a.rating?.tmdb));
-          arr = [...puntuadas, ...sinPuntuar];
         }
         // Fuera de cartelera agrupado al final, cualquiera sea el orden
         // elegido arriba -- issue #12: agrupado aparte, no mezclado.
         const enCartelera = arr.filter(it => !it._fueraDeCartelera);
         const fueraDeCartelera = arr.filter(it => it._fueraDeCartelera);
         return fueraDeCartelera.length ? [...enCartelera, ...fueraDeCartelera] : arr;
-      }, [fullItems, sortBy, ocultarDescartadas, ocultarEstreno, ocultarProduccion, ocultarTrending, esPelicula, cineEstado]);
+      }, [fullItems, sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloEstrenos, ocultarTrending, esPelicula, cineEstado]);
 
       const total = sortedItems.length;
       // Al cambiar el catálogo filtrado/ordenado (o de categoría), volver al
       // principio -- el `pos` anterior podía corresponder a un índice sin
       // sentido en la lista nueva.
-      useEffect(() => { setPosBoth(0); }, [sortedItems.length, sortBy, ocultarDescartadas, ocultarEstreno, ocultarProduccion, ocultarTrending, categoria]);
+      useEffect(() => { setPosBoth(0); }, [sortedItems.length, sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloEstrenos, ocultarTrending, categoria]);
+
+      function irARandom() {
+        if (sortedItems.length < 2) return;
+        let idx = Math.floor(Math.random() * sortedItems.length);
+        if (idx === Math.round(posRef.current)) idx = (idx + 1) % sortedItems.length;
+        animateTo(idx);
+      }
 
       const toolbarBtn = (active) => ({
         fontFamily: "'DM Sans',sans-serif", fontSize: 11, padding: "5px 11px", borderRadius: 20,
@@ -888,12 +897,13 @@
       const toolbar = (
         <div style={{ display: "flex", gap: 6, padding: "0 12px 8px", justifyContent: "center", flexWrap: "wrap" }}>
           <button onClick={() => setSortBy(sortBy === "proxima" ? "default" : "proxima")} style={toolbarBtn(sortBy === "proxima")}>📅 próxima a salir</button>
-          <button onClick={() => setSortBy(sortBy === "rating" ? "default" : "rating")} style={toolbarBtn(sortBy === "rating")}>⭐ rating</button>
+          <button onClick={() => setSoloInteresa(v => !v)} style={toolbarBtn(soloInteresa)}>🔖 solo me interesa</button>
+          <button onClick={() => setOcultarVistas(v => !v)} style={toolbarBtn(ocultarVistas)}>👁️ ocultar vistas</button>
           <button onClick={() => setOcultarDescartadas(v => !v)} style={toolbarBtn(ocultarDescartadas)}>🚫 ocultar no me interesa</button>
+          <button onClick={irARandom} style={toolbarBtn(false)}>🎲 sorpréndeme</button>
           {esPelicula && (
             <React.Fragment>
-              <button onClick={() => setOcultarEstreno(v => !v)} style={toolbarBtn(ocultarEstreno)}>🎬 ocultar estreno</button>
-              <button onClick={() => setOcultarProduccion(v => !v)} style={toolbarBtn(ocultarProduccion)}>🏗️ ocultar producción</button>
+              <button onClick={() => setSoloEstrenos(v => !v)} style={toolbarBtn(soloEstrenos)}>🎬 solo estrenos</button>
               <button onClick={() => setOcultarTrending(v => !v)} style={toolbarBtn(ocultarTrending)}>🔥 ocultar trending</button>
             </React.Fragment>
           )}
