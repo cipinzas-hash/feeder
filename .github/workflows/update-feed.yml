@@ -32,6 +32,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Sincronizar con la punta real de main
+        run: git fetch origin main && git reset --hard origin/main
+        # actions/checkout sin ref: explícito clona el SHA que disparó el
+        # run, no la punta viva de main -- si otro job/corrida pusheó algo
+        # en el medio, este job arranca desincronizado y el retry de push
+        # de abajo puede codificar esa desincronización como si fuera un
+        # cambio real. Mismo fix que en build-cine, ver comentario ahí.
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -90,6 +98,15 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: Sincronizar con la punta real de main
+        run: git fetch origin main && git reset --hard origin/main
+        # Crítico acá en particular: build-cine arranca después de que
+        # build ya pusheó (needs: build), pero su checkout por default
+        # clona el SHA que disparó el run -- no la punta viva de main. Sin
+        # este paso, empieza desincronizado y el retry de push más abajo
+        # puede pisar lo que build acaba de pushear (pasó de verdad:
+        # 51ec2c6, 29 ago, revirtió feed.json+diag de build por esto).
 
       - uses: actions/setup-node@v4
         with:

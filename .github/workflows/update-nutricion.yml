@@ -19,6 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Sincronizar con la punta real de main
+        run: git fetch origin main && git reset --hard origin/main
+        # Mismo fix que en update-feed.yml: actions/checkout sin ref:
+        # clona el SHA que disparó el run, no la punta viva de main.
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
