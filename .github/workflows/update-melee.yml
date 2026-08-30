@@ -1,0 +1,74 @@
+name: Actualizar Melee de Angst
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'   # cada 4 horas -- mismo cadencia que tenía compartiendo update-feed.yml
+  workflow_dispatch: {}      # botón "Run workflow" manual en la pestaña Actions
+
+# Mismo criterio que update-feed.yml: una corrida manual no debe competir
+# por el mismo push con la programada.
+concurrency:
+  group: melee-update
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35   # meleeDeadline interno (build-melee.mjs) es 15 min;
+                          # el resto (checkout, setup, npm install, git push)
+                          # suele rondar 3-5 min. Margen generoso a propósito:
+                          # esta corrida ya no comparte presupuesto con nada
+                          # más, así que no hay motivo para ajustarlo fino.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sincronizar con la punta real de main
+        run: git fetch origin main && git reset --hard origin/main
+        # actions/checkout sin ref: explícito clona el SHA que disparó el
+        # run, no la punta viva de main -- si otro workflow (update-feed,
+        # update-cine) pusheó algo en el medio, este job arranca
+        # desincronizado y el retry de push de abajo puede codificar esa
+        # desincronización como si fuera un cambio real (pasó de verdad:
+        # 51ec2c6, 29 ago -- mismo motivo, workflow distinto).
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias
+        working-directory: modules/feed
+        run: npm install
+
+      - name: Melee (meleemajors.gg + start.gg + YouTube + Gemini)
+        working-directory: modules/feed
+        env:
+          STARTGG_API_KEY: ${{ secrets.STARTGG_API_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: npm run build:melee
+
+      - name: Commitear data/melee.json + melee-state.json si cambiaron
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add modules/feed/data/melee.json modules/feed/data/melee-state.json
+          git diff --staged --quiet || { git commit -m "Actualizar Melee $(date -u +%Y-%m-%dT%H:%MZ)"; committed=1; }
+          # Sin pull --rebase: melee.json se regenera entero cada corrida,
+          # no hay cambios locales que integrar sobre una base vieja. Mismo
+          # fix que en update-feed.yml -- ver comentario ahí para el porqué.
+          pushed=0
+          for i in 1 2 3; do
+            git push && pushed=1 && break
+            echo "push falló, reintentando ($i/3)..."
+            git fetch origin main
+            git reset --soft origin/main
+            git diff --staged --quiet || git commit -m "Actualizar Melee $(date -u +%Y-%m-%dT%H:%MZ)"
+            sleep 5
+          done
+          if [ "${committed:-0}" -eq 1 ] && [ "$pushed" -ne 1 ]; then
+            echo "::error::se hizo commit local pero el push falló los 3 intentos -- nada llegó al remoto, ver conflicto/permisos más arriba"
+            exit 1
+          fi

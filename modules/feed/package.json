@@ -5,7 +5,8 @@
   "description": "Baja los feeds de Angst y extrae el texto completo de cada artículo — corre vía GitHub Action, produce data/feed.json",
   "scripts": {
     "build": "node scripts/build-feed.mjs",
-    "build:cine": "node scripts/build-cine.mjs"
+    "build:cine": "node scripts/build-cine.mjs",
+    "build:melee": "node scripts/build-melee.mjs"
   },
   "dependencies": {
     "rss-parser": "^3.13.0",

@@ -4,6 +4,7 @@
     // Si tu rama por defecto no es "main", este es el único lugar que hay que tocar.
     const FEED_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/feed.json";
     const CINE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/cine.json";
+    const MELEE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/melee.json";
 
     // Destacados (vitrina audiovisual) — 3 categorías separadas, cada una su
     // propio carrusel. Ya no participan del swipe round-robin de "Noticias".
@@ -118,11 +119,12 @@
     }
 
     async function fetchFeedData() {
-      const [feedData, cineData] = await Promise.all([
+      const [feedData, cineData, meleeData] = await Promise.all([
         fetchJsonSafe(FEED_JSON_URL),
         fetchJsonSafe(CINE_JSON_URL),
+        fetchJsonSafe(MELEE_JSON_URL),
       ]);
-      if (!feedData && !cineData) throw new Error("no se pudo leer ni feed.json ni cine.json");
+      if (!feedData && !cineData && !meleeData) throw new Error("no se pudo leer ni feed.json, cine.json ni melee.json");
 
       const merged = {}; // cat -> items[]
       function ingest(data, formatoDefault) {
@@ -135,6 +137,7 @@
       }
       ingest(feedData, "lectura");
       ingest(cineData, "cine");
+      ingest(meleeData, "lectura");
 
       // Vitrina (Películas/Series/Animación/Microdocumentales) sale del round-robin
       // de Noticias — es un catálogo aparte, siempre completo.
@@ -150,7 +153,7 @@
         count: c.items.length,
         withText: c.items.filter(i => (i.tipo === "video" && i.videoId) || i.fullText).length,
       }));
-      const generatedAt = feedData?.generatedAt || cineData?.generatedAt || null;
+      const generatedAt = feedData?.generatedAt || cineData?.generatedAt || meleeData?.generatedAt || null;
       return { queue: roundRobinMerge(feedCats), vitrina, diag, generatedAt };
     }
 
@@ -1758,17 +1761,47 @@
       );
     }
 
-    // ─── PlayerAvatar — foto de perfil de start.gg si existe, silueta genérica
-    // si no (muchos jugadores nunca la subieron, sobre todo amateurs).
-    function PlayerAvatar({ src, size = 40 }) {
-      return src ? (
-        <img src={src} alt="" style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0, background: "#222" }} />
-      ) : (
+    // ─── Ícono de personaje de Melee. Reemplaza la foto de perfil de start.gg
+    // (PlayerAvatar tenía un fallback "foto o silueta genérica", pero
+    // entrantFace() en build-melee.mjs es un stub que siempre devuelve null
+    // -- se sacó a propósito por el costo de query que tenía, ver comentario
+    // ahí. El resultado real era: silueta genérica el 100% de las veces,
+    // nunca una excepción. El personaje (.pj) en cambio SÍ viene siempre que
+    // el set ya se jugó -- mismo query, gratis, sin request nueva -- y es
+    // más relevante que una cara en este contexto igual. Roster fijo de
+    // Melee (26 personajes, no cambia nunca) así que un mapeo estático
+    // alcanza, sin necesidad de ningún ícono/imagen cargado por red.
+    const CHARACTER_ICONS = {
+      "Fox": { ab: "FOX", bg: "#8a8a8a" }, "Falco": { ab: "FAL", bg: "#3f6fd1" },
+      "Marth": { ab: "MTH", bg: "#2f5fc4" }, "Sheik": { ab: "SHK", bg: "#8a8478" },
+      "Jigglypuff": { ab: "PUF", bg: "#e87fb0" }, "Captain Falcon": { ab: "CF", bg: "#d1432f" },
+      "Peach": { ab: "PCH", bg: "#f2a6c6" }, "Ice Climbers": { ab: "ICS", bg: "#5c9cff" }, "IceClimbers": { ab: "ICS", bg: "#5c9cff" },
+      "Doctor Mario": { ab: "DOC", bg: "#e8e8e8" }, "Dr. Mario": { ab: "DOC", bg: "#e8e8e8" },
+      "Young Link": { ab: "YL", bg: "#4caf7d" }, "Ganondorf": { ab: "GAN", bg: "#6b4f8a" },
+      "Mr. Game & Watch": { ab: "G&W", bg: "#2a2a2a" }, "Game & Watch": { ab: "G&W", bg: "#2a2a2a" }, "Roy": { ab: "ROY", bg: "#c4432f" },
+      "Pichu": { ab: "PIC", bg: "#f2d13a" }, "Mewtwo": { ab: "MTW", bg: "#9a6fc4" },
+      "Luigi": { ab: "LUI", bg: "#3f9c5c" }, "Mario": { ab: "MAR", bg: "#d1432f" },
+      "Yoshi": { ab: "YSH", bg: "#4caf7d" }, "Donkey Kong": { ab: "DK", bg: "#8a5c3f" },
+      "Bowser": { ab: "BOW", bg: "#3f9c5c" }, "Zelda": { ab: "ZEL", bg: "#8a6fc4" },
+      "Link": { ab: "LNK", bg: "#3f9c5c" }, "Ness": { ab: "NES", bg: "#d1432f" },
+      "Samus": { ab: "SAM", bg: "#e88a3a" }, "Kirby": { ab: "KRB", bg: "#f2a6c6" },
+      "Pikachu": { ab: "PIK", bg: "#f2d13a" }, "Zelda/Sheik": { ab: "Z/S", bg: "#8a6fc4" },
+    };
+    function CharIcon({ pj, size = 40 }) {
+      const c = pj ? CHARACTER_ICONS[pj] : null;
+      if (!c) return (
         <div style={{
           width: size, height: size, borderRadius: "50%", flexShrink: 0,
           background: "#2a2a2a", display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: size * 0.55, color: "#555",
         }}>👤</div>
+      );
+      return (
+        <div title={pj} style={{
+          width: size, height: size, borderRadius: "50%", flexShrink: 0,
+          background: c.bg, display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: size * 0.26, fontWeight: 800, color: "#111", fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.3,
+        }}>{c.ab}</div>
       );
     }
 
@@ -1797,7 +1830,7 @@
       const etiquetaJugador = (j) => j.seed != null ? `[${j.seed}]` : j.ssbmrank != null ? `[SSBMRank #${j.ssbmrank}]` : "";
       return (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <PlayerAvatar src={g.foto} />
+          <CharIcon pj={g.pj} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#fff" }}>
               {g.nombre} <span style={{ color: "#999", fontWeight: 400 }}>{etiquetaJugador(g)}{g.pj ? ` · ${g.pj}` : ""}</span>
@@ -1807,7 +1840,7 @@
               {item.viaSSBMRank && <span style={{ color: "#ff6600" }}> · vía SSBMRank</span>}
             </div>
           </div>
-          <PlayerAvatar src={p.foto} size={30} />
+          <CharIcon pj={p.pj} size={30} />
         </div>
       );
     }
@@ -2012,7 +2045,7 @@
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
                           {(top16.jugadores || []).map(j => (
                             <div key={j.nombre} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 60 }}>
-                              <PlayerAvatar src={j.foto} size={44} />
+                              <CharIcon pj={j.pj} size={44} />
                               <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ccc", textAlign: "center", marginTop: 4 }}>{j.nombre}</div>
                             </div>
                           ))}
@@ -2025,7 +2058,7 @@
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
                           {(top8.jugadores || []).map(j => (
                             <div key={j.nombre} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 60 }}>
-                              <PlayerAvatar src={j.foto} size={44} />
+                              <CharIcon pj={j.pj} size={44} />
                               <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ccc", textAlign: "center", marginTop: 4 }}>{j.nombre}</div>
                             </div>
                           ))}

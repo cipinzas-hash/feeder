@@ -1,0 +1,1720 @@
+// build-melee.mjs
+// Corre vía GitHub Action en su propio workflow (update-melee.yml),
+// independiente de update-feed.yml (RSS general) y de update-cine.yml.
+//
+// Extraído de build-feed.mjs el 30-ago-2026 (issue #7) -- ahí compartía job
+// y presupuesto de tiempo con el fetch de RSS general y con Cine, lo que
+// causaba corridas canceladas por timeout job-level y, una vez, que el job
+// de Cine pisara feed.json entero por un checkout desincronizado (ver
+// 51ec2c6). Melee ahora tiene su propio archivo de salida (melee.json), su
+// propio presupuesto de tiempo, y su propio estado persistente entre
+// corridas (melee-state.json) para no re-buscar en YouTube lo que ya
+// encontró en una corrida anterior.
+//
+// Fuente de torneos: meleemajors.gg (listado público de majors). Por cada
+// torneo:
+//  - si ya terminó: se consulta start.gg para sacar seeds/sets, se detectan
+//    upsets (seed local + SSBMRank), y se busca el VOD en YouTube.
+//  - si todavía no empieza (o está en curso): se genera un aviso de "se
+//    viene" con cuenta regresiva, entrants destacados, y proyección de
+//    bracket.
+// Ver fetchMeleeItems() más abajo.
+
+import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { callGemini } from "./lib/gemini.mjs";
+
+const OUTPUT_PATH = new URL("../data/melee.json", import.meta.url);
+const STATE_PATH = new URL("../data/melee-state.json", import.meta.url);
+const SSBMRANK_PATH = new URL("../data/ssbmrank.json", import.meta.url);
+const RETENTION_DAYS = 30; // items de tracking en vivo (hype/proyección/seedreport/previews/upsets sueltos); el archivo permanente (esArchivo) queda exento, igual que antes
+
+const STARTGG_API_KEY = process.env.STARTGG_API_KEY;
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+const MELEEMAJORS_URL = "https://raw.githubusercontent.com/jtof-dev/meleemajors.gg/main/ssg/src/tournaments.json";
+const STARTGG_ENDPOINT = "https://api.start.gg/gql/alpha";
+// Debug temporal de búsquedas de clip individual -- findMatchClip vive fuera
+// de fetchMeleeItems, así que no tiene acceso directo al meleeDebug local de
+// ahí. Se junta acá (module-level) y se mezcla al final. Sacar junto con el
+// resto de meleeDebug una vez diagnosticado por qué vodClipsEncontrados
+// venía en 0 sin ningún error explícito.
+const vodClipDebug = [];
+const UPSET_SEED_DIFF_THRESHOLD = 5;
+const HYPE_WINDOW_DAYS = 14; // cuántos días antes de que empiece un major se genera el aviso de "se viene"
+// Antes en 3 días -- confundía "cuándo pedirle a start.gg la lista de
+// inscritos" con "cuándo cierra el seed oficial". Lo primero está
+// disponible mucho antes que lo segundo: alineado con HYPE_WINDOW_DAYS para
+// que el aviso de "se viene" muestre inscritos/notable entrants desde que
+// aparece, no recién 3 días antes. buildBracketProjectionItem (que sí
+// necesita seed real, no un proxy) ya devuelve null solo si no hay
+// suficientes seeds top 8 todavía -- se degrada solo, no hace falta una
+// ventana separada para eso.
+const PROJECTION_WINDOW_DAYS = 14;
+const PROJECTION_TOP_CUTOFF = 8; // solo nos interesan choques proyectados entre seeds de este rango
+
+// ---- SSBMRank: criterio de upset combinado (seed local + ranking mundial) ----
+//
+// El seed de un torneo lo pone el TO en base a lo que sabe de la escena local
+// -- en un regional chico eso puede no significar nada (o directamente faltar,
+// ver el `continue` de abajo en detectUpsets cuando initialSeedNum es null).
+// SSBMRank es un panel de votación externo y anual, no una API en vivo: se
+// carga una vez del JSON estático en data/ssbmrank.json (mantenimiento manual,
+// ver comentario en ese archivo). Sirve como señal independiente de qué tan
+// fuerte es un jugador *en términos absolutos*, sin depender del seeding local.
+const SSBMRANK_TOP_CUTOFF = 50; // un rankeado top 50 mundial perdiendo ya es noticia, sin importar seed
+const RANK_DIFF_THRESHOLD = 15; // diferencia mínima de puestos SSBMRank para contar como upset -- sin esto, "#3 vence a #2" contaba como sorpresa
+const UPSET_LOSER_SEED_CUTOFF = 32; // solo interesan upsets contra alguien seedeado top 32 -- perder ante peor seed en rondas tempranas del bracket es ruido
+let ssbmrankByTag = null;
+
+function normalizeTag(name) {
+  if (!name) return "";
+  // "C9 | Zain" / "C9|Zain" -> "Zain" -- gamertags en start.gg suelen traer
+  // el tag del sponsor pegado adelante, SSBMRank lista solo el nombre solo.
+  const sinSponsor = name.includes("|") ? name.split("|").pop() : name;
+  return sinSponsor.trim().toLowerCase();
+}
+
+async function loadSSBMRank() {
+  if (ssbmrankByTag) return ssbmrankByTag;
+  try {
+    const raw = JSON.parse(await readFile(SSBMRANK_PATH, "utf-8"));
+    ssbmrankByTag = new Map(raw.jugadores.map(j => [normalizeTag(j.tag), j.rank]));
+  } catch (e) {
+    console.warn(`⚠ No se pudo cargar ssbmrank.json (${e.message}) -- upsets se detectan solo por seed esta corrida.`);
+    ssbmrankByTag = new Map();
+  }
+  return ssbmrankByTag;
+}
+
+function ssbmrankOf(entrantName) {
+  return ssbmrankByTag?.get(normalizeTag(entrantName)) ?? null;
+}
+
+// Elegibilidad de "eliminado": doble eliminación real, no "al menos una
+// derrota". Se cuentan derrotas SOLO en phaseGroups de bracketType
+// SINGLE_ELIMINATION o DOUBLE_ELIMINATION -- una derrota en ROUND_ROBIN o
+// SWISS (fases de pools, comunes antes del bracket final) no elimina a
+// nadie, solo afecta el seeding hacia la siguiente fase, así que esas se
+// ignoran a propósito. Umbral: 1 derrota en SINGLE_ELIMINATION, 2 en
+// DOUBLE_ELIMINATION (la segunda caída es la que saca del bracket).
+function buildSeedReportItem(slug, tournamentName, bracketUrl, top32Entrants, sets, liveInfo) {
+  if (!top32Entrants.length) return null;
+
+  // Por entrant: lista de derrotas "que cuentan" (fuera de pools), en orden
+  // de aparición en `sets` (que viene sortType: RECENT, o sea más reciente
+  // primero) -- la primera de la lista es la derrota más reciente.
+  const derrotasPorEntrant = new Map();
+  for (const set of sets) {
+    if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
+    const bracketType = set.phaseGroup?.bracketType;
+    if (bracketType !== "SINGLE_ELIMINATION" && bracketType !== "DOUBLE_ELIMINATION") continue; // pools no eliminan
+    const [a, b] = set.slots.map(s => s.entrant);
+    if (!a || !b) continue;
+    const winner = a.id === set.winnerId ? a : b;
+    const loser = a.id === set.winnerId ? b : a;
+    const umbral = bracketType === "SINGLE_ELIMINATION" ? 1 : 2;
+    const lista = derrotasPorEntrant.get(loser.id) || [];
+    lista.push({ rival: winner, ronda: set.fullRoundText, umbral });
+    derrotasPorEntrant.set(loser.id, lista);
+  }
+
+  const jugadores = top32Entrants.map(e => {
+    const derrotas = derrotasPorEntrant.get(e.id) || [];
+    // Umbral del bracket en el que está: si tiene alguna derrota, todas
+    // deberían compartir el mismo bracketType (un entrant no cambia de
+    // SE a DE a mitad de evento en la práctica), así que basta mirar la
+    // primera.
+    const eliminado = derrotas.length > 0 && derrotas.length >= derrotas[0].umbral;
+    const ultimaDerrota = derrotas[0] ?? null; // sets viene RECENT-first
+    const rivalRank = ultimaDerrota ? ssbmrankOf(ultimaDerrota.rival.name) : null;
+    const cayoAnteMenorSeed = ultimaDerrota && ultimaDerrota.rival.initialSeedNum != null
+      ? ultimaDerrota.rival.initialSeedNum > e.initialSeedNum
+      : ultimaDerrota && rivalRank == null;
+    return {
+      nombre: e.name,
+      seed: e.initialSeedNum,
+      foto: entrantFace(e),
+      sostiene: !eliminado,
+      derrotas: derrotas.length, // 0, o 1 de 2 si va perdiendo en losers pero sigue vivo
+      eliminadoPor: eliminado && ultimaDerrota ? { nombre: ultimaDerrota.rival.name, seed: ultimaDerrota.rival.initialSeedNum ?? null, ssbmrank: rivalRank } : null,
+      ronda: eliminado ? ultimaDerrota?.ronda ?? null : null,
+      esUpset: eliminado ? !!cayoAnteMenorSeed : false,
+    };
+  });
+
+  const sostienen = jugadores.filter(j => j.sostiene).length;
+  const caidos = jugadores.length - sostienen;
+
+  return {
+    guid: `melee-seedreport-${slug}`,
+    title: `Reporte de seeds — ${tournamentName}`,
+    link: bracketUrl,
+    summary: `${sostienen}/${jugadores.length} del top ${jugadores.length} sostienen su seed. ${caidos} ya cayeron.`,
+    image: null,
+    pubDate: new Date().toISOString(), // se regenera cada corrida, no se acumula (mismo criterio que hype/top16/top8)
+    source: tournamentName,
+    categoria: "Melee",
+    fullText: null,
+    esSeedReport: true,
+    jugadores,
+    top8StartAt: liveInfo?.top8StartAt ?? null,
+    streamUrl: liveInfo?.streamUrl ?? null,
+  };
+}
+
+// Timeout por request: sin esto, si start.gg queda lento/colgado en un
+// momento de tráfico alto (justo lo que pasa DURANTE un torneo real en
+// vivo, que es cuando más importa que esto funcione), un solo fetch puede
+// quedarse esperando indefinidamente y arrastrar todo el job al timeout
+// externo de 20 min del workflow sin que se llegue a commitear nada.
+//
+// 25s, no 15s: con perPage 40 (ver fetchCompletedSets) cada request es más
+// pesado, y 15s resultó demasiado ajustado en la práctica -- CEO/Supernova
+// perdieron una corrida entera por "This operation was aborted" en la
+// primera página. fetchCompletedSets ahora además es resiliente a esto
+// (se queda con lo ya juntado en vez de perder el torneo), pero mejor
+// evitar el abort en primer lugar cuando es solo cuestión de margen.
+async function startggQuery(query, variables) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 25000);
+  try {
+    const res = await fetch(STARTGG_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${STARTGG_API_KEY}` },
+      body: JSON.stringify({ query, variables }),
+      signal: controller.signal,
+    });
+    const json = await res.json();
+    if (json.errors) throw new Error(JSON.stringify(json.errors));
+    return json.data;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+// Trae todos los entrants con seed de un evento, paginando (los majors grandes
+// pasan de 100 entrants). Descarta los que todavía no tienen seed asignado
+// (el seeding suele cerrarse recién cerca del check-in del torneo).
+async function fetchAllEntrants(eventId) {
+  const perPage = 100;
+  let page = 1;
+  let all = [];
+  while (page <= 10) { // salvaguarda: tope de 1000 entrants, ningún major llega a eso
+    const query = `
+      query($eventId: ID!, $page: Int!, $perPage: Int!){
+        event(id:$eventId){
+          entrants(query:{ page:$page, perPage:$perPage }){
+            nodes{ id name initialSeedNum }
+          }
+        }
+      }`;
+    const data = await startggQuery(query, { eventId, page, perPage });
+    const nodes = data?.event?.entrants?.nodes || [];
+    all = all.concat(nodes);
+    if (nodes.length < perPage) break;
+    page++;
+  }
+  return all; // sin filtrar: el conteo total de inscritos necesita a todos,
+              // tengan seed asignado todavía o no. Quien necesite solo los
+              // seedeados filtra initialSeedNum != null en el call site.
+}
+
+function parseSlugFromBracketUrl(bracketUrl) {
+  const m = (bracketUrl || "").match(/tournament\/([^/]+)\/event\/([^/]+)/);
+  return m ? `tournament/${m[1]}/event/${m[2]}` : null;
+}
+
+// Slug de TORNEO (a diferencia del de evento) -- timezone y streams viven en
+// el objeto Tournament de start.gg, no en Event.
+function parseTournamentSlugFromBracketUrl(bracketUrl) {
+  const m = (bracketUrl || "").match(/tournament\/([^/]+)/);
+  return m ? `tournament/${m[1]}` : null;
+}
+
+async function fetchEventInfo(slug) {
+  const query = `query($slug: String){ event(slug:$slug){ id name state startAt tournament{ name } } }`;
+  const data = await startggQuery(query, { slug });
+  return data?.event || null;
+}
+
+// timezone (IANA) + streams del torneo -- mismos dos campos que usa
+// meleemajors.gg (confirmado contra su fuente: ssg/src/main.rs y
+// getTournamentInfo.gql) para renderizar hora local y el link de stream.
+// Se piden juntos porque "top8-start-time" de meleemajors.gg viene sin
+// timezone propio -- está pensado para interpretarse en el timezone del
+// torneo, no en uno fijo.
+async function fetchTournamentInfo(tournamentSlug) {
+  const query = `
+    query($slug: String){
+      tournament(slug:$slug){
+        timezone
+        streams{ streamName streamSource }
+      }
+    }`;
+  const data = await startggQuery(query, { slug: tournamentSlug });
+  return data?.tournament || null;
+}
+
+// Mismo criterio que resolve_stream_url() de meleemajors.gg: override manual
+// en tournaments.json gana si existe; si no, el primer stream de start.gg
+// que sea Twitch o YouTube (otras plataformas -- Hitbox, StreamMe, Mixer --
+// están deprecadas y se ignoran, igual que en la fuente).
+function resolveStreamUrl(streams, manualOverride) {
+  if (manualOverride) return manualOverride;
+  for (const s of streams || []) {
+    if (!s.streamName) continue;
+    if (s.streamSource === "TWITCH") return `https://www.twitch.tv/${s.streamName}`;
+    if (s.streamSource === "YOUTUBE") return `https://www.youtube.com/${s.streamName}`;
+  }
+  return null;
+}
+
+// ── Conversión de "top8-start-time" (hora de pared en el timezone del
+// torneo) a epoch UTC, sin librerías de timezone -- Intl.DateTimeFormat con
+// timeZoneName:"shortOffset" ya trae el offset real (con DST incluido) para
+// cualquier IANA tz soportado por el runtime de Node. Dos pasadas: la
+// primera adivina el offset tratando la hora de pared como si fuera UTC: la
+// segunda recalcula con el offset ya encontrado, por si la primera pasada
+// cayó justo en un borde de horario de verano.
+const TOP8_START_TIME_RE = /^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2})\s*(AM|PM)$/i;
+
+function tzOffsetMinutes(date, timeZone) {
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "shortOffset" }).formatToParts(date);
+  const tzPart = parts.find(p => p.type === "timeZoneName")?.value || "GMT+0";
+  const m = /GMT([+-]\d+)(?::(\d+))?/.exec(tzPart);
+  if (!m) return 0;
+  const h = parseInt(m[1], 10);
+  const min = m[2] ? parseInt(m[2], 10) : 0;
+  return h * 60 + (h < 0 ? -min : min);
+}
+
+function parseTop8StartTime(raw, timezone) {
+  if (!raw || !timezone) return null;
+  const m = TOP8_START_TIME_RE.exec(String(raw).trim());
+  if (!m) return null;
+  const [, y, mo, d, hRaw, mi, ap] = m;
+  let h = parseInt(hRaw, 10);
+  if (/pm/i.test(ap) && h !== 12) h += 12;
+  if (/am/i.test(ap) && h === 12) h = 0;
+  try {
+    const guessUTC = Date.UTC(+y, +mo - 1, +d, h, +mi);
+    let offsetMin = tzOffsetMinutes(new Date(guessUTC), timezone);
+    let utc = guessUTC - offsetMin * 60000;
+    offsetMin = tzOffsetMinutes(new Date(utc), timezone); // segunda pasada, refina cerca de bordes DST
+    utc = guessUTC - offsetMin * 60000;
+    return Math.floor(utc / 1000);
+  } catch (e) {
+    return null; // timezone inválido para Intl -- no debería pasar con datos de start.gg
+  }
+}
+
+// Junta timezone+streams (start.gg) con top8-start-time (meleemajors.gg) en
+// un solo objeto {top8StartAt, streamUrl} para pasarle a los builders de
+// hype/top8/top16. Un solo punto de entrada así no se repite la lógica en
+// cada fase que lo necesita.
+async function fetchLiveInfo(t) {
+  try {
+    const tournamentSlug = parseTournamentSlugFromBracketUrl(t.bracketUrl);
+    if (!tournamentSlug) return { top8StartAt: null, streamUrl: null };
+    const info = await fetchTournamentInfo(tournamentSlug);
+    return {
+      top8StartAt: parseTop8StartTime(t["top8-start-time"], info?.timezone),
+      streamUrl: resolveStreamUrl(info?.streams, t["stream-url"]),
+    };
+  } catch (e) {
+    console.error(`✗ Melee · info de torneo (timezone/streams) (${t.bracketUrl}): ${e.message}`);
+    return { top8StartAt: null, streamUrl: null };
+  }
+}
+
+// Todos los sets jugados del evento -- pagina bastante más que la versión
+// original (que era perPage 60/page 1 nada más) porque el reporte de seeds
+// (Fase 2a) necesita historial, no solo lo último.
+//
+// perPage: se había bajado a 20 por un límite real de complejidad de
+// start.gg ("query complexity too high", máximo 1000 objetos anidados por
+// request) que reventaba en majors grandes como CEO/Supernova -- el costo
+// venía sobre todo de participants→player→user→images (varias fotos por
+// jugador, anidado 4 niveles). Como esas fotos ya no se piden (ver
+// entrantFace), la complejidad bajó bastante y perPage vuelve a subir a 40
+// como punto medio -- ni el 60 original (que sí reventaba) ni el 20 de
+// máxima cautela. El reintento adaptativo de abajo sigue como red de
+// seguridad por si algún evento igual se pasa.
+async function fetchCompletedSets(eventId) {
+  let perPage = 40;
+  let page = 1;
+  let all = [];
+  let totalFetched = 0;
+  while (page <= 15 && totalFetched < 600) {
+    const query = `
+      query($eventId: ID!, $page: Int!, $perPage: Int!){
+        event(id:$eventId){
+          sets(perPage:$perPage, page:$page, sortType: RECENT){
+            nodes{
+              id fullRoundText winnerId
+              phaseGroup{ bracketType phase{ id name } }
+              slots{
+                entrant{
+                  id name initialSeedNum
+                }
+              }
+              games{ stage{ name } selections{ entrant{ id } character{ name } } }
+            }
+          }
+        }
+      }`;
+    let data;
+    try {
+      data = await startggQuery(query, { eventId, page, perPage });
+    } catch (e) {
+      // Adaptativo: si igual nos pasamos del límite de complejidad de
+      // start.gg (formato del mensaje: "query complexity too high"), no
+      // hay forma de calcular el número exacto de antemano porque depende
+      // de cuántos objetos anidados trae CADA set (participants/images,
+      // games/selections varía según el evento) -- se corta perPage a la
+      // mitad y se reintenta esta misma página en vez de perder el evento
+      // entero. Tope de 3 reintentos: si con perPage 2-3 sigue fallando, es
+      // otra cosa y no vale la pena seguir insistiendo.
+      //
+      // Imprecisión conocida y aceptada: al bajar perPage a mitad de
+      // camino, la numeración de "página" cambia de tamaño, así que puede
+      // quedar un pequeño hueco o solape en los sets más viejos de esa
+      // franja. No importa para el uso real (reporte de seeds/upsets es
+      // best-effort sobre lo más reciente, no un registro exacto).
+      if (/complexity/i.test(e.message) && perPage > 2) {
+        perPage = Math.max(2, Math.floor(perPage / 2));
+        console.warn(`⚠ Melee · complejidad excedida, bajando perPage a ${perPage} y reintentando página ${page}`);
+        continue;
+      }
+      // Un timeout de request (abort) en una página NO debería tirar todo
+      // el torneo -- antes esto se propagaba hasta el catch de más arriba y
+      // se perdía TODO (incluido lo ya juntado en páginas anteriores). Mejor
+      // quedarse con lo que se alcanzó a traer hasta acá que perderlo todo
+      // por una sola página lenta.
+      if (/abort/i.test(e.message)) {
+        console.warn(`⚠ Melee · timeout en página ${page} de sets (eventId ${eventId}), se sigue con los ${all.length} sets ya juntados`);
+        break;
+      }
+      throw e;
+    }
+    const nodes = data?.event?.sets?.nodes || [];
+    all = all.concat(nodes);
+    totalFetched += nodes.length;
+    if (nodes.length < perPage) break;
+    page++;
+  }
+  return all;
+}
+
+// De un entrant saca la primera foto de perfil "profile" que haya subido el
+// Ya no se piden las fotos de perfil (participants→images) en las queries de
+// sets/standings -- eran una parte grande del costo de complejidad de
+// start.gg (ver fetchCompletedSets) y a Cristopher no le importan. Queda la
+// función para no tener que tocar cada call site, pero ahora siempre null;
+// el frontend ya muestra un placeholder genérico cuando no hay foto.
+function entrantFace(entrant) {
+  return null;
+}
+
+// El personaje "representativo" del set: el más jugado entre los games
+// reportados para ese entrant (no siempre es fijo — hay quien cambia de PJ
+// entre games de un mismo set). Si el TO no reportó con auto-report de
+// Slippi, games/selections viene vacío y esto da null sin romper nada.
+// Stages jugados en un set, en orden de game -- distinto del personaje: es
+// por GAME entero, no por jugador. Depende de que el TO haya auto-reportado
+// (típico vía Slippi en Melee), igual que el personaje; si no lo hizo, da
+// lista vacía sin romper nada.
+function setStages(games) {
+  return (games || []).map(g => g.stage?.name).filter(Boolean);
+}
+
+function entrantCharacter(games, entrantId) {
+  const counts = {};
+  for (const g of games || []) {
+    for (const sel of g.selections || []) {
+      if (sel.entrant?.id === entrantId && sel.character?.name) {
+        counts[sel.character.name] = (counts[sel.character.name] || 0) + 1;
+      }
+    }
+  }
+  const entries = Object.entries(counts);
+  if (!entries.length) return null;
+  entries.sort((a, b) => b[1] - a[1]);
+  return entries[0][0];
+}
+
+// Distinto de entrantCharacter (que devuelve solo el personaje MAYORITARIO
+// del set): esto chequea si el personaje aparece en CUALQUIER juego del set,
+// aunque haya sido un solo game de contrapick y no el main del set. Necesario
+// para docSetsFrom -- "todos los sets que se jugaron con Doc" incluye un
+// solo game de contrapick, no solo cuando Doc fue el personaje principal.
+function entrantUsedCharacterMatching(games, entrantId, re) {
+  for (const g of games || []) {
+    for (const sel of g.selections || []) {
+      if (sel.entrant?.id === entrantId && re.test(sel.character?.name || "")) return true;
+    }
+  }
+  return false;
+}
+
+function detectUpsets(sets) {
+  const out = [];
+  for (const set of sets) {
+    if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
+    const [a, b] = set.slots.map(s => s.entrant);
+    if (!a || !b) continue;
+    const winner = a.id === set.winnerId ? a : b;
+    const loser = a.id === set.winnerId ? b : a;
+
+    const winnerRank = ssbmrankOf(winner.name);
+    const loserRank = ssbmrankOf(loser.name);
+
+    // Criterio 1: diferencia de seed local. Positivo = el ganador tenía peor
+    // seed (número más alto) que el perdedor -- eso SÍ es upset. Requiere
+    // que ambos tengan seed asignado -- en regionales chicos esto suele
+    // faltar.
+    let seedDiff = null, seedUpset = false;
+    if (a.initialSeedNum && b.initialSeedNum) {
+      seedDiff = winner.initialSeedNum - loser.initialSeedNum;
+      seedUpset = seedDiff >= UPSET_SEED_DIFF_THRESHOLD;
+    }
+
+    // Criterio 2 (SSBMRank): señal independiente del seeding del torneo.
+    // Upset si el perdedor está rankeado top 50 mundial y el ganador no está
+    // rankeado, o está rankeado con una diferencia real (>= 15 puestos) --
+    // sin este piso, "rank #3 vence a rank #2" contaba como upset (técnicamente
+    // el ganador "estaba peor rankeado", pero eso es prácticamente un empate
+    // entre los dos mejores del mundo, no una sorpresa). No depende de que el
+    // TO haya seedeado bien -- por eso corre incluso cuando initialSeedNum
+    // falta.
+    let rankDiff = null, rankUpset = false;
+    if (loserRank != null && loserRank <= SSBMRANK_TOP_CUTOFF) {
+      if (winnerRank == null) {
+        rankUpset = true; // ganador ni siquiera está en el top 100 mundial
+      } else if (winnerRank - loserRank >= RANK_DIFF_THRESHOLD) {
+        rankDiff = winnerRank - loserRank;
+        rankUpset = true;
+      }
+    }
+
+    // Antes existía un tercer criterio ("top10Involved": cualquier set que
+    // involucrara un seed top 10, ganara o perdiera) que metía ruido real --
+    // un top 10 ganando limpio contra alguien peor seedeado NO es upset, y
+    // así se estaba mostrando. Sacado: solo cuentan seedUpset y rankUpset,
+    // que son sorpresas de verdad.
+    if (!seedUpset && !rankUpset) continue;
+
+    // Filtro adicional: solo interesa si el PERDEDOR estaba seedeado top 32
+    // -- perder contra alguien peor seedeado en las rondas tempranas del
+    // bracket (seed 90 cae ante seed 96, diferencia real pero irrelevante)
+    // es ruido, no una sorpresa que valga la pena destacar. Solo se aplica
+    // cuando el dato de seed existe: si no hay seed (torneo sin seeding
+    // cerrado, por eso existe rankUpset en primer lugar) no hay forma de
+    // filtrar por esto, así que no se descarta solo por falta de dato.
+    if (loser.initialSeedNum != null && loser.initialSeedNum > UPSET_LOSER_SEED_CUTOFF) continue;
+
+    out.push({
+      ronda: set.fullRoundText,
+      stages: setStages(set.games),
+      ganador: {
+        nombre: winner.name,
+        seed: winner.initialSeedNum ?? null,
+        ssbmrank: winnerRank,
+        pj: entrantCharacter(set.games, winner.id),
+        foto: entrantFace(winner),
+      },
+      perdedor: {
+        nombre: loser.name,
+        seed: loser.initialSeedNum ?? null,
+        ssbmrank: loserRank,
+        pj: entrantCharacter(set.games, loser.id),
+        foto: entrantFace(loser),
+      },
+      esUpset: seedUpset || rankUpset, // con seedDiff ya bien orientado, seedUpset por sí solo ya implica que el ganador tenía peor seed
+      seedDiff, // null si no había seed en ambos
+      rankDiff, // diferencia de puestos SSBMRank cuando aplica (null si el ganador no estaba rankeado)
+      viaSSBMRank: rankUpset && !seedUpset, // para distinguir en el título/summary qué criterio disparó esto
+    });
+  }
+  return out;
+}
+
+// Búsqueda de respaldo para Dark scene/Música: cuando un post de "release" no
+// trae ningún embed reproducible (ni YouTube directo, ni Bandcamp/SoundCloud/
+// Spotify que igual no sabemos renderizar todavía), se busca en YouTube por el
+// título de la noticia. Sin matching de timestamp (a diferencia de findVod para
+// Melee) — acá alcanza con encontrar el video, no un momento puntual dentro de él.
+async function findMusicVideo(title) {
+  if (!YOUTUBE_API_KEY) return null;
+  try {
+    const q = encodeURIComponent(`${title} official`);
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=1&key=${YOUTUBE_API_KEY}`
+    );
+    const data = await res.json();
+    return data?.items?.[0]?.id?.videoId || null;
+  } catch (e) {
+    console.error(`✗ Música · búsqueda YouTube ("${title}"): ${e.message}`);
+    return null;
+  }
+}
+
+
+
+// Convierte duración ISO8601 de YouTube (PT1H30M5S) a segundos, para el
+// filtro de "esto es un VOD completo, no un short/highlight".
+function isoDurationToSeconds(iso) {
+  const m = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso || "");
+  if (!m) return 0;
+  return (parseInt(m[1] || 0) * 3600) + (parseInt(m[2] || 0) * 60) + parseInt(m[3] || 0);
+}
+
+// Scoring para clips individuales por partido: queremos algo corto (un set
+// real dura minutos, no horas -- si sale algo de más de 40 min es casi
+// seguro el stream completo del día, no un clip del partido puntual) y con
+// AMBOS nombres en el título, que es la señal más fuerte posible de que el
+// clip es justo de ese matchup. Sin timestamp que buscar después: si
+// encontramos esto, el video ENTERO es el partido.
+//
+// OJO: "top 8"/"top 16" NO está en esta lista aunque suene a preview/hype --
+// varias producciones (VGBootCamp confirmado) titulan así los clips REALES
+// de sets individuales de esa etapa ("CEO 2026 TOP 8 - Hungrybox Vs. Axe
+// Smash Melee - SSBM"), así que excluirlo penalizaba justo lo que
+// buscábamos. Si en el futuro esto empieza a matchear videos de preview con
+// nombres de jugadores de casualidad, hay que resolverlo por duración
+// (los preview son cortos) antes que reintroducir esto acá.
+const CLIP_TITLE_PENALTY = /highlight|recap|hype|trailer|announcement|day ?\d|full (bracket|stream|vod)/i;
+async function pickBestMatchClip(items, nombreA, nombreB) {
+  if (!items.length) return null;
+  const ids = items.map(it => it.id.videoId).join(",");
+  const detailsRes = await fetch(
+    `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${ids}&key=${YOUTUBE_API_KEY}`
+  );
+  const detailsData = await detailsRes.json();
+  const a = nombreA.toLowerCase(), b = nombreB.toLowerCase();
+  const candidatos = (detailsData?.items || []).map(v => {
+    const seconds = isoDurationToSeconds(v.contentDetails?.duration);
+    const title = v.snippet?.title || "";
+    const titleLower = title.toLowerCase();
+    let score = 0;
+    if (titleLower.includes(a) && titleLower.includes(b)) score += 4; // ambos nombres en el título = señal fuerte de clip real
+    else if (titleLower.includes(a) || titleLower.includes(b)) score += 1;
+    else score -= 2; // ni un nombre en el título -- dudoso que sea el clip correcto
+    if (seconds >= 30 && seconds <= 2400) score += 2; // rango típico de un set real (30s a 40min, bo5 largo incluido)
+    else if (seconds > 2400) score -= 3; // probablemente el stream completo, no un clip
+    if (CLIP_TITLE_PENALTY.test(title)) score -= 3;
+    return { videoId: v.id, seconds, score };
+  });
+  candidatos.sort((x, y) => y.score - x.score);
+  return candidatos[0] || null;
+}
+
+// Canales de producción confirmados por torneo -- restringe la búsqueda de
+// YouTube a ese canal en vez de texto libre por todo YouTube. Necesario
+// porque el nombre de varios majors colisiona con vocabulario genérico de
+// altísimo volumen (ver caso "CEO": búsqueda de texto libre devolvía dramas
+// românticos/de negocios con "CEO" en el título, nunca los sets reales del
+// torneo, aunque SÍ existen subidos individualmente por set en YouTube).
+// Solo mapear acá lo que esté confirmado -- si un torneo no está en este
+// mapa, se usa búsqueda de texto libre sin restricción (comportamiento
+// anterior), no asumir que todos comparten productora.
+const KNOWN_PRODUCTION_CHANNEL = {
+  "CEO 2026": "UCj1J3QuIftjOq9iv_rr7Egw", // VGBootCamp -- confirmado (transmite CEO)
+  "Supernova 2026": "UCj1J3QuIftjOq9iv_rr7Egw", // VGBootCamp -- organizador directo de Supernova
+};
+
+// Mapea el fullRoundText de start.gg (ej. "Grand Final", "Winners
+// Quarter-Final") a la etiqueta que VGBootCamp usa como prefijo real del
+// título del video (confirmado por captura de pantalla del usuario: "GRAND
+// FINALS DE CEO 2026 - Hungrybox (Jigglypuff) Vs. Cody Schwab (Fox)...").
+// Agregar esta etiqueta a la query de búsqueda es mucho más específico que
+// solo nombres de jugadores + nombre del torneo -- "TOP 8"/"GRAND FINALS"
+// junto con los nombres reduce drásticamente el ruido de resultados
+// genéricos con "CEO" en el título.
+//
+// Solo devuelve etiqueta para rondas que son genuinamente parte de la fase
+// Top 8 (finales y quarter/semi de winners/losers) -- para cualquier otra
+// ronda (Winners/Losers Round N temprano, pools) devuelve null, porque no
+// hay evidencia de que esas lleven alguna etiqueta especial en el título
+// (el primer ejemplo real que vimos, "CEO 2026 - JChu Vs. Cappuccino...",
+// no tenía ninguna). Inventar una acá sería peor que no ponerla: rompería
+// la búsqueda en vez de ayudarla.
+const TOP8_ROUND_RE = /grand final|winners final|losers final|winners semi.?final|losers semi.?final|winners quarter.?final|losers quarter.?final/i;
+function productionRoundLabel(fullRoundText) {
+  if (!fullRoundText || !TOP8_ROUND_RE.test(fullRoundText)) return null;
+  const r = fullRoundText.toLowerCase();
+  if (r.includes("grand final")) return "GRAND FINALS";
+  if (r.includes("winners final")) return "WINNERS FINALS";
+  if (r.includes("losers final")) return "LOSERS FINALS";
+  return "TOP 8"; // winners/losers quarter-final o semi-final
+}
+
+// Búsqueda de VOD por partido individual: en vez de un stream largo +
+// timestamp adivinado dentro de la descripción, busca directamente el clip
+// del set (muchas producciones, incluida Beyond the Summit, suben cada set
+// destacado por separado además del stream completo). Costo de cuota más
+// alto que la versión por etapa (una búsqueda por partido en vez de una por
+// etapa) -- si en la práctica se acerca al límite diario, hay que volver a
+// agrupar o limitar a qué partidos se les busca clip individual.
+//
+// Corte por cuota agotada: una vez que la API devuelve "quota exceeded" una
+// vez en la corrida, TODAS las búsquedas restantes van a fallar igual (la
+// cuota diaria no se recupera a mitad de corrida) -- youtubeQuotaExhausted
+// corta el resto sin seguir gastando tiempo en llamadas que ya sabemos que
+// van a fallar.
+let youtubeQuotaExhausted = false;
+// start.gg permite "Equipo/Sponsor | Tag" como nombre de entrant (ej.
+// "BrockoSpotify | sethibuns", "SBG | CharCharRealSmooth"). Las producciones
+// titulan los videos solo con el tag del jugador, sin el equipo -- y de
+// paso, meter el sponsor en la query de YouTube ensucia la búsqueda con un
+// término extra que no aparece en el título real. Se queda con lo que hay
+// después de la ÚLTIMA barra vertical (por si hubiera más de una, poco
+// común pero posible), o el nombre completo si no tiene barra.
+function stripSponsorTag(name) {
+  if (!name) return name;
+  const idx = name.lastIndexOf("|");
+  return idx === -1 ? name.trim() : name.slice(idx + 1).trim();
+}
+
+async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roundLabel) {
+  if (!YOUTUBE_API_KEY) return null;
+  if (youtubeQuotaExhausted) return null;
+  const channelId = KNOWN_PRODUCTION_CHANNEL[tournamentName];
+  // Con etiqueta de ronda: imita el orden real del título de VGBootCamp
+  // (TORNEO ETIQUETA - Ganador vs Perdedor), mucho más específico que solo
+  // nombres + torneo. Sin ronda conocida (upsets fuera de Top 8, docClips):
+  // se mantiene la forma anterior, sin inventar una etiqueta que no sabemos
+  // si existe para esos sets.
+  const ganadorLimpio = stripSponsorTag(ganadorNombre);
+  const perdedorLimpio = stripSponsorTag(perdedorNombre);
+  const q = encodeURIComponent(
+    roundLabel
+      ? `${tournamentName} ${roundLabel} ${ganadorLimpio} vs ${perdedorLimpio}`
+      : `${ganadorLimpio} vs ${perdedorLimpio} ${tournamentName}`
+  );
+  try {
+    let searchData = await runClipSearch(q, channelId);
+    // Si la búsqueda restringida al canal no devolvió nada, probar sin
+    // restricción antes de rendirse -- puede que el video exista pero esté
+    // subido a un canal secundario (ej. "VGBootCamp Clips" en vez del
+    // principal) que no está en el mapa.
+    if (channelId && (!searchData?.items || !searchData.items.length)) {
+      searchData = await runClipSearch(q, null);
+    }
+    if (searchData?.error) {
+      const msg = searchData.error.message || JSON.stringify(searchData.error);
+      if (/quota/i.test(msg)) youtubeQuotaExhausted = true;
+      throw new Error(`YouTube API: ${msg}`);
+    }
+    const items = searchData?.items || [];
+    if (!items.length) {
+      if (vodClipDebug.length < 20) vodClipDebug.push({ q: decodeURIComponent(q), itemsFound: 0 });
+      return null;
+    }
+    const best = await pickBestMatchClip(items, ganadorNombre, perdedorNombre);
+    if (vodClipDebug.length < 20) vodClipDebug.push({ q: decodeURIComponent(q), itemsFound: items.length, bestScore: best?.score ?? null, primerTitulo: items[0]?.snippet?.title ?? null });
+    if (!best || best.score < 1) return null; // nada que pinte lo bastante bien a que sea el clip correcto
+    return { videoId: best.videoId, startSeconds: 0 }; // el clip ES el partido -- no hace falta timestamp
+  } catch (e) {
+    console.error(`✗ Melee · clip de ${ganadorNombre} vs ${perdedorNombre} (${tournamentName}): ${e.message}`);
+    if (vodClipDebug.length < 20) vodClipDebug.push({ q: decodeURIComponent(q), error: e.message });
+    // Nunca relanzar -- esta función se llama desde varios puntos del loop
+    // de upsets que NO tienen su propio try/catch (a diferencia de la
+    // sección de VOD del archivo, que sí). Un throw acá (como había antes
+    // para cuota agotada, pensando en cortar más intentos) se propaga sin
+    // capturar y mata el pipeline ENTERO -- no solo Melee, todo (Noticias,
+    // Podcasts, Cine), porque main() no tiene un try/catch global, solo el
+    // .catch() final que ya para el proceso. Mejor perder la optimización
+    // de "parar de intentar" que arriesgar esto -- reintentar con cuota
+    // agotada simplemente falla rápido cada vez, no es costoso.
+    return null;
+  }
+}
+
+async function runClipSearch(q, channelId) {
+  const channelParam = channelId ? `&channelId=${channelId}` : "";
+  const searchRes = await fetch(
+    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=5${channelParam}&key=${YOUTUBE_API_KEY}`
+  );
+  return searchRes.json();
+}
+
+// Arma el item de "se viene tal torneo" para un evento que todavía no termina.
+// Sin video, sin upsets — es solo un aviso con cuenta regresiva. Se recalcula
+// desde cero en cada corrida (no se guarda entre corridas): el guid es estable
+// por torneo, así que simplemente se reemplaza a sí mismo con la cuenta
+// regresiva actualizada cada vez, y desaparece solo una vez que el torneo deja
+// de estar "por venir" (pasa a generar sus propios upsets en vez de esto).
+function buildHypeItem(slug, tournamentName, bracketUrl, startAtSeconds, entrants, liveInfo) {
+  const daysUntil = (startAtSeconds * 1000 - Date.now()) / 86400000;
+  const cuando = daysUntil <= 0 ? "¡ya está en curso!" : `empieza en ${Math.ceil(daysUntil)} día(s)`;
+  const totalEntrants = entrants ? entrants.length : null;
+  // "Destacados": preferentemente los primeros 32 por seed oficial. Si el
+  // seeding todavía no cerró (normal a más de unos días del check-in, ver
+  // PROJECTION_WINDOW_DAYS) pero ya hay inscritos, se usa SSBMRank 2025
+  // como proxy -- ya está integrado para detección de upsets, cruzarlo acá
+  // no cuesta ninguna consulta nueva. Sin seed real todavía, así que se
+  // muestra el ranking mundial en vez de un número de seed que no existe.
+  const conSeed = entrants ? entrants.filter(e => e.initialSeedNum != null) : [];
+  let notableEntrants;
+  if (conSeed.length) {
+    notableEntrants = conSeed
+      .sort((a, b) => a.initialSeedNum - b.initialSeedNum)
+      .slice(0, 32)
+      .map(e => ({ nombre: e.name, seed: e.initialSeedNum }));
+  } else if (entrants && entrants.length) {
+    notableEntrants = entrants
+      .map(e => ({ nombre: e.name, ssbmrank: ssbmrankOf(e.name) }))
+      .filter(e => e.ssbmrank != null && e.ssbmrank <= SSBMRANK_TOP_CUTOFF)
+      .sort((a, b) => a.ssbmrank - b.ssbmrank)
+      .slice(0, 32);
+  } else {
+    notableEntrants = [];
+  }
+  return {
+    guid: `melee-hype-${slug}`,
+    title: `Se viene ${tournamentName}`,
+    link: bracketUrl,
+    summary: `${cuando} Bracket en start.gg.${totalEntrants != null ? ` ${totalEntrants} inscritos hasta ahora.` : ""}`,
+    image: null,
+    pubDate: new Date().toISOString(), // se regenera cada corrida, no se acumula
+    source: tournamentName,
+    categoria: "Melee",
+    fullText: null,
+    esHype: true,
+    startAt: startAtSeconds, // epoch segundos — el frontend lo formatea en horario local
+    totalEntrants,
+    notableEntrants,
+    top8StartAt: liveInfo?.top8StartAt ?? null, // epoch segundos, hora del Top 8/bracket final -- de meleemajors.gg + timezone real de start.gg
+    streamUrl: liveInfo?.streamUrl ?? null,
+  };
+}
+
+// ── Proyección de bracket: sorteo estándar + choques anticipados ───────────
+//
+// Bajo la asunción de "cero upsets" (el seed más alto siempre gana), el top 8
+// final es trivialmente los seeds 1 al 8 — no depende de si es simple o doble
+// eliminación, y no es contenido interesante para hype. Lo que sí vale la pena
+// proyectar es CUÁNDO se cruzan dos seeds específicos según el sorteo real del
+// bracket: si dos favoritos quedan del mismo lado, pueden chocar mucho antes
+// de lo esperado, y eso sí genera hype real ("choque de titanes en ronda 2").
+//
+// Método de sorteo estándar (reflection seeding), el mismo que usa cualquier
+// generador de brackets: para un bracket de tamaño N, seeds(N) da el orden en
+// que se ubican los seeds en el array de posiciones (posición 0-indexed).
+function standardSeedOrder(bracketSize) {
+  function seeds(n) {
+    if (n === 1) return [1];
+    const prev = seeds(n / 2);
+    const out = [];
+    for (const s of prev) out.push(s, n + 1 - s);
+    return out;
+  }
+  return seeds(bracketSize);
+}
+
+function nextPowerOfTwo(n) {
+  return Math.pow(2, Math.ceil(Math.log2(Math.max(2, n))));
+}
+
+// Posición (0-indexed) de cada seed dentro del sorteo — para saber en qué
+// "rama" del bracket cae cada uno.
+function seedPositions(bracketSize) {
+  const order = standardSeedOrder(bracketSize);
+  const pos = {};
+  order.forEach((seed, idx) => { pos[seed] = idx; });
+  return pos;
+}
+
+// Ronda de winners bracket en la que dos seeds colisionarían si ambos ganan
+// todo lo anterior — la más chica posible (ronda 1 = primera ronda del
+// bracket). null si algún seed no tiene posición (no debería pasar si ambos
+// vienen de la misma lista de entrants).
+function collisionRound(seedA, seedB, bracketSize, positions) {
+  const pA = positions[seedA], pB = positions[seedB];
+  if (pA == null || pB == null || pA === pB) return null;
+  let r = 1;
+  while (Math.floor(pA / Math.pow(2, r)) !== Math.floor(pB / Math.pow(2, r))) r++;
+  return r;
+}
+
+function roundLabel(r, totalRounds) {
+  const fromFinal = totalRounds - r;
+  if (fromFinal <= 0) return "la gran final de winners";
+  if (fromFinal === 1) return "semifinal de winners";
+  if (fromFinal === 2) return "cuartos de winners";
+  return `ronda ${r} de winners`;
+}
+
+// Arma el item de "proyección de bracket" para un torneo cuyo seeding ya
+// cerró (a diferencia del hype item de countdown, este necesita entrants con
+// seed real, así que solo se intenta cerca de la fecha — ver PROJECTION_WINDOW_DAYS).
+// Devuelve null si no hay suficientes seeds top 8 para decir algo interesante.
+function buildBracketProjectionItem(slug, tournamentName, bracketUrl, entrants) {
+  if (entrants.length < 4) return null;
+
+  const bracketSize = nextPowerOfTwo(entrants.length);
+  const totalRounds = Math.log2(bracketSize);
+  const positions = seedPositions(bracketSize);
+  const bySeed = {};
+  for (const e of entrants) if (e.initialSeedNum != null) bySeed[e.initialSeedNum] = e;
+
+  const topSeeds = Object.keys(bySeed).map(Number).filter(s => s <= PROJECTION_TOP_CUTOFF).sort((a, b) => a - b);
+  if (topSeeds.length < 2) return null;
+
+  // Choques anticipados entre favoritos: para cada par de top 8, la ronda en
+  // la que se cruzarían si ambos ganan todo antes. Nos interesan los que
+  // colisionan MÁS TEMPRANO de lo que uno esperaría (cualquier ronda antes de
+  // semifinal/final ya es noticia).
+  const earlyCollisions = [];
+  for (let i = 0; i < topSeeds.length; i++) {
+    for (let j = i + 1; j < topSeeds.length; j++) {
+      const r = collisionRound(topSeeds[i], topSeeds[j], bracketSize, positions);
+      if (r != null && totalRounds - r >= 2) { // más de 2 rondas antes de la final = "temprano"
+        earlyCollisions.push({ seedA: topSeeds[i], seedB: topSeeds[j], round: r });
+      }
+    }
+  }
+  earlyCollisions.sort((a, b) => a.round - b.round);
+
+  // Primera ronda: buscar el matchup más desparejo que involucre un top 8
+  // (posible upset temprano — el favorito puede caer antes de lo esperado).
+  const order = standardSeedOrder(bracketSize);
+  let biggestMismatch = null;
+  for (let i = 0; i < order.length; i += 2) {
+    const seedA = order[i], seedB = order[i + 1];
+    const a = bySeed[seedA], b = bySeed[seedB];
+    if (!a || !b) continue; // bye
+    const favorito = seedA < seedB ? a : b;
+    const rival = seedA < seedB ? b : a;
+    const favoritoSeed = Math.min(seedA, seedB), rivalSeed = Math.max(seedA, seedB);
+    if (favoritoSeed > PROJECTION_TOP_CUTOFF) continue;
+    if (!biggestMismatch || (rivalSeed - favoritoSeed) < (biggestMismatch.rivalSeed - biggestMismatch.favoritoSeed)) {
+      biggestMismatch = { favorito: favorito.name, favoritoSeed, rival: rival.name, rivalSeed };
+    }
+  }
+
+  if (earlyCollisions.length === 0 && !biggestMismatch) return null;
+
+  const partes = [];
+  if (earlyCollisions.length > 0) {
+    const c = earlyCollisions[0];
+    const nombreA = bySeed[c.seedA].name, nombreB = bySeed[c.seedB].name;
+    partes.push(`si ambos ganan todo antes, ${nombreA} [${c.seedA}] y ${nombreB} [${c.seedB}] chocarían en ${roundLabel(c.round, totalRounds)} — antes de lo esperado.`);
+  }
+  if (biggestMismatch) {
+    partes.push(`ojo con primera ronda: ${biggestMismatch.rival} [${biggestMismatch.rivalSeed}] enfrenta a ${biggestMismatch.favorito} [${biggestMismatch.favoritoSeed}], candidato a upset temprano.`);
+  }
+
+  return {
+    guid: `melee-proyeccion-${slug}`,
+    title: `Proyección de bracket: ${tournamentName}`,
+    link: bracketUrl,
+    summary: partes.join(" "),
+    image: null,
+    pubDate: new Date().toISOString(), // se recalcula cada corrida, no se acumula (mismo criterio que buildHypeItem)
+    source: tournamentName,
+    categoria: "Melee",
+    fullText: null,
+    esProyeccion: true,
+  };
+}
+
+// ── Fase 3: preview de Top 8 y archivo permanente del torneo ───────────────
+//
+// start.gg no tiene un campo "es Top 8" directo, pero los TOs de Melee casi
+// siempre nombran la fase final "Top 8" (a veces "Top 8 Bracket") — se
+// detecta por nombre de fase, mismo criterio informal que usa el resto de la
+// escena para esto. Si un torneo nombra su fase distinto, simplemente no se
+// genera preview (no rompe nada, solo no hay ese aviso puntual).
+const TOP8_PHASE_NAME_RE = /top\s*8/i;
+const TOP16_PHASE_NAME_RE = /top\s*16/i;
+
+async function fetchEventPhases(eventId) {
+  const query = `
+    query($eventId: ID!){
+      event(id:$eventId){
+        phases{
+          id name state
+          seeds(query:{ page:1, perPage:16 }){
+            nodes{
+              seedNum
+              entrant{ name }
+            }
+          }
+        }
+      }
+    }`;
+  const data = await startggQuery(query, { eventId });
+  return data?.event?.phases || [];
+}
+
+function findTop8Phase(phases) {
+  return phases.find(p => TOP8_PHASE_NAME_RE.test(p.name || "")) || null;
+}
+
+function findTop16Phase(phases) {
+  return phases.find(p => TOP16_PHASE_NAME_RE.test(p.name || "")) || null;
+}
+
+// Se regenera fresco cada corrida mientras la fase exista y no haya cerrado
+// — mismo criterio que buildHypeItem/buildBracketProjectionItem, no se
+// acumula entre corridas. guidPrefix/tituloFase/flagField parametrizan entre
+// Top 8 y Top 16, que comparten toda la lógica salvo esos tres valores.
+function buildPhasePreviewItem(slug, tournamentName, bracketUrl, phase, { guidPrefix, tituloFase, flagField }, liveInfo) {
+  const seeds = (phase.seeds?.nodes || [])
+    .filter(s => s.entrant)
+    .sort((a, b) => (a.seedNum ?? 99) - (b.seedNum ?? 99));
+  if (seeds.length < 2) return null;
+  const jugadores = seeds.map(s => ({
+    nombre: s.entrant.name,
+    seed: s.seedNum ?? null,
+    foto: entrantFace(s.entrant),
+  }));
+  const lista = jugadores.map(j => `${j.nombre}${j.seed ? ` [${j.seed}]` : ""}`).join(", ");
+  return {
+    guid: `melee-${guidPrefix}-${slug}`,
+    title: `${tituloFase} de ${tournamentName}`,
+    link: bracketUrl,
+    summary: `Quedaron: ${lista}.`,
+    image: null,
+    pubDate: new Date().toISOString(),
+    source: tournamentName,
+    categoria: "Melee",
+    fullText: null,
+    [flagField]: true,
+    jugadores,
+    top8StartAt: liveInfo?.top8StartAt ?? null,
+    streamUrl: liveInfo?.streamUrl ?? null,
+  };
+}
+
+function buildTop8PreviewItem(slug, tournamentName, bracketUrl, top8Phase, liveInfo) {
+  return buildPhasePreviewItem(slug, tournamentName, bracketUrl, top8Phase, { guidPrefix: "top8", tituloFase: "Top 8", flagField: "esTop8Preview" }, liveInfo);
+}
+
+function buildTop16PreviewItem(slug, tournamentName, bracketUrl, top16Phase, liveInfo) {
+  return buildPhasePreviewItem(slug, tournamentName, bracketUrl, top16Phase, { guidPrefix: "top16", tituloFase: "Top 16", flagField: "esTop16Preview" }, liveInfo);
+}
+
+async function fetchFinalStandings(eventId) {
+  const query = `
+    query($eventId: ID!){
+      event(id:$eventId){
+        standings(query:{ page:1, perPage:8 }){ nodes{ placement entrant{ name } } }
+      }
+    }`;
+  const data = await startggQuery(query, { eventId });
+  return (data?.event?.standings?.nodes || []).filter(n => n.entrant);
+}
+
+// ── Narrativa del archivo permanente (Claude API + búsqueda web) ───────────
+//
+// El resumen mecánico ("1° X · 2° Y ... Upsets destacados: A venció a B")
+// nunca tuvo contexto histórico -- para algo como "primera victoria de lloD
+// sobre Hungrybox" hace falta saber qué pasó ANTES de este torneo, dato que
+// no viene en la data de start.gg de un solo evento. Se le pide a Claude que
+// busque ese contexto (head-to-head, rachas, personajes) y redacte al estilo
+// del resumen de GOML -- con instrucción explícita de NO inventar
+// superlativos que no pueda confirmar con la búsqueda.
+//
+// Corre UNA sola vez por torneo (justo cuando pasa a archivo permanente,
+// nunca se regenera después), así que el costo real es de pocos calls/mes,
+// no algo recurrente cada 4h.
+function topUpsets(tournamentUpsets, n = 5) {
+  const vistosPar = new Set();
+  return tournamentUpsets
+    .filter(u => {
+      const par = `${u.ganador.nombre}|${u.perdedor.nombre}`;
+      if (vistosPar.has(par)) return false;
+      vistosPar.add(par);
+      return true;
+    })
+    .sort((a, b) => (Math.abs(b.seedDiff ?? b.rankDiff ?? 0)) - (Math.abs(a.seedDiff ?? a.rankDiff ?? 0)))
+    .slice(0, n);
+}
+
+async function narrateArchiveSummary(tournamentName, standings, upsets) {
+  const top8Line = [...standings]
+    .sort((a, b) => a.placement - b.placement)
+    .map(s => `${s.placement}° ${s.entrant.name}`)
+    .join(" · ");
+  const upsetsData = topUpsets(upsets, 8).map(u =>
+    `${u.ganador.nombre}${u.ganador.seed != null ? ` (seed ${u.ganador.seed})` : u.ganador.ssbmrank != null ? ` (SSBMRank #${u.ganador.ssbmrank})` : ""} venció a ${u.perdedor.nombre}${u.perdedor.seed != null ? ` (seed ${u.perdedor.seed})` : u.perdedor.ssbmrank != null ? ` (SSBMRank #${u.perdedor.ssbmrank})` : ""} -- ${u.ronda}`
+  ).join("\n");
+
+  const prompt = `Redactá el resumen de resultado final de un torneo de Super Smash Bros. Melee, en español, en el mismo estilo que este ejemplo real (una sola oración de standings + una oración de upsets destacados con contexto):
+
+"1° lloD · 2° RapMonster · 3° Zain · 4° Hungrybox · 5° moky · 5° Soonsay · 7° n0ne · 7° Aklo. Upsets destacados: lloD venció a Hungrybox en un reverse 3-0 para entrar a Top 8 (su primera victoria sobre él); Soonsay venció a Zain 3-0 mandándolo a losers (primer jugador de Fox aparte de Cody Schwab en vencerlo); Kola (seed 72) llegó hasta 9° derrotando a Maher, Drephen, Zuppy y SluG en el camino."
+
+Torneo: ${tournamentName}
+Standings finales: ${top8Line}
+Upsets detectados (por seed o SSBMRank, no necesariamente en orden de importancia):
+${upsetsData || "(ninguno detectado por el criterio automático)"}
+
+Usá la búsqueda web para confirmar contexto real: rachas, primera vez que X le gana a Y, importancia de un resultado dentro de la temporada, etc. -- SOLO si lo podés confirmar con una fuente real. Si no encontrás contexto verificable para un upset, simplemente describilo sin inventar superlativos ("primera vez", "el único", "el más joven en...") sin haberlo confirmado. Es preferible un resumen más plano y correcto que uno rico pero con datos inventados.
+
+Devolvé SOLO el texto del resumen final (el formato del ejemplo: standings + upsets), sin preámbulo, sin markdown, sin comillas.`;
+
+  const texto = await callGemini(prompt, { useSearch: true, maxOutputTokens: 1024, timeoutMs: 90000 });
+  return texto ? texto.trim() : null; // cae al resumen mecánico en buildTournamentArchiveItem si Gemini no responde
+}
+
+// El registro permanente del torneo: se arma UNA sola vez, en la misma
+// corrida en la que el evento pasa a COMPLETED por primera vez (justo antes
+// de que processedEventIds lo excluya de futuros escaneos). A diferencia de
+// los upsets sueltos — que sí expiran a los 30 días como el resto del feed,
+// ver RETENTION_DAYS más abajo — este item queda exento para siempre (mismo
+// criterio que Podcasts): es el resumen final del torneo, no un aviso
+// puntual que pierde sentido con el tiempo.
+// Orden real de juego del Top 8 (según lo que se ve en el broadcast, no el
+// orden "teórico" de bracket): Losers Quarters, Winners Quarters, Losers
+// Semis, Winners Semis, Winners Final, Losers Final, Grand Final(s).
+const TOP8_ROUND_ORDER = [
+  { rank: 1, re: /losers?.*quarter/i },
+  { rank: 2, re: /winners?.*quarter/i },
+  { rank: 3, re: /losers?.*semi/i },
+  { rank: 4, re: /winners?.*semi/i },
+  { rank: 5, re: /winners?\s*final/i },
+  { rank: 6, re: /losers?\s*final/i },
+  { rank: 7, re: /grand\s*final(?!.*reset)/i },
+  { rank: 8, re: /grand\s*final.*reset/i },
+];
+function top8RoundOrder(fullRoundText) {
+  for (const { rank, re } of TOP8_ROUND_ORDER) if (re.test(fullRoundText || "")) return rank;
+  return 99; // ronda no reconocida -- al final, no se pierde el set, solo queda sin orden claro
+}
+
+// Todos los sets de la fase Top 8, ordenados por orden real de juego (no por
+// el orden en que vinieron en `sets`, que es RECENT-first).
+function buildTop8Ordered(sets, top8PhaseId) {
+  if (top8PhaseId == null) return [];
+  const matches = [];
+  for (const set of sets) {
+    if (set.phaseGroup?.phase?.id !== top8PhaseId) continue;
+    if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
+    const [a, b] = set.slots.map(s => s.entrant);
+    if (!a || !b) continue;
+    const winner = a.id === set.winnerId ? a : b;
+    const loser = a.id === set.winnerId ? b : a;
+    matches.push({
+      setId: set.id,
+      ronda: set.fullRoundText,
+      orden: top8RoundOrder(set.fullRoundText),
+      stages: setStages(set.games),
+      ganador: { nombre: winner.name, seed: winner.initialSeedNum ?? null, ssbmrank: ssbmrankOf(winner.name), pj: entrantCharacter(set.games, winner.id), foto: entrantFace(winner) },
+      perdedor: { nombre: loser.name, seed: loser.initialSeedNum ?? null, ssbmrank: ssbmrankOf(loser.name), pj: entrantCharacter(set.games, loser.id), foto: entrantFace(loser) },
+    });
+  }
+  matches.sort((x, y) => x.orden - y.orden);
+  return matches;
+}
+
+// Todos los sets del torneo donde CUALQUIERA de los dos jugadores usó Dr.
+// Mario -- para revisión personal, no filtrado por seed ni por si fue upset.
+// Tope defensivo de 40: fetchCompletedSets ya viene acotado (~600 sets tope),
+// así que en la práctica no debería ni acercarse, pero por las dudas.
+const DOC_CHARACTER_RE = /dr\.?\s*mario/i;
+function docSetsFrom(sets, max = 40) {
+  const out = [];
+  for (const set of sets) {
+    if (out.length >= max) break;
+    if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
+    const [a, b] = set.slots.map(s => s.entrant);
+    if (!a || !b) continue;
+    const winner = a.id === set.winnerId ? a : b;
+    const loser = a.id === set.winnerId ? b : a;
+    // Cualquier juego del set, no solo el personaje mayoritario -- un solo
+    // game de contrapick con Doc cuenta igual que si fue el main del set.
+    const docJugado = entrantUsedCharacterMatching(set.games, winner.id, DOC_CHARACTER_RE)
+      || entrantUsedCharacterMatching(set.games, loser.id, DOC_CHARACTER_RE);
+    if (!docJugado) continue;
+    out.push({
+      setId: set.id,
+      ronda: set.fullRoundText,
+      stages: setStages(set.games),
+      ganador: { nombre: winner.name, seed: winner.initialSeedNum ?? null, pj: entrantCharacter(set.games, winner.id), foto: entrantFace(winner) },
+      perdedor: { nombre: loser.name, seed: loser.initialSeedNum ?? null, pj: entrantCharacter(set.games, loser.id), foto: entrantFace(loser) },
+    });
+  }
+  return out;
+}
+
+function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings, tournamentUpsets, vod, top8Clips, upsetClips, docClips, narracion) {
+  if (!standings.length) return null;
+  const top8Line = [...standings]
+    .sort((a, b) => a.placement - b.placement)
+    .map(s => `${s.placement}° ${s.entrant.name}`)
+    .join(" · ");
+  // topUpsets: dedupe por par (Gran Final + reset son dos sets reales entre
+  // los mismos jugadores, redundante mostrarlos dos veces) + orden por
+  // magnitud real del upset -- misma lista curada que ve el prompt de
+  // narración.
+  const upsetsSignificativos = topUpsets(tournamentUpsets, 5);
+  const upsetsLine = upsetsSignificativos.length
+    ? ` Upsets destacados: ${upsetsSignificativos.map(u => u.title).join("; ")}.`
+    : "";
+  // Si Gemini generó narrativa con contexto real, se usa esa; si no (sin
+  // GEMINI_API_KEY, falló la llamada, etc.) cae al resumen mecánico de
+  // siempre -- nunca se queda sin resumen por esto.
+  const summary = narracion || `${top8Line}.${upsetsLine}`;
+  return {
+    guid: `melee-archivo-${slug}`,
+    title: `Resultado final: ${tournamentName}`,
+    link: bracketUrl,
+    summary,
+    image: null,
+    pubDate: new Date().toISOString(),
+    source: tournamentName,
+    categoria: "Melee",
+    fullText: null,
+    tipo: vod?.videoId ? "video" : undefined,
+    videoId: vod?.videoId || null,
+    startSeconds: vod?.startSeconds || 0,
+    esArchivo: true,
+    // Fase 3b, tres secciones -- cada una con clip cortado individual por
+    // partido (findMatchClip), SIN fallback a stream completo con timestamp
+    // adivinado. Un partido sin clip cortado disponible simplemente no
+    // aparece.
+    top8Clips: top8Clips || [], // Top 8 completo, en orden real de juego (ver top8RoundOrder)
+    upsetClips: upsetClips || [], // upsets contra seed top 32, deduplicados
+    docClips: docClips || [], // TODOS los sets del torneo con Dr. Mario, para revisión personal
+  };
+}
+
+// previousUpsetItemsByGuid: Map guid→item de upsets ya generados en corridas
+//   anteriores (para no duplicar, y para reintentar el VOD de los que
+//   quedaron sin uno mientras el torneo estaba ACTIVE). Los items de hype no
+//   entran acá — se regeneran siempre.
+// previousProcessedEventIds: ids de evento de start.gg cuyo bracket ya
+//   terminó y ya se escaneó del todo (COMPLETED) — evita repetir llamadas a
+//   start.gg por un torneo que ya no va a cambiar. Mientras el torneo está
+//   ACTIVE (día 1 en curso) nunca entra acá, así que se re-escanea cada
+//   corrida hasta que cierra.
+// clipStateByGuid: Map guid -> {videoId, startSeconds}, persistido entre
+// corridas en melee-state.json. Antes cada reintento de un torneo con Top 8
+// incompleto volvía a buscar en YouTube TODOS los sets de Top 8 desde cero,
+// incluidos los que ya había encontrado en una corrida anterior -- quemando
+// presupuesto de tiempo/cuota re-confirmando lo ya resuelto en vez de
+// avanzar sobre lo que de verdad falta (issue #7, hallazgo del 30-ago).
+// Con esto, un clip ya encontrado se aplica directo sin red ni deadline de
+// por medio; el presupuesto de tiempo se gasta solo en lo genuinamente
+// nuevo. newClipState junta lo encontrado ESTA corrida para que main() lo
+// mezcle y persista.
+async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventIds, previousTrackedTournaments = [], clipStateByGuid = new Map()) {
+  const newClipState = new Map();
+  if (!STARTGG_API_KEY) {
+    console.error("✗ Melee · falta STARTGG_API_KEY, se omite esta categoría esta corrida");
+    return { upsetItems: [], hypeItems: [], projectionItems: [], seedReportItems: [], top16Items: [], top8Items: [], archiveItems: [], processedEventIds: previousProcessedEventIds, trackedTournaments: previousTrackedTournaments, meleeDebug: [], newClipState };
+  }
+
+  await loadSSBMRank();
+
+  const meleeDebug = []; // temporal: no puedo leer logs de Actions desde el
+                          // sandbox (host de Azure bloqueado), así que esto
+                          // deja rastro directo en feed.json -- borrar una vez
+                          // diagnosticado por qué CEO/Supernova no generan
+                          // reporte de seeds.
+  let tournaments = [];
+  try {
+    const res = await fetch(MELEEMAJORS_URL);
+    tournaments = await res.json();
+  } catch (e) {
+    console.error(`✗ Melee · no se pudo leer meleemajors.gg: ${e.message}`);
+    tournaments = []; // seguir igual con lo rastreado de corridas anteriores (ver abajo)
+  }
+  meleeDebug.push({ meleemajorsCount: tournaments.length, meleemajorsSlugs: tournaments.map(t => parseSlugFromBracketUrl(t.bracketUrl)) });
+
+  // meleemajors.gg deja de listar un torneo apenas termina (o incluso antes,
+  // por su propia lógica de retención). Si eso pasa justo antes de que esta
+  // corrida detecte el cambio a COMPLETED, el torneo nunca se vuelve a
+  // visitar y el archivo permanente (esArchivo) no se llega a construir --
+  // se pierde para siempre, sin aviso (esto es lo que pasó con GOML26).
+  // Fix: se combina el listado fresco con los torneos "rastreados" de la
+  // corrida anterior (cualquiera que llegó a ACTIVE/COMPLETED pero todavía
+  // no quedó en processedEventIds) -- así se los sigue consultando directo
+  // contra start.gg aunque el listado externo ya no los mencione.
+  const seenSlugs = new Set();
+  const combinedTournaments = [];
+  for (const t of tournaments) {
+    const slug = parseSlugFromBracketUrl(t.bracketUrl);
+    if (slug && !seenSlugs.has(slug)) { seenSlugs.add(slug); combinedTournaments.push(t); }
+  }
+  let recoveredCount = 0;
+  for (const t of previousTrackedTournaments) {
+    const slug = parseSlugFromBracketUrl(t.bracketUrl);
+    if (slug && !seenSlugs.has(slug)) { seenSlugs.add(slug); combinedTournaments.push(t); recoveredCount++; }
+  }
+  if (recoveredCount > 0) {
+    console.log(`✓ Melee · ${recoveredCount} torneo(s) ya no listado(s) en meleemajors.gg pero recuperado(s) del rastreo previo`);
+  }
+  meleeDebug.push({ combinedCount: combinedTournaments.length, combinedSlugs: combinedTournaments.map(t => parseSlugFromBracketUrl(t.bracketUrl)), previousTrackedCount: previousTrackedTournaments.length, previousProcessedCount: previousProcessedEventIds.length });
+
+  const upsetItems = [];
+  const hypeItems = [];
+  const projectionItems = [];
+  const seedReportItems = [];
+  const top16Items = [];
+  const top8Items = [];
+  const archiveItems = [];
+  const processedEventIds = new Set(previousProcessedEventIds);
+  const trackedTournaments = [];
+
+  // Presupuesto de tiempo global: el workflow externo mata el job entero
+  // (25 min, ver update-feed.yml) sin commitear nada si se pasa. Con esto,
+  // si ya vamos gastados, se corta el procesamiento (de torneos nuevos ENTRE
+  // torneos, y de clips individuales DENTRO de cada torneo -- ver el chequeo
+  // en los loops de top8Clips/upsetClips/docClips) y se devuelve lo que se
+  // alcanzó a juntar -- degradado pero real, en vez de nada.
+  //
+  // 15 min, no 12: la búsqueda de clip individual por partido (findMatchClip,
+  // una búsqueda de YouTube por cada set de Top 8 + cada upset + cada set de
+  // Doc) es bastante más pesada que la versión anterior por etapa. Deja ~10
+  // min de margen para el resto del pipeline (RSS, Cine, git push) dentro
+  // del tope de 25 min del job.
+  const meleeDeadline = Date.now() + 15 * 60 * 1000;
+
+  for (const t of combinedTournaments) {
+    if (Date.now() > meleeDeadline) {
+      console.warn(`⚠ Melee · presupuesto de 12 min agotado, se corta acá (${combinedTournaments.indexOf(t)}/${combinedTournaments.length} torneos procesados) -- se commitea lo juntado hasta ahora`);
+      break;
+    }
+    const slug = parseSlugFromBracketUrl(t.bracketUrl);
+    if (!slug) continue;
+
+    let eventInfo;
+    try {
+      eventInfo = await fetchEventInfo(slug);
+    } catch (e) {
+      console.error(`✗ Melee · ${slug}: ${e.message}`);
+      meleeDebug.push({ slug, error: `fetchEventInfo: ${e.message}` });
+      continue;
+    }
+    if (!eventInfo) { meleeDebug.push({ slug, error: "eventInfo null" }); continue; }
+    const tournamentName = t.name || eventInfo.tournament?.name || eventInfo.name;
+    const state = eventInfo.state;
+    meleeDebug.push({ slug, tournamentName, state, eventId: eventInfo.id, yaProcesado: previousProcessedEventIds.includes(eventInfo.id) });
+
+    // Red de seguridad estructural: TODO el procesamiento de este torneo
+    // (hype/active/completed, upsets, archivo, VOD) queda envuelto en un
+    // solo try/catch. Antes un error sin capturar en cualquier punto de acá
+    // adentro se propagaba hasta main().catch() y mataba el pipeline
+    // ENTERO -- no solo Melee, también Noticias/Podcasts/Cine, porque
+    // main() no tiene ningún try/catch intermedio. Pasó de verdad (ver
+    // fix de findMatchClip más arriba). Con esto, en el peor caso se pierde
+    // el procesamiento de ESTE torneo puntual, nunca el resto del feed.
+    try {
+
+    // Fase 1 (hype): el torneo todavía no arrancó (CREATED/READY/QUEUED/etc).
+    // Nada de sets todavía — solo countdown + proyección de bracket cerca de
+    // la fecha.
+    if (state !== "ACTIVE" && state !== "COMPLETED") {
+      if (eventInfo.startAt) {
+        const daysUntil = (eventInfo.startAt * 1000 - Date.now()) / 86400000;
+        // Entrants: solo cerca de la fecha, porque el seeding real recién
+        // cierra cerca del check-in — pedirlo 14 días antes daría una lista
+        // vacía o incompleta la mayoría de las veces.
+        let entrants = null;
+        if (daysUntil <= PROJECTION_WINDOW_DAYS) {
+          try {
+            entrants = await fetchAllEntrants(eventInfo.id);
+          } catch (e) {
+            console.error(`✗ Melee · entrants (${tournamentName}): ${e.message}`);
+          }
+        }
+        if (daysUntil <= HYPE_WINDOW_DAYS) {
+          const liveInfo = await fetchLiveInfo(t);
+          hypeItems.push(buildHypeItem(slug, tournamentName, t.bracketUrl, eventInfo.startAt, entrants, liveInfo));
+        }
+        if (entrants) {
+          const projectionItem = buildBracketProjectionItem(slug, tournamentName, t.bracketUrl, entrants);
+          if (projectionItem) projectionItems.push(projectionItem);
+        }
+      }
+      continue;
+    }
+
+    // Fase 2 (día 1 en adelante): el torneo ya está ACTIVE o COMPLETED —
+    // se escanean los sets ya jugados y se detectan upsets por seeding en
+    // ambos casos. La diferencia es solo el manejo del VOD y de
+    // processedEventIds: mientras está ACTIVE puede volver a escanearse en
+    // la próxima corrida (todavía puede haber sets nuevos), y no tiene
+    // sentido buscar el VOD de top 8 porque normalmente se sube recién
+    // terminado el torneo — se busca/reintenta una vez que pasa a COMPLETED.
+    if (state === "COMPLETED" && previousProcessedEventIds.includes(eventInfo.id)) continue; // ya escaneado y cerrado
+
+    let sets = [];
+    try {
+      sets = await fetchCompletedSets(eventInfo.id);
+    } catch (e) {
+      console.error(`✗ Melee · sets de ${tournamentName}: ${e.message}`);
+      meleeDebug.push({ slug, tournamentName, error: `fetchCompletedSets: ${e.message}` });
+      continue;
+    }
+    meleeDebug.push({ slug, tournamentName, setsCount: sets.length });
+
+    const upsets = detectUpsets(sets);
+    for (const u of upsets) {
+      const guid = `melee-${slug}-${u.ganador.nombre}-vs-${u.perdedor.nombre}-${u.ronda}`
+        .toLowerCase()
+        .replace(/\s+/g, "-");
+
+      const already = previousUpsetItemsByGuid.get(guid);
+      if (already) {
+        // Ya existe de una corrida anterior (probablemente generado durante
+        // ACTIVE, sin VOD todavía). Si ahora el torneo está COMPLETED y
+        // sigue sin VOD, se reintenta la búsqueda; si no, se deja tal cual.
+        if (state === "COMPLETED" && !already.videoId) {
+          const vod = (await findMatchClip(tournamentName, u.ganador.nombre, u.perdedor.nombre, productionRoundLabel(u.ronda))) || { videoId: null, startSeconds: 0 };
+          if (vod.videoId) upsetItems.push({ ...already, videoId: vod.videoId, startSeconds: vod.startSeconds });
+        }
+        continue;
+      }
+
+      // Durante ACTIVE no se busca VOD — el video de top 8 normalmente sube
+      // recién terminado el torneo, así que sería gastar cuota de YouTube
+      // buscando algo que casi seguro no existe todavía.
+      const vod = state === "COMPLETED" ? ((await findMatchClip(tournamentName, u.ganador.nombre, u.perdedor.nombre, productionRoundLabel(u.ronda))) || { videoId: null, startSeconds: 0 }) : { videoId: null, startSeconds: 0 };
+      const pjGanador = u.ganador.pj ? ` (${u.ganador.pj})` : "";
+      const pjPerdedor = u.perdedor.pj ? ` (${u.perdedor.pj})` : "";
+      // Etiqueta: seed si el torneo lo tenía, si no SSBMRank, si no nada --
+      // evita el "[null]" cuando el upset se detectó solo por SSBMRank en un
+      // torneo sin seeding cerrado.
+      const etiqueta = (seed, rank) => seed != null ? `[seed ${seed}]` : rank != null ? `[SSBMRank #${rank}]` : "";
+      const etGanador = etiqueta(u.ganador.seed, u.ganador.ssbmrank);
+      const etPerdedor = etiqueta(u.perdedor.seed, u.perdedor.ssbmrank);
+      const notaSSBMRank = u.viaSSBMRank ? " (upset por SSBMRank, seeding local no lo reflejaba)" : "";
+
+      upsetItems.push({
+        guid,
+        title: `${u.ganador.nombre}${pjGanador}${etGanador ? ` ${etGanador}` : ""} venció a ${u.perdedor.nombre}${pjPerdedor}${etPerdedor ? ` ${etPerdedor}` : ""}`,
+        link: t.bracketUrl,
+        summary: `${u.ronda} de ${tournamentName}.${notaSSBMRank}`,
+        ronda: u.ronda, // como campo separado -- topUpsets/buildTop8Ordered lo necesitan, antes solo estaba mezclado en summary
+        image: null,
+        pubDate: eventInfo.startAt ? new Date(eventInfo.startAt * 1000).toISOString() : null,
+        source: tournamentName,
+        categoria: "Melee",
+        fullText: null,
+        tipo: "video",
+        videoId: vod.videoId,
+        startSeconds: vod.startSeconds, // opcional — el prototipo lo ignora si no lo usa todavía
+        esUpset: u.esUpset,
+        viaSSBMRank: u.viaSSBMRank,
+        seedDiff: u.seedDiff, // como campo separado -- topUpsets ordena por esto, antes quedaba undefined siempre (bug: nunca ordenaba de verdad)
+        rankDiff: u.rankDiff,
+        ganador: { nombre: u.ganador.nombre, seed: u.ganador.seed, ssbmrank: u.ganador.ssbmrank, pj: u.ganador.pj, foto: u.ganador.foto },
+        perdedor: { nombre: u.perdedor.nombre, seed: u.perdedor.seed, ssbmrank: u.perdedor.ssbmrank, pj: u.perdedor.pj, foto: u.perdedor.foto },
+      });
+    }
+
+    // Fase 3a: preview de Top 16 y Top 8, solo mientras el torneo sigue
+    // ACTIVE (una vez COMPLETED ya no aportan nada — el archivo permanente
+    // los reemplaza). Se agrega hora Chile del Top 8 + link de stream a
+    // ambos, vía fetchLiveInfo (timezone/streams de start.gg + top8-start-time
+    // de meleemajors.gg).
+    if (state === "ACTIVE") {
+      try {
+        const phases = await fetchEventPhases(eventInfo.id);
+        const liveInfo = await fetchLiveInfo(t);
+        // Fase 2a: reporte de seeds -- reemplaza al "quién le ganó a quién"
+        // genérico como vista principal mientras el torneo está en curso.
+        // Usa los mismos entrants/orden que Fase 1 (hype), pero cruzados
+        // contra los sets ya jugados para saber quién sostiene y quién cayó.
+        try {
+          const entrants = await fetchAllEntrants(eventInfo.id);
+          const top32 = entrants
+            .filter(e => e.initialSeedNum != null)
+            .sort((a, b) => a.initialSeedNum - b.initialSeedNum)
+            .slice(0, 32);
+          const seedReport = buildSeedReportItem(slug, tournamentName, t.bracketUrl, top32, sets, liveInfo);
+          if (seedReport) seedReportItems.push(seedReport);
+        } catch (e) {
+          console.error(`✗ Melee · reporte de seeds (${tournamentName}): ${e.message}`);
+        }
+        const top16Phase = findTop16Phase(phases);
+        if (top16Phase && top16Phase.state !== "COMPLETED") {
+          const preview16 = buildTop16PreviewItem(slug, tournamentName, t.bracketUrl, top16Phase, liveInfo);
+          if (preview16) top16Items.push(preview16);
+        }
+        const top8Phase = findTop8Phase(phases);
+        if (top8Phase && top8Phase.state !== "COMPLETED") {
+          const preview8 = buildTop8PreviewItem(slug, tournamentName, t.bracketUrl, top8Phase, liveInfo);
+          if (preview8) top8Items.push(preview8);
+        }
+      } catch (e) {
+        console.error(`✗ Melee · preview de Top 16/8 (${tournamentName}): ${e.message}`);
+      }
+    }
+
+    // Fase 3b: archivo permanente — se arma una sola vez, justo en la corrida
+    // donde el torneo pasa a COMPLETED por primera vez (antes de que
+    // processedEventIds lo excluya de futuros escaneos).
+    // Si la búsqueda de clips queda a medias (presupuesto de tiempo o cuota
+    // de YouTube agotada a mitad de camino) o el armado del archivo falla
+    // por completo, este torneo NO se marca como procesado -- así se
+    // reintenta completo en la próxima corrida en vez de congelar para
+    // siempre los videoId:null que quedaron sin buscar. Ver dedupe de
+    // allArchiveItems más abajo: al reintentar, el archiveItem parcial
+    // anterior se descarta a favor del nuevo, no se acumulan duplicados.
+    let clipSearchIncompleta = false;
+    if (state === "COMPLETED" && !previousProcessedEventIds.includes(eventInfo.id)) {
+      try {
+        const standings = await fetchFinalStandings(eventInfo.id);
+        const tournamentUpsets = [...upsetItems, ...previousUpsetItemsByGuid.values()].filter(
+          i => i.source === tournamentName && i.esUpset
+        );
+        const finalistNames = [...standings].sort((a, b) => a.placement - b.placement).slice(0, 2).map(s => s.entrant.name);
+        const vod = finalistNames.length === 2
+          ? (await findMatchClip(tournamentName, finalistNames[0], finalistNames[1], "GRAND FINALS")) || { videoId: null, startSeconds: 0 }
+          : { videoId: null, startSeconds: 0 };
+
+        // Tres secciones, cada una con clip cortado individual (findMatchClip,
+        // SIN fallback a stream+timestamp) -- ver top8Clips/upsetClips/docClips
+        // en buildTournamentArchiveItem. Caché compartido por par de nombres:
+        // el mismo matchup puede aparecer en más de una sección (un upset
+        // real de Top 8 cae en top8Clips Y en upsetClips) y no tiene sentido
+        // pagar la búsqueda de YouTube dos veces por lo mismo.
+        const clipCache = new Map(); // "ganador|perdedor" -> clip | null
+        async function clipCached(ganadorNombre, perdedorNombre, roundLabel) {
+          const key = `${ganadorNombre}|${perdedorNombre}`;
+          if (clipCache.has(key)) return clipCache.get(key);
+          const clip = await findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roundLabel);
+          clipCache.set(key, clip);
+          return clip;
+        }
+
+        let top8Clips = [], upsetClips = [], docClips = [];
+        try {
+          const phasesForArchive = await fetchEventPhases(eventInfo.id);
+          const top8Phase = findTop8Phase(phasesForArchive);
+          if (!top8Phase) {
+            // No adivinar por qué -- loguear los nombres de fase reales que
+            // sí llegaron, para poder ajustar TOP8_PHASE_NAME_RE con el
+            // nombre correcto en vez de tantear a ciegas (pasó con
+            // Supernova: 0 candidatos, sin ningún rastro de si la fase no
+            // existía o solo se llamaba distinto).
+            meleeDebug.push({ slug, tournamentName, top8PhaseNotFound: true, phasesDisponibles: phasesForArchive.map(p => p.name) });
+          }
+          const top8Matches = buildTop8Ordered(sets, top8Phase?.id ?? null);
+          const upsetMatches = topUpsets(tournamentUpsets, 999); // dedupe por par, sin cap de cantidad (el cap de 5 es solo para el resumen de texto)
+          const docMatches = docSetsFrom(sets);
+
+          // El presupuesto de 12 min (meleeDeadline) antes solo se chequeaba
+          // ENTRE torneos -- si un solo torneo grande se ponía a buscar
+          // decenas de clips individuales (top8+upsets+doc, uno por
+          // partido), nada lo cortaba a mitad de camino y terminaba
+          // reventando el timeout de 25 min del workflow entero. Ahora se
+          // chequea acá también, dentro de cada uno de los tres loops --
+          // en el peor caso se pierden los clips que faltaban de ESTE
+          // torneo, nunca el resto del pipeline.
+          let presupuestoAgotado = false;
+          for (const m of top8Matches) {
+            const guid = `melee-top8clip-${slug}-${m.setId}`;
+            const known = clipStateByGuid.get(guid);
+            if (known) { top8Clips.push({ guid, ronda: m.ronda, orden: m.orden, stages: m.stages, ganador: m.ganador, perdedor: m.perdedor, videoId: known.videoId, startSeconds: known.startSeconds ?? 0 }); continue; }
+            if (Date.now() > meleeDeadline) { presupuestoAgotado = true; break; }
+            const clip = await clipCached(m.ganador.nombre, m.perdedor.nombre, productionRoundLabel(m.ronda));
+            if (!clip) continue;
+            top8Clips.push({ guid, ronda: m.ronda, orden: m.orden, stages: m.stages, ganador: m.ganador, perdedor: m.perdedor, videoId: clip.videoId, startSeconds: 0 });
+            newClipState.set(guid, { videoId: clip.videoId, startSeconds: 0 });
+          }
+          if (!presupuestoAgotado) for (const m of upsetMatches) {
+            const guid = `melee-upsetclip-${slug}-${m.guid}`;
+            const known = clipStateByGuid.get(guid);
+            if (known) { upsetClips.push({ guid, ronda: m.ronda, stages: m.stages, ganador: m.ganador, perdedor: m.perdedor, videoId: known.videoId, startSeconds: known.startSeconds ?? 0 }); continue; }
+            if (Date.now() > meleeDeadline) { presupuestoAgotado = true; break; }
+            const clip = await clipCached(m.ganador.nombre, m.perdedor.nombre);
+            if (!clip) continue;
+            upsetClips.push({ guid, ronda: m.ronda, stages: m.stages, ganador: m.ganador, perdedor: m.perdedor, videoId: clip.videoId, startSeconds: 0 });
+            newClipState.set(guid, { videoId: clip.videoId, startSeconds: 0 });
+          }
+          // A diferencia de top8Clips/upsetClips (que solo listan sets con
+          // VOD encontrado, pensados como destacados curados para el feed
+          // público), acá se quiere el listado COMPLETO de sets jugados con
+          // Doc para repaso personal -- con o sin video encontrado. Por eso
+          // este loop NO se saltea aunque presupuestoAgotado ya sea true por
+          // los loops anteriores: la LISTA siempre se arma completa, solo
+          // que sin intentar buscar clip (videoId null) para lo que ya no
+          // entra en el presupuesto de tiempo. Los ya conocidos por estado
+          // igual se aplican gratis, sin tocar el presupuesto.
+          for (const m of docMatches) {
+            const guid = `melee-docclip-${slug}-${m.setId}`;
+            const known = clipStateByGuid.get(guid);
+            let clip = null;
+            if (known) {
+              clip = known;
+            } else if (!presupuestoAgotado && Date.now() <= meleeDeadline) {
+              clip = await clipCached(m.ganador.nombre, m.perdedor.nombre);
+              if (clip?.videoId) newClipState.set(guid, { videoId: clip.videoId, startSeconds: 0 });
+            } else {
+              presupuestoAgotado = true;
+            }
+            docClips.push({ guid, ronda: m.ronda, stages: m.stages, ganador: m.ganador, perdedor: m.perdedor, videoId: clip?.videoId ?? null, startSeconds: 0 });
+          }
+          if (presupuestoAgotado) console.warn(`⚠ Melee · presupuesto agotado buscando clips de ${tournamentName}, se sigue con lo encontrado hasta acá`);
+          // Criterio de "completo" = Top 8 entero con video encontrado, no
+          // presupuesto/cuota en general. Motivo (explicado por el usuario):
+          // los clips de Top 8 son los ÚLTIMOS en subir, con retraso real
+          // después de terminado el torneo -- vale la pena seguir
+          // reintentando hasta encontrarlos todos. Upsets/doc en cambio: si
+          // el streamer no subió ese set individual, por lo general ya no
+          // va a aparecer después -- reintentar esas dos secciones
+          // indefinidamente no cambia nada, así que NO bloquean marcar el
+          // torneo como completado.
+          const top8Completo = !!top8Phase && top8Matches.length > 0 && top8Clips.length === top8Matches.length;
+          if (!top8Completo) clipSearchIncompleta = true;
+          meleeDebug.push({
+            slug, tournamentName, presupuestoAgotado, top8Completo, reintentaraProximaCorrida: clipSearchIncompleta,
+            top8ClipsEncontrados: top8Clips.length, top8Candidatos: top8Matches.length,
+            upsetClipsEncontrados: upsetClips.length, upsetCandidatos: upsetMatches.length,
+            docClipsEncontrados: docClips.length, docCandidatos: docMatches.length,
+          });
+        } catch (e) {
+          console.error(`✗ Melee · VOD permanente (${tournamentName}): ${e.message}`);
+          meleeDebug.push({ slug, tournamentName, vodError: e.message });
+          clipSearchIncompleta = true; // no se pudo ni empezar a buscar -- reintentar, no congelar sin clips
+        }
+
+        // Narrativa con contexto real (Claude API + búsqueda web) -- best
+        // effort, con su propio try/catch adentro (narrateArchiveSummary
+        // nunca tira, devuelve null si algo falla). No se deja que un
+        // problema acá tumbe el archivo permanente entero: si falla, el
+        // resumen mecánico de siempre sigue funcionando.
+        let narracion = null;
+        try {
+          narracion = await narrateArchiveSummary(tournamentName, standings, tournamentUpsets);
+        } catch (e) {
+          console.error(`✗ Melee · narración (${tournamentName}): ${e.message}`);
+        }
+
+        const archiveItem = buildTournamentArchiveItem(slug, tournamentName, t.bracketUrl, standings, tournamentUpsets, vod, top8Clips, upsetClips, docClips, narracion);
+        if (archiveItem) archiveItems.push(archiveItem);
+      } catch (e) {
+        console.error(`✗ Melee · archivo final (${tournamentName}): ${e.message}`);
+        clipSearchIncompleta = true; // el archivo ni se terminó de armar -- reintentar, no marcar como cerrado
+      }
+    }
+
+    if (state === "COMPLETED" && !clipSearchIncompleta) processedEventIds.add(eventInfo.id);
+
+    // Se sigue rastreando mientras no quede completamente cerrado -- una vez
+    // en processedEventIds (COMPLETED + archivo ya construido) ya no hace
+    // falta, el bloque de arriba (línea ~779) lo salta directo la próxima vez.
+    if (!processedEventIds.has(eventInfo.id)) {
+      trackedTournaments.push({ bracketUrl: t.bracketUrl, name: tournamentName });
+    }
+    } catch (e) {
+      console.error(`✗ Melee · error no capturado procesando ${tournamentName} (${slug}): ${e.message}`);
+      meleeDebug.push({ slug, tournamentName, errorNoCapturado: e.message });
+    }
+  }
+
+  return { upsetItems, hypeItems, projectionItems, seedReportItems, top16Items, top8Items, archiveItems, processedEventIds: Array.from(processedEventIds), trackedTournaments, meleeDebug, newClipState };
+}
+// ================= Fin módulo Melee =================
+
+
+// Un guid de cualquier tipo de ítem de Melee (upset suelto, hype,
+// proyección, seed report, preview de Top16/Top8, clip individual) siempre
+// trae el slug del torneo -- ya sea como sufijo (`melee-hype-${slug}`) o en
+// el medio (`melee-${slug}-${ganador}-vs-...`, caso de los upsets sueltos).
+// No asumir posición fija: alcanza con que aparezca como token separado por
+// guiones en algún punto del guid.
+function guidBelongsToSlug(guid, slug) {
+  return guid === `melee-archivo-${slug}` || guid.endsWith(`-${slug}`) || guid.includes(`-${slug}-`);
+}
+
+async function main() {
+  let previous = { categories: [] };
+  try {
+    previous = JSON.parse(await readFile(OUTPUT_PATH, "utf-8"));
+  } catch (e) { /* primera corrida, no hay melee.json todavía */ }
+  const previousMeleeItems = (previous.categories || []).find(c => c.cat === "Melee")?.items || [];
+  const previousProcessedEventIds = previous.processedEvents || [];
+  const previousTrackedTournaments = previous.trackedTournaments || [];
+
+  let clipState = {};
+  try {
+    clipState = JSON.parse(await readFile(STATE_PATH, "utf-8"));
+  } catch (e) { /* primera corrida, no hay estado todavía */ }
+  const clipStateByGuid = new Map(Object.entries(clipState.clips || {}));
+  console.log(`Estado cargado: ${clipStateByGuid.size} clip(s) ya conocido(s) de corridas anteriores`);
+
+  // Fase 1 del fix de unificación (issue #7, hallazgo del 30-ago): antes
+  // convivían tres representaciones del mismo dato de upsets -- el archivo
+  // permanente estructurado (archivo.upsetClips), los ítems sueltos de
+  // tracking en vivo (nunca se limpiaban), y la mención en prosa dentro de
+  // archivo.summary. La prosa queda igual (es narrativa, no una fuente de
+  // datos compitiendo), pero los ítems sueltos de un torneo YA ARCHIVADO se
+  // sacan por completo más abajo (archivedSlugs) en vez de dejarlos
+  // colgando hasta que expiren por RETENTION_DAYS -- de ahí salían las
+  // parejas inconsistentes (mismo jugador con dos rivales distintos).
+  const previousUpsetItemsOnly = previousMeleeItems.filter(
+    i => !i.esHype && !i.esProyeccion && !i.esSeedReport && !i.esTop16Preview && !i.esTop8Preview && !i.esArchivo
+  );
+  const previousArchiveItems = previousMeleeItems.filter(i => i.esArchivo);
+  const previousUpsetItemsByGuid = new Map(previousUpsetItemsOnly.map(i => [i.guid, i]));
+
+  console.log("Procesando Melee (meleemajors.gg + start.gg + YouTube)...");
+  const { upsetItems: newUpsetItems, hypeItems, projectionItems, seedReportItems, top16Items, top8Items, archiveItems: newArchiveItems, processedEventIds, trackedTournaments, meleeDebug, newClipState } = await fetchMeleeItems(
+    previousUpsetItemsByGuid,
+    previousProcessedEventIds,
+    previousTrackedTournaments,
+    clipStateByGuid
+  );
+  console.log(`✓ Melee · ${newUpsetItems.length} upset(s) nuevo(s)/actualizado(s), ${hypeItems.length} torneo(s) generando hype, ${projectionItems.length} proyección(es) de bracket, ${seedReportItems.length} reporte(s) de seeds en curso, ${top16Items.length} preview(s) de Top 16, ${top8Items.length} preview(s) de Top 8, ${newArchiveItems.length} archivo(s) final(es) nuevo(s) esta corrida, ${newClipState.size} clip(s) nuevo(s) encontrado(s)`);
+
+  const newUpsetGuids = new Set(newUpsetItems.map(i => i.guid));
+  const carriedUpsetItems = previousUpsetItemsOnly.filter(i => !newUpsetGuids.has(i.guid));
+  const newArchiveGuids = new Set(newArchiveItems.map(i => i.guid));
+  const carriedArchiveItems = previousArchiveItems.filter(i => !newArchiveGuids.has(i.guid));
+  const allArchiveItems = [...carriedArchiveItems, ...newArchiveItems]; // permanente, sin cutoff
+
+  // Fase 2 del fix de unificación: cualquier ítem de tracking en vivo que
+  // pertenezca a un torneo que YA tiene archivo (de esta corrida o de
+  // cualquier corrida anterior) se saca -- el archivo es la única fuente de
+  // verdad a partir de ahí, no coexisten.
+  const archivedSlugs = allArchiveItems.map(a => a.guid.replace(/^melee-archivo-/, ""));
+  function siguevigente(item) {
+    return !archivedSlugs.some(slug => guidBelongsToSlug(item.guid, slug));
+  }
+  const liveUpsetItems = [...carriedUpsetItems, ...newUpsetItems].filter(siguevigente);
+  const liveHypeItems = hypeItems.filter(siguevigente);
+  const liveProjectionItems = projectionItems.filter(siguevigente);
+  const liveSeedReportItems = seedReportItems.filter(siguevigente);
+  const liveTop16Items = top16Items.filter(siguevigente);
+  const liveTop8Items = top8Items.filter(siguevigente);
+  const clippedCount = (carriedUpsetItems.length + newUpsetItems.length) - liveUpsetItems.length;
+  if (clippedCount > 0) console.log(`✓ Melee · ${clippedCount} ítem(s) de tracking en vivo retirado(s) por tener ya archivo permanente`);
+
+  const cutoff = Date.now() - RETENTION_DAYS * 86400000;
+  const cutoffFilteredMeleeItems = [...liveUpsetItems, ...liveHypeItems, ...liveProjectionItems, ...liveSeedReportItems, ...liveTop16Items, ...liveTop8Items].filter(
+    a => !a.pubDate || new Date(a.pubDate).getTime() >= cutoff
+  );
+  const items = [...cutoffFilteredMeleeItems, ...allArchiveItems];
+
+  // Estado de clips: se mezcla lo nuevo encontrado esta corrida con lo que
+  // ya había. No se poda nunca por tamaño acá -- son pares guid->{videoId,
+  // startSeconds}, livianos (a diferencia de feed.json con Podcasts, esto
+  // no acumula texto).
+  const mergedClipState = { ...clipState.clips, ...Object.fromEntries(newClipState) };
+
+  const output = {
+    generatedAt: new Date().toISOString(),
+    categories: [{ cat: "Melee", items }],
+    processedEvents: processedEventIds,
+    trackedTournaments,
+    meleeDebug,
+    vodClipDebug,
+  };
+  await mkdir(new URL("../data/", import.meta.url), { recursive: true });
+  await writeFile(OUTPUT_PATH, JSON.stringify(output, null, 2));
+  await writeFile(STATE_PATH, JSON.stringify({ generatedAt: new Date().toISOString(), clips: mergedClipState }, null, 2));
+
+  console.log(`✓ ${items.length} ítems de Melee (${allArchiveItems.length} archivo(s) permanente(s)) · ${Object.keys(mergedClipState).length} clip(s) en estado persistido`);
+}
+
+main().catch(e => {
+  console.error("Error fatal:", e);
+  process.exit(1);
+});
