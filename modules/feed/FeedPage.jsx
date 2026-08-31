@@ -1906,6 +1906,14 @@
             const upsets = grupo.filter(i => !i.esArchivo && !i.esTop16Preview && !i.esTop8Preview && !i.esHype && !i.esProyeccion && !i.esSeedReport);
             const open = openTournament === nombre;
             const estado = archivo ? "finalizado" : top8 ? "en Top 8" : top16 ? "en Top 16" : (seedReport ? "en curso" : (upsets.length ? "en curso" : "próximamente"));
+            // Pendientes sin ver de TODO el torneo (Top 8 + Upsets + Doc),
+            // visible en el header de la carpeta sin necesidad de abrirla --
+            // así un set nuevo que se terminó de encontrar en una corrida
+            // posterior (sobre todo Top 8, que sube tarde) queda a la vista
+            // como "esperando", no enterrado adentro de una sección colapsada.
+            const pendientesTorneo = archivo
+              ? [...(archivo.top8Clips || []), ...(archivo.upsetClips || []), ...(archivo.docClips || [])].filter(c => !vodVistos.has(c.guid)).length
+              : 0;
             // Hora Chile del Top 8 + link de stream: puede venir de hype (pre-torneo)
             // o de top16/top8/seedReport (torneo en curso) — el que esté disponible primero.
             const liveInfo = top8 || top16 || seedReport || hype;
@@ -1916,7 +1924,15 @@
                   padding: "14px 16px", background: "rgba(255,102,0,0.06)", border: "none", cursor: "pointer", textAlign: "left",
                 }}>
                   <div style={{ fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff" }}>{nombre}</div>
-                  <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, color: "#ff6600" }}>{estado.toUpperCase()} {open ? "▲" : "▼"}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    {pendientesTorneo > 0 && (
+                      <span style={{
+                        fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, color: "#111",
+                        background: "#ff6600", borderRadius: 10, padding: "2px 8px",
+                      }}>{pendientesTorneo} sin ver</span>
+                    )}
+                    <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, color: "#ff6600" }}>{estado.toUpperCase()} {open ? "▲" : "▼"}</div>
+                  </div>
                 </button>
                 {open && (
                   <div style={{ padding: "14px 16px" }}>
@@ -1987,6 +2003,7 @@
                       return secciones.map(sec => sec.clips.length > 0 && (() => {
                         const sectionKey = `${nombre}-${sec.key}`;
                         const colapsada = collapsedSections.has(sectionKey);
+                        const pendientes = sec.clips.filter(c => !vodVistos.has(c.guid)).length;
                         return (
                         <div key={sec.key} style={{ marginBottom: 16, paddingBottom: colapsada ? 0 : 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                           <button onClick={() => toggleSection(sectionKey)} style={{
@@ -1996,6 +2013,12 @@
                             <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ff6600", transform: colapsada ? "rotate(-90deg)" : "none", transition: "transform 0.15s", display: "inline-block" }}>▼</span>
                             <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600" }}>{sec.titulo}</span>
                             <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#777" }}>({sec.clips.length})</span>
+                            {pendientes > 0 && (
+                              <span style={{
+                                fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, color: "#111",
+                                background: "#ff6600", borderRadius: 10, padding: "1px 7px", marginLeft: 2,
+                              }}>{pendientes} sin ver</span>
+                            )}
                           </button>
                           {!colapsada && sec.clips.map((clip, i) => {
                             const visto = vodVistos.has(clip.guid);

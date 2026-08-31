@@ -710,7 +710,7 @@ async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roun
       if (vodClipDebug.length < 20) vodClipDebug.push({ q: decodeURIComponent(q), itemsFound: 0 });
       return null;
     }
-    const best = await pickBestMatchClip(items, ganadorNombre, perdedorNombre);
+    const best = await pickBestMatchClip(items, ganadorLimpio, perdedorLimpio);
     if (vodClipDebug.length < 20) vodClipDebug.push({ q: decodeURIComponent(q), itemsFound: items.length, bestScore: best?.score ?? null, primerTitulo: items[0]?.snippet?.title ?? null });
     if (!best || best.score < 1) return null; // nada que pinte lo bastante bien a que sea el clip correcto
     return { videoId: best.videoId, startSeconds: 0 }; // el clip ES el partido -- no hace falta timestamp
