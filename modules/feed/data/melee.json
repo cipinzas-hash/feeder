@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-31T00:55:44.464Z",
+  "generatedAt": "2026-08-31T10:16:22.002Z",
   "categories": [
     {
       "cat": "Melee",
@@ -8,15 +8,15 @@
           "guid": "melee-hype-tournament/riptide-2026-4/event/melee-singles",
           "title": "Se viene Riptide 2026",
           "link": "https://www.start.gg/tournament/riptide-2026-4/event/melee-singles",
-          "summary": "empieza en 13 día(s) Bracket en start.gg. 538 inscritos hasta ahora.",
+          "summary": "empieza en 13 día(s) Bracket en start.gg. 543 inscritos hasta ahora.",
           "image": null,
-          "pubDate": "2026-08-31T00:55:01.708Z",
+          "pubDate": "2026-08-31T10:15:38.164Z",
           "source": "Riptide 2026",
           "categoria": "Melee",
           "fullText": null,
           "esHype": true,
           "startAt": 1789232400,
-          "totalEntrants": 538,
+          "totalEntrants": 543,
           "notableEntrants": [
             {
               "nombre": "Liquid | Hungrybox",
@@ -116,7 +116,7 @@
           "link": "https://www.start.gg/tournament/supernova-2026/event/melee-1v1-singles",
           "summary": "1° LLD | Cody Schwab · 2° Zain · 3° ROOTS | S3C | RapMonster · 4° Liquid | Hungrybox · 5° Brotherhood | Aklo · 5° EggdogSpiral | Krudo · 7° SR | moky · 7° BTE | n0ne. Upsets destacados: parry.gg | Ultra [seed 26] venció a SR | Joshman [seed 7]; SHED | Epoodle [seed 28] venció a Swift [seed 11]; EggdogSpiral | Krudo [seed 14] venció a Zain [seed 3]; Swift [seed 11] venció a Zuppy [seed 22]; EggdogSpiral | Krudo (Sheik) [seed 14] venció a SR | Joshman (Fox) [seed 7].",
           "image": null,
-          "pubDate": "2026-08-31T00:55:18.834Z",
+          "pubDate": "2026-08-31T10:15:52.375Z",
           "source": "Supernova 2026",
           "categoria": "Melee",
           "fullText": null,
@@ -175,7 +175,7 @@
           "link": "https://www.start.gg/tournament/ceo-2026/event/super-smash-bros-melee",
           "summary": "1° Liquid | Hungrybox · 2° LLD | Cody Schwab · 3° Envy | Wizzrobe · 4° Tempo | Axe · 5° EggdogSpiral | Krudo · 5° Preeminent · 7° Paladin · 7° JChu. Upsets destacados: DigDougg [seed 231] venció a HodTV | M1sf1re [seed 26]; Keegore [seed 229] venció a Forrest [seed 28]; SBG | CharCharRealSmooth [seed 103] venció a HodTV | M1sf1re [seed 26]; psy-phy [seed 76] venció a Forrest [seed 28]; SWFL | K-so [seed 75] venció a Stockholm Syndrome [seed 27].",
           "image": null,
-          "pubDate": "2026-08-31T00:55:44.463Z",
+          "pubDate": "2026-08-31T10:16:22.002Z",
           "source": "CEO 2026",
           "categoria": "Melee",
           "fullText": null,
@@ -257,7 +257,68 @@
               "startSeconds": 0
             }
           ],
-          "upsetClips": [],
+          "upsetClips": [
+            {
+              "guid": "melee-upsetclip-tournament/ceo-2026/event/super-smash-bros-melee-melee-tournament/ceo-2026/event/super-smash-bros-melee-schmang-vs-sily-|-119j-losers-round-1",
+              "ronda": "Losers Round 1",
+              "ganador": {
+                "nombre": "Schmang",
+                "seed": 62,
+                "ssbmrank": null,
+                "pj": null,
+                "foto": null
+              },
+              "perdedor": {
+                "nombre": "sily | 119J",
+                "seed": 31,
+                "ssbmrank": null,
+                "pj": null,
+                "foto": null
+              },
+              "videoId": "ewxyWgAmKZE",
+              "startSeconds": 0
+            },
+            {
+              "guid": "melee-upsetclip-tournament/ceo-2026/event/super-smash-bros-melee-melee-tournament/ceo-2026/event/super-smash-bros-melee-paladin-vs-meow-|-mof-winners-quarter-final",
+              "ronda": "Winners Quarter-Final",
+              "ganador": {
+                "nombre": "Paladin",
+                "seed": 21,
+                "ssbmrank": null,
+                "pj": "Fox",
+                "foto": null
+              },
+              "perdedor": {
+                "nombre": "MEOW | MOF",
+                "seed": 5,
+                "ssbmrank": 22,
+                "pj": "Ice Climbers",
+                "foto": null
+              },
+              "videoId": "E_V_eRyQ_8M",
+              "startSeconds": 0
+            },
+            {
+              "guid": "melee-upsetclip-tournament/ceo-2026/event/super-smash-bros-melee-melee-tournament/ceo-2026/event/super-smash-bros-melee-akir-vs-dawson-winners-semi-final",
+              "ronda": "Winners Semi-Final",
+              "ganador": {
+                "nombre": "Akir",
+                "seed": 20,
+                "ssbmrank": null,
+                "pj": null,
+                "foto": null
+              },
+              "perdedor": {
+                "nombre": "Dawson",
+                "seed": 13,
+                "ssbmrank": 48,
+                "pj": null,
+                "foto": null
+              },
+              "videoId": "1F7Sdv6R5H4",
+              "startSeconds": 0
+            }
+          ],
           "docClips": [
             {
               "guid": "melee-docclip-tournament/ceo-2026/event/super-smash-bros-melee-106518593",
@@ -405,7 +466,7 @@
       "reintentaraProximaCorrida": true,
       "top8ClipsEncontrados": 3,
       "top8Candidatos": 11,
-      "upsetClipsEncontrados": 0,
+      "upsetClipsEncontrados": 3,
       "upsetCandidatos": 20,
       "docClipsEncontrados": 1,
       "docCandidatos": 1
@@ -422,7 +483,7 @@
       "q": "Ultra vs Ben Supernova 2026",
       "itemsFound": 5,
       "bestScore": -8,
-      "primerTitulo": "Supernova 2026 | Day 4/4 | Smash Ultimate + Melee Finals"
+      "primerTitulo": "Supernova 2026 | Day 3/4 | Rivals Top 64 ➔ Melee Singles ➔ Smash 64 Finals"
     },
     {
       "q": "Epoodle vs Swift Supernova 2026",
@@ -465,18 +526,6 @@
       "primerTitulo": "Supernova 2026 - Ultra (Fox) Vs. moky (Fox) Smash Melee - SSBM"
     },
     {
-      "q": "Epoodle vs Swift Supernova 2026",
-      "itemsFound": 5,
-      "bestScore": 3,
-      "primerTitulo": "Supernova 2026 - RapMonster (Luigi) Vs. Swift (Pikachu) Smash Melee - SSBM"
-    },
-    {
-      "q": "Krudo vs Zain Supernova 2026",
-      "itemsFound": 5,
-      "bestScore": 3,
-      "primerTitulo": "Supernova 2026 - Krudo (Sheik) Vs. Zain (Marth) Smash Melee - SSBM"
-    },
-    {
       "q": "Swift vs Zuppy Supernova 2026",
       "itemsFound": 1,
       "bestScore": -8,
@@ -496,7 +545,7 @@
       "q": "Ultra vs Ben Supernova 2026",
       "itemsFound": 5,
       "bestScore": -8,
-      "primerTitulo": "Supernova 2026 | Day 4/4 | Smash Ultimate + Melee Finals"
+      "primerTitulo": "Supernova 2026 | Day 3/4 | Rivals Top 64 ➔ Melee Singles ➔ Smash 64 Finals"
     },
     {
       "q": "Paladin vs Gahtzu CEO 2026",
@@ -506,7 +555,7 @@
       "q": "Grab vs Dawson CEO 2026",
       "itemsFound": 5,
       "bestScore": 0,
-      "primerTitulo": "She Met a Mysterious CEO at Dinner—Only to Discover He Was Her One-Night Stand 7 Years Ago!"
+      "primerTitulo": "Transmigrator earns system rewards.Takes CEO to site.She loves him. He flees,chased to wedding"
     },
     {
       "q": "sethibuns vs I'm Michael BTW CEO 2026",
@@ -521,6 +570,16 @@
       "itemsFound": 5,
       "bestScore": 0,
       "primerTitulo": "穷小伙解锁角色扮演系统，开局扮演工地工人，竟撞上装穷女总裁！被他打动送出万亿彩礼求娶！#短剧 #中国热门短剧 #短剧全集"
+    },
+    {
+      "q": "CEO 2026 TOP 8 Paladin vs MOF",
+      "itemsFound": 5,
+      "bestScore": 0,
+      "primerTitulo": "SHE PULLED THE SWORD OUT OF THE STONE RIGHT IN FRONT OF ME IN DISNEY WORLD"
+    },
+    {
+      "q": "SDeems vs kdog CEO 2026",
+      "itemsFound": 0
     }
   ]
 }
