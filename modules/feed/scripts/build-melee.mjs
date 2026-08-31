@@ -1084,13 +1084,20 @@ function top8RoundOrder(fullRoundText) {
   return 99; // ronda no reconocida -- al final, no se pierde el set, solo queda sin orden claro
 }
 
-// Todos los sets de la fase Top 8, ordenados por orden real de juego (no por
-// el orden en que vinieron en `sets`, que es RECENT-first).
-function buildTop8Ordered(sets, top8PhaseId) {
-  if (top8PhaseId == null) return [];
+// Todos los sets de Top 8, ordenados por orden real de juego (no por el
+// orden en que vinieron en `sets`, que es RECENT-first). Detecta por
+// NOMBRE DE RONDA (top8RoundOrder: grand final, winners/losers final,
+// winners/losers semi/quarter-final), no por fase -- un bracket puede no
+// tener ninguna fase literalmente llamada "Top 8" (pasó con Supernova
+// 2026: fases "Phase 1/2, Top 64, Top 16", sin ninguna "Top 8") y aun así
+// tener sets de Top 8 perfectamente identificables por su ronda. Antes
+// dependía de encontrar la fase por nombre primero -- si no existía, cero
+// candidatos, para siempre, sin importar cuántas corridas se reintentara.
+function buildTop8Ordered(sets) {
   const matches = [];
   for (const set of sets) {
-    if (set.phaseGroup?.phase?.id !== top8PhaseId) continue;
+    const orden = top8RoundOrder(set.fullRoundText);
+    if (orden === 99) continue; // no es una ronda de Top 8 reconocida
     if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
     const [a, b] = set.slots.map(s => s.entrant);
     if (!a || !b) continue;
@@ -1099,7 +1106,7 @@ function buildTop8Ordered(sets, top8PhaseId) {
     matches.push({
       setId: set.id,
       ronda: set.fullRoundText,
-      orden: top8RoundOrder(set.fullRoundText),
+      orden,
       stages: setStages(set.games),
       ganador: { nombre: winner.name, seed: winner.initialSeedNum ?? null, ssbmrank: ssbmrankOf(winner.name), pj: entrantCharacter(set.games, winner.id), foto: entrantFace(winner) },
       perdedor: { nombre: loser.name, seed: loser.initialSeedNum ?? null, ssbmrank: ssbmrankOf(loser.name), pj: entrantCharacter(set.games, loser.id), foto: entrantFace(loser) },
@@ -1485,17 +1492,13 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
 
         let top8Clips = [], upsetClips = [], docClips = [];
         try {
-          const phasesForArchive = await fetchEventPhases(eventInfo.id);
-          const top8Phase = findTop8Phase(phasesForArchive);
-          if (!top8Phase) {
-            // No adivinar por qué -- loguear los nombres de fase reales que
-            // sí llegaron, para poder ajustar TOP8_PHASE_NAME_RE con el
-            // nombre correcto en vez de tantear a ciegas (pasó con
-            // Supernova: 0 candidatos, sin ningún rastro de si la fase no
-            // existía o solo se llamaba distinto).
-            meleeDebug.push({ slug, tournamentName, top8PhaseNotFound: true, phasesDisponibles: phasesForArchive.map(p => p.name) });
+          // Ya no depende de encontrar una fase llamada "Top 8" -- ver
+          // comentario en buildTop8Ordered. fetchEventPhases/findTop8Phase
+          // se sacaron de acá (ahorra una query, ya no hace falta).
+          const top8Matches = buildTop8Ordered(sets);
+          if (!top8Matches.length) {
+            meleeDebug.push({ slug, tournamentName, top8SinCandidatos: true, setsCount: sets.length });
           }
-          const top8Matches = buildTop8Ordered(sets, top8Phase?.id ?? null);
           const upsetMatches = topUpsets(tournamentUpsets, 999); // dedupe por par, sin cap de cantidad (el cap de 5 es solo para el resumen de texto)
           const docMatches = docSetsFrom(sets);
 
@@ -1561,7 +1564,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
           // va a aparecer después -- reintentar esas dos secciones
           // indefinidamente no cambia nada, así que NO bloquean marcar el
           // torneo como completado.
-          const top8Completo = !!top8Phase && top8Matches.length > 0 && top8Clips.length === top8Matches.length;
+          const top8Completo = top8Matches.length > 0 && top8Clips.length === top8Matches.length;
           if (!top8Completo) clipSearchIncompleta = true;
           meleeDebug.push({
             slug, tournamentName, presupuestoAgotado, top8Completo, reintentaraProximaCorrida: clipSearchIncompleta,
