@@ -1085,17 +1085,19 @@ function top8RoundOrder(fullRoundText) {
 }
 
 // Todos los sets de Top 8, ordenados por orden real de juego (no por el
-// orden en que vinieron en `sets`, que es RECENT-first). Detecta por
-// NOMBRE DE RONDA (top8RoundOrder: grand final, winners/losers final,
-// winners/losers semi/quarter-final), no por fase -- un bracket puede no
-// tener ninguna fase literalmente llamada "Top 8" (pasó con Supernova
-// 2026: fases "Phase 1/2, Top 64, Top 16", sin ninguna "Top 8") y aun así
-// tener sets de Top 8 perfectamente identificables por su ronda. Antes
-// dependía de encontrar la fase por nombre primero -- si no existía, cero
-// candidatos, para siempre, sin importar cuántas corridas se reintentara.
-function buildTop8Ordered(sets) {
+// orden en que vinieron en `sets`, que es RECENT-first). finalPhaseId acota
+// a UNA fase (evita agarrar cuartos/semis de brackets de pools que
+// coinciden por nombre de ronda con los de la fase final -- pasó de verdad:
+// sin acotar, Supernova daba 84 "candidatos" y CEO 55, muy por encima de
+// los 7-15 reales de un Top 8 genuino). Dentro de esa fase, el filtro es
+// por NOMBRE DE RONDA (top8RoundOrder), no por nombre de fase -- un bracket
+// puede no tener ninguna fase literalmente llamada "Top 8" (Supernova 2026:
+// fases "Phase 1/2, Top 64, Top 16", sin "Top 8") y aun así sus rondas
+// finales son identificables por nombre igual.
+function buildTop8Ordered(sets, finalPhaseId) {
   const matches = [];
   for (const set of sets) {
+    if (finalPhaseId != null && set.phaseGroup?.phase?.id !== finalPhaseId) continue;
     const orden = top8RoundOrder(set.fullRoundText);
     if (orden === 99) continue; // no es una ronda de Top 8 reconocida
     if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
@@ -1492,12 +1494,21 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
 
         let top8Clips = [], upsetClips = [], docClips = [];
         try {
-          // Ya no depende de encontrar una fase llamada "Top 8" -- ver
-          // comentario en buildTop8Ordered. fetchEventPhases/findTop8Phase
-          // se sacaron de acá (ahorra una query, ya no hace falta).
-          const top8Matches = buildTop8Ordered(sets);
+          // Prioridad 1: fase literalmente llamada "Top 8" (caso común, más
+          // preciso). Si no existe (Supernova 2026: "Phase 1/2, Top 64, Top
+          // 16", sin ninguna "Top 8"), respaldo: la ÚLTIMA fase de la lista
+          // -- start.gg las devuelve en orden de progresión del bracket, así
+          // que la última es la fase final (la más chica/elite), nunca una
+          // fase de pools. Acotar a UNA fase importa: sin acotar por fase,
+          // el filtro por nombre de ronda solo agarra también los cuartos/
+          // semis de brackets de POOLS que coinciden por nombre (confirmado
+          // con datos reales: sin acotar, Supernova daba 84 "candidatos" y
+          // CEO 55 -- muy por encima de los 7-15 reales de un Top 8 genuino).
+          const phasesForArchive = await fetchEventPhases(eventInfo.id);
+          const top8Phase = findTop8Phase(phasesForArchive) || phasesForArchive[phasesForArchive.length - 1] || null;
+          const top8Matches = buildTop8Ordered(sets, top8Phase?.id ?? null);
           if (!top8Matches.length) {
-            meleeDebug.push({ slug, tournamentName, top8SinCandidatos: true, setsCount: sets.length });
+            meleeDebug.push({ slug, tournamentName, top8SinCandidatos: true, fasesDisponibles: phasesForArchive.map(p => p.name), faseUsada: top8Phase?.name ?? null });
           }
           const upsetMatches = topUpsets(tournamentUpsets, 999); // dedupe por par, sin cap de cantidad (el cap de 5 es solo para el resumen de texto)
           const docMatches = docSetsFrom(sets);
