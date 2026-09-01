@@ -39,14 +39,28 @@ jobs:
             echo "::error::worker_url vino vacío del step anterior -- ver el log de 'Desplegar script' para la causa real"
             exit 1
           fi
-          sleep 15  # margen para propagación del subdominio recién habilitado
-          RESP_NOAUTH=$(curl -s -w "\n%{http_code}" -X POST "$WORKER_URL" -d '{"payload":{}}')
+
+          # El subdominio workers.dev recién creado puede tardar en tener
+          # certificado SSL propagado (visto: exit 35 de curl, SSL_CONNECT_ERROR,
+          # con apenas 15s de margen). Reintenta con backoff en vez de adivinar
+          # un sleep fijo -- más robusto contra el tiempo real de propagación.
+          ATTEMPT=0
+          HTTP_NOAUTH=""
+          while [ "$ATTEMPT" -lt 10 ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            HTTP_NOAUTH=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 -X POST "$WORKER_URL" -d '{"payload":{}}' || echo "CURL_ERROR")
+            echo "intento $ATTEMPT: HTTP $HTTP_NOAUTH"
+            if [ "$HTTP_NOAUTH" = "401" ]; then break; fi
+            sleep 10
+          done
+
+          RESP_NOAUTH=$(curl -s -w "\n%{http_code}" --max-time 10 -X POST "$WORKER_URL" -d '{"payload":{}}' || echo -e "\nCURL_ERROR")
           HTTP_NOAUTH=$(echo "$RESP_NOAUTH" | tail -1)
           BODY_NOAUTH=$(echo "$RESP_NOAUTH" | sed '$d')
-          RESP_OK=$(curl -s -w "\n%{http_code}" -X POST "$WORKER_URL" \
+          RESP_OK=$(curl -s -w "\n%{http_code}" --max-time 10 -X POST "$WORKER_URL" \
             -H "X-Angst-Auth: $AUTH_SECRET" \
             -H "Content-Type: application/json" \
-            -d '{"payload":{"_test":true,"deployedAt":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}}')
+            -d '{"payload":{"_test":true,"deployedAt":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}}' || echo -e "\nCURL_ERROR")
           HTTP_OK=$(echo "$RESP_OK" | tail -1)
           BODY_OK=$(echo "$RESP_OK" | sed '$d')
           cat > /tmp/diag.json << DIAGEOF
