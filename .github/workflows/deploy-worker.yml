@@ -35,6 +35,10 @@ jobs:
           AUTH_SECRET: ${{ secrets.WORKER_AUTH_SECRET }}
         run: |
           echo "Worker en: $WORKER_URL"
+          if [ -z "$WORKER_URL" ]; then
+            echo "::error::worker_url vino vacío del step anterior -- ver el log de 'Desplegar script' para la causa real"
+            exit 1
+          fi
           sleep 5  # margen para propagación del subdominio recién habilitado
           RESP_NOAUTH=$(curl -s -w "\n%{http_code}" -X POST "$WORKER_URL" -d '{"payload":{}}')
           HTTP_NOAUTH=$(echo "$RESP_NOAUTH" | tail -1)

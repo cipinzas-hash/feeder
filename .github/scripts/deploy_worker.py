@@ -74,9 +74,18 @@ def enable_subdomain():
 def get_subdomain_prefix():
     url = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/workers/subdomain"
     status, data = req("GET", url)
-    print("Subdominio de cuenta:", status, json.dumps(data)[:300])
-    if data.get("success") and data.get("result"):
-        return data["result"].get("subdomain")
+    print("Subdominio de cuenta (GET):", status, json.dumps(data)[:300])
+    if data.get("success") and data.get("result") and data.get("result").get("subdomain"):
+        return data["result"]["subdomain"]
+
+    # Cuenta nueva -- todavía no eligió nunca un subdominio workers.dev.
+    # Se crea acá, una sola vez, con un nombre derivado de la cuenta.
+    candidate = f"angst-{ACCOUNT_ID[:8]}"
+    body = json.dumps({"subdomain": candidate}).encode()
+    status, data = req("PUT", url, body=body, content_type="application/json")
+    print("Crear subdominio de cuenta (PUT):", status, json.dumps(data)[:300])
+    if data.get("success"):
+        return candidate
     return None
 
 
