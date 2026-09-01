@@ -93,8 +93,8 @@ if __name__ == "__main__":
     multipart_upload_worker()
     set_secret("GITHUB_PAT", os.environ["WORKER_GITHUB_PAT"])
     set_secret("AUTH_SECRET", os.environ["WORKER_AUTH_SECRET"])
-    enable_subdomain()
-    prefix = get_subdomain_prefix()
+    prefix = get_subdomain_prefix()  # asegura el subdominio de CUENTA primero
+    enable_subdomain()  # recién ahora tiene sentido habilitar el worker en él
     if prefix:
         worker_url = f"https://{SCRIPT_NAME}.{prefix}.workers.dev"
         print(f"WORKER_URL={worker_url}")
@@ -102,3 +102,6 @@ if __name__ == "__main__":
         if github_output:
             with open(github_output, "a") as f:
                 f.write(f"worker_url={worker_url}\n")
+    else:
+        print("No se pudo determinar/crear el subdominio de cuenta -- worker_url queda vacío", file=sys.stderr)
+        sys.exit(1)

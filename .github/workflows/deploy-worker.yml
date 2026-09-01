@@ -39,7 +39,7 @@ jobs:
             echo "::error::worker_url vino vacío del step anterior -- ver el log de 'Desplegar script' para la causa real"
             exit 1
           fi
-          sleep 5  # margen para propagación del subdominio recién habilitado
+          sleep 15  # margen para propagación del subdominio recién habilitado
           RESP_NOAUTH=$(curl -s -w "\n%{http_code}" -X POST "$WORKER_URL" -d '{"payload":{}}')
           HTTP_NOAUTH=$(echo "$RESP_NOAUTH" | tail -1)
           BODY_NOAUTH=$(echo "$RESP_NOAUTH" | sed '$d')
