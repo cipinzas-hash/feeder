@@ -488,6 +488,90 @@
       }, []);
       return map;
     }
+
+    // ─── Simkl: cola de pendientes + envío al Worker (issue #14) ───
+    // El navegador nunca le habla a Simkl directo (su API no tiene CORS) ni
+    // a GitHub directo (expondría una credencial fuerte) -- todo pasa por
+    // el Worker (angst-sync), que sí tiene ambas credenciales, server-side.
+    //
+    // AUTH_SECRET del Worker NO puede hornearse acá como constante --
+    // feeder es un repo público, cualquiera que lea el código lo vería y
+    // el secret dejaría de proteger nada. Se pide una sola vez con un
+    // prompt y se guarda SOLO en localStorage de este dispositivo -- nunca
+    // se commitea, nunca sale en el export/import de Angst.
+    const SIMKL_PENDING_KEY = "angst-simkl-pending-v1";
+    const SIMKL_AUTH_KEY = "angst-simkl-auth-v1";
+    const WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
+    const SIMKL_ESTADO_TO_STATUS = { interesa: "plantowatch", vista: "completed", descartada: "dropped" };
+
+    function getSimklAuth() {
+      try { return localStorage.getItem(SIMKL_AUTH_KEY) || null; } catch (e) { return null; }
+    }
+    function pedirSimklAuth() {
+      const v = prompt("Pegá el AUTH_SECRET del Worker de Simkl (una sola vez, queda solo en este dispositivo):");
+      if (v && v.trim()) {
+        try { localStorage.setItem(SIMKL_AUTH_KEY, v.trim()); } catch (e) {}
+        flushSimklQueue();
+      }
+    }
+    function loadSimklPending() {
+      try { const raw = localStorage.getItem(SIMKL_PENDING_KEY); return raw ? JSON.parse(raw) : []; } catch (e) { return []; }
+    }
+    function saveSimklPending(arr) {
+      try { localStorage.setItem(SIMKL_PENDING_KEY, JSON.stringify(arr)); } catch (e) {}
+    }
+    // guid = "tmdb-movie-603" / "tmdb-tv-1399" (ver build-cine.mjs) -- el
+    // ID de TMDb ya vive en el guid, no hace falta un campo nuevo.
+    function parseTmdbGuid(guid) {
+      const m = /^tmdb-(movie|tv)-(\d+)$/.exec(guid || "");
+      if (!m) return null;
+      return { tipo: m[1] === "movie" ? "movie" : "show", tmdbId: Number(m[2]) };
+    }
+    function enqueueSimklAction(item, estadoLocal) {
+      const parsed = parseTmdbGuid(item?.guid);
+      if (!parsed) return; // Animación (a veces ID de MAL) u otra fuente sin tmdb -- no aplica todavía
+      const status = SIMKL_ESTADO_TO_STATUS[estadoLocal];
+      if (!status) return;
+      const year = item.pubDate ? new Date(item.pubDate).getFullYear() : undefined;
+      const pending = loadSimklPending();
+      // Reemplaza cualquier acción pendiente anterior del mismo ítem -- no
+      // tiene sentido mandar dos veces, gana la más reciente.
+      const filtered = pending.filter(a => !(a.tmdbId === parsed.tmdbId && a.tipo === parsed.tipo));
+      filtered.push({ tmdbId: parsed.tmdbId, tipo: parsed.tipo, status, title: item.title, year, creadoEn: new Date().toISOString() });
+      saveSimklPending(filtered);
+      flushSimklQueue(); // best effort, no bloquea la UI -- si falla, la cola queda para el próximo intento
+    }
+    let simklFlushInFlight = false;
+    async function flushSimklQueue() {
+      if (simklFlushInFlight) return;
+      const auth = getSimklAuth();
+      const pending = loadSimklPending();
+      if (!auth || !pending.length) return;
+      simklFlushInFlight = true;
+      try {
+        // El POST del Worker REEMPLAZA el archivo entero, no hace merge --
+        // hay que leer primero o se perdería syncedList/lastSimklActivity
+        // (los escribe build-simkl.mjs del lado servidor) sin querer.
+        const getResp = await fetch(`${WORKER_URL}?path=simkl-state.json`, { headers: { "X-Angst-Auth": auth } });
+        if (!getResp.ok) return;
+        const remote = await getResp.json();
+        if (remote.found === false) return; // no debería faltar a esta altura -- no arriesgar a pisar con un objeto vacío
+        const remotePending = remote.pendingActions || [];
+        const remoteKeys = new Set(remotePending.map(a => `${a.tipo}-${a.tmdbId}`));
+        const merged = [...remotePending, ...pending.filter(a => !remoteKeys.has(`${a.tipo}-${a.tmdbId}`))];
+        remote.pendingActions = merged;
+        const postResp = await fetch(WORKER_URL, {
+          method: "POST",
+          headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
+          body: JSON.stringify({ path: "simkl-state.json", payload: remote }),
+        });
+        if (postResp.ok) saveSimklPending([]); // confirmado en Angst-data -- build-simkl.mjs lo toma de ahí en su próxima corrida
+      } catch (e) {
+        // sin red o Worker caído -- la cola local queda intacta, se reintenta la próxima vez
+      } finally {
+        simklFlushInFlight = false;
+      }
+    }
     function diasRestantesCartelera(item) {
       if (!item.firstSeenAt) return null;
       const RETENTION_MS = 30 * 86400000;
@@ -579,9 +663,11 @@
         } else {
           setCineItemEstado(item.guid, { estado: nuevoEstado });
         }
+        enqueueSimklAction(item, nuevoEstado);
       }
       function guardarReview(ratingId, nota) {
         setCineItemEstado(item.guid, { estado: "vista", rating: ratingId, nota: nota || "" });
+        enqueueSimklAction(item, "vista");
         setReviewOpen(false);
       }
       const color = CAT_COLORS[item.categoria] || "#e91e8c";
@@ -897,6 +983,7 @@
         background: active ? "#fff" : "transparent", color: active ? "#111" : "#999",
         borderColor: active ? "#fff" : "#333",
       });
+      const simklConectado = !!getSimklAuth();
       const toolbar = (
         <div style={{ display: "flex", gap: 6, padding: "0 12px 8px", justifyContent: "center", flexWrap: "wrap" }}>
           <button onClick={() => setSortBy(sortBy === "proxima" ? "default" : "proxima")} style={toolbarBtn(sortBy === "proxima")}>📅 próxima a salir</button>
@@ -909,6 +996,9 @@
               <button onClick={() => setSoloEstrenos(v => !v)} style={toolbarBtn(soloEstrenos)}>🎬 solo estrenos</button>
               <button onClick={() => setOcultarTrending(v => !v)} style={toolbarBtn(ocultarTrending)}>🔥 ocultar trending</button>
             </React.Fragment>
+          )}
+          {!simklConectado && (
+            <button onClick={pedirSimklAuth} style={toolbarBtn(false)} title="Conectar este dispositivo con la sincronización de Simkl">🔗 conectar Simkl</button>
           )}
         </div>
       );

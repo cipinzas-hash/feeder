@@ -7017,6 +7017,85 @@ ${item.link}`);
     }, []);
     return map;
   }
+  var SIMKL_PENDING_KEY = "angst-simkl-pending-v1";
+  var SIMKL_AUTH_KEY = "angst-simkl-auth-v1";
+  var WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
+  var SIMKL_ESTADO_TO_STATUS = { interesa: "plantowatch", vista: "completed", descartada: "dropped" };
+  function getSimklAuth() {
+    try {
+      return localStorage.getItem(SIMKL_AUTH_KEY) || null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function pedirSimklAuth() {
+    const v = prompt("Peg\xE1 el AUTH_SECRET del Worker de Simkl (una sola vez, queda solo en este dispositivo):");
+    if (v && v.trim()) {
+      try {
+        localStorage.setItem(SIMKL_AUTH_KEY, v.trim());
+      } catch (e) {
+      }
+      flushSimklQueue();
+    }
+  }
+  function loadSimklPending() {
+    try {
+      const raw = localStorage.getItem(SIMKL_PENDING_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  function saveSimklPending(arr) {
+    try {
+      localStorage.setItem(SIMKL_PENDING_KEY, JSON.stringify(arr));
+    } catch (e) {
+    }
+  }
+  function parseTmdbGuid(guid) {
+    const m = /^tmdb-(movie|tv)-(\d+)$/.exec(guid || "");
+    if (!m) return null;
+    return { tipo: m[1] === "movie" ? "movie" : "show", tmdbId: Number(m[2]) };
+  }
+  function enqueueSimklAction(item, estadoLocal) {
+    const parsed = parseTmdbGuid(item?.guid);
+    if (!parsed) return;
+    const status = SIMKL_ESTADO_TO_STATUS[estadoLocal];
+    if (!status) return;
+    const year = item.pubDate ? new Date(item.pubDate).getFullYear() : void 0;
+    const pending = loadSimklPending();
+    const filtered = pending.filter((a) => !(a.tmdbId === parsed.tmdbId && a.tipo === parsed.tipo));
+    filtered.push({ tmdbId: parsed.tmdbId, tipo: parsed.tipo, status, title: item.title, year, creadoEn: (/* @__PURE__ */ new Date()).toISOString() });
+    saveSimklPending(filtered);
+    flushSimklQueue();
+  }
+  var simklFlushInFlight = false;
+  async function flushSimklQueue() {
+    if (simklFlushInFlight) return;
+    const auth = getSimklAuth();
+    const pending = loadSimklPending();
+    if (!auth || !pending.length) return;
+    simklFlushInFlight = true;
+    try {
+      const getResp = await fetch(`${WORKER_URL}?path=simkl-state.json`, { headers: { "X-Angst-Auth": auth } });
+      if (!getResp.ok) return;
+      const remote = await getResp.json();
+      if (remote.found === false) return;
+      const remotePending = remote.pendingActions || [];
+      const remoteKeys = new Set(remotePending.map((a) => `${a.tipo}-${a.tmdbId}`));
+      const merged = [...remotePending, ...pending.filter((a) => !remoteKeys.has(`${a.tipo}-${a.tmdbId}`))];
+      remote.pendingActions = merged;
+      const postResp = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
+        body: JSON.stringify({ path: "simkl-state.json", payload: remote })
+      });
+      if (postResp.ok) saveSimklPending([]);
+    } catch (e) {
+    } finally {
+      simklFlushInFlight = false;
+    }
+  }
   function diasRestantesCartelera(item) {
     if (!item.firstSeenAt) return null;
     const RETENTION_MS = 30 * 864e5;
@@ -7106,9 +7185,11 @@ ${item.link}`);
       } else {
         setCineItemEstado(item.guid, { estado: nuevoEstado });
       }
+      enqueueSimklAction(item, nuevoEstado);
     }
     function guardarReview(ratingId, nota) {
       setCineItemEstado(item.guid, { estado: "vista", rating: ratingId, nota: nota || "" });
+      enqueueSimklAction(item, "vista");
       setReviewOpen(false);
     }
     const color = CAT_COLORS[item.categoria] || "#e91e8c";
@@ -7272,7 +7353,8 @@ ${item.link}`);
       color: active ? "#111" : "#999",
       borderColor: active ? "#fff" : "#333"
     });
-    const toolbar = /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "0 12px 8px", justifyContent: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setSortBy(sortBy === "proxima" ? "default" : "proxima"), style: toolbarBtn(sortBy === "proxima") }, "\u{1F4C5} pr\xF3xima a salir"), /* @__PURE__ */ React.createElement("button", { onClick: () => setSoloInteresa((v) => !v), style: toolbarBtn(soloInteresa) }, "\u{1F516} solo me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarVistas((v) => !v), style: toolbarBtn(ocultarVistas) }, "\u{1F441}\uFE0F ocultar vistas"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarDescartadas((v) => !v), style: toolbarBtn(ocultarDescartadas) }, "\u{1F6AB} ocultar no me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: irARandom, style: toolbarBtn(false) }, "\u{1F3B2} sorpr\xE9ndeme"), esPelicula && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { onClick: () => setSoloEstrenos((v) => !v), style: toolbarBtn(soloEstrenos) }, "\u{1F3AC} solo estrenos"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarTrending((v) => !v), style: toolbarBtn(ocultarTrending) }, "\u{1F525} ocultar trending")));
+    const simklConectado = !!getSimklAuth();
+    const toolbar = /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "0 12px 8px", justifyContent: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setSortBy(sortBy === "proxima" ? "default" : "proxima"), style: toolbarBtn(sortBy === "proxima") }, "\u{1F4C5} pr\xF3xima a salir"), /* @__PURE__ */ React.createElement("button", { onClick: () => setSoloInteresa((v) => !v), style: toolbarBtn(soloInteresa) }, "\u{1F516} solo me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarVistas((v) => !v), style: toolbarBtn(ocultarVistas) }, "\u{1F441}\uFE0F ocultar vistas"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarDescartadas((v) => !v), style: toolbarBtn(ocultarDescartadas) }, "\u{1F6AB} ocultar no me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: irARandom, style: toolbarBtn(false) }, "\u{1F3B2} sorpr\xE9ndeme"), esPelicula && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { onClick: () => setSoloEstrenos((v) => !v), style: toolbarBtn(soloEstrenos) }, "\u{1F3AC} solo estrenos"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarTrending((v) => !v), style: toolbarBtn(ocultarTrending) }, "\u{1F525} ocultar trending")), !simklConectado && /* @__PURE__ */ React.createElement("button", { onClick: pedirSimklAuth, style: toolbarBtn(false), title: "Conectar este dispositivo con la sincronizaci\xF3n de Simkl" }, "\u{1F517} conectar Simkl"));
     if (!sortedItems.length) {
       return /* @__PURE__ */ React.createElement("div", null, toolbar, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" } }, "nada por ac\xE1 todav\xEDa"));
     }
