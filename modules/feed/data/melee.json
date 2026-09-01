@@ -1,9 +1,119 @@
 {
-  "generatedAt": "2026-09-01T15:45:46.621Z",
+  "generatedAt": "2026-09-01T18:59:51.428Z",
   "categories": [
     {
       "cat": "Melee",
       "items": [
+        {
+          "guid": "melee-hype-tournament/riptide-2026-4/event/melee-singles",
+          "title": "Se viene Riptide 2026",
+          "link": "https://www.start.gg/tournament/riptide-2026-4/event/melee-singles",
+          "summary": "empieza en 11 día(s) Bracket en start.gg. 565 inscritos hasta ahora.",
+          "image": null,
+          "pubDate": "2026-09-01T18:59:50.779Z",
+          "source": "Riptide 2026",
+          "categoria": "Melee",
+          "fullText": null,
+          "esHype": true,
+          "startAt": 1789232400,
+          "totalEntrants": 565,
+          "notableEntrants": [
+            {
+              "nombre": "Liquid | Hungrybox",
+              "ssbmrank": 3
+            },
+            {
+              "nombre": "SR | Joshman",
+              "ssbmrank": 4
+            },
+            {
+              "nombre": "Tempo | Axe",
+              "ssbmrank": 6
+            },
+            {
+              "nombre": "FLY | Jmook",
+              "ssbmrank": 7
+            },
+            {
+              "nombre": "Envy | Wizzrobe",
+              "ssbmrank": 9
+            },
+            {
+              "nombre": "lloD",
+              "ssbmrank": 10
+            },
+            {
+              "nombre": "EggdogSpiral | Krudo",
+              "ssbmrank": 16
+            },
+            {
+              "nombre": "Ginger",
+              "ssbmrank": 18
+            },
+            {
+              "nombre": "Ossify",
+              "ssbmrank": 20
+            },
+            {
+              "nombre": "The Yard | Magi",
+              "ssbmrank": 21
+            },
+            {
+              "nombre": "MEOW | MOF",
+              "ssbmrank": 22
+            },
+            {
+              "nombre": "Zamu",
+              "ssbmrank": 25
+            },
+            {
+              "nombre": "BTE | n0ne",
+              "ssbmrank": 26
+            },
+            {
+              "nombre": "ROOTS | S3C | RapMonster",
+              "ssbmrank": 28
+            },
+            {
+              "nombre": "404Cray",
+              "ssbmrank": 30
+            },
+            {
+              "nombre": "Ben",
+              "ssbmrank": 32
+            },
+            {
+              "nombre": "Spark",
+              "ssbmrank": 35
+            },
+            {
+              "nombre": "Zuppy",
+              "ssbmrank": 36
+            },
+            {
+              "nombre": "Spicy | Medz",
+              "ssbmrank": 38
+            },
+            {
+              "nombre": "Rwing|Milk | Morsecode762",
+              "ssbmrank": 39
+            },
+            {
+              "nombre": "Preeminent",
+              "ssbmrank": 42
+            },
+            {
+              "nombre": "The Local | Faust",
+              "ssbmrank": 49
+            },
+            {
+              "nombre": "Slowking",
+              "ssbmrank": 50
+            }
+          ],
+          "top8StartAt": null,
+          "streamUrl": "https://www.twitch.tv/btssmash"
+        },
         {
           "guid": "melee-archivo-tournament/supernova-2026/event/melee-1v1-singles",
           "title": "Resultado final: Supernova 2026",
@@ -765,7 +875,10 @@
     },
     {
       "slug": "tournament/riptide-2026-4/event/melee-singles",
-      "error": "fetchEventInfo: Unexpected token '<', \"<html>\r\n<h\"... is not valid JSON"
+      "tournamentName": "Riptide 2026",
+      "state": "CREATED",
+      "eventId": 1503439,
+      "yaProcesado": false
     },
     {
       "slug": "tournament/tipped-off-17-haunted/event/melee-singles",
@@ -776,11 +889,17 @@
     },
     {
       "slug": "tournament/port-priority-dx/event/melee-singles",
-      "error": "fetchEventInfo: Unexpected token '<', \"<html>\r\n<h\"... is not valid JSON"
+      "tournamentName": "Port Priority: DX",
+      "state": "CREATED",
+      "eventId": 1587277,
+      "yaProcesado": false
     },
     {
       "slug": "tournament/platfight-gaming-championships-2026/event/melee-singles",
-      "error": "fetchEventInfo: Unexpected token '<', \"<html>\r\n<h\"... is not valid JSON"
+      "tournamentName": "Platfight 2026",
+      "state": "CREATED",
+      "eventId": 1661592,
+      "yaProcesado": false
     }
   ],
   "vodClipDebug": []
