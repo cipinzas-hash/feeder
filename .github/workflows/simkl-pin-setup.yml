@@ -1,0 +1,77 @@
+name: Simkl - obtener access_token (PIN flow, uso único)
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  auth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20   # el código PIN de Simkl expira típicamente a los 15 min
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sincronizar con la punta real de main
+        run: git fetch origin main && git reset --hard origin/main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar PyNaCl (para cifrar el secret final)
+        run: pip install pynacl --quiet
+
+      - name: Pedir el PIN a Simkl
+        id: pin
+        env:
+          SIMKL_CLIENT_ID: ${{ secrets.SIMKL_CLIENT_ID }}
+        run: python3 .github/scripts/simkl_pin_request.py
+
+      - name: Publicar el código para aprobar (archivo temporal, bajo riesgo -- expira en minutos)
+        env:
+          USER_CODE: ${{ steps.pin.outputs.user_code }}
+          VERIFICATION_URL: ${{ steps.pin.outputs.verification_url }}
+          EXPIRES_IN: ${{ steps.pin.outputs.expires_in }}
+        run: |
+          python3 .github/scripts/simkl_write_pending.py
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add .simkl-pin-pending.json
+          git commit -m "Simkl: código PIN pendiente de aprobar"
+          for i in 1 2 3; do
+            git push && break
+            git fetch origin main && git reset --soft origin/main
+            git commit -m "Simkl: código PIN pendiente de aprobar" || true
+            sleep 5
+          done
+
+      - name: Poll hasta que se apruebe (o expire)
+        id: poll
+        env:
+          SIMKL_CLIENT_ID: ${{ secrets.SIMKL_CLIENT_ID }}
+          SIMKL_USER_CODE: ${{ steps.pin.outputs.user_code }}
+          SIMKL_INTERVAL: ${{ steps.pin.outputs.interval }}
+          SIMKL_EXPIRES_IN: ${{ steps.pin.outputs.expires_in }}
+        run: python3 .github/scripts/simkl_pin_poll.py
+
+      - name: Guardar SIMKL_ACCESS_TOKEN como secret del repo (nunca pasa por un commit)
+        env:
+          GH_TOKEN: ${{ secrets.SIMKL_SETUP_PAT }}
+          TOKEN_VALUE: ${{ steps.poll.outputs.token }}
+        run: python3 .github/scripts/simkl_save_secret.py
+
+      - name: Limpiar el archivo temporal del PIN
+        run: |
+          git fetch origin main && git reset --hard origin/main
+          rm -f .simkl-pin-pending.json
+          git add -A
+          git diff --staged --quiet || git commit -m "Simkl: limpiar código PIN ya usado"
+          for i in 1 2 3; do
+            git push && break
+            git fetch origin main && git reset --soft origin/main
+            git add -A
+            git commit -m "Simkl: limpiar código PIN ya usado" || true
+            sleep 5
+          done
