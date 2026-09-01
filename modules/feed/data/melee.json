@@ -1,119 +1,9 @@
 {
-  "generatedAt": "2026-09-01T09:01:41.013Z",
+  "generatedAt": "2026-09-01T15:45:46.621Z",
   "categories": [
     {
       "cat": "Melee",
       "items": [
-        {
-          "guid": "melee-hype-tournament/riptide-2026-4/event/melee-singles",
-          "title": "Se viene Riptide 2026",
-          "link": "https://www.start.gg/tournament/riptide-2026-4/event/melee-singles",
-          "summary": "empieza en 12 día(s) Bracket en start.gg. 561 inscritos hasta ahora.",
-          "image": null,
-          "pubDate": "2026-09-01T09:00:42.861Z",
-          "source": "Riptide 2026",
-          "categoria": "Melee",
-          "fullText": null,
-          "esHype": true,
-          "startAt": 1789232400,
-          "totalEntrants": 561,
-          "notableEntrants": [
-            {
-              "nombre": "Liquid | Hungrybox",
-              "ssbmrank": 3
-            },
-            {
-              "nombre": "SR | Joshman",
-              "ssbmrank": 4
-            },
-            {
-              "nombre": "Tempo | Axe",
-              "ssbmrank": 6
-            },
-            {
-              "nombre": "FLY | Jmook",
-              "ssbmrank": 7
-            },
-            {
-              "nombre": "Envy | Wizzrobe",
-              "ssbmrank": 9
-            },
-            {
-              "nombre": "lloD",
-              "ssbmrank": 10
-            },
-            {
-              "nombre": "EggdogSpiral | Krudo",
-              "ssbmrank": 16
-            },
-            {
-              "nombre": "Ginger",
-              "ssbmrank": 18
-            },
-            {
-              "nombre": "Ossify",
-              "ssbmrank": 20
-            },
-            {
-              "nombre": "The Yard | Magi",
-              "ssbmrank": 21
-            },
-            {
-              "nombre": "MEOW | MOF",
-              "ssbmrank": 22
-            },
-            {
-              "nombre": "Zamu",
-              "ssbmrank": 25
-            },
-            {
-              "nombre": "BTE | n0ne",
-              "ssbmrank": 26
-            },
-            {
-              "nombre": "ROOTS | S3C | RapMonster",
-              "ssbmrank": 28
-            },
-            {
-              "nombre": "404Cray",
-              "ssbmrank": 30
-            },
-            {
-              "nombre": "Ben",
-              "ssbmrank": 32
-            },
-            {
-              "nombre": "Spark",
-              "ssbmrank": 35
-            },
-            {
-              "nombre": "Zuppy",
-              "ssbmrank": 36
-            },
-            {
-              "nombre": "Spicy | Medz",
-              "ssbmrank": 38
-            },
-            {
-              "nombre": "Rwing|Milk | Morsecode762",
-              "ssbmrank": 39
-            },
-            {
-              "nombre": "Preeminent",
-              "ssbmrank": 42
-            },
-            {
-              "nombre": "The Local | Faust",
-              "ssbmrank": 49
-            },
-            {
-              "nombre": "Slowking",
-              "ssbmrank": 50
-            }
-          ],
-          "top8StartAt": null,
-          "streamUrl": "https://www.twitch.tv/btssmash"
-        },
         {
           "guid": "melee-archivo-tournament/supernova-2026/event/melee-1v1-singles",
           "title": "Resultado final: Supernova 2026",
@@ -863,24 +753,19 @@
       ]
     },
     {
-      "combinedCount": 6,
+      "combinedCount": 4,
       "combinedSlugs": [
         "tournament/riptide-2026-4/event/melee-singles",
         "tournament/tipped-off-17-haunted/event/melee-singles",
         "tournament/port-priority-dx/event/melee-singles",
-        "tournament/platfight-gaming-championships-2026/event/melee-singles",
-        "tournament/supernova-2026/event/melee-1v1-singles",
-        "tournament/ceo-2026/event/super-smash-bros-melee"
+        "tournament/platfight-gaming-championships-2026/event/melee-singles"
       ],
-      "previousTrackedCount": 2,
-      "previousProcessedCount": 0
+      "previousTrackedCount": 0,
+      "previousProcessedCount": 2
     },
     {
       "slug": "tournament/riptide-2026-4/event/melee-singles",
-      "tournamentName": "Riptide 2026",
-      "state": "CREATED",
-      "eventId": 1503439,
-      "yaProcesado": false
+      "error": "fetchEventInfo: Unexpected token '<', \"<html>\r\n<h\"... is not valid JSON"
     },
     {
       "slug": "tournament/tipped-off-17-haunted/event/melee-singles",
@@ -891,187 +776,12 @@
     },
     {
       "slug": "tournament/port-priority-dx/event/melee-singles",
-      "tournamentName": "Port Priority: DX",
-      "state": "CREATED",
-      "eventId": 1587277,
-      "yaProcesado": false
+      "error": "fetchEventInfo: Unexpected token '<', \"<html>\r\n<h\"... is not valid JSON"
     },
     {
       "slug": "tournament/platfight-gaming-championships-2026/event/melee-singles",
-      "tournamentName": "Platfight 2026",
-      "state": "CREATED",
-      "eventId": 1661592,
-      "yaProcesado": false
-    },
-    {
-      "slug": "tournament/supernova-2026/event/melee-1v1-singles",
-      "tournamentName": "Supernova 2026",
-      "state": "COMPLETED",
-      "eventId": 1614800,
-      "yaProcesado": false
-    },
-    {
-      "slug": "tournament/supernova-2026/event/melee-1v1-singles",
-      "tournamentName": "Supernova 2026",
-      "setsCount": 300
-    },
-    {
-      "slug": "tournament/supernova-2026/event/melee-1v1-singles",
-      "tournamentName": "Supernova 2026",
-      "presupuestoAgotado": false,
-      "top8Completo": true,
-      "reintentaraProximaCorrida": false,
-      "top8ClipsEncontrados": 12,
-      "top8Candidatos": 12,
-      "upsetClipsEncontrados": 4,
-      "upsetCandidatos": 7,
-      "docClipsEncontrados": 0,
-      "docCandidatos": 0
-    },
-    {
-      "slug": "tournament/ceo-2026/event/super-smash-bros-melee",
-      "tournamentName": "CEO 2026",
-      "state": "COMPLETED",
-      "eventId": 1517780,
-      "yaProcesado": false
-    },
-    {
-      "slug": "tournament/ceo-2026/event/super-smash-bros-melee",
-      "tournamentName": "CEO 2026",
-      "setsCount": 300
-    },
-    {
-      "slug": "tournament/ceo-2026/event/super-smash-bros-melee",
-      "tournamentName": "CEO 2026",
-      "presupuestoAgotado": false,
-      "top8Completo": true,
-      "reintentaraProximaCorrida": false,
-      "top8ClipsEncontrados": 9,
-      "top8Candidatos": 9,
-      "upsetClipsEncontrados": 4,
-      "upsetCandidatos": 20,
-      "docClipsEncontrados": 1,
-      "docCandidatos": 1
+      "error": "fetchEventInfo: Unexpected token '<', \"<html>\r\n<h\"... is not valid JSON"
     }
   ],
-  "vodClipDebug": [
-    {
-      "q": "Krudo vs Joshman Supernova 2026",
-      "itemsFound": 5,
-      "bestScore": 6,
-      "primerTitulo": "Supernova 2026 - Joshman (Fox) Vs. Krudo (Sheik) Smash Melee - SSBM"
-    },
-    {
-      "q": "Ultra vs Ben Supernova 2026",
-      "itemsFound": 5,
-      "bestScore": -8,
-      "primerTitulo": "Supernova 2026 | Day 4/4 | Smash Ultimate + Melee Finals"
-    },
-    {
-      "q": "Epoodle vs Swift Supernova 2026",
-      "itemsFound": 5,
-      "bestScore": 3,
-      "primerTitulo": "Supernova 2026 - RapMonster (Luigi) Vs. Swift (Pikachu) Smash Melee - SSBM"
-    },
-    {
-      "q": "Krudo vs Zain Supernova 2026",
-      "itemsFound": 5,
-      "bestScore": 6,
-      "primerTitulo": "Supernova 2026 - Krudo (Sheik) Vs. Zain (Marth) Smash Melee - SSBM"
-    },
-    {
-      "q": "Drephen vs Lowercase hero Supernova 2026",
-      "itemsFound": 0
-    },
-    {
-      "q": "Swift vs Zuppy Supernova 2026",
-      "itemsFound": 1,
-      "bestScore": -8,
-      "primerTitulo": "GOML 2026 | Day 3/3 | Smash Melee Tournament Finals"
-    },
-    {
-      "q": "Ultra vs Joshman Supernova 2026",
-      "itemsFound": 5,
-      "bestScore": 3,
-      "primerTitulo": "Supernova 2026 - Ultra (Fox) Vs. moky (Fox) Smash Melee - SSBM"
-    },
-    {
-      "q": "Supernova 2026 GRAND FINALS Cody Schwab vs Zain",
-      "itemsFound": 5,
-      "bestScore": 6,
-      "primerTitulo": "Supernova 2026 GRAND FINALS - Zain (Marth) Vs. Cody Schwab (Fox) Smash Melee - SSBM"
-    },
-    {
-      "q": "Supernova 2026 TOP 8 Hungrybox vs Krudo",
-      "itemsFound": 5,
-      "bestScore": 6,
-      "primerTitulo": "Supernova 2026 TOP 8 - Hungrybox (Jigglypuff) Vs. Krudo (Sheik) Smash Melee - SSBM"
-    },
-    {
-      "q": "Supernova 2026 TOP 8 Cody Schwab vs Soonsay",
-      "itemsFound": 5,
-      "bestScore": 6,
-      "primerTitulo": "Supernova 2026 - Cody Schwab (Fox) Vs. Soonsay (Fox) Smash Melee - SSBM"
-    },
-    {
-      "q": "Supernova 2026 TOP 8 Hungrybox vs moky",
-      "itemsFound": 5,
-      "bestScore": 6,
-      "primerTitulo": "Supernova 2026 - Moky (Fox) Vs. Hungrybox (Jigglypuff) Smash Melee - SSBM"
-    },
-    {
-      "q": "Supernova 2026 TOP 8 Aklo vs n0ne",
-      "itemsFound": 5,
-      "bestScore": 6,
-      "primerTitulo": "Supernova 2026 - Aklo (Fox) Vs. n0ne (Captain Falcon) Smash Melee - SSBM"
-    },
-    {
-      "q": "Supernova 2026 TOP 8 RapMonster vs Krudo",
-      "itemsFound": 5,
-      "bestScore": 6,
-      "primerTitulo": "Supernova 2026 - Krudo (Sheik) Vs. RapMonster (Luigi) Smash Melee - SSBM"
-    },
-    {
-      "q": "Supernova 2026 TOP 8 Zain vs Hungrybox",
-      "itemsFound": 5,
-      "bestScore": 6,
-      "primerTitulo": "Supernova 2026 LOSERS SEMIS - Zain (Marth) Vs. Hungrybox (Jigglypuff) Smash Melee - SSBM"
-    },
-    {
-      "q": "Supernova 2026 TOP 8 RapMonster vs Aklo",
-      "itemsFound": 5,
-      "bestScore": 6,
-      "primerTitulo": "Supernova 2026 TOP 8 - Aklo (Fox, Link) Vs. RapMonster (Luigi) Smash Melee - SSBM"
-    },
-    {
-      "q": "Supernova 2026 TOP 8 Cody Schwab vs Hungrybox",
-      "itemsFound": 5,
-      "bestScore": 6,
-      "primerTitulo": "Supernova 2026 TOP 8 - Hungrybox (Jigglypuff) Vs. Cody Schwab (Fox) Smash Melee - SSBM"
-    },
-    {
-      "q": "Supernova 2026 WINNERS FINALS Cody Schwab vs RapMonster",
-      "itemsFound": 5,
-      "bestScore": 6,
-      "primerTitulo": "Supernova 2026 WINNERS FINALS - Rapmonster (Luigi) Vs. Cody Schwab (Fox) Smash Melee - SSBM"
-    },
-    {
-      "q": "Supernova 2026 LOSERS FINALS Zain vs RapMonster",
-      "itemsFound": 5,
-      "bestScore": 6,
-      "primerTitulo": "Supernova 2026 LOSERS FINALS - Zain (Marth) Vs. RapMonster (Luigi) Smash Melee - SSBM"
-    },
-    {
-      "q": "Supernova 2026 GRAND FINALS Cody Schwab vs Zain",
-      "itemsFound": 5,
-      "bestScore": 6,
-      "primerTitulo": "Supernova 2026 GRAND FINALS - Zain (Marth) Vs. Cody Schwab (Fox) Smash Melee - SSBM"
-    },
-    {
-      "q": "Ultra vs Joshman Supernova 2026",
-      "itemsFound": 5,
-      "bestScore": 3,
-      "primerTitulo": "Supernova 2026 - Ultra (Fox) Vs. moky (Fox) Smash Melee - SSBM"
-    }
-  ]
+  "vodClipDebug": []
 }
