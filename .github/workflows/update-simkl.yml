@@ -1,0 +1,72 @@
+name: Sincronizar Simkl
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # cada 6hs -- el estado de Simkl cambia mucho
+                            # menos seguido que el feed general o Melee
+  workflow_dispatch: {}
+
+concurrency:
+  group: simkl-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout feeder (el script vive acá)
+        uses: actions/checkout@v4
+        with:
+          path: feeder
+
+      - name: Sincronizar feeder con la punta real de main
+        working-directory: feeder
+        run: git fetch origin main && git reset --hard origin/main
+
+      - name: Checkout Angst-data (simkl-state.json vive acá, repo privado)
+        uses: actions/checkout@v4
+        with:
+          repository: cipinzas-hash/Angst-data
+          token: ${{ secrets.WORKER_GITHUB_PAT }}
+          path: angst-data
+
+      - name: Sincronizar Angst-data con la punta real de main
+        working-directory: angst-data
+        run: git fetch origin main && git reset --hard origin/main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Correr build-simkl.mjs
+        working-directory: feeder
+        env:
+          SIMKL_ACCESS_TOKEN: ${{ secrets.SIMKL_ACCESS_TOKEN }}
+          SIMKL_CLIENT_ID: ${{ secrets.SIMKL_CLIENT_ID }}
+          SIMKL_STATE_PATH: ${{ github.workspace }}/angst-data/simkl-state.json
+        run: node modules/feed/scripts/build-simkl.mjs
+
+      - name: Commitear simkl-state.json en Angst-data si cambió
+        working-directory: angst-data
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add simkl-state.json
+          git diff --staged --quiet || { git commit -m "Sincronizar Simkl $(date -u +%Y-%m-%dT%H:%MZ)"; committed=1; }
+          pushed=0
+          for i in 1 2 3; do
+            git push && pushed=1 && break
+            echo "push falló, reintentando ($i/3)..."
+            git fetch origin main
+            git reset --soft origin/main
+            git diff --staged --quiet || git commit -m "Sincronizar Simkl $(date -u +%Y-%m-%dT%H:%MZ)"
+            sleep 5
+          done
+          if [ "${committed:-0}" -eq 1 ] && [ "$pushed" -ne 1 ]; then
+            echo "::error::se hizo commit local pero el push falló los 3 intentos"
+            exit 1
+          fi
