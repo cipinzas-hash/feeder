@@ -35,21 +35,36 @@ jobs:
           AUTH_SECRET: ${{ secrets.WORKER_AUTH_SECRET }}
         run: |
           echo "Worker en: $WORKER_URL"
-          # Prueba negativa: sin auth tiene que rechazar (401)
-          HTTP_NOAUTH=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$WORKER_URL" -d '{"payload":{}}')
-          echo "Sin auth -> HTTP $HTTP_NOAUTH (esperado 401)"
-          if [ "$HTTP_NOAUTH" != "401" ]; then
-            echo "::error::el Worker no está rechazando requests sin auth"
-            exit 1
-          fi
-          # Prueba positiva: con auth tiene que aceptar y commitear
-          HTTP_OK=$(curl -s -o /tmp/worker_resp.txt -w "%{http_code}" -X POST "$WORKER_URL" \
+          sleep 5  # margen para propagación del subdominio recién habilitado
+          RESP_NOAUTH=$(curl -s -w "\n%{http_code}" -X POST "$WORKER_URL" -d '{"payload":{}}')
+          HTTP_NOAUTH=$(echo "$RESP_NOAUTH" | tail -1)
+          BODY_NOAUTH=$(echo "$RESP_NOAUTH" | sed '$d')
+          RESP_OK=$(curl -s -w "\n%{http_code}" -X POST "$WORKER_URL" \
             -H "X-Angst-Auth: $AUTH_SECRET" \
             -H "Content-Type: application/json" \
             -d '{"payload":{"_test":true,"deployedAt":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}}')
-          echo "Con auth -> HTTP $HTTP_OK"
-          cat /tmp/worker_resp.txt
-          if [ "$HTTP_OK" != "200" ]; then
-            echo "::error::el Worker no aceptó el request autenticado de prueba"
+          HTTP_OK=$(echo "$RESP_OK" | tail -1)
+          BODY_OK=$(echo "$RESP_OK" | sed '$d')
+          cat > /tmp/diag.json << DIAGEOF
+          {
+            "worker_url": "$WORKER_URL",
+            "sin_auth": {"http": "$HTTP_NOAUTH", "body": $(echo "$BODY_NOAUTH" | python3 -c "import json,sys; print(json.dumps(sys.stdin.read()))")},
+            "con_auth": {"http": "$HTTP_OK", "body": $(echo "$BODY_OK" | python3 -c "import json,sys; print(json.dumps(sys.stdin.read()))")}
+          }
+          DIAGEOF
+          cat /tmp/diag.json
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          cp /tmp/diag.json .worker-test-diag.json
+          git add .worker-test-diag.json
+          git commit -m "Worker: diagnóstico de la prueba de despliegue"
+          for i in 1 2 3; do
+            git push && break
+            git fetch origin main && git reset --soft origin/main
+            git commit -m "Worker: diagnóstico de la prueba de despliegue" || true
+            sleep 5
+          done
+          if [ "$HTTP_NOAUTH" != "401" ] || [ "$HTTP_OK" != "200" ]; then
+            echo "::error::ver .worker-test-diag.json en el repo para el detalle"
             exit 1
           fi
