@@ -1,0 +1,55 @@
+name: Desplegar Worker angst-sync a Cloudflare
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - 'cloudflare-worker/**'
+      - '.github/workflows/deploy-worker.yml'
+      - '.github/scripts/deploy_worker.py'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Desplegar script + secrets + subdominio
+        id: deploy
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          WORKER_GITHUB_PAT: ${{ secrets.WORKER_GITHUB_PAT }}
+          WORKER_AUTH_SECRET: ${{ secrets.WORKER_AUTH_SECRET }}
+        run: python3 .github/scripts/deploy_worker.py
+
+      - name: Probar el Worker desplegado
+        env:
+          WORKER_URL: ${{ steps.deploy.outputs.worker_url }}
+          AUTH_SECRET: ${{ secrets.WORKER_AUTH_SECRET }}
+        run: |
+          echo "Worker en: $WORKER_URL"
+          # Prueba negativa: sin auth tiene que rechazar (401)
+          HTTP_NOAUTH=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$WORKER_URL" -d '{"payload":{}}')
+          echo "Sin auth -> HTTP $HTTP_NOAUTH (esperado 401)"
+          if [ "$HTTP_NOAUTH" != "401" ]; then
+            echo "::error::el Worker no está rechazando requests sin auth"
+            exit 1
+          fi
+          # Prueba positiva: con auth tiene que aceptar y commitear
+          HTTP_OK=$(curl -s -o /tmp/worker_resp.txt -w "%{http_code}" -X POST "$WORKER_URL" \
+            -H "X-Angst-Auth: $AUTH_SECRET" \
+            -H "Content-Type: application/json" \
+            -d '{"payload":{"_test":true,"deployedAt":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}}')
+          echo "Con auth -> HTTP $HTTP_OK"
+          cat /tmp/worker_resp.txt
+          if [ "$HTTP_OK" != "200" ]; then
+            echo "::error::el Worker no aceptó el request autenticado de prueba"
+            exit 1
+          fi
