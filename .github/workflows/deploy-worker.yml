@@ -63,11 +63,17 @@ jobs:
             -d '{"payload":{"_test":true,"deployedAt":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}}' || echo -e "\nCURL_ERROR")
           HTTP_OK=$(echo "$RESP_OK" | tail -1)
           BODY_OK=$(echo "$RESP_OK" | sed '$d')
+
+          # GET: leer de vuelta lo que se acaba de escribir.
+          RESP_GET=$(curl -s -w "\n%{http_code}" --max-time 10 -X GET "$WORKER_URL" -H "X-Angst-Auth: $AUTH_SECRET" || echo -e "\nCURL_ERROR")
+          HTTP_GET=$(echo "$RESP_GET" | tail -1)
+          BODY_GET=$(echo "$RESP_GET" | sed '$d')
           cat > /tmp/diag.json << DIAGEOF
           {
             "worker_url": "$WORKER_URL",
             "sin_auth": {"http": "$HTTP_NOAUTH", "body": $(echo "$BODY_NOAUTH" | python3 -c "import json,sys; print(json.dumps(sys.stdin.read()))")},
-            "con_auth": {"http": "$HTTP_OK", "body": $(echo "$BODY_OK" | python3 -c "import json,sys; print(json.dumps(sys.stdin.read()))")}
+            "con_auth_post": {"http": "$HTTP_OK", "body": $(echo "$BODY_OK" | python3 -c "import json,sys; print(json.dumps(sys.stdin.read()))")},
+            "con_auth_get": {"http": "$HTTP_GET", "body": $(echo "$BODY_GET" | python3 -c "import json,sys; print(json.dumps(sys.stdin.read()))")}
           }
           DIAGEOF
           cat /tmp/diag.json
@@ -82,7 +88,7 @@ jobs:
             git commit -m "Worker: diagnóstico de la prueba de despliegue" || true
             sleep 5
           done
-          if [ "$HTTP_NOAUTH" != "401" ] || [ "$HTTP_OK" != "200" ]; then
+          if [ "$HTTP_NOAUTH" != "401" ] || [ "$HTTP_OK" != "200" ] || [ "$HTTP_GET" != "200" ]; then
             echo "::error::ver .worker-test-diag.json en el repo para el detalle"
             exit 1
           fi
