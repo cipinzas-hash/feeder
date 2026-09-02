@@ -89,6 +89,6 @@ jobs:
             sleep 5
           done
           if [ "$HTTP_NOAUTH" != "401" ] || [ "$HTTP_OK" != "200" ] || [ "$HTTP_GET" != "200" ]; then
-            echo "::error::ver .worker-test-diag.json en el repo para el detalle"
+            echo "::error::sin_auth=$HTTP_NOAUTH(esperado 401) con_auth_post=$HTTP_OK(esperado 200) con_auth_get=$HTTP_GET(esperado 200) -- bodies en .worker-test-diag.json si el commit llegó"
             exit 1
           fi
