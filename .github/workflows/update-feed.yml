@@ -18,12 +18,15 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15   # Melee (con su propio presupuesto de 15 min) se
-                          # separó a su propio workflow (update-melee.yml,
-                          # issue #7) -- este job ya solo hace RSS general,
-                          # que en las corridas que llegaban a completar
-                          # rondaba 5 min. Margen generoso sin inflar contra
-                          # un presupuesto que ya no comparte.
+    timeout-minutes: 25   # Subido de 15 a 25 (2-sep): el bug de YOUTUBE_API_KEY
+                          # sin declarar (ver commit ac99e6d) hacía que el
+                          # script crasheara ANTES de llegar al filtro real de
+                          # Conciertos por duración (llamadas a la API de
+                          # YouTube) -- por eso las corridas "exitosas" previas
+                          # a este bug rondaban 5 min, un tiempo que nunca
+                          # incluía ese trabajo real. Arreglado el crash, la
+                          # corrida completa por primera vez superó los 15 min
+                          # y se canceló por timeout.
     steps:
       - uses: actions/checkout@v4
 
