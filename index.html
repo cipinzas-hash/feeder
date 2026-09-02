@@ -7021,6 +7021,24 @@ ${item.link}`);
   var SIMKL_AUTH_KEY = "angst-simkl-auth-v1";
   var WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
   var SIMKL_ESTADO_TO_STATUS = { interesa: "plantowatch", vista: "completed", descartada: "dropped" };
+  var simklSyncListeners = /* @__PURE__ */ new Set();
+  var simklSyncStatus = { conectado: false, estado: "idle", ultimoOk: null, ultimoError: null };
+  try {
+    simklSyncStatus.conectado = !!localStorage.getItem(SIMKL_AUTH_KEY);
+  } catch (e) {
+  }
+  function setSimklSyncStatus(patch) {
+    simklSyncStatus = { ...simklSyncStatus, ...patch };
+    simklSyncListeners.forEach((fn) => fn(simklSyncStatus));
+  }
+  function useSimklSyncStatus() {
+    const [s, setS] = useState7(simklSyncStatus);
+    useEffect7(() => {
+      simklSyncListeners.add(setS);
+      return () => simklSyncListeners.delete(setS);
+    }, []);
+    return s;
+  }
   function getSimklAuth() {
     try {
       return localStorage.getItem(SIMKL_AUTH_KEY) || null;
@@ -7035,6 +7053,7 @@ ${item.link}`);
         localStorage.setItem(SIMKL_AUTH_KEY, v.trim());
       } catch (e) {
       }
+      setSimklSyncStatus({ conectado: true });
       flushSimklQueue();
     }
   }
@@ -7076,11 +7095,18 @@ ${item.link}`);
     const pending = loadSimklPending();
     if (!auth || !pending.length) return;
     simklFlushInFlight = true;
+    setSimklSyncStatus({ estado: "syncing" });
     try {
       const getResp = await fetch(`${WORKER_URL}?path=simkl-state.json`, { headers: { "X-Angst-Auth": auth } });
-      if (!getResp.ok) return;
+      if (!getResp.ok) {
+        setSimklSyncStatus({ estado: "error", ultimoError: `GET ${getResp.status}` });
+        return;
+      }
       const remote = await getResp.json();
-      if (remote.found === false) return;
+      if (remote.found === false) {
+        setSimklSyncStatus({ estado: "error", ultimoError: "simkl-state.json no existe todav\xEDa" });
+        return;
+      }
       const remotePending = remote.pendingActions || [];
       const remoteKeys = new Set(remotePending.map((a) => `${a.tipo}-${a.tmdbId}`));
       const merged = [...remotePending, ...pending.filter((a) => !remoteKeys.has(`${a.tipo}-${a.tmdbId}`))];
@@ -7090,8 +7116,14 @@ ${item.link}`);
         headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
         body: JSON.stringify({ path: "simkl-state.json", payload: remote })
       });
-      if (postResp.ok) saveSimklPending([]);
+      if (postResp.ok) {
+        saveSimklPending([]);
+        setSimklSyncStatus({ estado: "ok", ultimoOk: (/* @__PURE__ */ new Date()).toISOString(), ultimoError: null });
+      } else {
+        setSimklSyncStatus({ estado: "error", ultimoError: `POST ${postResp.status}` });
+      }
     } catch (e) {
+      setSimklSyncStatus({ estado: "error", ultimoError: e.message });
     } finally {
       simklFlushInFlight = false;
     }
@@ -7228,6 +7260,9 @@ ${item.link}`);
     )), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "anterior"), /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareToWhatsApp(item), style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4E4}"), "compartir"), /* @__PURE__ */ React.createElement("button", { onClick: onNext, style: { ...btnGhost, background: color, color: "#111", borderColor: color } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente"))), hideActions && onExportImage && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onExportImage(item), style: { ...btnGhost, background: color, color: "#111", borderColor: color, flex: "none", width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4F8}"), "exportar imagen para compartir")));
   }
   function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
+    useEffect7(() => {
+      flushSimklQueue();
+    }, []);
     const CARD_W = 160;
     const GAP = 20;
     const ITEM_W = CARD_W + GAP;
@@ -7353,8 +7388,8 @@ ${item.link}`);
       color: active ? "#111" : "#999",
       borderColor: active ? "#fff" : "#333"
     });
-    const simklConectado = !!getSimklAuth();
-    const toolbar = /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "0 12px 8px", justifyContent: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setSortBy(sortBy === "proxima" ? "default" : "proxima"), style: toolbarBtn(sortBy === "proxima") }, "\u{1F4C5} pr\xF3xima a salir"), /* @__PURE__ */ React.createElement("button", { onClick: () => setSoloInteresa((v) => !v), style: toolbarBtn(soloInteresa) }, "\u{1F516} solo me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarVistas((v) => !v), style: toolbarBtn(ocultarVistas) }, "\u{1F441}\uFE0F ocultar vistas"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarDescartadas((v) => !v), style: toolbarBtn(ocultarDescartadas) }, "\u{1F6AB} ocultar no me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: irARandom, style: toolbarBtn(false) }, "\u{1F3B2} sorpr\xE9ndeme"), esPelicula && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { onClick: () => setSoloEstrenos((v) => !v), style: toolbarBtn(soloEstrenos) }, "\u{1F3AC} solo estrenos"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarTrending((v) => !v), style: toolbarBtn(ocultarTrending) }, "\u{1F525} ocultar trending")), !simklConectado && /* @__PURE__ */ React.createElement("button", { onClick: pedirSimklAuth, style: toolbarBtn(false), title: "Conectar este dispositivo con la sincronizaci\xF3n de Simkl" }, "\u{1F517} conectar Simkl"));
+    const simklStatus = useSimklSyncStatus();
+    const toolbar = /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "0 12px 8px", justifyContent: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setSortBy(sortBy === "proxima" ? "default" : "proxima"), style: toolbarBtn(sortBy === "proxima") }, "\u{1F4C5} pr\xF3xima a salir"), /* @__PURE__ */ React.createElement("button", { onClick: () => setSoloInteresa((v) => !v), style: toolbarBtn(soloInteresa) }, "\u{1F516} solo me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarVistas((v) => !v), style: toolbarBtn(ocultarVistas) }, "\u{1F441}\uFE0F ocultar vistas"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarDescartadas((v) => !v), style: toolbarBtn(ocultarDescartadas) }, "\u{1F6AB} ocultar no me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: irARandom, style: toolbarBtn(false) }, "\u{1F3B2} sorpr\xE9ndeme"), esPelicula && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { onClick: () => setSoloEstrenos((v) => !v), style: toolbarBtn(soloEstrenos) }, "\u{1F3AC} solo estrenos"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarTrending((v) => !v), style: toolbarBtn(ocultarTrending) }, "\u{1F525} ocultar trending")), !simklStatus.conectado && /* @__PURE__ */ React.createElement("button", { onClick: pedirSimklAuth, style: toolbarBtn(false), title: "Conectar este dispositivo con la sincronizaci\xF3n de Simkl" }, "\u{1F517} conectar Simkl"), simklStatus.conectado && simklStatus.estado === "syncing" && /* @__PURE__ */ React.createElement("span", { style: { ...toolbarBtn(false), cursor: "default", opacity: 0.7 } }, "\u23F3 sincronizando..."), simklStatus.conectado && simklStatus.estado === "ok" && /* @__PURE__ */ React.createElement("span", { style: { ...toolbarBtn(true), cursor: "default" }, title: `\xDAltima sincronizaci\xF3n: ${simklStatus.ultimoOk}` }, "\u2713 Simkl"), simklStatus.conectado && simklStatus.estado === "error" && /* @__PURE__ */ React.createElement("button", { onClick: flushSimklQueue, style: { ...toolbarBtn(false), borderColor: "#c0392b", color: "#e74c3c" }, title: simklStatus.ultimoError || "error" }, "\u26A0\uFE0F Simkl (reintentar)"), simklStatus.conectado && simklStatus.estado === "idle" && /* @__PURE__ */ React.createElement("span", { style: { ...toolbarBtn(false), cursor: "default", opacity: 0.5 } }, "\u{1F517} Simkl conectado"));
     if (!sortedItems.length) {
       return /* @__PURE__ */ React.createElement("div", null, toolbar, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" } }, "nada por ac\xE1 todav\xEDa"));
     }

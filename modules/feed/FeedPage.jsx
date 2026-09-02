@@ -504,6 +504,26 @@
     const WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
     const SIMKL_ESTADO_TO_STATUS = { interesa: "plantowatch", vista: "completed", descartada: "dropped" };
 
+    // Reactivo -- sin esto, conectar (o que el flush cambie de estado) no
+    // dispara ningún re-render, así que el botón/badge del toolbar se queda
+    // pegado en su estado viejo hasta que algo MÁS fuerce un refresh. Mismo
+    // patrón que cineEstadoListeners más arriba.
+    const simklSyncListeners = new Set();
+    let simklSyncStatus = { conectado: false, estado: "idle", ultimoOk: null, ultimoError: null };
+    try { simklSyncStatus.conectado = !!localStorage.getItem(SIMKL_AUTH_KEY); } catch (e) {}
+    function setSimklSyncStatus(patch) {
+      simklSyncStatus = { ...simklSyncStatus, ...patch };
+      simklSyncListeners.forEach(fn => fn(simklSyncStatus));
+    }
+    function useSimklSyncStatus() {
+      const [s, setS] = useState(simklSyncStatus);
+      useEffect(() => {
+        simklSyncListeners.add(setS);
+        return () => simklSyncListeners.delete(setS);
+      }, []);
+      return s;
+    }
+
     function getSimklAuth() {
       try { return localStorage.getItem(SIMKL_AUTH_KEY) || null; } catch (e) { return null; }
     }
@@ -511,6 +531,7 @@
       const v = prompt("Pegá el AUTH_SECRET del Worker de Simkl (una sola vez, queda solo en este dispositivo):");
       if (v && v.trim()) {
         try { localStorage.setItem(SIMKL_AUTH_KEY, v.trim()); } catch (e) {}
+        setSimklSyncStatus({ conectado: true });
         flushSimklQueue();
       }
     }
@@ -548,14 +569,15 @@
       const pending = loadSimklPending();
       if (!auth || !pending.length) return;
       simklFlushInFlight = true;
+      setSimklSyncStatus({ estado: "syncing" });
       try {
         // El POST del Worker REEMPLAZA el archivo entero, no hace merge --
         // hay que leer primero o se perdería syncedList/lastSimklActivity
         // (los escribe build-simkl.mjs del lado servidor) sin querer.
         const getResp = await fetch(`${WORKER_URL}?path=simkl-state.json`, { headers: { "X-Angst-Auth": auth } });
-        if (!getResp.ok) return;
+        if (!getResp.ok) { setSimklSyncStatus({ estado: "error", ultimoError: `GET ${getResp.status}` }); return; }
         const remote = await getResp.json();
-        if (remote.found === false) return; // no debería faltar a esta altura -- no arriesgar a pisar con un objeto vacío
+        if (remote.found === false) { setSimklSyncStatus({ estado: "error", ultimoError: "simkl-state.json no existe todavía" }); return; }
         const remotePending = remote.pendingActions || [];
         const remoteKeys = new Set(remotePending.map(a => `${a.tipo}-${a.tmdbId}`));
         const merged = [...remotePending, ...pending.filter(a => !remoteKeys.has(`${a.tipo}-${a.tmdbId}`))];
@@ -565,9 +587,15 @@
           headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
           body: JSON.stringify({ path: "simkl-state.json", payload: remote }),
         });
-        if (postResp.ok) saveSimklPending([]); // confirmado en Angst-data -- build-simkl.mjs lo toma de ahí en su próxima corrida
+        if (postResp.ok) {
+          saveSimklPending([]); // confirmado en Angst-data -- build-simkl.mjs lo toma de ahí en su próxima corrida
+          setSimklSyncStatus({ estado: "ok", ultimoOk: new Date().toISOString(), ultimoError: null });
+        } else {
+          setSimklSyncStatus({ estado: "error", ultimoError: `POST ${postResp.status}` });
+        }
       } catch (e) {
         // sin red o Worker caído -- la cola local queda intacta, se reintenta la próxima vez
+        setSimklSyncStatus({ estado: "error", ultimoError: e.message });
       } finally {
         simklFlushInFlight = false;
       }
@@ -812,6 +840,11 @@
     // Flechas ◀️▶️ a los costados + loop infinito (después del último vuelve
     // al primero, y viceversa) además del scroll táctil de siempre.
     function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
+      // Reintenta lo que haya quedado pendiente de una corrida anterior
+      // (red caída, Worker no respondió, etc.) al entrar a la Vitrina --
+      // sin esto, solo se reintenta la próxima vez que se toque un ítem.
+      useEffect(() => { flushSimklQueue(); }, []);
+
       const CARD_W = 160;
       const GAP = 20;
       const ITEM_W = CARD_W + GAP;
@@ -983,7 +1016,7 @@
         background: active ? "#fff" : "transparent", color: active ? "#111" : "#999",
         borderColor: active ? "#fff" : "#333",
       });
-      const simklConectado = !!getSimklAuth();
+      const simklStatus = useSimklSyncStatus();
       const toolbar = (
         <div style={{ display: "flex", gap: 6, padding: "0 12px 8px", justifyContent: "center", flexWrap: "wrap" }}>
           <button onClick={() => setSortBy(sortBy === "proxima" ? "default" : "proxima")} style={toolbarBtn(sortBy === "proxima")}>📅 próxima a salir</button>
@@ -997,8 +1030,20 @@
               <button onClick={() => setOcultarTrending(v => !v)} style={toolbarBtn(ocultarTrending)}>🔥 ocultar trending</button>
             </React.Fragment>
           )}
-          {!simklConectado && (
+          {!simklStatus.conectado && (
             <button onClick={pedirSimklAuth} style={toolbarBtn(false)} title="Conectar este dispositivo con la sincronización de Simkl">🔗 conectar Simkl</button>
+          )}
+          {simklStatus.conectado && simklStatus.estado === "syncing" && (
+            <span style={{ ...toolbarBtn(false), cursor: "default", opacity: 0.7 }}>⏳ sincronizando...</span>
+          )}
+          {simklStatus.conectado && simklStatus.estado === "ok" && (
+            <span style={{ ...toolbarBtn(true), cursor: "default" }} title={`Última sincronización: ${simklStatus.ultimoOk}`}>✓ Simkl</span>
+          )}
+          {simklStatus.conectado && simklStatus.estado === "error" && (
+            <button onClick={flushSimklQueue} style={{ ...toolbarBtn(false), borderColor: "#c0392b", color: "#e74c3c" }} title={simklStatus.ultimoError || "error"}>⚠️ Simkl (reintentar)</button>
+          )}
+          {simklStatus.conectado && simklStatus.estado === "idle" && (
+            <span style={{ ...toolbarBtn(false), cursor: "default", opacity: 0.5 }}>🔗 Simkl conectado</span>
           )}
         </div>
       );
