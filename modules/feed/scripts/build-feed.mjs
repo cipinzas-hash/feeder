@@ -20,8 +20,8 @@ import Parser from "rss-parser";
 
 const FEEDS_PATH = new URL("../feeds.json", import.meta.url);
 const OUTPUT_PATH = new URL("../data/feed.json", import.meta.url);
-const SSBMRANK_PATH = new URL("../data/ssbmrank.json", import.meta.url);
 const PODCAST_LATEST_PATH = new URL("../data/podcast-latest.json", import.meta.url);
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY; // Conciertos: filtra por duración real si hay key; si no, cae al criterio de título (ver CONCIERTOS_INCLUDE_RE)
 
 // Meta Pod es el único podcast que se sigue (categoría "Podcasts" completa
 // eliminada de feeds.json: 1797 items acumulados sin retención, 45MB de los
