@@ -480,6 +480,36 @@
       else next[guid] = { ...(next[guid] || {}), ...patch };
       saveCineEstado(next);
     }
+    // ─── Simkl discovery ("bajo el radar") -- fetch único, cacheado a nivel de
+    // módulo, compartido entre las 3 categorías de Vitrina (Películas/Series/
+    // Animación). Mismo patrón reactivo que cineEstadoCache más abajo.
+    const simklDiscoveryListeners = new Set();
+    let simklDiscoveryItems = [];
+    let simklDiscoveryFetched = false;
+    function useSimklDiscovery() {
+      const [items, setItems] = useState(simklDiscoveryItems);
+      useEffect(() => {
+        simklDiscoveryListeners.add(setItems);
+        if (!simklDiscoveryFetched) {
+          simklDiscoveryFetched = true;
+          const auth = getSimklAuth();
+          if (auth) {
+            fetch(`${WORKER_URL}?path=simkl-discovery.json`, { headers: { "X-Angst-Auth": auth } })
+              .then(r => r.ok ? r.json() : null)
+              .then(d => {
+                if (d && d.found !== false && Array.isArray(d.items)) {
+                  simklDiscoveryItems = d.items.map(it => ({ ...it, _deSimkl: true }));
+                  simklDiscoveryListeners.forEach(fn => fn(simklDiscoveryItems));
+                }
+              })
+              .catch(() => {}); // sin red o Worker caído -- la Vitrina sigue andando sin esto, no es crítico
+          }
+        }
+        return () => simklDiscoveryListeners.delete(setItems);
+      }, []);
+      return items;
+    }
+
     function useCineEstadoMap() {
       const [map, setMap] = useState(cineEstadoCache);
       useEffect(() => {
@@ -939,7 +969,18 @@
           && (!categoria || e.item.categoria === categoria)
           && !itemGuidsEnCartelera.has(e.item.guid))
         .map(e => ({ ...e.item, _fueraDeCartelera: true })), [cineEstado, itemGuidsEnCartelera, categoria]);
-      const fullItems = exemptExtra.length ? [...items, ...exemptExtra] : items;
+      // "Bajo el radar" (issue #14, fase B): lo de tu lista real de Simkl que
+      // el descubrimiento normal de cine.json nunca trajo. Mismo criterio de
+      // no-duplicar que exemptExtra -- si ya está en `items` o ya se agregó
+      // como exemptExtra (marcado localmente también), no se vuelve a meter.
+      const simklDiscoveryAll = useSimklDiscovery();
+      const exemptGuids = React.useMemo(() => new Set(exemptExtra.map(e => e.guid)), [exemptExtra]);
+      const simklExtra = React.useMemo(() => simklDiscoveryAll
+        .filter(it => (!categoria || it.categoria === categoria)
+          && !itemGuidsEnCartelera.has(it.guid)
+          && !exemptGuids.has(it.guid)),
+        [simklDiscoveryAll, itemGuidsEnCartelera, exemptGuids, categoria]);
+      const fullItems = (exemptExtra.length || simklExtra.length) ? [...items, ...exemptExtra, ...simklExtra] : items;
 
       // Orden y filtro del carrusel: por defecto el orden del catálogo tal
       // cual llega; "próxima" prioriza lo que menos le queda en cartelera
@@ -1113,6 +1154,7 @@
               const ratingVista = vista ? CINE_RATINGS.find(r => r.id === estadoItem.rating) : null;
               const trending = esTrending(item);
               const fueraDeCartelera = !!item._fueraDeCartelera;
+              const deSimkl = !!item._deSimkl;
               return (
                 <div key={offset} data-cine-tap={offset} style={{
                   position: "absolute", top: 16, left: "50%", width: CARD_W,
@@ -1183,6 +1225,18 @@
                         fontFamily: "'DM Sans',sans-serif", fontSize: 8, fontWeight: 700, padding: "3px 6px",
                         borderRadius: 5, letterSpacing: 0.2, textAlign: "right", lineHeight: 1.3,
                       }}>FUERA DE<br/>CARTELERA</div>
+                    )}
+                    {/* "Bajo el radar" (issue #14): entró a la Vitrina porque
+                        está en tu lista real de Simkl, no porque cine.json lo
+                        haya traído por trending -- mismo slot, mutuamente
+                        excluyente con los anteriores por construcción (ver
+                        simklExtra, nunca se solapa con exemptExtra/items). */}
+                    {deSimkl && !nuevo && !vista && !fueraDeCartelera && (
+                      <div style={{
+                        position: "absolute", top: 6, right: 6, background: "#2a4d3a", color: "#7fd99a",
+                        fontFamily: "'DM Sans',sans-serif", fontSize: 8, fontWeight: 700, padding: "3px 6px",
+                        borderRadius: 5, letterSpacing: 0.2, textAlign: "right", lineHeight: 1.3,
+                      }}>TU LISTA<br/>SIMKL</div>
                     )}
                     {/* "Interesa" -- además del anillo verde del póster, un
                         ícono explícito arriba-izquierda (mutuamente excluyente
