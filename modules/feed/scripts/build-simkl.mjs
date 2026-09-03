@@ -16,6 +16,7 @@
 // chequear /sync/activities. Ver https://api.simkl.org/api-rules
 
 import { readFile, writeFile } from "node:fs/promises";
+import { enrichMovieOrTv } from "./lib/enrich.mjs";
 
 const SIMKL_ACCESS_TOKEN = process.env.SIMKL_ACCESS_TOKEN;
 const SIMKL_CLIENT_ID = process.env.SIMKL_CLIENT_ID;
@@ -23,10 +24,21 @@ const SIMKL_CLIENT_ID = process.env.SIMKL_CLIENT_ID;
 // directorio hermano y pasa la ruta acá. No se puede adivinar por
 // posición relativa al script como con feed.json/cine.json (mismo repo).
 const STATE_PATH = process.env.SIMKL_STATE_PATH;
+const DISCOVERY_PATH = process.env.SIMKL_DISCOVERY_PATH; // ídem, otro archivo en Angst-data
 if (!STATE_PATH) {
   console.error("✗ Falta SIMKL_STATE_PATH (ruta a simkl-state.json en el checkout de Angst-data)");
   process.exit(1);
 }
+// cine.json sí vive en el mismo repo que este script -- acá no hace falta
+// ninguna ruta pasada por env.
+const CINE_JSON_PATH = new URL("../data/cine.json", import.meta.url);
+// Cuántos ítems nuevos enriquecer como máximo por corrida -- cada uno son 5
+// llamadas a TMDb en paralelo + OMDb + a veces Wikipedia, igual que en
+// build-cine.mjs. Sin tope, una lista de Simkl grande podría hacer que esta
+// corrida (cada 6hs, sin presupuesto de tiempo propio como Melee) se vuelva
+// lenta de golpe -- lo que no entra en una corrida, entra en la siguiente
+// (nada se pierde, syncedList no se toca acá).
+const DISCOVERY_BUDGET = 20;
 
 const APP_PARAMS = "app-name=angst&app-version=1.0";
 
@@ -169,6 +181,89 @@ async function main() {
   state.generatedAt = new Date().toISOString();
   await writeFile(STATE_PATH, JSON.stringify(state, null, 2));
   console.log("✓ simkl-state.json actualizado");
+
+  await buildDiscovery(state);
+}
+
+// ─── "Bajo el radar" (issue #14, fase B): lo que ya está en tu lista de
+// Simkl pero el descubrimiento normal de TMDb (trending/estrenos) nunca
+// trajo a cine.json -- contenido de nicho, continuaciones, etc. Se guarda
+// en un archivo PRIVADO aparte (simkl-discovery.json en Angst-data), NUNCA
+// en el cine.json público de feeder: aunque el título/poster de una
+// película no es dato personal en sí, la ATRIBUCIÓN ("esto está en tu
+// lista") sí lo es -- publicarla ahí sería exactamente el tipo de fuga que
+// el issue prohíbe. El cliente lo lee vía el Worker (autenticado), igual
+// que simkl-state.json.
+async function buildDiscovery(state) {
+  if (!DISCOVERY_PATH) {
+    console.log("⚠ Simkl · SIMKL_DISCOVERY_PATH no seteado, se omite 'bajo el radar' esta corrida");
+    return;
+  }
+
+  let cineData = { categories: [] };
+  try {
+    cineData = JSON.parse(await readFile(CINE_JSON_PATH, "utf-8"));
+  } catch (e) {
+    console.log("No se pudo leer cine.json, se asume vacío para el cruce.");
+  }
+  const yaEnCine = new Set();
+  for (const cat of cineData.categories || []) {
+    for (const item of cat.items || []) {
+      const m = /^tmdb-(movie|tv)-(\d+)$/.exec(item.guid || "");
+      if (m) yaEnCine.add(`${m[1] === "movie" ? "movie" : "show"}-${m[2]}`);
+    }
+  }
+
+  let previousDiscovery = { items: [] };
+  try {
+    previousDiscovery = JSON.parse(await readFile(DISCOVERY_PATH, "utf-8"));
+  } catch (e) { /* primera corrida */ }
+  const cache = {};
+  for (const it of previousDiscovery.items || []) cache[it.guid] = it;
+
+  // Candidatos: solo lo que todavía importa mostrar -- "interesa" (plantowatch)
+  // o en curso (watching/hold, ya mapeados a "interesa" por mapEntry). Lo
+  // "vista"/"descartada" no tiene sentido empujarlo a un catálogo de
+  // descubrimiento.
+  const candidatos = [];
+  for (const [tmdbId, entry] of Object.entries(state.syncedList.movies || {})) {
+    if (entry.estado === "interesa" && !yaEnCine.has(`movie-${tmdbId}`)) {
+      candidatos.push({ tmdbId: Number(tmdbId), tipo: "movie", entry });
+    }
+  }
+  for (const [tmdbId, entry] of Object.entries(state.syncedList.shows || {})) {
+    if (entry.estado === "interesa" && !yaEnCine.has(`show-${tmdbId}`)) {
+      candidatos.push({ tmdbId: Number(tmdbId), tipo: "show", entry });
+    }
+  }
+
+  console.log(`Simkl · 'bajo el radar': ${candidatos.length} candidato(s) fuera de cine.json`);
+
+  let enriquecidos = 0;
+  const items = [];
+  for (const c of candidatos) {
+    const guid = `tmdb-${c.tipo === "movie" ? "movie" : "tv"}-${c.tmdbId}`;
+    if (cache[guid]) {
+      // Ya enriquecido en una corrida anterior -- se reusa tal cual, no
+      // hace falta re-pedir a TMDb cada 6hs algo que no cambia seguido.
+      items.push({ ...cache[guid], simklStatus: c.entry.estado, simklProgreso: c.entry.progreso || null });
+      continue;
+    }
+    if (enriquecidos >= DISCOVERY_BUDGET) continue; // lo que no entra esta corrida, entra en la próxima
+    try {
+      const mediaType = c.tipo === "movie" ? "movie" : "tv";
+      const enriched = await enrichMovieOrTv(mediaType, c.tmdbId, {}, guid);
+      if (enriched) {
+        items.push({ ...enriched, simklStatus: c.entry.estado, simklProgreso: c.entry.progreso || null });
+        enriquecidos++;
+      }
+    } catch (e) {
+      console.error(`✗ Simkl · no se pudo enriquecer ${guid}: ${e.message}`);
+    }
+  }
+  console.log(`✓ Simkl · 'bajo el radar': ${enriquecidos} ítem(s) nuevo(s) enriquecido(s), ${items.length} en total`);
+
+  await writeFile(DISCOVERY_PATH, JSON.stringify({ generatedAt: new Date().toISOString(), items }, null, 2));
 }
 
 main().catch(e => {

@@ -16,7 +16,9 @@ permissions:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15   # subido de 10 a 15: la fase de 'bajo el radar'
+                          # agrega hasta 20 enriquecimientos por corrida
+                          # (cada uno, varias llamadas a TMDb/OMDb/Wikipedia)
     steps:
       - name: Checkout feeder (el script vive acá)
         uses: actions/checkout@v4
@@ -48,14 +50,18 @@ jobs:
           SIMKL_ACCESS_TOKEN: ${{ secrets.SIMKL_ACCESS_TOKEN }}
           SIMKL_CLIENT_ID: ${{ secrets.SIMKL_CLIENT_ID }}
           SIMKL_STATE_PATH: ${{ github.workspace }}/angst-data/simkl-state.json
+          SIMKL_DISCOVERY_PATH: ${{ github.workspace }}/angst-data/simkl-discovery.json
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
         run: node modules/feed/scripts/build-simkl.mjs
 
-      - name: Commitear simkl-state.json en Angst-data si cambió
+      - name: Commitear simkl-state.json + simkl-discovery.json en Angst-data si cambiaron
         working-directory: angst-data
         run: |
           git config user.name "angst-feed-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add simkl-state.json
+          git add simkl-state.json simkl-discovery.json
           git diff --staged --quiet || { git commit -m "Sincronizar Simkl $(date -u +%Y-%m-%dT%H:%MZ)"; committed=1; }
           pushed=0
           for i in 1 2 3; do
