@@ -32,11 +32,34 @@
 const REPO = "cipinzas-hash/Angst-data";
 const PATH = "state-backup.json";
 
+// CORS: el navegador llama a este Worker desde un origen distinto
+// (cipinzas-hash.github.io -> *.workers.dev). Sin estos headers, el
+// navegador bloquea la respuesta ANTES de que el código JS la vea --
+// nunca llega a ser "401" ni "200" ni nada, es un fetch() que revienta
+// directo con un error de red genérico, sin importar que el
+// X-Angst-Auth esté perfecto. El preflight (OPTIONS) también hay que
+// contestarlo explícito -- el navegador lo manda solo antes del POST/GET
+// real porque van con headers custom (X-Angst-Auth, Content-Type).
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "X-Angst-Auth, Content-Type",
+};
+function withCors(response) {
+  const headers = new Headers(response.headers);
+  for (const [k, v] of Object.entries(CORS_HEADERS)) headers.set(k, v);
+  return new Response(response.body, { status: response.status, headers });
+}
+
 export default {
   async fetch(request, env) {
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
+
     const auth = request.headers.get("X-Angst-Auth");
     if (!auth || auth !== env.AUTH_SECRET) {
-      return new Response("Unauthorized", { status: 401 });
+      return withCors(new Response("Unauthorized", { status: 401 }));
     }
 
     const ghHeaders = {
@@ -56,33 +79,33 @@ export default {
         { headers: ghHeaders }
       );
       if (getResp.status === 404) {
-        return new Response(JSON.stringify({ found: false }), {
+        return withCors(new Response(JSON.stringify({ found: false }), {
           status: 200, headers: { "Content-Type": "application/json" },
-        });
+        }));
       }
       if (!getResp.ok) {
         const errText = await getResp.text();
-        return new Response(JSON.stringify({ error: "no se pudo leer", detail: errText }), { status: 502 });
+        return withCors(new Response(JSON.stringify({ error: "no se pudo leer", detail: errText }), { status: 502 }));
       }
       const getData = await getResp.json();
       const decoded = decodeURIComponent(escape(atob(getData.content)));
-      return new Response(decoded, {
+      return withCors(new Response(decoded, {
         status: 200, headers: { "Content-Type": "application/json" },
-      });
+      }));
     }
 
     if (request.method !== "POST") {
-      return new Response("Method not allowed", { status: 405 });
+      return withCors(new Response("Method not allowed", { status: 405 }));
     }
 
     let body;
     try {
       body = await request.json();
     } catch (e) {
-      return new Response(JSON.stringify({ error: "JSON inválido" }), { status: 400 });
+      return withCors(new Response(JSON.stringify({ error: "JSON inválido" }), { status: 400 }));
     }
     if (!body || typeof body.payload !== "object") {
-      return new Response(JSON.stringify({ error: "falta 'payload' en el body" }), { status: 400 });
+      return withCors(new Response(JSON.stringify({ error: "falta 'payload' en el body" }), { status: 400 }));
     }
     const path = body.path || PATH;
 
@@ -98,7 +121,7 @@ export default {
       sha = getData.sha;
     } else if (getResp.status !== 404) {
       const errText = await getResp.text();
-      return new Response(JSON.stringify({ error: "no se pudo leer el archivo actual", detail: errText }), { status: 502 });
+      return withCors(new Response(JSON.stringify({ error: "no se pudo leer el archivo actual", detail: errText }), { status: 502 }));
     }
 
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(body.payload, null, 2))));
@@ -117,12 +140,12 @@ export default {
 
     if (!putResp.ok) {
       const errText = await putResp.text();
-      return new Response(JSON.stringify({ error: "no se pudo commitear", detail: errText }), { status: 502 });
+      return withCors(new Response(JSON.stringify({ error: "no se pudo commitear", detail: errText }), { status: 502 }));
     }
 
-    return new Response(JSON.stringify({ ok: true }), {
+    return withCors(new Response(JSON.stringify({ ok: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
-    });
+    }));
   },
 };

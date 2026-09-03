@@ -1081,7 +1081,10 @@
             <span style={{ ...toolbarBtn(true), cursor: "default" }} title={`Última sincronización: ${simklStatus.ultimoOk}`}>✓ Simkl</span>
           )}
           {simklStatus.conectado && simklStatus.estado === "error" && (
-            <button onClick={flushSimklQueue} style={{ ...toolbarBtn(false), borderColor: "#c0392b", color: "#e74c3c" }} title={simklStatus.ultimoError || "error"}>⚠️ Simkl (reintentar)</button>
+            <button
+              onClick={() => { alert(`Simkl no pudo sincronizar:\n\n${simklStatus.ultimoError || "error desconocido"}\n\nToco reintentar ahora.`); flushSimklQueue(); }}
+              style={{ ...toolbarBtn(false), borderColor: "#c0392b", color: "#e74c3c", maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+            >⚠️ Simkl: {simklStatus.ultimoError || "error"} (tocar)</button>
           )}
           {simklStatus.conectado && simklStatus.estado === "idle" && (
             <span style={{ ...toolbarBtn(false), cursor: "default", opacity: 0.5 }}>🔗 Simkl conectado</span>
