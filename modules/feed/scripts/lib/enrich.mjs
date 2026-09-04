@@ -136,7 +136,8 @@ export function needsRetry(cached) {
   const trailerMissing = !cached.trailer;
   const statusMissing = cached.status === undefined;
   const seasonsMissing = cached.numberOfSeasons === undefined;
-  return ratingMissing || trailerMissing || statusMissing || seasonsMissing;
+  const seasonsDetailMissing = cached.seasons === undefined;
+  return ratingMissing || trailerMissing || statusMissing || seasonsMissing || seasonsDetailMissing;
 }
 
 export async function enrichMovieOrTv(mediaType, id, cache, guid) {
@@ -224,6 +225,16 @@ export async function enrichMovieOrTv(mediaType, id, cache, guid) {
     status: details.status || null,
     nextEpisodeDate: mediaType === "tv" ? (details.next_episode_to_air?.air_date || null) : null,
     numberOfSeasons: mediaType === "tv" ? (details.number_of_seasons || null) : null,
+    // Temporadas reales con su cantidad de episodios -- necesario para poder
+    // marcar visto por episodio (no alcanza con saber CUÁNTAS temporadas
+    // hay, hace falta saber cuántos episodios tiene CADA una). Se excluye
+    // season_number 0 -- TMDb la usa para "especiales", no cuenta como
+    // progreso real de la serie.
+    seasons: mediaType === "tv"
+      ? (details.seasons || [])
+          .filter(s => s.season_number > 0)
+          .map(s => ({ numero: s.season_number, episodios: s.episode_count, fechaEstreno: s.air_date || null }))
+      : null,
     // "en curso" = la última temporada que emitió (no necesariamente la
     // última numerada — a veces TMDb cuenta specials como su propia
     // temporada). Si terminó, esto no se usa: se muestra el total.

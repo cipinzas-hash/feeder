@@ -16,7 +16,7 @@
 // chequear /sync/activities. Ver https://api.simkl.org/api-rules
 
 import { readFile, writeFile } from "node:fs/promises";
-import { enrichMovieOrTv } from "./lib/enrich.mjs";
+import { enrichMovieOrTv, tmdb } from "./lib/enrich.mjs";
 
 const SIMKL_ACCESS_TOKEN = process.env.SIMKL_ACCESS_TOKEN;
 const SIMKL_CLIENT_ID = process.env.SIMKL_CLIENT_ID;
@@ -105,6 +105,16 @@ function mapEntry(item, tipo) {
   return entry;
 }
 
+// Para marcar "hasta acá" en una serie hace falta saber cuántos episodios
+// tenía CADA temporada anterior a la actual (si no, no se puede armar la
+// lista completa de episodios a marcar visto -- Simkl no tiene un "marcá
+// todo hasta el episodio X" nativo, hay que mandarle la lista explícita).
+async function episodiosPorTemporada(tmdbId, hastaTemporada) {
+  const details = await tmdb(`/tv/${tmdbId}`, {}, null);
+  const seasons = (details.seasons || []).filter(s => s.season_number > 0 && s.season_number <= hastaTemporada);
+  return seasons.map(s => ({ numero: s.season_number, episodios: s.episode_count }));
+}
+
 async function main() {
   let state = { generatedAt: null, lastSimklActivity: null, syncedList: { movies: {}, shows: {} }, pendingActions: [] };
   try {
@@ -131,7 +141,31 @@ async function main() {
   const stillPending = [];
   for (const action of state.pendingActions) {
     try {
-      if (action.status === "completed") {
+      if (action.progreso && action.tipo === "show") {
+        // "Marcar hasta acá": arma la lista completa de episodios (todas
+        // las temporadas anteriores completas + la actual hasta el
+        // episodio marcado) y la manda de una -- Simkl no tiene un "marcá
+        // todo hasta X" nativo.
+        const { temporada, episodio } = action.progreso;
+        const seasonsInfo = await episodiosPorTemporada(action.tmdbId, temporada);
+        const seasonsPayload = seasonsInfo.map(s => ({
+          number: s.numero,
+          episodes: Array.from(
+            { length: s.numero === temporada ? episodio : s.episodios },
+            (_, i) => ({ number: i + 1 })
+          ),
+        }));
+        const resp = await simklPost("/sync/history", {
+          shows: [{ ids: { tmdb: action.tmdbId }, title: action.title, year: action.year, seasons: seasonsPayload }],
+        });
+        console.log(`✓ Simkl · progreso T${temporada}·E${episodio}: ${action.title || action.tmdbId}`, JSON.stringify(resp).slice(0, 150));
+        // Además del historial de episodios, el status de la serie en sí
+        // queda en "watching" -- /sync/history marca episodios, no cambia
+        // el status general por su cuenta.
+        await simklPost("/sync/add-to-list", {
+          shows: [{ ids: { tmdb: action.tmdbId }, title: action.title, year: action.year, to: "watching" }],
+        });
+      } else if (action.status === "completed") {
         const resp = await simklPost("/sync/history", {
           [action.tipo === "movie" ? "movies" : "shows"]: [
             { ids: { tmdb: action.tmdbId }, title: action.title, year: action.year },

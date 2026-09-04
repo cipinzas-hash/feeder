@@ -7100,15 +7100,17 @@ ${item.link}`);
     if (!m) return null;
     return { tipo: m[1] === "movie" ? "movie" : "show", tmdbId: Number(m[2]) };
   }
-  function enqueueSimklAction(item, estadoLocal) {
+  function enqueueSimklAction(item, estadoLocal, progreso) {
     const parsed = parseTmdbGuid(item?.guid);
     if (!parsed) return;
-    const status = SIMKL_ESTADO_TO_STATUS[estadoLocal];
+    const status = progreso && parsed.tipo === "show" ? "watching" : SIMKL_ESTADO_TO_STATUS[estadoLocal];
     if (!status) return;
     const year = item.pubDate ? new Date(item.pubDate).getFullYear() : void 0;
     const pending = loadSimklPending();
     const filtered = pending.filter((a) => !(a.tmdbId === parsed.tmdbId && a.tipo === parsed.tipo));
-    filtered.push({ tmdbId: parsed.tmdbId, tipo: parsed.tipo, status, title: item.title, year, creadoEn: (/* @__PURE__ */ new Date()).toISOString() });
+    const accion = { tmdbId: parsed.tmdbId, tipo: parsed.tipo, status, title: item.title, year, creadoEn: (/* @__PURE__ */ new Date()).toISOString() };
+    if (progreso) accion.progreso = progreso;
+    filtered.push(accion);
     saveSimklPending(filtered);
     flushSimklQueue();
   }
@@ -7228,6 +7230,49 @@ ${item.link}`);
       "guardar rese\xF1a"
     )));
   }
+  function diasHasta(fechaISO) {
+    if (!fechaISO) return null;
+    const dias = Math.ceil((new Date(fechaISO).getTime() - Date.now()) / 864e5);
+    return dias;
+  }
+  function SeriesProgreso({ item, progresoActual, onMarcar }) {
+    const seasons = item.seasons;
+    const [temporada, setTemporada] = useState7(progresoActual?.temporada || seasons?.[0]?.numero || 1);
+    const [episodio, setEpisodio] = useState7(progresoActual?.episodio || 1);
+    const seasonInfo = seasons?.find((s) => s.numero === temporada);
+    const maxEp = seasonInfo?.episodios || 99;
+    const diasProximoEp = diasHasta(item.nextEpisodeDate);
+    return /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 10px", background: "#111", borderTop: "1px solid #1c1c1c" } }, progresoActual && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#2ecc71", marginBottom: 6 } }, "\u{1F4FA} vas por T", progresoActual.temporada, "\xB7E", progresoActual.episodio), diasProximoEp != null && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: diasProximoEp <= 0 ? "#2ecc71" : "#999", marginBottom: 6 } }, diasProximoEp <= 0 ? "\u{1F195} nuevo episodio ya disponible" : `\u{1F4C5} pr\xF3ximo episodio en ${diasProximoEp} d\xEDa${diasProximoEp === 1 ? "" : "s"}`), seasons && seasons.length > 0 ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(
+      "select",
+      {
+        value: temporada,
+        onChange: (e) => {
+          setTemporada(Number(e.target.value));
+          setEpisodio(1);
+        },
+        style: { background: "#1c1c1c", color: "#fff", border: "1px solid #333", borderRadius: 6, padding: "6px 8px", fontFamily: "'DM Sans',sans-serif", fontSize: 12 }
+      },
+      seasons.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.numero, value: s.numero }, "Temporada ", s.numero))
+    ), /* @__PURE__ */ React.createElement(
+      "select",
+      {
+        value: episodio,
+        onChange: (e) => setEpisodio(Number(e.target.value)),
+        style: { background: "#1c1c1c", color: "#fff", border: "1px solid #333", borderRadius: 6, padding: "6px 8px", fontFamily: "'DM Sans',sans-serif", fontSize: 12 }
+      },
+      Array.from({ length: maxEp }, (_, i) => i + 1).map((n) => /* @__PURE__ */ React.createElement("option", { key: n, value: n }, "Ep. ", n))
+    ), /* @__PURE__ */ React.createElement("button", { onClick: () => onMarcar(temporada, episodio), style: {
+      background: "#2ecc71",
+      color: "#111",
+      border: "none",
+      borderRadius: 6,
+      padding: "6px 12px",
+      fontFamily: "'DM Sans',sans-serif",
+      fontSize: 12,
+      fontWeight: 700,
+      cursor: "pointer"
+    } }, "marcar hasta ac\xE1")) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#666", fontStyle: "italic" } }, "sin desglose de temporadas todav\xEDa -- se completa en la pr\xF3xima actualizaci\xF3n del cat\xE1logo"));
+  }
   function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions, onExportImage }) {
     const cineEstado = useCineEstadoMap();
     const estadoItem = cineEstado[item.guid];
@@ -7247,6 +7292,11 @@ ${item.link}`);
       setCineItemEstado(item.guid, { estado: "vista", rating: ratingId, nota: nota || "" });
       enqueueSimklAction(item, "vista");
       setReviewOpen(false);
+    }
+    const progresoActual = estadoItem?.progreso || null;
+    function marcarProgreso(temporada, episodio) {
+      setCineItemEstado(item.guid, { estado: "interesa", item, progreso: { temporada, episodio } });
+      enqueueSimklAction(item, "interesa", { temporada, episodio });
     }
     const color = CAT_COLORS[item.categoria] || "#e91e8c";
     const leads = (item.cast || []).filter((c) => c.order < 4);
@@ -7281,7 +7331,7 @@ ${item.link}`);
       },
       /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F44E}"),
       "no me interesa"
-    )), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "anterior"), /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareToWhatsApp(item), style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4E4}"), "compartir"), /* @__PURE__ */ React.createElement("button", { onClick: onNext, style: { ...btnGhost, background: color, color: "#111", borderColor: color } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente"))), hideActions && onExportImage && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onExportImage(item), style: { ...btnGhost, background: color, color: "#111", borderColor: color, flex: "none", width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4F8}"), "exportar imagen para compartir")));
+    )), !reviewOpen && item.categoria === "Series" && /* @__PURE__ */ React.createElement(SeriesProgreso, { item, progresoActual, onMarcar: marcarProgreso }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "anterior"), /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareToWhatsApp(item), style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4E4}"), "compartir"), /* @__PURE__ */ React.createElement("button", { onClick: onNext, style: { ...btnGhost, background: color, color: "#111", borderColor: color } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente"))), hideActions && onExportImage && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onExportImage(item), style: { ...btnGhost, background: color, color: "#111", borderColor: color, flex: "none", width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4F8}"), "exportar imagen para compartir")));
   }
   function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
     useEffect7(() => {

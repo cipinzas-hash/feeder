@@ -578,17 +578,23 @@
       if (!m) return null;
       return { tipo: m[1] === "movie" ? "movie" : "show", tmdbId: Number(m[2]) };
     }
-    function enqueueSimklAction(item, estadoLocal) {
+    function enqueueSimklAction(item, estadoLocal, progreso) {
       const parsed = parseTmdbGuid(item?.guid);
       if (!parsed) return; // Animación (a veces ID de MAL) u otra fuente sin tmdb -- no aplica todavía
-      const status = SIMKL_ESTADO_TO_STATUS[estadoLocal];
+      // Con progreso de episodio, el status real en Simkl es "watching" --
+      // "plantowatch" es para lo que todavía ni empezaste. Solo aplica a
+      // series (parsed.tipo === "show"); progreso en una película no
+      // tiene sentido.
+      const status = progreso && parsed.tipo === "show" ? "watching" : SIMKL_ESTADO_TO_STATUS[estadoLocal];
       if (!status) return;
       const year = item.pubDate ? new Date(item.pubDate).getFullYear() : undefined;
       const pending = loadSimklPending();
       // Reemplaza cualquier acción pendiente anterior del mismo ítem -- no
       // tiene sentido mandar dos veces, gana la más reciente.
       const filtered = pending.filter(a => !(a.tmdbId === parsed.tmdbId && a.tipo === parsed.tipo));
-      filtered.push({ tmdbId: parsed.tmdbId, tipo: parsed.tipo, status, title: item.title, year, creadoEn: new Date().toISOString() });
+      const accion = { tmdbId: parsed.tmdbId, tipo: parsed.tipo, status, title: item.title, year, creadoEn: new Date().toISOString() };
+      if (progreso) accion.progreso = progreso; // {temporada, episodio} -- build-simkl.mjs marca visto hasta ahí
+      filtered.push(accion);
       saveSimklPending(filtered);
       flushSimklQueue(); // best effort, no bloquea la UI -- si falla, la cola queda para el próximo intento
     }
@@ -706,6 +712,59 @@
       );
     }
 
+    function diasHasta(fechaISO) {
+      if (!fechaISO) return null;
+      const dias = Math.ceil((new Date(fechaISO).getTime() - Date.now()) / 86400000);
+      return dias;
+    }
+    // Selector de temporada/episodio + contador de días para lo próximo.
+    // "Marcar hasta acá" = vas viendo la serie hasta ese punto -- manda
+    // status "watching" a Simkl (ver enqueueSimklAction), que internamente
+    // marca visto todo lo anterior, no solo el episodio puntual.
+    function SeriesProgreso({ item, progresoActual, onMarcar }) {
+      const seasons = item.seasons;
+      const [temporada, setTemporada] = useState(progresoActual?.temporada || seasons?.[0]?.numero || 1);
+      const [episodio, setEpisodio] = useState(progresoActual?.episodio || 1);
+      const seasonInfo = seasons?.find(s => s.numero === temporada);
+      const maxEp = seasonInfo?.episodios || 99;
+      const diasProximoEp = diasHasta(item.nextEpisodeDate);
+
+      return (
+        <div style={{ padding: "8px 10px", background: "#111", borderTop: "1px solid #1c1c1c" }}>
+          {progresoActual && (
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#2ecc71", marginBottom: 6 }}>
+              📺 vas por T{progresoActual.temporada}·E{progresoActual.episodio}
+            </div>
+          )}
+          {diasProximoEp != null && (
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: diasProximoEp <= 0 ? "#2ecc71" : "#999", marginBottom: 6 }}>
+              {diasProximoEp <= 0 ? "🆕 nuevo episodio ya disponible" : `📅 próximo episodio en ${diasProximoEp} día${diasProximoEp === 1 ? "" : "s"}`}
+            </div>
+          )}
+          {seasons && seasons.length > 0 ? (
+            <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+              <select value={temporada} onChange={e => { setTemporada(Number(e.target.value)); setEpisodio(1); }}
+                style={{ background: "#1c1c1c", color: "#fff", border: "1px solid #333", borderRadius: 6, padding: "6px 8px", fontFamily: "'DM Sans',sans-serif", fontSize: 12 }}>
+                {seasons.map(s => <option key={s.numero} value={s.numero}>Temporada {s.numero}</option>)}
+              </select>
+              <select value={episodio} onChange={e => setEpisodio(Number(e.target.value))}
+                style={{ background: "#1c1c1c", color: "#fff", border: "1px solid #333", borderRadius: 6, padding: "6px 8px", fontFamily: "'DM Sans',sans-serif", fontSize: 12 }}>
+                {Array.from({ length: maxEp }, (_, i) => i + 1).map(n => <option key={n} value={n}>Ep. {n}</option>)}
+              </select>
+              <button onClick={() => onMarcar(temporada, episodio)} style={{
+                background: "#2ecc71", color: "#111", border: "none", borderRadius: 6, padding: "6px 12px",
+                fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer",
+              }}>marcar hasta acá</button>
+            </div>
+          ) : (
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#666", fontStyle: "italic" }}>
+              sin desglose de temporadas todavía -- se completa en la próxima actualización del catálogo
+            </div>
+          )}
+        </div>
+      );
+    }
+
     function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions, onExportImage }) {
       const cineEstado = useCineEstadoMap();
       const estadoItem = cineEstado[item.guid];
@@ -727,6 +786,16 @@
         setCineItemEstado(item.guid, { estado: "vista", rating: ratingId, nota: nota || "" });
         enqueueSimklAction(item, "vista");
         setReviewOpen(false);
+      }
+      // Progreso por episodio (solo Series) -- "watching" en Simkl: acá
+      // vas, marca todo lo anterior como visto. No es un estado local
+      // nuevo, es "interesa" + progreso enganchado, mismo criterio que ya
+      // habíamos definido para watching/hold al diseñar el mapeo de
+      // estados de Simkl.
+      const progresoActual = estadoItem?.progreso || null;
+      function marcarProgreso(temporada, episodio) {
+        setCineItemEstado(item.guid, { estado: "interesa", item, progreso: { temporada, episodio } });
+        enqueueSimklAction(item, "interesa", { temporada, episodio });
       }
       const color = CAT_COLORS[item.categoria] || "#e91e8c";
       const leads = (item.cast || []).filter(c => c.order < 4);
@@ -845,6 +914,14 @@
                     <span style={{ fontSize: 17 }}>👎</span>no me interesa
                   </button>
                 </div>
+              )}
+              {/* Progreso por episodio -- solo Series, solo si TMDb trajo el
+                  desglose de temporadas (seasons: null en ítems viejos que
+                  todavía no se re-enriquecieron, o en Películas/Animación
+                  donde no aplica). Días para próximo episodio/temporada:
+                  dato que ya se traía (nextEpisodeDate), nunca se mostraba. */}
+              {!reviewOpen && item.categoria === "Series" && (
+                <SeriesProgreso item={item} progresoActual={progresoActual} onMarcar={marcarProgreso} />
               )}
               <div style={{ display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" }}>
                 <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>anterior</button>
