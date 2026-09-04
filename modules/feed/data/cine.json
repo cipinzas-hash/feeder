@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T22:35:35.878Z",
+  "generatedAt": "2026-09-04T08:47:48.942Z",
   "categories": [
     {
       "cat": "Películas",
@@ -336,9 +336,9 @@
           "firstSeenAt": "2026-08-29T13:48:44.683Z",
           "fullText": null,
           "rating": {
-            "imdb": null,
+            "imdb": 6.5,
             "rt": null,
-            "metascore": null,
+            "metascore": 49,
             "tmdb": 6.7
           },
           "status": "Released",
@@ -562,7 +562,7 @@
               "order": 9
             }
           ],
-          "trending": false
+          "trending": true
         },
         {
           "guid": "tmdb-movie-1291595",
@@ -819,7 +819,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 5.7
+            "tmdb": 6.2
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1292,6 +1292,141 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1516698",
+          "title": "Sunrise. El último amanecer",
+          "link": "https://www.themoviedb.org/movie/1516698",
+          "summary": "Basada en la aclamada novela, SUNRISE. El último amanecer presenta a Ry, una estudiante con una enfermedad crónica durante un verano en Mallorca con su madre. Tras enamorarse de Julián y empezar a vivir el presente, su enfermedad empeora y los secretos familiares ocultos durante años amenazan con arruinarlo todo antes del fin del verano.",
+          "image": "https://image.tmdb.org/t/p/w500/xf85WDNB5ICqlOqRAHxIdMi3jdZ.jpg",
+          "pubDate": "2026-08-26",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-08-29T13:48:45.710Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.7
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "iHGSsaSEPdw",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Maia Reficco",
+              "character": "Oriah 'Ry' Pera",
+              "order": 0
+            },
+            {
+              "name": "Fernando Lindez",
+              "character": "Julián",
+              "order": 1
+            },
+            {
+              "name": "Eva Longoria",
+              "character": "Isolde Pera",
+              "order": 2
+            },
+            {
+              "name": "Chloé Sweetlove",
+              "character": "Amara",
+              "order": 3
+            },
+            {
+              "name": "Andrés Velencoso",
+              "character": "Mateo",
+              "order": 4
+            },
+            {
+              "name": "Stefanie Martini",
+              "character": "Lena",
+              "order": 5
+            },
+            {
+              "name": "Sabrina Bartlett",
+              "character": "Prisha",
+              "order": 6
+            },
+            {
+              "name": "Àlex Peracaula",
+              "character": "Carlos",
+              "order": 7
+            },
+            {
+              "name": "Molly B. Thomas",
+              "character": "Sofia",
+              "order": 8
+            },
+            {
+              "name": "Razan Nassar",
+              "character": "Chloe",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1423191",
+          "title": "Resident Evil",
+          "link": "https://www.themoviedb.org/movie/1423191",
+          "summary": "Película basada en la saga de videojuegos de Capcom del mismo nombre. En una reinvención totalmente nueva, el mensajero médico Bryan se ve inmerso en una carrera de acción sin descanso por la supervivencia, mientras el caos se desata a su alrededor.",
+          "image": "https://image.tmdb.org/t/p/w500/pJQOA9ZTr1vFC0pDyT0ewH5046M.jpg",
+          "pubDate": "2026-09-16",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-02T23:29:33.275Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Post Production",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "d6oszs7f5aI",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Austin Abrams",
+              "character": "Bryan",
+              "order": 0
+            },
+            {
+              "name": "Zach Cherry",
+              "character": "Dave",
+              "order": 1
+            },
+            {
+              "name": "Kali Reis",
+              "character": "Pauline",
+              "order": 2
+            },
+            {
+              "name": "Paul Walter Hauser",
+              "character": "Carl",
+              "order": 3
+            },
+            {
+              "name": "Johnno Wilson",
+              "character": "Max",
+              "order": 4
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1081003",
           "title": "Supergirl",
           "link": "https://www.themoviedb.org/movie/1081003",
@@ -1380,62 +1515,7 @@
               "order": 9
             }
           ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1423191",
-          "title": "Resident Evil",
-          "link": "https://www.themoviedb.org/movie/1423191",
-          "summary": "Película basada en la saga de videojuegos de Capcom del mismo nombre. En una reinvención totalmente nueva, el mensajero médico Bryan se ve inmerso en una carrera de acción sin descanso por la supervivencia, mientras el caos se desata a su alrededor.",
-          "image": "https://image.tmdb.org/t/p/w500/pJQOA9ZTr1vFC0pDyT0ewH5046M.jpg",
-          "pubDate": "2026-09-16",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-02T23:29:33.275Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Post Production",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "d6oszs7f5aI",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Austin Abrams",
-              "character": "Bryan",
-              "order": 0
-            },
-            {
-              "name": "Zach Cherry",
-              "character": "Dave",
-              "order": 1
-            },
-            {
-              "name": "Kali Reis",
-              "character": "Pauline",
-              "order": 2
-            },
-            {
-              "name": "Paul Walter Hauser",
-              "character": "Carl",
-              "order": 3
-            },
-            {
-              "name": "Johnno Wilson",
-              "character": "Max",
-              "order": 4
-            }
-          ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1185806",
@@ -1672,86 +1752,6 @@
             {
               "name": "Eduardo Aladro",
               "character": "Martinez",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1516698",
-          "title": "Sunrise. El último amanecer",
-          "link": "https://www.themoviedb.org/movie/1516698",
-          "summary": "Basada en la aclamada novela, SUNRISE. El último amanecer presenta a Ry, una estudiante con una enfermedad crónica durante un verano en Mallorca con su madre. Tras enamorarse de Julián y empezar a vivir el presente, su enfermedad empeora y los secretos familiares ocultos durante años amenazan con arruinarlo todo antes del fin del verano.",
-          "image": "https://image.tmdb.org/t/p/w500/xf85WDNB5ICqlOqRAHxIdMi3jdZ.jpg",
-          "pubDate": "2026-08-26",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-08-29T13:48:45.710Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.6
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "iHGSsaSEPdw",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Maia Reficco",
-              "character": "Oriah 'Ry' Pera",
-              "order": 0
-            },
-            {
-              "name": "Fernando Lindez",
-              "character": "Julián",
-              "order": 1
-            },
-            {
-              "name": "Eva Longoria",
-              "character": "Isolde Pera",
-              "order": 2
-            },
-            {
-              "name": "Chloé Sweetlove",
-              "character": "Amara",
-              "order": 3
-            },
-            {
-              "name": "Andrés Velencoso",
-              "character": "Mateo",
-              "order": 4
-            },
-            {
-              "name": "Stefanie Martini",
-              "character": "Lena",
-              "order": 5
-            },
-            {
-              "name": "Sabrina Bartlett",
-              "character": "Prisha",
-              "order": 6
-            },
-            {
-              "name": "Àlex Peracaula",
-              "character": "Carlos",
-              "order": 7
-            },
-            {
-              "name": "Molly B. Thomas",
-              "character": "Sofia",
-              "order": 8
-            },
-            {
-              "name": "Razan Nassar",
-              "character": "Chloe",
               "order": 9
             }
           ],
@@ -3723,12 +3723,12 @@
             "tmdb": 7.2
           },
           "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-03",
+          "nextEpisodeDate": "2026-09-04",
           "numberOfSeasons": 1,
           "currentSeason": 1,
           "reviews": null,
           "trailer": {
-            "key": "3T-nDgvPpV8",
+            "key": "J-fEjuVy5cQ",
             "site": "YouTube"
           },
           "cast": [
@@ -4637,214 +4637,6 @@
           "cast": []
         },
         {
-          "guid": "mal-60636",
-          "title": "Bleach: Sennen Kessen-hen - Kashin-tan",
-          "link": "https://myanimelist.net/anime/60636/Bleach__Sennen_Kessen-hen_-_Kashin-tan",
-          "summary": "Final part of Bleach: Sennen Kessen-hen.",
-          "image": "https://cdn.myanimelist.net/images/anime/1275/158595l.jpg",
-          "pubDate": "2026-07-25T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-30T22:38:16.565Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Not yet aired",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "DKKZ10FsSBM",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-62542",
-          "title": "Grand Blue Season 3",
-          "link": "https://myanimelist.net/anime/62542/Grand_Blue_Season_3",
-          "summary": "Third season of Grand Blue.",
-          "image": "https://cdn.myanimelist.net/images/anime/1615/158194l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-30T19:19:34.544Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.41
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "sJcfFBGzros",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-62542",
-          "title": "Grand Blue Season 3",
-          "link": "https://myanimelist.net/anime/62542/Grand_Blue_Season_3",
-          "summary": "Third season of Grand Blue.",
-          "image": "https://cdn.myanimelist.net/images/anime/1615/158194l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-30T19:19:34.544Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.41
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "KJw6ZZaMOWA",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-48820",
-          "title": "Mahou Shoujo Madoka★Magica Movie 4: Walpurgis no Kaiten",
-          "link": "https://myanimelist.net/anime/48820/Mahou_Shoujo_Madoka★Magica_Movie_4__Walpurgis_no_Kaiten",
-          "summary": "",
-          "image": "https://cdn.myanimelist.net/images/anime/1784/151057l.jpg",
-          "pubDate": "2026-08-28T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-30T22:38:20.865Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Not yet aired",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "coczqqQVQtM",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-63832",
-          "title": "Seihantai na Kimi to Boku 2nd Season",
-          "link": "https://myanimelist.net/anime/63832/Seihantai_na_Kimi_to_Boku_2nd_Season",
-          "summary": "Second season of Seihantai na Kimi to Boku.",
-          "image": "https://cdn.myanimelist.net/images/anime/1143/158409l.jpg",
-          "pubDate": "2026-07-05T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-02T23:29:45.989Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.35
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "o9eLX4W-gys",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-60522",
-          "title": "Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu II",
-          "link": "https://myanimelist.net/anime/60522/Gaikotsu_Kishi-sama_Tadaima_Isekai_e_Odekakechuu_II",
-          "summary": "Second season of Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu.",
-          "image": "https://cdn.myanimelist.net/images/anime/1544/157046l.jpg",
-          "pubDate": "2026-07-06T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-29T22:37:20.274Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.08
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "u_TQJHga6k8",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-58929",
-          "title": "Koukaku Kidoutai (TV)",
-          "link": "https://myanimelist.net/anime/58929/Koukaku_Kidoutai_TV",
-          "summary": "In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetics, its citizens are able to replace their limbs with robotic parts. The world is now more interconnected than ever before, and the city's Public Security Section 9 is responsible for combating corruption, terrorism, and other dangerous threats following this shift toward globalization.\n\nThe strong-willed Major Motoko Kusanagi of Section 9 spearheads a case involving a mysterious hacker known only as the \"Puppet Master,\" who leaves a trail of victims stripped of their memories. Like many in this futuristic world, the Puppet Master's body is almost entirely robotic, giving them incredible power.\n\nAs Motoko and her subordinates follow the enigmatic criminal's trail, other parties—including Section 6—start to get involved, forcing her to confront the extremely complicated nature of the case. Pondering about various philosophical questions, such as her own life's meaning, Motoko soon realizes that the one who will provide these answers is none other than the Puppet Master themself.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1474/158937l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-03T16:16:10.868Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.02
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "ahZn4dVCbvs",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-61169",
-          "title": "Black Torch",
-          "link": "https://myanimelist.net/anime/61169/Black_Torch",
-          "summary": "Seventeen-year-old Jirou Azuma lives a quiet life with his grandfather, utilizing his supernatural ability to speak with animals to befriend and protect them. Both Jirou and his grandfather are descendants of a long-standing shinobi clan, training in combat to keep the art of battle alive within their family. Jirou's life is thrown into upheaval after rescuing a seemingly normal black cat, Ragou, only to discover that the cat is actually a mononoke—a demonic spirit that has long been at war with mankind. When a hostile mononoke comes looking for Ragou, Jirou uses his shinobi training to jump to the cat's defense, but immediately suffers a mortal wound.\n\nFaced with the decision of whether or not to devour Jirou's fading energy and restore himself to full power, Ragou instead chooses to give his remaining energy to Jirou. Reviving the boy, the transfer also grants him great supernatural powers that complement his own shinobi fighting style. This act is witnessed by Ryousuke Shiba, an officer in the Bureau of Espionage whose job revolves around dispatching aggressive mononoke. Shiba extends Jirou and his grandfather an offer: to join the Bureau's new squad, Black Torch, and help them battle powerful mononoke who seek to devour innocent people.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1965/158363l.jpg",
-          "pubDate": "2026-07-04T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-03T22:35:35.052Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.39
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "XL_biwm-hxU",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
           "guid": "tmdb-tv-456",
           "title": "Los Simpson",
           "link": "https://www.themoviedb.org/tv/456",
@@ -4997,6 +4789,195 @@
               "order": 1
             }
           ],
+          "trending": false
+        },
+        {
+          "guid": "mal-60636",
+          "title": "Bleach: Sennen Kessen-hen - Kashin-tan",
+          "link": "https://myanimelist.net/anime/60636/Bleach__Sennen_Kessen-hen_-_Kashin-tan",
+          "summary": "Final part of Bleach: Sennen Kessen-hen.",
+          "image": "https://cdn.myanimelist.net/images/anime/1275/158595l.jpg",
+          "pubDate": "2026-07-25T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-30T22:38:16.565Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Not yet aired",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "DKKZ10FsSBM",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-62542",
+          "title": "Grand Blue Season 3",
+          "link": "https://myanimelist.net/anime/62542/Grand_Blue_Season_3",
+          "summary": "Third season of Grand Blue.",
+          "image": "https://cdn.myanimelist.net/images/anime/1615/158194l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-30T19:19:34.544Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.41
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "KJw6ZZaMOWA",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-48820",
+          "title": "Mahou Shoujo Madoka★Magica Movie 4: Walpurgis no Kaiten",
+          "link": "https://myanimelist.net/anime/48820/Mahou_Shoujo_Madoka★Magica_Movie_4__Walpurgis_no_Kaiten",
+          "summary": "",
+          "image": "https://cdn.myanimelist.net/images/anime/1784/151057l.jpg",
+          "pubDate": "2026-08-28T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-30T22:38:20.865Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Not yet aired",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "coczqqQVQtM",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-63832",
+          "title": "Seihantai na Kimi to Boku 2nd Season",
+          "link": "https://myanimelist.net/anime/63832/Seihantai_na_Kimi_to_Boku_2nd_Season",
+          "summary": "Second season of Seihantai na Kimi to Boku.",
+          "image": "https://cdn.myanimelist.net/images/anime/1143/158409l.jpg",
+          "pubDate": "2026-07-05T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-02T23:29:45.989Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.35
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "o9eLX4W-gys",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-60522",
+          "title": "Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu II",
+          "link": "https://myanimelist.net/anime/60522/Gaikotsu_Kishi-sama_Tadaima_Isekai_e_Odekakechuu_II",
+          "summary": "Second season of Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu.",
+          "image": "https://cdn.myanimelist.net/images/anime/1544/157046l.jpg",
+          "pubDate": "2026-07-06T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-29T22:37:20.274Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.08
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "u_TQJHga6k8",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-58929",
+          "title": "Koukaku Kidoutai (TV)",
+          "link": "https://myanimelist.net/anime/58929/Koukaku_Kidoutai_TV",
+          "summary": "In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetics, its citizens are able to replace their limbs with robotic parts. The world is now more interconnected than ever before, and the city's Public Security Section 9 is responsible for combating corruption, terrorism, and other dangerous threats following this shift toward globalization.\n\nThe strong-willed Major Motoko Kusanagi of Section 9 spearheads a case involving a mysterious hacker known only as the \"Puppet Master,\" who leaves a trail of victims stripped of their memories. Like many in this futuristic world, the Puppet Master's body is almost entirely robotic, giving them incredible power.\n\nAs Motoko and her subordinates follow the enigmatic criminal's trail, other parties—including Section 6—start to get involved, forcing her to confront the extremely complicated nature of the case. Pondering about various philosophical questions, such as her own life's meaning, Motoko soon realizes that the one who will provide these answers is none other than the Puppet Master themself.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1474/158937l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-03T16:16:10.868Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.02
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "ahZn4dVCbvs",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-61169",
+          "title": "Black Torch",
+          "link": "https://myanimelist.net/anime/61169/Black_Torch",
+          "summary": "Seventeen-year-old Jirou Azuma lives a quiet life with his grandfather, utilizing his supernatural ability to speak with animals to befriend and protect them. Both Jirou and his grandfather are descendants of a long-standing shinobi clan, training in combat to keep the art of battle alive within their family. Jirou's life is thrown into upheaval after rescuing a seemingly normal black cat, Ragou, only to discover that the cat is actually a mononoke—a demonic spirit that has long been at war with mankind. When a hostile mononoke comes looking for Ragou, Jirou uses his shinobi training to jump to the cat's defense, but immediately suffers a mortal wound.\n\nFaced with the decision of whether or not to devour Jirou's fading energy and restore himself to full power, Ragou instead chooses to give his remaining energy to Jirou. Reviving the boy, the transfer also grants him great supernatural powers that complement his own shinobi fighting style. This act is witnessed by Ryousuke Shiba, an officer in the Bureau of Espionage whose job revolves around dispatching aggressive mononoke. Shiba extends Jirou and his grandfather an offer: to join the Bureau's new squad, Black Torch, and help them battle powerful mononoke who seek to devour innocent people.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1965/158363l.jpg",
+          "pubDate": "2026-07-04T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-03T22:35:35.052Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.39
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "XL_biwm-hxU",
+            "site": "YouTube"
+          },
+          "cast": [],
           "trending": false
         },
         {
