@@ -12,8 +12,8 @@
     // Microdocumentales vive en Vitrina también, pero NO es carrusel de posters
     // (es un feed vertical de video+comentario) — por eso es una categoría aparte
     // de CINE_CATEGORIAS aunque comparta la misma exclusión del round-robin.
-    const VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales", "Podcasts", "Melee", "Conciertos"];
-    const VITRINA_ICONS = { "Películas": "🎬", "Series": "📺", "Animación": "⛩️", "Microdocumentales": "🎥", "Podcasts": "🎙️", "Melee": "🕹️", "Conciertos": "🎪" };
+    const VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales", "Melee", "Conciertos"];
+    const VITRINA_ICONS = { "Películas": "🎬", "Series": "📺", "Animación": "⛩️", "Microdocumentales": "🎥", "Melee": "🕹️", "Conciertos": "🎪" };
     const NOTICIAS_CATEGORIA = "Noticias"; // RSS cine/TV/anime — vive en el área "Noticias", no en Vitrina
     const MUSIC_CATEGORIA = "Dark scene / Música";
 
@@ -808,13 +808,16 @@
             <a href={item.link} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>fuente ↗</a>
           </div>
           <div style={{ flex: 1, overflowY: "auto", overscrollBehaviorY: "contain", padding: "18px 20px 30px" }}>
-            {item.image && (
-              <img src={item.image} alt="" style={{ width: 120, borderRadius: 10, float: "left", marginRight: 14, marginBottom: 10 }} onError={e => { e.target.style.display = "none"; }} />
-            )}
-            <FormatoTag item={item} />
-            <div style={{ fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", marginBottom: 8, lineHeight: 1.2 }}>{item.title}</div>
-            <div style={{ marginBottom: 12 }}><RatingBadges rating={item.rating} size="lg" /></div>
-            <div style={{ clear: "both" }} />
+            <div style={{ display: "flex", gap: 14, marginBottom: 12 }}>
+              {item.image && (
+                <img src={item.image} alt="" style={{ width: 110, minWidth: 110, borderRadius: 10, alignSelf: "flex-start" }} onError={e => { e.target.style.display = "none"; }} />
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <FormatoTag item={item} />
+                <div style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff", margin: "4px 0 8px", lineHeight: 1.15, wordBreak: "break-word" }}>{item.title}</div>
+                <RatingBadges rating={item.rating} size="lg" />
+              </div>
+            </div>
 
             {item.trailer && (
               <div style={{ margin: "16px 0", borderRadius: 10, overflow: "hidden", aspectRatio: "16/9" }}>
