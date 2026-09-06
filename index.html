@@ -12,6 +12,23 @@
 <div id="root"></div>
 <div id="err" style="display:none;white-space:pre-wrap;padding:16px;font-family:monospace;color:#c00;"></div>
 <script>
+// No hay ningún .register() de service worker en el código de Angst -- si
+// el navegador tiene uno activo de todos modos, es un resabio de algún
+// mecanismo anterior (o algo registrado a mano alguna vez para probar
+// notificaciones) y puede estar sirviendo un snapshot cacheado viejo que
+// ningún deploy nuevo puede pisar por su cuenta. Desregistro defensivo:
+// si no hay ninguno, esto no hace nada; si lo hay, lo saca de encima para
+// que la próxima carga sí traiga el bundle real desde la red.
+if (window.isSecureContext && navigator.serviceWorker) {
+  navigator.serviceWorker.getRegistrations()
+    .then(regs => regs.forEach(r => r.unregister()))
+    .catch(() => {});
+}
+if (window.caches) {
+  caches.keys().then(names => names.forEach(n => caches.delete(n))).catch(() => {});
+}
+</script>
+<script>
 var __angst = (() => {
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
