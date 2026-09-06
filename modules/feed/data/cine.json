@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-05T22:03:51.146Z",
+  "generatedAt": "2026-09-06T03:59:49.454Z",
   "categories": [
     {
       "cat": "Películas",
@@ -757,7 +757,7 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "MdDirGR98l8",
+            "key": "b6tPEfe7NCI",
             "site": "YouTube"
           },
           "cast": [
@@ -829,7 +829,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.3
+            "tmdb": 6.4
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -910,7 +910,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.7
+            "tmdb": 6.8
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -971,6 +971,87 @@
             {
               "name": "Exavier Montanez",
               "character": "Neil Spencer",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1339713",
+          "title": "Obsesión",
+          "link": "https://www.themoviedb.org/movie/1339713",
+          "summary": "El anhelo romántico desesperado de un chico por su amor platónico de toda la vida desencadena un siniestro hechizo: Nikki se vuelve irracionalmente obsesiva hasta convertirse en la sombra de Bear. Una fantasía aparentemente inofensiva que se convertirá en una perturbadora pesadilla.",
+          "image": "https://image.tmdb.org/t/p/w500/wnyUBssII8ZRDjDRlUyXt6tX9rt.jpg",
+          "pubDate": "2026-05-13",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-08-29T22:37:14.894Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.9,
+            "rt": 93,
+            "metascore": 77,
+            "tmdb": 8.2
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "WbziExW1-i4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Michael Johnston",
+              "character": "Bear",
+              "order": 0
+            },
+            {
+              "name": "Inde Navarrette",
+              "character": "Nikki",
+              "order": 1
+            },
+            {
+              "name": "Cooper Tomlinson",
+              "character": "Ian",
+              "order": 2
+            },
+            {
+              "name": "Megan Lawless",
+              "character": "Sarah",
+              "order": 3
+            },
+            {
+              "name": "Andy Richter",
+              "character": "Carter",
+              "order": 4
+            },
+            {
+              "name": "Haley Fitzgerald",
+              "character": "Viola",
+              "order": 5
+            },
+            {
+              "name": "Darin Toonder",
+              "character": "Harry",
+              "order": 6
+            },
+            {
+              "name": "Anthony Pavone",
+              "character": "Reggie",
+              "order": 7
+            },
+            {
+              "name": "Justice",
+              "character": "Joe",
+              "order": 8
+            },
+            {
+              "name": "Anthony Casabianca",
+              "character": "Chris",
               "order": 9
             }
           ],
@@ -1065,87 +1146,6 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1339713",
-          "title": "Obsesión",
-          "link": "https://www.themoviedb.org/movie/1339713",
-          "summary": "El anhelo romántico desesperado de un chico por su amor platónico de toda la vida desencadena un siniestro hechizo: Nikki se vuelve irracionalmente obsesiva hasta convertirse en la sombra de Bear. Una fantasía aparentemente inofensiva que se convertirá en una perturbadora pesadilla.",
-          "image": "https://image.tmdb.org/t/p/w500/wnyUBssII8ZRDjDRlUyXt6tX9rt.jpg",
-          "pubDate": "2026-05-13",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-08-29T22:37:14.894Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.9,
-            "rt": 93,
-            "metascore": 77,
-            "tmdb": 8.2
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "WbziExW1-i4",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Michael Johnston",
-              "character": "Bear",
-              "order": 0
-            },
-            {
-              "name": "Inde Navarrette",
-              "character": "Nikki",
-              "order": 1
-            },
-            {
-              "name": "Cooper Tomlinson",
-              "character": "Ian",
-              "order": 2
-            },
-            {
-              "name": "Megan Lawless",
-              "character": "Sarah",
-              "order": 3
-            },
-            {
-              "name": "Andy Richter",
-              "character": "Carter",
-              "order": 4
-            },
-            {
-              "name": "Haley Fitzgerald",
-              "character": "Viola",
-              "order": 5
-            },
-            {
-              "name": "Darin Toonder",
-              "character": "Harry",
-              "order": 6
-            },
-            {
-              "name": "Anthony Pavone",
-              "character": "Reggie",
-              "order": 7
-            },
-            {
-              "name": "Justice",
-              "character": "Joe",
-              "order": 8
-            },
-            {
-              "name": "Anthony Casabianca",
-              "character": "Chris",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
           "guid": "tmdb-movie-1083381",
           "title": "Backrooms",
           "link": "https://www.themoviedb.org/movie/1083381",
@@ -1221,6 +1221,168 @@
             {
               "name": "Philip Granger",
               "character": "Meterman",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1514026",
+          "title": "Buddy",
+          "link": "https://www.themoviedb.org/movie/1514026",
+          "summary": "A magical, singing orange unicorn holds his cast hostage in a surreal TV-show dimension, as he becomes more and more demented.",
+          "image": "https://image.tmdb.org/t/p/w500/6Lh4ZlsAISFQFVfLZ90sE9ycVnN.jpg",
+          "pubDate": "2026-08-27",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-04T22:19:44.355Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.3,
+            "rt": null,
+            "metascore": 64,
+            "tmdb": 8.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "O1fNEHX9tSM",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Cristin Milioti",
+              "character": "Grace",
+              "order": 0
+            },
+            {
+              "name": "Delaney Quinn",
+              "character": "Freddy",
+              "order": 1
+            },
+            {
+              "name": "Topher Grace",
+              "character": "Ben",
+              "order": 2
+            },
+            {
+              "name": "Keegan-Michael Key",
+              "character": "Buddy the Unicorn (voice)",
+              "order": 3
+            },
+            {
+              "name": "Michael Shannon",
+              "character": "Willie (voice)",
+              "order": 4
+            },
+            {
+              "name": "Patton Oswalt",
+              "character": "Strappy (voice)",
+              "order": 5
+            },
+            {
+              "name": "Clint Howard",
+              "character": "George",
+              "order": 6
+            },
+            {
+              "name": "Eric Bauza",
+              "character": "Mr. Mailbox / Worry Well / Couchy / Trashy / Pee Flower (voice)",
+              "order": 7
+            },
+            {
+              "name": "Sergey Zhuravsky",
+              "character": "Buddy the Unicorn (suit)",
+              "order": 8
+            },
+            {
+              "name": "Jonathan Yurco",
+              "character": "Dark Buddy (suit)",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1084244",
+          "title": "Toy Story 5",
+          "link": "https://www.themoviedb.org/movie/1084244",
+          "summary": "Los juguetes de Bonnie se enfrentan a otra amenaza cuando la niña recibe una tableta llamada Lilypad, la cual absorbe toda su atención y pone en peligro el juego tradicional. Todos deben unirse para competir contra la tecnología y recuperar su lugar.",
+          "image": "https://image.tmdb.org/t/p/w500/pTjZfbFVWUIwUM5OzX3LVh84ejU.jpg",
+          "pubDate": "2026-06-17",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-08-29T22:37:14.953Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.4,
+            "rt": 93,
+            "metascore": 73,
+            "tmdb": 8.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "jdp9abDgvCU",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Joan Cusack",
+              "character": "Jessie (voice)",
+              "order": 0
+            },
+            {
+              "name": "Tom Hanks",
+              "character": "Woody (voice)",
+              "order": 1
+            },
+            {
+              "name": "Tim Allen",
+              "character": "Buzz Lightyear (voice)",
+              "order": 2
+            },
+            {
+              "name": "Conan O'Brien",
+              "character": "Smarty Pants (voice)",
+              "order": 3
+            },
+            {
+              "name": "Scarlett Spears",
+              "character": "Bonnie (voice)",
+              "order": 4
+            },
+            {
+              "name": "Greta Lee",
+              "character": "Lilypad (voice)",
+              "order": 5
+            },
+            {
+              "name": "Shelby Rabara",
+              "character": "Snappy (voice)",
+              "order": 6
+            },
+            {
+              "name": "Mykal-Michelle Harris",
+              "character": "Blaze (voice)",
+              "order": 7
+            },
+            {
+              "name": "Craig Robinson",
+              "character": "Atlas (voice)",
+              "order": 8
+            },
+            {
+              "name": "Jay Hernandez",
+              "character": "Bonnie’s Dad (voice)",
               "order": 9
             }
           ],
@@ -1308,6 +1470,62 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1423191",
+          "title": "Resident Evil",
+          "link": "https://www.themoviedb.org/movie/1423191",
+          "summary": "Película basada en la saga de videojuegos de Capcom del mismo nombre. En una reinvención totalmente nueva, el mensajero médico Bryan se ve inmerso en una carrera de acción sin descanso por la supervivencia, mientras el caos se desata a su alrededor.",
+          "image": "https://image.tmdb.org/t/p/w500/pJQOA9ZTr1vFC0pDyT0ewH5046M.jpg",
+          "pubDate": "2026-09-16",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-02T23:29:33.275Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Post Production",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "d6oszs7f5aI",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Austin Abrams",
+              "character": "Bryan",
+              "order": 0
+            },
+            {
+              "name": "Zach Cherry",
+              "character": "Dave",
+              "order": 1
+            },
+            {
+              "name": "Kali Reis",
+              "character": "Pauline",
+              "order": 2
+            },
+            {
+              "name": "Paul Walter Hauser",
+              "character": "Carl",
+              "order": 3
+            },
+            {
+              "name": "Johnno Wilson",
+              "character": "Max",
+              "order": 4
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1315772",
           "title": "Minions & Monsters",
           "link": "https://www.themoviedb.org/movie/1315772",
@@ -1386,144 +1604,7 @@
               "order": 12
             }
           ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1084244",
-          "title": "Toy Story 5",
-          "link": "https://www.themoviedb.org/movie/1084244",
-          "summary": "Los juguetes de Bonnie se enfrentan a otra amenaza cuando la niña recibe una tableta llamada Lilypad, la cual absorbe toda su atención y pone en peligro el juego tradicional. Todos deben unirse para competir contra la tecnología y recuperar su lugar.",
-          "image": "https://image.tmdb.org/t/p/w500/pTjZfbFVWUIwUM5OzX3LVh84ejU.jpg",
-          "pubDate": "2026-06-17",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-08-29T22:37:14.953Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.4,
-            "rt": 93,
-            "metascore": 73,
-            "tmdb": 8.3
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "jdp9abDgvCU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Joan Cusack",
-              "character": "Jessie (voice)",
-              "order": 0
-            },
-            {
-              "name": "Tom Hanks",
-              "character": "Woody (voice)",
-              "order": 1
-            },
-            {
-              "name": "Tim Allen",
-              "character": "Buzz Lightyear (voice)",
-              "order": 2
-            },
-            {
-              "name": "Conan O'Brien",
-              "character": "Smarty Pants (voice)",
-              "order": 3
-            },
-            {
-              "name": "Scarlett Spears",
-              "character": "Bonnie (voice)",
-              "order": 4
-            },
-            {
-              "name": "Greta Lee",
-              "character": "Lilypad (voice)",
-              "order": 5
-            },
-            {
-              "name": "Shelby Rabara",
-              "character": "Snappy (voice)",
-              "order": 6
-            },
-            {
-              "name": "Mykal-Michelle Harris",
-              "character": "Blaze (voice)",
-              "order": 7
-            },
-            {
-              "name": "Craig Robinson",
-              "character": "Atlas (voice)",
-              "order": 8
-            },
-            {
-              "name": "Jay Hernandez",
-              "character": "Bonnie’s Dad (voice)",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1423191",
-          "title": "Resident Evil",
-          "link": "https://www.themoviedb.org/movie/1423191",
-          "summary": "Película basada en la saga de videojuegos de Capcom del mismo nombre. En una reinvención totalmente nueva, el mensajero médico Bryan se ve inmerso en una carrera de acción sin descanso por la supervivencia, mientras el caos se desata a su alrededor.",
-          "image": "https://image.tmdb.org/t/p/w500/pJQOA9ZTr1vFC0pDyT0ewH5046M.jpg",
-          "pubDate": "2026-09-16",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-02T23:29:33.275Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Post Production",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "d6oszs7f5aI",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Austin Abrams",
-              "character": "Bryan",
-              "order": 0
-            },
-            {
-              "name": "Zach Cherry",
-              "character": "Dave",
-              "order": 1
-            },
-            {
-              "name": "Kali Reis",
-              "character": "Pauline",
-              "order": 2
-            },
-            {
-              "name": "Paul Walter Hauser",
-              "character": "Carl",
-              "order": 3
-            },
-            {
-              "name": "Johnno Wilson",
-              "character": "Max",
-              "order": 4
-            }
-          ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1137844",
@@ -1682,87 +1763,6 @@
             {
               "name": "James Duval",
               "character": "Justice of the Peace",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1514026",
-          "title": "Buddy",
-          "link": "https://www.themoviedb.org/movie/1514026",
-          "summary": "A magical, singing orange unicorn holds his cast hostage in a surreal TV-show dimension, as he becomes more and more demented.",
-          "image": "https://image.tmdb.org/t/p/w500/6Lh4ZlsAISFQFVfLZ90sE9ycVnN.jpg",
-          "pubDate": "2026-08-27",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-04T22:19:44.355Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.3,
-            "rt": null,
-            "metascore": 64,
-            "tmdb": 8.3
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "O1fNEHX9tSM",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Cristin Milioti",
-              "character": "Grace",
-              "order": 0
-            },
-            {
-              "name": "Delaney Quinn",
-              "character": "Freddy",
-              "order": 1
-            },
-            {
-              "name": "Topher Grace",
-              "character": "Ben",
-              "order": 2
-            },
-            {
-              "name": "Keegan-Michael Key",
-              "character": "Buddy the Unicorn (voice)",
-              "order": 3
-            },
-            {
-              "name": "Michael Shannon",
-              "character": "Willie (voice)",
-              "order": 4
-            },
-            {
-              "name": "Patton Oswalt",
-              "character": "Strappy (voice)",
-              "order": 5
-            },
-            {
-              "name": "Clint Howard",
-              "character": "George",
-              "order": 6
-            },
-            {
-              "name": "Eric Bauza",
-              "character": "Mr. Mailbox / Worry Well / Couchy / Trashy / Pee Flower (voice)",
-              "order": 7
-            },
-            {
-              "name": "Sergey Zhuravsky",
-              "character": "Buddy the Unicorn (suit)",
-              "order": 8
-            },
-            {
-              "name": "Jonathan Yurco",
-              "character": "Dark Buddy (suit)",
               "order": 9
             }
           ],
@@ -4863,7 +4863,7 @@
             "tmdb": 7.6
           },
           "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-05",
+          "nextEpisodeDate": "2026-09-06",
           "numberOfSeasons": 1,
           "seasons": [
             {
@@ -6257,7 +6257,7 @@
           "guid": "mal-59193",
           "title": "Mushoku Tensei III: Isekai Ittara Honki Dasu",
           "link": "https://myanimelist.net/anime/59193/Mushoku_Tensei_III__Isekai_Ittara_Honki_Dasu",
-          "summary": "Third season of Mushoku Tensei: Isekai Ittara Honki Dasu.",
+          "summary": "Mushoku Tensei: Isekai Ittara Honki Dasu , también conocida como Mushoku Tensei: Jobless Reencarnation o como Mushoku Tensei: Reencarnación desde cero en Latinoamérica, es una novela web japonesa escrita por Rifujin na Magonote, publicada originalmente en el sitio web Shōsetsuka ni Narō entre el 22 de noviembre de 2012 y el 3 de abril de 2015. Una serie de novelas ligeras comenzó su publicación el 23 de enero de 2014 bajo el sello MF Books de Media Factory con ilustraciones realizadas por un usuario de Pixiv llamado ShiroTaka.",
           "image": "https://cdn.myanimelist.net/images/anime/1527/158340l.jpg",
           "pubDate": "2026-07-06T00:00:00+00:00",
           "source": "MyAnimeList",
@@ -6283,7 +6283,7 @@
           "guid": "mal-49233",
           "title": "Youjo Senki II",
           "link": "https://myanimelist.net/anime/49233/Youjo_Senki_II",
-          "summary": "Second season of Youjo Senki.",
+          "summary": "Yōjo Senki , también conocida como Saga of Tanya the Evil en inglés y Diario de guerra en España, es una novela ligera escrita por Carlo Zen e ilustrada por Shinobu Shinotsuki. Ha dado origen a un manga, una serie de anime, dos OVA y un especial de TV.",
           "image": "https://cdn.myanimelist.net/images/anime/1917/158371l.jpg",
           "pubDate": "2026-07-08T00:00:00+00:00",
           "source": "MyAnimeList",
@@ -6335,7 +6335,7 @@
           "guid": "mal-60636",
           "title": "Bleach: Sennen Kessen-hen - Kashin-tan",
           "link": "https://myanimelist.net/anime/60636/Bleach__Sennen_Kessen-hen_-_Kashin-tan",
-          "summary": "Final part of Bleach: Sennen Kessen-hen.",
+          "summary": "Tomohisa Taguchi  es un animador, director, guionista gráfico y guionista japonés. Algunas de las series que ha dirigido incluyen Sōsei no Onmyōji, Akudama Drive y Bleach: Sennen Kessen-hen.",
           "image": "https://cdn.myanimelist.net/images/anime/1275/158595l.jpg",
           "pubDate": "2026-07-25T00:00:00+00:00",
           "source": "MyAnimeList",
@@ -6378,7 +6378,7 @@
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": {
-            "key": "CH3w7Ub_w38",
+            "key": "JP3ksqOosBY",
             "site": "YouTube"
           },
           "cast": []
@@ -6508,7 +6508,7 @@
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": {
-            "key": "Sa7UVZElbCs",
+            "key": "o9eLX4W-gys",
             "site": "YouTube"
           },
           "cast": []
@@ -6560,7 +6560,33 @@
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": {
-            "key": "ahZn4dVCbvs",
+            "key": "yfKqPQ-BjYE",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-61126",
+          "title": "Kimi ga Shinu made Koi wo Shitai",
+          "link": "https://myanimelist.net/anime/61126/Kimi_ga_Shinu_made_Koi_wo_Shitai",
+          "summary": "The death of Sheena Totsuki's roommate is casually announced at the start of class, and the day carries on as usual. In an orphanage that raises children as soldiers, death is nothing new to the residents. With their home country embroiled in a war that has dragged on for too many years and shows no signs of stopping, the institution's children are sent off to die in battle every day. In contrast to the other orphans, Sheena is deeply disturbed by the ongoing conflict and wishes for it to end.\n\nOn the night of her roommate's death, Sheena met a blood-covered girl who remained jubilant despite the condition she was in. The next day, the girl appears as a new student in Sheena's class and introduces herself as Mimi Kagari. Initially thought to be a school myth, Mimi is said to be the secret weapon of the orphanage—a girl who cannot die. Assigned as Sheena's new roommate, Mimi hopes to get along with her and get accustomed to school life.\n\nHowever, unsettled by Mimi's carefree attitude toward the war, Sheena struggles to accept the world they live in, all while their unusual friendship flourishes amid the bleak situation.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1096/158712l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-29T22:37:21.289Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.81
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "rSiaUuG1kpM",
             "site": "YouTube"
           },
           "cast": []
@@ -6587,6 +6613,32 @@
           "reviews": null,
           "trailer": {
             "key": "qsbyAix6lUY",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-61169",
+          "title": "Black Torch",
+          "link": "https://myanimelist.net/anime/61169/Black_Torch",
+          "summary": "Seventeen-year-old Jirou Azuma lives a quiet life with his grandfather, utilizing his supernatural ability to speak with animals to befriend and protect them. Both Jirou and his grandfather are descendants of a long-standing shinobi clan, training in combat to keep the art of battle alive within their family. Jirou's life is thrown into upheaval after rescuing a seemingly normal black cat, Ragou, only to discover that the cat is actually a mononoke—a demonic spirit that has long been at war with mankind. When a hostile mononoke comes looking for Ragou, Jirou uses his shinobi training to jump to the cat's defense, but immediately suffers a mortal wound.\n\nFaced with the decision of whether or not to devour Jirou's fading energy and restore himself to full power, Ragou instead chooses to give his remaining energy to Jirou. Reviving the boy, the transfer also grants him great supernatural powers that complement his own shinobi fighting style. This act is witnessed by Ryousuke Shiba, an officer in the Bureau of Espionage whose job revolves around dispatching aggressive mononoke. Shiba extends Jirou and his grandfather an offer: to join the Bureau's new squad, Black Torch, and help them battle powerful mononoke who seek to devour innocent people.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1965/158363l.jpg",
+          "pubDate": "2026-07-04T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-03T22:35:35.052Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.39
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "XL_biwm-hxU",
             "site": "YouTube"
           },
           "cast": []
@@ -6883,60 +6935,6 @@
               "order": 1
             }
           ],
-          "trending": false
-        },
-        {
-          "guid": "mal-61126",
-          "title": "Kimi ga Shinu made Koi wo Shitai",
-          "link": "https://myanimelist.net/anime/61126/Kimi_ga_Shinu_made_Koi_wo_Shitai",
-          "summary": "The death of Sheena Totsuki's roommate is casually announced at the start of class, and the day carries on as usual. In an orphanage that raises children as soldiers, death is nothing new to the residents. With their home country embroiled in a war that has dragged on for too many years and shows no signs of stopping, the institution's children are sent off to die in battle every day. In contrast to the other orphans, Sheena is deeply disturbed by the ongoing conflict and wishes for it to end.\n\nOn the night of her roommate's death, Sheena met a blood-covered girl who remained jubilant despite the condition she was in. The next day, the girl appears as a new student in Sheena's class and introduces herself as Mimi Kagari. Initially thought to be a school myth, Mimi is said to be the secret weapon of the orphanage—a girl who cannot die. Assigned as Sheena's new roommate, Mimi hopes to get along with her and get accustomed to school life.\n\nHowever, unsettled by Mimi's carefree attitude toward the war, Sheena struggles to accept the world they live in, all while their unusual friendship flourishes amid the bleak situation.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1096/158712l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-29T22:37:21.289Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.81
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "rSiaUuG1kpM",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-61169",
-          "title": "Black Torch",
-          "link": "https://myanimelist.net/anime/61169/Black_Torch",
-          "summary": "Seventeen-year-old Jirou Azuma lives a quiet life with his grandfather, utilizing his supernatural ability to speak with animals to befriend and protect them. Both Jirou and his grandfather are descendants of a long-standing shinobi clan, training in combat to keep the art of battle alive within their family. Jirou's life is thrown into upheaval after rescuing a seemingly normal black cat, Ragou, only to discover that the cat is actually a mononoke—a demonic spirit that has long been at war with mankind. When a hostile mononoke comes looking for Ragou, Jirou uses his shinobi training to jump to the cat's defense, but immediately suffers a mortal wound.\n\nFaced with the decision of whether or not to devour Jirou's fading energy and restore himself to full power, Ragou instead chooses to give his remaining energy to Jirou. Reviving the boy, the transfer also grants him great supernatural powers that complement his own shinobi fighting style. This act is witnessed by Ryousuke Shiba, an officer in the Bureau of Espionage whose job revolves around dispatching aggressive mononoke. Shiba extends Jirou and his grandfather an offer: to join the Bureau's new squad, Black Torch, and help them battle powerful mononoke who seek to devour innocent people.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1965/158363l.jpg",
-          "pubDate": "2026-07-04T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-03T22:35:35.052Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.39
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "XL_biwm-hxU",
-            "site": "YouTube"
-          },
-          "cast": [],
           "trending": false
         }
       ]
