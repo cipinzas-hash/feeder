@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node scripts/build-feed.mjs",
     "build:cine": "node scripts/build-cine.mjs",
-    "build:melee": "node scripts/build-melee.mjs"
+    "build:melee": "node scripts/build-melee.mjs",
+    "build:podcasts": "node scripts/build-podcasts.mjs"
   },
   "dependencies": {
     "rss-parser": "^3.13.0",

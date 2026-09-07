@@ -122,18 +122,45 @@ function AngstApp() {
   // ── Podcast global: aviso de episodios pendientes + reproductor que corre
   // en paralelo a Angst (sobrevive cambio de pestaña porque vive acá, en
   // core, no adentro de FeedPage que se desmonta al salir de esa página).
-  // Solo Meta Pod. Sin resumen de posición ni "visto/no visto" persistente
-  // -- no hace falta volver a escuchar un episodio, así que "pendiente" es
-  // binario: está en la ventana de los últimos 5 del servidor y no está en
-  // el set de despachados. Al despachar uno (tocar play) se poda además
-  // contra la ventana actual -- nada que ya haya salido de los últimos 5
-  // se queda dando vueltas en localStorage para siempre.
-  const [podcastLatest, setPodcastLatest] = useState(null); // {generatedAt, episodes:[...]}
+  // Multi-show desde el 7-sep-2026 (antes solo Meta Pod, hardcodeado acá
+  // mismo). Los shows se agregan editando podcasts-config.json en
+  // Angst-data -- a mano, o desde el formulario del panel más abajo, que
+  // pega contra el mismo Worker que ya usa Simkl (angst-sync). build-
+  // podcasts.mjs (cron horario, separado del job pesado de feed) lee ese
+  // config y arma podcast-latest.json agrupado por show.
+  //
+  // Sin resumen de posición ni "visto/no visto" persistente por episodio
+  // -- no hace falta volver a escuchar uno, así que "pendiente" es binario:
+  // está en la ventana de los últimos 5 de ALGÚN show y no está en el set
+  // de despachados. Al despachar uno (tocar play) se poda además contra la
+  // ventana actual -- nada que ya haya salido de esa ventana se queda
+  // dando vueltas en localStorage para siempre.
+  const PODCAST_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
+  // Mismo AUTH_SECRET que Simkl -- es el mismo Worker, un solo secret
+  // compartido server-side, no uno por feature. Reusar la key evita
+  // pedirlo dos veces si Cristopher ya lo cargó para Simkl.
+  const PODCAST_AUTH_KEY = "angst-simkl-auth-v1";
+  const [podcastLatest, setPodcastLatest] = useState(null); // {generatedAt, shows:[{nombre, episodios:[...]}]}
   const [podcastDispatched, setPodcastDispatched] = useState(()=>{
     try { const v = localStorage.getItem("angst-podcast-dispatched-v1"); return v ? JSON.parse(v) : []; } catch(e) { return []; }
   });
-  const [nowPlaying, setNowPlaying] = useState(null);
+  const [nowPlaying, setNowPlaying] = useState(null); // {title,source,audioUrl,guid}
   const [podcastMenuOpen, setPodcastMenuOpen] = useState(false);
+  const [activeShowIdx, setActiveShowIdx] = useState(0);
+  const [podcastPlaying, setPodcastPlaying] = useState(false);
+  const [podcastProgress, setPodcastProgress] = useState({current:0, duration:0});
+  const [newPodcastNombre, setNewPodcastNombre] = useState("");
+  const [newPodcastUrl, setNewPodcastUrl] = useState("");
+  const [addPodcastBusy, setAddPodcastBusy] = useState(false);
+  const [addPodcastMsg, setAddPodcastMsg] = useState(null);
+  // Posición del cuadrado flotante -- se guarda en localStorage para que
+  // quede donde el usuario lo dejó entre sesiones. Default: esquina
+  // inferior derecha, calculado en runtime porque depende del viewport.
+  const [playerPos, setPlayerPos] = useState(()=>{
+    try { const v = localStorage.getItem("angst-podcast-player-pos-v1"); if(v) return JSON.parse(v); } catch(e){}
+    return null; // null = todavía no se calculó el default (necesita innerWidth/innerHeight)
+  });
+  const dragState = useRef(null);
   const podcastAudioRef = useRef(null);
   useEffect(()=>{
     fetch("https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/podcast-latest.json", { cache: "no-store" })
@@ -142,9 +169,9 @@ function AngstApp() {
         if(!d) return;
         setPodcastLatest(d);
         // Poda: cualquier guid despachado que ya no esté en la ventana
-        // actual nunca va a volver a aparecer -- se saca, así el set no
-        // crece más allá del tamaño de la ventana del servidor.
-        const windowGuids = new Set((d.episodes||[]).map(e=>e.guid));
+        // actual de ningún show nunca va a volver a aparecer -- se saca,
+        // así el set no crece más allá de lo que el servidor mantiene.
+        const windowGuids = new Set((d.shows||[]).flatMap(s=>(s.episodios||[]).map(e=>e.guid)));
         setPodcastDispatched(prev=>{
           const next = prev.filter(g=>windowGuids.has(g));
           if(next.length === prev.length) return prev;
@@ -164,15 +191,84 @@ function AngstApp() {
   }
   function closePodcastPlayer(){
     setNowPlaying(null);
+    setPodcastPlaying(false);
+    setPodcastProgress({current:0, duration:0});
   }
-  const podcastPending = (podcastLatest?.episodes||[]).filter(e=>!podcastDispatched.includes(e.guid));
-  // Otros módulos (ej. la barra Noticias/Vitrina/Buzón en FeedPage, fixed
-  // bottom:0 propia) no reciben props de App.jsx -- avisamos vía variable
-  // CSS en :root en vez de acoplarlos, para que puedan correrse hacia
-  // arriba y no quedar tapados por este reproductor fijo.
-  useEffect(()=>{
-    document.documentElement.style.setProperty("--angst-podcast-h", nowPlaying ? "64px" : "0px");
-  }, [nowPlaying]);
+  const podcastShows = podcastLatest?.shows || [];
+  const podcastPending = podcastShows.flatMap(s=>s.episodios||[]).filter(e=>!podcastDispatched.includes(e.guid));
+
+  function getPodcastAuth(){
+    try { return localStorage.getItem(PODCAST_AUTH_KEY) || null; } catch(e) { return null; }
+  }
+  function pedirPodcastAuth(){
+    const v = prompt("Pegá el AUTH_SECRET del Worker (el mismo que Simkl, una sola vez, queda solo en este dispositivo):");
+    if (v && v.trim()) { try { localStorage.setItem(PODCAST_AUTH_KEY, v.trim()); } catch(e){} }
+    return v && v.trim() ? v.trim() : null;
+  }
+  async function agregarPodcast(){
+    const nombre = newPodcastNombre.trim();
+    const rssUrl = newPodcastUrl.trim();
+    if(!nombre || !rssUrl) { setAddPodcastMsg("Falta nombre o URL"); return; }
+    let auth = getPodcastAuth();
+    if(!auth) auth = pedirPodcastAuth();
+    if(!auth) { setAddPodcastMsg("Sin AUTH_SECRET, no se pudo agregar"); return; }
+    setAddPodcastBusy(true);
+    setAddPodcastMsg(null);
+    try {
+      const getResp = await fetch(`${PODCAST_WORKER_URL}?path=podcasts-config.json`, { headers: { "X-Angst-Auth": auth } });
+      if(!getResp.ok) { setAddPodcastMsg(`Error leyendo config (${getResp.status})`); return; }
+      const remote = await getResp.json();
+      const config = (remote.found === false) ? [] : (Array.isArray(remote) ? remote : []);
+      if(config.some(s=>s.rssUrl===rssUrl)) { setAddPodcastMsg("Ese RSS ya está en la lista"); return; }
+      config.push({nombre, rssUrl});
+      const postResp = await fetch(PODCAST_WORKER_URL, {
+        method: "POST",
+        headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
+        body: JSON.stringify({ path: "podcasts-config.json", payload: config }),
+      });
+      if(postResp.ok) {
+        setAddPodcastMsg(`✓ Agregado -- aparece en la próxima corrida horaria`);
+        setNewPodcastNombre(""); setNewPodcastUrl("");
+      } else {
+        setAddPodcastMsg(`Error guardando (${postResp.status})`);
+      }
+    } catch(e) {
+      setAddPodcastMsg(`Sin conexión al Worker: ${e.message}`);
+    } finally {
+      setAddPodcastBusy(false);
+    }
+  }
+
+  // Drag del cuadrado flotante -- pointer events (cubre mouse y touch con
+  // una sola API), clampeado para que no se pueda arrastrar fuera del
+  // viewport. Se persiste en localStorage al soltar, no en cada frame.
+  function podcastPlayerPointerDown(e){
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    dragState.current = { offsetX: e.clientX-rect.left, offsetY: e.clientY-rect.top, startX: e.clientX, startY: e.clientY, moved:false };
+    el.setPointerCapture(e.pointerId);
+  }
+  function podcastPlayerPointerMove(e){
+    if(!dragState.current) return;
+    if(!dragState.current.moved && Math.hypot(e.clientX-dragState.current.startX, e.clientY-dragState.current.startY) < 4) return;
+    dragState.current.moved = true;
+    const size = 56;
+    const x = Math.min(Math.max(0, e.clientX-dragState.current.offsetX), window.innerWidth-size);
+    const y = Math.min(Math.max(0, e.clientY-dragState.current.offsetY), window.innerHeight-size);
+    setPlayerPos({x,y});
+  }
+  function podcastPlayerPointerUp(e){
+    if(!dragState.current) return;
+    const wasDrag = dragState.current.moved;
+    dragState.current = null;
+    try { if(playerPos) localStorage.setItem("angst-podcast-player-pos-v1", JSON.stringify(playerPos)); } catch(err){}
+    if(!wasDrag){
+      // click sin arrastre real -- togglea play/pause
+      if(podcastAudioRef.current){
+        if(podcastAudioRef.current.paused) podcastAudioRef.current.play(); else podcastAudioRef.current.pause();
+      }
+    }
+  }
 
 
   // Refs for async-safe access
@@ -1255,7 +1351,7 @@ function AngstApp() {
       }}/>}
       {calOpen&&<CalendarModal weekStart={weekStart} marks={calMarks} onMark={handleMark} dayData={dayData} calMarks={calMarks} kidsHealth={kidsHealth} onWeekSelect={date=>{const dow=date.getDay();const mon=addDays(date,-(dow===0?6:dow-1));const diff=Math.round((mon-BASE_DATE)/(7*86400000));updateWeekOffset(diff);}} onClose={()=>setCalOpen(false)}/>}
 
-      <div className="app" style={nowPlaying?{paddingBottom:64}:undefined}>
+      <div className="app">
         <div className="hdr">
           <div className="hdr-title" style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{["Mi semana día a día","Presupuesto mensual","Emprendimientos","🧠 mindfulness","🩺 salud","🍄 Fadiman","🥗 Nutrición","🏋️ Ejercicio","🃏 Pokécripto"][page]}</div>
           <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
@@ -1268,6 +1364,54 @@ function AngstApp() {
               📂<input type="file" accept=".xlsx,.xls,.json" onChange={handleLoad} style={{position:"absolute",inset:0,opacity:0,cursor:"pointer",width:"100%",height:"100%",fontSize:0}}/>
             </label>
             <button className={`disk-btn${exportOk===true?" ok":""}`} onClick={handleExport} title="Descargar backup .json">💾</button>
+            <div style={{position:"relative"}}>
+              <button className="disk-btn" onClick={()=>setPodcastMenuOpen(o=>!o)} title="Podcasts" style={{position:"relative"}}>
+                🎙️
+                {podcastPending.length>0&&<span style={{position:"absolute",top:-3,right:-3,width:8,height:8,borderRadius:"50%",background:"#e91e8c"}}/>}
+              </button>
+              {podcastMenuOpen&&(()=>{
+                const activeShow = podcastShows[activeShowIdx] || podcastShows[0];
+                const playEpisode = (ep, showNombre)=>{
+                  setNowPlaying({title:ep.title, source:showNombre, audioUrl:ep.audioUrl, guid:ep.guid});
+                  markPodcastDispatched(ep.guid);
+                  setPodcastMenuOpen(false);
+                };
+                return (
+                  <div style={{position:"absolute",top:"calc(100% + 4px)",right:0,width:280,background:"#222",border:"1px dashed #444",borderRadius:4,zIndex:600,fontFamily:"'DM Sans',sans-serif"}}>
+                    {podcastShows.length>1&&(
+                      <div style={{display:"flex",flexWrap:"wrap",gap:4,padding:"8px 8px 4px"}}>
+                        {podcastShows.map((s,si)=>(
+                          <button key={s.nombre} onClick={()=>setActiveShowIdx(si)}
+                            style={{background:si===activeShowIdx?"#e91e8c":"transparent",border:"1px solid #444",color:"#fff",borderRadius:12,padding:"3px 10px",fontSize:11,cursor:"pointer"}}>
+                            {s.nombre}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {!activeShow&&<div style={{padding:"10px 12px",fontSize:12,color:"#888"}}>Todavía no hay episodios.</div>}
+                    {activeShow&&(activeShow.episodios||[]).length===0&&<div style={{padding:"10px 12px",fontSize:12,color:"#888"}}>Sin episodios.</div>}
+                    {activeShow&&(activeShow.episodios||[]).map(ep=>(
+                      <div key={ep.guid} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px"}}>
+                        <button onClick={()=>playEpisode(ep, activeShow.nombre)}
+                          style={{background:"#fff",color:"#111",border:"none",borderRadius:4,padding:"3px 10px",fontSize:11,cursor:"pointer",flexShrink:0}}>▶</button>
+                        <span style={{fontSize:12,color:podcastDispatched.includes(ep.guid)?"#888":"#fff",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ep.title}</span>
+                      </div>
+                    ))}
+                    <div style={{borderTop:"1px dashed #444",padding:8,display:"flex",flexDirection:"column",gap:5}}>
+                      <input value={newPodcastNombre} onChange={e=>setNewPodcastNombre(e.target.value)} placeholder="Nombre del podcast"
+                        style={{background:"#111",border:"1px solid #444",color:"#fff",borderRadius:4,padding:"4px 8px",fontSize:11}}/>
+                      <input value={newPodcastUrl} onChange={e=>setNewPodcastUrl(e.target.value)} placeholder="URL del RSS"
+                        style={{background:"#111",border:"1px solid #444",color:"#fff",borderRadius:4,padding:"4px 8px",fontSize:11}}/>
+                      <button onClick={agregarPodcast} disabled={addPodcastBusy}
+                        style={{background:"transparent",border:"1px dashed #666",color:"#ccc",borderRadius:4,padding:"4px 8px",fontSize:11,cursor:addPodcastBusy?"default":"pointer"}}>
+                        {addPodcastBusy?"agregando...":"+ agregar podcast"}
+                      </button>
+                      {addPodcastMsg&&<span style={{fontSize:10,color:addPodcastMsg.startsWith("✓")?"#4caf50":"#f0a000"}}>{addPodcastMsg}</span>}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
           </div>
         </div>
 
@@ -1291,44 +1435,6 @@ function AngstApp() {
         })()}
 
         <div className="sub-bar"><div className="sub-text">{CYNICAL_SUBTITLES[subIdx]}</div></div>
-
-        {podcastLatest&&(()=>{
-          const playEpisode = (ep)=>{
-            setNowPlaying({title:ep.title,source:"Meta Pod",audioUrl:ep.audioUrl,guid:ep.guid});
-            markPodcastDispatched(ep.guid);
-            setPodcastMenuOpen(false);
-          };
-          if(!podcastPending.length) return (
-            <div style={{padding:"4px 20px",display:"flex",alignItems:"center"}}>
-              <span style={{fontSize:13,opacity:0.35}} title="Meta Pod: al día">🎙️</span>
-            </div>
-          );
-          return (
-            <div style={{position:"relative"}}>
-              <div style={{background:"#ffcc00",padding:"5px 20px",display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}
-                onClick={()=>setPodcastMenuOpen(o=>!o)}>
-                <span style={{fontSize:13,flexShrink:0}}>🎙️</span>
-                <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#111",flex:1}}>
-                  Meta Pod: {podcastPending.length} episodio{podcastPending.length>1?"s":""} pendiente{podcastPending.length>1?"s":""}
-                </span>
-                <span style={{fontSize:10,color:"#111",flexShrink:0}}>{podcastMenuOpen?"▲":"▼"}</span>
-              </div>
-              {podcastMenuOpen&&(
-                <div style={{background:"#222",padding:"6px 0"}}>
-                  {podcastPending.map(ep=>(
-                    <div key={ep.guid} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 20px"}}>
-                      <button onClick={()=>playEpisode(ep)}
-                        style={{background:"#fff",color:"#111",border:"none",borderRadius:4,padding:"3px 10px",fontSize:11,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",flexShrink:0}}>▶</button>
-                      <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#fff",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ep.title}</span>
-                      <button onClick={()=>markPodcastDispatched(ep.guid)}
-                        style={{background:"transparent",border:"none",color:"#888",fontSize:14,cursor:"pointer",flexShrink:0}} title="descartar sin escuchar">×</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })()}
 
         {/* ── PLANNER ── */}
         {page===0&&(
@@ -1746,18 +1852,40 @@ function AngstApp() {
         </div>
         {searchOpen&&<SearchModal dayData={dayData} nutria={nutria} kidsHealth={kidsHealth} routines={routines} onClose={()=>setSearchOpen(false)}/>}
         {scheduleOpen&&<ScheduleModal dateKey={scheduleOpen} day={dayData[scheduleOpen]||makeEmptyDay()} isWork={Array.isArray(calMarks[scheduleOpen])?(calMarks[scheduleOpen].includes("work")):(calMarks[scheduleOpen]==="work")} isColegio={Array.isArray(calMarks[scheduleOpen])?(calMarks[scheduleOpen].includes("colegio")):(calMarks[scheduleOpen]==="colegio")} onSave={sched=>updateDay(scheduleOpen,{schedule:sched})} onClose={()=>setScheduleOpen(null)} onNavigate={dk=>setScheduleOpen(dk)}/>}
-        {nowPlaying&&(
-          <div style={{position:"fixed",bottom:0,left:0,right:0,background:"#111",borderTop:"1px dashed #444",padding:"8px 14px",display:"flex",alignItems:"center",gap:10,zIndex:500}}>
-            <span style={{fontSize:16,flexShrink:0}}>🎧</span>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontFamily:"'Caveat',cursive",fontSize:14,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{nowPlaying.title}</div>
-              <audio ref={podcastAudioRef} controls autoPlay src={nowPlaying.audioUrl} style={{width:"100%",height:28,colorScheme:"dark"}}
+        {nowPlaying&&(()=>{
+          const SIZE=56, STROKE=3, R=(SIZE-STROKE)/2, CIRC=2*Math.PI*R;
+          const frac = podcastProgress.duration>0 ? Math.min(1, podcastProgress.current/podcastProgress.duration) : 0;
+          const pos = playerPos || {x: window.innerWidth-SIZE-16, y: window.innerHeight-SIZE-90};
+          return (
+            <div
+              onPointerDown={podcastPlayerPointerDown}
+              onPointerMove={podcastPlayerPointerMove}
+              onPointerUp={podcastPlayerPointerUp}
+              title={nowPlaying.title}
+              style={{position:"fixed",left:pos.x,top:pos.y,width:SIZE,height:SIZE,zIndex:600,cursor:"grab",touchAction:"none"}}>
+              <svg width={SIZE} height={SIZE} style={{position:"absolute",inset:0,transform:"rotate(-90deg)"}}>
+                <circle cx={SIZE/2} cy={SIZE/2} r={R} fill="#111" stroke="#333" strokeWidth={STROKE}/>
+                <circle cx={SIZE/2} cy={SIZE/2} r={R} fill="none" stroke="#ffcc00" strokeWidth={STROKE}
+                  strokeDasharray={CIRC} strokeDashoffset={CIRC*(1-frac)} strokeLinecap="round"/>
+              </svg>
+              <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#fff",userSelect:"none"}}>
+                {podcastPlaying?"⏸":"▶"}
+              </div>
+              <button
+                onPointerDown={e=>e.stopPropagation()}
+                onClick={closePodcastPlayer}
+                title="cerrar reproductor (guarda el avance)"
+                style={{position:"absolute",top:-6,right:-6,width:16,height:16,borderRadius:"50%",background:"#222",border:"1px solid #444",color:"#888",fontSize:10,lineHeight:1,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>×</button>
+              <audio ref={podcastAudioRef} autoPlay src={nowPlaying.audioUrl} style={{display:"none"}}
                 onEnded={closePodcastPlayer}
+                onPlay={()=>setPodcastPlaying(true)}
+                onPause={()=>setPodcastPlaying(false)}
+                onTimeUpdate={e=>setPodcastProgress({current:e.target.currentTime, duration:e.target.duration||0})}
+                onLoadedMetadata={e=>setPodcastProgress(p=>({...p, duration:e.target.duration||0}))}
               />
             </div>
-            <button onClick={closePodcastPlayer} style={{background:"transparent",border:"none",color:"#888",fontSize:18,cursor:"pointer",flexShrink:0,lineHeight:1}} title="cerrar reproductor (guarda el avance)">×</button>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </>
   );

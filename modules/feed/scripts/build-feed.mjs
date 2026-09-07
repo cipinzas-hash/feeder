@@ -20,7 +20,6 @@ import Parser from "rss-parser";
 
 const FEEDS_PATH = new URL("../feeds.json", import.meta.url);
 const OUTPUT_PATH = new URL("../data/feed.json", import.meta.url);
-const PODCAST_LATEST_PATH = new URL("../data/podcast-latest.json", import.meta.url);
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY; // Conciertos: filtra por duración real si hay key; si no, cae al criterio de título (ver CONCIERTOS_INCLUDE_RE)
 
 // Meta Pod es el único podcast que se sigue (categoría "Podcasts" completa
@@ -32,29 +31,6 @@ const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY; // Conciertos: filtra por d
 // El cliente decide qué está pendiente cruzando esto contra su propio set
 // de guids "despachados" (angst-podcast-dispatched-v1) -- nada de eso vive
 // acá ni en el archivo generado.
-const META_POD_RSS_URL = "https://anchor.fm/s/238c39d0/podcast/rss";
-const PODCAST_LATEST_WINDOW = 5;
-
-async function fetchPodcastLatestEpisodes() {
-  try {
-    const feed = await parser.parseURL(META_POD_RSS_URL);
-    return (feed.items || [])
-      .map(item => ({
-        guid: item.guid || item.id || item.link,
-        title: (item.title || "").trim(),
-        audioUrl: item.enclosure?.url || null,
-        pubDate: item.isoDate || (item.pubDate ? new Date(item.pubDate).toISOString() : null),
-        link: item.link || "",
-      }))
-      .filter(e => e.guid && e.title && e.audioUrl)
-      .sort((a, b) => (b.pubDate || "").localeCompare(a.pubDate || ""))
-      .slice(0, PODCAST_LATEST_WINDOW);
-  } catch (e) {
-    console.error(`✗ Meta Pod (podcast-latest): ${e.message}`);
-    return null; // null = no reescribir el archivo esta corrida, se conserva el de la corrida anterior
-  }
-}
-
 const RETENTION_DAYS = 30;              // no guardar items más viejos que esto
 const MAX_NEW_EXTRACTIONS_PER_RUN = 60; // tope de extracciones nuevas por corrida
 const FEED_CONCURRENCY = 5;             // feeds en paralelo
@@ -375,16 +351,10 @@ async function main() {
     items: items.sort((a, b) => (b.pubDate || "").localeCompare(a.pubDate || "")),
   }));
 
-  // Archivo liviano aparte para el banner/reproductor de Meta Pod (ver
-  // fetchPodcastLatestEpisodes arriba) -- fuera de categories/feed.json.
-  console.log("Bajando últimos episodios de Meta Pod...");
-  const podcastEpisodes = await fetchPodcastLatestEpisodes();
-  if (podcastEpisodes) {
-    await writeFile(PODCAST_LATEST_PATH, JSON.stringify({ generatedAt: new Date().toISOString(), episodes: podcastEpisodes }, null, 2));
-    console.log(`✓ Meta Pod: ${podcastEpisodes.length} episodio(s) en la ventana`);
-  } else {
-    console.log("⚠ Meta Pod: fetch falló, se conserva podcast-latest.json de la corrida anterior");
-  }
+  // El fetch de podcasts (Meta Pod + lo que se sume a podcasts-config.json
+  // en Angst-data) se movió a build-podcasts.mjs / update-podcasts.yml,
+  // cron horario aparte -- no comparte más job/presupuesto con esta corrida
+  // pesada de RSS+extracción (mismo criterio que la separación de Melee).
 
   const output = {
     generatedAt: new Date().toISOString(),

@@ -1,0 +1,76 @@
+name: Actualizar podcasts
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # cada hora -- separado de update-feed.yml (cada 4h)
+                          # a propósito, mismo criterio que Melee: fetch
+                          # liviano, no debería esperar el presupuesto de
+                          # tiempo del job pesado de RSS+extracción
+  workflow_dispatch: {}
+
+concurrency:
+  group: podcasts-update
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout feeder (el script vive acá)
+        uses: actions/checkout@v4
+        with:
+          path: feeder
+
+      - name: Sincronizar feeder con la punta real de main
+        working-directory: feeder
+        run: git fetch origin main && git reset --hard origin/main
+
+      - name: Checkout Angst-data (podcasts-config.json vive acá, solo lectura)
+        uses: actions/checkout@v4
+        with:
+          repository: cipinzas-hash/Angst-data
+          token: ${{ secrets.WORKER_GITHUB_PAT }}
+          path: angst-data
+
+      - name: Sincronizar Angst-data con la punta real de main
+        working-directory: angst-data
+        run: git fetch origin main && git reset --hard origin/main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias
+        working-directory: feeder/modules/feed
+        run: npm install
+
+      - name: Correr build-podcasts.mjs
+        working-directory: feeder/modules/feed
+        env:
+          PODCASTS_CONFIG_PATH: ${{ github.workspace }}/angst-data/podcasts-config.json
+        run: npm run build:podcasts
+
+      - name: Commitear data/podcast-latest.json si cambió
+        working-directory: feeder
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add modules/feed/data/podcast-latest.json
+          git diff --staged --quiet -- modules/feed/data/podcast-latest.json || { git commit -m "Actualizar podcasts $(date -u +%Y-%m-%dT%H:%MZ)"; committed=1; }
+          pushed=0
+          for i in 1 2 3; do
+            git push && pushed=1 && break
+            echo "push falló, reintentando ($i/3)..."
+            git fetch origin main
+            git reset --soft origin/main
+            git diff --staged --quiet || git commit -m "Actualizar podcasts $(date -u +%Y-%m-%dT%H:%MZ)"
+            sleep 5
+          done
+          if [ "${committed:-0}" -eq 1 ] && [ "$pushed" -ne 1 ]; then
+            echo "::error::se hizo commit local pero el push falló los 3 intentos"
+            exit 1
+          fi
