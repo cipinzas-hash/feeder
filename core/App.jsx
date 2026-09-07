@@ -1378,7 +1378,7 @@ function AngstApp() {
                 };
                 return (
                   <div style={{position:"absolute",top:"calc(100% + 4px)",right:0,width:280,background:"#222",border:"1px dashed #444",borderRadius:4,zIndex:600,fontFamily:"'DM Sans',sans-serif"}}>
-                    {podcastShows.length>1&&(
+                    {podcastShows.length>0&&(
                       <div style={{display:"flex",flexWrap:"wrap",gap:4,padding:"8px 8px 4px"}}>
                         {podcastShows.map((s,si)=>(
                           <button key={s.nombre} onClick={()=>setActiveShowIdx(si)}
