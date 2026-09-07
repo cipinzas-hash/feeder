@@ -140,14 +140,42 @@ export function needsRetry(cached) {
   return ratingMissing || trailerMissing || statusMissing || seasonsMissing || seasonsDetailMissing;
 }
 
+// Selección de trailer -- issue #16: la llamada a /videos heredaba el
+// language="es-CL" default de tmdb() sin querer, así que solo traía
+// trailers doblados al español cuando TMDb tenía uno subido, ignorando
+// el idioma original y el inglés por completo. Ahora se pide
+// explícitamente el idioma original de la obra + inglés (+ sin idioma
+// tageado) vía include_video_language, y se elige en el orden que pide
+// el issue: Trailer > Teaser > Featurette (video promocional), oficial
+// primero, en idioma original antes que inglés.
+const VIDEO_TYPE_PRIORITY = ["Trailer", "Teaser", "Featurette"];
+export function pickBestVideo(results, originalLang) {
+  const yt = (results || []).filter(v => v.site === "YouTube");
+  for (const lang of [originalLang, "en"]) {
+    const byLang = yt.filter(v => v.iso_639_1 === lang);
+    for (const type of VIDEO_TYPE_PRIORITY) {
+      const oficial = byLang.find(v => v.type === type && v.official);
+      if (oficial) return oficial.key;
+      const cualquiera = byLang.find(v => v.type === type);
+      if (cualquiera) return cualquiera.key;
+    }
+  }
+  return null;
+}
+
 export async function enrichMovieOrTv(mediaType, id, cache, guid) {
   if (cache[guid] && !needsRetry(cache[guid])) return cache[guid];
   const firstSeenAt = cache[guid]?.firstSeenAt || new Date().toISOString();
 
-  const [details, credits, videos, reviewsRes, externalIds] = await Promise.all([
-    tmdb(`/${mediaType}/${id}`),
+  // details va primero y solo -- hace falta original_language antes de
+  // poder pedir /videos con el idioma correcto (issue #16), así que ya
+  // no puede ir junto al resto en el mismo Promise.all.
+  const details = await tmdb(`/${mediaType}/${id}`);
+  const originalLang = details.original_language || "en";
+
+  const [credits, videos, reviewsRes, externalIds] = await Promise.all([
     tmdb(`/${mediaType}/${id}/credits`),
-    tmdb(`/${mediaType}/${id}/videos`),
+    tmdb(`/${mediaType}/${id}/videos`, { include_video_language: `${originalLang},en,null` }, "en-US"),
     tmdb(`/${mediaType}/${id}/reviews`),
     tmdb(`/${mediaType}/${id}/external_ids`),
   ]);
@@ -185,9 +213,7 @@ export async function enrichMovieOrTv(mediaType, id, cache, guid) {
     return null;
   }
 
-  let trailerKey = (videos.results || []).find(
-    v => v.site === "YouTube" && v.type === "Trailer" && v.official
-  )?.key || (videos.results || []).find(v => v.site === "YouTube" && v.type === "Trailer")?.key;
+  let trailerKey = pickBestVideo(videos.results, originalLang);
   if (!trailerKey) {
     trailerKey = await findMovieTrailer(details.title || details.name);
   }

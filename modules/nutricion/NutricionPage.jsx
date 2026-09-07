@@ -331,7 +331,7 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
   const SIZE_MULT = {S:1, M:1.5, L:2};
   const CALIBRE_KCAL = {S:192, M:280, L:392, XL:560};
   const CALIBRE_PROT = {S:2.4, M:3.5, L:4.9, XL:7.0};
-  const FRUIT_FRACTIONS = [[1,"entera"],[0.5,"½"],[0.333,"⅓"],[0.25,"¼"]];
+  const FRUIT_FRACTIONS = [[1,"entera"],[0.5,"½"],[2/3,"⅔"],[0.333,"⅓"],[0.25,"¼"]];
 
   function computeEffective(food, qty, fraction, sizeKey) {
     const pt = food.portionType;
@@ -342,11 +342,11 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
     if(pt === "size") {
       const m = SIZE_MULT[sizeKey]||1;
       const ef = fraction||1;
-      const fLabel = ef===1?"":ef===0.5?" ½":ef===0.333?" ⅓":" ¼";
+      const fLabel = ef===1?"":ef===0.5?" ½":ef===2/3?" ⅔":ef===0.333?" ⅓":" ¼";
       return { kcal: food.kcal * m * ef * qty, prot: food.prot * m * ef * qty, displayQty: `${sizeKey}${fLabel}` };
     }
     if(pt === "fraction") {
-      return { kcal: food.kcal * fraction * qty, prot: food.prot * fraction * qty, displayQty: fraction===1?"completa":fraction===0.5?"½":fraction===0.333?"⅓":"¼" };
+      return { kcal: food.kcal * fraction * qty, prot: food.prot * fraction * qty, displayQty: fraction===1?"completa":fraction===0.5?"½":fraction===2/3?"⅔":fraction===0.333?"⅓":"¼" };
     }
     if(pt === "calibre") {
       const kcal = CALIBRE_KCAL[sizeKey] || food.kcal;
@@ -643,7 +643,7 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
             <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>porción</div>
             <div style={{display:"flex",gap:8}}>
               {(pt==="fraction"
-                ? [[1,"completa"],[0.5,"½"],[0.333,"⅓"],[0.25,"¼"]]
+                ? [[1,"completa"],[0.5,"½"],[2/3,"⅔"],[0.333,"⅓"],[0.25,"¼"]]
                 : pt==="calibre"
                   ? [[1,"entera"],[0.5,"½"],[0.25,"¼"]]
                   : FRUIT_FRACTIONS
