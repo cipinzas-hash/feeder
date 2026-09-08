@@ -167,18 +167,25 @@ export async function enrichMovieOrTv(mediaType, id, cache, guid) {
   if (cache[guid] && !needsRetry(cache[guid])) return cache[guid];
   const firstSeenAt = cache[guid]?.firstSeenAt || new Date().toISOString();
 
-  // details va primero y solo -- hace falta original_language antes de
-  // poder pedir /videos con el idioma correcto (issue #16), así que ya
-  // no puede ir junto al resto en el mismo Promise.all.
-  const details = await tmdb(`/${mediaType}/${id}`);
-  const originalLang = details.original_language || "en";
-
-  const [credits, videos, reviewsRes, externalIds] = await Promise.all([
+  // videos va DENTRO del Promise.all de nuevo (no después de details) --
+  // la versión secuencial (7-sep) causó 2 timeouts reales de 25min en
+  // producción (corridas del 8-sep, cine.json/feed.json quedaron 15+hs
+  // sin actualizar). En vez de esperar a original_language, se pide un
+  // set fijo de idiomas comunes de antemano -- cubre la enorme mayoría
+  // de casos reales (en/ja/ko/es/fr/de/pt/it) sin el round-trip extra.
+  // Si el idioma original de una obra puntual no está en esa lista,
+  // pickBestVideo() simplemente no encuentra nada en el tier de idioma
+  // original y cae al tier de inglés o al fallback de YouTube -- mismo
+  // comportamiento de degradación que ya tenía antes de issue #16, ahora
+  // solo para el puñado de idiomas fuera de la lista en vez de todos.
+  const [details, credits, videos, reviewsRes, externalIds] = await Promise.all([
+    tmdb(`/${mediaType}/${id}`),
     tmdb(`/${mediaType}/${id}/credits`),
-    tmdb(`/${mediaType}/${id}/videos`, { include_video_language: `${originalLang},en,null` }, "en-US"),
+    tmdb(`/${mediaType}/${id}/videos`, { include_video_language: "en,ja,ko,es,fr,de,pt,it,null" }, "en-US"),
     tmdb(`/${mediaType}/${id}/reviews`),
     tmdb(`/${mediaType}/${id}/external_ids`),
   ]);
+  const originalLang = details.original_language || "en";
 
   const omdbData = await omdb(externalIds.imdb_id);
 
