@@ -1,3 +1,8 @@
+// modules/pokecripto/lib/pricing.mjs es la misma lógica que usa el bot
+// (build-pokecripto.mjs) -- se importa acá para que cliente y bot nunca
+// diverjan en matching/normalización (issue #9).
+import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPriceDiag, fetchTCGPrice, addSnapshot } from "./lib/pricing.mjs";
+
 // ─── PokeLoader ───────────────────────────────────────────────────────────────
 function PokeLoader({ active }) {
   const [filled, setFilled] = React.useState(0);
@@ -29,8 +34,8 @@ function PokeLoader({ active }) {
 // ─── PokeCripto — constantes y helpers ────────────────────────────────────────
 const USD_CLP = 1000;
 const CONDICIONES = ["NM","LP","MP","HP","DMG"];
-export const CARPETAS_DEFAULT = ["MLP","Staples & Meta","Dark Collection"];
-const CARPETAS_ICONS = {"MLP":"🐴","Staples & Meta":"⚡","Dark Collection":"⚫"};
+export const CARPETAS_DEFAULT = ["MLP","Staples & Meta","Dark Collection","Price Watch"];
+const CARPETAS_ICONS = {"MLP":"🐴","Staples & Meta":"⚡","Dark Collection":"⚫","Price Watch":"🎯"};
 const ESTADOS = {
   hunting:      { label:"hunting",      color:"#7c4dff", bg:"#ede7f6" },
   sin_publicar: { label:"sin publicar", color:"#888",    bg:"#f0f0f0" },
@@ -54,8 +59,6 @@ const MEGA_SETS = [
 const MEGA_PROMO_SETS = [
   {id:"mep", name:"Mega Evolution Promos", releaseDate:"2025-09-26"},
 ];
-const TCG_BASE = "https://api.tcgpricelookup.com/v1";
-const POKE_BASE = "https://api.pokemontcg.io/v2";
 const RESYNC_INTERVAL_MS = 24*60*60*1000; // resync automático de sets ya trackeados, 1x/día
 
 // ── Modelo de estado para el catálogo Dark ──
@@ -76,15 +79,6 @@ function getEstadoDark(entry){
 function fmtUSD(n){ return "$"+parseFloat(n||0).toFixed(2); }
 function fmtPokeCLP(n){ return "$"+Math.round((n||0)*USD_CLP).toLocaleString("es-CL"); }
 function fmtDateShort(dk){ if(!dk) return ""; const [,m,d]=dk.split("-"); return `${d}/${m}`; }
-
-function getPrimaryPrice(card){
-  const p = card?.tcgplayer?.prices;
-  if(!p) return null;
-  const priority = ["holofoil","reverseHolofoil","normal","1stEditionHolofoil","unlimitedHolofoil","1stEdition","unlimited"];
-  for(const k of priority){ if(p[k]?.market) return {market:p[k].market, low:p[k].low, high:p[k].high}; }
-  const first = Object.entries(p).find(([,v])=>v?.market);
-  return first ? {market:first[1].market, low:first[1].low, high:first[1].high} : null;
-}
 
 function isDarkCard(card){
   if(!card) return false;
@@ -108,14 +102,6 @@ function isDarkCard(card){
   return false;
 }
 
-function addSnapshot(history, market, low, high){
-  const today = new Date().toISOString().slice(0,10);
-  const h = history||[];
-  if(h.length && h[h.length-1].date===today)
-    return h.map((x,i)=>i===h.length-1?{...x,market,low,high}:x);
-  return [...h, {date:today, market, low:low||null, high:high||null}];
-}
-
 // Construye la carta de inv correspondiente a una carta recién descubierta
 // del catálogo Dark — nace en estado "hunting" (la querés, no la tenés),
 // carpeta "Dark Collection". Desde acá en más es una carta del pool real,
@@ -136,81 +122,6 @@ function huntingEntryFromCard(c, s){
     fechaVenta:null,precioVendidoUSD:null,
     notas:"",isDark:true,
   };
-}
-
-async function fetchPoke(url){
-  const r = await fetch(url, {signal:AbortSignal.timeout(10000)});
-  if(!r.ok) throw new Error("HTTP "+r.status);
-  return r.json();
-}
-
-async function fetchTCGPrice(name, setName, number, setCode, apiKey){
-  const price = await fetchTCGPriceDiag(name, setName, number, setCode, apiKey);
-  return price?.match ? {market:price.market, low:price.low, high:price.high} : null;
-}
-
-// Normaliza un número de colección para comparar: pokemontcg.io da solo el
-// número ("116"), tcgpricelookup.com lo manda con el total del set pegado
-// ("116/084") -- nos quedamos solo con la parte antes de la barra. Después
-// sacamos ceros a la izquierda y cualquier caracter no alfanumérico
-// (letras de secret rare tipo "116a" quedan intactas).
-function normNum(n){
-  const antesDeBarra = String(n||"").trim().split("/")[0];
-  return antesDeBarra.toLowerCase().replace(/[^a-z0-9]/g,"").replace(/^0+(?=\d)/,"");
-}
-// Mismo criterio para el nombre: pokemontcg.io y tcgpricelookup.com pueden
-// diferir en espacios dobles, guiones (- vs – vs —), may/minúscula de "ex"/
-// "EX", o acentos -- nada de eso debería impedir el match si el número ya
-// lo ancla a la carta correcta. tcgpricelookup.com además le pega el número
-// al nombre para distinguir variantes/alt-arts ("Mega Darkrai ex -
-// 116/084"), así que primero se saca ese sufijo antes de normalizar.
-function normName(s){
-  return String(s||"")
-    .replace(/\s*[-–—]\s*\d+\/\d+\s*$/,"") // sufijo "- 116/084" al final
-    .normalize("NFD").replace(/[\u0300-\u036f]/g,"") // acentos
-    .toLowerCase().replace(/[^a-z0-9]/g,"");
-}
-
-// Versión con diagnóstico completo de fetchTCGPrice -- devuelve además la
-// query mandada, los candidatos que trajo tcgpricelookup.com, y por qué no
-// matcheó ninguno (si es el caso). fetchTCGPrice (arriba) es un wrapper
-// liviano de esto para no duplicar la lógica de búsqueda/match en dos
-// lugares -- antes de este cambio estaban duplicadas y podían divergir.
-async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey){
-  if(!apiKey) return {error:"sin API key"};
-  try{
-    let q = name;
-    if(setCode && number) q = `${name} ${setCode} ${number}`;
-    else if(number)       q = `${name} ${number}`;
-    const r = await fetch(`${TCG_BASE}/cards/search?q=${encodeURIComponent(q)}&game=pokemon&limit=20`,
-      {headers:{"X-API-Key":apiKey}, signal:AbortSignal.timeout(8000)});
-    if(!r.ok) return {error:`HTTP ${r.status}`, query:q};
-    const data = await r.json();
-    const cards = data.data||[];
-    const nameNorm=normName(name), numNorm=normNum(number);
-    const setCodeLow=(setCode||"").toLowerCase();
-    // Solo matcheamos con nombre+número (+setCode si lo tenemos). Nada de
-    // fallback por nombre solo o por prefijo de set — eso es lo que generaba
-    // snapshots de la variante equivocada (holo vs estándar, u otro set con
-    // carta homónima). Preferimos no tener precio a tener uno contaminado.
-    // El nombre se compara normalizado (sin acentos/puntuación/espacios) en
-    // vez de string exacto -- el número sigue siendo el ancla real.
-    const match =
-      (number && setCode && cards.find(c=>normName(c.name)===nameNorm&&normNum(c.number)===numNorm&&(c.set?.ptcgoCode?.toLowerCase()===setCodeLow||c.set?.id?.toLowerCase()===setCodeLow))) ||
-      (number && cards.find(c=>normName(c.name)===nameNorm&&normNum(c.number)===numNorm));
-    const candidatos = cards.slice(0,10).map(c=>({name:c.name, number:c.number, setId:c.set?.id, setCode:c.set?.ptcgoCode, tieneRaw: !!c.prices?.raw}));
-    if(!match) return {query:q, candidatos, matchEncontrado:false};
-    const nm=match.prices?.raw?.near_mint?.tcgplayer, lp=match.prices?.raw?.lightly_played?.tcgplayer;
-    const best=nm||lp;
-    return {
-      query:q, candidatos, matchEncontrado:true,
-      matchNombre:match.name, matchNumero:match.number,
-      preciosDisponibles: Object.keys(match.prices||{}),
-      tienePrecioTcgplayer: !!best,
-      match: best?.market?true:false,
-      market: best?.market, low: best?.low||null, high: best?.high||null,
-    };
-  }catch(e){ return {error:e.message}; }
 }
 
 // ── Métricas de historial ──────────────────────────────────────────────────────
@@ -397,7 +308,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     setEditMode(false);
     setEditFields({costoUSD:c.costoUSD||0,precioVentaUSD:c.precioVentaUSD||0,
       condicion:c.condicion||"NM",notas:c.notas||"",carpeta:c.carpeta||cats[0],
-      fechaCompra:c.fechaCompra||hoy,cantidad:c.cantidad||1});
+      fechaCompra:c.fechaCompra||hoy,cantidad:c.cantidad||1,precioObjetivo:c.precioObjetivo||""});
     setVendModal(false);
     setSelectedPoint(null);
     setChartRange("todo");
@@ -504,6 +415,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               const cur=prev||[];
               const ids=new Set(cur.map(c=>c.cardId));
               const add=dark.filter(c=>!ids.has(c.id)).map(c=>huntingEntryFromCard(c,s));
+              if(add.length) encolarPokecriptoPending(add);
               return add.length?[...cur,...add]:cur;
             });
           }
@@ -551,6 +463,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               const cur=prev||[];
               const ids=new Set(cur.map(c=>c.cardId));
               const add=dark.filter(c=>!ids.has(c.id)).map(c=>huntingEntryFromCard(c,s));
+              if(add.length) encolarPokecriptoPending(add);
               return add.length?[...cur,...add]:cur;
             });
           }
@@ -561,47 +474,77 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     return ()=>{ resyncAbort.current=true; };
   },[darkSets]);
 
-  // ── Scheduler diario — 200/día (cambio 4) ──
-  // Todo el pool de cartas (inventario real + hunting, incluida Dark
-  // Collection ya que ahora es una carta más de inv) se refresca desde el
-  // mismo lugar, ordenado por snapshot más antiguo. Ya no hay una rama
-  // separada para Dark Collection — antes tenía su propio mecanismo de
-  // precio paralelo, que era justo la causa de que no generara gráficos.
+  // ── Sync con el bot de precios (issue #9, 7-sep-2026) ──
+  // El bot (build-pokecripto.mjs, corre 1x/día en GitHub Actions) es dueño
+  // exclusivo de tcgMarket/tcgLow/tcgHigh/tcgUpdated/priceHistory -- nunca
+  // toca carpeta/notas/costoUSD/condicion/cantidad/estado, esos siguen
+  // siendo del estado local del cliente como siempre. El scheduler de
+  // 200/día que vivía acá (comparaba solo contra cache local) queda
+  // reemplazado por esto: ya no hace falta que el navegador gaste su
+  // propia cuota de tcgpricelookup.com en paralelo al bot.
+  const POKECRIPTO_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
+  // Mismo AUTH_SECRET que Simkl/podcasts -- un solo secret de Worker
+  // compartido, no uno por feature.
+  const POKECRIPTO_AUTH_KEY = "angst-simkl-auth-v1";
+  const [pokecriptoSyncMsg, setPokecriptoSyncMsg] = React.useState(null);
+  function getPokecriptoAuth(){ try{ return localStorage.getItem(POKECRIPTO_AUTH_KEY)||null; }catch(e){ return null; } }
+  function pedirPokecriptoAuth(){
+    const v = prompt("Pegá el AUTH_SECRET del Worker (el mismo que Simkl/podcasts, una sola vez, queda solo en este dispositivo):");
+    if(v && v.trim()){ try{ localStorage.setItem(POKECRIPTO_AUTH_KEY, v.trim()); }catch(e){} }
+    return v && v.trim() ? v.trim() : null;
+  }
+  // Encola cartas nuevas para que el bot las precie en su próxima corrida
+  // -- nunca prompt() acá, solo lo llaman flujos donde el usuario ya
+  // conectó el Worker (agregarCarta, resync de Dark Collection, botón
+  // "conectar" de abajo).
+  async function encolarPokecriptoPending(cartas){
+    const auth = getPokecriptoAuth();
+    if(!auth || !cartas.length) return;
+    try{
+      const getResp = await fetch(`${POKECRIPTO_WORKER_URL}?path=pokecripto-pending.json`, {headers:{"X-Angst-Auth":auth}});
+      const remote = getResp.ok ? await getResp.json() : [];
+      const actual = Array.isArray(remote) ? remote : [];
+      const ids = new Set(actual.map(c=>c.id));
+      const nuevasParaCola = cartas.filter(c=>!ids.has(c.id));
+      if(!nuevasParaCola.length) return;
+      await fetch(POKECRIPTO_WORKER_URL, {
+        method:"POST",
+        headers:{"X-Angst-Auth":auth,"Content-Type":"application/json"},
+        body: JSON.stringify({path:"pokecripto-pending.json", payload:[...actual, ...nuevasParaCola]}),
+      });
+    }catch(e){ /* silencioso -- se reintenta la próxima vez que se llame, nada local se rompe */ }
+  }
+  // Botón "conectar" (mismo patrón que "🔗 conectar Simkl"): pide el
+  // AUTH_SECRET si hace falta y empuja TODO el inventario local a pending
+  // una sola vez, así el bot arranca a trabajar con los datos reales de
+  // Cristopher en vez de un canónico vacío. Después de esa primera vez, las
+  // altas nuevas se encolan solas (agregarCarta / resync Dark Collection).
+  async function conectarPokecripto(){
+    let auth = getPokecriptoAuth();
+    if(!auth) auth = pedirPokecriptoAuth();
+    if(!auth) return;
+    setPokecriptoSyncMsg("sincronizando...");
+    await encolarPokecriptoPending(inv);
+    try{ localStorage.setItem("angst-pokecripto-migrated-v1","1"); }catch(e){}
+    setPokecriptoSyncMsg("✓ conectado -- el bot va a empezar a traer precios en su próxima corrida");
+  }
+  const pokecriptoConectado = !!getPokecriptoAuth() && (()=>{ try{ return localStorage.getItem("angst-pokecripto-migrated-v1")==="1"; }catch(e){ return false; } })();
+  // Trae los precios más recientes que dejó el bot y los superpone sobre
+  // el inventario local -- SOLO los 5 campos de precio, todo lo demás
+  // sigue siendo dueño el cliente. Silencioso si todavía no hay auth
+  // cargada (no interrumpe con un prompt solo por abrir el módulo).
   React.useEffect(()=>{
-    if(!inv.length) return;
-    const DAILY_CAP=200;
-    const log=cache._snapshotLog||{};
-    const yaHoy=log.date===hoy;
-    const yaHechas=yaHoy?(log.count||0):0;
-    if(yaHoy&&yaHechas>=DAILY_CAP) return;
-    const invCandidatas=inv
-      .filter(c=>c.estado!=="vendida"&&c.cardId)
-      .sort((a,b)=>(a.tcgUpdated||"2000-01-01").localeCompare(b.tcgUpdated||"2000-01-01"));
-    const cupoRestante=DAILY_CAP-yaHechas;
-    const candidatas=invCandidatas.slice(0,cupoRestante);
-    if(!candidatas.length) return;
-    schedAbort.current=false;
-    setSchedStatus("running");
-    setSchedProgress({done:0,total:candidatas.length});
-    setSchedLog([]);
-    let i=0;
-    async function processNext(){
-      if(schedAbort.current||i>=candidatas.length){ setSchedStatus("done"); return; }
-      const carta=candidatas[i++];
-      const prevMarket=carta.tcgMarket||null;
-      const newMarket=await refreshPrecioSilent(carta);
-      if(prevMarket&&newMarket){
-        const delta=((newMarket-prevMarket)/prevMarket*100).toFixed(1);
-        setSchedLog(prev=>[...prev,{name:carta.name,image:carta.image,prevMarket,newMarket,delta}]);
-      }
-      const newCount=yaHechas+i;
-      savePriceCache(prev=>({...(prev||{}),_snapshotLog:{date:hoy,count:newCount}}));
-      setSchedProgress({done:i,total:candidatas.length});
-      setTimeout(processNext,1500);
-    }
-    processNext();
-    return ()=>{ schedAbort.current=true; };
-  },[inv.length]);
+    const auth = getPokecriptoAuth();
+    if(!auth) return;
+    fetch(`${POKECRIPTO_WORKER_URL}?path=pokecripto-inventario.json`, {headers:{"X-Angst-Auth":auth}})
+      .then(r=>r.ok?r.json():null)
+      .then(remote=>{
+        if(!Array.isArray(remote) || !remote.length) return;
+        const preciosPorId = new Map(remote.map(c=>[c.id,{tcgMarket:c.tcgMarket,tcgLow:c.tcgLow,tcgHigh:c.tcgHigh,tcgUpdated:c.tcgUpdated,priceHistory:c.priceHistory}]));
+        saveInventario(prev=>(prev||[]).map(c=>preciosPorId.has(c.id)?{...c,...preciosPorId.get(c.id)}:c));
+      })
+      .catch(()=>{});
+  },[]);
 
   // ── Precio ──
   async function refreshPrecioSilent(carta){
@@ -676,6 +619,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       notas:newForm.notas||"",isDark:isDarkCard(card),
     };
     saveInventario([nueva,...inv]);
+    encolarPokecriptoPending([nueva]);
     setAddingCard(null);
     setNewForm({costoUSD:"",precioVentaUSD:"",condicion:"NM",notas:"",fechaCompra:hoy,carpeta:cats[0],cantidad:1,destino:"inventario"});
     setView("coleccion");
@@ -1216,8 +1160,15 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               <textarea value={editFields.notas||""} onChange={e=>setEditFields(f=>({...f,notas:e.target.value}))} rows={2}
                 style={{width:"100%",border:"1px dashed #ccc",borderRadius:8,padding:"8px 10px",fontFamily:"'DM Sans',sans-serif",fontSize:13,outline:"none",resize:"none",boxSizing:"border-box",color:"#111"}}/>
             </div>
+            {editFields.carpeta==="Price Watch"&&(
+              <div style={{marginBottom:10}}>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:4}}>Precio objetivo USD (opcional)</div>
+                <input type="number" step="0.01" value={editFields.precioObjetivo||""} onChange={e=>setEditFields(f=>({...f,precioObjetivo:e.target.value}))}
+                  style={{width:"100%",border:"1px dashed #ccc",borderRadius:6,padding:"6px 8px",fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",boxSizing:"border-box",color:"#111"}}/>
+              </div>
+            )}
             <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>{updCarta(carta.id,{costoUSD:parseFloat(editFields.costoUSD)||0,precioVentaUSD:parseFloat(editFields.precioVentaUSD)||0,condicion:editFields.condicion,notas:editFields.notas||"",carpeta:editFields.carpeta,cantidad:editFields.cantidad||1});setEditMode(false);}}
+              <button onClick={()=>{updCarta(carta.id,{costoUSD:parseFloat(editFields.costoUSD)||0,precioVentaUSD:parseFloat(editFields.precioVentaUSD)||0,condicion:editFields.condicion,notas:editFields.notas||"",carpeta:editFields.carpeta,cantidad:editFields.cantidad||1,precioObjetivo:editFields.precioObjetivo?parseFloat(editFields.precioObjetivo):null});setEditMode(false);}}
                 style={{flex:1,background:"#111",border:"none",borderRadius:8,padding:"9px",fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#fff",cursor:"pointer",fontWeight:600}}>guardar</button>
               <button onClick={()=>setEditMode(false)}
                 style={{background:"transparent",border:"1px dashed #ddd",borderRadius:8,padding:"9px 14px",fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#999",cursor:"pointer"}}>cancelar</button>
@@ -1585,6 +1536,18 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               Guardar
             </button>
           </div>
+        </div>
+      )}
+      {!pokecriptoConectado&&(
+        <div style={{background:"#1a1a1a",border:"1px solid #333",borderRadius:12,padding:"12px 14px",marginBottom:12}}>
+          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#bbb",marginBottom:8}}>
+            Sin conectar con el bot de precios — los snapshots automáticos diarios no van a llegar hasta que conectes este dispositivo una vez.
+          </div>
+          <button onClick={conectarPokecripto}
+            style={{background:"#aac756",border:"none",borderRadius:8,padding:"8px 14px",fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:"#111",cursor:"pointer"}}>
+            🔗 conectar con el bot de precios
+          </button>
+          {pokecriptoSyncMsg&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#aac756",marginTop:6}}>{pokecriptoSyncMsg}</div>}
         </div>
       )}
       {zoomImage&&(

@@ -1,0 +1,75 @@
+name: Actualizar precios Pokécripto
+
+on:
+  schedule:
+    - cron: '0 12 * * *'   # una vez al día -- ver nota de presupuesto de
+                          # API en build-pokecripto.mjs sobre por qué no
+                          # corre más seguido
+  workflow_dispatch: {}
+
+concurrency:
+  group: pokecripto-update
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout feeder (el script vive acá)
+        uses: actions/checkout@v4
+        with:
+          path: feeder
+
+      - name: Sincronizar feeder con la punta real de main
+        working-directory: feeder
+        run: git fetch origin main && git reset --hard origin/main
+
+      - name: Checkout Angst-data (los datos viven acá, lectura y escritura)
+        uses: actions/checkout@v4
+        with:
+          repository: cipinzas-hash/Angst-data
+          token: ${{ secrets.WORKER_GITHUB_PAT }}
+          path: angst-data
+
+      - name: Sincronizar Angst-data con la punta real de main
+        working-directory: angst-data
+        run: git fetch origin main && git reset --hard origin/main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Correr build-pokecripto.mjs
+        working-directory: feeder/modules/feed/scripts
+        env:
+          TCG_API_KEY: ${{ secrets.TCG_API_KEY }}
+          POKECRIPTO_INVENTARIO_PATH: ${{ github.workspace }}/angst-data/pokecripto-inventario.json
+          POKECRIPTO_PENDING_PATH: ${{ github.workspace }}/angst-data/pokecripto-pending.json
+        run: node build-pokecripto.mjs
+
+      - name: Commitear y pushear a Angst-data, con reintento si hay conflicto
+        working-directory: angst-data
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add pokecripto-inventario.json pokecripto-pending.json
+          git diff --staged --quiet -- pokecripto-inventario.json pokecripto-pending.json && { echo "sin cambios, nada que pushear"; exit 0; }
+          git commit -m "Actualizar precios Pokécripto $(date -u +%Y-%m-%dT%H:%MZ)"
+          pushed=0
+          for i in 1 2 3; do
+            git push && pushed=1 && break
+            echo "push falló, reintentando ($i/3)..."
+            # reset --soft: mueve la rama a la punta nueva de origin pero
+            # mantiene intacto el working tree/índice -- el output fresco
+            # del script (recién escrito a disco, todavía no en ningún
+            # commit de origin) NO se toca ni se pisa con la versión vieja.
+            git fetch origin main
+            git reset --soft origin/main
+            git commit -m "Actualizar precios Pokécripto $(date -u +%Y-%m-%dT%H:%MZ)"
+            sleep 5
+          done
+          if [ "$pushed" -ne 1 ]; then
+            echo "::error::push falló los 3 intentos, output del bot sin persistir"
+            exit 1
+          fi

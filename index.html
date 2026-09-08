@@ -1323,78 +1323,13 @@ var __angst = (() => {
     URL.revokeObjectURL(url);
   }
 
-  // modules/pokecripto/PokecriptoPage.jsx
-  function PokeLoader({ active }) {
-    const [filled, setFilled] = React.useState(0);
-    React.useEffect(() => {
-      if (!active) {
-        setFilled(0);
-        return;
-      }
-      setFilled(0);
-      let i = 0;
-      const iv = setInterval(() => {
-        i = (i + 1) % 9;
-        setFilled(i);
-      }, 350);
-      return () => clearInterval(iv);
-    }, [active]);
-    const segs = 8, r = 18, cx = 22, cy = 22;
-    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 0 12px", gap: 10 } }, /* @__PURE__ */ React.createElement("svg", { width: 44, height: 44, viewBox: "0 0 44 44" }, Array.from({ length: segs }).map((_, i) => {
-      const a = i / segs * Math.PI * 2 - Math.PI / 2, na = (i + 1) / segs * Math.PI * 2 - Math.PI / 2;
-      return /* @__PURE__ */ React.createElement(
-        "path",
-        {
-          key: i,
-          d: `M ${cx} ${cy} L ${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)} A ${r} ${r} 0 0 1 ${(cx + r * Math.cos(na)).toFixed(2)} ${(cy + r * Math.sin(na)).toFixed(2)} Z`,
-          fill: filled > i ? "#111" : "#eee",
-          stroke: "#fff",
-          strokeWidth: "2",
-          style: { transition: "fill 0.2s" }
-        }
-      );
-    }), /* @__PURE__ */ React.createElement("circle", { cx, cy, r: 8, fill: "#fff" }), /* @__PURE__ */ React.createElement("line", { x1: 4, y1: cy, x2: 40, y2: cy, stroke: filled > 0 ? "#111" : "#ddd", strokeWidth: "1.5" }), /* @__PURE__ */ React.createElement("circle", { cx, cy, r: 4, fill: "#fff", stroke: filled > 0 ? "#111" : "#ddd", strokeWidth: "1.5" })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb", letterSpacing: 2, textTransform: "uppercase" } }, "buscando"));
-  }
-  var USD_CLP = 1e3;
-  var CONDICIONES = ["NM", "LP", "MP", "HP", "DMG"];
-  var CARPETAS_DEFAULT = ["MLP", "Staples & Meta", "Dark Collection"];
-  var CARPETAS_ICONS = { "MLP": "\u{1F434}", "Staples & Meta": "\u26A1", "Dark Collection": "\u26AB" };
-  var ESTADOS = {
-    hunting: { label: "hunting", color: "#7c4dff", bg: "#ede7f6" },
-    sin_publicar: { label: "sin publicar", color: "#888", bg: "#f0f0f0" },
-    a_la_venta: { label: "a la venta", color: "#2e7d52", bg: "#e8f5e9" },
-    vendida: { label: "vendida", color: "#555", bg: "#f5f5f5" }
-  };
-  var MEGA_SETS = [
-    { id: "me1", name: "Mega Evolution", releaseDate: "2025-09-26" },
-    { id: "me2", name: "Phantasmal Flames", releaseDate: "2025-11-14" },
-    { id: "me25", name: "Ascended Heroes", releaseDate: "2026-01-30" },
-    { id: "me3", name: "Perfect Order", releaseDate: "2026-03-27" },
-    { id: "me4", name: "Chaos Rising", releaseDate: "2026-05-22" },
-    { id: "me5", name: "Pitch Black", releaseDate: "2026-07-17" }
-  ];
-  var MEGA_PROMO_SETS = [
-    { id: "mep", name: "Mega Evolution Promos", releaseDate: "2025-09-26" }
-  ];
-  var TCG_BASE = "https://api.tcgpricelookup.com/v1";
+  // modules/pokecripto/lib/pricing.mjs
   var POKE_BASE = "https://api.pokemontcg.io/v2";
-  var RESYNC_INTERVAL_MS = 24 * 60 * 60 * 1e3;
-  function getEstadoDark(entry) {
-    if (!entry) return "hunting";
-    if (entry.estado) return entry.estado === "hunting" ? "hunting" : "conseguida";
-    if (entry.estadoDark) return entry.estadoDark;
-    return entry.conseguida ? "conseguida" : "hunting";
-  }
-  function fmtUSD(n) {
-    return "$" + parseFloat(n || 0).toFixed(2);
-  }
-  function fmtPokeCLP(n) {
-    return "$" + Math.round((n || 0) * USD_CLP).toLocaleString("es-CL");
-  }
-  function fmtDateShort(dk) {
-    if (!dk) return "";
-    const [, m, d] = dk.split("-");
-    return `${d}/${m}`;
+  var TCG_BASE = "https://api.tcgpricelookup.com/v1";
+  async function fetchPoke(url) {
+    const r = await fetch(url, { signal: AbortSignal.timeout(1e4) });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
   }
   function getPrimaryPrice(card) {
     const p = card?.tcgplayer?.prices;
@@ -1405,66 +1340,6 @@ var __angst = (() => {
     }
     const first = Object.entries(p).find(([, v]) => v?.market);
     return first ? { market: first[1].market, low: first[1].low, high: first[1].high } : null;
-  }
-  function isDarkCard(card) {
-    if (!card) return false;
-    if ((card.types || []).includes("Darkness")) return true;
-    if (card.supertype === "Energy" && (card.name || "").toLowerCase().includes("darkness")) return true;
-    const hasDark = (t) => {
-      if (!t) return false;
-      const l = t.toLowerCase();
-      return l.includes("darkness energy") || l.includes("darkness pok\xE9mon") || l.includes("darkness pokemon") || l.includes("darkness type") || l.includes("darkness-type") || l.includes("non-darkness") || l.includes("basic darkness") || l.includes("{d} energy") || l.includes("[d] energy") || t.includes("[D]") || t.includes("{D}");
-    };
-    if ((card.attacks || []).some((a) => (a.cost || []).includes("Darkness") || hasDark(a.text))) return true;
-    if ((card.abilities || []).some((a) => hasDark(a.text))) return true;
-    if ((card.rules || []).some((r) => hasDark(r))) return true;
-    if (hasDark(card.text)) return true;
-    return false;
-  }
-  function addSnapshot(history, market, low, high) {
-    const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-    const h = history || [];
-    if (h.length && h[h.length - 1].date === today)
-      return h.map((x, i) => i === h.length - 1 ? { ...x, market, low, high } : x);
-    return [...h, { date: today, market, low: low || null, high: high || null }];
-  }
-  function huntingEntryFromCard(c, s) {
-    return {
-      id: Date.now().toString() + Math.random().toString(36).slice(2) + "_" + c.id,
-      cardId: c.id,
-      name: c.name,
-      set: s.name || "",
-      setCode: s.id || "",
-      number: c.number || "",
-      rarity: c.rarity || "",
-      image: c.images?.small || "",
-      imageHd: c.images?.large || "",
-      tcgMarket: null,
-      tcgLow: null,
-      tcgHigh: null,
-      tcgUpdated: null,
-      priceHistory: [],
-      costoUSD: 0,
-      precioVentaUSD: 0,
-      condicion: "NM",
-      estado: "hunting",
-      carpeta: "Dark Collection",
-      fechaCompra: null,
-      cantidad: 1,
-      fechaVenta: null,
-      precioVendidoUSD: null,
-      notas: "",
-      isDark: true
-    };
-  }
-  async function fetchPoke(url) {
-    const r = await fetch(url, { signal: AbortSignal.timeout(1e4) });
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    return r.json();
-  }
-  async function fetchTCGPrice(name, setName, number, setCode, apiKey) {
-    const price = await fetchTCGPriceDiag(name, setName, number, setCode, apiKey);
-    return price?.match ? { market: price.market, low: price.low, high: price.high } : null;
   }
   function normNum(n) {
     const antesDeBarra = String(n || "").trim().split("/")[0];
@@ -1509,6 +1384,133 @@ var __angst = (() => {
     } catch (e) {
       return { error: e.message };
     }
+  }
+  async function fetchTCGPrice(name, setName, number, setCode, apiKey) {
+    const price = await fetchTCGPriceDiag(name, setName, number, setCode, apiKey);
+    return price?.match ? { market: price.market, low: price.low, high: price.high } : null;
+  }
+  function addSnapshot(history, market, low, high, dateISO) {
+    const today = dateISO || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+    const h = history || [];
+    if (h.length && h[h.length - 1].date === today)
+      return h.map((x, i) => i === h.length - 1 ? { ...x, market, low, high } : x);
+    return [...h, { date: today, market, low: low || null, high: high || null }];
+  }
+
+  // modules/pokecripto/PokecriptoPage.jsx
+  function PokeLoader({ active }) {
+    const [filled, setFilled] = React.useState(0);
+    React.useEffect(() => {
+      if (!active) {
+        setFilled(0);
+        return;
+      }
+      setFilled(0);
+      let i = 0;
+      const iv = setInterval(() => {
+        i = (i + 1) % 9;
+        setFilled(i);
+      }, 350);
+      return () => clearInterval(iv);
+    }, [active]);
+    const segs = 8, r = 18, cx = 22, cy = 22;
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 0 12px", gap: 10 } }, /* @__PURE__ */ React.createElement("svg", { width: 44, height: 44, viewBox: "0 0 44 44" }, Array.from({ length: segs }).map((_, i) => {
+      const a = i / segs * Math.PI * 2 - Math.PI / 2, na = (i + 1) / segs * Math.PI * 2 - Math.PI / 2;
+      return /* @__PURE__ */ React.createElement(
+        "path",
+        {
+          key: i,
+          d: `M ${cx} ${cy} L ${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)} A ${r} ${r} 0 0 1 ${(cx + r * Math.cos(na)).toFixed(2)} ${(cy + r * Math.sin(na)).toFixed(2)} Z`,
+          fill: filled > i ? "#111" : "#eee",
+          stroke: "#fff",
+          strokeWidth: "2",
+          style: { transition: "fill 0.2s" }
+        }
+      );
+    }), /* @__PURE__ */ React.createElement("circle", { cx, cy, r: 8, fill: "#fff" }), /* @__PURE__ */ React.createElement("line", { x1: 4, y1: cy, x2: 40, y2: cy, stroke: filled > 0 ? "#111" : "#ddd", strokeWidth: "1.5" }), /* @__PURE__ */ React.createElement("circle", { cx, cy, r: 4, fill: "#fff", stroke: filled > 0 ? "#111" : "#ddd", strokeWidth: "1.5" })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb", letterSpacing: 2, textTransform: "uppercase" } }, "buscando"));
+  }
+  var USD_CLP = 1e3;
+  var CONDICIONES = ["NM", "LP", "MP", "HP", "DMG"];
+  var CARPETAS_DEFAULT = ["MLP", "Staples & Meta", "Dark Collection", "Price Watch"];
+  var CARPETAS_ICONS = { "MLP": "\u{1F434}", "Staples & Meta": "\u26A1", "Dark Collection": "\u26AB", "Price Watch": "\u{1F3AF}" };
+  var ESTADOS = {
+    hunting: { label: "hunting", color: "#7c4dff", bg: "#ede7f6" },
+    sin_publicar: { label: "sin publicar", color: "#888", bg: "#f0f0f0" },
+    a_la_venta: { label: "a la venta", color: "#2e7d52", bg: "#e8f5e9" },
+    vendida: { label: "vendida", color: "#555", bg: "#f5f5f5" }
+  };
+  var MEGA_SETS = [
+    { id: "me1", name: "Mega Evolution", releaseDate: "2025-09-26" },
+    { id: "me2", name: "Phantasmal Flames", releaseDate: "2025-11-14" },
+    { id: "me25", name: "Ascended Heroes", releaseDate: "2026-01-30" },
+    { id: "me3", name: "Perfect Order", releaseDate: "2026-03-27" },
+    { id: "me4", name: "Chaos Rising", releaseDate: "2026-05-22" },
+    { id: "me5", name: "Pitch Black", releaseDate: "2026-07-17" }
+  ];
+  var MEGA_PROMO_SETS = [
+    { id: "mep", name: "Mega Evolution Promos", releaseDate: "2025-09-26" }
+  ];
+  var RESYNC_INTERVAL_MS = 24 * 60 * 60 * 1e3;
+  function getEstadoDark(entry) {
+    if (!entry) return "hunting";
+    if (entry.estado) return entry.estado === "hunting" ? "hunting" : "conseguida";
+    if (entry.estadoDark) return entry.estadoDark;
+    return entry.conseguida ? "conseguida" : "hunting";
+  }
+  function fmtUSD(n) {
+    return "$" + parseFloat(n || 0).toFixed(2);
+  }
+  function fmtPokeCLP(n) {
+    return "$" + Math.round((n || 0) * USD_CLP).toLocaleString("es-CL");
+  }
+  function fmtDateShort(dk) {
+    if (!dk) return "";
+    const [, m, d] = dk.split("-");
+    return `${d}/${m}`;
+  }
+  function isDarkCard(card) {
+    if (!card) return false;
+    if ((card.types || []).includes("Darkness")) return true;
+    if (card.supertype === "Energy" && (card.name || "").toLowerCase().includes("darkness")) return true;
+    const hasDark = (t) => {
+      if (!t) return false;
+      const l = t.toLowerCase();
+      return l.includes("darkness energy") || l.includes("darkness pok\xE9mon") || l.includes("darkness pokemon") || l.includes("darkness type") || l.includes("darkness-type") || l.includes("non-darkness") || l.includes("basic darkness") || l.includes("{d} energy") || l.includes("[d] energy") || t.includes("[D]") || t.includes("{D}");
+    };
+    if ((card.attacks || []).some((a) => (a.cost || []).includes("Darkness") || hasDark(a.text))) return true;
+    if ((card.abilities || []).some((a) => hasDark(a.text))) return true;
+    if ((card.rules || []).some((r) => hasDark(r))) return true;
+    if (hasDark(card.text)) return true;
+    return false;
+  }
+  function huntingEntryFromCard(c, s) {
+    return {
+      id: Date.now().toString() + Math.random().toString(36).slice(2) + "_" + c.id,
+      cardId: c.id,
+      name: c.name,
+      set: s.name || "",
+      setCode: s.id || "",
+      number: c.number || "",
+      rarity: c.rarity || "",
+      image: c.images?.small || "",
+      imageHd: c.images?.large || "",
+      tcgMarket: null,
+      tcgLow: null,
+      tcgHigh: null,
+      tcgUpdated: null,
+      priceHistory: [],
+      costoUSD: 0,
+      precioVentaUSD: 0,
+      condicion: "NM",
+      estado: "hunting",
+      carpeta: "Dark Collection",
+      fechaCompra: null,
+      cantidad: 1,
+      fechaVenta: null,
+      precioVendidoUSD: null,
+      notas: "",
+      isDark: true
+    };
   }
   function computeHistMetrics(history, range) {
     const pts = (history || []).filter((h) => h.market);
@@ -1746,7 +1748,8 @@ var __angst = (() => {
         notas: c.notas || "",
         carpeta: c.carpeta || cats[0],
         fechaCompra: c.fechaCompra || hoy,
-        cantidad: c.cantidad || 1
+        cantidad: c.cantidad || 1,
+        precioObjetivo: c.precioObjetivo || ""
       });
       setVendModal(false);
       setSelectedPoint(null);
@@ -1838,6 +1841,7 @@ var __angst = (() => {
               const cur = prev || [];
               const ids = new Set(cur.map((c) => c.cardId));
               const add = dark.filter((c) => !ids.has(c.id)).map((c) => huntingEntryFromCard(c, s));
+              if (add.length) encolarPokecriptoPending(add);
               return add.length ? [...cur, ...add] : cur;
             });
           }
@@ -1883,6 +1887,7 @@ var __angst = (() => {
               const cur = prev || [];
               const ids = new Set(cur.map((c) => c.cardId));
               const add = dark.filter((c) => !ids.has(c.id)).map((c) => huntingEntryFromCard(c, s));
+              if (add.length) encolarPokecriptoPending(add);
               return add.length ? [...cur, ...add] : cur;
             });
           }
@@ -1894,44 +1899,73 @@ var __angst = (() => {
         resyncAbort.current = true;
       };
     }, [darkSets]);
-    React.useEffect(() => {
-      if (!inv.length) return;
-      const DAILY_CAP = 200;
-      const log = cache._snapshotLog || {};
-      const yaHoy = log.date === hoy;
-      const yaHechas = yaHoy ? log.count || 0 : 0;
-      if (yaHoy && yaHechas >= DAILY_CAP) return;
-      const invCandidatas = inv.filter((c) => c.estado !== "vendida" && c.cardId).sort((a, b) => (a.tcgUpdated || "2000-01-01").localeCompare(b.tcgUpdated || "2000-01-01"));
-      const cupoRestante = DAILY_CAP - yaHechas;
-      const candidatas = invCandidatas.slice(0, cupoRestante);
-      if (!candidatas.length) return;
-      schedAbort.current = false;
-      setSchedStatus("running");
-      setSchedProgress({ done: 0, total: candidatas.length });
-      setSchedLog([]);
-      let i = 0;
-      async function processNext() {
-        if (schedAbort.current || i >= candidatas.length) {
-          setSchedStatus("done");
-          return;
-        }
-        const carta = candidatas[i++];
-        const prevMarket = carta.tcgMarket || null;
-        const newMarket = await refreshPrecioSilent(carta);
-        if (prevMarket && newMarket) {
-          const delta = ((newMarket - prevMarket) / prevMarket * 100).toFixed(1);
-          setSchedLog((prev) => [...prev, { name: carta.name, image: carta.image, prevMarket, newMarket, delta }]);
-        }
-        const newCount = yaHechas + i;
-        savePriceCache((prev) => ({ ...prev || {}, _snapshotLog: { date: hoy, count: newCount } }));
-        setSchedProgress({ done: i, total: candidatas.length });
-        setTimeout(processNext, 1500);
+    const POKECRIPTO_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
+    const POKECRIPTO_AUTH_KEY = "angst-simkl-auth-v1";
+    const [pokecriptoSyncMsg, setPokecriptoSyncMsg] = React.useState(null);
+    function getPokecriptoAuth() {
+      try {
+        return localStorage.getItem(POKECRIPTO_AUTH_KEY) || null;
+      } catch (e) {
+        return null;
       }
-      processNext();
-      return () => {
-        schedAbort.current = true;
-      };
-    }, [inv.length]);
+    }
+    function pedirPokecriptoAuth() {
+      const v = prompt("Peg\xE1 el AUTH_SECRET del Worker (el mismo que Simkl/podcasts, una sola vez, queda solo en este dispositivo):");
+      if (v && v.trim()) {
+        try {
+          localStorage.setItem(POKECRIPTO_AUTH_KEY, v.trim());
+        } catch (e) {
+        }
+      }
+      return v && v.trim() ? v.trim() : null;
+    }
+    async function encolarPokecriptoPending(cartas) {
+      const auth = getPokecriptoAuth();
+      if (!auth || !cartas.length) return;
+      try {
+        const getResp = await fetch(`${POKECRIPTO_WORKER_URL}?path=pokecripto-pending.json`, { headers: { "X-Angst-Auth": auth } });
+        const remote = getResp.ok ? await getResp.json() : [];
+        const actual = Array.isArray(remote) ? remote : [];
+        const ids = new Set(actual.map((c) => c.id));
+        const nuevasParaCola = cartas.filter((c) => !ids.has(c.id));
+        if (!nuevasParaCola.length) return;
+        await fetch(POKECRIPTO_WORKER_URL, {
+          method: "POST",
+          headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
+          body: JSON.stringify({ path: "pokecripto-pending.json", payload: [...actual, ...nuevasParaCola] })
+        });
+      } catch (e) {
+      }
+    }
+    async function conectarPokecripto() {
+      let auth = getPokecriptoAuth();
+      if (!auth) auth = pedirPokecriptoAuth();
+      if (!auth) return;
+      setPokecriptoSyncMsg("sincronizando...");
+      await encolarPokecriptoPending(inv);
+      try {
+        localStorage.setItem("angst-pokecripto-migrated-v1", "1");
+      } catch (e) {
+      }
+      setPokecriptoSyncMsg("\u2713 conectado -- el bot va a empezar a traer precios en su pr\xF3xima corrida");
+    }
+    const pokecriptoConectado = !!getPokecriptoAuth() && (() => {
+      try {
+        return localStorage.getItem("angst-pokecripto-migrated-v1") === "1";
+      } catch (e) {
+        return false;
+      }
+    })();
+    React.useEffect(() => {
+      const auth = getPokecriptoAuth();
+      if (!auth) return;
+      fetch(`${POKECRIPTO_WORKER_URL}?path=pokecripto-inventario.json`, { headers: { "X-Angst-Auth": auth } }).then((r) => r.ok ? r.json() : null).then((remote) => {
+        if (!Array.isArray(remote) || !remote.length) return;
+        const preciosPorId = new Map(remote.map((c) => [c.id, { tcgMarket: c.tcgMarket, tcgLow: c.tcgLow, tcgHigh: c.tcgHigh, tcgUpdated: c.tcgUpdated, priceHistory: c.priceHistory }]));
+        saveInventario((prev) => (prev || []).map((c) => preciosPorId.has(c.id) ? { ...c, ...preciosPorId.get(c.id) } : c));
+      }).catch(() => {
+      });
+    }, []);
     async function refreshPrecioSilent(carta) {
       let market = null, low = null, high = null;
       if (carta.cardId) {
@@ -2017,6 +2051,7 @@ var __angst = (() => {
         isDark: isDarkCard(card)
       };
       saveInventario([nueva, ...inv]);
+      encolarPokecriptoPending([nueva]);
       setAddingCard(null);
       setNewForm({ costoUSD: "", precioVentaUSD: "", condicion: "NM", notas: "", fechaCompra: hoy, carpeta: cats[0], cantidad: 1, destino: "inventario" });
       setView("coleccion");
@@ -2426,11 +2461,20 @@ var __angst = (() => {
           rows: 2,
           style: { width: "100%", border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none", resize: "none", boxSizing: "border-box", color: "#111" }
         }
+      )), editFields.carpeta === "Price Watch" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "Precio objetivo USD (opcional)"), /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "number",
+          step: "0.01",
+          value: editFields.precioObjetivo || "",
+          onChange: (e) => setEditFields((f) => ({ ...f, precioObjetivo: e.target.value })),
+          style: { width: "100%", border: "1px dashed #ccc", borderRadius: 6, padding: "6px 8px", fontSize: 14, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box", color: "#111" }
+        }
       )), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement(
         "button",
         {
           onClick: () => {
-            updCarta(carta.id, { costoUSD: parseFloat(editFields.costoUSD) || 0, precioVentaUSD: parseFloat(editFields.precioVentaUSD) || 0, condicion: editFields.condicion, notas: editFields.notas || "", carpeta: editFields.carpeta, cantidad: editFields.cantidad || 1 });
+            updCarta(carta.id, { costoUSD: parseFloat(editFields.costoUSD) || 0, precioVentaUSD: parseFloat(editFields.precioVentaUSD) || 0, condicion: editFields.condicion, notas: editFields.notas || "", carpeta: editFields.carpeta, cantidad: editFields.cantidad || 1, precioObjetivo: editFields.precioObjetivo ? parseFloat(editFields.precioObjetivo) : null });
             setEditMode(false);
           },
           style: { flex: 1, background: "#111", border: "none", borderRadius: 8, padding: "9px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", cursor: "pointer", fontWeight: 600 }
@@ -2753,7 +2797,14 @@ var __angst = (() => {
         style: { background: "#aac756", border: "none", borderRadius: 8, padding: "8px 14px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#111" }
       },
       "Guardar"
-    ))), zoomImage && /* @__PURE__ */ React.createElement("div", { onClick: () => setZoomImage(null), style: { position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("img", { src: zoomImage, style: { maxWidth: "90vw", maxHeight: "90vh", borderRadius: 12, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" } })), /* @__PURE__ */ React.createElement("div", { style: { background: "#111", borderRadius: 12, padding: "14px 16px", marginBottom: 12, cursor: "pointer" }, onClick: () => {
+    ))), !pokecriptoConectado && /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", border: "1px solid #333", borderRadius: 12, padding: "12px 14px", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#bbb", marginBottom: 8 } }, "Sin conectar con el bot de precios \u2014 los snapshots autom\xE1ticos diarios no van a llegar hasta que conectes este dispositivo una vez."), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        onClick: conectarPokecripto,
+        style: { background: "#aac756", border: "none", borderRadius: 8, padding: "8px 14px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#111", cursor: "pointer" }
+      },
+      "\u{1F517} conectar con el bot de precios"
+    ), pokecriptoSyncMsg && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#aac756", marginTop: 6 } }, pokecriptoSyncMsg)), zoomImage && /* @__PURE__ */ React.createElement("div", { onClick: () => setZoomImage(null), style: { position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("img", { src: zoomImage, style: { maxWidth: "90vw", maxHeight: "90vh", borderRadius: 12, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" } })), /* @__PURE__ */ React.createElement("div", { style: { background: "#111", borderRadius: 12, padding: "14px 16px", marginBottom: 12, cursor: "pointer" }, onClick: () => {
     } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 } }, [
       { label: "inventario", val: fmtUSD(valorEstim), sub: `${activas.length} cartas` },
       { label: "ganancia mes", val: fmtUSD(ganMes), sub: `${vendMes.length} vendidas`, color: ganMes >= 0 ? "#aac756" : "#e53935" }
