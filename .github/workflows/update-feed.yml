@@ -1,4 +1,8 @@
 name: Actualizar feed de Angst
+# Cine se separó a update-cine.yml, workflow propio, el 9-sep-2026 -- antes
+# era un job "build-cine" acá mismo con needs:build, así que un timeout o
+# cancelación de este job (feed general) bloqueaba a Cine enteramente,
+# pese a ser pipelines de contenido sin relación real entre sí.
 
 on:
   schedule:
@@ -79,57 +83,6 @@ jobs:
             git fetch origin main
             git reset --soft origin/main
             git diff --staged --quiet || git commit -m "Actualizar feed $(date -u +%Y-%m-%dT%H:%MZ)"
-            sleep 5
-          done
-          if [ "${committed:-0}" -eq 1 ] && [ "$pushed" -ne 1 ]; then
-            echo "::error::se hizo commit local pero el push falló los 3 intentos -- nada llegó al remoto, ver conflicto/permisos más arriba"
-            exit 1
-          fi
-
-  build-cine:
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Sincronizar con la punta real de main
-        run: git fetch origin main && git reset --hard origin/main
-        # Crítico acá en particular: build-cine arranca después de que
-        # build ya pusheó (needs: build), pero su checkout por default
-        # clona el SHA que disparó el run -- no la punta viva de main. Sin
-        # este paso, empieza desincronizado y el retry de push más abajo
-        # puede pisar lo que build acaba de pushear (pasó de verdad:
-        # 51ec2c6, 29 ago, revirtió feed.json+diag de build por esto).
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Bajar y enriquecer cine (TMDb + OMDb + Jikan)
-        working-directory: modules/feed
-        env:
-          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-          OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
-          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
-        run: node scripts/build-cine.mjs
-
-      - name: Commitear data/cine.json si cambió
-        run: |
-          git config user.name "angst-feed-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add modules/feed/data/cine.json
-          git diff --staged --quiet -- modules/feed/data/cine.json || { git commit -m "Actualizar cine $(date -u +%Y-%m-%dT%H:%MZ)"; committed=1; }
-          # Mismo fix que en el job build -- ver comentario ahí.
-          pushed=0
-          for i in 1 2 3; do
-            git push && pushed=1 && break
-            echo "push falló, reintentando ($i/3)..."
-            git fetch origin main
-            git reset --soft origin/main
-            git diff --staged --quiet || git commit -m "Actualizar cine $(date -u +%Y-%m-%dT%H:%MZ)"
             sleep 5
           done
           if [ "${committed:-0}" -eq 1 ] && [ "$pushed" -ne 1 ]; then
