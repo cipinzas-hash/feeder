@@ -78,8 +78,10 @@ function extractSoundcloudTrackUrl(rawHtml) {
   return m ? m[0] : null;
 }
 async function resolveSoundcloudEmbed(trackUrl) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(`https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(trackUrl)}`);
+    const res = await fetch(`https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(trackUrl)}`, { signal: controller.signal });
     if (!res.ok) return null;
     const data = await res.json();
     const m = (data.html || "").match(/src="([^"]+)"/);
@@ -87,6 +89,33 @@ async function resolveSoundcloudEmbed(trackUrl) {
   } catch (e) {
     console.error(`✗ Música · oEmbed SoundCloud (${trackUrl}): ${e.message}`);
     return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+// findMusicVideo se llamaba pero nunca estaba definida ni importada en este
+// archivo -- vivía solo en build-melee.mjs. Si el gate de música (más abajo)
+// llegaba a activarse de verdad, era un ReferenceError sin capturar que
+// tiraba abajo TODA la corrida (no un timeout -- un crash inmediato). Copia
+// local, con timeout real agregado (el original en build-melee.mjs tampoco
+// lo tenía).
+async function findMusicVideo(title) {
+  if (!YOUTUBE_API_KEY) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const q = encodeURIComponent(`${title} official`);
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=1&key=${YOUTUBE_API_KEY}`,
+      { signal: controller.signal }
+    );
+    const data = await res.json();
+    return data?.items?.[0]?.id?.videoId || null;
+  } catch (e) {
+    console.error(`✗ Música · búsqueda YouTube ("${title}"): ${e.message}`);
+    return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -315,18 +344,26 @@ async function main() {
   // las cuatro fallan se descarta. Heurística v1 de "es release" — ver comentario
   // junto a RELEASE_TITLE_RE arriba.
   const musicResolved = await mapWithConcurrency(withFullText, EXTRACT_CONCURRENCY, async item => {
-    if (item.categoria !== MUSIC_CATEGORIA) return item;
-    if (!looksLikeReleaseNews(item.title)) return item;
-    if (item.tipo === "video" && item.videoId) return item; // ya resuelto (directo o de una corrida anterior)
-    if (item.bandcampEmbedUrl) return { ...item, hasListenEmbed: true }; // ya trae el iframe, se usa tal cual
-    if (item.soundcloudEmbedUrl) return item; // ya resuelto en una corrida anterior
-    if (item.soundcloudTrackUrl) {
-      const embedUrl = await resolveSoundcloudEmbed(item.soundcloudTrackUrl);
-      if (embedUrl) return { ...item, soundcloudEmbedUrl: embedUrl, hasListenEmbed: true };
+    try {
+      if (item.categoria !== MUSIC_CATEGORIA) return item;
+      if (!looksLikeReleaseNews(item.title)) return item;
+      if (item.tipo === "video" && item.videoId) return item; // ya resuelto (directo o de una corrida anterior)
+      if (item.bandcampEmbedUrl) return { ...item, hasListenEmbed: true }; // ya trae el iframe, se usa tal cual
+      if (item.soundcloudEmbedUrl) return item; // ya resuelto en una corrida anterior
+      if (item.soundcloudTrackUrl) {
+        const embedUrl = await resolveSoundcloudEmbed(item.soundcloudTrackUrl);
+        if (embedUrl) return { ...item, soundcloudEmbedUrl: embedUrl, hasListenEmbed: true };
+      }
+      const videoId = await findMusicVideo(item.title);
+      if (videoId) return { ...item, tipo: "video", videoId, hasListenEmbed: true };
+      return item;
+    } catch (e) {
+      // cualquier error acá (incluido uno de programación) degrada a "sin
+      // resolver" en vez de tirar abajo la corrida entera -- pasó una vez
+      // con findMusicVideo indefinida, no debería poder volver a pasar.
+      console.error(`✗ Música · resolución ("${item.title}"): ${e.message}`);
+      return item;
     }
-    const videoId = await findMusicVideo(item.title);
-    if (videoId) return { ...item, tipo: "video", videoId, hasListenEmbed: true };
-    return item;
   });
 
   const musicFiltered = musicResolved.filter(item => {
