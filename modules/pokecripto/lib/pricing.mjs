@@ -50,9 +50,15 @@ export function normName(s) {
 export async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey) {
   if (!apiKey) return { error: "sin API key" };
   try {
-    let q = name;
-    if (setCode && number) q = `${name} ${setCode} ${number}`;
-    else if (number) q = `${name} ${number}`;
+    // setCode (ej. "me4") es un ID interno de catálogo, no necesariamente
+    // el código real que tcgpricelookup.com indexa como texto buscable --
+    // meterlo en la query de texto libre puede degradar la relevancia en
+    // vez de ayudar (encontrado 9-sep-2026 con cartas de sets nuevos tipo
+    // Chaos Rising que TCGPlayer sí tenía con precio, pero acá no
+    // matcheaban). Se sigue usando setCode más abajo, pero solo para
+    // FILTRAR candidatos ya encontrados por nombre+número, nunca como
+    // término de búsqueda.
+    let q = number ? `${name} ${number}` : name;
     const r = await fetch(`${TCG_BASE}/cards/search?q=${encodeURIComponent(q)}&game=pokemon&limit=20`,
       { headers: { "X-API-Key": apiKey }, signal: AbortSignal.timeout(8000) });
     if (!r.ok) return { error: `HTTP ${r.status}`, query: q };

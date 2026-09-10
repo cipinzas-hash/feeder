@@ -220,6 +220,18 @@ async function extractFullText(url) {
     // apenas llegan los headers, no cuando termina de bajar el body — si no, una
     // página que gotea el body muy lento (o se cuelga) queda leyendo sin límite.
     const html = await res.text();
+    // JSDOM + Readability son 100% síncronos -- ningún AbortController ni
+    // timeout de fetch los puede cortar una vez que arrancan a parsear.
+    // Una página con HTML gigante o patológico puede colgar el parseo
+    // durante minutos, bloqueando TODO el event loop (no solo este ítem) y
+    // comiéndose el timeout-minutes del job entero. Tope defensivo: nada
+    // de extracción para páginas absurdamente grandes, se degrada a "sin
+    // texto completo" igual que cualquier otro fallo de esta función.
+    const MAX_HTML_BYTES = 2_000_000;
+    if (html.length > MAX_HTML_BYTES) {
+      console.error(`✗ Extracción (${url}): HTML de ${html.length} bytes, supera el tope de ${MAX_HTML_BYTES}, se salta el parseo`);
+      return { sanitized: null, hasEmbed: false, videoId: null, bandcampEmbedUrl: null, soundcloudTrackUrl: null };
+    }
     const dom = new JSDOM(html, { url });
     const article = new Readability(dom.window.document).parse();
     if (!article?.content) return { sanitized: null, hasEmbed: false, videoId: null, bandcampEmbedUrl: null, soundcloudTrackUrl: null };

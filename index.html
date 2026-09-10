@@ -1351,9 +1351,7 @@ var __angst = (() => {
   async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey) {
     if (!apiKey) return { error: "sin API key" };
     try {
-      let q = name;
-      if (setCode && number) q = `${name} ${setCode} ${number}`;
-      else if (number) q = `${name} ${number}`;
+      let q = number ? `${name} ${number}` : name;
       const r = await fetch(
         `${TCG_BASE}/cards/search?q=${encodeURIComponent(q)}&game=pokemon&limit=20`,
         { headers: { "X-API-Key": apiKey }, signal: AbortSignal.timeout(8e3) }
