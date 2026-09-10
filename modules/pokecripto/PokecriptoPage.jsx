@@ -158,6 +158,49 @@ function computeHistMetrics(history, range){
   return {ath,athDate,atl,atlDate,vol,volLabel,filtered};
 }
 
+// Variación del último precio contra el snapshot vigente hace N días --
+// "para el futuro" (9-sep-2026): el bot recién arrancó, así que con pocos
+// días de historial casi todo esto va a mostrar "—" (sin datos todavía).
+// Se llena solo a medida que se acumulan snapshots reales, sin tocar nada
+// de acá. Ventana = snapshot más reciente CON fecha <= hoy-N días (no el
+// más cercano en cualquier dirección) -- "precio vigente hace N días", no
+// "el snapshot más próximo a esa fecha aunque sea posterior".
+const TIMEFRAME_WINDOWS = [7, 30, 90, 180, 360];
+function computeTimeframeDeltas(history){
+  const pts = (history||[]).filter(h=>h.market).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!pts.length) return [];
+  const latest = pts[pts.length-1];
+  const latestDate = new Date(latest.date+"T12:00:00");
+  return TIMEFRAME_WINDOWS.map(days=>{
+    const cutoff = new Date(latestDate); cutoff.setDate(cutoff.getDate()-days);
+    let ref = null;
+    for(const p of pts){
+      if(new Date(p.date+"T12:00:00")<=cutoff) ref = p; else break;
+    }
+    if(!ref || ref.market<=0) return {days, pct:null};
+    return {days, pct:(latest.market-ref.market)/ref.market*100};
+  });
+}
+function TimeframeDeltas({history, dark}){
+  const deltas = computeTimeframeDeltas(history);
+  if(!deltas.length) return null;
+  return (
+    <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6,marginBottom:12}}>
+      {deltas.map(({days,pct})=>{
+        const up = pct!=null && pct>=0;
+        return (
+          <div key={days} style={{background:dark?"#1a1a1a":"#fafafa",border:dark?"none":"1px solid #eee",borderRadius:8,padding:"8px 4px",textAlign:"center"}}>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:8,color:dark?"rgba(255,255,255,0.35)":"#bbb",letterSpacing:0.5,marginBottom:3}}>{days}D</div>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:700,color:pct==null?(dark?"rgba(255,255,255,0.2)":"#ddd"):up?(dark?"#4caf80":"#2e7d52"):"#e53935"}}>
+              {pct==null?"—":`${up?"+":""}${pct.toFixed(1)}%`}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Gráfico SVG con eje de fecha real ─────────────────────────────────────────
 function PriceChart({history, precioVenta, compact, range, onSelectPoint, selectedPoint}){
   const pts=(history||[]).filter(h=>h.market);
@@ -907,6 +950,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               </div>
             ))}
           </div>}
+          <TimeframeDeltas history={hist} dark={true}/>
           {/* Historial de precio — mismo gráfico seleccionable + borrado de
               snapshot que la ficha del inventario, ahora que Dark Collection
               usa exactamente los mismos datos (inv), esto ya funciona acá. */}
@@ -1042,6 +1086,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             </div>
           ))}
         </div>}
+        <TimeframeDeltas history={hist} dark={false}/>
 
         {/* Gráfico con selector de rango y borrar snapshot */}
         {hist.length>=2&&(

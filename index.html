@@ -1551,6 +1551,32 @@ var __angst = (() => {
     }
     return { ath, athDate, atl, atlDate, vol, volLabel, filtered };
   }
+  var TIMEFRAME_WINDOWS = [7, 30, 90, 180, 360];
+  function computeTimeframeDeltas(history) {
+    const pts = (history || []).filter((h) => h.market).sort((a, b) => a.date.localeCompare(b.date));
+    if (!pts.length) return [];
+    const latest = pts[pts.length - 1];
+    const latestDate = /* @__PURE__ */ new Date(latest.date + "T12:00:00");
+    return TIMEFRAME_WINDOWS.map((days) => {
+      const cutoff = new Date(latestDate);
+      cutoff.setDate(cutoff.getDate() - days);
+      let ref = null;
+      for (const p of pts) {
+        if (/* @__PURE__ */ new Date(p.date + "T12:00:00") <= cutoff) ref = p;
+        else break;
+      }
+      if (!ref || ref.market <= 0) return { days, pct: null };
+      return { days, pct: (latest.market - ref.market) / ref.market * 100 };
+    });
+  }
+  function TimeframeDeltas({ history, dark }) {
+    const deltas = computeTimeframeDeltas(history);
+    if (!deltas.length) return null;
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 6, marginBottom: 12 } }, deltas.map(({ days, pct }) => {
+      const up = pct != null && pct >= 0;
+      return /* @__PURE__ */ React.createElement("div", { key: days, style: { background: dark ? "#1a1a1a" : "#fafafa", border: dark ? "none" : "1px solid #eee", borderRadius: 8, padding: "8px 4px", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 8, color: dark ? "rgba(255,255,255,0.35)" : "#bbb", letterSpacing: 0.5, marginBottom: 3 } }, days, "D"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: pct == null ? dark ? "rgba(255,255,255,0.2)" : "#ddd" : up ? dark ? "#4caf80" : "#2e7d52" : "#e53935" } }, pct == null ? "\u2014" : `${up ? "+" : ""}${pct.toFixed(1)}%`));
+    }));
+  }
   function PriceChart({ history, precioVenta, compact, range, onSelectPoint, selectedPoint }) {
     const pts = (history || []).filter((h) => h.market);
     if (pts.length < 2) return null;
@@ -2258,7 +2284,7 @@ var __angst = (() => {
         { label: "ATH", val: ath, date: athDate, color: "#4caf80" },
         { label: "ATL", val: atl, date: atlDate, color: "#e57373" },
         { label: `\u03C3 ${volLabel || ""}`, val: vol ? `${vol}%` : null, date: null, color: "#999" }
-      ].map(({ label, val, date, color }) => /* @__PURE__ */ React.createElement("div", { key: label, style: { background: "#1a1a1a", borderRadius: 10, padding: "10px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 } }, label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: val ? color : "rgba(255,255,255,0.2)", lineHeight: 1 } }, val ? fmtUSD(parseFloat(val)) : "\u2014"), date && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 3 } }, fmtDateShort(date))))), hist.length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 10, padding: "12px 14px", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 2, textTransform: "uppercase" } }, "historial"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4 } }, ["7d", "30d", "todo"].map((r) => /* @__PURE__ */ React.createElement(
+      ].map(({ label, val, date, color }) => /* @__PURE__ */ React.createElement("div", { key: label, style: { background: "#1a1a1a", borderRadius: 10, padding: "10px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 } }, label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: val ? color : "rgba(255,255,255,0.2)", lineHeight: 1 } }, val ? fmtUSD(parseFloat(val)) : "\u2014"), date && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 3 } }, fmtDateShort(date))))), /* @__PURE__ */ React.createElement(TimeframeDeltas, { history: hist, dark: true }), hist.length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 10, padding: "12px 14px", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 2, textTransform: "uppercase" } }, "historial"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4 } }, ["7d", "30d", "todo"].map((r) => /* @__PURE__ */ React.createElement(
         "button",
         {
           key: r,
@@ -2348,7 +2374,7 @@ var __angst = (() => {
         { label: "ATH", val: ath, date: athDate, color: "#2e7d52" },
         { label: "ATL", val: atl, date: atlDate, color: "#e53935" },
         { label: `\u03C3 ${volLabel || ""}`, val: vol ? `${vol}%` : null, date: null, color: "#888" }
-      ].map(({ label, val, date, color }) => /* @__PURE__ */ React.createElement("div", { key: label, style: { background: "#fafafa", border: "1px solid #eee", borderRadius: 10, padding: "10px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 } }, label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: val ? color : "#ddd", lineHeight: 1 } }, val ? fmtUSD(parseFloat(val)) : "\u2014"), date && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", marginTop: 3 } }, fmtDateShort(date))))), hist.length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { background: "#fafafa", border: "1px solid #eee", borderRadius: 12, padding: "12px 14px", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 2, textTransform: "uppercase" } }, "historial TCGPlayer"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4 } }, ["7d", "30d", "todo"].map((r) => /* @__PURE__ */ React.createElement(
+      ].map(({ label, val, date, color }) => /* @__PURE__ */ React.createElement("div", { key: label, style: { background: "#fafafa", border: "1px solid #eee", borderRadius: 10, padding: "10px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 } }, label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: val ? color : "#ddd", lineHeight: 1 } }, val ? fmtUSD(parseFloat(val)) : "\u2014"), date && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", marginTop: 3 } }, fmtDateShort(date))))), /* @__PURE__ */ React.createElement(TimeframeDeltas, { history: hist, dark: false }), hist.length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { background: "#fafafa", border: "1px solid #eee", borderRadius: 12, padding: "12px 14px", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 2, textTransform: "uppercase" } }, "historial TCGPlayer"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4 } }, ["7d", "30d", "todo"].map((r) => /* @__PURE__ */ React.createElement(
         "button",
         {
           key: r,
