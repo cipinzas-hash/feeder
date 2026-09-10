@@ -49,6 +49,14 @@ async function readJsonSafe(path, fallback) {
   }
 }
 
+// pokemontcg.io sin API key: 20 requests/minuto. Sin ninguna pausa entre
+// llamadas, un loop de hasta 100 cartas agota ese cupo a los ~20-25
+// segundos -- coincide exactamente con el patrón real observado (siempre
+// ~24-26 cartas actualizadas por día, nunca cerca de las 100 candidatas).
+// 3.2s entre cartas = ~18.75 req/min, con margen bajo el límite real.
+const POKE_THROTTLE_MS = 3200;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
 async function main() {
   const inventario = await readJsonSafe(INVENTARIO_PATH, []);
   const pending = await readJsonSafe(PENDING_PATH, []);
@@ -76,7 +84,9 @@ async function main() {
   const hoy = new Date().toISOString().slice(0, 10);
   const actualizadas = new Map();
 
-  for (const carta of candidatas) {
+  for (let i = 0; i < candidatas.length; i++) {
+    const carta = candidatas[i];
+    if (i > 0) await sleep(POKE_THROTTLE_MS); // ver nota de POKE_THROTTLE_MS arriba
     try {
       // Presupuesto de tcgpricelookup.com agotado -- no aborta la corrida,
       // simplemente esta carta puntual (y las que sigan necesitando
@@ -84,16 +94,17 @@ async function main() {
       // disponible sin restricción.
       const necesitaFallbackSiFalla = !carta.cardId;
       if (necesitaFallbackSiFalla && tcgUsadas >= RESERVA_TCG_DIARIA) {
-        console.log(`⏭ ${carta.name}: sin cardId y cupo de tcgpricelookup.com agotado por hoy, se pospone`);
+        console.log(`⏭ (${i + 1}/${candidatas.length}) ${carta.name}: sin cardId y cupo de tcgpricelookup.com agotado por hoy, se pospone`);
         continue;
       }
       const { market, low, high, fuente } = await refreshPrecio(carta, TCG_API_KEY);
       if (fuente === "tcgpricelookup") tcgUsadas++;
       if (market == null) {
-        console.log(`✗ ${carta.name}: sin precio de ninguna fuente`);
+        console.log(`✗ (${i + 1}/${candidatas.length}) ${carta.name}: sin precio de ninguna fuente`);
         failCount++;
         continue;
       }
+      console.log(`✓ (${i + 1}/${candidatas.length}) ${carta.name}: $${market} (${fuente})`);
       const newHist = [...(carta.priceHistory || [])];
       const idx = newHist.length && newHist[newHist.length - 1].date === hoy ? newHist.length - 1 : -1;
       const snap = { date: hoy, market, low: low || null, high: high || null };
@@ -101,7 +112,7 @@ async function main() {
       actualizadas.set(carta.id, { tcgMarket: market, tcgLow: low, tcgHigh: high, tcgUpdated: hoy, priceHistory: newHist });
       okCount++;
     } catch (e) {
-      console.error(`✗ ${carta.name}: ${e.message}`);
+      console.error(`✗ (${i + 1}/${candidatas.length}) ${carta.name}: ${e.message}`);
       failCount++;
     }
   }
