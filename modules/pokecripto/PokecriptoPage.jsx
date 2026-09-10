@@ -261,13 +261,11 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [darkSetsLoading,setDarkSetsLoading]= React.useState(false);
   const [showAddCarpeta, setShowAddCarpeta] = React.useState(false);
   const [newCarpeta,     setNewCarpeta]     = React.useState("");
-  const [schedStatus,    setSchedStatus]    = React.useState(null);
-  const [schedProgress,  setSchedProgress]  = React.useState({done:0,total:0});
-  const [schedLog,       setSchedLog]       = React.useState([]);
+  const [historialOpen,  setHistorialOpen]  = React.useState(false);
+  const [historialFecha, setHistorialFecha] = React.useState(null);
   const [apiKeyInput,    setApiKeyInput]    = React.useState("");
   const [diagResult, setDiagResult] = React.useState(null);
   const [diagLoading, setDiagLoading] = React.useState(false);
-  const [showSchedLog,   setShowSchedLog]   = React.useState(false);
   const [darkPriceModal, setDarkPriceModal] = React.useState(null);
   const [darkPrecioInput,setDarkPrecioInput]= React.useState("");
   const [darkNotaInput,  setDarkNotaInput]  = React.useState("");
@@ -1571,42 +1569,77 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         </div>
       </div>
 
-      {/* Scheduler clickeable */}
-      {(schedStatus==="running"||schedStatus==="done")&&(
-        <div>
-          <div onClick={()=>setShowSchedLog(v=>!v)}
-            style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",background:"#f9f9f9",border:"1px solid #f0f0f0",borderRadius:8,marginBottom:4,cursor:"pointer"}}>
-            {schedStatus==="running"&&<div style={{width:6,height:6,borderRadius:"50%",background:"#2e7d52",flexShrink:0}}/>}
-            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",letterSpacing:1,flex:1}}>
-              {schedStatus==="running"?`actualizando precios ${schedProgress.done}/${schedProgress.total}`:`✓ ${schedProgress.done} precios actualizados hoy`}
-            </span>
-            {schedLog.length>0&&<span style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb"}}>{showSchedLog?"▴":"▾"}</span>}
-            {schedStatus==="running"&&<div style={{width:50,height:3,background:"#eee",borderRadius:99,overflow:"hidden",flexShrink:0}}>
-              <div style={{height:"100%",width:`${schedProgress.total>0?schedProgress.done/schedProgress.total*100:0}%`,background:"#2e7d52",borderRadius:99,transition:"width 0.3s"}}/>
-            </div>}
-          </div>
-          {showSchedLog&&schedLog.length>0&&(
-            <div style={{background:"#fff",border:"1px solid #f0f0f0",borderRadius:8,marginBottom:8,maxHeight:200,overflowY:"auto"}}>
-              {schedLog.map((item,i)=>{
-                const up=parseFloat(item.delta)>=0;
-                return(
-                  <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",borderBottom:"1px solid #f8f8f8"}}>
-                    {item.image&&<img src={item.image} style={{width:28,borderRadius:4,flexShrink:0}}/>}
-                    <div style={{flex:1,minWidth:0,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#333",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.name}</div>
-                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:700,color:up?"#2e7d52":"#e53935",flexShrink:0}}>
-                      {up?"+":""}{item.delta}%
-                    </div>
-                  </div>
-                );
-              })}
+      {/* Historial de snapshots del bot -- reemplaza al scheduler viejo de
+          200/día (ya no existe, el bot corre en GitHub Actions). Derivado
+          100% de priceHistory, que ya viene en cada carta -- sin backend
+          nuevo, sin archivo aparte. Por cada carta, cada entrada de su
+          priceHistory (salvo la primera) se compara contra la anterior
+          para armar el delta del día. */}
+      {(()=>{
+        const porFecha = new Map(); // fecha -> [{carta, prevMarket, newMarket, delta}]
+        for (const c of inv) {
+          const hist = c.priceHistory || [];
+          for (let i = 0; i < hist.length; i++) {
+            const cur = hist[i];
+            if (cur.market == null) continue;
+            const prev = i > 0 ? hist[i - 1] : null;
+            const entry = {
+              carta: c,
+              prevMarket: prev?.market ?? null,
+              newMarket: cur.market,
+              delta: prev?.market ? ((cur.market - prev.market) / prev.market * 100).toFixed(1) : null,
+            };
+            if (!porFecha.has(cur.date)) porFecha.set(cur.date, []);
+            porFecha.get(cur.date).push(entry);
+          }
+        }
+        const fechas = [...porFecha.keys()].sort().reverse();
+        if (!fechas.length) return null;
+        const fecha = fechas.includes(historialFecha) ? historialFecha : fechas[0];
+        const idx = fechas.indexOf(fecha);
+        const entradas = (porFecha.get(fecha) || []).sort((a, b) => Math.abs(parseFloat(b.delta) || 0) - Math.abs(parseFloat(a.delta) || 0));
+        return (
+          <div>
+            <div onClick={()=>setHistorialOpen(v=>!v)}
+              style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",background:"#f9f9f9",border:"1px solid #f0f0f0",borderRadius:8,marginBottom:4,cursor:"pointer"}}>
+              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",letterSpacing:1,flex:1}}>
+                📊 historial de snapshots -- {entradas.length} carta{entradas.length===1?"":"s"} el {fecha}
+              </span>
+              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb"}}>{historialOpen?"▴":"▾"}</span>
             </div>
-          )}
-        </div>
-      )}
+            {historialOpen&&(
+              <div style={{background:"#fff",border:"1px solid #f0f0f0",borderRadius:8,marginBottom:8}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",borderBottom:"1px solid #f0f0f0"}}>
+                  <button onClick={()=>setHistorialFecha(fechas[idx+1])} disabled={idx>=fechas.length-1}
+                    style={{background:"transparent",border:"none",fontSize:14,cursor:idx>=fechas.length-1?"default":"pointer",opacity:idx>=fechas.length-1?0.3:1,padding:"0 4px"}}>◀</button>
+                  <span style={{flex:1,textAlign:"center",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#333"}}>{fecha}</span>
+                  <button onClick={()=>setHistorialFecha(fechas[idx-1])} disabled={idx<=0}
+                    style={{background:"transparent",border:"none",fontSize:14,cursor:idx<=0?"default":"pointer",opacity:idx<=0?0.3:1,padding:"0 4px"}}>▶</button>
+                </div>
+                <div style={{maxHeight:280,overflowY:"auto"}}>
+                  {entradas.map((item,i)=>{
+                    const up = item.delta!=null && parseFloat(item.delta)>=0;
+                    return(
+                      <div key={item.carta.id+i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",borderBottom:"1px solid #f8f8f8"}}>
+                        {item.carta.image&&<img src={item.carta.image} style={{width:28,borderRadius:4,flexShrink:0}}/>}
+                        <div style={{flex:1,minWidth:0,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#333",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.carta.name}</div>
+                        <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",flexShrink:0}}>${item.newMarket?.toFixed(2)}</div>
+                        <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:700,color:item.delta==null?"#aaa":up?"#2e7d52":"#e53935",flexShrink:0,width:48,textAlign:"right"}}>
+                          {item.delta==null?"nuevo":`${up?"+":""}${item.delta}%`}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Iconos de carpetas hardcodeadas */}
       <div style={{display:"flex",gap:8,marginBottom:14}}>
-        {["MLP","Staples & Meta","Dark Collection"].map(cat=>{
+        {["MLP","Staples & Meta","Dark Collection","Price Watch"].map(cat=>{
           const n=cat==="Dark Collection"?darkCat.length:inv.filter(c=>c.carpeta===cat).length;
           const cons=cat==="Dark Collection"?darkConseguidas:null;
           return(

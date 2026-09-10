@@ -1688,13 +1688,11 @@ var __angst = (() => {
     const [darkSetsLoading, setDarkSetsLoading] = React.useState(false);
     const [showAddCarpeta, setShowAddCarpeta] = React.useState(false);
     const [newCarpeta, setNewCarpeta] = React.useState("");
-    const [schedStatus, setSchedStatus] = React.useState(null);
-    const [schedProgress, setSchedProgress] = React.useState({ done: 0, total: 0 });
-    const [schedLog, setSchedLog] = React.useState([]);
+    const [historialOpen, setHistorialOpen] = React.useState(false);
+    const [historialFecha, setHistorialFecha] = React.useState(null);
     const [apiKeyInput, setApiKeyInput] = React.useState("");
     const [diagResult, setDiagResult] = React.useState(null);
     const [diagLoading, setDiagLoading] = React.useState(false);
-    const [showSchedLog, setShowSchedLog] = React.useState(false);
     const [darkPriceModal, setDarkPriceModal] = React.useState(null);
     const [darkPrecioInput, setDarkPrecioInput] = React.useState("");
     const [darkNotaInput, setDarkNotaInput] = React.useState("");
@@ -2806,20 +2804,58 @@ var __angst = (() => {
     } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 } }, [
       { label: "inventario", val: fmtUSD(valorEstim), sub: `${activas.length} cartas` },
       { label: "ganancia mes", val: fmtUSD(ganMes), sub: `${vendMes.length} vendidas`, color: ganMes >= 0 ? "#aac756" : "#e53935" }
-    ].map(({ label, val, sub, color }, i) => /* @__PURE__ */ React.createElement("div", { key: label, style: { textAlign: i === 0 ? "left" : "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: color || "#fff", lineHeight: 1 } }, val), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginTop: 3 } }, label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.25)", marginTop: 2 } }, sub))))), (schedStatus === "running" || schedStatus === "done") && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(
-      "div",
-      {
-        onClick: () => setShowSchedLog((v) => !v),
-        style: { display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "#f9f9f9", border: "1px solid #f0f0f0", borderRadius: 8, marginBottom: 4, cursor: "pointer" }
-      },
-      schedStatus === "running" && /* @__PURE__ */ React.createElement("div", { style: { width: 6, height: 6, borderRadius: "50%", background: "#2e7d52", flexShrink: 0 } }),
-      /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 1, flex: 1 } }, schedStatus === "running" ? `actualizando precios ${schedProgress.done}/${schedProgress.total}` : `\u2713 ${schedProgress.done} precios actualizados hoy`),
-      schedLog.length > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb" } }, showSchedLog ? "\u25B4" : "\u25BE"),
-      schedStatus === "running" && /* @__PURE__ */ React.createElement("div", { style: { width: 50, height: 3, background: "#eee", borderRadius: 99, overflow: "hidden", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${schedProgress.total > 0 ? schedProgress.done / schedProgress.total * 100 : 0}%`, background: "#2e7d52", borderRadius: 99, transition: "width 0.3s" } }))
-    ), showSchedLog && schedLog.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { background: "#fff", border: "1px solid #f0f0f0", borderRadius: 8, marginBottom: 8, maxHeight: 200, overflowY: "auto" } }, schedLog.map((item, i) => {
-      const up = parseFloat(item.delta) >= 0;
-      return /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderBottom: "1px solid #f8f8f8" } }, item.image && /* @__PURE__ */ React.createElement("img", { src: item.image, style: { width: 28, borderRadius: 4, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#333", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, item.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: up ? "#2e7d52" : "#e53935", flexShrink: 0 } }, up ? "+" : "", item.delta, "%"));
-    }))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14 } }, ["MLP", "Staples & Meta", "Dark Collection"].map((cat) => {
+    ].map(({ label, val, sub, color }, i) => /* @__PURE__ */ React.createElement("div", { key: label, style: { textAlign: i === 0 ? "left" : "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: color || "#fff", lineHeight: 1 } }, val), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginTop: 3 } }, label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.25)", marginTop: 2 } }, sub))))), (() => {
+      const porFecha = /* @__PURE__ */ new Map();
+      for (const c of inv) {
+        const hist = c.priceHistory || [];
+        for (let i = 0; i < hist.length; i++) {
+          const cur = hist[i];
+          if (cur.market == null) continue;
+          const prev = i > 0 ? hist[i - 1] : null;
+          const entry = {
+            carta: c,
+            prevMarket: prev?.market ?? null,
+            newMarket: cur.market,
+            delta: prev?.market ? ((cur.market - prev.market) / prev.market * 100).toFixed(1) : null
+          };
+          if (!porFecha.has(cur.date)) porFecha.set(cur.date, []);
+          porFecha.get(cur.date).push(entry);
+        }
+      }
+      const fechas = [...porFecha.keys()].sort().reverse();
+      if (!fechas.length) return null;
+      const fecha = fechas.includes(historialFecha) ? historialFecha : fechas[0];
+      const idx = fechas.indexOf(fecha);
+      const entradas = (porFecha.get(fecha) || []).sort((a, b) => Math.abs(parseFloat(b.delta) || 0) - Math.abs(parseFloat(a.delta) || 0));
+      return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          onClick: () => setHistorialOpen((v) => !v),
+          style: { display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "#f9f9f9", border: "1px solid #f0f0f0", borderRadius: 8, marginBottom: 4, cursor: "pointer" }
+        },
+        /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 1, flex: 1 } }, "\u{1F4CA} historial de snapshots -- ", entradas.length, " carta", entradas.length === 1 ? "" : "s", " el ", fecha),
+        /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb" } }, historialOpen ? "\u25B4" : "\u25BE")
+      ), historialOpen && /* @__PURE__ */ React.createElement("div", { style: { background: "#fff", border: "1px solid #f0f0f0", borderRadius: 8, marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderBottom: "1px solid #f0f0f0" } }, /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          onClick: () => setHistorialFecha(fechas[idx + 1]),
+          disabled: idx >= fechas.length - 1,
+          style: { background: "transparent", border: "none", fontSize: 14, cursor: idx >= fechas.length - 1 ? "default" : "pointer", opacity: idx >= fechas.length - 1 ? 0.3 : 1, padding: "0 4px" }
+        },
+        "\u25C0"
+      ), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, textAlign: "center", fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#333" } }, fecha), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          onClick: () => setHistorialFecha(fechas[idx - 1]),
+          disabled: idx <= 0,
+          style: { background: "transparent", border: "none", fontSize: 14, cursor: idx <= 0 ? "default" : "pointer", opacity: idx <= 0 ? 0.3 : 1, padding: "0 4px" }
+        },
+        "\u25B6"
+      )), /* @__PURE__ */ React.createElement("div", { style: { maxHeight: 280, overflowY: "auto" } }, entradas.map((item, i) => {
+        const up = item.delta != null && parseFloat(item.delta) >= 0;
+        return /* @__PURE__ */ React.createElement("div", { key: item.carta.id + i, style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderBottom: "1px solid #f8f8f8" } }, item.carta.image && /* @__PURE__ */ React.createElement("img", { src: item.carta.image, style: { width: 28, borderRadius: 4, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#333", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, item.carta.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", flexShrink: 0 } }, "$", item.newMarket?.toFixed(2)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: item.delta == null ? "#aaa" : up ? "#2e7d52" : "#e53935", flexShrink: 0, width: 48, textAlign: "right" } }, item.delta == null ? "nuevo" : `${up ? "+" : ""}${item.delta}%`));
+      }))));
+    })(), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14 } }, ["MLP", "Staples & Meta", "Dark Collection", "Price Watch"].map((cat) => {
       const n = cat === "Dark Collection" ? darkCat.length : inv.filter((c) => c.carpeta === cat).length;
       const cons = cat === "Dark Collection" ? darkConseguidas : null;
       return /* @__PURE__ */ React.createElement(
