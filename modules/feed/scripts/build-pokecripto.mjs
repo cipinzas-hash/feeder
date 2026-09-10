@@ -12,7 +12,8 @@
 // cola de "más antiguas" sin necesitar lógica de prioridad aparte.
 //
 // Política (issue #9): ordenar TODAS las cartas activas por antigüedad de
-// snapshot, tomar las 100 más viejas, consultar, snapshot, persistir. Una
+// snapshot, tomar las 300 más viejas (ver CARTAS_POR_CORRIDA más abajo,
+// subido de 100 el 9-sep-2026), consultar, snapshot, persistir. Una
 // carta actualizada pasa al final de la cola para la próxima corrida.
 //
 // Presupuesto de API: pokemontcg.io (gratis, sin key) va primero y cubre
@@ -30,7 +31,17 @@ const INVENTARIO_PATH = process.env.POKECRIPTO_INVENTARIO_PATH;
 const PENDING_PATH = process.env.POKECRIPTO_PENDING_PATH;
 const TCG_API_KEY = process.env.TCG_API_KEY || null;
 
-const CARTAS_POR_CORRIDA = 100;
+// Con el throttle de POKE_THROTTLE_MS (más abajo) y timeout-minutes:20 del
+// workflow, el presupuesto de tiempo real de una corrida permite bastante
+// más que 100 cartas: ~3.7-4.2s por carta (throttle + latencia real de red)
+// x 300 cartas ≈ 18-21 min, todavía dentro del margen. Se sube de 100 a 300
+// (9-sep-2026, Cristopher pidió maximizar cobertura ya que pokemontcg.io es
+// gratis) -- con esto el inventario activo de hoy (128) entra ENTERO en una
+// sola corrida diaria, todos los días, en vez de ir rotando entre corridas.
+// Si el inventario crece bastante más allá de ~250-280 cartas activas, esta
+// cuenta hay que rehacerla (subir timeout-minutes, o recién ahí sí
+// considerar correr más de una vez al día).
+const CARTAS_POR_CORRIDA = 300;
 const RESERVA_TCG_DIARIA = 80; // de 100 reales -- margen para uso manual
 
 if (!INVENTARIO_PATH || !PENDING_PATH) {
@@ -70,7 +81,7 @@ async function main() {
   if (nuevas.length) console.log(`✓ ${nuevas.length} carta(s) nueva(s) fusionada(s) desde pending`);
 
   // 2. Ordenar por antigüedad de snapshot (tcgUpdated null = más viejo
-  // posible, entra primero) y tomar las 100 más viejas. "vendida" no
+  // posible, entra primero) y tomar las CARTAS_POR_CORRIDA más viejas. "vendida" no
   // participa -- ya no es inventario activo.
   const candidatas = inventarioFusionado
     .filter(c => c.estado !== "vendida" && (c.cardId || c.name))
