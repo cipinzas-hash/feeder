@@ -309,23 +309,43 @@ async function main() {
     if (!YOUTUBE_API_KEY || !videoIds.length) return map;
     for (let i = 0; i < videoIds.length; i += 50) {
       const batch = videoIds.slice(i, i + 50);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
       try {
-        const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${batch.join(",")}&key=${YOUTUBE_API_KEY}`);
+        const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${batch.join(",")}&key=${YOUTUBE_API_KEY}`, { signal: controller.signal });
         const data = await res.json();
         for (const v of data.items || []) map[v.id] = parseISO8601Duration(v.contentDetails?.duration);
       } catch (e) { console.error(`✗ Conciertos duración (lote): ${e.message}`); }
+      finally { clearTimeout(timer); }
     }
     return map;
   }
 
   const conciertosPreFiltered = recentItems.filter(a => a.categoria !== "Conciertos" || !CONCIERTOS_EXCLUDE_RE.test(a.title));
-  const conciertosVideoIds = conciertosPreFiltered.filter(a => a.categoria === "Conciertos" && a.videoId).map(a => a.videoId);
-  const conciertosDurations = await fetchDurationsMap(conciertosVideoIds);
+  // Issue #8 sacó la purga de 30 días para Conciertos -- este acumulado ya
+  // no tiene techo natural, así que pedirle a YouTube la duración de TODO
+  // en cada corrida (como hacía antes) escala sin límite con el tiempo. La
+  // duración de un video de YouTube no cambia nunca, así que se persiste en
+  // el item (duracionSegundos) y solo se pide de nuevo lo que sea
+  // genuinamente nuevo -- mismo criterio que ya usa fullText más abajo.
+  const conciertosNuevosIds = conciertosPreFiltered
+    .filter(a => a.categoria === "Conciertos" && a.videoId && previousByGuid.get(a.guid)?.duracionSegundos == null)
+    .map(a => a.videoId);
+  console.log(`Conciertos: pidiendo duración de ${conciertosNuevosIds.length} video(s) nuevo(s) a YouTube (lotes de 50) -- el resto ya la tenía de una corrida anterior`);
+  const conciertosDurationsNuevas = await fetchDurationsMap(conciertosNuevosIds);
+  const conciertosDurations = { ...conciertosDurationsNuevas };
+  for (const a of conciertosPreFiltered) {
+    if (a.categoria === "Conciertos" && a.videoId) {
+      const prevDur = previousByGuid.get(a.guid)?.duracionSegundos;
+      if (prevDur != null && conciertosDurations[a.videoId] == null) conciertosDurations[a.videoId] = prevDur;
+    }
+  }
   const recentItemsFiltered = conciertosPreFiltered.filter(a => {
     if (a.categoria !== "Conciertos") return true;
     if (!YOUTUBE_API_KEY) return CONCIERTOS_INCLUDE_RE.test(a.title); // sin key, fallback al criterio de título
     if (!a.videoId) return false;
     const dur = conciertosDurations[a.videoId];
+    if (dur != null) a.duracionSegundos = dur; // se persiste para la próxima corrida
     return dur != null && dur >= CONCIERTOS_MIN_SECONDS;
   });
   const droppedConciertosCount = recentItems.length - recentItemsFiltered.length;
@@ -349,7 +369,9 @@ async function main() {
     }
     if (extractionsUsed >= MAX_NEW_EXTRACTIONS_PER_RUN) return item; // se completa en la próxima corrida
     extractionsUsed++;
+    console.log(`  → extrayendo (${extractionsUsed}/${MAX_NEW_EXTRACTIONS_PER_RUN}): ${item.link}`);
     const { sanitized, hasEmbed, videoId, bandcampEmbedUrl, soundcloudTrackUrl } = await extractFullText(item.link);
+    console.log(`  ✓ listo (${extractionsUsed}/${MAX_NEW_EXTRACTIONS_PER_RUN}): ${item.link}`);
     const out = { ...item, fullText: sanitized, hasListenEmbed: item.hasListenEmbed || hasEmbed };
     if (videoId && !out.tipo) { out.tipo = "video"; out.videoId = videoId; }
     if (bandcampEmbedUrl && !out.bandcampEmbedUrl) out.bandcampEmbedUrl = bandcampEmbedUrl;
