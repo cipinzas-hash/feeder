@@ -268,13 +268,22 @@ async function main() {
   const allSources = feedsConfig.flatMap(g => g.feeds.map(f => ({ ...f, cat: g.cat })));
   console.log(`Bajando ${allSources.length} feeds...`);
   const fetched = await mapWithConcurrency(allSources, FEED_CONCURRENCY, f => fetchFeed(f, f.cat));
-  const allItems = fetched.flat();
+  // addedAt: fecha de incorporación al Feed, distinta de pubDate (fecha real de
+  // publicación/upload). Se sella la primera vez que un guid aparece nuevo
+  // (no está en previousByGuid) y se conserva igual en corridas siguientes —
+  // requisito de issue #8 (Micro Docs/Conciertos como videoteca persistente).
+  const allItems = fetched.flat().map(item => ({
+    ...item,
+    addedAt: previousByGuid.get(item.guid)?.addedAt || new Date().toISOString(),
+  }));
 
   const cutoff = Date.now() - RETENTION_DAYS * 86400000;
-  // Podcasts (Meta Pod, Uncommon Energy) queda fuera de la retención de 30 días:
-  // son shows activos con cadencia baja, se acumulan indefinidamente en vez de
-  // perderse cada mes como el resto del feed de lectura.
-  const recentItems = allItems.filter(a => a.categoria === "Podcasts" || !a.pubDate || new Date(a.pubDate).getTime() >= cutoff);
+  // Podcasts (Meta Pod, Uncommon Energy), Microdocumentales y Conciertos quedan
+  // fuera de la retención de 30 días: issue #8 pide que estas dos últimas sean
+  // una videoteca persistente ("no introducir caducidad automática del
+  // contenido"), mismo criterio que ya regía para Podcasts.
+  const CATEGORIAS_SIN_RETENCION = new Set(["Podcasts", "Microdocumentales", "Conciertos"]);
+  const recentItems = allItems.filter(a => CATEGORIAS_SIN_RETENCION.has(a.categoria) || !a.pubDate || new Date(a.pubDate).getTime() >= cutoff);
 
   // Conciertos: los 6 canales (WackenTV, Hellfest, M'era Luna, Bangers Open
   // Air, ARTE Concert, MagentaTV) suben de todo -- trailers, aftermovies,
