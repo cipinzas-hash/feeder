@@ -59,8 +59,23 @@ export async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey) 
     // FILTRAR candidatos ya encontrados por nombre+número, nunca como
     // término de búsqueda.
     let q = number ? `${name} ${number}` : name;
-    const r = await fetch(`${TCG_BASE}/cards/search?q=${encodeURIComponent(q)}&game=pokemon&limit=20`,
-      { headers: { "X-API-Key": apiKey }, signal: AbortSignal.timeout(8000) });
+    // Confirmado con el botón de diagnóstico del cliente (10-sep-2026,
+    // Drapion 97 -> HTTP 429): tcgpricelookup.com rate-limitea más agresivo
+    // que pokemontcg.io, y el bot le pega varias veces seguidas cuando hay
+    // varias cartas consecutivas sin cardId resuelto (todas caen al
+    // fallback, sin el respiro del throttle de pokemontcg.io que solo
+    // corre cuando el primario responde). 3 intentos con backoff,
+    // respetando Retry-After si lo manda.
+    let r, intento = 0;
+    while (true) {
+      r = await fetch(`${TCG_BASE}/cards/search?q=${encodeURIComponent(q)}&game=pokemon&limit=20`,
+        { headers: { "X-API-Key": apiKey }, signal: AbortSignal.timeout(8000) });
+      if (r.status !== 429 || intento >= 2) break;
+      const retryAfter = parseInt(r.headers.get("retry-after") || "", 10);
+      const esperaMs = Number.isFinite(retryAfter) ? retryAfter * 1000 : 2000 * Math.pow(2, intento);
+      await new Promise(res => setTimeout(res, esperaMs));
+      intento++;
+    }
     if (!r.ok) return { error: `HTTP ${r.status}`, query: q };
     const data = await r.json();
     const cards = data.data || [];
