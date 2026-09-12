@@ -1809,7 +1809,7 @@
       );
     }
 
-    function ArchivedFeedCard({ item, visto, onToggleVisto, showSource }) {
+    function ArchivedFeedCard({ item, visto, onToggleVisto, onNoInteresa, showSource }) {
       return (
         <div style={{
           padding: "22px 0",
@@ -1817,14 +1817,23 @@
           opacity: visto ? 0.55 : 1,
         }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
-            <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>{item.title}</div>
-            <button onClick={onToggleVisto} style={{
-              flexShrink: 0, fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700,
-              border: "1px solid " + (visto ? "#333" : "#26a69a"), borderRadius: 14, padding: "4px 10px",
-              background: "transparent", color: visto ? "#666" : "#26a69a", cursor: "pointer",
-            }}>
-              {visto ? "✓ visto" : "marcar visto"}
-            </button>
+            <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff", lineHeight: 1.2, flex: 1 }}>{item.title}</div>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+              <button onClick={onToggleVisto} style={{
+                fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700,
+                border: "1px solid " + (visto ? "#333" : "#26a69a"), borderRadius: 14, padding: "4px 10px",
+                background: "transparent", color: visto ? "#666" : "#26a69a", cursor: "pointer", whiteSpace: "nowrap",
+              }}>
+                {visto ? "✓ visto" : "marcar visto"}
+              </button>
+              <button onClick={onNoInteresa} style={{
+                fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700,
+                border: "1px solid #4a2f2f", borderRadius: 14, padding: "4px 10px",
+                background: "transparent", color: "#a35a5a", cursor: "pointer", whiteSpace: "nowrap",
+              }}>
+                no me interesa
+              </button>
+            </div>
           </div>
           {showSource && item.source && (
             <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>{item.source}</div>
@@ -1862,6 +1871,8 @@
 
     function ArchivedFeed({ items, storageKey }) {
       const [vistos, setVistos] = useState(() => loadArchivedVistos(storageKey));
+      const noInteresaKey = storageKey + "-no-interesa";
+      const [noInteresa, setNoInteresa] = useState(() => loadArchivedVistos(noInteresaKey));
       const [canal, setCanal] = useState("Todos");
       const [openPeriods, setOpenPeriods] = useState(() => new Set());
 
@@ -1870,6 +1881,17 @@
           const next = new Set(prev);
           if (next.has(guid)) next.delete(guid); else next.add(guid);
           saveArchivedVistos(storageKey, next);
+          return next;
+        });
+      }
+      // No hay toggle de vuelta desde la UI: una vez marcado "no me interesa" el
+      // ítem desaparece (de NUEVOS y del archivo), no hay afordancia para
+      // deshacerlo. Igual queda en localStorage por si hace falta limpiar a mano.
+      function marcarNoInteresa(guid) {
+        setNoInteresa(prev => {
+          const next = new Set(prev);
+          next.add(guid);
+          saveArchivedVistos(noInteresaKey, next);
           return next;
         });
       }
@@ -1884,10 +1906,14 @@
       const canales = [...new Set(items.map(i => i.source).filter(Boolean))];
       const showCanalTabs = canales.length > 1;
       const filtered = (!showCanalTabs || canal === "Todos") ? items : items.filter(i => i.source === canal);
-      const sorted = [...filtered].sort((a, b) => (b.pubDate || "").localeCompare(a.pubDate || ""));
+      // "no me interesa" saca el ítem de todo el componente, no solo de NUEVOS.
+      const visibles = filtered.filter(i => !noInteresa.has(i.guid));
+      const sorted = [...visibles].sort((a, b) => (b.pubDate || "").localeCompare(a.pubDate || ""));
 
       const cutoff = Date.now() - ARCHIVEDFEED_NUEVOS_DIAS * 86400000;
-      const nuevos = sorted.filter(i => i.pubDate && new Date(i.pubDate).getTime() >= cutoff);
+      // Marcar visto (además de no me interesa) también saca el ítem de NUEVOS
+      // aunque siga adentro de la ventana de días — pasa directo al archivo.
+      const nuevos = sorted.filter(i => i.pubDate && new Date(i.pubDate).getTime() >= cutoff && !vistos.has(i.guid));
       const resto = sorted.filter(i => !nuevos.includes(i));
 
       const porPeriodo = new Map();
@@ -1915,7 +1941,7 @@
             <div style={{ marginBottom: 24 }}>
               <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: 1, color: "#26a69a", marginBottom: 4 }}>NUEVOS</div>
               {nuevos.map(item => (
-                <ArchivedFeedCard key={item.guid} item={item} visto={vistos.has(item.guid)} onToggleVisto={() => toggleVisto(item.guid)} showSource={showCanalTabs} />
+                <ArchivedFeedCard key={item.guid} item={item} visto={vistos.has(item.guid)} onToggleVisto={() => toggleVisto(item.guid)} onNoInteresa={() => marcarNoInteresa(item.guid)} showSource={showCanalTabs} />
               ))}
             </div>
           )}
@@ -1939,7 +1965,7 @@
                       <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#555" }}>{periodoItems.length}</span>
                     </button>
                     {isOpen && periodoItems.map(item => (
-                      <ArchivedFeedCard key={item.guid} item={item} visto={vistos.has(item.guid)} onToggleVisto={() => toggleVisto(item.guid)} showSource={showCanalTabs} />
+                      <ArchivedFeedCard key={item.guid} item={item} visto={vistos.has(item.guid)} onToggleVisto={() => toggleVisto(item.guid)} onNoInteresa={() => marcarNoInteresa(item.guid)} showSource={showCanalTabs} />
                     ))}
                   </div>
                 );
