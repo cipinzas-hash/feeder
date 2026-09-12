@@ -583,7 +583,35 @@ function isoDurationToSeconds(iso) {
 // nombres de jugadores de casualidad, hay que resolverlo por duración
 // (los preview son cortos) antes que reintroducir esto acá.
 const CLIP_TITLE_PENALTY = /highlight|recap|hype|trailer|announcement|day ?\d|full (bracket|stream|vod)/i;
-async function pickBestMatchClip(items, nombreA, nombreB) {
+// Bug real (CEO 2026, reportado por Cristopher): Winners Final terminó con el
+// mismo video que Grand Final, porque cuando Winners Final y Grand Final son
+// entre los mismos dos jugadores (pasa seguido -- el finalista de winners se
+// reencuentra con el mismo rival en la gran final), el scoring de más abajo
+// solo mira nombres de jugadores + duración, nunca el ROTULO de la ronda. Si
+// no existe un video de "WINNERS FINALS" propio en el canal y sí uno de
+// "GRAND FINALS" con los mismos dos nombres, ese termina ganando por
+// default. Esto agrega una segunda señal: si el título nombra explícitamente
+// una de las tres finales (grand/winners/losers) y NO es la que se estaba
+// buscando, es un error real aunque los nombres coincidan -- mismos
+// jugadores no alcanza cuando el título mismo dice qué ronda es.
+const FINALS_LABELS = ["GRAND FINALS", "WINNERS FINALS", "LOSERS FINALS"];
+function scoreRoundLabelMatch(title, roundLabel) {
+  if (!FINALS_LABELS.includes(roundLabel)) return 0; // no aplica a TOP 8 genérico (quarter/semi)
+  const tieneGrand = /grand final/i.test(title);
+  const tieneWinners = /winners final/i.test(title);
+  const tieneLosers = /losers final/i.test(title);
+  const esperado = (roundLabel === "GRAND FINALS" && tieneGrand)
+    || (roundLabel === "WINNERS FINALS" && tieneWinners)
+    || (roundLabel === "LOSERS FINALS" && tieneLosers);
+  const otraFinal = (tieneGrand && roundLabel !== "GRAND FINALS")
+    || (tieneWinners && roundLabel !== "WINNERS FINALS")
+    || (tieneLosers && roundLabel !== "LOSERS FINALS");
+  let delta = 0;
+  if (esperado) delta += 3;   // el título confirma explícitamente la ronda correcta
+  if (otraFinal) delta -= 6;  // el título nombra OTRA final -- descarta aunque los jugadores coincidan
+  return delta;
+}
+async function pickBestMatchClip(items, nombreA, nombreB, roundLabel) {
   if (!items.length) return null;
   const ids = items.map(it => it.id.videoId).join(",");
   const detailsRes = await fetch(
@@ -602,6 +630,7 @@ async function pickBestMatchClip(items, nombreA, nombreB) {
     if (seconds >= 30 && seconds <= 2400) score += 2; // rango típico de un set real (30s a 40min, bo5 largo incluido)
     else if (seconds > 2400) score -= 3; // probablemente el stream completo, no un clip
     if (CLIP_TITLE_PENALTY.test(title)) score -= 3;
+    score += scoreRoundLabelMatch(title, roundLabel);
     return { videoId: v.id, seconds, score };
   });
   candidatos.sort((x, y) => y.score - x.score);
@@ -710,7 +739,7 @@ async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roun
       if (vodClipDebug.length < 20) vodClipDebug.push({ q: decodeURIComponent(q), itemsFound: 0 });
       return null;
     }
-    const best = await pickBestMatchClip(items, ganadorLimpio, perdedorLimpio);
+    const best = await pickBestMatchClip(items, ganadorLimpio, perdedorLimpio, roundLabel);
     if (vodClipDebug.length < 20) vodClipDebug.push({ q: decodeURIComponent(q), itemsFound: items.length, bestScore: best?.score ?? null, primerTitulo: items[0]?.snippet?.title ?? null });
     if (!best || best.score < 1) return null; // nada que pinte lo bastante bien a que sea el clip correcto
     return { videoId: best.videoId, startSeconds: 0 }; // el clip ES el partido -- no hace falta timestamp
