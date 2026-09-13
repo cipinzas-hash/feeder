@@ -357,7 +357,7 @@ async function fetchCompletedSets(eventId) {
                   id name initialSeedNum
                 }
               }
-              games{ stage{ name } selections{ entrant{ id } character{ name } } }
+              games{ winnerId stage{ name } selections{ entrant{ id } character{ name } } }
             }
           }
         }
@@ -442,6 +442,14 @@ function entrantCharacter(games, entrantId) {
   return entries[0][0];
 }
 
+// Juegos ganados por un entrant dentro de un set -- necesita winnerId por
+// game (agregado a la query junto a stage/selections). Si el TO no
+// auto-reportó juego por juego (games vacío), da 0 sin romper nada; el
+// frontend trata 0 como "sin dato" cuando el set entero no tiene games.
+function gamesWonBy(games, entrantId) {
+  return (games || []).filter(g => g.winnerId === entrantId).length;
+}
+
 // Distinto de entrantCharacter (que devuelve solo el personaje MAYORITARIO
 // del set): esto chequea si el personaje aparece en CUALQUIER juego del set,
 // aunque haya sido un solo game de contrapick y no el main del set. Necesario
@@ -520,6 +528,7 @@ function detectUpsets(sets) {
         seed: winner.initialSeedNum ?? null,
         ssbmrank: winnerRank,
         pj: entrantCharacter(set.games, winner.id),
+        juegosGanados: gamesWonBy(set.games, winner.id),
         foto: entrantFace(winner),
       },
       perdedor: {
@@ -527,6 +536,7 @@ function detectUpsets(sets) {
         seed: loser.initialSeedNum ?? null,
         ssbmrank: loserRank,
         pj: entrantCharacter(set.games, loser.id),
+        juegosGanados: gamesWonBy(set.games, loser.id),
         foto: entrantFace(loser),
       },
       esUpset: seedUpset || rankUpset, // con seedDiff ya bien orientado, seedUpset por sí solo ya implica que el ganador tenía peor seed
@@ -1065,15 +1075,17 @@ function topUpsets(tournamentUpsets, n = 5) {
 async function narrateArchiveSummary(tournamentName, standings, upsets) {
   const top8Line = [...standings]
     .sort((a, b) => a.placement - b.placement)
-    .map(s => `${s.placement}° ${s.entrant.name}`)
+    .map(s => `${s.placement}° ${stripSponsorTag(s.entrant.name)}`)
     .join(" · ");
   const upsetsData = topUpsets(upsets, 8).map(u =>
-    `${u.ganador.nombre}${u.ganador.seed != null ? ` (seed ${u.ganador.seed})` : u.ganador.ssbmrank != null ? ` (SSBMRank #${u.ganador.ssbmrank})` : ""} venció a ${u.perdedor.nombre}${u.perdedor.seed != null ? ` (seed ${u.perdedor.seed})` : u.perdedor.ssbmrank != null ? ` (SSBMRank #${u.perdedor.ssbmrank})` : ""} -- ${u.ronda}`
+    `${stripSponsorTag(u.ganador.nombre)}${u.ganador.seed != null ? ` (seed ${u.ganador.seed})` : u.ganador.ssbmrank != null ? ` (SSBMRank #${u.ganador.ssbmrank})` : ""} venció a ${stripSponsorTag(u.perdedor.nombre)}${u.perdedor.seed != null ? ` (seed ${u.perdedor.seed})` : u.perdedor.ssbmrank != null ? ` (SSBMRank #${u.perdedor.ssbmrank})` : ""} -- ${u.ronda}`
   ).join("\n");
 
-  const prompt = `Redactá el resumen de resultado final de un torneo de Super Smash Bros. Melee, en español, en el mismo estilo que este ejemplo real (una sola oración de standings + una oración de upsets destacados con contexto):
+  const prompt = `Redactá el resumen de resultado final de un torneo de Super Smash Bros. Melee, en español, en prosa narrativa -- NO como una lista de posiciones ("1° X · 2° Y · 3° Z"), sino contando cómo se dio el resultado. Un ejemplo del tono buscado (dos o tres oraciones, standings integrados a la narración + upsets con contexto real):
 
-"1° lloD · 2° RapMonster · 3° Zain · 4° Hungrybox · 5° moky · 5° Soonsay · 7° n0ne · 7° Aklo. Upsets destacados: lloD venció a Hungrybox en un reverse 3-0 para entrar a Top 8 (su primera victoria sobre él); Soonsay venció a Zain 3-0 mandándolo a losers (primer jugador de Fox aparte de Cody Schwab en vencerlo); Kola (seed 72) llegó hasta 9° derrotando a Maher, Drephen, Zuppy y SluG en el camino."
+"Hungrybox se quedó con el título tras remontarle la gran final a Cody Schwab, que había llegado invicto desde winners. Wizzrobe completó el podio en tercer lugar. Entre los resultados más sorprendentes: lloD sorprendió a Hungrybox en un reverse 3-0 que lo mandó directo a Top 8 -- su primera victoria sobre él --, y Kola, entrando como seed 72, llegó hasta noveno lugar derrotando a Maher, Drephen, Zuppy y SluG en el camino."
+
+Nombres SIN el tag de equipo/sponsor (solo el nombre de jugador, ya vienen así abajo -- no los reconstruyas con equipo).
 
 Torneo: ${tournamentName}
 Standings finales: ${top8Line}
@@ -1082,7 +1094,7 @@ ${upsetsData || "(ninguno detectado por el criterio automático)"}
 
 Usá la búsqueda web para confirmar contexto real: rachas, primera vez que X le gana a Y, importancia de un resultado dentro de la temporada, etc. -- SOLO si lo podés confirmar con una fuente real. Si no encontrás contexto verificable para un upset, simplemente describilo sin inventar superlativos ("primera vez", "el único", "el más joven en...") sin haberlo confirmado. Es preferible un resumen más plano y correcto que uno rico pero con datos inventados.
 
-Devolvé SOLO el texto del resumen final (el formato del ejemplo: standings + upsets), sin preámbulo, sin markdown, sin comillas.`;
+Devolvé SOLO el texto del resumen final en prosa, sin preámbulo, sin markdown, sin comillas.`;
 
   const texto = await callGemini(prompt, { useSearch: true, maxOutputTokens: 1024, timeoutMs: 90000 });
   return texto ? texto.trim() : null; // cae al resumen mecánico en buildTournamentArchiveItem si Gemini no responde
@@ -1139,8 +1151,8 @@ function buildTop8Ordered(sets, finalPhaseId) {
       ronda: set.fullRoundText,
       orden,
       stages: setStages(set.games),
-      ganador: { nombre: winner.name, seed: winner.initialSeedNum ?? null, ssbmrank: ssbmrankOf(winner.name), pj: entrantCharacter(set.games, winner.id), foto: entrantFace(winner) },
-      perdedor: { nombre: loser.name, seed: loser.initialSeedNum ?? null, ssbmrank: ssbmrankOf(loser.name), pj: entrantCharacter(set.games, loser.id), foto: entrantFace(loser) },
+      ganador: { nombre: winner.name, seed: winner.initialSeedNum ?? null, ssbmrank: ssbmrankOf(winner.name), pj: entrantCharacter(set.games, winner.id), juegosGanados: gamesWonBy(set.games, winner.id), foto: entrantFace(winner) },
+      perdedor: { nombre: loser.name, seed: loser.initialSeedNum ?? null, ssbmrank: ssbmrankOf(loser.name), pj: entrantCharacter(set.games, loser.id), juegosGanados: gamesWonBy(set.games, loser.id), foto: entrantFace(loser) },
     });
   }
   matches.sort((x, y) => x.orden - y.orden);
@@ -1170,8 +1182,8 @@ function docSetsFrom(sets, max = 40) {
       setId: set.id,
       ronda: set.fullRoundText,
       stages: setStages(set.games),
-      ganador: { nombre: winner.name, seed: winner.initialSeedNum ?? null, pj: entrantCharacter(set.games, winner.id), foto: entrantFace(winner) },
-      perdedor: { nombre: loser.name, seed: loser.initialSeedNum ?? null, pj: entrantCharacter(set.games, loser.id), foto: entrantFace(loser) },
+      ganador: { nombre: winner.name, seed: winner.initialSeedNum ?? null, pj: entrantCharacter(set.games, winner.id), juegosGanados: gamesWonBy(set.games, winner.id), foto: entrantFace(winner) },
+      perdedor: { nombre: loser.name, seed: loser.initialSeedNum ?? null, pj: entrantCharacter(set.games, loser.id), juegosGanados: gamesWonBy(set.games, loser.id), foto: entrantFace(loser) },
     });
   }
   return out;
@@ -1179,22 +1191,45 @@ function docSetsFrom(sets, max = 40) {
 
 function buildTournamentArchiveItem(slug, tournamentName, bracketUrl, standings, tournamentUpsets, vod, top8Clips, upsetClips, docClips, narracion) {
   if (!standings.length) return null;
-  const top8Line = [...standings]
-    .sort((a, b) => a.placement - b.placement)
-    .map(s => `${s.placement}° ${s.entrant.name}`)
-    .join(" · ");
+  // Resumen mecánico en prosa -- reemplaza la lista "1° X · 2° Y · 3° Z" de
+  // antes (puro dato tabular, cero lectura) por dos o tres oraciones. Sigue
+  // siendo 100% mecánico (nada inventado, solo reordenado en prosa a partir
+  // de standings/upsets reales) -- la narrativa CON contexto real (rachas,
+  // head-to-head) es cosa de narracion/Gemini más abajo; esto es el piso
+  // cuando Gemini no respondió.
+  const ordenados = [...standings].sort((a, b) => a.placement - b.placement);
+  const nombreLimpio = s => stripSponsorTag(s.entrant.name);
+  const campeon = ordenados.find(s => s.placement === 1);
+  const finalista = ordenados.find(s => s.placement === 2);
+  let standingsLine;
+  if (campeon && finalista) {
+    const porPuesto = new Map();
+    ordenados.filter(s => s.placement > 2).forEach(s => {
+      if (!porPuesto.has(s.placement)) porPuesto.set(s.placement, []);
+      porPuesto.get(s.placement).push(nombreLimpio(s));
+    });
+    const restoPartes = [...porPuesto.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([puesto, nombres]) => `${nombres.join(" y ")} en el ${puesto}°`);
+    standingsLine = `${nombreLimpio(campeon)} se quedó con el título de ${tournamentName} tras vencer a ${nombreLimpio(finalista)} en la gran final`
+      + (restoPartes.length ? `, con ${restoPartes.join(", ")} lugar.` : ".");
+  } else {
+    // Standings sin 1°/2° claros (no debería pasar con datos reales de
+    // start.gg, pero por si acaso no se rompe): cae a la lista plana de antes.
+    standingsLine = ordenados.map(s => `${s.placement}° ${nombreLimpio(s)}`).join(" · ") + ".";
+  }
   // topUpsets: dedupe por par (Gran Final + reset son dos sets reales entre
   // los mismos jugadores, redundante mostrarlos dos veces) + orden por
   // magnitud real del upset -- misma lista curada que ve el prompt de
   // narración.
   const upsetsSignificativos = topUpsets(tournamentUpsets, 5);
   const upsetsLine = upsetsSignificativos.length
-    ? ` Upsets destacados: ${upsetsSignificativos.map(u => u.title).join("; ")}.`
+    ? ` Entre los resultados más sorprendentes: ${upsetsSignificativos.map(u => u.title).join("; ")}.`
     : "";
   // Si Gemini generó narrativa con contexto real, se usa esa; si no (sin
   // GEMINI_API_KEY, falló la llamada, etc.) cae al resumen mecánico de
-  // siempre -- nunca se queda sin resumen por esto.
-  const summary = narracion || `${top8Line}.${upsetsLine}`;
+  // arriba -- nunca se queda sin resumen por esto.
+  const summary = narracion || `${standingsLine}${upsetsLine}`;
   return {
     guid: `melee-archivo-${slug}`,
     title: `Resultado final: ${tournamentName}`,
@@ -1424,7 +1459,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
 
       upsetItems.push({
         guid,
-        title: `${u.ganador.nombre}${pjGanador}${etGanador ? ` ${etGanador}` : ""} venció a ${u.perdedor.nombre}${pjPerdedor}${etPerdedor ? ` ${etPerdedor}` : ""}`,
+        title: `${stripSponsorTag(u.ganador.nombre)}${pjGanador}${etGanador ? ` ${etGanador}` : ""} venció a ${stripSponsorTag(u.perdedor.nombre)}${pjPerdedor}${etPerdedor ? ` ${etPerdedor}` : ""}`,
         link: t.bracketUrl,
         summary: `${u.ronda} de ${tournamentName}.${notaSSBMRank}`,
         ronda: u.ronda, // como campo separado -- topUpsets/buildTop8Ordered lo necesitan, antes solo estaba mezclado en summary

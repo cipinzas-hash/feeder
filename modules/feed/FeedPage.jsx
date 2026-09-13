@@ -2115,21 +2115,49 @@
       "Samus": { ab: "SAM", bg: "#e88a3a" }, "Kirby": { ab: "KRB", bg: "#f2a6c6" },
       "Pikachu": { ab: "PIK", bg: "#f2d13a" }, "Zelda/Sheik": { ab: "Z/S", bg: "#8a6fc4" },
     };
-    function CharIcon({ pj, size = 40 }) {
+    // ─── Sponsor/team fuera de la vitrina -- mismo criterio que
+    // stripSponsorTag en build-melee.mjs (se queda con lo que hay después de
+    // la ÚLTIMA barra vertical), pero acá corre sobre nombres que en algunos
+    // items viejos ya vienen sin tag y en otros no -- por eso vive acá
+    // también en vez de sacarlo una sola vez en el backend: los items ya
+    // generados antes de este cambio (guardados en melee.json) siguen
+    // teniendo el nombre completo, así que esto los limpia en el momento de
+    // mostrarlos sin necesidad de tocar ni reprocesar datos viejos.
+    function stripSponsorTag(name) {
+      if (!name) return name;
+      const idx = name.lastIndexOf("|");
+      return idx === -1 ? name.trim() : name.slice(idx + 1).trim();
+    }
+
+    function CharIcon({ pj, size = 40, juegosGanados = null }) {
       const c = pj ? CHARACTER_ICONS[pj] : null;
-      if (!c) return (
+      const badge = juegosGanados != null && (
         <div style={{
-          width: size, height: size, borderRadius: "50%", flexShrink: 0,
-          background: "#2a2a2a", display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: size * 0.55, color: "#555",
-        }}>👤</div>
+          position: "absolute", bottom: -3, right: -3, minWidth: 15, height: 15,
+          borderRadius: 8, background: "#111", border: "1px solid #444",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 9, fontWeight: 800, color: "#fff", padding: "0 3px", lineHeight: 1,
+        }}>{juegosGanados}</div>
+      );
+      if (!c) return (
+        <div style={{ position: "relative", flexShrink: 0 }}>
+          <div style={{
+            width: size, height: size, borderRadius: "50%",
+            background: "#2a2a2a", display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: size * 0.55, color: "#555",
+          }}>👤</div>
+          {badge}
+        </div>
       );
       return (
-        <div title={pj} style={{
-          width: size, height: size, borderRadius: "50%", flexShrink: 0,
-          background: c.bg, display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: size * 0.26, fontWeight: 800, color: "#111", fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.3,
-        }}>{c.ab}</div>
+        <div style={{ position: "relative", flexShrink: 0 }}>
+          <div title={pj} style={{
+            width: size, height: size, borderRadius: "50%",
+            background: c.bg, display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: size * 0.26, fontWeight: 800, color: "#111", fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.3,
+          }}>{c.ab}</div>
+          {badge}
+        </div>
       );
     }
 
@@ -2158,17 +2186,17 @@
       const etiquetaJugador = (j) => j.seed != null ? `[${j.seed}]` : j.ssbmrank != null ? `[SSBMRank #${j.ssbmrank}]` : "";
       return (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <CharIcon pj={g.pj} />
+          <CharIcon pj={g.pj} juegosGanados={g.juegosGanados} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#fff" }}>
-              {g.nombre} <span style={{ color: "#999", fontWeight: 400 }}>{etiquetaJugador(g)}{g.pj ? ` · ${g.pj}` : ""}</span>
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#4caf7d" }}>
+              {stripSponsorTag(g.nombre)} <span style={{ color: "#999", fontWeight: 400 }}>{etiquetaJugador(g)}{g.pj ? ` · ${g.pj}` : ""}</span>
             </div>
-            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#777", marginTop: 2 }}>
-              venció a {p.nombre} {etiquetaJugador(p)}{p.pj ? ` · ${p.pj}` : ""}
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, marginTop: 2 }}>
+              <span style={{ color: "#777" }}>venció a </span><span style={{ color: "#e05a5a", fontWeight: 700 }}>{stripSponsorTag(p.nombre)}</span><span style={{ color: "#777" }}> {etiquetaJugador(p)}{p.pj ? ` · ${p.pj}` : ""}</span>
               {item.viaSSBMRank && <span style={{ color: "#ff6600" }}> · vía SSBMRank</span>}
             </div>
           </div>
-          <CharIcon pj={p.pj} size={30} />
+          <CharIcon pj={p.pj} size={30} juegosGanados={p.juegosGanados} />
         </div>
       );
     }
@@ -2182,9 +2210,14 @@
     function MeleeFeed({ items }) {
       const [openTournament, setOpenTournament] = useState(null);
       const [vodVistos, setVodVistos] = useState(() => loadMeleeVodVistos());
-      const [collapsedSections, setCollapsedSections] = useState(() => new Set());
+      // Antes "collapsedSections" (colapsado explícito, default expandido).
+      // Cristopher pidió que arranquen minimizadas -- se invierte a
+      // "openSections" (expandido explícito, default colapsado) en vez de
+      // pre-cargar todos los sectionKey posibles (dependen de `nombre`, no
+      // se conocen hasta el render).
+      const [openSections, setOpenSections] = useState(() => new Set());
       function toggleSection(key) {
-        setCollapsedSections(prev => {
+        setOpenSections(prev => {
           const next = new Set(prev);
           if (next.has(key)) next.delete(key); else next.add(key);
           return next;
@@ -2294,7 +2327,7 @@
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 12px" }}>
                               {hype.notableEntrants.map(e => (
                                 <div key={e.seed} style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#ddd" }}>
-                                  <span style={{ color: "#ff6600", fontWeight: 700 }}>[{e.seed}]</span> {e.nombre}
+                                  <span style={{ color: "#ff6600", fontWeight: 700 }}>[{e.seed}]</span> {stripSponsorTag(e.nombre)}
                                 </div>
                               ))}
                             </div>
@@ -2330,7 +2363,7 @@
                       ];
                       return secciones.map(sec => sec.clips.length > 0 && (() => {
                         const sectionKey = `${nombre}-${sec.key}`;
-                        const colapsada = collapsedSections.has(sectionKey);
+                        const colapsada = !openSections.has(sectionKey);
                         const pendientes = sec.clips.filter(c => !vodVistos.has(c.guid)).length;
                         return (
                         <div key={sec.key} style={{ marginBottom: 16, paddingBottom: colapsada ? 0 : 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
@@ -2375,7 +2408,7 @@
                                   <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: 10, overflow: "hidden", background: "#000" }}>
                                     <iframe
                                       src={`https://www.youtube-nocookie.com/embed/${clip.videoId}${clip.startSeconds ? `?start=${clip.startSeconds}` : ""}`}
-                                      title={`${clip.ganador?.nombre} vs ${clip.perdedor?.nombre}`}
+                                      title={`${stripSponsorTag(clip.ganador?.nombre)} vs ${stripSponsorTag(clip.perdedor?.nombre)}`}
                                       style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
                                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                       referrerPolicy="strict-origin-when-cross-origin"
@@ -2397,7 +2430,7 @@
                           {(top16.jugadores || []).map(j => (
                             <div key={j.nombre} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 60 }}>
                               <CharIcon pj={j.pj} size={44} />
-                              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ccc", textAlign: "center", marginTop: 4 }}>{j.nombre}</div>
+                              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ccc", textAlign: "center", marginTop: 4 }}>{stripSponsorTag(j.nombre)}</div>
                             </div>
                           ))}
                         </div>
@@ -2410,7 +2443,7 @@
                           {(top8.jugadores || []).map(j => (
                             <div key={j.nombre} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 60 }}>
                               <CharIcon pj={j.pj} size={44} />
-                              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ccc", textAlign: "center", marginTop: 4 }}>{j.nombre}</div>
+                              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ccc", textAlign: "center", marginTop: 4 }}>{stripSponsorTag(j.nombre)}</div>
                             </div>
                           ))}
                         </div>
@@ -2430,10 +2463,10 @@
                               textDecoration: j.sostiene ? "none" : "line-through",
                             }}>
                               <span style={{ color: j.sostiene ? "#ff6600" : "#666", fontWeight: 700, textDecoration: "none" }}>[{j.seed}]</span>
-                              <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{j.nombre}</span>
+                              <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{stripSponsorTag(j.nombre)}</span>
                               {!j.sostiene ? (
                                 <span style={{ color: j.esUpset ? "#ff6600" : "#666", fontSize: 10, textDecoration: "none", flexShrink: 0 }}>
-                                  {j.esUpset ? "⚡" : "✕"} vs {j.eliminadoPor?.nombre}
+                                  {j.esUpset ? "⚡" : "✕"} vs {stripSponsorTag(j.eliminadoPor?.nombre)}
                                 </span>
                               ) : j.derrotas > 0 ? (
                                 // Sigue vivo pero ya perdió una en el bracket (va en
@@ -2501,7 +2534,7 @@
                                         <div style={{ position: "relative", paddingTop: "56.25%", borderRadius: 10, overflow: "hidden", background: "#000" }}>
                                           <iframe
                                             src={`https://www.youtube-nocookie.com/embed/${it.videoId}${it.startSeconds ? `?start=${it.startSeconds}` : ""}`}
-                                            title={`${it.ganador?.nombre} vs ${it.perdedor?.nombre}`}
+                                            title={`${stripSponsorTag(it.ganador?.nombre)} vs ${stripSponsorTag(it.perdedor?.nombre)}`}
                                             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                             referrerPolicy="strict-origin-when-cross-origin"
