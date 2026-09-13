@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-13T02:05:36.467Z",
+  "generatedAt": "2026-09-13T08:38:09.891Z",
   "categories": [
     {
       "cat": "Melee",
@@ -599,12 +599,111 @@
           }
         },
         {
+          "guid": "melee-tournament/riptide-2026-4/event/melee-singles-regex-vs-ben-winners-round-1",
+          "title": "regEx (Marth) [seed 48] venció a Ben (Sheik) [seed 17]",
+          "link": "https://www.start.gg/tournament/riptide-2026-4/event/melee-singles",
+          "summary": "Winners Round 1 de Riptide 2026.",
+          "ronda": "Winners Round 1",
+          "image": null,
+          "pubDate": "2026-09-12T16:00:00.000Z",
+          "source": "Riptide 2026",
+          "categoria": "Melee",
+          "fullText": null,
+          "tipo": "video",
+          "videoId": null,
+          "startSeconds": 0,
+          "esUpset": true,
+          "viaSSBMRank": false,
+          "seedDiff": 31,
+          "rankDiff": null,
+          "ganador": {
+            "nombre": "regEx",
+            "seed": 48,
+            "ssbmrank": null,
+            "pj": "Marth",
+            "foto": null
+          },
+          "perdedor": {
+            "nombre": "Ben",
+            "seed": 17,
+            "ssbmrank": 32,
+            "pj": "Sheik",
+            "foto": null
+          }
+        },
+        {
+          "guid": "melee-tournament/riptide-2026-4/event/melee-singles-ginger-vs-llod-losers-quarter-final",
+          "title": "Ginger [seed 10] venció a lloD [seed 2]",
+          "link": "https://www.start.gg/tournament/riptide-2026-4/event/melee-singles",
+          "summary": "Losers Quarter-Final de Riptide 2026.",
+          "ronda": "Losers Quarter-Final",
+          "image": null,
+          "pubDate": "2026-09-12T16:00:00.000Z",
+          "source": "Riptide 2026",
+          "categoria": "Melee",
+          "fullText": null,
+          "tipo": "video",
+          "videoId": null,
+          "startSeconds": 0,
+          "esUpset": true,
+          "viaSSBMRank": false,
+          "seedDiff": 8,
+          "rankDiff": null,
+          "ganador": {
+            "nombre": "Ginger",
+            "seed": 10,
+            "ssbmrank": 18,
+            "pj": null,
+            "foto": null
+          },
+          "perdedor": {
+            "nombre": "lloD",
+            "seed": 2,
+            "ssbmrank": 10,
+            "pj": null,
+            "foto": null
+          }
+        },
+        {
+          "guid": "melee-tournament/riptide-2026-4/event/melee-singles-rwing|milk-|-morsecode762-vs-goats-esports-|-the-weapon-losers-round-5",
+          "title": "Rwing|Milk | Morsecode762 [seed 26] venció a goats esports | The Weapon [seed 18]",
+          "link": "https://www.start.gg/tournament/riptide-2026-4/event/melee-singles",
+          "summary": "Losers Round 5 de Riptide 2026.",
+          "ronda": "Losers Round 5",
+          "image": null,
+          "pubDate": "2026-09-12T16:00:00.000Z",
+          "source": "Riptide 2026",
+          "categoria": "Melee",
+          "fullText": null,
+          "tipo": "video",
+          "videoId": null,
+          "startSeconds": 0,
+          "esUpset": true,
+          "viaSSBMRank": false,
+          "seedDiff": 8,
+          "rankDiff": null,
+          "ganador": {
+            "nombre": "Rwing|Milk | Morsecode762",
+            "seed": 26,
+            "ssbmrank": 39,
+            "pj": null,
+            "foto": null
+          },
+          "perdedor": {
+            "nombre": "goats esports | The Weapon",
+            "seed": 18,
+            "ssbmrank": null,
+            "pj": null,
+            "foto": null
+          }
+        },
+        {
           "guid": "melee-seedreport-tournament/riptide-2026-4/event/melee-singles",
           "title": "Reporte de seeds — Riptide 2026",
           "link": "https://www.start.gg/tournament/riptide-2026-4/event/melee-singles",
-          "summary": "28/32 del top 32 sostienen su seed. 4 ya cayeron.",
+          "summary": "19/32 del top 32 sostienen su seed. 13 ya cayeron.",
           "image": null,
-          "pubDate": "2026-09-13T02:05:35.873Z",
+          "pubDate": "2026-09-13T08:38:09.158Z",
           "source": "Riptide 2026",
           "categoria": "Melee",
           "fullText": null,
@@ -624,11 +723,15 @@
               "nombre": "lloD",
               "seed": 2,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 0,
-              "eliminadoPor": null,
-              "ronda": null,
-              "esUpset": false
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "Ginger",
+                "seed": 10,
+                "ssbmrank": 18
+              },
+              "ronda": "Losers Quarter-Final",
+              "esUpset": true
             },
             {
               "nombre": "Envy | Wizzrobe",
@@ -705,7 +808,7 @@
               "seed": 10,
               "foto": null,
               "sostiene": true,
-              "derrotas": 0,
+              "derrotas": 1,
               "eliminadoPor": null,
               "ronda": null,
               "esUpset": false
@@ -758,11 +861,15 @@
               "nombre": "Preeminent",
               "seed": 15,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 0,
-              "eliminadoPor": null,
-              "ronda": null,
-              "esUpset": false
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "100 Grand",
+                "seed": 34,
+                "ssbmrank": null
+              },
+              "ronda": "Losers Round 4",
+              "esUpset": true
             },
             {
               "nombre": "404Cray",
@@ -778,28 +885,36 @@
               "nombre": "Ben",
               "seed": 17,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
-              "esUpset": false
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "B Team | Mew2King",
+                "seed": 25,
+                "ssbmrank": null
+              },
+              "ronda": "Losers Round 5",
+              "esUpset": true
             },
             {
               "nombre": "goats esports | The Weapon",
               "seed": 18,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 0,
-              "eliminadoPor": null,
-              "ronda": null,
-              "esUpset": false
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "Rwing|Milk | Morsecode762",
+                "seed": 26,
+                "ssbmrank": 39
+              },
+              "ronda": "Losers Round 5",
+              "esUpset": true
             },
             {
               "nombre": "Zuppy",
               "seed": 19,
               "foto": null,
               "sostiene": true,
-              "derrotas": 0,
+              "derrotas": 1,
               "eliminadoPor": null,
               "ronda": null,
               "esUpset": false
@@ -808,10 +923,14 @@
               "nombre": "Zamu",
               "seed": 20,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "SR | Joshman",
+                "seed": 5,
+                "ssbmrank": 4
+              },
+              "ronda": "Losers Quarter-Final",
               "esUpset": false
             },
             {
@@ -829,7 +948,7 @@
               "seed": 22,
               "foto": null,
               "sostiene": true,
-              "derrotas": 0,
+              "derrotas": 1,
               "eliminadoPor": null,
               "ronda": null,
               "esUpset": false
@@ -838,21 +957,29 @@
               "nombre": "The Local | Faust",
               "seed": 23,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 0,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "goats esports | The Weapon",
+                "seed": 18,
+                "ssbmrank": null
+              },
+              "ronda": "Losers Round 4",
               "esUpset": false
             },
             {
               "nombre": "Spicy | Medz",
               "seed": 24,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 0,
-              "eliminadoPor": null,
-              "ronda": null,
-              "esUpset": false
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "stones",
+                "seed": 280,
+                "ssbmrank": null
+              },
+              "ronda": "Losers Round 2",
+              "esUpset": true
             },
             {
               "nombre": "B Team | Mew2King",
@@ -872,11 +999,15 @@
               "nombre": "Rwing|Milk | Morsecode762",
               "seed": 26,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
-              "esUpset": false
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "TheRealThing",
+                "seed": 31,
+                "ssbmrank": 84
+              },
+              "ronda": "Losers Quarter-Final",
+              "esUpset": true
             },
             {
               "nombre": "Paladin",
@@ -921,7 +1052,7 @@
               "seed": 30,
               "foto": null,
               "sostiene": true,
-              "derrotas": 0,
+              "derrotas": 1,
               "eliminadoPor": null,
               "ronda": null,
               "esUpset": false
@@ -931,7 +1062,7 @@
               "seed": 31,
               "foto": null,
               "sostiene": true,
-              "derrotas": 0,
+              "derrotas": 1,
               "eliminadoPor": null,
               "ronda": null,
               "esUpset": false
@@ -940,11 +1071,15 @@
               "nombre": "Lowercase hero",
               "seed": 32,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
-              "esUpset": false
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "McSmash | fknsilver",
+                "seed": 104,
+                "ssbmrank": null
+              },
+              "ronda": "Losers Round 5",
+              "esUpset": true
             }
           ],
           "top8StartAt": 1789322400,
@@ -954,9 +1089,9 @@
           "guid": "melee-top16-tournament/riptide-2026-4/event/melee-singles",
           "title": "Top 16 de Riptide 2026",
           "link": "https://www.start.gg/tournament/riptide-2026-4/event/melee-singles",
-          "summary": "Quedaron: Liquid | Hungrybox [1], Free Palestine [2], Envy | Wizzrobe [3], ROOTS | S3C | RapMonster [4], SR | Kola [5], FLY | Jmook [6], EggdogSpiral | Krudo [7], Ossify [8], The Yard | Magi [9], Ginger [10], Spark [11], BTE | n0ne [13], Tempo | Axe [14], TheRealThing [15], 404Cray [16].",
+          "summary": "Quedaron: Liquid | Hungrybox [1], Free Palestine [2], Envy | Wizzrobe [3], ROOTS | S3C | RapMonster [4], SR | Kola [5], FLY | Jmook [6], EggdogSpiral | Krudo [7], Ossify [8], The Yard | Magi [9], Ginger [10], Spark [11], SR | Joshman [12], BTE | n0ne [13], Tempo | Axe [14], TheRealThing [15], 404Cray [16].",
           "image": null,
-          "pubDate": "2026-09-13T02:05:35.873Z",
+          "pubDate": "2026-09-13T08:38:09.158Z",
           "source": "Riptide 2026",
           "categoria": "Melee",
           "fullText": null,
@@ -1015,6 +1150,11 @@
             {
               "nombre": "Spark",
               "seed": 11,
+              "foto": null
+            },
+            {
+              "nombre": "SR | Joshman",
+              "seed": 12,
               "foto": null
             },
             {
@@ -1815,7 +1955,7 @@
     {
       "slug": "tournament/riptide-2026-4/event/melee-singles",
       "tournamentName": "Riptide 2026",
-      "setsCount": 300
+      "setsCount": 600
     },
     {
       "slug": "tournament/tipped-off-17-haunted/event/melee-singles",
