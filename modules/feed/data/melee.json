@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-13T15:18:32.824Z",
+  "generatedAt": "2026-09-13T18:25:44.508Z",
   "categories": [
     {
       "cat": "Melee",
@@ -698,12 +698,45 @@
           }
         },
         {
+          "guid": "melee-tournament/riptide-2026-4/event/melee-singles-the-yard-|-magi-vs-tempo-|-axe-losers-round-1",
+          "title": "The Yard | Magi [seed 9] venció a Tempo | Axe [seed 11]",
+          "link": "https://www.start.gg/tournament/riptide-2026-4/event/melee-singles",
+          "summary": "Losers Round 1 de Riptide 2026. (upset por SSBMRank, seeding local no lo reflejaba)",
+          "ronda": "Losers Round 1",
+          "image": null,
+          "pubDate": "2026-09-12T16:00:00.000Z",
+          "source": "Riptide 2026",
+          "categoria": "Melee",
+          "fullText": null,
+          "tipo": "video",
+          "videoId": null,
+          "startSeconds": 0,
+          "esUpset": true,
+          "viaSSBMRank": true,
+          "seedDiff": -2,
+          "rankDiff": 15,
+          "ganador": {
+            "nombre": "The Yard | Magi",
+            "seed": 9,
+            "ssbmrank": 21,
+            "pj": null,
+            "foto": null
+          },
+          "perdedor": {
+            "nombre": "Tempo | Axe",
+            "seed": 11,
+            "ssbmrank": 6,
+            "pj": null,
+            "foto": null
+          }
+        },
+        {
           "guid": "melee-seedreport-tournament/riptide-2026-4/event/melee-singles",
           "title": "Reporte de seeds — Riptide 2026",
           "link": "https://www.start.gg/tournament/riptide-2026-4/event/melee-singles",
-          "summary": "19/32 del top 32 sostienen su seed. 13 ya cayeron.",
+          "summary": "14/32 del top 32 sostienen su seed. 18 ya cayeron.",
           "image": null,
-          "pubDate": "2026-09-13T15:18:32.279Z",
+          "pubDate": "2026-09-13T18:25:43.760Z",
           "source": "Riptide 2026",
           "categoria": "Melee",
           "fullText": null,
@@ -738,7 +771,7 @@
               "seed": 3,
               "foto": null,
               "sostiene": true,
-              "derrotas": 0,
+              "derrotas": 1,
               "eliminadoPor": null,
               "ronda": null,
               "esUpset": false
@@ -757,10 +790,14 @@
               "nombre": "SR | Joshman",
               "seed": 5,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "Envy | Wizzrobe",
+                "seed": 3,
+                "ssbmrank": 9
+              },
+              "ronda": "Losers Round 2",
               "esUpset": false
             },
             {
@@ -788,7 +825,7 @@
               "seed": 8,
               "foto": null,
               "sostiene": true,
-              "derrotas": 0,
+              "derrotas": 1,
               "eliminadoPor": null,
               "ronda": null,
               "esUpset": false
@@ -807,10 +844,14 @@
               "nombre": "Ginger",
               "seed": 10,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "Ossify",
+                "seed": 8,
+                "ssbmrank": 20
+              },
+              "ronda": "Losers Round 2",
               "esUpset": false
             },
             {
@@ -818,7 +859,7 @@
               "seed": 11,
               "foto": null,
               "sostiene": true,
-              "derrotas": 0,
+              "derrotas": 1,
               "eliminadoPor": null,
               "ronda": null,
               "esUpset": false
@@ -827,10 +868,14 @@
               "nombre": "BTE | n0ne",
               "seed": 12,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "Ginger",
+                "seed": 10,
+                "ssbmrank": 18
+              },
+              "ronda": "Losers Round 1",
               "esUpset": false
             },
             {
@@ -875,10 +920,14 @@
               "nombre": "404Cray",
               "seed": 16,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "Spark",
+                "seed": 14,
+                "ssbmrank": 35
+              },
+              "ronda": "Losers Round 1",
               "esUpset": false
             },
             {
@@ -899,22 +948,18 @@
               "nombre": "goats esports | The Weapon",
               "seed": 18,
               "foto": null,
-              "sostiene": false,
-              "derrotas": 2,
-              "eliminadoPor": {
-                "nombre": "Rwing|Milk | Morsecode762",
-                "seed": 26,
-                "ssbmrank": 39
-              },
-              "ronda": "Losers Round 5",
-              "esUpset": true
+              "sostiene": true,
+              "derrotas": 1,
+              "eliminadoPor": null,
+              "ronda": null,
+              "esUpset": false
             },
             {
               "nombre": "Zuppy",
               "seed": 19,
               "foto": null,
               "sostiene": true,
-              "derrotas": 1,
+              "derrotas": 0,
               "eliminadoPor": null,
               "ronda": null,
               "esUpset": false
@@ -937,10 +982,14 @@
               "nombre": "SR | Kola",
               "seed": 21,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 0,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "Spark",
+                "seed": 14,
+                "ssbmrank": 35
+              },
+              "ronda": "Losers Round 2",
               "esUpset": false
             },
             {
@@ -1061,10 +1110,14 @@
               "nombre": "TheRealThing",
               "seed": 31,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "SR | Joshman",
+                "seed": 5,
+                "ssbmrank": 4
+              },
+              "ronda": "Losers Round 1",
               "esUpset": false
             },
             {
@@ -1086,16 +1139,16 @@
           "streamUrl": "https://www.twitch.tv/splatoontourney"
         },
         {
-          "guid": "melee-top16-tournament/riptide-2026-4/event/melee-singles",
-          "title": "Top 16 de Riptide 2026",
+          "guid": "melee-top8-tournament/riptide-2026-4/event/melee-singles",
+          "title": "Top 8 de Riptide 2026",
           "link": "https://www.start.gg/tournament/riptide-2026-4/event/melee-singles",
-          "summary": "Quedaron: Liquid | Hungrybox [1], Free Palestine [2], Envy | Wizzrobe [3], ROOTS | S3C | RapMonster [4], SR | Kola [5], FLY | Jmook [6], EggdogSpiral | Krudo [7], Ossify [8], The Yard | Magi [9], Ginger [10], Spark [11], SR | Joshman [12], BTE | n0ne [13], Tempo | Axe [14], TheRealThing [15], 404Cray [16].",
+          "summary": "Quedaron: Liquid | Hungrybox [1], EggdogSpiral | Krudo [2], FLY | Jmook [3], ROOTS | S3C | RapMonster [4], Spark [5], Envy | Wizzrobe [6], The Yard | Magi [7], Ossify [8].",
           "image": null,
-          "pubDate": "2026-09-13T15:18:32.280Z",
+          "pubDate": "2026-09-13T18:25:43.761Z",
           "source": "Riptide 2026",
           "categoria": "Melee",
           "fullText": null,
-          "esTop16Preview": true,
+          "esTop8Preview": true,
           "jugadores": [
             {
               "nombre": "Liquid | Hungrybox",
@@ -1103,12 +1156,12 @@
               "foto": null
             },
             {
-              "nombre": "Free Palestine",
+              "nombre": "EggdogSpiral | Krudo",
               "seed": 2,
               "foto": null
             },
             {
-              "nombre": "Envy | Wizzrobe",
+              "nombre": "FLY | Jmook",
               "seed": 3,
               "foto": null
             },
@@ -1118,63 +1171,23 @@
               "foto": null
             },
             {
-              "nombre": "SR | Kola",
+              "nombre": "Spark",
               "seed": 5,
               "foto": null
             },
             {
-              "nombre": "FLY | Jmook",
+              "nombre": "Envy | Wizzrobe",
               "seed": 6,
               "foto": null
             },
             {
-              "nombre": "EggdogSpiral | Krudo",
+              "nombre": "The Yard | Magi",
               "seed": 7,
               "foto": null
             },
             {
               "nombre": "Ossify",
               "seed": 8,
-              "foto": null
-            },
-            {
-              "nombre": "The Yard | Magi",
-              "seed": 9,
-              "foto": null
-            },
-            {
-              "nombre": "Ginger",
-              "seed": 10,
-              "foto": null
-            },
-            {
-              "nombre": "Spark",
-              "seed": 11,
-              "foto": null
-            },
-            {
-              "nombre": "SR | Joshman",
-              "seed": 12,
-              "foto": null
-            },
-            {
-              "nombre": "BTE | n0ne",
-              "seed": 13,
-              "foto": null
-            },
-            {
-              "nombre": "Tempo | Axe",
-              "seed": 14,
-              "foto": null
-            },
-            {
-              "nombre": "TheRealThing",
-              "seed": 15,
-              "foto": null
-            },
-            {
-              "nombre": "404Cray",
-              "seed": 16,
               "foto": null
             }
           ],
