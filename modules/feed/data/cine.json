@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-13T23:55:48.319Z",
+  "generatedAt": "2026-09-14T07:39:33.299Z",
   "categories": [
     {
       "cat": "Películas",
@@ -326,7 +326,7 @@
               "order": 9
             }
           ],
-          "trending": false
+          "trending": true
         },
         {
           "guid": "tmdb-movie-1127384",
@@ -492,7 +492,7 @@
         },
         {
           "guid": "tmdb-movie-1302904",
-          "title": "Hechizo de amor: La magia continúa",
+          "title": "Prácticamente magia 2",
           "link": "https://www.themoviedb.org/movie/1302904",
           "summary": "Las hermanas Owens deben enfrentarse a la oscura maldición que amenaza con desintegrar a su familia de una vez por todas.",
           "image": "https://image.tmdb.org/t/p/w500/cQjtzBXcTMzHqvo7zmpJvcBFRdC.jpg",
@@ -505,7 +505,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.4
+            "tmdb": 6
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -757,7 +757,7 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "c6roXTZqNkg",
+            "key": "b6tPEfe7NCI",
             "site": "YouTube"
           },
           "cast": [
@@ -1227,6 +1227,62 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1423191",
+          "title": "Resident Evil",
+          "link": "https://www.themoviedb.org/movie/1423191",
+          "summary": "Película basada en la saga de videojuegos de Capcom del mismo nombre. En una reinvención totalmente nueva, el mensajero médico Bryan se ve inmerso en una carrera de acción sin descanso por la supervivencia, mientras el caos se desata a su alrededor.",
+          "image": "https://image.tmdb.org/t/p/w500/pJQOA9ZTr1vFC0pDyT0ewH5046M.jpg",
+          "pubDate": "2026-09-16",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-02T23:29:33.275Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 10
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "mNd1gb19A-c",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Austin Abrams",
+              "character": "Bryan",
+              "order": 0
+            },
+            {
+              "name": "Zach Cherry",
+              "character": "Dave",
+              "order": 1
+            },
+            {
+              "name": "Kali Reis",
+              "character": "Pauline",
+              "order": 2
+            },
+            {
+              "name": "Paul Walter Hauser",
+              "character": "Carl",
+              "order": 3
+            },
+            {
+              "name": "Johnno Wilson",
+              "character": "Max",
+              "order": 4
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1386315",
           "title": "A la carrera",
           "link": "https://www.themoviedb.org/movie/1386315",
@@ -1305,63 +1361,7 @@
               "order": 9
             }
           ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1423191",
-          "title": "Resident Evil",
-          "link": "https://www.themoviedb.org/movie/1423191",
-          "summary": "Película basada en la saga de videojuegos de Capcom del mismo nombre. En una reinvención totalmente nueva, el mensajero médico Bryan se ve inmerso en una carrera de acción sin descanso por la supervivencia, mientras el caos se desata a su alrededor.",
-          "image": "https://image.tmdb.org/t/p/w500/pJQOA9ZTr1vFC0pDyT0ewH5046M.jpg",
-          "pubDate": "2026-09-16",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-02T23:29:33.275Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 10
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "mNd1gb19A-c",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Austin Abrams",
-              "character": "Bryan",
-              "order": 0
-            },
-            {
-              "name": "Zach Cherry",
-              "character": "Dave",
-              "order": 1
-            },
-            {
-              "name": "Kali Reis",
-              "character": "Pauline",
-              "order": 2
-            },
-            {
-              "name": "Paul Walter Hauser",
-              "character": "Carl",
-              "order": 3
-            },
-            {
-              "name": "Johnno Wilson",
-              "character": "Max",
-              "order": 4
-            }
-          ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1377237",
@@ -1442,7 +1442,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1440098",
@@ -3786,6 +3786,78 @@
           "cast": []
         },
         {
+          "guid": "tmdb-tv-70672",
+          "title": "Hombres en una Misión",
+          "link": "https://www.themoviedb.org/tv/70672",
+          "summary": "Las celebridades masculinas juegan a la fantasía como estudiantes de secundaria, dan la bienvenida a estudiantes de transferencia estelar cada semana y participan en batallas de humor ingenioso y payasadas.",
+          "image": "https://image.tmdb.org/t/p/w500/zak7mqMxJGnnWplSdbjDtV7bg2Y.jpg",
+          "pubDate": "2015-12-05",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-08-29T13:48:46.098Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.1,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.4
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-09-12",
+          "numberOfSeasons": 1,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 546,
+              "fechaEstreno": "2015-12-05"
+            }
+          ],
+          "currentSeason": 1,
+          "reviews": null,
+          "trailer": {
+            "key": "7vHG3DqEo7Y",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "김영철",
+              "character": "Self",
+              "order": 0
+            },
+            {
+              "name": "민경훈",
+              "character": "Self",
+              "order": 1
+            },
+            {
+              "name": "강호동",
+              "character": "Self",
+              "order": 2
+            },
+            {
+              "name": "이수근",
+              "character": "Self",
+              "order": 3
+            },
+            {
+              "name": "김희철",
+              "character": "Self",
+              "order": 4
+            },
+            {
+              "name": "서장훈",
+              "character": "Self",
+              "order": 5
+            },
+            {
+              "name": "이상민",
+              "character": "Self",
+              "order": 6
+            }
+          ],
+          "trending": false
+        },
+        {
           "guid": "tmdb-tv-97546",
           "title": "Ted Lasso",
           "link": "https://www.themoviedb.org/tv/97546",
@@ -4104,6 +4176,67 @@
           "trending": false
         },
         {
+          "guid": "tmdb-tv-95350",
+          "title": "Linternas",
+          "link": "https://www.themoviedb.org/tv/95350",
+          "summary": "Sigue al nuevo recluta John Stewart y al legendario Linterna Hal Jordan, dos policías intergalácticos que se ven envueltos en un oscuro misterio terrestre mientras investigan un asesinato en el corazón de Estados Unidos. Esto les lleva a misterios y ajustes de cuentas más oscuros.",
+          "image": "https://image.tmdb.org/t/p/w500/20ZcwtRQ4zMczKg3eBcIpC3FAuW.jpg",
+          "pubDate": "2026-08-16",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-08-18T04:44:49.133Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.4,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.3
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-09-06",
+          "numberOfSeasons": 1,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 8,
+              "fechaEstreno": "2026-08-16"
+            }
+          ],
+          "currentSeason": 1,
+          "reviews": null,
+          "trailer": {
+            "key": "-b78KhjNeHQ",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Kyle Chandler",
+              "character": "Hal Jordan",
+              "order": 0
+            },
+            {
+              "name": "Aaron Pierre",
+              "character": "John Stewart",
+              "order": 1
+            },
+            {
+              "name": "Kelly Macdonald",
+              "character": "Sheriff Kerry Kane",
+              "order": 2
+            },
+            {
+              "name": "Garret Dillahunt",
+              "character": "William 'Will' Macon",
+              "order": 3
+            },
+            {
+              "name": "Poorna Jagannathan",
+              "character": "Zoe Macon",
+              "order": 4
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-2661",
           "title": "Kamen Rider",
           "link": "https://www.themoviedb.org/tv/2661",
@@ -4356,67 +4489,6 @@
               "name": "Koichi Yamadera",
               "character": "ZEZTZ Driver (voice)",
               "order": 405
-            }
-          ]
-        },
-        {
-          "guid": "tmdb-tv-95350",
-          "title": "Linternas",
-          "link": "https://www.themoviedb.org/tv/95350",
-          "summary": "Sigue al nuevo recluta John Stewart y al legendario Linterna Hal Jordan, dos policías intergalácticos que se ven envueltos en un oscuro misterio terrestre mientras investigan un asesinato en el corazón de Estados Unidos. Esto les lleva a misterios y ajustes de cuentas más oscuros.",
-          "image": "https://image.tmdb.org/t/p/w500/20ZcwtRQ4zMczKg3eBcIpC3FAuW.jpg",
-          "pubDate": "2026-08-16",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-08-18T04:44:49.133Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.4,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.3
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-06",
-          "numberOfSeasons": 1,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 8,
-              "fechaEstreno": "2026-08-16"
-            }
-          ],
-          "currentSeason": 1,
-          "reviews": null,
-          "trailer": {
-            "key": "-b78KhjNeHQ",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Kyle Chandler",
-              "character": "Hal Jordan",
-              "order": 0
-            },
-            {
-              "name": "Aaron Pierre",
-              "character": "John Stewart",
-              "order": 1
-            },
-            {
-              "name": "Kelly Macdonald",
-              "character": "Sheriff Kerry Kane",
-              "order": 2
-            },
-            {
-              "name": "Garret Dillahunt",
-              "character": "William 'Will' Macon",
-              "order": 3
-            },
-            {
-              "name": "Poorna Jagannathan",
-              "character": "Zoe Macon",
-              "order": 4
             }
           ]
         },
@@ -5494,78 +5566,6 @@
               "name": "Maria Sol Perez",
               "character": "Panelist",
               "order": 5
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-70672",
-          "title": "Hombres en una Misión",
-          "link": "https://www.themoviedb.org/tv/70672",
-          "summary": "Las celebridades masculinas juegan a la fantasía como estudiantes de secundaria, dan la bienvenida a estudiantes de transferencia estelar cada semana y participan en batallas de humor ingenioso y payasadas.",
-          "image": "https://image.tmdb.org/t/p/w500/zak7mqMxJGnnWplSdbjDtV7bg2Y.jpg",
-          "pubDate": "2015-12-05",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-08-29T13:48:46.098Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.1,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.4
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-12",
-          "numberOfSeasons": 1,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 546,
-              "fechaEstreno": "2015-12-05"
-            }
-          ],
-          "currentSeason": 1,
-          "reviews": null,
-          "trailer": {
-            "key": "7vHG3DqEo7Y",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "김영철",
-              "character": "Self",
-              "order": 0
-            },
-            {
-              "name": "민경훈",
-              "character": "Self",
-              "order": 1
-            },
-            {
-              "name": "강호동",
-              "character": "Self",
-              "order": 2
-            },
-            {
-              "name": "이수근",
-              "character": "Self",
-              "order": 3
-            },
-            {
-              "name": "김희철",
-              "character": "Self",
-              "order": 4
-            },
-            {
-              "name": "서장훈",
-              "character": "Self",
-              "order": 5
-            },
-            {
-              "name": "이상민",
-              "character": "Self",
-              "order": 6
             }
           ],
           "trending": false
@@ -6678,7 +6678,7 @@
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": {
-            "key": "J-yul2h6ryg",
+            "key": "gn4rbzV-dvY",
             "site": "YouTube"
           },
           "cast": []
@@ -6704,7 +6704,7 @@
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": {
-            "key": "x6-Iva0OBJ8",
+            "key": "pQ0vtP-hPq0",
             "site": "YouTube"
           },
           "cast": []
@@ -6866,32 +6866,6 @@
           "cast": []
         },
         {
-          "guid": "mal-63832",
-          "title": "Seihantai na Kimi to Boku 2nd Season",
-          "link": "https://myanimelist.net/anime/63832/Seihantai_na_Kimi_to_Boku_2nd_Season",
-          "summary": "Second season of Seihantai na Kimi to Boku.",
-          "image": "https://cdn.myanimelist.net/images/anime/1143/158409l.jpg",
-          "pubDate": "2026-07-05T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-02T23:29:45.989Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.35
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "o9eLX4W-gys",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
           "guid": "mal-60522",
           "title": "Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu II",
           "link": "https://myanimelist.net/anime/60522/Gaikotsu_Kishi-sama_Tadaima_Isekai_e_Odekakechuu_II",
@@ -6912,33 +6886,7 @@
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": {
-            "key": "u_TQJHga6k8",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-58929",
-          "title": "Koukaku Kidoutai (TV)",
-          "link": "https://myanimelist.net/anime/58929/Koukaku_Kidoutai_TV",
-          "summary": "In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetics, its citizens are able to replace their limbs with robotic parts. The world is now more interconnected than ever before, and the city's Public Security Section 9 is responsible for combating corruption, terrorism, and other dangerous threats following this shift toward globalization.\n\nThe strong-willed Major Motoko Kusanagi of Section 9 spearheads a case involving a mysterious hacker known only as the \"Puppet Master,\" who leaves a trail of victims stripped of their memories. Like many in this futuristic world, the Puppet Master's body is almost entirely robotic, giving them incredible power.\n\nAs Motoko and her subordinates follow the enigmatic criminal's trail, other parties—including Section 6—start to get involved, forcing her to confront the extremely complicated nature of the case. Pondering about various philosophical questions, such as her own life's meaning, Motoko soon realizes that the one who will provide these answers is none other than the Puppet Master themself.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1474/158937l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-03T16:16:10.868Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.02
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "yfKqPQ-BjYE",
+            "key": "I3IDKbpBPDM",
             "site": "YouTube"
           },
           "cast": []
@@ -6965,58 +6913,6 @@
           "reviews": null,
           "trailer": {
             "key": "rSiaUuG1kpM",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-62513",
-          "title": "Clevatess II: Majuu no Ou to Itsuwari no Yuusha Denshou",
-          "link": "https://myanimelist.net/anime/62513/Clevatess_II__Majuu_no_Ou_to_Itsuwari_no_Yuusha_Denshou",
-          "summary": "Second season of Clevatess.",
-          "image": "https://cdn.myanimelist.net/images/anime/1741/157105l.jpg",
-          "pubDate": "2026-07-08T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-05T22:03:50.157Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.68
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "qsbyAix6lUY",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-61169",
-          "title": "Black Torch",
-          "link": "https://myanimelist.net/anime/61169/Black_Torch",
-          "summary": "Seventeen-year-old Jirou Azuma lives a quiet life with his grandfather, utilizing his supernatural ability to speak with animals to befriend and protect them. Both Jirou and his grandfather are descendants of a long-standing shinobi clan, training in combat to keep the art of battle alive within their family. Jirou's life is thrown into upheaval after rescuing a seemingly normal black cat, Ragou, only to discover that the cat is actually a mononoke—a demonic spirit that has long been at war with mankind. When a hostile mononoke comes looking for Ragou, Jirou uses his shinobi training to jump to the cat's defense, but immediately suffers a mortal wound.\n\nFaced with the decision of whether or not to devour Jirou's fading energy and restore himself to full power, Ragou instead chooses to give his remaining energy to Jirou. Reviving the boy, the transfer also grants him great supernatural powers that complement his own shinobi fighting style. This act is witnessed by Ryousuke Shiba, an officer in the Bureau of Espionage whose job revolves around dispatching aggressive mononoke. Shiba extends Jirou and his grandfather an offer: to join the Bureau's new squad, Black Torch, and help them battle powerful mononoke who seek to devour innocent people.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1965/158363l.jpg",
-          "pubDate": "2026-07-04T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-03T22:35:35.052Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.39
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "XL_biwm-hxU",
             "site": "YouTube"
           },
           "cast": []
@@ -7477,6 +7373,114 @@
               "order": 1
             }
           ],
+          "trending": false
+        },
+        {
+          "guid": "mal-63832",
+          "title": "Seihantai na Kimi to Boku 2nd Season",
+          "link": "https://myanimelist.net/anime/63832/Seihantai_na_Kimi_to_Boku_2nd_Season",
+          "summary": "Second season of Seihantai na Kimi to Boku.",
+          "image": "https://cdn.myanimelist.net/images/anime/1143/158409l.jpg",
+          "pubDate": "2026-07-05T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-02T23:29:45.989Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.35
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "o9eLX4W-gys",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-58929",
+          "title": "Koukaku Kidoutai (TV)",
+          "link": "https://myanimelist.net/anime/58929/Koukaku_Kidoutai_TV",
+          "summary": "In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetics, its citizens are able to replace their limbs with robotic parts. The world is now more interconnected than ever before, and the city's Public Security Section 9 is responsible for combating corruption, terrorism, and other dangerous threats following this shift toward globalization.\n\nThe strong-willed Major Motoko Kusanagi of Section 9 spearheads a case involving a mysterious hacker known only as the \"Puppet Master,\" who leaves a trail of victims stripped of their memories. Like many in this futuristic world, the Puppet Master's body is almost entirely robotic, giving them incredible power.\n\nAs Motoko and her subordinates follow the enigmatic criminal's trail, other parties—including Section 6—start to get involved, forcing her to confront the extremely complicated nature of the case. Pondering about various philosophical questions, such as her own life's meaning, Motoko soon realizes that the one who will provide these answers is none other than the Puppet Master themself.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1474/158937l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-03T16:16:10.868Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.02
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "yfKqPQ-BjYE",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-62513",
+          "title": "Clevatess II: Majuu no Ou to Itsuwari no Yuusha Denshou",
+          "link": "https://myanimelist.net/anime/62513/Clevatess_II__Majuu_no_Ou_to_Itsuwari_no_Yuusha_Denshou",
+          "summary": "Second season of Clevatess.",
+          "image": "https://cdn.myanimelist.net/images/anime/1741/157105l.jpg",
+          "pubDate": "2026-07-08T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-05T22:03:50.157Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.68
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "qsbyAix6lUY",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-61169",
+          "title": "Black Torch",
+          "link": "https://myanimelist.net/anime/61169/Black_Torch",
+          "summary": "Seventeen-year-old Jirou Azuma lives a quiet life with his grandfather, utilizing his supernatural ability to speak with animals to befriend and protect them. Both Jirou and his grandfather are descendants of a long-standing shinobi clan, training in combat to keep the art of battle alive within their family. Jirou's life is thrown into upheaval after rescuing a seemingly normal black cat, Ragou, only to discover that the cat is actually a mononoke—a demonic spirit that has long been at war with mankind. When a hostile mononoke comes looking for Ragou, Jirou uses his shinobi training to jump to the cat's defense, but immediately suffers a mortal wound.\n\nFaced with the decision of whether or not to devour Jirou's fading energy and restore himself to full power, Ragou instead chooses to give his remaining energy to Jirou. Reviving the boy, the transfer also grants him great supernatural powers that complement his own shinobi fighting style. This act is witnessed by Ryousuke Shiba, an officer in the Bureau of Espionage whose job revolves around dispatching aggressive mononoke. Shiba extends Jirou and his grandfather an offer: to join the Bureau's new squad, Black Torch, and help them battle powerful mononoke who seek to devour innocent people.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1965/158363l.jpg",
+          "pubDate": "2026-07-04T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-03T22:35:35.052Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.39
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "XL_biwm-hxU",
+            "site": "YouTube"
+          },
+          "cast": [],
           "trending": false
         }
       ]
