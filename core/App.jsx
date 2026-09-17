@@ -313,8 +313,68 @@ function AngstApp() {
   function savePokeApiKey(k){ try{ localStorage.setItem(TCG_KEY_STORAGE,k); }catch(e){} setPokeApiKey(k); }
   const [nutriDecks, setNutriDecks] = useState([]);
   const nutriDecksRef = useRef([]);
-  const lastExportSizeRef = useRef(0);
-  const lastExportDateRef = useRef(null);
+
+  // ── Sync de estado completo a Angst-data (14-sep-2026) ──
+  // Reemplaza al auto-export diario que descargaba un archivo local --
+  // ahora el estado completo se empuja solo, con debounce, a la rama
+  // `state-sync` de Angst-data (aislada de main, con amend real del lado
+  // del Worker: siempre el mismo commit, sin crecer el historial sin
+  // importar cuántas veces se guarde). Mismo AUTH_SECRET/localStorage key
+  // que ya usan Simkl/podcasts/Pokécripto -- no se pide de nuevo si ya
+  // está cargado.
+  const ANGST_STATE_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
+  const ANGST_STATE_AUTH_KEY = "angst-simkl-auth-v1";
+  const ANGST_STATE_PATH = "angst-full-state.json";
+  const ANGST_STATE_BRANCH = "state-sync";
+  const stateSyncTimerRef = useRef(null);
+  const [stateSyncMsg, setStateSyncMsg] = useState(null);
+  function getAngstStateAuth(){ try{ return localStorage.getItem(ANGST_STATE_AUTH_KEY)||null; }catch(e){ return null; } }
+  function pedirAngstStateAuth(){
+    const v = prompt("Pegá el AUTH_SECRET del Worker (el mismo que Simkl/podcasts/Pokécripto, una sola vez):");
+    if(v && v.trim()){ try{ localStorage.setItem(ANGST_STATE_AUTH_KEY, v.trim()); }catch(e){} }
+    return v && v.trim() ? v.trim() : null;
+  }
+  // Silencioso -- nunca prompt() desde acá, este llamado sale de
+  // saveToStorage (efecto pasivo). Si no hay auth todavía, no hace nada;
+  // el botón "leer de repo" es el único lugar que pide el secret.
+  async function pushStateToRepo(payload){
+    const auth = getAngstStateAuth();
+    if(!auth) return;
+    try{
+      const resp = await fetch(ANGST_STATE_WORKER_URL, {
+        method: "POST",
+        headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
+        body: JSON.stringify({ path: ANGST_STATE_PATH, branch: ANGST_STATE_BRANCH, amend: true, payload }),
+      });
+      if(!resp.ok) console.warn("Sync a Angst-data falló:", resp.status);
+    }catch(e){ console.warn("Sync a Angst-data falló:", e.message); }
+  }
+  // Debounce real -- cualquier cambio agenda un push a los 8s de
+  // inactividad; un cambio nuevo antes de eso reinicia el timer, así una
+  // sesión de edición seguida termina en UN solo push, no uno por tecla.
+  function scheduleStateSync(payload){
+    if(stateSyncTimerRef.current) clearTimeout(stateSyncTimerRef.current);
+    stateSyncTimerRef.current = setTimeout(()=>{ pushStateToRepo(payload); }, 8000);
+  }
+  async function leerDeRepo(){
+    let auth = getAngstStateAuth();
+    if(!auth) auth = pedirAngstStateAuth();
+    if(!auth) return;
+    setStateSyncMsg("leyendo...");
+    try{
+      const resp = await fetch(`${ANGST_STATE_WORKER_URL}?path=${ANGST_STATE_PATH}&branch=${ANGST_STATE_BRANCH}`, { headers: { "X-Angst-Auth": auth } });
+      const d = await resp.json();
+      if(d.found === false){ setStateSyncMsg("nada guardado todavía en el repo"); setTimeout(()=>setStateSyncMsg(null), 4000); return; }
+      if(restoreFromPayload(d, "Angst-data")){
+        setStateSyncMsg("✓ restaurado desde el repo");
+      } else {
+        setStateSyncMsg("✗ el repo no tenía datos reconocibles");
+      }
+    }catch(e){
+      setStateSyncMsg(`✗ ${e.message}`);
+    }
+    setTimeout(()=>setStateSyncMsg(null), 4000);
+  }
 
   useEffect(()=>{ dayDataRef.current  = dayData;   }, [dayData]);
   useEffect(()=>{ weekOffsetRef.current = weekOffset; }, [weekOffset]);
@@ -604,32 +664,6 @@ function AngstApp() {
     load();
   },[]);
 
-  // ── Auto-export silencioso — recordatorio para respaldar ──
-  // Reusa buildExportPayload() (la misma fuente que el botón 💾 manual)
-  // así nunca queda un campo afuera en uno y no en el otro.
-  function silentExport(payloadArg){
-    try {
-      const payload = payloadArg || buildExportPayload();
-      downloadBackupJSON(payload);
-      lastExportDateRef.current = new Date().toISOString().slice(0,10);
-      lastExportSizeRef.current = JSON.stringify(payload).length;
-    } catch(e) { console.warn("Auto-export failed:", e); }
-  }
-
-  // Export diario al abrir la app (una vez por día, como recordatorio de respaldo)
-  useEffect(()=>{
-    if(!loaded) return;
-    const todayKey = new Date().toISOString().slice(0,10);
-    const lastDate = localStorage.getItem("angst-last-export-date");
-    if(lastDate !== todayKey) {
-      // Pequeño delay para que los refs estén poblados tras el load
-      setTimeout(()=>{
-        silentExport();
-        localStorage.setItem("angst-last-export-date", todayKey);
-      }, 3000);
-    }
-  }, [loaded]);
-
   // Save to storage
   async function saveToStorage(overrides={}) {
     const payload = {
@@ -663,13 +697,10 @@ function AngstApp() {
       await localSet("angst-v12", serialized);
       setSaved(true);
       setTimeout(()=>setSaved(false), 2000);
-      // Watcher: si el payload creció >1KB respecto al último export, exportar de nuevo
-      if(lastExportSizeRef.current > 0 && serialized.length - lastExportSizeRef.current > 1024) {
-        silentExport();
-      }
-      if(lastExportSizeRef.current === 0) {
-        lastExportSizeRef.current = serialized.length;
-      }
+      // Cualquier guardado local agenda un sync a Angst-data (debounced
+      // 8s, ver scheduleStateSync) -- reemplaza al watcher viejo de
+      // ">1KB de crecimiento" que solo disparaba el export local.
+      scheduleStateSync(payload);
     } catch(e) { console.warn("Save failed:", e); }
   }
 
@@ -1364,6 +1395,8 @@ function AngstApp() {
               📂<input type="file" accept=".xlsx,.xls,.json" onChange={handleLoad} style={{position:"absolute",inset:0,opacity:0,cursor:"pointer",width:"100%",height:"100%",fontSize:0}}/>
             </label>
             <button className={`disk-btn${exportOk===true?" ok":""}`} onClick={handleExport} title="Descargar backup .json">💾</button>
+            <button className="disk-btn" onClick={leerDeRepo} title="Leer el estado completo desde Angst-data">📥</button>
+            {stateSyncMsg&&<span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:stateSyncMsg.startsWith("✓")?"#4caf50":"#f0a000",marginLeft:4}}>{stateSyncMsg}</span>}
             <div style={{position:"relative"}}>
               <button className="disk-btn" onClick={()=>setPodcastMenuOpen(o=>!o)} title="Podcasts" style={{position:"relative"}}>
                 🎙️

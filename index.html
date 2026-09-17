@@ -9113,8 +9113,72 @@ Toco reintentar ahora.`);
     }
     const [nutriDecks, setNutriDecks] = useState8([]);
     const nutriDecksRef = useRef8([]);
-    const lastExportSizeRef = useRef8(0);
-    const lastExportDateRef = useRef8(null);
+    const ANGST_STATE_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
+    const ANGST_STATE_AUTH_KEY = "angst-simkl-auth-v1";
+    const ANGST_STATE_PATH = "angst-full-state.json";
+    const ANGST_STATE_BRANCH = "state-sync";
+    const stateSyncTimerRef = useRef8(null);
+    const [stateSyncMsg, setStateSyncMsg] = useState8(null);
+    function getAngstStateAuth() {
+      try {
+        return localStorage.getItem(ANGST_STATE_AUTH_KEY) || null;
+      } catch (e) {
+        return null;
+      }
+    }
+    function pedirAngstStateAuth() {
+      const v = prompt("Peg\xE1 el AUTH_SECRET del Worker (el mismo que Simkl/podcasts/Pok\xE9cripto, una sola vez):");
+      if (v && v.trim()) {
+        try {
+          localStorage.setItem(ANGST_STATE_AUTH_KEY, v.trim());
+        } catch (e) {
+        }
+      }
+      return v && v.trim() ? v.trim() : null;
+    }
+    async function pushStateToRepo(payload) {
+      const auth = getAngstStateAuth();
+      if (!auth) return;
+      try {
+        const resp = await fetch(ANGST_STATE_WORKER_URL, {
+          method: "POST",
+          headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
+          body: JSON.stringify({ path: ANGST_STATE_PATH, branch: ANGST_STATE_BRANCH, amend: true, payload })
+        });
+        if (!resp.ok) console.warn("Sync a Angst-data fall\xF3:", resp.status);
+      } catch (e) {
+        console.warn("Sync a Angst-data fall\xF3:", e.message);
+      }
+    }
+    function scheduleStateSync(payload) {
+      if (stateSyncTimerRef.current) clearTimeout(stateSyncTimerRef.current);
+      stateSyncTimerRef.current = setTimeout(() => {
+        pushStateToRepo(payload);
+      }, 8e3);
+    }
+    async function leerDeRepo() {
+      let auth = getAngstStateAuth();
+      if (!auth) auth = pedirAngstStateAuth();
+      if (!auth) return;
+      setStateSyncMsg("leyendo...");
+      try {
+        const resp = await fetch(`${ANGST_STATE_WORKER_URL}?path=${ANGST_STATE_PATH}&branch=${ANGST_STATE_BRANCH}`, { headers: { "X-Angst-Auth": auth } });
+        const d = await resp.json();
+        if (d.found === false) {
+          setStateSyncMsg("nada guardado todav\xEDa en el repo");
+          setTimeout(() => setStateSyncMsg(null), 4e3);
+          return;
+        }
+        if (restoreFromPayload(d, "Angst-data")) {
+          setStateSyncMsg("\u2713 restaurado desde el repo");
+        } else {
+          setStateSyncMsg("\u2717 el repo no ten\xEDa datos reconocibles");
+        }
+      } catch (e) {
+        setStateSyncMsg(`\u2717 ${e.message}`);
+      }
+      setTimeout(() => setStateSyncMsg(null), 4e3);
+    }
     useEffect8(() => {
       dayDataRef.current = dayData;
     }, [dayData]);
@@ -9484,27 +9548,6 @@ Toco reintentar ahora.`);
       }
       load();
     }, []);
-    function silentExport(payloadArg) {
-      try {
-        const payload = payloadArg || buildExportPayload();
-        downloadBackupJSON(payload);
-        lastExportDateRef.current = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-        lastExportSizeRef.current = JSON.stringify(payload).length;
-      } catch (e) {
-        console.warn("Auto-export failed:", e);
-      }
-    }
-    useEffect8(() => {
-      if (!loaded) return;
-      const todayKey = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-      const lastDate = localStorage.getItem("angst-last-export-date");
-      if (lastDate !== todayKey) {
-        setTimeout(() => {
-          silentExport();
-          localStorage.setItem("angst-last-export-date", todayKey);
-        }, 3e3);
-      }
-    }, [loaded]);
     async function saveToStorage(overrides = {}) {
       const payload = {
         dayData: overrides.dayData ?? dayDataRef.current,
@@ -9537,12 +9580,7 @@ Toco reintentar ahora.`);
         await localSet("angst-v12", serialized);
         setSaved(true);
         setTimeout(() => setSaved(false), 2e3);
-        if (lastExportSizeRef.current > 0 && serialized.length - lastExportSizeRef.current > 1024) {
-          silentExport();
-        }
-        if (lastExportSizeRef.current === 0) {
-          lastExportSizeRef.current = serialized.length;
-        }
+        scheduleStateSync(payload);
       } catch (e) {
         console.warn("Save failed:", e);
       }
@@ -10319,7 +10357,7 @@ Toco reintentar ahora.`);
       const mon = addDays(date, -(dow === 0 ? 6 : dow - 1));
       const diff = Math.round((mon - BASE_DATE) / (7 * 864e5));
       updateWeekOffset(diff);
-    }, onClose: () => setCalOpen(false) }), /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("div", { className: "hdr" }, /* @__PURE__ */ React.createElement("div", { className: "hdr-title", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, ["Mi semana d\xEDa a d\xEDa", "Presupuesto mensual", "Emprendimientos", "\u{1F9E0} mindfulness", "\u{1FA7A} salud", "\u{1F344} Fadiman", "\u{1F957} Nutrici\xF3n", "\u{1F3CB}\uFE0F Ejercicio", "\u{1F0CF} Pok\xE9cripto"][page]), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexShrink: 0 } }, saved && /* @__PURE__ */ React.createElement("span", { className: "saved-msg" }, "guardado \u2713"), loadMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: loadMsg.startsWith("\u2713") ? "#4caf50" : loadMsg.startsWith("\u26A0") ? "#f0a000" : "#c00", fontSize: 13, maxWidth: 220 } }, loadMsg), exportOk === true && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#4caf50", fontSize: 13 } }, "descargado \u2713"), exportOk === false && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, "error al exportar"), typeof exportOk === "string" && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, exportOk), /* @__PURE__ */ React.createElement("label", { title: "Cargar backup .xlsx o .json", style: { position: "relative", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "1px dashed #444", borderRadius: 4, color: "#888", padding: "5px 10px", fontSize: 14, lineHeight: 1, overflow: "hidden" } }, "\u{1F4C2}", /* @__PURE__ */ React.createElement("input", { type: "file", accept: ".xlsx,.xls,.json", onChange: handleLoad, style: { position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%", fontSize: 0 } })), /* @__PURE__ */ React.createElement("button", { className: `disk-btn${exportOk === true ? " ok" : ""}`, onClick: handleExport, title: "Descargar backup .json" }, "\u{1F4BE}"), /* @__PURE__ */ React.createElement("div", { style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { className: "disk-btn", onClick: () => setPodcastMenuOpen((o) => !o), title: "Podcasts", style: { position: "relative" } }, "\u{1F399}\uFE0F", podcastPending.length > 0 && /* @__PURE__ */ React.createElement("span", { style: { position: "absolute", top: -3, right: -3, width: 8, height: 8, borderRadius: "50%", background: "#e91e8c" } })), podcastMenuOpen && (() => {
+    }, onClose: () => setCalOpen(false) }), /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("div", { className: "hdr" }, /* @__PURE__ */ React.createElement("div", { className: "hdr-title", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, ["Mi semana d\xEDa a d\xEDa", "Presupuesto mensual", "Emprendimientos", "\u{1F9E0} mindfulness", "\u{1FA7A} salud", "\u{1F344} Fadiman", "\u{1F957} Nutrici\xF3n", "\u{1F3CB}\uFE0F Ejercicio", "\u{1F0CF} Pok\xE9cripto"][page]), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexShrink: 0 } }, saved && /* @__PURE__ */ React.createElement("span", { className: "saved-msg" }, "guardado \u2713"), loadMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: loadMsg.startsWith("\u2713") ? "#4caf50" : loadMsg.startsWith("\u26A0") ? "#f0a000" : "#c00", fontSize: 13, maxWidth: 220 } }, loadMsg), exportOk === true && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#4caf50", fontSize: 13 } }, "descargado \u2713"), exportOk === false && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, "error al exportar"), typeof exportOk === "string" && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, exportOk), /* @__PURE__ */ React.createElement("label", { title: "Cargar backup .xlsx o .json", style: { position: "relative", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "1px dashed #444", borderRadius: 4, color: "#888", padding: "5px 10px", fontSize: 14, lineHeight: 1, overflow: "hidden" } }, "\u{1F4C2}", /* @__PURE__ */ React.createElement("input", { type: "file", accept: ".xlsx,.xls,.json", onChange: handleLoad, style: { position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%", fontSize: 0 } })), /* @__PURE__ */ React.createElement("button", { className: `disk-btn${exportOk === true ? " ok" : ""}`, onClick: handleExport, title: "Descargar backup .json" }, "\u{1F4BE}"), /* @__PURE__ */ React.createElement("button", { className: "disk-btn", onClick: leerDeRepo, title: "Leer el estado completo desde Angst-data" }, "\u{1F4E5}"), stateSyncMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: stateSyncMsg.startsWith("\u2713") ? "#4caf50" : "#f0a000", marginLeft: 4 } }, stateSyncMsg), /* @__PURE__ */ React.createElement("div", { style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { className: "disk-btn", onClick: () => setPodcastMenuOpen((o) => !o), title: "Podcasts", style: { position: "relative" } }, "\u{1F399}\uFE0F", podcastPending.length > 0 && /* @__PURE__ */ React.createElement("span", { style: { position: "absolute", top: -3, right: -3, width: 8, height: 8, borderRadius: "50%", background: "#e91e8c" } })), podcastMenuOpen && (() => {
       const activeShow = podcastShows[activeShowIdx] || podcastShows[0];
       const playEpisode = (ep, showNombre) => {
         setNowPlaying({ title: ep.title, source: showNombre, audioUrl: ep.audioUrl, guid: ep.guid });
