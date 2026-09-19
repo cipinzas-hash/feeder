@@ -346,7 +346,16 @@ function AngstApp() {
         headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
         body: JSON.stringify({ path: ANGST_STATE_PATH, branch: ANGST_STATE_BRANCH, amend: true, payload }),
       });
-      if(!resp.ok) console.warn("Sync a Angst-data falló:", resp.status);
+      if(resp.status === 401){
+        // Secret guardado ya no matchea (se rotó del lado del Worker) --
+        // se limpia para que la próxima acción explícita (leerDeRepo, o
+        // cualquier otro botón que use la misma key) vuelva a pedirlo,
+        // en vez de seguir fallando en silencio para siempre con el viejo.
+        try{ localStorage.removeItem(ANGST_STATE_AUTH_KEY); }catch(e){}
+        console.warn("Sync a Angst-data: AUTH_SECRET vencido, se limpió -- hace falta volver a pegarlo");
+      } else if(!resp.ok) {
+        console.warn("Sync a Angst-data falló:", resp.status);
+      }
     }catch(e){ console.warn("Sync a Angst-data falló:", e.message); }
   }
   // Debounce real -- cualquier cambio agenda un push a los 8s de
@@ -362,7 +371,21 @@ function AngstApp() {
     if(!auth) return;
     setStateSyncMsg("leyendo...");
     try{
-      const resp = await fetch(`${ANGST_STATE_WORKER_URL}?path=${ANGST_STATE_PATH}&branch=${ANGST_STATE_BRANCH}`, { headers: { "X-Angst-Auth": auth } });
+      let resp = await fetch(`${ANGST_STATE_WORKER_URL}?path=${ANGST_STATE_PATH}&branch=${ANGST_STATE_BRANCH}`, { headers: { "X-Angst-Auth": auth } });
+      if(resp.status === 401){
+        // Mismo caso que pushStateToRepo, pero acá SÍ es una acción
+        // explícita del usuario -- tiene sentido volver a pedir el
+        // secret al toque en vez de solo limpiarlo y listo.
+        try{ localStorage.removeItem(ANGST_STATE_AUTH_KEY); }catch(e){}
+        auth = pedirAngstStateAuth();
+        if(!auth){ setStateSyncMsg("✗ sin AUTH_SECRET válido"); setTimeout(()=>setStateSyncMsg(null), 4000); return; }
+        resp = await fetch(`${ANGST_STATE_WORKER_URL}?path=${ANGST_STATE_PATH}&branch=${ANGST_STATE_BRANCH}`, { headers: { "X-Angst-Auth": auth } });
+      }
+      if(!resp.ok){
+        setStateSyncMsg(`✗ el Worker respondió ${resp.status} (¿AUTH_SECRET incorrecto?)`);
+        setTimeout(()=>setStateSyncMsg(null), 5000);
+        return;
+      }
       const d = await resp.json();
       if(d.found === false){ setStateSyncMsg("nada guardado todavía en el repo"); setTimeout(()=>setStateSyncMsg(null), 4000); return; }
       if(restoreFromPayload(d, "Angst-data")){
@@ -375,6 +398,7 @@ function AngstApp() {
     }
     setTimeout(()=>setStateSyncMsg(null), 4000);
   }
+
 
   useEffect(()=>{ dayDataRef.current  = dayData;   }, [dayData]);
   useEffect(()=>{ weekOffsetRef.current = weekOffset; }, [weekOffset]);

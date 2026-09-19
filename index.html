@@ -9145,7 +9145,15 @@ Toco reintentar ahora.`);
           headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
           body: JSON.stringify({ path: ANGST_STATE_PATH, branch: ANGST_STATE_BRANCH, amend: true, payload })
         });
-        if (!resp.ok) console.warn("Sync a Angst-data fall\xF3:", resp.status);
+        if (resp.status === 401) {
+          try {
+            localStorage.removeItem(ANGST_STATE_AUTH_KEY);
+          } catch (e) {
+          }
+          console.warn("Sync a Angst-data: AUTH_SECRET vencido, se limpi\xF3 -- hace falta volver a pegarlo");
+        } else if (!resp.ok) {
+          console.warn("Sync a Angst-data fall\xF3:", resp.status);
+        }
       } catch (e) {
         console.warn("Sync a Angst-data fall\xF3:", e.message);
       }
@@ -9162,7 +9170,25 @@ Toco reintentar ahora.`);
       if (!auth) return;
       setStateSyncMsg("leyendo...");
       try {
-        const resp = await fetch(`${ANGST_STATE_WORKER_URL}?path=${ANGST_STATE_PATH}&branch=${ANGST_STATE_BRANCH}`, { headers: { "X-Angst-Auth": auth } });
+        let resp = await fetch(`${ANGST_STATE_WORKER_URL}?path=${ANGST_STATE_PATH}&branch=${ANGST_STATE_BRANCH}`, { headers: { "X-Angst-Auth": auth } });
+        if (resp.status === 401) {
+          try {
+            localStorage.removeItem(ANGST_STATE_AUTH_KEY);
+          } catch (e) {
+          }
+          auth = pedirAngstStateAuth();
+          if (!auth) {
+            setStateSyncMsg("\u2717 sin AUTH_SECRET v\xE1lido");
+            setTimeout(() => setStateSyncMsg(null), 4e3);
+            return;
+          }
+          resp = await fetch(`${ANGST_STATE_WORKER_URL}?path=${ANGST_STATE_PATH}&branch=${ANGST_STATE_BRANCH}`, { headers: { "X-Angst-Auth": auth } });
+        }
+        if (!resp.ok) {
+          setStateSyncMsg(`\u2717 el Worker respondi\xF3 ${resp.status} (\xBFAUTH_SECRET incorrecto?)`);
+          setTimeout(() => setStateSyncMsg(null), 5e3);
+          return;
+        }
         const d = await resp.json();
         if (d.found === false) {
           setStateSyncMsg("nada guardado todav\xEDa en el repo");
