@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-19T17:02:13.991Z",
+  "generatedAt": "2026-09-19T20:10:49.613Z",
   "categories": [
     {
       "cat": "Películas",
@@ -181,7 +181,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 7.5
+            "tmdb": 7.4
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -569,7 +569,7 @@
               "order": 9
             }
           ],
-          "trending": false
+          "trending": true
         },
         {
           "guid": "tmdb-movie-1284465",
@@ -647,87 +647,6 @@
             {
               "name": "Alfie Lawless",
               "character": "Hendrie",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1433367",
-          "title": "Una noche al año",
-          "link": "https://www.themoviedb.org/movie/1433367",
-          "summary": "Dos extraños tratan de encontrar a alguien con quien acostarse en la única noche del año en la que es legal el sexo prematrimonial.",
-          "image": "https://image.tmdb.org/t/p/w500/6zWaYWrPXG7JBX3Tb3OI9ITWGad.jpg",
-          "pubDate": "2026-07-28",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-08-21T02:05:23.994Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.3,
-            "rt": 43,
-            "metascore": 42,
-            "tmdb": 7
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "lDsAVq9lo9g",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Monica Barbaro",
-              "character": "Allie",
-              "order": 0
-            },
-            {
-              "name": "Callum Turner",
-              "character": "Owen",
-              "order": 1
-            },
-            {
-              "name": "Maya Hawke",
-              "character": "Malika",
-              "order": 2
-            },
-            {
-              "name": "King Princess",
-              "character": "Jacinta",
-              "order": 3
-            },
-            {
-              "name": "Molly Ringwald",
-              "character": "Linda",
-              "order": 4
-            },
-            {
-              "name": "LeVar Burton",
-              "character": "Rick",
-              "order": 5
-            },
-            {
-              "name": "Charlie Gillespie",
-              "character": "Ezra Strong",
-              "order": 6
-            },
-            {
-              "name": "Quintessa Swindell",
-              "character": "Arya",
-              "order": 7
-            },
-            {
-              "name": "Mateo Ray Garcia",
-              "character": "Troy",
-              "order": 8
-            },
-            {
-              "name": "Okieriete Onaodowan",
-              "character": "Tejan",
               "order": 9
             }
           ],
@@ -815,6 +734,87 @@
           "trending": false
         },
         {
+          "guid": "tmdb-movie-1291595",
+          "title": "Insidious: Fuera del más allá",
+          "link": "https://www.themoviedb.org/movie/1291595",
+          "summary": "La saga de terror vuelve a sus raíces sobrenaturales. Una nueva protagonista se enfrenta a misteriosas apariciones que van mucho más allá de los fenómenos de embrujamiento clásicos. El mal encuentra nuevos caminos en la realidad. Un trío de acechadores se infiltra en un tranquilo suburbio obligando a una nueva familia a entrar en el plano astral, donde descubren una aterradora verdad: el Más Allá está sangrando en el mundo real",
+          "image": "https://image.tmdb.org/t/p/w500/uEqCJh1fA9Ao9jaCL2xoROPJeUB.jpg",
+          "pubDate": "2026-08-19",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-19T20:10:41.648Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.2,
+            "rt": 58,
+            "metascore": 47,
+            "tmdb": 6.5
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "gXjurDkYnEM",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Amelia Eve",
+              "character": "Gemma Hall",
+              "order": 0
+            },
+            {
+              "name": "Island Austin",
+              "character": "Maya Hall",
+              "order": 1
+            },
+            {
+              "name": "Brandon Perea",
+              "character": "Nick Mendoza",
+              "order": 2
+            },
+            {
+              "name": "Lin Shaye",
+              "character": "Elise Rainier",
+              "order": 3
+            },
+            {
+              "name": "Maisie Richardson-Sellers",
+              "character": "Clare",
+              "order": 4
+            },
+            {
+              "name": "Sam Spruell",
+              "character": "Cyrus Lam",
+              "order": 5
+            },
+            {
+              "name": "Joseph Lopez",
+              "character": "Lester",
+              "order": 6
+            },
+            {
+              "name": "Robina Beard",
+              "character": "Edna",
+              "order": 7
+            },
+            {
+              "name": "Susan Gray",
+              "character": "Patsy",
+              "order": 8
+            },
+            {
+              "name": "Laura Gordon",
+              "character": "Ingrid Lilith Hall",
+              "order": 9
+            }
+          ],
+          "trending": false
+        },
+        {
           "guid": "tmdb-movie-969681",
           "title": "Spider-Man: Brand New Day",
           "link": "https://www.themoviedb.org/movie/969681",
@@ -890,330 +890,6 @@
             {
               "name": "Marisa Tomei",
               "character": "May Parker",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1240889",
-          "title": "Adolescencia, sexo y muerte en campamento Miasma",
-          "link": "https://www.themoviedb.org/movie/1240889",
-          "summary": "Tras años de secuelas cutres y un fandom en declive, la franquicia slasher 'Camp Miasma' es puesta en manos de una joven y entusiasta directora para que la resucite. Pero cuando visita a la estrella de la película original, una actriz que ahora vive recluida y envuelta en misterio, las dos caen en una espiral de sangre, deseo, miedo y delirio.",
-          "image": "https://image.tmdb.org/t/p/w500/8UTCpwvHxWPllCJ7YnaCbffmYyD.jpg",
-          "pubDate": "2026-08-06",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-18T23:56:14.781Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.1,
-            "rt": 94,
-            "metascore": 89,
-            "tmdb": 6.6
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "j9TsiTgYZGw",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Hannah Einbinder",
-              "character": "Kris",
-              "order": 0
-            },
-            {
-              "name": "Gillian Anderson",
-              "character": "Billy",
-              "order": 1
-            },
-            {
-              "name": "Amanda Fix",
-              "character": "Young Billy",
-              "order": 2
-            },
-            {
-              "name": "Arthur Conti",
-              "character": "Alex",
-              "order": 3
-            },
-            {
-              "name": "Eva Victor",
-              "character": "DJ Ella Giastic",
-              "order": 4
-            },
-            {
-              "name": "Zach Cherry",
-              "character": "Will",
-              "order": 5
-            },
-            {
-              "name": "Sarah Sherman",
-              "character": "Kris' Agent",
-              "order": 6
-            },
-            {
-              "name": "Patrick Fischler",
-              "character": "Rudolph",
-              "order": 7
-            },
-            {
-              "name": "Dylan Baker",
-              "character": "Jeffrey",
-              "order": 8
-            },
-            {
-              "name": "Jasmin Savoy Brown",
-              "character": "Mari",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1108427",
-          "title": "Vaiana",
-          "link": "https://www.themoviedb.org/movie/1108427",
-          "summary": "Vaiana (Catherine Lagaʻaia) responde a la llamada del océano y, por primera vez, viaja más allá del arrecife de su isla de Motunui con el semidiós Maui (Dwayne Johnson) en un viaje inolvidable para devolver la prosperidad a su pueblo.",
-          "image": "https://image.tmdb.org/t/p/w500/wC27PIEqSthbUhaVMdYEhaTzYmo.jpg",
-          "pubDate": "2026-07-08",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-07T17:39:56.550Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": 32,
-            "metascore": null,
-            "tmdb": 6.2
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "n7f6hlKsxxo",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Catherine Lagaʻaia",
-              "character": "Moana",
-              "order": 0
-            },
-            {
-              "name": "Dwayne Johnson",
-              "character": "Maui",
-              "order": 1
-            },
-            {
-              "name": "Rena Owen",
-              "character": "Gramma Tala",
-              "order": 2
-            },
-            {
-              "name": "John Tui",
-              "character": "Chief Tui",
-              "order": 3
-            },
-            {
-              "name": "Frankie Adams",
-              "character": "Sina",
-              "order": 4
-            },
-            {
-              "name": "Jemaine Clement",
-              "character": "Tamatoa (voice)",
-              "order": 5
-            },
-            {
-              "name": "Emma Puahi-Shapazian",
-              "character": "Moana (4 years old)",
-              "order": 6
-            },
-            {
-              "name": "Amaya Masoli",
-              "character": "Moana (8 years old)",
-              "order": 7
-            },
-            {
-              "name": "Sam Puefua",
-              "character": "Village Fisherman",
-              "order": 8
-            },
-            {
-              "name": "Sione Milford",
-              "character": "Coconut Farmer",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1124142",
-          "title": "Los rivales de Amziah King",
-          "link": "https://www.themoviedb.org/movie/1124142",
-          "summary": "En lo más profundo de los bosques de la Oklahoma rural, el carismático y musicalmente dotado Amziah King lidera una banda de inadaptados que tocan bluegrass mientras supervisa la principal operación de fabricación de miel del pueblo. Cuando la hija adoptiva de Amziah, Kateri, regresa inesperadamente, él trata de renovar su conexión y crear un negocio familiar. Pero el juego de la miel es despiadado, y los rivales de Amziah amenazan con destruir todo lo que ha construido.",
-          "image": "https://image.tmdb.org/t/p/w500/gINcZnpbBboaT5cMYGJiWi6Og3Y.jpg",
-          "pubDate": "2026-08-13",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-18T20:33:08.205Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.3,
-            "rt": 89,
-            "metascore": 74,
-            "tmdb": 6.8
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "GwSvAyaMGMo",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Matthew McConaughey",
-              "character": "Amziah King",
-              "order": 0
-            },
-            {
-              "name": "Kurt Russell",
-              "character": "Dob McCoy",
-              "order": 1
-            },
-            {
-              "name": "Angelina LookingGlass",
-              "character": "Kateri",
-              "order": 2
-            },
-            {
-              "name": "Cole Sprouse",
-              "character": "Oat",
-              "order": 3
-            },
-            {
-              "name": "Scott Shepherd",
-              "character": "Chimmy",
-              "order": 4
-            },
-            {
-              "name": "Rob Morgan",
-              "character": "Rippy",
-              "order": 5
-            },
-            {
-              "name": "Tony Revolori",
-              "character": "Colemar",
-              "order": 6
-            },
-            {
-              "name": "Jake Horowitz",
-              "character": "Remick",
-              "order": 7
-            },
-            {
-              "name": "Owen Teague",
-              "character": "Pirate",
-              "order": 8
-            },
-            {
-              "name": "Bruce Davis",
-              "character": "Sunderland",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1212763",
-          "title": "Posesión infernal: En llamas",
-          "link": "https://www.themoviedb.org/movie/1212763",
-          "summary": "Tras la muerte de su marido, una mujer busca consuelo junto a la familia de este en su aislada casa familiar. Pero, cuando uno a uno comienzan a convertirse en seres poseídos, el encuentro acaba convirtiéndose en una reunión familiar salida del infierno. Entonces descubre que los votos que hizo en vida siguen vigentes incluso después de la muerte.",
-          "image": "https://image.tmdb.org/t/p/w500/5BxpImOaOTssydHBGOpvXzszsEg.jpg",
-          "pubDate": "2026-07-07",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-19T17:02:02.100Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.3,
-            "rt": 71,
-            "metascore": 54,
-            "tmdb": 7.7
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "RddZObTlmA8",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Souheila Yacoub",
-              "character": "Alice",
-              "order": 0
-            },
-            {
-              "name": "Tandi Wright",
-              "character": "Susan",
-              "order": 1
-            },
-            {
-              "name": "Hunter Doohan",
-              "character": "Joseph",
-              "order": 2
-            },
-            {
-              "name": "Luciane Buchanan",
-              "character": "Thya",
-              "order": 3
-            },
-            {
-              "name": "Erroll Shand",
-              "character": "Edgar",
-              "order": 4
-            },
-            {
-              "name": "Maude Davey",
-              "character": "Polly",
-              "order": 5
-            },
-            {
-              "name": "George Pullar",
-              "character": "Will",
-              "order": 6
-            },
-            {
-              "name": "Greta van den Brink",
-              "character": "Jessica",
-              "order": 7
-            },
-            {
-              "name": "Keanu Karim",
-              "character": "Jared",
-              "order": 8
-            },
-            {
-              "name": "Victory Ndukwe",
-              "character": "Leo",
               "order": 9
             }
           ],
@@ -1308,6 +984,168 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1108427",
+          "title": "Vaiana",
+          "link": "https://www.themoviedb.org/movie/1108427",
+          "summary": "Vaiana (Catherine Lagaʻaia) responde a la llamada del océano y, por primera vez, viaja más allá del arrecife de su isla de Motunui con el semidiós Maui (Dwayne Johnson) en un viaje inolvidable para devolver la prosperidad a su pueblo.",
+          "image": "https://image.tmdb.org/t/p/w500/wC27PIEqSthbUhaVMdYEhaTzYmo.jpg",
+          "pubDate": "2026-07-08",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-07T17:39:56.550Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": 32,
+            "metascore": null,
+            "tmdb": 6.2
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "n7f6hlKsxxo",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Catherine Lagaʻaia",
+              "character": "Moana",
+              "order": 0
+            },
+            {
+              "name": "Dwayne Johnson",
+              "character": "Maui",
+              "order": 1
+            },
+            {
+              "name": "Rena Owen",
+              "character": "Gramma Tala",
+              "order": 2
+            },
+            {
+              "name": "John Tui",
+              "character": "Chief Tui",
+              "order": 3
+            },
+            {
+              "name": "Frankie Adams",
+              "character": "Sina",
+              "order": 4
+            },
+            {
+              "name": "Jemaine Clement",
+              "character": "Tamatoa (voice)",
+              "order": 5
+            },
+            {
+              "name": "Emma Puahi-Shapazian",
+              "character": "Moana (4 years old)",
+              "order": 6
+            },
+            {
+              "name": "Amaya Masoli",
+              "character": "Moana (8 years old)",
+              "order": 7
+            },
+            {
+              "name": "Sam Puefua",
+              "character": "Village Fisherman",
+              "order": 8
+            },
+            {
+              "name": "Sione Milford",
+              "character": "Coconut Farmer",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1240889",
+          "title": "Adolescencia, sexo y muerte en campamento Miasma",
+          "link": "https://www.themoviedb.org/movie/1240889",
+          "summary": "Tras años de secuelas cutres y un fandom en declive, la franquicia slasher 'Camp Miasma' es puesta en manos de una joven y entusiasta directora para que la resucite. Pero cuando visita a la estrella de la película original, una actriz que ahora vive recluida y envuelta en misterio, las dos caen en una espiral de sangre, deseo, miedo y delirio.",
+          "image": "https://image.tmdb.org/t/p/w500/8UTCpwvHxWPllCJ7YnaCbffmYyD.jpg",
+          "pubDate": "2026-08-06",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-18T23:56:14.781Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.1,
+            "rt": 94,
+            "metascore": 89,
+            "tmdb": 6.6
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "j9TsiTgYZGw",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Hannah Einbinder",
+              "character": "Kris",
+              "order": 0
+            },
+            {
+              "name": "Gillian Anderson",
+              "character": "Billy",
+              "order": 1
+            },
+            {
+              "name": "Amanda Fix",
+              "character": "Young Billy",
+              "order": 2
+            },
+            {
+              "name": "Arthur Conti",
+              "character": "Alex",
+              "order": 3
+            },
+            {
+              "name": "Eva Victor",
+              "character": "DJ Ella Giastic",
+              "order": 4
+            },
+            {
+              "name": "Zach Cherry",
+              "character": "Will",
+              "order": 5
+            },
+            {
+              "name": "Sarah Sherman",
+              "character": "Kris' Agent",
+              "order": 6
+            },
+            {
+              "name": "Patrick Fischler",
+              "character": "Rudolph",
+              "order": 7
+            },
+            {
+              "name": "Dylan Baker",
+              "character": "Jeffrey",
+              "order": 8
+            },
+            {
+              "name": "Jasmin Savoy Brown",
+              "character": "Mari",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1339713",
           "title": "Obsesión",
           "link": "https://www.themoviedb.org/movie/1339713",
@@ -1383,6 +1221,168 @@
             {
               "name": "Anthony Casabianca",
               "character": "Chris",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1122030",
+          "title": "Alpha",
+          "link": "https://www.themoviedb.org/movie/1122030",
+          "summary": "Alpha desvela la historia de una joven criada y entrenada para convertirse en un arma letal. Una misión pondrá a prueba todo aquello para lo que fue preparada: infiltrarse, sobrevivir y eliminar sin margen de error.",
+          "image": "https://image.tmdb.org/t/p/w500/bPtRt3ajQ0EkyeQ1O6iJwAIi9Py.jpg",
+          "pubDate": "2026-07-02",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-19T20:10:41.842Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": 58,
+            "metascore": null,
+            "tmdb": 5
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "YP1uSAggr6Y",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "आलिया भट्ट",
+              "character": "Sita",
+              "order": 0
+            },
+            {
+              "name": "Sharvari Wagh",
+              "character": "Durga",
+              "order": 1
+            },
+            {
+              "name": "बॉबी द्योल",
+              "character": "Fateh Singh Lakhawat",
+              "order": 2
+            },
+            {
+              "name": "अनिल कपूर",
+              "character": "Vikrant Kaul",
+              "order": 3
+            },
+            {
+              "name": "Dibyendu Bhattacharya",
+              "character": "Dr. John Verghese",
+              "order": 4
+            },
+            {
+              "name": "Dia Mirza",
+              "character": "Janaki Kaul",
+              "order": 5
+            },
+            {
+              "name": "Hrithik Roshan",
+              "character": "Kabir Dhaliwal",
+              "order": 6
+            },
+            {
+              "name": "Shubhi Mehta",
+              "character": "Susan Cherian",
+              "order": 7
+            },
+            {
+              "name": "Pavleen Gujral",
+              "character": "Dr. Preeti",
+              "order": 8
+            },
+            {
+              "name": "Pranay Narayan",
+              "character": "General Sodhi",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1400940",
+          "title": "Clayface",
+          "link": "https://www.themoviedb.org/movie/1400940",
+          "summary": "Una criatura cambiante hecha de arcilla mágica acecha Ciudad Gótica, alternando entre villano y aliado de Batman. Varias figuras trágicas han asumido el manto de Cara de Barro a lo largo de los años.",
+          "image": "https://image.tmdb.org/t/p/w500/6ihSDJlBNcvoTWzSA0jonZyOXTs.jpg",
+          "pubDate": "2026-10-21",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-19T20:10:41.997Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Post Production",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "OGO4Mqvo3jI",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Rhys Harries",
+              "character": "Matt Hagen / Clayface",
+              "order": 0
+            },
+            {
+              "name": "Naomi Ackie",
+              "character": "Caitlyn Corr",
+              "order": 1
+            },
+            {
+              "name": "Eddie Marsan",
+              "character": "",
+              "order": 2
+            },
+            {
+              "name": "Max Minghella",
+              "character": "John Borrelli",
+              "order": 3
+            },
+            {
+              "name": "David Dencik",
+              "character": "",
+              "order": 4
+            },
+            {
+              "name": "Francesca Corney",
+              "character": "",
+              "order": 5
+            },
+            {
+              "name": "Ruby Sear",
+              "character": "Theresa",
+              "order": 6
+            },
+            {
+              "name": "Wil Coban",
+              "character": "Bones",
+              "order": 7
+            },
+            {
+              "name": "Joshua James",
+              "character": "Corey Bowery",
+              "order": 8
+            },
+            {
+              "name": "Jake Curran",
+              "character": "Patches",
               "order": 9
             }
           ],
@@ -1470,6 +1470,249 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1433367",
+          "title": "Una noche al año",
+          "link": "https://www.themoviedb.org/movie/1433367",
+          "summary": "Dos extraños tratan de encontrar a alguien con quien acostarse en la única noche del año en la que es legal el sexo prematrimonial.",
+          "image": "https://image.tmdb.org/t/p/w500/6zWaYWrPXG7JBX3Tb3OI9ITWGad.jpg",
+          "pubDate": "2026-07-28",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-08-21T02:05:23.994Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.3,
+            "rt": 43,
+            "metascore": 42,
+            "tmdb": 7
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "lDsAVq9lo9g",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Monica Barbaro",
+              "character": "Allie",
+              "order": 0
+            },
+            {
+              "name": "Callum Turner",
+              "character": "Owen",
+              "order": 1
+            },
+            {
+              "name": "Maya Hawke",
+              "character": "Malika",
+              "order": 2
+            },
+            {
+              "name": "King Princess",
+              "character": "Jacinta",
+              "order": 3
+            },
+            {
+              "name": "Molly Ringwald",
+              "character": "Linda",
+              "order": 4
+            },
+            {
+              "name": "LeVar Burton",
+              "character": "Rick",
+              "order": 5
+            },
+            {
+              "name": "Charlie Gillespie",
+              "character": "Ezra Strong",
+              "order": 6
+            },
+            {
+              "name": "Quintessa Swindell",
+              "character": "Arya",
+              "order": 7
+            },
+            {
+              "name": "Mateo Ray Garcia",
+              "character": "Troy",
+              "order": 8
+            },
+            {
+              "name": "Okieriete Onaodowan",
+              "character": "Tejan",
+              "order": 9
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-movie-1124142",
+          "title": "Los rivales de Amziah King",
+          "link": "https://www.themoviedb.org/movie/1124142",
+          "summary": "En lo más profundo de los bosques de la Oklahoma rural, el carismático y musicalmente dotado Amziah King lidera una banda de inadaptados que tocan bluegrass mientras supervisa la principal operación de fabricación de miel del pueblo. Cuando la hija adoptiva de Amziah, Kateri, regresa inesperadamente, él trata de renovar su conexión y crear un negocio familiar. Pero el juego de la miel es despiadado, y los rivales de Amziah amenazan con destruir todo lo que ha construido.",
+          "image": "https://image.tmdb.org/t/p/w500/gINcZnpbBboaT5cMYGJiWi6Og3Y.jpg",
+          "pubDate": "2026-08-13",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-18T20:33:08.205Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.3,
+            "rt": 89,
+            "metascore": 74,
+            "tmdb": 6.8
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "GwSvAyaMGMo",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Matthew McConaughey",
+              "character": "Amziah King",
+              "order": 0
+            },
+            {
+              "name": "Kurt Russell",
+              "character": "Dob McCoy",
+              "order": 1
+            },
+            {
+              "name": "Angelina LookingGlass",
+              "character": "Kateri",
+              "order": 2
+            },
+            {
+              "name": "Cole Sprouse",
+              "character": "Oat",
+              "order": 3
+            },
+            {
+              "name": "Scott Shepherd",
+              "character": "Chimmy",
+              "order": 4
+            },
+            {
+              "name": "Rob Morgan",
+              "character": "Rippy",
+              "order": 5
+            },
+            {
+              "name": "Tony Revolori",
+              "character": "Colemar",
+              "order": 6
+            },
+            {
+              "name": "Jake Horowitz",
+              "character": "Remick",
+              "order": 7
+            },
+            {
+              "name": "Owen Teague",
+              "character": "Pirate",
+              "order": 8
+            },
+            {
+              "name": "Bruce Davis",
+              "character": "Sunderland",
+              "order": 9
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-movie-1212763",
+          "title": "Posesión infernal: En llamas",
+          "link": "https://www.themoviedb.org/movie/1212763",
+          "summary": "Tras la muerte de su marido, una mujer busca consuelo junto a la familia de este en su aislada casa familiar. Pero, cuando uno a uno comienzan a convertirse en seres poseídos, el encuentro acaba convirtiéndose en una reunión familiar salida del infierno. Entonces descubre que los votos que hizo en vida siguen vigentes incluso después de la muerte.",
+          "image": "https://image.tmdb.org/t/p/w500/5BxpImOaOTssydHBGOpvXzszsEg.jpg",
+          "pubDate": "2026-07-07",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-19T17:02:02.100Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.3,
+            "rt": 71,
+            "metascore": 54,
+            "tmdb": 7.7
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "RddZObTlmA8",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Souheila Yacoub",
+              "character": "Alice",
+              "order": 0
+            },
+            {
+              "name": "Tandi Wright",
+              "character": "Susan",
+              "order": 1
+            },
+            {
+              "name": "Hunter Doohan",
+              "character": "Joseph",
+              "order": 2
+            },
+            {
+              "name": "Luciane Buchanan",
+              "character": "Thya",
+              "order": 3
+            },
+            {
+              "name": "Erroll Shand",
+              "character": "Edgar",
+              "order": 4
+            },
+            {
+              "name": "Maude Davey",
+              "character": "Polly",
+              "order": 5
+            },
+            {
+              "name": "George Pullar",
+              "character": "Will",
+              "order": 6
+            },
+            {
+              "name": "Greta van den Brink",
+              "character": "Jessica",
+              "order": 7
+            },
+            {
+              "name": "Keanu Karim",
+              "character": "Jared",
+              "order": 8
+            },
+            {
+              "name": "Victory Ndukwe",
+              "character": "Leo",
+              "order": 9
+            }
+          ],
+          "trending": false
+        },
+        {
           "guid": "tmdb-movie-1263337",
           "title": "En el corazón de la bestia",
           "link": "https://www.themoviedb.org/movie/1263337",
@@ -1518,7 +1761,7 @@
               "order": 3
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1137844",
@@ -7761,79 +8004,27 @@
           "cast": []
         },
         {
-          "guid": "mal-54000",
-          "title": "Otome Game Sekai wa Mob ni Kibishii Sekai desu 2",
-          "link": "https://myanimelist.net/anime/54000/Otome_Game_Sekai_wa_Mob_ni_Kibishii_Sekai_desu_2",
-          "summary": "Otome Game Sekai wa Mob ni Kibishii Sekai desu , también conocida como Trapped in a Dating Sim: The World of Otome Games is Tough for Mobs en inglés y abreviado como Mobuseka , es una serie de novelas ligeras japonesas escritas por Yomu Mishima e ilustradas por un artista que usa el seudónimo de Monda. La historia se enfoca en un joven oficinista amargado y malhumorado del Japón moderno quien fallece por un accidente debido al cansancio de jugar un videojuego otome titulado Holfort Kingdom ―el cual fue obligado a jugar chantajeado por su hermana mimada—, solo para reencarnar dentro en el mismo mundo del juego otome por el que murió como un personaje de fondo llamado Leon Fou Bartfort. A pesar de su odio por dicho mundo, empieza a sacar provecho, usando su conocimiento del mismo en su vida anterior y de paso, tener una vida tranquila; sin embargo, la historia empieza a mostrar cambios drásticos que amenazan la estabilidad de dicho mundo, obligando a Leon a intervenir a regañadientes.",
-          "image": "https://cdn.myanimelist.net/images/anime/1285/158337l.jpg",
-          "pubDate": "2026-07-08T00:00:00+00:00",
+          "guid": "mal-58929",
+          "title": "Koukaku Kidoutai (TV)",
+          "link": "https://myanimelist.net/anime/58929/Koukaku_Kidoutai_TV",
+          "summary": "In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetics, its citizens are able to replace their limbs with robotic parts. The world is now more interconnected than ever before, and the city's Public Security Section 9 is responsible for combating corruption, terrorism, and other dangerous threats following this shift toward globalization.\n\nThe strong-willed Major Motoko Kusanagi of Section 9 spearheads a case involving a mysterious hacker known only as the \"Puppet Master,\" who leaves a trail of victims stripped of their memories. Like many in this futuristic world, the Puppet Master's body is almost entirely robotic, giving them incredible power.\n\nAs Motoko and her subordinates follow the enigmatic criminal's trail, other parties—including Section 6—start to get involved, forcing her to confront the extremely complicated nature of the case. Pondering about various philosophical questions, such as her own life's meaning, Motoko soon realizes that the one who will provide these answers is none other than the Puppet Master themself.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1474/158937l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
           "source": "MyAnimeList",
           "categoria": "Animación",
-          "firstSeenAt": "2026-08-30T19:19:29.586Z",
+          "firstSeenAt": "2026-09-03T16:16:10.868Z",
           "fullText": null,
           "rating": {
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.83
+            "tmdb": 8.02
           },
           "status": "Currently Airing",
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": {
-            "key": "JP3ksqOosBY",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-63403",
-          "title": "Yani Neko",
-          "link": "https://myanimelist.net/anime/63403/Yani_Neko",
-          "summary": "Yani is a catgirl with a seriously bad smoking habit. She smokes so much that her apartment smells like ash and is littered with cigarette butts—and plenty of other trash! Every time she tries to quit, she becomes weak to the cravings and gives in almost instantly. Will she ever get her life together, or is she doomed to live as a chainsmoking slob forever?\n\n(Source: Seven Seas Entertainment)",
-          "image": "https://cdn.myanimelist.net/images/anime/1281/156496l.jpg",
-          "pubDate": "2026-07-03T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-30T22:38:21.733Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.13
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "0e-tPUjYkvA",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-62513",
-          "title": "Clevatess II: Majuu no Ou to Itsuwari no Yuusha Denshou",
-          "link": "https://myanimelist.net/anime/62513/Clevatess_II__Majuu_no_Ou_to_Itsuwari_no_Yuusha_Denshou",
-          "summary": "Second season of Clevatess.",
-          "image": "https://cdn.myanimelist.net/images/anime/1741/157105l.jpg",
-          "pubDate": "2026-07-08T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-05T22:03:50.157Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.68
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "qsbyAix6lUY",
+            "key": "nnRcKC4Rgsc",
             "site": "YouTube"
           },
           "cast": []
@@ -8451,6 +8642,87 @@
           "trending": false
         },
         {
+          "guid": "mal-54000",
+          "title": "Otome Game Sekai wa Mob ni Kibishii Sekai desu 2",
+          "link": "https://myanimelist.net/anime/54000/Otome_Game_Sekai_wa_Mob_ni_Kibishii_Sekai_desu_2",
+          "summary": "Otome Game Sekai wa Mob ni Kibishii Sekai desu , también conocida como Trapped in a Dating Sim: The World of Otome Games is Tough for Mobs en inglés y abreviado como Mobuseka , es una serie de novelas ligeras japonesas escritas por Yomu Mishima e ilustradas por un artista que usa el seudónimo de Monda. La historia se enfoca en un joven oficinista amargado y malhumorado del Japón moderno quien fallece por un accidente debido al cansancio de jugar un videojuego otome titulado Holfort Kingdom ―el cual fue obligado a jugar chantajeado por su hermana mimada—, solo para reencarnar dentro en el mismo mundo del juego otome por el que murió como un personaje de fondo llamado Leon Fou Bartfort. A pesar de su odio por dicho mundo, empieza a sacar provecho, usando su conocimiento del mismo en su vida anterior y de paso, tener una vida tranquila; sin embargo, la historia empieza a mostrar cambios drásticos que amenazan la estabilidad de dicho mundo, obligando a Leon a intervenir a regañadientes.",
+          "image": "https://cdn.myanimelist.net/images/anime/1285/158337l.jpg",
+          "pubDate": "2026-07-08T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-30T19:19:29.586Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.83
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "JP3ksqOosBY",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-63403",
+          "title": "Yani Neko",
+          "link": "https://myanimelist.net/anime/63403/Yani_Neko",
+          "summary": "Yani is a catgirl with a seriously bad smoking habit. She smokes so much that her apartment smells like ash and is littered with cigarette butts—and plenty of other trash! Every time she tries to quit, she becomes weak to the cravings and gives in almost instantly. Will she ever get her life together, or is she doomed to live as a chainsmoking slob forever?\n\n(Source: Seven Seas Entertainment)",
+          "image": "https://cdn.myanimelist.net/images/anime/1281/156496l.jpg",
+          "pubDate": "2026-07-03T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-30T22:38:21.733Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.13
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "0e-tPUjYkvA",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-62513",
+          "title": "Clevatess II: Majuu no Ou to Itsuwari no Yuusha Denshou",
+          "link": "https://myanimelist.net/anime/62513/Clevatess_II__Majuu_no_Ou_to_Itsuwari_no_Yuusha_Denshou",
+          "summary": "Second season of Clevatess.",
+          "image": "https://cdn.myanimelist.net/images/anime/1741/157105l.jpg",
+          "pubDate": "2026-07-08T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-05T22:03:50.157Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.68
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "qsbyAix6lUY",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
           "guid": "mal-60636",
           "title": "Bleach: Sennen Kessen-hen - Kashin-tan",
           "link": "https://myanimelist.net/anime/60636/Bleach__Sennen_Kessen-hen_-_Kashin-tan",
@@ -8580,33 +8852,6 @@
           "reviews": null,
           "trailer": {
             "key": "u_TQJHga6k8",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-58929",
-          "title": "Koukaku Kidoutai (TV)",
-          "link": "https://myanimelist.net/anime/58929/Koukaku_Kidoutai_TV",
-          "summary": "In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetics, its citizens are able to replace their limbs with robotic parts. The world is now more interconnected than ever before, and the city's Public Security Section 9 is responsible for combating corruption, terrorism, and other dangerous threats following this shift toward globalization.\n\nThe strong-willed Major Motoko Kusanagi of Section 9 spearheads a case involving a mysterious hacker known only as the \"Puppet Master,\" who leaves a trail of victims stripped of their memories. Like many in this futuristic world, the Puppet Master's body is almost entirely robotic, giving them incredible power.\n\nAs Motoko and her subordinates follow the enigmatic criminal's trail, other parties—including Section 6—start to get involved, forcing her to confront the extremely complicated nature of the case. Pondering about various philosophical questions, such as her own life's meaning, Motoko soon realizes that the one who will provide these answers is none other than the Puppet Master themself.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1474/158937l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-03T16:16:10.868Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.02
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "yfKqPQ-BjYE",
             "site": "YouTube"
           },
           "cast": [],
