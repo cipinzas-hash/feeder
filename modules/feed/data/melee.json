@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-20T22:02:34.919Z",
+  "generatedAt": "2026-09-21T02:22:04.619Z",
   "categories": [
     {
       "cat": "Melee",
@@ -1154,14 +1154,52 @@
   "trackedTournaments": [],
   "meleeDebug": [
     {
-      "meleemajorsCount": 0,
-      "meleemajorsSlugs": []
+      "meleemajorsCount": 4,
+      "meleemajorsSlugs": [
+        "tournament/riptide-2026-4/event/melee-singles",
+        "tournament/tipped-off-17-haunted/event/melee-singles",
+        "tournament/port-priority-dx/event/melee-singles",
+        "tournament/platfight-gaming-championships-2026/event/melee-singles"
+      ]
     },
     {
-      "combinedCount": 0,
-      "combinedSlugs": [],
+      "combinedCount": 4,
+      "combinedSlugs": [
+        "tournament/riptide-2026-4/event/melee-singles",
+        "tournament/tipped-off-17-haunted/event/melee-singles",
+        "tournament/port-priority-dx/event/melee-singles",
+        "tournament/platfight-gaming-championships-2026/event/melee-singles"
+      ],
       "previousTrackedCount": 0,
       "previousProcessedCount": 3
+    },
+    {
+      "slug": "tournament/riptide-2026-4/event/melee-singles",
+      "tournamentName": "Riptide 2026",
+      "state": "COMPLETED",
+      "eventId": 1503439,
+      "yaProcesado": true
+    },
+    {
+      "slug": "tournament/tipped-off-17-haunted/event/melee-singles",
+      "tournamentName": "Tipped Off 17: Haunted!",
+      "state": "CREATED",
+      "eventId": 1539199,
+      "yaProcesado": false
+    },
+    {
+      "slug": "tournament/port-priority-dx/event/melee-singles",
+      "tournamentName": "Port Priority: DX",
+      "state": "CREATED",
+      "eventId": 1587277,
+      "yaProcesado": false
+    },
+    {
+      "slug": "tournament/platfight-gaming-championships-2026/event/melee-singles",
+      "tournamentName": "Platfight 2026",
+      "state": "CREATED",
+      "eventId": 1661592,
+      "yaProcesado": false
     }
   ],
   "vodClipDebug": []
