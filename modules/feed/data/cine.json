@@ -1,90 +1,9 @@
 {
-  "generatedAt": "2026-09-22T07:25:33.873Z",
+  "generatedAt": "2026-09-22T14:25:42.206Z",
   "categories": [
     {
       "cat": "Películas",
       "items": [
-        {
-          "guid": "tmdb-movie-1101383",
-          "title": "El final de Oak Street",
-          "link": "https://www.themoviedb.org/movie/1101383",
-          "summary": "Después de que un misterioso fenómeno cósmico arranque Oak Street de su entorno suburbano y transporte a sus habitantes a un lugar desconocido, la familia Platt pronto descubre que su propia supervivencia depende de que permanezcan unidos mientras se orientan en un entorno que ya no reconocen.",
-          "image": "https://image.tmdb.org/t/p/w500/g9DUGw8ufetrwhCIrwq3h1NlpWO.jpg",
-          "pubDate": "2026-08-12",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-09T23:52:02.565Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.6,
-            "rt": 86,
-            "metascore": 69,
-            "tmdb": 6.4
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "u4tgctWuHc0",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Anne Hathaway",
-              "character": "Denise Platt",
-              "order": 0
-            },
-            {
-              "name": "Ewan McGregor",
-              "character": "Greg Platt",
-              "order": 1
-            },
-            {
-              "name": "Maisy Stella",
-              "character": "Audrey Platt",
-              "order": 2
-            },
-            {
-              "name": "Christian Convery",
-              "character": "Brian Platt",
-              "order": 3
-            },
-            {
-              "name": "Jordan Alexa Davis",
-              "character": "Jeannette Christiansen",
-              "order": 4
-            },
-            {
-              "name": "P.J. Byrne",
-              "character": "Mel Jacobs",
-              "order": 5
-            },
-            {
-              "name": "Bethany Anne Lind",
-              "character": "Mary Bagrowski",
-              "order": 6
-            },
-            {
-              "name": "Emily Kuroda",
-              "character": "Mrs. Valcour",
-              "order": 7
-            },
-            {
-              "name": "Denitra Isler",
-              "character": "Mae",
-              "order": 8
-            },
-            {
-              "name": "Hudson Meek",
-              "character": "Kaden",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
         {
           "guid": "tmdb-movie-1423191",
           "title": "Resident Evil",
@@ -161,6 +80,87 @@
             {
               "name": "Zoé Bellas",
               "character": "Birdie",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1101383",
+          "title": "El final de Oak Street",
+          "link": "https://www.themoviedb.org/movie/1101383",
+          "summary": "Después de que un misterioso fenómeno cósmico arranque Oak Street de su entorno suburbano y transporte a sus habitantes a un lugar desconocido, la familia Platt pronto descubre que su propia supervivencia depende de que permanezcan unidos mientras se orientan en un entorno que ya no reconocen.",
+          "image": "https://image.tmdb.org/t/p/w500/g9DUGw8ufetrwhCIrwq3h1NlpWO.jpg",
+          "pubDate": "2026-08-12",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-09T23:52:02.565Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.6,
+            "rt": 86,
+            "metascore": 69,
+            "tmdb": 6.4
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "u4tgctWuHc0",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Anne Hathaway",
+              "character": "Denise Platt",
+              "order": 0
+            },
+            {
+              "name": "Ewan McGregor",
+              "character": "Greg Platt",
+              "order": 1
+            },
+            {
+              "name": "Maisy Stella",
+              "character": "Audrey Platt",
+              "order": 2
+            },
+            {
+              "name": "Christian Convery",
+              "character": "Brian Platt",
+              "order": 3
+            },
+            {
+              "name": "Jordan Alexa Davis",
+              "character": "Jeannette Christiansen",
+              "order": 4
+            },
+            {
+              "name": "P.J. Byrne",
+              "character": "Mel Jacobs",
+              "order": 5
+            },
+            {
+              "name": "Bethany Anne Lind",
+              "character": "Mary Bagrowski",
+              "order": 6
+            },
+            {
+              "name": "Emily Kuroda",
+              "character": "Mrs. Valcour",
+              "order": 7
+            },
+            {
+              "name": "Denitra Isler",
+              "character": "Mae",
+              "order": 8
+            },
+            {
+              "name": "Hudson Meek",
+              "character": "Kaden",
               "order": 9
             }
           ],
@@ -984,6 +984,52 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1263337",
+          "title": "En el corazón de la bestia",
+          "link": "https://www.themoviedb.org/movie/1263337",
+          "summary": "Tras sobrevivir a un brutal accidente aéreo, el oficial de las Fuerzas Especiales James Belmont y su perro de combate Odín intentan intentarán regresar a la civilización desde un remoto lugar en medio de los parajes salvajes de Alaska.",
+          "image": "https://image.tmdb.org/t/p/w500/h9Ql2vsltCOuf44c28nInxjzL2m.jpg",
+          "pubDate": "2026-09-19",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-19T13:43:53.697Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.5,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.8
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "UkMuGKqAux4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Brad Pitt",
+              "character": "James Belmont",
+              "order": 0
+            },
+            {
+              "name": "J.K. Simmons",
+              "character": "Walter Boone",
+              "order": 1
+            },
+            {
+              "name": "Anna Lambe",
+              "character": "",
+              "order": 2
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1339713",
           "title": "Obsesión",
           "link": "https://www.themoviedb.org/movie/1339713",
@@ -1146,21 +1192,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1477712",
-          "title": "Dulce sabor a muerte",
-          "link": "https://www.themoviedb.org/movie/1477712",
-          "summary": "Lo que comienza siendo un verano idílico, en un pequeño y tranquilo pueblo vacacional, se convierte en una auténtica pesadilla cuando los más pequeños comienzan a mostrar instintos asesinos y deseos insaciables por acabar con todos los adultos. Son víctimas de una curiosa maldición provocada por los helados que comen que afecta a todos, menos a tres niños que tendrán que intentar escapar y salvar a todo el pueblo.",
-          "image": "https://image.tmdb.org/t/p/w500/uVuP2ZTYLn5hdL1aUOe4BiFD6d3.jpg",
-          "pubDate": "2026-08-03",
+          "guid": "tmdb-movie-445466",
+          "title": "Idiots",
+          "link": "https://www.themoviedb.org/movie/445466",
+          "summary": "When two unqualified bozos are hired to transfer a rich teen to rehab, their straightforward gig quickly spirals into dangerous mayhem.",
+          "image": "https://image.tmdb.org/t/p/w500/iPBQ9btO6VBX6z8qJUdKBwiEGo8.jpg",
+          "pubDate": "2026-08-20",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-09-22T07:25:27.492Z",
+          "firstSeenAt": "2026-09-22T14:25:17.967Z",
           "fullText": null,
           "rating": {
-            "imdb": 3.8,
-            "rt": 25,
-            "metascore": 33,
-            "tmdb": 4.5
+            "imdb": 6.2,
+            "rt": 61,
+            "metascore": 62,
+            "tmdb": 6.5
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1169,160 +1215,79 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "Cgw3zNmFtRo",
+            "key": "UoAf0LNAn30",
             "site": "YouTube"
           },
           "cast": [
-            {
-              "name": "Ari Millen",
-              "character": "The Ice Cream Man / Jonathan Smiley",
-              "order": 0
-            },
-            {
-              "name": "Charlie Zeltzer",
-              "character": "Jared",
-              "order": 1
-            },
-            {
-              "name": "Shiloh O’Reilly",
-              "character": "Tommy",
-              "order": 2
-            },
-            {
-              "name": "Kiori Mirza Waldman",
-              "character": "Mia",
-              "order": 3
-            },
-            {
-              "name": "Sarah Abbott",
-              "character": "Lizzie",
-              "order": 4
-            },
-            {
-              "name": "Benjamin Byron Davis",
-              "character": "The Priest",
-              "order": 5
-            },
-            {
-              "name": "Karen Cliche",
-              "character": "Alison",
-              "order": 6
-            },
-            {
-              "name": "Dylan Hawco",
-              "character": "Chris",
-              "order": 7
-            },
-            {
-              "name": "Luke Dietz",
-              "character": "Elliot",
-              "order": 10
-            },
-            {
-              "name": "Eli Massillon",
-              "character": "Myles",
-              "order": 11
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1465063",
-          "title": "La isla olvidada",
-          "link": "https://www.themoviedb.org/movie/1465063",
-          "summary": "Dos amigas se quedan varadas en el místico mundo de Nakali, donde su único escape podría costarles su vida compartida de recuerdos.",
-          "image": "https://image.tmdb.org/t/p/w500/vpTdXFoZGzwnCWzkVYU7JH8teAZ.jpg",
-          "pubDate": "2026-09-10",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-16T00:01:02.440Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.9
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "PhgY8cOJiQA",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "H.E.R.",
-              "character": "Jo (voice)",
-              "order": 0
-            },
-            {
-              "name": "Liza Soberano",
-              "character": "Raissa (voice)",
-              "order": 1
-            },
             {
               "name": "Dave Franco",
-              "character": "Raww (voice)",
+              "character": "Mark",
+              "order": 0
+            },
+            {
+              "name": "O'Shea Jackson Jr.",
+              "character": "Davis",
+              "order": 1
+            },
+            {
+              "name": "Mason Thames",
+              "character": "Sheridan",
               "order": 2
             },
             {
-              "name": "Lea Salonga",
-              "character": "Manang (voice)",
+              "name": "Kiernan Shipka",
+              "character": "Irina Anastas",
               "order": 3
             },
             {
-              "name": "Jenny Slate",
-              "character": "Batiba (voice)",
+              "name": "Peter Dinklage",
+              "character": "Karl \"Koko\" Sandoz",
               "order": 4
             },
             {
-              "name": "Manny Jacinto",
-              "character": "Bungi (voice)",
+              "name": "Nicholas Braun",
+              "character": "Joe Thom Pell a.k.a Pricka Bush Da Werewoof",
               "order": 5
             },
             {
-              "name": "Dolly de Leon",
-              "character": "Lola Fatima (voice)",
+              "name": "Lynn Wanlass",
+              "character": "Bodha 'Baba' Anastas",
               "order": 6
             },
             {
-              "name": "Jo Koy",
-              "character": "Datu (voice)",
+              "name": "Macon Blair",
+              "character": "D.D",
               "order": 7
             },
             {
-              "name": "Ronny Chieng",
-              "character": "King Truffle Wuffle (voice)",
+              "name": "Grace Junot",
+              "character": "India Worsham Dorindo",
               "order": 8
             },
             {
-              "name": "Kevin McCann",
-              "character": "Prince Mermahn (voice)",
+              "name": "Lee Eddy",
+              "character": "Celeste Waingro",
               "order": 9
             }
           ],
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1263337",
-          "title": "En el corazón de la bestia",
-          "link": "https://www.themoviedb.org/movie/1263337",
-          "summary": "Tras sobrevivir a un brutal accidente aéreo, el oficial de las Fuerzas Especiales James Belmont y su perro de combate Odín intentan intentarán regresar a la civilización desde un remoto lugar en medio de los parajes salvajes de Alaska.",
-          "image": "https://image.tmdb.org/t/p/w500/h9Ql2vsltCOuf44c28nInxjzL2m.jpg",
-          "pubDate": "2026-09-19",
+          "guid": "tmdb-movie-1641629",
+          "title": "Tú+Yo - Solos contra todos",
+          "link": "https://www.themoviedb.org/movie/1641629",
+          "summary": "Alma Lancaster, de 18 años, parece llevar una vida perfecta en el seno de una familia adinerada que cree que está estudiando Derecho. Sin embargo, en secreto persigue su verdadero sueño: el cine. En la universidad conoce a Vadim Arcadi, de 20 años, un rebelde carismático y solitario con un pasado turbulento. Obligados a colaborar en una película para la universidad, ambos chocan, se acercan y terminan enamorándose, pese a sus esfuerzos por evitarlo. Pero alguien que los observa está decidido a separarlos y desvelar secretos que podrían destruir tanto a Alma como a Vadim.",
+          "image": "https://image.tmdb.org/t/p/w500/mzgqiEhujCAZiaD6jNVYSXdqFXs.jpg",
+          "pubDate": "2026-09-18",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-09-19T13:43:53.697Z",
+          "firstSeenAt": "2026-09-18T23:56:14.891Z",
           "fullText": null,
           "rating": {
-            "imdb": 7.5,
+            "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 7.8
+            "tmdb": 5.6
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1331,24 +1296,59 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "UkMuGKqAux4",
+            "key": "jZLAduvYWZA",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Brad Pitt",
-              "character": "James Belmont",
+              "name": "Vittoria Di Savoia",
+              "character": "Alma Lancaster",
               "order": 0
             },
             {
-              "name": "J.K. Simmons",
-              "character": "Walter Boone",
+              "name": "Lucas Barski",
+              "character": "Vadim Arcadi",
               "order": 1
             },
             {
-              "name": "Anna Lambe",
-              "character": "",
+              "name": "Zoé Garcia",
+              "character": "Clémentine",
               "order": 2
+            },
+            {
+              "name": "Léo Legrand",
+              "character": "Timothé Vallas",
+              "order": 3
+            },
+            {
+              "name": "Jean-Yves Berteloot",
+              "character": "Edward Lancaster",
+              "order": 4
+            },
+            {
+              "name": "Suliane Brahim",
+              "character": "Marie Lancaster",
+              "order": 5
+            },
+            {
+              "name": "Aymeric Fougeron",
+              "character": "Basile Lancaster",
+              "order": 6
+            },
+            {
+              "name": "Gabrielle Taittinger",
+              "character": "Lily Lancaster",
+              "order": 7
+            },
+            {
+              "name": "Bryan Trésor",
+              "character": "Oscar Johnson",
+              "order": 8
+            },
+            {
+              "name": "Aboubacar Bidanessy",
+              "character": "Félix Alonso",
+              "order": 9
             }
           ],
           "trending": true
@@ -1429,6 +1429,87 @@
             {
               "name": "임현식",
               "character": "Hae-sul",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1465063",
+          "title": "La isla olvidada",
+          "link": "https://www.themoviedb.org/movie/1465063",
+          "summary": "Dos amigas se quedan varadas en el místico mundo de Nakali, donde su único escape podría costarles su vida compartida de recuerdos.",
+          "image": "https://image.tmdb.org/t/p/w500/vpTdXFoZGzwnCWzkVYU7JH8teAZ.jpg",
+          "pubDate": "2026-09-10",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-16T00:01:02.440Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.9
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "PhgY8cOJiQA",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "H.E.R.",
+              "character": "Jo (voice)",
+              "order": 0
+            },
+            {
+              "name": "Liza Soberano",
+              "character": "Raissa (voice)",
+              "order": 1
+            },
+            {
+              "name": "Dave Franco",
+              "character": "Raww (voice)",
+              "order": 2
+            },
+            {
+              "name": "Lea Salonga",
+              "character": "Manang (voice)",
+              "order": 3
+            },
+            {
+              "name": "Jenny Slate",
+              "character": "Batiba (voice)",
+              "order": 4
+            },
+            {
+              "name": "Manny Jacinto",
+              "character": "Bungi (voice)",
+              "order": 5
+            },
+            {
+              "name": "Dolly de Leon",
+              "character": "Lola Fatima (voice)",
+              "order": 6
+            },
+            {
+              "name": "Jo Koy",
+              "character": "Datu (voice)",
+              "order": 7
+            },
+            {
+              "name": "Ronny Chieng",
+              "character": "King Truffle Wuffle (voice)",
+              "order": 8
+            },
+            {
+              "name": "Kevin McCann",
+              "character": "Prince Mermahn (voice)",
               "order": 9
             }
           ],
@@ -1516,21 +1597,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1641629",
-          "title": "Tú+Yo - Solos contra todos",
-          "link": "https://www.themoviedb.org/movie/1641629",
-          "summary": "Alma Lancaster, de 18 años, parece llevar una vida perfecta en el seno de una familia adinerada que cree que está estudiando Derecho. Sin embargo, en secreto persigue su verdadero sueño: el cine. En la universidad conoce a Vadim Arcadi, de 20 años, un rebelde carismático y solitario con un pasado turbulento. Obligados a colaborar en una película para la universidad, ambos chocan, se acercan y terminan enamorándose, pese a sus esfuerzos por evitarlo. Pero alguien que los observa está decidido a separarlos y desvelar secretos que podrían destruir tanto a Alma como a Vadim.",
-          "image": "https://image.tmdb.org/t/p/w500/mzgqiEhujCAZiaD6jNVYSXdqFXs.jpg",
-          "pubDate": "2026-09-18",
+          "guid": "tmdb-movie-1477712",
+          "title": "Dulce sabor a muerte",
+          "link": "https://www.themoviedb.org/movie/1477712",
+          "summary": "Lo que comienza siendo un verano idílico, en un pequeño y tranquilo pueblo vacacional, se convierte en una auténtica pesadilla cuando los más pequeños comienzan a mostrar instintos asesinos y deseos insaciables por acabar con todos los adultos. Son víctimas de una curiosa maldición provocada por los helados que comen que afecta a todos, menos a tres niños que tendrán que intentar escapar y salvar a todo el pueblo.",
+          "image": "https://image.tmdb.org/t/p/w500/uVuP2ZTYLn5hdL1aUOe4BiFD6d3.jpg",
+          "pubDate": "2026-08-03",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-09-18T23:56:14.891Z",
+          "firstSeenAt": "2026-09-22T07:25:27.492Z",
           "fullText": null,
           "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 5.8
+            "imdb": 3.8,
+            "rt": 25,
+            "metascore": 33,
+            "tmdb": 4.5
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1539,59 +1620,59 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "jZLAduvYWZA",
+            "key": "Cgw3zNmFtRo",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Vittoria Di Savoia",
-              "character": "Alma Lancaster",
+              "name": "Ari Millen",
+              "character": "The Ice Cream Man / Jonathan Smiley",
               "order": 0
             },
             {
-              "name": "Lucas Barski",
-              "character": "Vadim Arcadi",
+              "name": "Charlie Zeltzer",
+              "character": "Jared",
               "order": 1
             },
             {
-              "name": "Zoé Garcia",
-              "character": "Clémentine",
+              "name": "Shiloh O’Reilly",
+              "character": "Tommy",
               "order": 2
             },
             {
-              "name": "Léo Legrand",
-              "character": "Timothé Vallas",
+              "name": "Kiori Mirza Waldman",
+              "character": "Mia",
               "order": 3
             },
             {
-              "name": "Jean-Yves Berteloot",
-              "character": "Edward Lancaster",
+              "name": "Sarah Abbott",
+              "character": "Lizzie",
               "order": 4
             },
             {
-              "name": "Suliane Brahim",
-              "character": "Marie Lancaster",
+              "name": "Benjamin Byron Davis",
+              "character": "The Priest",
               "order": 5
             },
             {
-              "name": "Aymeric Fougeron",
-              "character": "Basile Lancaster",
+              "name": "Karen Cliche",
+              "character": "Alison",
               "order": 6
             },
             {
-              "name": "Gabrielle Taittinger",
-              "character": "Lily Lancaster",
+              "name": "Dylan Hawco",
+              "character": "Chris",
               "order": 7
             },
             {
-              "name": "Bryan Trésor",
-              "character": "Oscar Johnson",
-              "order": 8
+              "name": "Luke Dietz",
+              "character": "Elliot",
+              "order": 10
             },
             {
-              "name": "Aboubacar Bidanessy",
-              "character": "Félix Alonso",
-              "order": 9
+              "name": "Eli Massillon",
+              "character": "Myles",
+              "order": 11
             }
           ],
           "trending": false
@@ -3952,7 +4033,7 @@
           "currentSeason": 1,
           "reviews": null,
           "trailer": {
-            "key": "K8VFIhvUrkI",
+            "key": "K_X1TpV0Pdw",
             "site": "YouTube"
           },
           "cast": [
@@ -8663,7 +8744,345 @@
           "nextEpisodeDate": null,
           "reviews": null,
           "trailer": {
-            "key": "gn4rbzV-dvY",
+            "key": "J-yul2h6ryg",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-62076",
+          "title": "Super no Ura de Yani Suu Futari",
+          "link": "https://myanimelist.net/anime/62076/Super_no_Ura_de_Yani_Suu_Futari",
+          "summary": "The sole thing that gets the middle-aged Sasaki through his soul-sucking job is a cheerful smile from Yamada—the young woman who works at a nearby 24-hour supermarket he frequents. After every tiring day of getting berated by his boss, Sasaki stops by the store to have his spirit healed by his favorite cashier.\n\nAfter a particularly grueling day, Sasaki shows up at the supermarket, only to find that Yamada's shift has already ended. Disappointed, he searches for a place to smoke when a woman from behind the store calls him over to join her. The bold and dangerously playful Tayama is quick to call out Sasaki's peculiar habit of always seeking out her coworker—even going as far as telling Yamada about Sasaki's vested interest in her.\n\nNow, in addition to seeing his adored cashier Yamada, Sasaki also visits the store to see if his new smoking partner Tayama is around. But there is more to Tayama's mischievousness than she initially lets on. With every cigarette, an unlikely friendship begins to blossom.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1768/156339l.jpg",
+          "pubDate": "2026-07-09T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-30T19:19:28.563Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.44
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "BJvW_SwQn3w",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-60636",
+          "title": "Bleach: Sennen Kessen-hen - Kashin-tan",
+          "link": "https://myanimelist.net/anime/60636/Bleach__Sennen_Kessen-hen_-_Kashin-tan",
+          "summary": "Tomohisa Taguchi  es un animador, director, guionista gráfico y guionista japonés. Algunas de las series que ha dirigido incluyen Sōsei no Onmyōji, Akudama Drive y Bleach: Sennen Kessen-hen.",
+          "image": "https://cdn.myanimelist.net/images/anime/1275/158595l.jpg",
+          "pubDate": "2026-07-25T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-30T22:38:16.565Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Not yet aired",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "DKKZ10FsSBM",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-54000",
+          "title": "Otome Game Sekai wa Mob ni Kibishii Sekai desu 2",
+          "link": "https://myanimelist.net/anime/54000/Otome_Game_Sekai_wa_Mob_ni_Kibishii_Sekai_desu_2",
+          "summary": "Second season of Otome Game Sekai wa Mob ni Kibishii Sekai desu.",
+          "image": "https://cdn.myanimelist.net/images/anime/1285/158337l.jpg",
+          "pubDate": "2026-07-08T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-30T19:19:29.586Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.83
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "JP3ksqOosBY",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-62542",
+          "title": "Grand Blue Season 3",
+          "link": "https://myanimelist.net/anime/62542/Grand_Blue_Season_3",
+          "summary": "Third season of Grand Blue.",
+          "image": "https://cdn.myanimelist.net/images/anime/1615/158194l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-30T19:19:34.544Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.41
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "KJw6ZZaMOWA",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-62542",
+          "title": "Grand Blue Season 3",
+          "link": "https://myanimelist.net/anime/62542/Grand_Blue_Season_3",
+          "summary": "Third season of Grand Blue.",
+          "image": "https://cdn.myanimelist.net/images/anime/1615/158194l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-30T19:19:34.544Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.41
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "KJw6ZZaMOWA",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-48820",
+          "title": "Mahou Shoujo Madoka★Magica Movie 4: Walpurgis no Kaiten",
+          "link": "https://myanimelist.net/anime/48820/Mahou_Shoujo_Madoka★Magica_Movie_4__Walpurgis_no_Kaiten",
+          "summary": "",
+          "image": "https://cdn.myanimelist.net/images/anime/1784/151057l.jpg",
+          "pubDate": "2026-08-28T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-30T22:38:20.865Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Not yet aired",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "rSe4mqP1Mj0",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-63403",
+          "title": "Yani Neko",
+          "link": "https://myanimelist.net/anime/63403/Yani_Neko",
+          "summary": "Yani is a catgirl with a seriously bad smoking habit. She smokes so much that her apartment smells like ash and is littered with cigarette butts—and plenty of other trash! Every time she tries to quit, she becomes weak to the cravings and gives in almost instantly. Will she ever get her life together, or is she doomed to live as a chainsmoking slob forever?\n\n(Source: Seven Seas Entertainment)",
+          "image": "https://cdn.myanimelist.net/images/anime/1281/156496l.jpg",
+          "pubDate": "2026-07-03T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-30T22:38:21.733Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.13
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "0e-tPUjYkvA",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-63832",
+          "title": "Seihantai na Kimi to Boku 2nd Season",
+          "link": "https://myanimelist.net/anime/63832/Seihantai_na_Kimi_to_Boku_2nd_Season",
+          "summary": "Second season of Seihantai na Kimi to Boku.",
+          "image": "https://cdn.myanimelist.net/images/anime/1143/158409l.jpg",
+          "pubDate": "2026-07-05T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-02T23:29:45.989Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.35
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "o9eLX4W-gys",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-60522",
+          "title": "Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu II",
+          "link": "https://myanimelist.net/anime/60522/Gaikotsu_Kishi-sama_Tadaima_Isekai_e_Odekakechuu_II",
+          "summary": "Second season of Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu.",
+          "image": "https://cdn.myanimelist.net/images/anime/1544/157046l.jpg",
+          "pubDate": "2026-07-06T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-29T22:37:20.274Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.08
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "u_TQJHga6k8",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-58929",
+          "title": "Koukaku Kidoutai (TV)",
+          "link": "https://myanimelist.net/anime/58929/Koukaku_Kidoutai_TV",
+          "summary": "In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetics, its citizens are able to replace their limbs with robotic parts. The world is now more interconnected than ever before, and the city's Public Security Section 9 is responsible for combating corruption, terrorism, and other dangerous threats following this shift toward globalization.\n\nThe strong-willed Major Motoko Kusanagi of Section 9 spearheads a case involving a mysterious hacker known only as the \"Puppet Master,\" who leaves a trail of victims stripped of their memories. Like many in this futuristic world, the Puppet Master's body is almost entirely robotic, giving them incredible power.\n\nAs Motoko and her subordinates follow the enigmatic criminal's trail, other parties—including Section 6—start to get involved, forcing her to confront the extremely complicated nature of the case. Pondering about various philosophical questions, such as her own life's meaning, Motoko soon realizes that the one who will provide these answers is none other than the Puppet Master themself.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1474/158937l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-03T16:16:10.868Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.02
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "yfKqPQ-BjYE",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-61126",
+          "title": "Kimi ga Shinu made Koi wo Shitai",
+          "link": "https://myanimelist.net/anime/61126/Kimi_ga_Shinu_made_Koi_wo_Shitai",
+          "summary": "The death of Sheena Totsuki's roommate is casually announced at the start of class, and the day carries on as usual. In an orphanage that raises children as soldiers, death is nothing new to the residents. With their home country embroiled in a war that has dragged on for too many years and shows no signs of stopping, the institution's children are sent off to die in battle every day. In contrast to the other orphans, Sheena is deeply disturbed by the ongoing conflict and wishes for it to end.\n\nOn the night of her roommate's death, Sheena met a blood-covered girl who remained jubilant despite the condition she was in. The next day, the girl appears as a new student in Sheena's class and introduces herself as Mimi Kagari. Initially thought to be a school myth, Mimi is said to be the secret weapon of the orphanage—a girl who cannot die. Assigned as Sheena's new roommate, Mimi hopes to get along with her and get accustomed to school life.\n\nHowever, unsettled by Mimi's carefree attitude toward the war, Sheena struggles to accept the world they live in, all while their unusual friendship flourishes amid the bleak situation.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1096/158712l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-08-29T22:37:21.289Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.81
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "rSiaUuG1kpM",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-62513",
+          "title": "Clevatess II: Majuu no Ou to Itsuwari no Yuusha Denshou",
+          "link": "https://myanimelist.net/anime/62513/Clevatess_II__Majuu_no_Ou_to_Itsuwari_no_Yuusha_Denshou",
+          "summary": "Second season of Clevatess.",
+          "image": "https://cdn.myanimelist.net/images/anime/1741/157105l.jpg",
+          "pubDate": "2026-07-08T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-05T22:03:50.157Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.68
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "qsbyAix6lUY",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "mal-61169",
+          "title": "Black Torch",
+          "link": "https://myanimelist.net/anime/61169/Black_Torch",
+          "summary": "Seventeen-year-old Jirou Azuma lives a quiet life with his grandfather, utilizing his supernatural ability to speak with animals to befriend and protect them. Both Jirou and his grandfather are descendants of a long-standing shinobi clan, training in combat to keep the art of battle alive within their family. Jirou's life is thrown into upheaval after rescuing a seemingly normal black cat, Ragou, only to discover that the cat is actually a mononoke—a demonic spirit that has long been at war with mankind. When a hostile mononoke comes looking for Ragou, Jirou uses his shinobi training to jump to the cat's defense, but immediately suffers a mortal wound.\n\nFaced with the decision of whether or not to devour Jirou's fading energy and restore himself to full power, Ragou instead chooses to give his remaining energy to Jirou. Reviving the boy, the transfer also grants him great supernatural powers that complement his own shinobi fighting style. This act is witnessed by Ryousuke Shiba, an officer in the Bureau of Espionage whose job revolves around dispatching aggressive mononoke. Shiba extends Jirou and his grandfather an offer: to join the Bureau's new squad, Black Torch, and help them battle powerful mononoke who seek to devour innocent people.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1965/158363l.jpg",
+          "pubDate": "2026-07-04T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-03T22:35:35.052Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.39
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "XL_biwm-hxU",
             "site": "YouTube"
           },
           "cast": []
@@ -9223,330 +9642,6 @@
               "order": 4
             }
           ],
-          "trending": false
-        },
-        {
-          "guid": "mal-62076",
-          "title": "Super no Ura de Yani Suu Futari",
-          "link": "https://myanimelist.net/anime/62076/Super_no_Ura_de_Yani_Suu_Futari",
-          "summary": "The sole thing that gets the middle-aged Sasaki through his soul-sucking job is a cheerful smile from Yamada—the young woman who works at a nearby 24-hour supermarket he frequents. After every tiring day of getting berated by his boss, Sasaki stops by the store to have his spirit healed by his favorite cashier.\n\nAfter a particularly grueling day, Sasaki shows up at the supermarket, only to find that Yamada's shift has already ended. Disappointed, he searches for a place to smoke when a woman from behind the store calls him over to join her. The bold and dangerously playful Tayama is quick to call out Sasaki's peculiar habit of always seeking out her coworker—even going as far as telling Yamada about Sasaki's vested interest in her.\n\nNow, in addition to seeing his adored cashier Yamada, Sasaki also visits the store to see if his new smoking partner Tayama is around. But there is more to Tayama's mischievousness than she initially lets on. With every cigarette, an unlikely friendship begins to blossom.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1768/156339l.jpg",
-          "pubDate": "2026-07-09T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-30T19:19:28.563Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.44
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "2f3OT_0DYQ4",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-60636",
-          "title": "Bleach: Sennen Kessen-hen - Kashin-tan",
-          "link": "https://myanimelist.net/anime/60636/Bleach__Sennen_Kessen-hen_-_Kashin-tan",
-          "summary": "Tomohisa Taguchi  es un animador, director, guionista gráfico y guionista japonés. Algunas de las series que ha dirigido incluyen Sōsei no Onmyōji, Akudama Drive y Bleach: Sennen Kessen-hen.",
-          "image": "https://cdn.myanimelist.net/images/anime/1275/158595l.jpg",
-          "pubDate": "2026-07-25T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-30T22:38:16.565Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Not yet aired",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "DKKZ10FsSBM",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-54000",
-          "title": "Otome Game Sekai wa Mob ni Kibishii Sekai desu 2",
-          "link": "https://myanimelist.net/anime/54000/Otome_Game_Sekai_wa_Mob_ni_Kibishii_Sekai_desu_2",
-          "summary": "Second season of Otome Game Sekai wa Mob ni Kibishii Sekai desu.",
-          "image": "https://cdn.myanimelist.net/images/anime/1285/158337l.jpg",
-          "pubDate": "2026-07-08T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-30T19:19:29.586Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.83
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "JP3ksqOosBY",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-62542",
-          "title": "Grand Blue Season 3",
-          "link": "https://myanimelist.net/anime/62542/Grand_Blue_Season_3",
-          "summary": "Grand Blue , también conocida como Grand Blue Dreaming, es una serie de manga escrita por Kenji Inoue e ilustrada por Kimitake Yoshioka. Ha sido serializada en la revista de manga seinen, Good! Afternoon, de la editorial Kodansha desde abril de 2014 y ha sido recopilada en veintiséis volúmenes tankōbon. Una adaptación a serie de anime producida por el estudio Zero-G fue transmitida desde el 14 de julio al 29 de septiembre de 2018 en el bloque de programación Animeism de MBS TV.",
-          "image": "https://cdn.myanimelist.net/images/anime/1615/158194l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-30T19:19:34.544Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.41
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "KJw6ZZaMOWA",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-48820",
-          "title": "Mahou Shoujo Madoka★Magica Movie 4: Walpurgis no Kaiten",
-          "link": "https://myanimelist.net/anime/48820/Mahou_Shoujo_Madoka★Magica_Movie_4__Walpurgis_no_Kaiten",
-          "summary": "",
-          "image": "https://cdn.myanimelist.net/images/anime/1784/151057l.jpg",
-          "pubDate": "2026-08-28T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-30T22:38:20.865Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Not yet aired",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "rSe4mqP1Mj0",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-63403",
-          "title": "Yani Neko",
-          "link": "https://myanimelist.net/anime/63403/Yani_Neko",
-          "summary": "Yani is a catgirl with a seriously bad smoking habit. She smokes so much that her apartment smells like ash and is littered with cigarette butts—and plenty of other trash! Every time she tries to quit, she becomes weak to the cravings and gives in almost instantly. Will she ever get her life together, or is she doomed to live as a chainsmoking slob forever?\n\n(Source: Seven Seas Entertainment)",
-          "image": "https://cdn.myanimelist.net/images/anime/1281/156496l.jpg",
-          "pubDate": "2026-07-03T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-30T22:38:21.733Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.13
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "0e-tPUjYkvA",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-63832",
-          "title": "Seihantai na Kimi to Boku 2nd Season",
-          "link": "https://myanimelist.net/anime/63832/Seihantai_na_Kimi_to_Boku_2nd_Season",
-          "summary": "Seihantai na Kimi to Boku , también conocido como You and I Are Polar Opposites en inglés y como Tú y yo somos polos opuestos en España, es un manga japonés escrito e ilustrado por Kōcha Agasawa. La historia sigue a Miyu Suzuki, una estudiante de preparatoria extrovertida, y su relación con Yusuke Tani, el chico que le gusta y que es introvertido, al tiempo que se centra en su grupo de amigos y en las relaciones de cada uno de ellos.",
-          "image": "https://cdn.myanimelist.net/images/anime/1143/158409l.jpg",
-          "pubDate": "2026-07-05T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-02T23:29:45.989Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.35
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "o9eLX4W-gys",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-60522",
-          "title": "Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu II",
-          "link": "https://myanimelist.net/anime/60522/Gaikotsu_Kishi-sama_Tadaima_Isekai_e_Odekakechuu_II",
-          "summary": "Second season of Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu.",
-          "image": "https://cdn.myanimelist.net/images/anime/1544/157046l.jpg",
-          "pubDate": "2026-07-06T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-29T22:37:20.274Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.08
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "u_TQJHga6k8",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-58929",
-          "title": "Koukaku Kidoutai (TV)",
-          "link": "https://myanimelist.net/anime/58929/Koukaku_Kidoutai_TV",
-          "summary": "In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetics, its citizens are able to replace their limbs with robotic parts. The world is now more interconnected than ever before, and the city's Public Security Section 9 is responsible for combating corruption, terrorism, and other dangerous threats following this shift toward globalization.\n\nThe strong-willed Major Motoko Kusanagi of Section 9 spearheads a case involving a mysterious hacker known only as the \"Puppet Master,\" who leaves a trail of victims stripped of their memories. Like many in this futuristic world, the Puppet Master's body is almost entirely robotic, giving them incredible power.\n\nAs Motoko and her subordinates follow the enigmatic criminal's trail, other parties—including Section 6—start to get involved, forcing her to confront the extremely complicated nature of the case. Pondering about various philosophical questions, such as her own life's meaning, Motoko soon realizes that the one who will provide these answers is none other than the Puppet Master themself.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1474/158937l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-03T16:16:10.868Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.02
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "7yE9MHlifmw",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-62513",
-          "title": "Clevatess II: Majuu no Ou to Itsuwari no Yuusha Denshou",
-          "link": "https://myanimelist.net/anime/62513/Clevatess_II__Majuu_no_Ou_to_Itsuwari_no_Yuusha_Denshou",
-          "summary": "Second season of Clevatess.",
-          "image": "https://cdn.myanimelist.net/images/anime/1741/157105l.jpg",
-          "pubDate": "2026-07-08T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-05T22:03:50.157Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.68
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "qsbyAix6lUY",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-61169",
-          "title": "Black Torch",
-          "link": "https://myanimelist.net/anime/61169/Black_Torch",
-          "summary": "Seventeen-year-old Jirou Azuma lives a quiet life with his grandfather, utilizing his supernatural ability to speak with animals to befriend and protect them. Both Jirou and his grandfather are descendants of a long-standing shinobi clan, training in combat to keep the art of battle alive within their family. Jirou's life is thrown into upheaval after rescuing a seemingly normal black cat, Ragou, only to discover that the cat is actually a mononoke—a demonic spirit that has long been at war with mankind. When a hostile mononoke comes looking for Ragou, Jirou uses his shinobi training to jump to the cat's defense, but immediately suffers a mortal wound.\n\nFaced with the decision of whether or not to devour Jirou's fading energy and restore himself to full power, Ragou instead chooses to give his remaining energy to Jirou. Reviving the boy, the transfer also grants him great supernatural powers that complement his own shinobi fighting style. This act is witnessed by Ryousuke Shiba, an officer in the Bureau of Espionage whose job revolves around dispatching aggressive mononoke. Shiba extends Jirou and his grandfather an offer: to join the Bureau's new squad, Black Torch, and help them battle powerful mononoke who seek to devour innocent people.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1965/158363l.jpg",
-          "pubDate": "2026-07-04T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-03T22:35:35.052Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.39
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "XL_biwm-hxU",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-61126",
-          "title": "Kimi ga Shinu made Koi wo Shitai",
-          "link": "https://myanimelist.net/anime/61126/Kimi_ga_Shinu_made_Koi_wo_Shitai",
-          "summary": "The death of Sheena Totsuki's roommate is casually announced at the start of class, and the day carries on as usual. In an orphanage that raises children as soldiers, death is nothing new to the residents. With their home country embroiled in a war that has dragged on for too many years and shows no signs of stopping, the institution's children are sent off to die in battle every day. In contrast to the other orphans, Sheena is deeply disturbed by the ongoing conflict and wishes for it to end.\n\nOn the night of her roommate's death, Sheena met a blood-covered girl who remained jubilant despite the condition she was in. The next day, the girl appears as a new student in Sheena's class and introduces herself as Mimi Kagari. Initially thought to be a school myth, Mimi is said to be the secret weapon of the orphanage—a girl who cannot die. Assigned as Sheena's new roommate, Mimi hopes to get along with her and get accustomed to school life.\n\nHowever, unsettled by Mimi's carefree attitude toward the war, Sheena struggles to accept the world they live in, all while their unusual friendship flourishes amid the bleak situation.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1096/158712l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-08-29T22:37:21.289Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.81
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "rSiaUuG1kpM",
-            "site": "YouTube"
-          },
-          "cast": [],
           "trending": false
         }
       ]
