@@ -103,25 +103,52 @@ function isDarkCard(card){
 }
 
 // Construye la carta de inv correspondiente a una carta recién descubierta
-// del catálogo Dark — nace en estado "hunting" (la querés, no la tenés),
-// carpeta "Dark Collection". Desde acá en más es una carta del pool real,
-// con el mismo scheduler de precios y la misma ficha que cualquier otra.
-function huntingEntryFromCard(c, s){
+// del catálogo Dark (o de una colección de ilustrador, ver abajo) — nace en
+// estado "hunting" (la querés, no la tenés), en la carpeta que corresponda.
+// Desde acá en más es una carta del pool real, con el mismo scheduler de
+// precios y la misma ficha que cualquier otra. isDark se mantiene acotado a
+// Dark Collection puntual (define badge/estilo propio en otras partes del
+// archivo) — las colecciones de ilustrador no lo prenden.
+function huntingEntryFromCard(c, s, carpeta="Dark Collection"){
   return {
     id:Date.now().toString()+Math.random().toString(36).slice(2)+"_"+c.id,
     cardId:c.id,name:c.name,
     set:s.name||"",setCode:s.id||"",
-    number:c.number||"",rarity:c.rarity||"",
+    number:c.number||"",rarity:c.rarity||"",artist:c.artist||"",
     image:c.images?.small||"",imageHd:c.images?.large||"",
     tcgMarket:null,tcgLow:null,tcgHigh:null,tcgUpdated:null,
     priceHistory:[],
     costoUSD:0,precioVentaUSD:0,
     condicion:"NM",estado:"hunting",
-    carpeta:"Dark Collection",
+    carpeta,
     fechaCompra:null,cantidad:1,
     fechaVenta:null,precioVendidoUSD:null,
-    notas:"",isDark:true,
+    notas:"",isDark:carpeta==="Dark Collection",
   };
+}
+
+// ── Colecciones automáticas por ilustrador (imita Dark Collection, 22-sep-2026) ──
+// A diferencia de Dark (acotada a sets desde la era Mega Evolution), estas
+// escanean el catálogo COMPLETO de pokemontcg.io -- "busca desde el
+// principio", a pedido explícito de Cristopher -- y se autocompletan cuando
+// pokemontcg.io indexa sets nuevos. sui/tayu van con match exacto (nombres
+// cortos, alto riesgo de falso positivo si un `artist` compuesto los
+// contuviera); el resto con "contiene" por si el campo trae variantes
+// (con/sin punto final, varios ilustradores en el mismo campo).
+const COLECCIONES_ILUSTRADOR = [
+  {carpeta:"tayu",             artist:"tayu",              exact:true},
+  {carpeta:"Sachiko Adachi",   artist:"sachiko adachi"},
+  {carpeta:"Shibuzoh",         artist:"shibuzoh"},
+  {carpeta:"Tomokazu Komiya",  artist:"tomokazu komiya"},
+  {carpeta:"Yuka Morii",       artist:"yuka morii"},
+  {carpeta:"Eri Yamaki",       artist:"eri yamaki"},
+  {carpeta:"Asako Ito",        artist:"asako ito"},
+  {carpeta:"sui",              artist:"sui",               exact:true},
+];
+function matchIlustrador(card, def){
+  const a=(card.artist||"").trim().toLowerCase();
+  if(!a) return false;
+  return def.exact ? a===def.artist : a.includes(def.artist);
 }
 
 // ── Métricas de historial ──────────────────────────────────────────────────────
@@ -302,6 +329,8 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [darkView,       setDarkView]       = React.useState("grid_small");
   const [darkSets,       setDarkSets]       = React.useState([]);
   const [darkSetsLoading,setDarkSetsLoading]= React.useState(false);
+  const [allSets,        setAllSets]        = React.useState([]);
+  const [allSetsLoading, setAllSetsLoading] = React.useState(false);
   const [showAddCarpeta, setShowAddCarpeta] = React.useState(false);
   const [newCarpeta,     setNewCarpeta]     = React.useState("");
   const [historialOpen,  setHistorialOpen]  = React.useState(false);
@@ -515,6 +544,118 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     return ()=>{ resyncAbort.current=true; };
   },[darkSets]);
 
+  // ── Registrar las 8 carpetas de ilustrador en la lista de carpetas ──
+  // Mismo mecanismo que "+ carpeta" (addCarpeta) -- sin esto las carpetas
+  // existirían en el catálogo/inv pero no aparecerían en el filtro/rail.
+  React.useEffect(()=>{
+    const faltantes=COLECCIONES_ILUSTRADOR.map(d=>d.carpeta).filter(c=>!cats.includes(c));
+    if(faltantes.length) saveCarpetas([...cats,...faltantes]);
+  },[]);
+
+  // ── Auto-cargar catálogo COMPLETO de sets (colecciones de ilustrador, 22-sep-2026) ──
+  // A diferencia de darkSets (acotado a la era Mega Evolution), esto trae
+  // todos los sets que pokemontcg.io indexa, sin filtro de fecha -- "busca
+  // desde el principio", a pedido de Cristopher. Se dispara al abrir
+  // cualquiera de las 8 carpetas de ilustrador.
+  React.useEffect(()=>{
+    if(!COLECCIONES_ILUSTRADOR.some(d=>d.carpeta===carpetaView)) return;
+    if(!allSets.length&&!allSetsLoading) loadAllSets();
+  },[carpetaView]);
+
+  // ── Auto-poblar colecciones de ilustrador con sets nuevos ──
+  // Mismo mecanismo que Dark (catálogo=identidad, precio/estado viven en la
+  // carta de inv) pero un solo fetch por set sirve para las 8 colecciones a
+  // la vez -- se corre matchIlustrador() contra cada carta traída, una vez
+  // por definición, en vez de pedir el set 8 veces.
+  React.useEffect(()=>{
+    if(!allSets.length) return;
+    const enCat=new Set(darkCat.filter(d=>d.carpeta).map(d=>d.setId+"::"+d.carpeta));
+    const pendientes=allSets.filter(s=>COLECCIONES_ILUSTRADOR.some(def=>!enCat.has(s.id+"::"+def.carpeta)));
+    if(!pendientes.length) return;
+    let idx=0;
+    function siguiente(){
+      if(idx>=pendientes.length) return;
+      const s=pendientes[idx++];
+      fetchPoke(`${POKE_BASE}/cards?q=set.id:${s.id}&select=id,name,number,artist,images&orderBy=number&pageSize=500`)
+        .then(data=>{
+          const cards=data.data||[];
+          COLECCIONES_ILUSTRADOR.forEach(def=>{
+            if(enCat.has(s.id+"::"+def.carpeta)) return;
+            const match=cards.filter(c=>matchIlustrador(c,def));
+            if(!match.length) return;
+            const nuevas=match.map(c=>({
+              cardId:c.id,name:c.name,image:c.images?.small||"",
+              number:c.number||"",setName:s.name,setId:s.id,setCode:s.id,
+              releaseDate:s.releaseDate||"",carpeta:def.carpeta,artist:c.artist||"",
+            }));
+            saveDarkCatalogo(prev=>{
+              const ids=new Set((prev||[]).map(d=>d.cardId+"::"+(d.carpeta||"Dark Collection")));
+              const add=nuevas.filter(n=>!ids.has(n.cardId+"::"+n.carpeta));
+              return add.length?[...(prev||[]),...add]:(prev||[]);
+            });
+            saveInventario(prev=>{
+              const cur=prev||[];
+              const ids=new Set(cur.map(c=>c.cardId));
+              const add=match.filter(c=>!ids.has(c.id)).map(c=>huntingEntryFromCard(c,s,def.carpeta));
+              if(add.length) encolarPokecriptoPending(add);
+              return add.length?[...cur,...add]:cur;
+            });
+          });
+          setTimeout(siguiente,400);
+        }).catch(()=>setTimeout(siguiente,800));
+    }
+    siguiente();
+  },[allSets]);
+
+  // ── Resync automático periódico de colecciones de ilustrador ──
+  // Mismo criterio que el resync de Dark (1x/día, cache key propia para no
+  // pisar `_lastResyncDate` de Dark), sobre el catálogo completo de sets.
+  React.useEffect(()=>{
+    if(!allSets.length) return;
+    const lastSync=cache._lastResyncIlustradorDate;
+    if(lastSync && (Date.now()-new Date(lastSync).getTime())<RESYNC_INTERVAL_MS) return;
+    resyncAbort.current=false;
+    setResyncStatus("running");
+    let idx=0;
+    const sets=[...allSets];
+    function siguiente(){
+      if(resyncAbort.current||idx>=sets.length){
+        setResyncStatus("done");
+        savePriceCache(prev=>({...(prev||{}),_lastResyncIlustradorDate:new Date().toISOString()}));
+        return;
+      }
+      const s=sets[idx++];
+      fetchPoke(`${POKE_BASE}/cards?q=set.id:${s.id}&select=id,name,number,artist,images&orderBy=number&pageSize=500`)
+        .then(data=>{
+          const cards=data.data||[];
+          COLECCIONES_ILUSTRADOR.forEach(def=>{
+            const match=cards.filter(c=>matchIlustrador(c,def));
+            if(!match.length) return;
+            saveDarkCatalogo(prev=>{
+              const cur=prev||[];
+              const ids=new Set(cur.map(d=>d.cardId+"::"+(d.carpeta||"Dark Collection")));
+              const nuevas=match.filter(c=>!ids.has(c.id+"::"+def.carpeta)).map(c=>({
+                cardId:c.id,name:c.name,image:c.images?.small||"",
+                number:c.number||"",setName:s.name,setId:s.id,setCode:s.id,
+                releaseDate:s.releaseDate||"",carpeta:def.carpeta,artist:c.artist||"",
+              }));
+              return nuevas.length?[...cur,...nuevas]:cur;
+            });
+            saveInventario(prev=>{
+              const cur=prev||[];
+              const ids=new Set(cur.map(c=>c.cardId));
+              const add=match.filter(c=>!ids.has(c.id)).map(c=>huntingEntryFromCard(c,s,def.carpeta));
+              if(add.length) encolarPokecriptoPending(add);
+              return add.length?[...cur,...add]:cur;
+            });
+          });
+          setTimeout(siguiente,500);
+        }).catch(()=>setTimeout(siguiente,900));
+    }
+    siguiente();
+    return ()=>{ resyncAbort.current=true; };
+  },[allSets]);
+
   // ── Sync con el bot de precios (issue #9, 7-sep-2026) ──
   // El bot (build-pokecripto.mjs, corre 1x/día en GitHub Actions) es dueño
   // exclusivo de tcgMarket/tcgLow/tcgHigh/tcgUpdated/priceHistory -- nunca
@@ -625,6 +766,26 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     sets.sort((a,b)=>b.releaseDate.localeCompare(a.releaseDate));
     setDarkSets(sets);
     setDarkSetsLoading(false);
+  }
+
+  // ── Cargar catálogo COMPLETO de sets (colecciones de ilustrador) ──
+  // Sin filtro de releaseDate, a diferencia de loadDarkSets -- pagina de
+  // verdad (no asume que todo entra en una sola página) porque el total de
+  // sets de pokemontcg.io ya pasó el tope de pageSize=250 en un solo pedido.
+  async function loadAllSets(){
+    setAllSetsLoading(true);
+    let sets=[],page=1;
+    try{
+      while(true){
+        const data=await fetchPoke(`${POKE_BASE}/sets?orderBy=-releaseDate&pageSize=250&page=${page}`);
+        const batch=data.data||[];
+        sets=sets.concat(batch);
+        if(batch.length<250||sets.length>=(data.totalCount||0)) break;
+        page++;
+      }
+    }catch(e){}
+    setAllSets(sets);
+    setAllSetsLoading(false);
   }
 
   // ── Repoblar Dark Collection preservando progreso ──
