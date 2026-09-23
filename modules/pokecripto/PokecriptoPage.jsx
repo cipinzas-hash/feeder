@@ -549,14 +549,6 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     return ()=>{ resyncAbort.current=true; };
   },[darkSets]);
 
-  // ── Registrar las 8 carpetas de ilustrador en la lista de carpetas ──
-  // Mismo mecanismo que "+ carpeta" (addCarpeta) -- sin esto las carpetas
-  // existirían en el catálogo/inv pero no aparecerían en el filtro/rail.
-  React.useEffect(()=>{
-    const faltantes=COLECCIONES_ILUSTRADOR.map(d=>d.carpeta).filter(c=>!cats.includes(c));
-    if(faltantes.length) saveCarpetas([...cats,...faltantes]);
-  },[]);
-
   // ── Auto-cargar catálogo COMPLETO de sets (colecciones de ilustrador, 22-sep-2026) ──
   // Corrección (mismo día): esto NO puede depender de carpetaView -- ese
   // estado solo lo prenden los 4 íconos hardcodeados del dashboard (línea
@@ -935,11 +927,6 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const invTotal=activas.reduce((s,c)=>s+(c.costoUSD||0),0);
   const valorEstim=activas.reduce((s,c)=>s+(c.precioVentaUSD||0)*(c.cantidad||1),0);
   const gananciaReal=vendidas.reduce((s,c)=>s+((c.precioVendidoUSD||0)-(c.costoUSD||0)),0);
-  const darkConseguidas=darkCat.filter(d=>{
-    if(d.carpeta&&d.carpeta!=="Dark Collection") return false; // no mezclar con colecciones de ilustrador
-    const invMatch=inv.find(c=>c.cardId===d.cardId);
-    return invMatch&&invMatch.estado!=="hunting";
-  }).length;
 
   // ── Filtrado y ordenamiento del pool ──
   const filtradas=(()=>{
@@ -1643,6 +1630,42 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     );
   }
 
+  // ── MENÚ DE COLECCIONES ("Colecciones", antes tile de Dark) ────────────────────
+  // Lista las 9 colecciones automáticas (Dark + 8 ilustrador) con su avance
+  // -- reemplaza el acceso directo que antes tenía Dark en el dashboard.
+  if(view==="colecciones_menu"){
+    const nombres=["Dark Collection",...COLECCIONES_ILUSTRADOR.map(d=>d.carpeta)];
+    const filas=nombres.map(nombre=>{
+      const esDark=nombre==="Dark Collection";
+      const entradas=darkCat.filter(d=>(d.carpeta||"Dark Collection")===nombre);
+      const total=entradas.length;
+      const conseguidas=entradas.filter(d=>{
+        const invMatch=inv.find(c=>c.cardId===d.cardId);
+        return invMatch&&invMatch.estado!=="hunting";
+      }).length;
+      return {nombre,esDark,total,conseguidas};
+    });
+    return(
+      <div style={{background:"#0a0a0a",minHeight:"100vh",padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+          <button onClick={()=>setView("coleccion")} style={{background:"transparent",border:"none",fontSize:20,color:"#444",cursor:"pointer",padding:0}}>←</button>
+          <div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff"}}>🗂️ Colecciones</div>
+        </div>
+        {filas.map(({nombre,esDark,total,conseguidas})=>(
+          <button key={nombre} onClick={()=>{setView("coleccion");setAutocolCarpeta(nombre);}}
+            style={{display:"flex",alignItems:"center",gap:10,width:"100%",background:"#151515",border:"none",borderRadius:10,padding:"12px 14px",marginBottom:8,cursor:"pointer",textAlign:"left"}}>
+            <div style={{fontSize:20}}>{esDark?"⚫":(CARPETAS_ICONS[nombre]||"🎨")}</div>
+            <div style={{flex:1,fontFamily:"'Caveat',cursive",fontSize:16,color:"#fff"}}>{nombre}</div>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:total>0?"#aac756":"#555"}}>
+              {total>0?`${conseguidas}/${total}`:"escaneando…"}
+            </div>
+          </button>
+        ))}
+        <div style={{height:32}}/>
+      </div>
+    );
+  }
+
   // ── VISTA DE COLECCIÓN AUTOMÁTICA (Dark Collection + ilustradores) ──────────────
   // Generalizada (22-sep-2026) para no duplicar pantalla por cada carpeta
   // automática nueva — antes era exclusiva de Dark. mergeDarkWithInv/
@@ -1869,16 +1892,15 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
 
       {/* Iconos de carpetas hardcodeadas */}
       <div style={{display:"flex",gap:8,marginBottom:14}}>
-        {["MLP","Staples & Meta","Dark Collection","Price Watch"].map(cat=>{
-          const n=cat==="Dark Collection"?darkCat.filter(d=>!d.carpeta||d.carpeta==="Dark Collection").length:inv.filter(c=>c.carpeta===cat).length;
-          const cons=cat==="Dark Collection"?darkConseguidas:null;
+        {["MLP","Staples & Meta","Colecciones","Price Watch"].map(cat=>{
+          const n=cat==="Colecciones"?0:inv.filter(c=>c.carpeta===cat).length;
           return(
-            <button key={cat} onClick={()=>cat==="Dark Collection"?setAutocolCarpeta("Dark Collection"):setCarpetaView(cat)}
+            <button key={cat} onClick={()=>cat==="Colecciones"?setView("colecciones_menu"):setCarpetaView(cat)}
               style={{flex:1,background:"#1a1a1a",border:"none",borderRadius:10,padding:"10px 8px",cursor:"pointer",textAlign:"center"}}>
-              <div style={{fontSize:20,marginBottom:4}}>{CARPETAS_ICONS[cat]}</div>
+              <div style={{fontSize:20,marginBottom:4}}>{cat==="Colecciones"?"🗂️":CARPETAS_ICONS[cat]}</div>
               <div style={{fontFamily:"'Caveat',cursive",fontSize:13,color:"#fff",lineHeight:1.2}}>{cat}</div>
               <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.35)",marginTop:3}}>
-                {cons!=null?`${cons}/${n}`:n} {cat==="Dark Collection"?"conseguidas":"cartas"}
+                {cat==="Colecciones"?"9 en curso":`${n} cartas`}
               </div>
             </button>
           );
@@ -1901,9 +1923,12 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       </div>
 
       {/* Filtros línea 1 — por carpeta */}
+      {/* Las 9 colecciones automáticas (Dark + 8 ilustrador) salieron de acá
+          (22-sep-2026, a pedido de Cristopher) -- viven exclusivamente en el
+          menú "Colecciones" del dashboard ahora, para no duplicar el acceso. */}
       <div style={{display:"flex",gap:4,marginBottom:8,overflowX:"auto",paddingBottom:2}}>
-        {["todas",...cats].map(c=>(
-          <button key={c} onClick={()=>COLECCIONES_ILUSTRADOR.some(d=>d.carpeta===c)?setAutocolCarpeta(c):setCarpetaFiltro(c)}
+        {["todas",...cats.filter(c=>c!=="Dark Collection"&&!COLECCIONES_ILUSTRADOR.some(d=>d.carpeta===c))].map(c=>(
+          <button key={c} onClick={()=>setCarpetaFiltro(c)}
             style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,padding:"4px 10px",borderRadius:12,border:"1px dashed",cursor:"pointer",flexShrink:0,
               background:carpetaFiltro===c?"#111":"transparent",color:carpetaFiltro===c?"#fff":"#aaa",borderColor:carpetaFiltro===c?"#111":"#ddd"}}>
             {c}

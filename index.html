@@ -1949,10 +1949,6 @@ var __angst = (() => {
       };
     }, [darkSets]);
     React.useEffect(() => {
-      const faltantes = COLECCIONES_ILUSTRADOR.map((d) => d.carpeta).filter((c) => !cats.includes(c));
-      if (faltantes.length) saveCarpetas([...cats, ...faltantes]);
-    }, []);
-    React.useEffect(() => {
       if (!allSets.length && !allSetsLoading) loadAllSets();
     }, []);
     React.useEffect(() => {
@@ -2329,11 +2325,6 @@ var __angst = (() => {
     const invTotal = activas.reduce((s, c) => s + (c.costoUSD || 0), 0);
     const valorEstim = activas.reduce((s, c) => s + (c.precioVentaUSD || 0) * (c.cantidad || 1), 0);
     const gananciaReal = vendidas.reduce((s, c) => s + ((c.precioVendidoUSD || 0) - (c.costoUSD || 0)), 0);
-    const darkConseguidas = darkCat.filter((d) => {
-      if (d.carpeta && d.carpeta !== "Dark Collection") return false;
-      const invMatch = inv.find((c) => c.cardId === d.cardId);
-      return invMatch && invMatch.estado !== "hunting";
-    }).length;
     const filtradas = (() => {
       let f = inv.filter((c) => carpetaFiltro === "todas" || c.carpeta === carpetaFiltro);
       if (filterEstado !== "todos") f = f.filter((c) => c.estado === filterEstado);
@@ -2898,6 +2889,33 @@ var __angst = (() => {
         );
       })), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
     }
+    if (view === "colecciones_menu") {
+      const nombres = ["Dark Collection", ...COLECCIONES_ILUSTRADOR.map((d) => d.carpeta)];
+      const filas = nombres.map((nombre) => {
+        const esDark = nombre === "Dark Collection";
+        const entradas = darkCat.filter((d) => (d.carpeta || "Dark Collection") === nombre);
+        const total = entradas.length;
+        const conseguidas = entradas.filter((d) => {
+          const invMatch = inv.find((c) => c.cardId === d.cardId);
+          return invMatch && invMatch.estado !== "hunting";
+        }).length;
+        return { nombre, esDark, total, conseguidas };
+      });
+      return /* @__PURE__ */ React.createElement("div", { style: { background: "#0a0a0a", minHeight: "100vh", padding: "16px", maxWidth: 480, margin: "0 auto", overflowX: "hidden", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 16 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setView("coleccion"), style: { background: "transparent", border: "none", fontSize: 20, color: "#444", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff" } }, "\u{1F5C2}\uFE0F Colecciones")), filas.map(({ nombre, esDark, total, conseguidas }) => /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          key: nombre,
+          onClick: () => {
+            setView("coleccion");
+            setAutocolCarpeta(nombre);
+          },
+          style: { display: "flex", alignItems: "center", gap: 10, width: "100%", background: "#151515", border: "none", borderRadius: 10, padding: "12px 14px", marginBottom: 8, cursor: "pointer", textAlign: "left" }
+        },
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20 } }, esDark ? "\u26AB" : CARPETAS_ICONS[nombre] || "\u{1F3A8}"),
+        /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: "'Caveat',cursive", fontSize: 16, color: "#fff" } }, nombre),
+        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: total > 0 ? "#aac756" : "#555" } }, total > 0 ? `${conseguidas}/${total}` : "escaneando\u2026")
+      )), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
+    }
     if (autocolCarpeta) {
       const cat = autocolCarpeta;
       const esDark = cat === "Dark Collection";
@@ -3038,19 +3056,18 @@ var __angst = (() => {
         const up = item.delta != null && parseFloat(item.delta) >= 0;
         return /* @__PURE__ */ React.createElement("div", { key: item.carta.id + i, style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderBottom: "1px solid #f8f8f8" } }, item.carta.image && /* @__PURE__ */ React.createElement("img", { src: item.carta.image, style: { width: 28, borderRadius: 4, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#333", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, item.carta.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", flexShrink: 0 } }, "$", item.newMarket?.toFixed(2)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: item.delta == null ? "#aaa" : up ? "#2e7d52" : "#e53935", flexShrink: 0, width: 48, textAlign: "right" } }, item.delta == null ? "nuevo" : `${up ? "+" : ""}${item.delta}%`));
       }))));
-    })(), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14 } }, ["MLP", "Staples & Meta", "Dark Collection", "Price Watch"].map((cat) => {
-      const n = cat === "Dark Collection" ? darkCat.filter((d) => !d.carpeta || d.carpeta === "Dark Collection").length : inv.filter((c) => c.carpeta === cat).length;
-      const cons = cat === "Dark Collection" ? darkConseguidas : null;
+    })(), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14 } }, ["MLP", "Staples & Meta", "Colecciones", "Price Watch"].map((cat) => {
+      const n = cat === "Colecciones" ? 0 : inv.filter((c) => c.carpeta === cat).length;
       return /* @__PURE__ */ React.createElement(
         "button",
         {
           key: cat,
-          onClick: () => cat === "Dark Collection" ? setAutocolCarpeta("Dark Collection") : setCarpetaView(cat),
+          onClick: () => cat === "Colecciones" ? setView("colecciones_menu") : setCarpetaView(cat),
           style: { flex: 1, background: "#1a1a1a", border: "none", borderRadius: 10, padding: "10px 8px", cursor: "pointer", textAlign: "center" }
         },
-        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, marginBottom: 4 } }, CARPETAS_ICONS[cat]),
+        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, marginBottom: 4 } }, cat === "Colecciones" ? "\u{1F5C2}\uFE0F" : CARPETAS_ICONS[cat]),
         /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 13, color: "#fff", lineHeight: 1.2 } }, cat),
-        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 3 } }, cons != null ? `${cons}/${n}` : n, " ", cat === "Dark Collection" ? "conseguidas" : "cartas")
+        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 3 } }, cat === "Colecciones" ? "9 en curso" : `${n} cartas`)
       );
     })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", alignItems: "center" } }, /* @__PURE__ */ React.createElement(
       "button",
@@ -3076,11 +3093,11 @@ var __angst = (() => {
         placeholder: "nombre...",
         style: { border: "1px dashed #ccc", borderRadius: 6, padding: "4px 8px", fontSize: 12, fontFamily: "'DM Sans',sans-serif", outline: "none", width: 100, color: "#111" }
       }
-    ), /* @__PURE__ */ React.createElement("button", { onClick: addCarpeta, style: { background: "#111", color: "#fff", border: "none", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 11 } }, "+"), /* @__PURE__ */ React.createElement("button", { onClick: () => setShowAddCarpeta(false), style: { background: "transparent", border: "none", color: "#bbb", cursor: "pointer", fontSize: 14 } }, "\xD7")) : /* @__PURE__ */ React.createElement("button", { onClick: () => setShowAddCarpeta(true), style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb", background: "transparent", border: "1px dashed #eee", borderRadius: 12, padding: "4px 10px", cursor: "pointer" } }, "+ carpeta")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, marginBottom: 8, overflowX: "auto", paddingBottom: 2 } }, ["todas", ...cats].map((c) => /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React.createElement("button", { onClick: addCarpeta, style: { background: "#111", color: "#fff", border: "none", borderRadius: 6, padding: "4px 8px", cursor: "pointer", fontSize: 11 } }, "+"), /* @__PURE__ */ React.createElement("button", { onClick: () => setShowAddCarpeta(false), style: { background: "transparent", border: "none", color: "#bbb", cursor: "pointer", fontSize: 14 } }, "\xD7")) : /* @__PURE__ */ React.createElement("button", { onClick: () => setShowAddCarpeta(true), style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb", background: "transparent", border: "1px dashed #eee", borderRadius: 12, padding: "4px 10px", cursor: "pointer" } }, "+ carpeta")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, marginBottom: 8, overflowX: "auto", paddingBottom: 2 } }, ["todas", ...cats.filter((c) => c !== "Dark Collection" && !COLECCIONES_ILUSTRADOR.some((d) => d.carpeta === c))].map((c) => /* @__PURE__ */ React.createElement(
       "button",
       {
         key: c,
-        onClick: () => COLECCIONES_ILUSTRADOR.some((d) => d.carpeta === c) ? setAutocolCarpeta(c) : setCarpetaFiltro(c),
+        onClick: () => setCarpetaFiltro(c),
         style: {
           fontFamily: "'DM Sans',sans-serif",
           fontSize: 10,
