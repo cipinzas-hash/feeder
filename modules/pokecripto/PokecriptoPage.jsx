@@ -994,7 +994,12 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     if(!darkPriceModal) return null;
     const carta=darkCat.find(d=>d.cardId===darkPriceModal);
     return(
-      <div onClick={()=>setDarkPriceModal(null)} style={{position:"fixed",inset:0,zIndex:600,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+      <div onClick={()=>setDarkPriceModal(null)} style={{position:"fixed",inset:0,zIndex:660,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+        {/* zIndex 660 (22-sep-2026, bug reportado): tiene que superar al
+            modal de detalles (650) -- toggleDark() se llama DESDE adentro
+            del modal de detalles (botón "marcar conseguida"), así que este
+            modal se abre con el de detalles todavía montado atrás. Con 600
+            quedaba oculto detrás de los 650 del detalle. */}
         <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,420px)",background:"#111",borderRadius:"16px 16px 0 0",padding:"22px 20px 40px"}}>
           <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:16}}>
             {carta?.image&&<img src={carta.image} style={{width:44,borderRadius:6,flexShrink:0}}/>}
