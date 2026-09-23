@@ -327,6 +327,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [editMode,       setEditMode]       = React.useState(false);
   const [editFields,     setEditFields]     = React.useState({});
   const [darkView,       setDarkView]       = React.useState("grid_small");
+  const [autocolCarpeta, setAutocolCarpeta] = React.useState(null);
   const [darkSets,       setDarkSets]       = React.useState([]);
   const [darkSetsLoading,setDarkSetsLoading]= React.useState(false);
   const [allSets,        setAllSets]        = React.useState([]);
@@ -460,7 +461,11 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // el mismo scheduler confiable que cualquier otra carta del pool.
   React.useEffect(()=>{
     if(!darkSets.length) return;
-    const enCat=new Set(darkCat.map(d=>d.setId));
+    // Filtrado por carpeta (22-sep-2026): darkCat pasó a ser compartido con
+    // las 8 colecciones de ilustrador. Sin este filtro, un set que ya tenga
+    // una entrada de ilustrador se marcaría como "ya escaneado" para Dark
+    // también, aunque nunca se haya chequeado el criterio real de Darkness.
+    const enCat=new Set(darkCat.filter(d=>!d.carpeta||d.carpeta==="Dark Collection").map(d=>d.setId));
     const nuevos=darkSets.filter(s=>!enCat.has(s.id));
     if(!nuevos.length) return;
     let idx=0;
@@ -794,8 +799,11 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     // El progreso (estado/precio/historial/notas) vive en inv, no en darkCat
     // — vaciar el catálogo y dejar que el auto-poblado lo reconstruya no
     // toca esas cartas para nada, se reconectan solas por cardId.
+    // OJO: darkCat es compartido con las 8 colecciones de ilustrador desde
+    // el 22-sep-2026 — vaciarlo entero las borraría a ellas también. Solo
+    // se limpian las entradas de Dark (sin `carpeta` o con "Dark Collection").
     setRepoblando(true);
-    saveDarkCatalogo([]);
+    saveDarkCatalogo(prev=>(prev||[]).filter(d=>d.carpeta&&d.carpeta!=="Dark Collection"));
     if(!darkSets.length) await loadDarkSets();
     setTimeout(()=>setRepoblando(false),4000);
   }
@@ -918,6 +926,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const valorEstim=activas.reduce((s,c)=>s+(c.precioVentaUSD||0)*(c.cantidad||1),0);
   const gananciaReal=vendidas.reduce((s,c)=>s+((c.precioVendidoUSD||0)-(c.costoUSD||0)),0);
   const darkConseguidas=darkCat.filter(d=>{
+    if(d.carpeta&&d.carpeta!=="Dark Collection") return false; // no mezclar con colecciones de ilustrador
     const invMatch=inv.find(c=>c.cardId===d.cardId);
     return invMatch&&invMatch.estado!=="hunting";
   }).length;
@@ -1546,7 +1555,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // ── VISTA CARPETA (MLP / Staples / Dark desde icono) ─────────────────────────
   if(carpetaView){
     const esDark=carpetaView==="Dark Collection";
-    if(esDark){ setTimeout(()=>{setCarpetaView(null);setView("dark");},0); return null; }
+    if(esDark){ setTimeout(()=>{setCarpetaView(null);setAutocolCarpeta("Dark Collection");},0); return null; }
     const cartasCarpeta=inv.filter(c=>c.carpeta===carpetaView);
     const cvView=darkView; const setCvView=setDarkView;
     const gridCols=cvView==="grid_small"?"repeat(auto-fill,minmax(72px,1fr))":cvView==="grid_med"?"repeat(auto-fill,minmax(100px,1fr))":null;
@@ -1624,23 +1633,27 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     );
   }
 
-  // ── VISTA DARK COLLECTION ─────────────────────────────────────────────────────
-  // Muestra las cartas que cumplen el criterio real de Darkness (catálogo
-  // auto-poblado desde los sets) — conseguidas en color, las que faltan en
-  // blanco y negro, para trackear avance por set. El precio/estado de cada
-  // una vive en su carta de inv correspondiente (mergeDarkWithInv la trae).
-  if(view==="dark"){
-    const darkCatMerged = darkCat.map(mergeDarkWithInv);
-    const conseguidas=darkCatMerged.filter(d=>getEstadoDark(d)==="conseguida").length;
-    const total=darkCatMerged.length;
+  // ── VISTA DE COLECCIÓN AUTOMÁTICA (Dark Collection + ilustradores) ──────────────
+  // Generalizada (22-sep-2026) para no duplicar pantalla por cada carpeta
+  // automática nueva — antes era exclusiva de Dark. mergeDarkWithInv/
+  // toggleDark/DarkCard ya eran genéricas (operan sobre cardId, no sobre
+  // "Dark Collection" como string), lo único que hacía falta era filtrar
+  // el catálogo por carpeta y parametrizar título/loading/botón repoblar.
+  if(autocolCarpeta){
+    const cat=autocolCarpeta;
+    const esDark=cat==="Dark Collection";
+    const catMerged=darkCat.filter(d=>(d.carpeta||"Dark Collection")===cat).map(mergeDarkWithInv);
+    const conseguidas=catMerged.filter(d=>getEstadoDark(d)==="conseguida").length;
+    const total=catMerged.length;
     const porSet={};
-    darkCatMerged.forEach(d=>{
+    catMerged.forEach(d=>{
       const k=d.setId||d.setName||"Sin set";
       if(!porSet[k]) porSet[k]={setName:d.setName||k,setId:d.setId||k,releaseDate:d.releaseDate||"",cards:[]};
       porSet[k].cards.push(d);
     });
     const setGroups=Object.values(porSet).sort((a,b)=>b.releaseDate.localeCompare(a.releaseDate));
     const gridCols=darkView==="grid_small"?"repeat(auto-fill,minmax(58px,1fr))":darkView==="grid_med"?"repeat(auto-fill,minmax(88px,1fr))":null;
+    const catLoading=esDark?darkSetsLoading:allSetsLoading;
 
     return(
       <div style={{background:"#0a0a0a",minHeight:"100vh",padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
@@ -1653,9 +1666,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         {renderDarkDetailModal()}
 
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
-          <button onClick={()=>setView("coleccion")} style={{background:"transparent",border:"none",fontSize:20,color:"#444",cursor:"pointer",padding:0}}>←</button>
+          <button onClick={()=>setAutocolCarpeta(null)} style={{background:"transparent",border:"none",fontSize:20,color:"#444",cursor:"pointer",padding:0}}>←</button>
           <div style={{flex:1}}>
-            <div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff"}}>⚫ Dark Collection</div>
+            <div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff"}}>{esDark?"⚫ Dark Collection":`${CARPETAS_ICONS[cat]||"🎨"} ${cat}`}</div>
           </div>
           {total>0&&<div style={{textAlign:"right"}}>
             <div style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:"#aac756"}}>{conseguidas}/{total}</div>
@@ -1673,20 +1686,20 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               {l}
             </button>
           ))}
-          <button onClick={()=>{if(window.confirm("¿Repoblar catálogo Dark? Se conserva tu progreso (conseguidas, precios, notas)."))repoblarDark();}}
+          {esDark&&<button onClick={()=>{if(window.confirm("¿Repoblar catálogo Dark? Se conserva tu progreso (conseguidas, precios, notas)."))repoblarDark();}}
             style={{marginLeft:"auto",background:"transparent",border:"1px dashed #333",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#444"}}>
             {repoblando?"repoblando...":"🔄 repoblar"}
-          </button>
+          </button>}
         </div>
         {resyncStatus==="running"&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#444",marginBottom:8}}>resincronizando sets trackeados en segundo plano…</div>}
 
 
-        {darkSetsLoading&&<PokeLoader active/>}
-        {!darkSetsLoading&&total===0&&<div style={{textAlign:"center",padding:"32px 0"}}>
-          <div style={{fontFamily:"'Caveat',cursive",fontSize:16,color:"#333",marginBottom:6}}>cargando cartas dark...</div>
+        {catLoading&&<PokeLoader active/>}
+        {!catLoading&&total===0&&<div style={{textAlign:"center",padding:"32px 0"}}>
+          <div style={{fontFamily:"'Caveat',cursive",fontSize:16,color:"#333",marginBottom:6}}>{esDark?"cargando cartas dark...":`buscando cartas de ${cat} en ~200 sets, puede tardar unos minutos...`}</div>
         </div>}
-        {!darkSetsLoading&&total>0&&setGroups.length===0&&<div style={{textAlign:"center",padding:"32px 0"}}>
-          <div style={{fontFamily:"'Caveat',cursive",fontSize:16,color:"#333"}}>cargando catálogo dark...</div>
+        {!catLoading&&total>0&&setGroups.length===0&&<div style={{textAlign:"center",padding:"32px 0"}}>
+          <div style={{fontFamily:"'Caveat',cursive",fontSize:16,color:"#333"}}>cargando catálogo...</div>
         </div>}
         {setGroups.map(({setName,setId,cards})=>{
           const cons=cards.filter(c=>getEstadoDark(c)==="conseguida").length;
@@ -1847,10 +1860,10 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       {/* Iconos de carpetas hardcodeadas */}
       <div style={{display:"flex",gap:8,marginBottom:14}}>
         {["MLP","Staples & Meta","Dark Collection","Price Watch"].map(cat=>{
-          const n=cat==="Dark Collection"?darkCat.length:inv.filter(c=>c.carpeta===cat).length;
+          const n=cat==="Dark Collection"?darkCat.filter(d=>!d.carpeta||d.carpeta==="Dark Collection").length:inv.filter(c=>c.carpeta===cat).length;
           const cons=cat==="Dark Collection"?darkConseguidas:null;
           return(
-            <button key={cat} onClick={()=>cat==="Dark Collection"?setView("dark"):setCarpetaView(cat)}
+            <button key={cat} onClick={()=>cat==="Dark Collection"?setAutocolCarpeta("Dark Collection"):setCarpetaView(cat)}
               style={{flex:1,background:"#1a1a1a",border:"none",borderRadius:10,padding:"10px 8px",cursor:"pointer",textAlign:"center"}}>
               <div style={{fontSize:20,marginBottom:4}}>{CARPETAS_ICONS[cat]}</div>
               <div style={{fontFamily:"'Caveat',cursive",fontSize:13,color:"#fff",lineHeight:1.2}}>{cat}</div>
@@ -1880,7 +1893,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       {/* Filtros línea 1 — por carpeta */}
       <div style={{display:"flex",gap:4,marginBottom:8,overflowX:"auto",paddingBottom:2}}>
         {["todas",...cats].map(c=>(
-          <button key={c} onClick={()=>setCarpetaFiltro(c)}
+          <button key={c} onClick={()=>COLECCIONES_ILUSTRADOR.some(d=>d.carpeta===c)?setAutocolCarpeta(c):setCarpetaFiltro(c)}
             style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,padding:"4px 10px",borderRadius:12,border:"1px dashed",cursor:"pointer",flexShrink:0,
               background:carpetaFiltro===c?"#111":"transparent",color:carpetaFiltro===c?"#fff":"#aaa",borderColor:carpetaFiltro===c?"#111":"#ddd"}}>
             {c}
