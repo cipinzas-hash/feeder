@@ -1,7 +1,7 @@
 // modules/pokecripto/lib/pricing.mjs es la misma lógica que usa el bot
 // (build-pokecripto.mjs) -- se importa acá para que cliente y bot nunca
 // diverjan en matching/normalización (issue #9).
-import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPriceDiag, fetchTCGPrice, addSnapshot } from "./lib/pricing.mjs";
+import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPriceDiag, fetchTCGPrice, addSnapshot, refreshPrecio } from "./lib/pricing.mjs";
 
 // ─── PokeLoader ───────────────────────────────────────────────────────────────
 function PokeLoader({ active }) {
@@ -492,6 +492,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               const ids=new Set(cur.map(c=>c.cardId));
               const add=dark.filter(c=>!ids.has(c.id)).map(c=>huntingEntryFromCard(c,s));
               if(add.length) encolarPokecriptoPending(add);
+              if(add.length) snapshotInicial(add);
               return add.length?[...cur,...add]:cur;
             });
           }
@@ -540,6 +541,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               const ids=new Set(cur.map(c=>c.cardId));
               const add=dark.filter(c=>!ids.has(c.id)).map(c=>huntingEntryFromCard(c,s));
               if(add.length) encolarPokecriptoPending(add);
+              if(add.length) snapshotInicial(add);
               return add.length?[...cur,...add]:cur;
             });
           }
@@ -597,6 +599,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               const ids=new Set(cur.map(c=>c.cardId));
               const add=match.filter(c=>!ids.has(c.id)).map(c=>huntingEntryFromCard(c,s,def.carpeta));
               if(add.length) encolarPokecriptoPending(add);
+              if(add.length) snapshotInicial(add);
               return add.length?[...cur,...add]:cur;
             });
           });
@@ -645,6 +648,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               const ids=new Set(cur.map(c=>c.cardId));
               const add=match.filter(c=>!ids.has(c.id)).map(c=>huntingEntryFromCard(c,s,def.carpeta));
               if(add.length) encolarPokecriptoPending(add);
+              if(add.length) snapshotInicial(add);
               return add.length?[...cur,...add]:cur;
             });
           });
@@ -872,6 +876,44 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     };
   }
 
+  // Navegación compartida ‹› entre cartas de la carpeta -- usada tanto por
+  // las flechas del modal de detalle como por las del zoom de imagen
+  // (22-sep-2026, a pedido de Cristopher: "desde el arte en grande también
+  // se pueda avanzar"). Si el zoom está abierto, lo refresca con la imagen
+  // de la carta nueva en vez de cerrarlo.
+  function irADetalle(delta){
+    const idx=darkDetailList.indexOf(darkDetailId);
+    if(idx<0||!darkDetailList.length) return;
+    const nextId=darkDetailList[(idx+delta+darkDetailList.length)%darkDetailList.length];
+    setDarkDetailId(nextId); setDarkDetailRange("todo"); setSelectedPoint(null); setDiagResult(null);
+    if(zoomImage){
+      const nextEntry=darkCat.find(d=>d.cardId===nextId);
+      if(nextEntry){ const m=mergeDarkWithInv(nextEntry); setZoomImage(m.imageHd||m.image); }
+    }
+  }
+  // Snapshot inicial para cartas recién descubiertas (22-sep-2026, a pedido
+  // de Cristopher: "poder identificar rápidamente cuáles no se encuentran").
+  // Antes había que esperar la corrida diaria del bot para saber si una
+  // carta tenía precio real o no. Corre en background, secuencial con
+  // pausa (mismo criterio de throttle que el resto del archivo) para no
+  // sumarle presión al límite de pokemontcg.io -- las cartas ya se ven en
+  // pantalla (hunting/gris) apenas se descubren, esto solo les completa el
+  // precio un poco después. Si no encuentra precio, tcgMarket queda en
+  // null -- esa ausencia ES la señal de "no se encuentra" que pidió.
+  async function snapshotInicial(nuevas){
+    for(const c of nuevas){
+      try{
+        const {market,low,high}=await refreshPrecio(c,apiKey);
+        if(market!=null){
+          saveInventario(prev=>(prev||[]).map(x=>x.id===c.id?{
+            ...x,tcgMarket:market,tcgLow:low,tcgHigh:high,tcgUpdated:new Date().toISOString(),
+            priceHistory:addSnapshot(x.priceHistory,market,low,high),
+          }:x));
+        }
+      }catch(e){}
+      await new Promise(r=>setTimeout(r,350));
+    }
+  }
   function toggleDark(cardId){
     const invMatch=inv.find(c=>c.cardId===cardId);
     if(!invMatch) return;
@@ -1067,11 +1109,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     // darkDetailList es el orden real en pantalla (todos los sets de la
     // carpeta, en el orden que se ve), seteado por DarkCard al abrir.
     const idx=darkDetailList.indexOf(darkDetailId);
-    const irA=delta=>{
-      if(idx<0||!darkDetailList.length) return;
-      const next=darkDetailList[(idx+delta+darkDetailList.length)%darkDetailList.length];
-      setDarkDetailId(next); setDarkDetailRange("todo"); setSelectedPoint(null); setDiagResult(null);
-    };
+    const irA=delta=>irADetalle(delta);
     return(
       <div onClick={()=>{setDarkDetailId(null);setDarkDetailRange("todo");}} style={{position:"fixed",inset:0,zIndex:650,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
         <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,460px)",background:"#111",borderRadius:"16px 16px 0 0",padding:"20px 20px 36px",maxHeight:"90vh",overflowY:"auto",boxSizing:"border-box"}}>
@@ -1719,6 +1757,12 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         {zoomImage&&(
           <div onClick={()=>setZoomImage(null)} style={{position:"fixed",inset:0,zIndex:700,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center"}}>
             <img src={zoomImage} style={{maxWidth:"90vw",maxHeight:"90vh",borderRadius:12,boxShadow:"0 8px 40px rgba(0,0,0,0.5)"}}/>
+            {darkDetailId&&darkDetailList.length>1&&(<>
+              <button onClick={e=>{e.stopPropagation();irADetalle(-1);}}
+                style={{position:"fixed",left:10,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.1)",border:"none",borderRadius:20,width:40,height:40,color:"#fff",fontSize:20,cursor:"pointer"}}>‹</button>
+              <button onClick={e=>{e.stopPropagation();irADetalle(1);}}
+                style={{position:"fixed",right:10,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.1)",border:"none",borderRadius:20,width:40,height:40,color:"#fff",fontSize:20,cursor:"pointer"}}>›</button>
+            </>)}
           </div>
         )}
         {renderDarkPriceModal()}
