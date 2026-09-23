@@ -2152,10 +2152,15 @@ var __angst = (() => {
     }
     async function loadDarkSets() {
       setDarkSetsLoading(true);
-      let sets = [];
+      let sets = [], page = 1;
       try {
-        const data = await fetchPoke(`${POKE_BASE}/sets?q=releaseDate:[2025/09/26 TO 2099/12/31]&orderBy=-releaseDate&pageSize=100`);
-        sets = data.data || [];
+        while (true) {
+          const data = await fetchPoke(`${POKE_BASE}/sets?q=releaseDate:[2025/09/26 TO 2099/12/31]&orderBy=-releaseDate&pageSize=250&page=${page}`);
+          const batch = data.data || [];
+          sets = sets.concat(batch);
+          if (batch.length < 250 || sets.length >= (data.totalCount || 0)) break;
+          page++;
+        }
       } catch (e) {
       }
       MEGA_SETS.forEach((known) => {

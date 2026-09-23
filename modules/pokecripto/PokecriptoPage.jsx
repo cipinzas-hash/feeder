@@ -760,10 +760,20 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // ── Dark sets ──
   async function loadDarkSets(){
     setDarkSetsLoading(true);
-    let sets=[];
+    // Paginado real (22-sep-2026, bug reportado por Cristopher: "30th
+    // Anniversary" no aparecía en Dark). pageSize=100 sin paginar se comía
+    // los sets más viejos del rango en cuanto salían >100 sets nuevos desde
+    // el 26-sep-2025 -- orderBy=-releaseDate corta por el final, no por el
+    // principio. Mismo fix que loadAllSets.
+    let sets=[],page=1;
     try{
-      const data=await fetchPoke(`${POKE_BASE}/sets?q=releaseDate:[2025/09/26 TO 2099/12/31]&orderBy=-releaseDate&pageSize=100`);
-      sets=data.data||[];
+      while(true){
+        const data=await fetchPoke(`${POKE_BASE}/sets?q=releaseDate:[2025/09/26 TO 2099/12/31]&orderBy=-releaseDate&pageSize=250&page=${page}`);
+        const batch=data.data||[];
+        sets=sets.concat(batch);
+        if(batch.length<250||sets.length>=(data.totalCount||0)) break;
+        page++;
+      }
     }catch(e){}
     MEGA_SETS.forEach(known=>{ if(!sets.find(s=>s.id===known.id)) sets.push({id:known.id,name:known.name,releaseDate:known.releaseDate,images:{symbol:"",logo:""}}); });
     // Sets de promo — se incluyen SIEMPRE por ID fijo, sin importar su
