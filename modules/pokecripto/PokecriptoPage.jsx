@@ -350,6 +350,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const schedAbort = React.useRef(false);
   // Detalle de carta en Dark Collection / pool hunting (cambio 2 de la sesión)
   const [darkDetailId,   setDarkDetailId]   = React.useState(null); // cardId del detalle abierto
+  const [darkDetailList, setDarkDetailList] = React.useState([]); // cardIds del set/grilla actual, para las flechas ‹›
   const [darkDetailRange,setDarkDetailRange]= React.useState("todo");
   // Long-press sobre imagen → fullscreen (cambio 9). Un solo ref porque solo
   // puede haber una presión activa a la vez; el flag `fired` se usa para
@@ -952,9 +953,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // Precio de mercado visible en TODO el catálogo — se muestra tanto en
   // hunting como en conseguida, para decidir si conviene salir a buscar la
   // carta según el precio de referencia.
-  function DarkCard({d}){
+  function DarkCard({d,list}){
     const cons=getEstadoDark(d)==="conseguida";
-    const abrir=guardLongPressClick(()=>setDarkDetailId(d.cardId));
+    const abrir=guardLongPressClick(()=>{setDarkDetailId(d.cardId);setDarkDetailList(list||[]);});
     const press=bindLongPress(d.imageHd||d.image);
     if(darkView==="lista") return(
       <div onClick={abrir} {...press} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",borderBottom:"1px solid #f0f0f0",cursor:"pointer"}}>
@@ -1062,14 +1063,33 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const cons=getEstadoDark(detalle)==="conseguida";
     const metrics=computeHistMetrics(hist,darkDetailRange);
     const {ath,athDate,atl,atlDate,vol,volLabel}=metrics;
+    // Navegación ‹ › entre cartas (22-sep-2026, a pedido de Cristopher) --
+    // darkDetailList es el orden real en pantalla (todos los sets de la
+    // carpeta, en el orden que se ve), seteado por DarkCard al abrir.
+    const idx=darkDetailList.indexOf(darkDetailId);
+    const irA=delta=>{
+      if(idx<0||!darkDetailList.length) return;
+      const next=darkDetailList[(idx+delta+darkDetailList.length)%darkDetailList.length];
+      setDarkDetailId(next); setDarkDetailRange("todo"); setSelectedPoint(null); setDiagResult(null);
+    };
     return(
       <div onClick={()=>{setDarkDetailId(null);setDarkDetailRange("todo");}} style={{position:"fixed",inset:0,zIndex:650,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
         <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,460px)",background:"#111",borderRadius:"16px 16px 0 0",padding:"20px 20px 36px",maxHeight:"90vh",overflowY:"auto",boxSizing:"border-box"}}>
+          {darkDetailList.length>1&&(
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <button onClick={()=>irA(-1)} style={{background:"transparent",border:"1px dashed #333",borderRadius:8,padding:"4px 12px",color:"#aaa",fontSize:15,cursor:"pointer"}}>‹</button>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.3)"}}>{idx+1} / {darkDetailList.length}</div>
+              <button onClick={()=>irA(1)} style={{background:"transparent",border:"1px dashed #333",borderRadius:8,padding:"4px 12px",color:"#aaa",fontSize:15,cursor:"pointer"}}>›</button>
+            </div>
+          )}
+          {/* Arte extendido (22-sep-2026): la miniatura de 84px pasó a ser
+              banner a todo el ancho -- sigue abriendo el zoom a pantalla
+              completa al tocarla, esto es solo la vista inline. */}
+          {detalle.image&&<img src={detalle.imageHd||detalle.image} alt={detalle.name}
+            style={{width:"100%",maxHeight:280,objectFit:"contain",borderRadius:10,cursor:"pointer",filter:cons?"none":"grayscale(1) brightness(0.65)",marginBottom:12,background:"#000"}}
+            {...bindLongPress(detalle.imageHd||detalle.image)}
+            onClick={()=>setZoomImage(detalle.imageHd||detalle.image)}/>}
           <div style={{display:"flex",gap:12,alignItems:"flex-start",marginBottom:14}}>
-            {detalle.image&&<img src={detalle.imageHd||detalle.image} alt={detalle.name}
-              style={{width:84,borderRadius:8,flexShrink:0,cursor:"pointer",filter:cons?"none":"grayscale(1) brightness(0.65)"}}
-              {...bindLongPress(detalle.imageHd||detalle.image)}
-              onClick={()=>setZoomImage(detalle.imageHd||detalle.image)}/>}
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:"#fff",lineHeight:1.15}}>{detalle.name}</div>
               <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#777",marginTop:3}}>#{detalle.number} · {detalle.setName}</div>
@@ -1690,6 +1710,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       porSet[k].cards.push(d);
     });
     const setGroups=Object.values(porSet).sort((a,b)=>b.releaseDate.localeCompare(a.releaseDate));
+    const cardIdsOrdenados=setGroups.flatMap(g=>g.cards.map(c=>c.cardId)); // orden real en pantalla, para las flechas ‹› del detalle
     const gridCols=darkView==="grid_small"?"repeat(auto-fill,minmax(58px,1fr))":darkView==="grid_med"?"repeat(auto-fill,minmax(88px,1fr))":null;
     const catLoading=esDark?darkSetsLoading:allSetsLoading;
 
@@ -1759,9 +1780,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                 <div style={{height:"100%",width:`${cards.length>0?cons/cards.length*100:0}%`,background:"#2e7d52",borderRadius:99}}/>
               </div>
               {darkView==="lista"
-                ?<div>{cards.map(d=><DarkCard key={d.cardId} d={d}/>)}</div>
+                ?<div>{cards.map(d=><DarkCard key={d.cardId} d={d} list={cardIdsOrdenados}/>)}</div>
                 :<div style={{display:"grid",gridTemplateColumns:gridCols,gap:darkView==="grid_small"?3:5}}>
-                  {cards.map(d=><DarkCard key={d.cardId} d={d}/>)}
+                  {cards.map(d=><DarkCard key={d.cardId} d={d} list={cardIdsOrdenados}/>)}
                 </div>
               }
             </div>
