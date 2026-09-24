@@ -1846,7 +1846,18 @@ var __angst = (() => {
       const carta = inv.find((c) => c.id === fichaId);
       if (carta) refreshPrecio2(carta);
     }, [view, fichaId]);
-    const darkSetsScope = allSets.filter((s) => s.releaseDate >= "2025-09-26" || MEGA_PROMO_SETS.some((p) => p.id === s.id));
+    const norm = (d) => (d || "").replace(/\//g, "-");
+    const darkSetsScope = allSets.filter((s) => norm(s.releaseDate) >= "2025-09-26" || MEGA_PROMO_SETS.some((p) => p.id === s.id));
+    React.useEffect(() => {
+      if (!allSets.length) return;
+      const idsSetsValidos = new Set(darkSetsScope.map((s) => s.id));
+      const paraSacar = inv.filter((c) => c.carpeta === "Dark Collection" && c.estado === "hunting" && c.costoUSD === 0 && !c.notas && c.setCode && !idsSetsValidos.has(c.setCode));
+      if (!paraSacar.length) return;
+      const idsSacar = new Set(paraSacar.map((c) => c.id));
+      const cardIdsSacar = new Set(paraSacar.map((c) => c.cardId));
+      saveInventario((prev) => (prev || []).filter((c) => !idsSacar.has(c.id)));
+      saveDarkCatalogo((prev) => (prev || []).filter((d) => !((!d.carpeta || d.carpeta === "Dark Collection") && cardIdsSacar.has(d.cardId))));
+    }, [allSets]);
     React.useEffect(() => {
       if (!darkSetsScope.length) return;
       const enCat = new Set(darkCat.filter((d) => !d.carpeta || d.carpeta === "Dark Collection").map((d) => d.setId));

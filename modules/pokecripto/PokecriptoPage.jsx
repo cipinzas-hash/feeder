@@ -467,7 +467,34 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // Con esto, Dark reusa exactamente el mismo fetch de sets que ya
   // funciona para las 8 de ilustrador (loadAllSets, sin adivinar ningún
   // ID) y solo filtra por fecha del lado del cliente.
-  const darkSetsScope=allSets.filter(s=>s.releaseDate>="2025-09-26"||MEGA_PROMO_SETS.some(p=>p.id===s.id));
+  // Fix (22-sep-2026, bug reportado: "cargaron sets previos a mega
+  // evolution"): pokemontcg.io guarda releaseDate con BARRAS ("2025/09/26"),
+  // no guiones. Comparar como texto contra "2025-09-26" fallaba en serio:
+  // '/' (ASCII 47) ordena después que '-' (45), así que CUALQUIER set de
+  // 2025 con barra quedaba >= el corte sin importar el mes real -- "2025/03/15"
+  // (bien anterior a la era) comparaba como mayor por el separador, antes
+  // de siquiera llegar a comparar 03 vs 09. Normalizo a guiones de los dos
+  // lados para que la comparación sea real, sin depender de qué separador
+  // use el campo de origen.
+  const norm=d=>(d||"").replace(/\//g,"-");
+  const darkSetsScope=allSets.filter(s=>norm(s.releaseDate)>="2025-09-26"||MEGA_PROMO_SETS.some(p=>p.id===s.id));
+
+  // ── Limpieza única: cartas de Dark de sets pre-era que entraron mal ──
+  // (22-sep-2026) El bug de comparación de fechas de arriba dejó pasar
+  // sets anteriores al 26-sep-2025 antes de este fix. Sus cartas quedaron
+  // en inv como "hunting" en carpeta Dark Collection. Se sacan automático
+  // acá, pero SOLO si siguen intactas (estado hunting, nunca tocadas) --
+  // si Cristopher ya marcó alguna conseguida o la editó, se conserva.
+  React.useEffect(()=>{
+    if(!allSets.length) return;
+    const idsSetsValidos=new Set(darkSetsScope.map(s=>s.id));
+    const paraSacar=inv.filter(c=>c.carpeta==="Dark Collection"&&c.estado==="hunting"&&c.costoUSD===0&&!c.notas&&c.setCode&&!idsSetsValidos.has(c.setCode));
+    if(!paraSacar.length) return;
+    const idsSacar=new Set(paraSacar.map(c=>c.id));
+    const cardIdsSacar=new Set(paraSacar.map(c=>c.cardId));
+    saveInventario(prev=>(prev||[]).filter(c=>!idsSacar.has(c.id)));
+    saveDarkCatalogo(prev=>(prev||[]).filter(d=>!((!d.carpeta||d.carpeta==="Dark Collection")&&cardIdsSacar.has(d.cardId))));
+  },[allSets]);
   React.useEffect(()=>{
     if(!darkSetsScope.length) return;
     // Filtrado por carpeta (22-sep-2026): darkCat pasó a ser compartido con
