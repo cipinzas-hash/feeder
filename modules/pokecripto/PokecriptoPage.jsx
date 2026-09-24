@@ -327,6 +327,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [editFields,     setEditFields]     = React.useState({});
   const [darkView,       setDarkView]       = React.useState("grid_small");
   const [autocolCarpeta, setAutocolCarpeta] = React.useState(null);
+  const [printJob,       setPrintJob]       = React.useState(null); // {cartas,cat} -- placeholders A4 para imprimir
   const [allSets,        setAllSets]        = React.useState([]);
   const [allSetsLoading, setAllSetsLoading] = React.useState(false);
   const [showAddCarpeta, setShowAddCarpeta] = React.useState(false);
@@ -893,6 +894,22 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // (22-sep-2026, a pedido de Cristopher: "desde el arte en grande también
   // se pueda avanzar"). Si el zoom está abierto, lo refresca con la imagen
   // de la carta nueva en vez de cerrarlo.
+  // Placeholders A4 imprimibles (23-sep-2026, a pedido de Cristopher: "fijar
+  // el espacio en la carpeta mientras consigo las copias genuinas"). Usa el
+  // "Guardar como PDF" nativo del navegador via window.print() -- sin
+  // librería nueva, funciona igual en celular/desktop. printJob dispara un
+  // contenedor #pokecripto-print-root que la hoja de estilos de abajo aísla
+  // del resto de la app durante la impresión (ver el <style> en el render).
+  function imprimirFaltantes(cartas,cat){
+    setPrintJob({cartas,cat});
+  }
+  React.useEffect(()=>{
+    if(!printJob) return;
+    const t=setTimeout(()=>window.print(),60); // deja pintar el DOM antes de abrir el diálogo
+    const onAfter=()=>setPrintJob(null);
+    window.addEventListener("afterprint",onAfter);
+    return ()=>{clearTimeout(t);window.removeEventListener("afterprint",onAfter);};
+  },[printJob]);
   function irADetalle(delta){
     const idx=darkDetailList.indexOf(darkDetailId);
     if(idx<0||!darkDetailList.length) return;
@@ -1770,6 +1787,15 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const catMerged=darkCat.filter(d=>(d.carpeta||"Dark Collection")===cat).map(mergeDarkWithInv);
     const conseguidas=catMerged.filter(d=>getEstadoDark(d)==="conseguida").length;
     const total=catMerged.length;
+    // Valor $ de la colección completa vs. lo que ya tenemos (23-sep-2026,
+    // a pedido de Cristopher: "no solo completación en porcentajes") --
+    // usa tcgMarket actual de cada carta (viene de inv vía mergeDarkWithInv/
+    // el fallback de snapshotInicial), no lo que costó conseguirla.
+    const valorTotal=catMerged.reduce((s,d)=>s+(d.tcgMarket||0),0);
+    const valorConseguido=catMerged.filter(d=>getEstadoDark(d)==="conseguida").reduce((s,d)=>s+(d.tcgMarket||0),0);
+    // Ojo: se arma a partir de cardIdsOrdenados (definido más abajo), no de
+    // catMerged crudo -- así el PDF sale agrupado por set, igual que la
+    // pantalla, en vez del orden de inserción del catálogo.
     const porSet={};
     catMerged.forEach(d=>{
       const k=d.setId||d.setName||"Sin set";
@@ -1778,6 +1804,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     });
     const setGroups=Object.values(porSet).sort((a,b)=>b.releaseDate.localeCompare(a.releaseDate));
     const cardIdsOrdenados=setGroups.flatMap(g=>g.cards.map(c=>c.cardId)); // orden real en pantalla, para las flechas ‹› del detalle
+    const faltantes=cardIdsOrdenados.map(id=>catMerged.find(d=>d.cardId===id)).filter(d=>d&&getEstadoDark(d)!=="conseguida");
     const gridCols=darkView==="grid_small"?"repeat(auto-fill,minmax(58px,1fr))":darkView==="grid_med"?"repeat(auto-fill,minmax(88px,1fr))":null;
     const catLoading=allSetsLoading;
 
@@ -1796,6 +1823,34 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         )}
         {renderDarkPriceModal()}
         {renderDarkDetailModal()}
+        {printJob&&(
+          <div id="pokecripto-print-root">
+            <style>{`
+              @media print {
+                body * { visibility: hidden !important; }
+                #pokecripto-print-root, #pokecripto-print-root * { visibility: visible !important; }
+                #pokecripto-print-root { position: fixed; inset: 0; background: #fff; }
+                @page { size: A4 landscape; margin: 8mm; }
+                .pk-print-page { break-after: page; page-break-after: always; }
+                .pk-print-page:last-child { break-after: auto; page-break-after: auto; }
+              }
+              @media screen { #pokecripto-print-root { display: none; } }
+            `}</style>
+            {Array.from({length:Math.ceil(printJob.cartas.length/8)},(_,pi)=>printJob.cartas.slice(pi*8,pi*8+8)).map((pagina,pi)=>(
+              <div key={pi} className="pk-print-page" style={{display:"grid",gridTemplateColumns:"repeat(4,63mm)",gridTemplateRows:"repeat(2,88mm)",gap:"3mm",justifyContent:"center",alignContent:"center"}}>
+                {pagina.map(d=>(
+                  <div key={d.cardId} style={{width:"63mm",height:"88mm",position:"relative",border:"0.3mm dashed #999",boxSizing:"border-box",overflow:"hidden",background:"#fff"}}>
+                    {d.image&&<img src={d.imageHd||d.image} crossOrigin="anonymous" style={{width:"100%",height:"100%",objectFit:"cover",filter:"grayscale(1)"}}/>}
+                    <div style={{position:"absolute",bottom:0,left:0,right:0,background:"rgba(255,255,255,0.88)",fontSize:"7pt",padding:"1mm",textAlign:"center",fontFamily:"sans-serif",color:"#000",lineHeight:1.2}}>
+                      {d.name} · #{d.number}
+                    </div>
+                    <div style={{position:"absolute",top:"2mm",right:"2mm",background:"#fff",border:"0.3mm solid #000",fontSize:"6pt",padding:"0.5mm 1.5mm",fontFamily:"sans-serif",fontWeight:"bold",color:"#000"}}>PROXY</div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
 
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
           <button onClick={()=>setAutocolCarpeta(null)} style={{background:"transparent",border:"none",fontSize:20,color:"#444",cursor:"pointer",padding:0}}>←</button>
@@ -1810,6 +1865,17 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         {total>0&&<div style={{height:3,background:"#1a1a1a",borderRadius:99,overflow:"hidden",marginBottom:12}}>
           <div style={{height:"100%",width:`${total>0?conseguidas/total*100:0}%`,background:"#2e7d52",borderRadius:99}}/>
         </div>}
+        {valorTotal>0&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#151515",borderRadius:10,padding:"10px 14px",marginBottom:10}}>
+          <div>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:1,textTransform:"uppercase",marginBottom:2}}>valor conseguido / total</div>
+            <div style={{fontFamily:"'Caveat',cursive",fontSize:17,fontWeight:700,color:"#fff"}}>{fmtUSD(valorConseguido)} <span style={{color:"#555",fontSize:14}}>/ {fmtUSD(valorTotal)}</span></div>
+          </div>
+          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:"#aac756"}}>{Math.round(valorConseguido/valorTotal*100)}% del valor</div>
+        </div>}
+        {faltantes.length>0&&<button onClick={()=>imprimirFaltantes(faltantes,cat)}
+          style={{width:"100%",background:"transparent",border:"1px dashed #333",borderRadius:8,padding:"8px",marginBottom:10,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888",cursor:"pointer"}}>
+          🖨️ imprimir {faltantes.length} faltante{faltantes.length===1?"":"s"} (placeholders A4)
+        </button>}
         <div style={{display:"flex",gap:6,marginBottom:10,alignItems:"center",flexWrap:"wrap"}}>
           {[["grid_small","⠿"],["grid_med","▦"],["lista","≡"]].map(([v,l])=>(
             <button key={v} onClick={()=>setDarkView(v)}
