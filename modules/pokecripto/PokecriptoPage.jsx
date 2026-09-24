@@ -1771,9 +1771,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             <img src={zoomImage} style={{maxWidth:"90vw",maxHeight:"90vh",borderRadius:12,boxShadow:"0 8px 40px rgba(0,0,0,0.5)"}}/>
             {darkDetailId&&darkDetailList.length>1&&(<>
               <button onClick={e=>{e.stopPropagation();irADetalle(-1);}}
-                style={{position:"fixed",left:10,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.1)",border:"none",borderRadius:20,width:40,height:40,color:"#fff",fontSize:20,cursor:"pointer"}}>‹</button>
+                style={{position:"fixed",left:6,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.12)",border:"none",borderRadius:16,width:64,height:110,color:"#fff",fontSize:30,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
               <button onClick={e=>{e.stopPropagation();irADetalle(1);}}
-                style={{position:"fixed",right:10,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.1)",border:"none",borderRadius:20,width:40,height:40,color:"#fff",fontSize:20,cursor:"pointer"}}>›</button>
+                style={{position:"fixed",right:6,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.12)",border:"none",borderRadius:16,width:64,height:110,color:"#fff",fontSize:30,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
             </>)}
           </div>
         )}
