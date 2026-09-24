@@ -2256,10 +2256,14 @@ var __angst = (() => {
       setDiagResult(null);
       if (zoomImage) {
         const nextEntry = darkCat.find((d) => d.cardId === nextId);
-        if (nextEntry) {
+        const img = nextEntry ? (() => {
           const m = mergeDarkWithInv(nextEntry);
-          setZoomImage(m.imageHd || m.image);
-        }
+          return m.imageHd || m.image;
+        })() : (() => {
+          const c = inv.find((c2) => c2.cardId === nextId);
+          return c?.imageHd || c?.image;
+        })();
+        if (img) setZoomImage(img);
       }
     }
     async function snapshotInicial(nuevas) {
@@ -2415,11 +2419,13 @@ var __angst = (() => {
       return /* @__PURE__ */ React.createElement("div", { style: { background: "#fafafa", border: "1px dashed #ccc", borderRadius: 10, padding: "10px 12px", marginBottom: 12, fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#444", lineHeight: 1.6 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, "diagn\xF3stico tcgpricelookup.com"), /* @__PURE__ */ React.createElement("button", { onClick: () => setDiagResult(null), style: { background: "transparent", border: "none", color: "#999", cursor: "pointer", fontSize: 14 } }, "\u2715")), diagResult.error ? /* @__PURE__ */ React.createElement("div", null, "error: ", diagResult.error, diagResult.query ? ` (query: "${diagResult.query}")` : "") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", null, 'query: "', diagResult.query, '"'), diagResult.matchEncontrado ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", null, '\u2713 match: "', diagResult.matchNombre, '" #', diagResult.matchNumero), /* @__PURE__ */ React.createElement("div", null, "precios disponibles en la carta: ", diagResult.preciosDisponibles?.length ? diagResult.preciosDisponibles.join(", ") : "ninguno"), /* @__PURE__ */ React.createElement("div", null, diagResult.tienePrecioTcgplayer ? "\u2713" : "\u2717", " tiene precio tcgplayer en raw/near_mint o lightly_played")) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", null, "\u2717 ning\xFAn candidato matche\xF3 por nombre+n\xFAmero"), diagResult.candidatos?.length ? /* @__PURE__ */ React.createElement("div", { style: { marginTop: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { color: "#888" } }, "candidatos que trajo la b\xFAsqueda:"), diagResult.candidatos.map((c, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { marginLeft: 8 } }, "\xB7 ", c.name, " #", c.number, " (", c.setId || c.setCode || "sin set", ")", c.tieneRaw ? "" : " \u2014 sin precio raw"))) : /* @__PURE__ */ React.createElement("div", { style: { color: "#888" } }, "la b\xFAsqueda no devolvi\xF3 ning\xFAn candidato"))));
     }
     function renderDarkDetailModal() {
-      const catalogEntry = darkDetailId ? darkCat.find((d) => d.cardId === darkDetailId) : null;
-      if (!catalogEntry) return null;
-      const detalle = mergeDarkWithInv(catalogEntry);
+      if (!darkDetailId) return null;
+      const catalogEntry = darkCat.find((d) => d.cardId === darkDetailId);
+      const invPlano = !catalogEntry ? inv.find((c) => c.cardId === darkDetailId) : null;
+      if (!catalogEntry && !invPlano) return null;
+      const detalle = catalogEntry ? mergeDarkWithInv(catalogEntry) : { ...invPlano, setName: invPlano.set, precioUSD: invPlano.costoUSD };
       const hist = detalle.priceHistory || [];
-      const cons = getEstadoDark(detalle) === "conseguida";
+      const cons = catalogEntry ? getEstadoDark(detalle) === "conseguida" : true;
       const metrics = computeHistMetrics(hist, darkDetailRange);
       const { ath, athDate, atl, atlDate, vol, volLabel } = metrics;
       const idx = darkDetailList.indexOf(darkDetailId);
@@ -2500,7 +2506,7 @@ var __angst = (() => {
           style: { background: "transparent", border: "1px dashed #5a2020", borderRadius: 8, padding: "5px 10px", fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#e08080", cursor: detalle.id ? "pointer" : "default", opacity: detalle.id ? 1 : 0.4 }
         },
         "\xD7 borrar snapshot"
-      )), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 6, textAlign: "center" } }, hist.length, " snapshots \u2014 toc\xE1 un punto para seleccionarlo")), detalle.notas && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 12, fontStyle: "italic" } }, '"', detalle.notas, '"'), /* @__PURE__ */ React.createElement(
+      )), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.25)", marginTop: 6, textAlign: "center" } }, hist.length, " snapshots \u2014 toc\xE1 un punto para seleccionarlo")), detalle.notas && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 12, fontStyle: "italic" } }, '"', detalle.notas, '"'), catalogEntry && /* @__PURE__ */ React.createElement(
         "button",
         {
           onClick: () => toggleDark(detalle.cardId),
@@ -3042,7 +3048,27 @@ var __angst = (() => {
         style: { background: "#aac756", border: "none", borderRadius: 8, padding: "8px 14px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#111", cursor: "pointer" }
       },
       "\u{1F517} conectar con el bot de precios"
-    ), pokecriptoSyncMsg && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#aac756", marginTop: 6 } }, pokecriptoSyncMsg)), zoomImage && /* @__PURE__ */ React.createElement("div", { onClick: () => setZoomImage(null), style: { position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("img", { src: zoomImage, style: { maxWidth: "90vw", maxHeight: "90vh", borderRadius: 12, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" } })), /* @__PURE__ */ React.createElement("div", { style: { background: "#111", borderRadius: 12, padding: "14px 16px", marginBottom: 12, cursor: "pointer" }, onClick: () => {
+    ), pokecriptoSyncMsg && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#aac756", marginTop: 6 } }, pokecriptoSyncMsg)), zoomImage && /* @__PURE__ */ React.createElement("div", { onClick: () => setZoomImage(null), style: { position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("img", { src: zoomImage, style: { maxWidth: "90vw", maxHeight: "90vh", borderRadius: 12, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" } }), darkDetailId && darkDetailList.length > 1 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        onClick: (e) => {
+          e.stopPropagation();
+          irADetalle(-1);
+        },
+        style: { position: "fixed", left: 6, top: "50%", transform: "translateY(-50%)", background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 16, width: 64, height: 110, color: "#fff", fontSize: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }
+      },
+      "\u2039"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        onClick: (e) => {
+          e.stopPropagation();
+          irADetalle(1);
+        },
+        style: { position: "fixed", right: 6, top: "50%", transform: "translateY(-50%)", background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 16, width: 64, height: 110, color: "#fff", fontSize: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }
+      },
+      "\u203A"
+    ))), renderDarkPriceModal(), renderDarkDetailModal(), /* @__PURE__ */ React.createElement("div", { style: { background: "#111", borderRadius: 12, padding: "14px 16px", marginBottom: 12, cursor: "pointer" }, onClick: () => {
     } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 } }, [
       { label: "inventario", val: fmtUSD(valorEstim), sub: `${activas.length} cartas` },
       { label: "ganancia mes", val: fmtUSD(ganMes), sub: `${vendMes.length} vendidas`, color: ganMes >= 0 ? "#aac756" : "#e53935" }
@@ -3069,6 +3095,7 @@ var __angst = (() => {
       const fecha = fechas.includes(historialFecha) ? historialFecha : fechas[0];
       const idx = fechas.indexOf(fecha);
       const entradas = (porFecha.get(fecha) || []).sort((a, b) => Math.abs(parseFloat(b.delta) || 0) - Math.abs(parseFloat(a.delta) || 0));
+      const cardIdsHistorial = entradas.map((e) => e.carta.cardId);
       return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(
         "div",
         {
@@ -3095,7 +3122,21 @@ var __angst = (() => {
         "\u25B6"
       )), /* @__PURE__ */ React.createElement("div", { style: { maxHeight: 280, overflowY: "auto" } }, entradas.map((item, i) => {
         const up = item.delta != null && parseFloat(item.delta) >= 0;
-        return /* @__PURE__ */ React.createElement("div", { key: item.carta.id + i, style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderBottom: "1px solid #f8f8f8" } }, item.carta.image && /* @__PURE__ */ React.createElement("img", { src: item.carta.image, style: { width: 28, borderRadius: 4, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#333", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, item.carta.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", flexShrink: 0 } }, "$", item.newMarket?.toFixed(2)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: item.delta == null ? "#aaa" : up ? "#2e7d52" : "#e53935", flexShrink: 0, width: 48, textAlign: "right" } }, item.delta == null ? "nuevo" : `${up ? "+" : ""}${item.delta}%`));
+        return /* @__PURE__ */ React.createElement(
+          "div",
+          {
+            key: item.carta.id + i,
+            onClick: () => {
+              setDarkDetailId(item.carta.cardId);
+              setDarkDetailList(cardIdsHistorial);
+            },
+            style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderBottom: "1px solid #f8f8f8", cursor: "pointer" }
+          },
+          item.carta.image && /* @__PURE__ */ React.createElement("img", { src: item.carta.image, style: { width: 28, borderRadius: 4, flexShrink: 0 } }),
+          /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#333", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, item.carta.name),
+          /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", flexShrink: 0 } }, "$", item.newMarket?.toFixed(2)),
+          /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: item.delta == null ? "#aaa" : up ? "#2e7d52" : "#e53935", flexShrink: 0, width: 48, textAlign: "right" } }, item.delta == null ? "nuevo" : `${up ? "+" : ""}${item.delta}%`)
+        );
       }))));
     })(), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14 } }, ["MLP", "Staples & Meta", "Colecciones", "Price Watch"].map((cat) => {
       const n = cat === "Colecciones" ? 0 : inv.filter((c) => c.carpeta === cat).length;

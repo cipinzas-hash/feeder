@@ -899,8 +899,12 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const nextId=darkDetailList[(idx+delta+darkDetailList.length)%darkDetailList.length];
     setDarkDetailId(nextId); setDarkDetailRange("todo"); setSelectedPoint(null); setDiagResult(null);
     if(zoomImage){
+      // Generalizado (23-sep-2026): si la carta no tiene catálogo (viene de
+      // "historial de snapshots", no de Dark/ilustrador), cae a inv directo.
       const nextEntry=darkCat.find(d=>d.cardId===nextId);
-      if(nextEntry){ const m=mergeDarkWithInv(nextEntry); setZoomImage(m.imageHd||m.image); }
+      const img=nextEntry?(()=>{const m=mergeDarkWithInv(nextEntry);return m.imageHd||m.image;})()
+        :(()=>{const c=inv.find(c=>c.cardId===nextId);return c?.imageHd||c?.image;})();
+      if(img) setZoomImage(img);
     }
   }
   // Snapshot inicial para cartas recién descubiertas (22-sep-2026, a pedido
@@ -1110,11 +1114,20 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   }
 
   function renderDarkDetailModal(){
-    const catalogEntry=darkDetailId?darkCat.find(d=>d.cardId===darkDetailId):null;
-    if(!catalogEntry) return null;
-    const detalle=mergeDarkWithInv(catalogEntry);
+    if(!darkDetailId) return null;
+    // Generalizado (23-sep-2026, a pedido de Cristopher: abrir el detalle
+    // desde "historial de snapshots") -- antes solo funcionaba para cartas
+    // con entrada en darkCat (Dark/ilustrador). Ahora, si no hay catálogo,
+    // arma `detalle` directo desde inv (cartas compradas normales) --
+    // mapeando set->setName para que coincida con lo que ya usa el resto de
+    // este modal, ya que huntingEntryFromCard/agregarCarta guardan `set`,
+    // no `setName` (ese campo vive en el catálogo para las de Dark/ilustrador).
+    const catalogEntry=darkCat.find(d=>d.cardId===darkDetailId);
+    const invPlano=!catalogEntry?inv.find(c=>c.cardId===darkDetailId):null;
+    if(!catalogEntry&&!invPlano) return null;
+    const detalle=catalogEntry?mergeDarkWithInv(catalogEntry):{...invPlano,setName:invPlano.set,precioUSD:invPlano.costoUSD};
     const hist=detalle.priceHistory||[];
-    const cons=getEstadoDark(detalle)==="conseguida";
+    const cons=catalogEntry?getEstadoDark(detalle)==="conseguida":true; // sin catálogo no hay estado hunting/conseguida real -- se muestra en color, no gris
     const metrics=computeHistMetrics(hist,darkDetailRange);
     const {ath,athDate,atl,atlDate,vol,volLabel}=metrics;
     // Navegación ‹ › entre cartas (22-sep-2026, a pedido de Cristopher) --
@@ -1239,11 +1252,15 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             </div>
           )}
           {detalle.notas&&<div style={{fontFamily:"'Caveat',cursive",fontSize:14,color:"rgba(255,255,255,0.5)",marginBottom:12,fontStyle:"italic"}}>"{detalle.notas}"</div>}
-          {/* Toggle explícito de estado — reemplaza el tap directo */}
-          <button onClick={()=>toggleDark(detalle.cardId)}
+          {/* Toggle explícito de estado — reemplaza el tap directo. Solo
+              tiene sentido para cartas de Dark/ilustrador (hunting <->
+              conseguida) -- para una carta comprada normal, togglear la
+              mandaría a estado "hunting" y le pisaría costoUSD/fechaCompra,
+              así que se oculta entero si no hay catalogEntry (23-sep-2026). */}
+          {catalogEntry&&<button onClick={()=>toggleDark(detalle.cardId)}
             style={{width:"100%",background:cons?"transparent":"#2e7d52",border:cons?"1px dashed #555":"none",borderRadius:10,padding:"12px",fontFamily:"'Caveat',cursive",fontSize:17,color:cons?"#aaa":"#fff",cursor:"pointer"}}>
             {cons?"↺ volver a hunting":"✓ marcar conseguida"}
-          </button>
+          </button>}
         </div>
       </div>
     );
@@ -1886,8 +1903,16 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       {zoomImage&&(
         <div onClick={()=>setZoomImage(null)} style={{position:"fixed",inset:0,zIndex:700,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center"}}>
           <img src={zoomImage} style={{maxWidth:"90vw",maxHeight:"90vh",borderRadius:12,boxShadow:"0 8px 40px rgba(0,0,0,0.5)"}}/>
+          {darkDetailId&&darkDetailList.length>1&&(<>
+            <button onClick={e=>{e.stopPropagation();irADetalle(-1);}}
+              style={{position:"fixed",left:6,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.12)",border:"none",borderRadius:16,width:64,height:110,color:"#fff",fontSize:30,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
+            <button onClick={e=>{e.stopPropagation();irADetalle(1);}}
+              style={{position:"fixed",right:6,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.12)",border:"none",borderRadius:16,width:64,height:110,color:"#fff",fontSize:30,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
+          </>)}
         </div>
       )}
+      {renderDarkPriceModal()}
+      {renderDarkDetailModal()}
       {/* Header métricas */}
       <div style={{background:"#111",borderRadius:12,padding:"14px 16px",marginBottom:12,cursor:"pointer"}} onClick={()=>{}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
@@ -1933,6 +1958,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         const fecha = fechas.includes(historialFecha) ? historialFecha : fechas[0];
         const idx = fechas.indexOf(fecha);
         const entradas = (porFecha.get(fecha) || []).sort((a, b) => Math.abs(parseFloat(b.delta) || 0) - Math.abs(parseFloat(a.delta) || 0));
+        const cardIdsHistorial = entradas.map(e=>e.carta.cardId); // orden real en pantalla, para las flechas ‹› del detalle
         return (
           <div>
             <div onClick={()=>setHistorialOpen(v=>!v)}
@@ -1955,7 +1981,8 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                   {entradas.map((item,i)=>{
                     const up = item.delta!=null && parseFloat(item.delta)>=0;
                     return(
-                      <div key={item.carta.id+i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",borderBottom:"1px solid #f8f8f8"}}>
+                      <div key={item.carta.id+i} onClick={()=>{setDarkDetailId(item.carta.cardId);setDarkDetailList(cardIdsHistorial);}}
+                        style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",borderBottom:"1px solid #f8f8f8",cursor:"pointer"}}>
                         {item.carta.image&&<img src={item.carta.image} style={{width:28,borderRadius:4,flexShrink:0}}/>}
                         <div style={{flex:1,minWidth:0,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#333",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.carta.name}</div>
                         <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",flexShrink:0}}>${item.newMarket?.toFixed(2)}</div>
