@@ -42,20 +42,19 @@ const ESTADOS = {
   a_la_venta:   { label:"a la venta",   color:"#2e7d52", bg:"#e8f5e9" },
   vendida:      { label:"vendida",       color:"#555",    bg:"#f5f5f5" },
 };
-const MEGA_SETS = [
-  {id:"me1",  name:"Mega Evolution",    releaseDate:"2025-09-26"},
-  {id:"me2",  name:"Phantasmal Flames", releaseDate:"2025-11-14"},
-  {id:"me25", name:"Ascended Heroes",   releaseDate:"2026-01-30"},
-  {id:"me3",  name:"Perfect Order",     releaseDate:"2026-03-27"},
-  {id:"me4",  name:"Chaos Rising",      releaseDate:"2026-05-22"},
-  {id:"me5",  name:"Pitch Black",       releaseDate:"2026-07-17"},
-];
+// MEGA_SETS (lista hardcodeada de IDs de set) retirada 22-sep-2026: tenía
+// "me25" mal para Ascended Heroes (real: "me2pt5") -- causa raíz de que
+// Dark Collection nunca encontrara ese set. Dark ahora deriva su lista de
+// sets de allSets (fetch real, sin IDs adivinados) filtrado por fecha.
 // Sets de promo de la era Mega Evolution — se incluyen por ID fijo porque son
 // contenedores que siguen sumando cartas nuevas (ETB exclusives, blister promos)
-// sin que su releaseDate de set se actualice, así que el filtro por fecha en
-// loadDarkSets() los excluye. ⚠️ VERIFICAR ID contra la API real la primera vez
-// que corra esto — si el ID está mal, el fetch simplemente devuelve 0 cartas
-// (no rompe nada), y hay que corregirlo acá.
+// sin que su releaseDate de set se actualice, así que el filtro por fecha
+// (darkSetsScope, ver effect de "Auto-poblar catálogo dark") los excluiría.
+// ⚠️ VERIFICAR ID contra la API real — el mismo tipo de error de tipeo que
+// tenía MEGA_SETS ("me25" en vez de "me2pt5") puede estar acá también, sin
+// verificar todavía. Si el ID está mal, allSets simplemente no lo contiene
+// y este fallback no encuentra nada que agregar (no rompe nada, pero
+// tampoco arregla el hueco — hay que corregirlo acá si pasa).
 const MEGA_PROMO_SETS = [
   {id:"mep", name:"Mega Evolution Promos", releaseDate:"2025-09-26"},
 ];
@@ -328,8 +327,6 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [editFields,     setEditFields]     = React.useState({});
   const [darkView,       setDarkView]       = React.useState("grid_small");
   const [autocolCarpeta, setAutocolCarpeta] = React.useState(null);
-  const [darkSets,       setDarkSets]       = React.useState([]);
-  const [darkSetsLoading,setDarkSetsLoading]= React.useState(false);
   const [allSets,        setAllSets]        = React.useState([]);
   const [allSetsLoading, setAllSetsLoading] = React.useState(false);
   const [showAddCarpeta, setShowAddCarpeta] = React.useState(false);
@@ -449,25 +446,36 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     if(carta) refreshPrecio(carta);
   },[view,fichaId]);
 
-  // ── Auto-cargar sets dark (incluye promos por ID fijo — cambio 5) ──
-  React.useEffect(()=>{
-    if(view!=="dark"&&carpetaView!=="Dark Collection") return;
-    if(!darkSets.length&&!darkSetsLoading) loadDarkSets();
-  },[view,carpetaView]);
-
   // ── Auto-poblar catálogo dark con sets nuevos ──
   // El catálogo guarda solo identidad (cardId/name/número/set) — el precio y
   // el estado (hunting/conseguida) viven en la carta de inv correspondiente,
   // que se crea acá mismo en estado "hunting" para que junte snapshots con
   // el mismo scheduler confiable que cualquier otra carta del pool.
+  //
+  // Migrado de loadDarkSets() a allSets (22-sep-2026, causa raíz real de
+  // "Ascended Heroes/30th Anniversary no aparecen"): loadDarkSets() tenía
+  // DOS bugs, no uno --
+  //  1) MEGA_SETS traía "me25" hardcodeado para Ascended Heroes; el ID real
+  //     es "me2pt5" (confirmado contra 3 fuentes externas). Con el ID mal,
+  //     el fallback fabricaba un set fantasma que siempre traía 0 cartas.
+  //  2) El trigger que llamaba a loadDarkSets() (antes en el effect de
+  //     arriba) chequeaba view==="dark"/carpetaView==="Dark Collection" --
+  //     condición que dejó de cumplirse el día que Dark pasó a navegar por
+  //     autocolCarpeta (commit del menú "Colecciones"), así que la función
+  //     dejó de llamarse por completo. Los fixes de paginación de esa
+  //     sesión nunca llegaron a correr.
+  // Con esto, Dark reusa exactamente el mismo fetch de sets que ya
+  // funciona para las 8 de ilustrador (loadAllSets, sin adivinar ningún
+  // ID) y solo filtra por fecha del lado del cliente.
+  const darkSetsScope=allSets.filter(s=>s.releaseDate>="2025-09-26"||MEGA_PROMO_SETS.some(p=>p.id===s.id));
   React.useEffect(()=>{
-    if(!darkSets.length) return;
+    if(!darkSetsScope.length) return;
     // Filtrado por carpeta (22-sep-2026): darkCat pasó a ser compartido con
     // las 8 colecciones de ilustrador. Sin este filtro, un set que ya tenga
     // una entrada de ilustrador se marcaría como "ya escaneado" para Dark
     // también, aunque nunca se haya chequeado el criterio real de Darkness.
     const enCat=new Set(darkCat.filter(d=>!d.carpeta||d.carpeta==="Dark Collection").map(d=>d.setId));
-    const nuevos=darkSets.filter(s=>!enCat.has(s.id));
+    const nuevos=darkSetsScope.filter(s=>!enCat.has(s.id));
     if(!nuevos.length) return;
     let idx=0;
     function siguiente(){
@@ -500,7 +508,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         }).catch(()=>setTimeout(siguiente,800));
     }
     siguiente();
-  },[darkSets]);
+  },[allSets]);
 
   // ── Resync automático periódico de sets ya trackeados (cambio 6) ──
   // El "🔄 repoblar" manual sigue existiendo, pero esto corre solo 1x/día sin
@@ -508,13 +516,13 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // conocemos y suma las que pokemontcg.io haya indexado con lag, sin tocar
   // el progreso (conseguida/hunting/precio) de las que ya están.
   React.useEffect(()=>{
-    if(!darkSets.length) return;
+    if(!darkSetsScope.length) return;
     const lastSync=cache._lastResyncDate;
     if(lastSync && (Date.now()-new Date(lastSync).getTime())<RESYNC_INTERVAL_MS) return;
     resyncAbort.current=false;
     setResyncStatus("running");
     let idx=0;
-    const sets=[...darkSets];
+    const sets=[...darkSetsScope];
     function siguiente(){
       if(resyncAbort.current||idx>=sets.length){
         setResyncStatus("done");
@@ -550,7 +558,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     }
     siguiente();
     return ()=>{ resyncAbort.current=true; };
-  },[darkSets]);
+  },[allSets]);
 
   // ── Auto-cargar catálogo COMPLETO de sets (colecciones de ilustrador, 22-sep-2026) ──
   // Corrección (mismo día): esto NO puede depender de carpetaView -- ese
@@ -755,31 +763,8 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   async function refreshPrecio(carta){ await refreshPrecioSilent(carta); }
 
   // ── Dark sets ──
-  async function loadDarkSets(){
-    setDarkSetsLoading(true);
-    // Paginado real (22-sep-2026, bug reportado por Cristopher: "30th
-    // Anniversary" no aparecía en Dark). pageSize=100 sin paginar se comía
-    // los sets más viejos del rango en cuanto salían >100 sets nuevos desde
-    // el 26-sep-2025 -- orderBy=-releaseDate corta por el final, no por el
-    // principio. Mismo fix que loadAllSets.
-    let sets=[],page=1;
-    try{
-      while(true){
-        const data=await fetchPoke(`${POKE_BASE}/sets?q=releaseDate:[2025/09/26 TO 2099/12/31]&orderBy=-releaseDate&pageSize=250&page=${page}`);
-        const batch=data.data||[];
-        sets=sets.concat(batch);
-        if(batch.length<250||sets.length>=(data.totalCount||0)) break;
-        page++;
-      }
-    }catch(e){}
-    MEGA_SETS.forEach(known=>{ if(!sets.find(s=>s.id===known.id)) sets.push({id:known.id,name:known.name,releaseDate:known.releaseDate,images:{symbol:"",logo:""}}); });
-    // Sets de promo — se incluyen SIEMPRE por ID fijo, sin importar su
-    // releaseDate de contenedor (cambio 5: ver comentario junto a MEGA_PROMO_SETS).
-    MEGA_PROMO_SETS.forEach(promo=>{ if(!sets.find(s=>s.id===promo.id)) sets.push({id:promo.id,name:promo.name,releaseDate:promo.releaseDate,images:{symbol:"",logo:""},isPromo:true}); });
-    sets.sort((a,b)=>b.releaseDate.localeCompare(a.releaseDate));
-    setDarkSets(sets);
-    setDarkSetsLoading(false);
-  }
+  // (loadDarkSets() retirada 22-sep-2026 -- ver comentario en el effect de
+  // "Auto-poblar catálogo dark" más arriba. Dark reusa loadAllSets().)
 
   // ── Cargar catálogo COMPLETO de sets (colecciones de ilustrador) ──
   // Sin filtro de releaseDate, a diferencia de loadDarkSets -- pagina de
@@ -811,7 +796,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     // se limpian las entradas de Dark (sin `carpeta` o con "Dark Collection").
     setRepoblando(true);
     saveDarkCatalogo(prev=>(prev||[]).filter(d=>d.carpeta&&d.carpeta!=="Dark Collection"));
-    if(!darkSets.length) await loadDarkSets();
+    if(!allSets.length) await loadAllSets();
     setTimeout(()=>setRepoblando(false),4000);
   }
 
@@ -1750,7 +1735,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const setGroups=Object.values(porSet).sort((a,b)=>b.releaseDate.localeCompare(a.releaseDate));
     const cardIdsOrdenados=setGroups.flatMap(g=>g.cards.map(c=>c.cardId)); // orden real en pantalla, para las flechas ‹› del detalle
     const gridCols=darkView==="grid_small"?"repeat(auto-fill,minmax(58px,1fr))":darkView==="grid_med"?"repeat(auto-fill,minmax(88px,1fr))":null;
-    const catLoading=esDark?darkSetsLoading:allSetsLoading;
+    const catLoading=allSetsLoading;
 
     return(
       <div style={{background:"#0a0a0a",minHeight:"100vh",padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>

@@ -1445,14 +1445,6 @@ var __angst = (() => {
     a_la_venta: { label: "a la venta", color: "#2e7d52", bg: "#e8f5e9" },
     vendida: { label: "vendida", color: "#555", bg: "#f5f5f5" }
   };
-  var MEGA_SETS = [
-    { id: "me1", name: "Mega Evolution", releaseDate: "2025-09-26" },
-    { id: "me2", name: "Phantasmal Flames", releaseDate: "2025-11-14" },
-    { id: "me25", name: "Ascended Heroes", releaseDate: "2026-01-30" },
-    { id: "me3", name: "Perfect Order", releaseDate: "2026-03-27" },
-    { id: "me4", name: "Chaos Rising", releaseDate: "2026-05-22" },
-    { id: "me5", name: "Pitch Black", releaseDate: "2026-07-17" }
-  ];
   var MEGA_PROMO_SETS = [
     { id: "mep", name: "Mega Evolution Promos", releaseDate: "2025-09-26" }
   ];
@@ -1735,8 +1727,6 @@ var __angst = (() => {
     const [editFields, setEditFields] = React.useState({});
     const [darkView, setDarkView] = React.useState("grid_small");
     const [autocolCarpeta, setAutocolCarpeta] = React.useState(null);
-    const [darkSets, setDarkSets] = React.useState([]);
-    const [darkSetsLoading, setDarkSetsLoading] = React.useState(false);
     const [allSets, setAllSets] = React.useState([]);
     const [allSetsLoading, setAllSetsLoading] = React.useState(false);
     const [showAddCarpeta, setShowAddCarpeta] = React.useState(false);
@@ -1856,14 +1846,11 @@ var __angst = (() => {
       const carta = inv.find((c) => c.id === fichaId);
       if (carta) refreshPrecio2(carta);
     }, [view, fichaId]);
+    const darkSetsScope = allSets.filter((s) => s.releaseDate >= "2025-09-26" || MEGA_PROMO_SETS.some((p) => p.id === s.id));
     React.useEffect(() => {
-      if (view !== "dark" && carpetaView !== "Dark Collection") return;
-      if (!darkSets.length && !darkSetsLoading) loadDarkSets();
-    }, [view, carpetaView]);
-    React.useEffect(() => {
-      if (!darkSets.length) return;
+      if (!darkSetsScope.length) return;
       const enCat = new Set(darkCat.filter((d) => !d.carpeta || d.carpeta === "Dark Collection").map((d) => d.setId));
-      const nuevos = darkSets.filter((s) => !enCat.has(s.id));
+      const nuevos = darkSetsScope.filter((s) => !enCat.has(s.id));
       if (!nuevos.length) return;
       let idx = 0;
       function siguiente() {
@@ -1900,15 +1887,15 @@ var __angst = (() => {
         }).catch(() => setTimeout(siguiente, 800));
       }
       siguiente();
-    }, [darkSets]);
+    }, [allSets]);
     React.useEffect(() => {
-      if (!darkSets.length) return;
+      if (!darkSetsScope.length) return;
       const lastSync = cache._lastResyncDate;
       if (lastSync && Date.now() - new Date(lastSync).getTime() < RESYNC_INTERVAL_MS) return;
       resyncAbort.current = false;
       setResyncStatus("running");
       let idx = 0;
-      const sets = [...darkSets];
+      const sets = [...darkSetsScope];
       function siguiente() {
         if (resyncAbort.current || idx >= sets.length) {
           setResyncStatus("done");
@@ -1950,7 +1937,7 @@ var __angst = (() => {
       return () => {
         resyncAbort.current = true;
       };
-    }, [darkSets]);
+    }, [allSets]);
     React.useEffect(() => {
       if (!allSets.length && !allSetsLoading) loadAllSets();
     }, []);
@@ -2151,29 +2138,6 @@ var __angst = (() => {
     async function refreshPrecio2(carta) {
       await refreshPrecioSilent(carta);
     }
-    async function loadDarkSets() {
-      setDarkSetsLoading(true);
-      let sets = [], page = 1;
-      try {
-        while (true) {
-          const data = await fetchPoke(`${POKE_BASE}/sets?q=releaseDate:[2025/09/26 TO 2099/12/31]&orderBy=-releaseDate&pageSize=250&page=${page}`);
-          const batch = data.data || [];
-          sets = sets.concat(batch);
-          if (batch.length < 250 || sets.length >= (data.totalCount || 0)) break;
-          page++;
-        }
-      } catch (e) {
-      }
-      MEGA_SETS.forEach((known) => {
-        if (!sets.find((s) => s.id === known.id)) sets.push({ id: known.id, name: known.name, releaseDate: known.releaseDate, images: { symbol: "", logo: "" } });
-      });
-      MEGA_PROMO_SETS.forEach((promo) => {
-        if (!sets.find((s) => s.id === promo.id)) sets.push({ id: promo.id, name: promo.name, releaseDate: promo.releaseDate, images: { symbol: "", logo: "" }, isPromo: true });
-      });
-      sets.sort((a, b) => b.releaseDate.localeCompare(a.releaseDate));
-      setDarkSets(sets);
-      setDarkSetsLoading(false);
-    }
     async function loadAllSets() {
       setAllSetsLoading(true);
       let sets = [], page = 1;
@@ -2193,7 +2157,7 @@ var __angst = (() => {
     async function repoblarDark() {
       setRepoblando(true);
       saveDarkCatalogo((prev) => (prev || []).filter((d) => d.carpeta && d.carpeta !== "Dark Collection"));
-      if (!darkSets.length) await loadDarkSets();
+      if (!allSets.length) await loadAllSets();
       setTimeout(() => setRepoblando(false), 4e3);
     }
     function agregarCarta(card) {
@@ -2976,7 +2940,7 @@ var __angst = (() => {
       const setGroups = Object.values(porSet).sort((a, b) => b.releaseDate.localeCompare(a.releaseDate));
       const cardIdsOrdenados = setGroups.flatMap((g) => g.cards.map((c) => c.cardId));
       const gridCols = darkView === "grid_small" ? "repeat(auto-fill,minmax(58px,1fr))" : darkView === "grid_med" ? "repeat(auto-fill,minmax(88px,1fr))" : null;
-      const catLoading = esDark ? darkSetsLoading : allSetsLoading;
+      const catLoading = allSetsLoading;
       return /* @__PURE__ */ React.createElement("div", { style: { background: "#0a0a0a", minHeight: "100vh", padding: "16px", maxWidth: 480, margin: "0 auto", overflowX: "hidden", boxSizing: "border-box" } }, zoomImage && /* @__PURE__ */ React.createElement("div", { onClick: () => setZoomImage(null), style: { position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("img", { src: zoomImage, style: { maxWidth: "90vw", maxHeight: "90vh", borderRadius: 12, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" } }), darkDetailId && darkDetailList.length > 1 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
         "button",
         {
