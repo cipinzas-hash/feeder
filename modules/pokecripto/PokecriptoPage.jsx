@@ -327,7 +327,6 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [editFields,     setEditFields]     = React.useState({});
   const [darkView,       setDarkView]       = React.useState("grid_small");
   const [autocolCarpeta, setAutocolCarpeta] = React.useState(null);
-  const [printJob,       setPrintJob]       = React.useState(null); // {cartas,cat} -- placeholders A4 para imprimir
   const [allSets,        setAllSets]        = React.useState([]);
   const [allSetsLoading, setAllSetsLoading] = React.useState(false);
   const [showAddCarpeta, setShowAddCarpeta] = React.useState(false);
@@ -895,21 +894,51 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // se pueda avanzar"). Si el zoom está abierto, lo refresca con la imagen
   // de la carta nueva en vez de cerrarlo.
   // Placeholders A4 imprimibles (23-sep-2026, a pedido de Cristopher: "fijar
-  // el espacio en la carpeta mientras consigo las copias genuinas"). Usa el
-  // "Guardar como PDF" nativo del navegador via window.print() -- sin
-  // librería nueva, funciona igual en celular/desktop. printJob dispara un
-  // contenedor #pokecripto-print-root que la hoja de estilos de abajo aísla
-  // del resto de la app durante la impresión (ver el <style> en el render).
+  // el espacio en la carpeta mientras consigo las copias genuinas").
+  // v2 (mismo día, el intento con #pokecripto-print-root + @media print
+  // falló -- Cristopher mandó el PDF y era la pantalla entera capturada,
+  // las reglas de aislamiento no tuvieron ningún efecto). En vez de pelear
+  // con CSS para ocultar el resto de una SPA de una sola página, abre una
+  // ventana nueva con un documento HTML propio y limpio -- no hay nada que
+  // ocultar porque no hay nada más ahí adentro. window.open() sincrónico
+  // (sin await/setTimeout de por medio) para no chocar con el bloqueador
+  // de pop-ups de mobile, que solo deja pasar los que salen directo de un
+  // click. Espera a que las imágenes carguen (son de pokemontcg.io, otro
+  // origen) antes de llamar a print() desde adentro de la ventana nueva.
   function imprimirFaltantes(cartas,cat){
-    setPrintJob({cartas,cat});
+    const w=window.open("","_blank");
+    if(!w){ alert("El navegador bloqueó la ventana de impresión — revisá el bloqueador de pop-ups para este sitio e intentá de nuevo."); return; }
+    const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    const paginas=[];
+    for(let i=0;i<cartas.length;i+=8) paginas.push(cartas.slice(i,i+8));
+    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(cat)} — faltantes</title><style>
+      @page{size:A4 landscape;margin:8mm;}
+      *{box-sizing:border-box;}
+      body{margin:0;font-family:sans-serif;background:#fff;}
+      .page{display:grid;grid-template-columns:repeat(4,63mm);grid-template-rows:repeat(2,88mm);gap:3mm;justify-content:center;align-content:center;page-break-after:always;}
+      .page:last-child{page-break-after:auto;}
+      .card{width:63mm;height:88mm;position:relative;border:0.3mm dashed #999;overflow:hidden;background:#fff;}
+      .card img{width:100%;height:100%;object-fit:cover;filter:grayscale(1);display:block;}
+      .label{position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,0.88);font-size:7pt;padding:1mm;text-align:center;color:#000;line-height:1.2;}
+      .proxy{position:absolute;top:2mm;right:2mm;background:#fff;border:0.3mm solid #000;font-size:6pt;padding:0.5mm 1.5mm;font-weight:bold;color:#000;}
+    </style></head><body>
+      ${paginas.map(pagina=>`<div class="page">${pagina.map(d=>`
+        <div class="card">
+          ${d.image?`<img src="${esc(d.imageHd||d.image)}"/>`:""}
+          <div class="label">${esc(d.name)} · #${esc(d.number)}</div>
+          <div class="proxy">PROXY</div>
+        </div>`).join("")}</div>`).join("")}
+      <script>
+        window.onload=function(){
+          var imgs=Array.prototype.slice.call(document.images);
+          Promise.all(imgs.map(function(img){
+            return img.complete?Promise.resolve():new Promise(function(res){img.onload=img.onerror=res;});
+          })).then(function(){ window.print(); });
+        };
+      <\/script>
+    </body></html>`;
+    w.document.open(); w.document.write(html); w.document.close();
   }
-  React.useEffect(()=>{
-    if(!printJob) return;
-    const t=setTimeout(()=>window.print(),60); // deja pintar el DOM antes de abrir el diálogo
-    const onAfter=()=>setPrintJob(null);
-    window.addEventListener("afterprint",onAfter);
-    return ()=>{clearTimeout(t);window.removeEventListener("afterprint",onAfter);};
-  },[printJob]);
   function irADetalle(delta){
     const idx=darkDetailList.indexOf(darkDetailId);
     if(idx<0||!darkDetailList.length) return;
@@ -1823,34 +1852,6 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         )}
         {renderDarkPriceModal()}
         {renderDarkDetailModal()}
-        {printJob&&(
-          <div id="pokecripto-print-root">
-            <style>{`
-              @media print {
-                body * { visibility: hidden !important; }
-                #pokecripto-print-root, #pokecripto-print-root * { visibility: visible !important; }
-                #pokecripto-print-root { position: fixed; inset: 0; background: #fff; }
-                @page { size: A4 landscape; margin: 8mm; }
-                .pk-print-page { break-after: page; page-break-after: always; }
-                .pk-print-page:last-child { break-after: auto; page-break-after: auto; }
-              }
-              @media screen { #pokecripto-print-root { display: none; } }
-            `}</style>
-            {Array.from({length:Math.ceil(printJob.cartas.length/8)},(_,pi)=>printJob.cartas.slice(pi*8,pi*8+8)).map((pagina,pi)=>(
-              <div key={pi} className="pk-print-page" style={{display:"grid",gridTemplateColumns:"repeat(4,63mm)",gridTemplateRows:"repeat(2,88mm)",gap:"3mm",justifyContent:"center",alignContent:"center"}}>
-                {pagina.map(d=>(
-                  <div key={d.cardId} style={{width:"63mm",height:"88mm",position:"relative",border:"0.3mm dashed #999",boxSizing:"border-box",overflow:"hidden",background:"#fff"}}>
-                    {d.image&&<img src={d.imageHd||d.image} crossOrigin="anonymous" style={{width:"100%",height:"100%",objectFit:"cover",filter:"grayscale(1)"}}/>}
-                    <div style={{position:"absolute",bottom:0,left:0,right:0,background:"rgba(255,255,255,0.88)",fontSize:"7pt",padding:"1mm",textAlign:"center",fontFamily:"sans-serif",color:"#000",lineHeight:1.2}}>
-                      {d.name} · #{d.number}
-                    </div>
-                    <div style={{position:"absolute",top:"2mm",right:"2mm",background:"#fff",border:"0.3mm solid #000",fontSize:"6pt",padding:"0.5mm 1.5mm",fontFamily:"sans-serif",fontWeight:"bold",color:"#000"}}>PROXY</div>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        )}
 
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
           <button onClick={()=>setAutocolCarpeta(null)} style={{background:"transparent",border:"none",fontSize:20,color:"#444",cursor:"pointer",padding:0}}>←</button>
