@@ -404,19 +404,22 @@ function AngstApp() {
   const [nutriDecks, setNutriDecks] = useState([]);
   const nutriDecksRef = useRef([]);
 
-  // ── Sync de estado completo a Angst-data (14-sep-2026) ──
-  // Reemplaza al auto-export diario que descargaba un archivo local --
-  // ahora el estado completo se empuja solo, con debounce, a la rama
-  // `state-sync` de Angst-data (aislada de main, con amend real del lado
-  // del Worker: siempre el mismo commit, sin crecer el historial sin
-  // importar cuántas veces se guarde). Mismo AUTH_SECRET/localStorage key
-  // que ya usan Simkl/podcasts/Pokécripto -- no se pide de nuevo si ya
-  // está cargado.
+  // ── Sync de estado completo a Angst-data (14-sep-2026, revisado 25-sep) ──
+  // Tercer frente de guardado (los otros dos: localStorage automático de
+  // saveToStorage, y el .json manual de 💾) y segundo frente de lectura
+  // (el otro: 📂 importar archivo local). Guardado y lectura acá son los
+  // DOS manuales -- 📤 empuja, 📥 lee -- más una lectura automática al
+  // abrir (ver el useEffect después de leerDeRepo). Ya no hay push
+  // automático por debounce: guardar al repo es siempre una acción
+  // consciente. Rama `state-sync` de Angst-data (aislada de main, con
+  // amend real del lado del Worker: siempre el mismo commit, sin crecer
+  // el historial sin importar cuántas veces se guarde). Mismo
+  // AUTH_SECRET/localStorage key que ya usan Simkl/podcasts/Pokécripto --
+  // no se pide de nuevo si ya está cargado.
   const ANGST_STATE_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
   const ANGST_STATE_AUTH_KEY = "angst-simkl-auth-v1";
   const ANGST_STATE_PATH = "angst-full-state.json";
   const ANGST_STATE_BRANCH = "state-sync";
-  const stateSyncTimerRef = useRef(null);
   const [stateSyncMsg, setStateSyncMsg] = useState(null);
   function getAngstStateAuth(){ try{ return localStorage.getItem(ANGST_STATE_AUTH_KEY)||null; }catch(e){ return null; } }
   function pedirAngstStateAuth(){
@@ -424,36 +427,42 @@ function AngstApp() {
     if(v && v.trim()){ try{ localStorage.setItem(ANGST_STATE_AUTH_KEY, v.trim()); }catch(e){} }
     return v && v.trim() ? v.trim() : null;
   }
-  // Silencioso -- nunca prompt() desde acá, este llamado sale de
-  // saveToStorage (efecto pasivo). Si no hay auth todavía, no hace nada;
-  // el botón "leer de repo" es el único lugar que pide el secret.
-  async function pushStateToRepo(payload){
-    const auth = getAngstStateAuth();
+  // Botón 📤, acción manual. Usa buildExportPayload() completo (32 campos
+  // -- los mismos que 💾 y que restoreFromPayload sabe leer) en vez del
+  // payload parcial de saveToStorage (23 campos, sin los 6 de Feed ni
+  // metadata) que usaba el viejo push automático -- ese desacople fue el
+  // bug del 25-sep. Con feedback en stateSyncMsg, igual que leerDeRepo.
+  async function pushStateToRepo(){
+    let auth = getAngstStateAuth();
+    if(!auth) auth = pedirAngstStateAuth();
     if(!auth) return;
+    setStateSyncMsg("guardando en el repo...");
+    const payload = buildExportPayload();
+    const post = (a) => fetch(ANGST_STATE_WORKER_URL, {
+      method: "POST",
+      headers: { "X-Angst-Auth": a, "Content-Type": "application/json" },
+      body: JSON.stringify({ path: ANGST_STATE_PATH, branch: ANGST_STATE_BRANCH, amend: true, payload }),
+    });
     try{
-      const resp = await fetch(ANGST_STATE_WORKER_URL, {
-        method: "POST",
-        headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
-        body: JSON.stringify({ path: ANGST_STATE_PATH, branch: ANGST_STATE_BRANCH, amend: true, payload }),
-      });
+      let resp = await post(auth);
       if(resp.status === 401){
-        // Secret guardado ya no matchea (se rotó del lado del Worker) --
-        // se limpia para que la próxima acción explícita (leerDeRepo, o
-        // cualquier otro botón que use la misma key) vuelva a pedirlo,
-        // en vez de seguir fallando en silencio para siempre con el viejo.
+        // Acción explícita -- tiene sentido volver a pedir el secret al
+        // toque, igual que ya hace leerDeRepo.
         try{ localStorage.removeItem(ANGST_STATE_AUTH_KEY); }catch(e){}
-        console.warn("Sync a Angst-data: AUTH_SECRET vencido, se limpió -- hace falta volver a pegarlo");
-      } else if(!resp.ok) {
-        console.warn("Sync a Angst-data falló:", resp.status);
+        auth = pedirAngstStateAuth();
+        if(!auth){ setStateSyncMsg("✗ sin AUTH_SECRET válido"); setTimeout(()=>setStateSyncMsg(null), 4000); return; }
+        resp = await post(auth);
       }
-    }catch(e){ console.warn("Sync a Angst-data falló:", e.message); }
-  }
-  // Debounce real -- cualquier cambio agenda un push a los 8s de
-  // inactividad; un cambio nuevo antes de eso reinicia el timer, así una
-  // sesión de edición seguida termina en UN solo push, no uno por tecla.
-  function scheduleStateSync(payload){
-    if(stateSyncTimerRef.current) clearTimeout(stateSyncTimerRef.current);
-    stateSyncTimerRef.current = setTimeout(()=>{ pushStateToRepo(payload); }, 8000);
+      if(!resp.ok){
+        setStateSyncMsg(`✗ el Worker respondió ${resp.status}`);
+        setTimeout(()=>setStateSyncMsg(null), 5000);
+        return;
+      }
+      setStateSyncMsg("✓ guardado en el repo");
+    }catch(e){
+      setStateSyncMsg(`✗ ${e.message}`);
+    }
+    setTimeout(()=>setStateSyncMsg(null), 4000);
   }
   async function leerDeRepo(){
     let auth = getAngstStateAuth();
@@ -488,6 +497,33 @@ function AngstApp() {
     }
     setTimeout(()=>setStateSyncMsg(null), 4000);
   }
+  // Lectura automática al abrir -- una sola vez al montar. Si ya hay
+  // AUTH_SECRET guardado, trae el estado del repo en silencio y lo aplica
+  // con restoreFromPayload (mismo aviso "✓ restaurado..." que ya usa 📥).
+  // Sin secret guardado no interrumpe con un prompt -- sigue con el
+  // estado local, como si el sync no existiera. Un 401 acá tampoco pide
+  // el secret de nuevo (sería un prompt() bloqueante en cada carga) -- se
+  // limpia en silencio, igual que hacía el viejo push automático.
+  const autoLeidoRef = useRef(false);
+  useEffect(()=>{
+    if(autoLeidoRef.current) return;
+    autoLeidoRef.current = true;
+    const auth = getAngstStateAuth();
+    if(!auth) return;
+    (async () => {
+      try{
+        const resp = await fetch(`${ANGST_STATE_WORKER_URL}?path=${ANGST_STATE_PATH}&branch=${ANGST_STATE_BRANCH}`, { headers: { "X-Angst-Auth": auth } });
+        if(resp.status === 401){
+          try{ localStorage.removeItem(ANGST_STATE_AUTH_KEY); }catch(e){}
+          return;
+        }
+        if(!resp.ok) return;
+        const d = await resp.json();
+        if(d.found === false) return;
+        restoreFromPayload(d, "Angst-data (auto)");
+      }catch(e){ /* offline u otro error de red -- se sigue con el estado local */ }
+    })();
+  }, []);
 
 
   useEffect(()=>{ dayDataRef.current  = dayData;   }, [dayData]);
@@ -811,10 +847,8 @@ function AngstApp() {
       await localSet("angst-v12", serialized);
       setSaved(true);
       setTimeout(()=>setSaved(false), 2000);
-      // Cualquier guardado local agenda un sync a Angst-data (debounced
-      // 8s, ver scheduleStateSync) -- reemplaza al watcher viejo de
-      // ">1KB de crecimiento" que solo disparaba el export local.
-      scheduleStateSync(payload);
+      // El sync a Angst-data ya no es automático desde acá -- es el botón
+      // 📤 (pushStateToRepo), manual, con buildExportPayload() completo.
     } catch(e) { console.warn("Save failed:", e); }
   }
 
@@ -1509,6 +1543,7 @@ function AngstApp() {
               📂<input type="file" accept=".xlsx,.xls,.json" onChange={handleLoad} style={{position:"absolute",inset:0,opacity:0,cursor:"pointer",width:"100%",height:"100%",fontSize:0}}/>
             </label>
             <button className={`disk-btn${exportOk===true?" ok":""}`} onClick={handleExport} title="Descargar backup .json">💾</button>
+            <button className="disk-btn" onClick={pushStateToRepo} title="Guardar el estado completo en Angst-data">📤</button>
             <button className="disk-btn" onClick={leerDeRepo} title="Leer el estado completo desde Angst-data">📥</button>
             {stateSyncMsg&&<span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:stateSyncMsg.startsWith("✓")?"#4caf50":"#f0a000",marginLeft:4}}>{stateSyncMsg}</span>}
             <div style={{position:"relative"}}>
