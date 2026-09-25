@@ -326,6 +326,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [editMode,       setEditMode]       = React.useState(false);
   const [editFields,     setEditFields]     = React.useState({});
   const [darkView,       setDarkView]       = React.useState("grid_small");
+  const [soloSinPrecio,  setSoloSinPrecio]  = React.useState(false); // filtro rápido por carpeta -- cartas con tcgMarket null
   const [autocolCarpeta, setAutocolCarpeta] = React.useState(null);
   const [allSets,        setAllSets]        = React.useState([]);
   const [allSetsLoading, setAllSetsLoading] = React.useState(false);
@@ -1822,18 +1823,35 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     // el fallback de snapshotInicial), no lo que costó conseguirla.
     const valorTotal=catMerged.reduce((s,d)=>s+(d.tcgMarket||0),0);
     const valorConseguido=catMerged.filter(d=>getEstadoDark(d)==="conseguida").reduce((s,d)=>s+(d.tcgMarket||0),0);
-    // Ojo: se arma a partir de cardIdsOrdenados (definido más abajo), no de
-    // catMerged crudo -- así el PDF sale agrupado por set, igual que la
-    // pantalla, en vez del orden de inserción del catálogo.
-    const porSet={};
+    // Filtro "sin precio" (23-sep-2026, a pedido de Cristopher: "revisar por
+    // qué algunas cartas no consiguen precio") -- cuenta siempre sobre TODA
+    // la carpeta (catMerged), independiente de si el filtro está prendido,
+    // para que el contador del botón no cambie al activarlo.
+    const sinPrecioCount=catMerged.filter(d=>d.tcgMarket==null).length;
+    // Agrupado SIEMPRE sobre catMerged completo (no el filtrado) -- de acá
+    // salen cardIdsOrdenados/faltantes, que alimentan tanto las flechas ‹›
+    // del detalle como la lista de impresión. El filtro de "sin precio" no
+    // debe achicar lo que se puede imprimir ni la navegación del detalle,
+    // solo qué se ve dibujado en la grilla (setGroups, más abajo).
+    const porSetFull={};
     catMerged.forEach(d=>{
+      const k=d.setId||d.setName||"Sin set";
+      if(!porSetFull[k]) porSetFull[k]={setName:d.setName||k,setId:d.setId||k,releaseDate:d.releaseDate||"",cards:[]};
+      porSetFull[k].cards.push(d);
+    });
+    const setGroupsFull=Object.values(porSetFull).sort((a,b)=>b.releaseDate.localeCompare(a.releaseDate));
+    const cardIdsOrdenados=setGroupsFull.flatMap(g=>g.cards.map(c=>c.cardId)); // orden real completo, para ‹› e impresión
+    const faltantes=cardIdsOrdenados.map(id=>catMerged.find(d=>d.cardId===id)).filter(d=>d&&getEstadoDark(d)!=="conseguida");
+    // Grilla visible: respeta el filtro "sin precio" cuando está prendido.
+    const catParaGrid=soloSinPrecio?catMerged.filter(d=>d.tcgMarket==null):catMerged;
+    const porSet={};
+    catParaGrid.forEach(d=>{
       const k=d.setId||d.setName||"Sin set";
       if(!porSet[k]) porSet[k]={setName:d.setName||k,setId:d.setId||k,releaseDate:d.releaseDate||"",cards:[]};
       porSet[k].cards.push(d);
     });
     const setGroups=Object.values(porSet).sort((a,b)=>b.releaseDate.localeCompare(a.releaseDate));
-    const cardIdsOrdenados=setGroups.flatMap(g=>g.cards.map(c=>c.cardId)); // orden real en pantalla, para las flechas ‹› del detalle
-    const faltantes=cardIdsOrdenados.map(id=>catMerged.find(d=>d.cardId===id)).filter(d=>d&&getEstadoDark(d)!=="conseguida");
+    const cardIdsGrid=setGroups.flatMap(g=>g.cards.map(c=>c.cardId)); // orden de lo VISIBLE (respeta soloSinPrecio), para ‹› desde la grilla
     const gridCols=darkView==="grid_small"?"repeat(auto-fill,minmax(58px,1fr))":darkView==="grid_med"?"repeat(auto-fill,minmax(88px,1fr))":null;
     const catLoading=allSetsLoading;
 
@@ -1874,8 +1892,16 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:"#aac756"}}>{Math.round(valorConseguido/valorTotal*100)}% del valor</div>
         </div>}
         {faltantes.length>0&&<button onClick={()=>imprimirFaltantes(faltantes,cat)}
-          style={{width:"100%",background:"transparent",border:"1px dashed #333",borderRadius:8,padding:"8px",marginBottom:10,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888",cursor:"pointer"}}>
+          style={{width:"100%",background:"transparent",border:"1px dashed #333",borderRadius:8,padding:"8px",marginBottom:8,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888",cursor:"pointer"}}>
           🖨️ imprimir {faltantes.length} faltante{faltantes.length===1?"":"s"} (placeholders A4)
+        </button>}
+        {/* Filtro "sin precio" (23-sep-2026) -- para revisar de un vistazo
+            cuáles no consiguieron precio en vez de escanear la grilla
+            entera a ojo. El contador cuenta siempre sobre la carpeta
+            completa (sinPrecioCount), el toggle solo cambia qué se dibuja. */}
+        {sinPrecioCount>0&&<button onClick={()=>setSoloSinPrecio(v=>!v)}
+          style={{width:"100%",background:soloSinPrecio?"#3a2a1a":"transparent",border:"1px dashed #5c4a2a",borderRadius:8,padding:"8px",marginBottom:10,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#c9a86a",cursor:"pointer"}}>
+          {soloSinPrecio?"✕ mostrando solo sin precio":"🔍"} {sinPrecioCount} sin precio{soloSinPrecio?"":" — tocar para filtrar"}
         </button>}
         <div style={{display:"flex",gap:6,marginBottom:10,alignItems:"center",flexWrap:"wrap"}}>
           {[["grid_small","⠿"],["grid_med","▦"],["lista","≡"]].map(([v,l])=>(
@@ -1920,9 +1946,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                 <div style={{height:"100%",width:`${cards.length>0?cons/cards.length*100:0}%`,background:"#2e7d52",borderRadius:99}}/>
               </div>
               {darkView==="lista"
-                ?<div>{cards.map(d=><DarkCard key={d.cardId} d={d} list={cardIdsOrdenados}/>)}</div>
+                ?<div>{cards.map(d=><DarkCard key={d.cardId} d={d} list={cardIdsGrid}/>)}</div>
                 :<div style={{display:"grid",gridTemplateColumns:gridCols,gap:darkView==="grid_small"?3:5}}>
-                  {cards.map(d=><DarkCard key={d.cardId} d={d} list={cardIdsOrdenados}/>)}
+                  {cards.map(d=><DarkCard key={d.cardId} d={d} list={cardIdsGrid}/>)}
                 </div>
               }
             </div>
