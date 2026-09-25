@@ -158,7 +158,27 @@ export default {
         return withCors(new Response(JSON.stringify({ error: "no se pudo leer", detail: errText }), { status: 502 }));
       }
       const getData = await getResp.json();
-      const decoded = decodeURIComponent(escape(atob(getData.content)));
+      let b64;
+      if (getData.encoding === "base64" && getData.content) {
+        // Camino rápido -- archivos <1MB (Simkl/podcasts/Pokécripto y la
+        // mayoría de las lecturas). Sin cambios de comportamiento acá.
+        b64 = getData.content;
+      } else {
+        // La Contents API omite `content` (encoding:"none") para archivos
+        // >1MB -- pasó con angst-full-state.json (2.46MB). La API de git
+        // de bajo nivel (ya usada en amendCommit) no tiene ese techo, sirve
+        // hasta 100MB: se pide el mismo blob por sha directo.
+        const blobResp = await gh(`/git/blobs/${getData.sha}`, ghHeaders);
+        if (!blobResp.ok) {
+          const errText = await blobResp.text();
+          return withCors(new Response(JSON.stringify({ error: "no se pudo leer el blob (archivo grande)", detail: errText }), { status: 502 }));
+        }
+        b64 = (await blobResp.json()).content;
+      }
+      // El blob de git viene con saltos de línea cada 60 caracteres --
+      // atob() los tolera en runtimes modernos (forgiving-base64), pero
+      // se limpian igual por las dudas.
+      const decoded = decodeURIComponent(escape(atob(b64.replace(/\s+/g, ""))));
       return withCors(new Response(decoded, {
         status: 200, headers: { "Content-Type": "application/json" },
       }));
