@@ -178,6 +178,16 @@ function AngstApp() {
           try { localStorage.setItem("angst-podcast-dispatched-v1", JSON.stringify(next)); } catch(e){}
           return next;
         });
+        // Misma poda para posiciones guardadas -- un guid que salió de la
+        // ventana no vuelve a aparecer, no tiene sentido guardar su avance.
+        try {
+          const positions = getPodcastPositions();
+          const pruned = {};
+          Object.keys(positions).forEach(g=>{ if(windowGuids.has(g)) pruned[g]=positions[g]; });
+          if(Object.keys(pruned).length !== Object.keys(positions).length){
+            localStorage.setItem(PODCAST_POSITIONS_KEY, JSON.stringify(pruned));
+          }
+        } catch(e){}
       })
       .catch(()=>{});
   }, []);
@@ -189,11 +199,54 @@ function AngstApp() {
       return next;
     });
   }
+  // Posición de reproducción por episodio -- para poder retomar un capítulo
+  // que no se terminó en una sesión. Guardado: debounced cada ~5s mientras
+  // suena (onTimeUpdate), y siempre en pausa/cierre/backgrounding (esos son
+  // checkpoints reales, no hace falta esperar el debounce ahí). Se borra al
+  // terminar el episodio (onEnded) -- no tiene sentido retomar algo ya visto.
+  const PODCAST_POSITIONS_KEY = "angst-podcast-positions-v1"; // {guid: segundos}
+  function getPodcastPositions(){
+    try { const v = localStorage.getItem(PODCAST_POSITIONS_KEY); return v ? JSON.parse(v) : {}; } catch(e) { return {}; }
+  }
+  function savePodcastPosition(guid, seconds){
+    if(!guid) return;
+    try {
+      const all = getPodcastPositions();
+      all[guid] = seconds;
+      localStorage.setItem(PODCAST_POSITIONS_KEY, JSON.stringify(all));
+    } catch(e){}
+  }
+  function clearPodcastPosition(guid){
+    if(!guid) return;
+    try {
+      const all = getPodcastPositions();
+      delete all[guid];
+      localStorage.setItem(PODCAST_POSITIONS_KEY, JSON.stringify(all));
+    } catch(e){}
+  }
+  function formatPodcastTime(s){
+    if(!isFinite(s) || s<0) s=0;
+    const m = Math.floor(s/60), sec = Math.floor(s%60);
+    return `${m}:${sec<10?"0":""}${sec}`;
+  }
+  const lastPosSaveRef = useRef(0);
   function closePodcastPlayer(){
+    if(nowPlaying?.guid && podcastAudioRef.current){
+      savePodcastPosition(nowPlaying.guid, podcastAudioRef.current.currentTime);
+    }
     setNowPlaying(null);
     setPodcastPlaying(false);
     setPodcastProgress({current:0, duration:0});
   }
+  useEffect(()=>{
+    function onVisibility(){
+      if(document.visibilityState === "hidden" && nowPlaying?.guid && podcastAudioRef.current){
+        savePodcastPosition(nowPlaying.guid, podcastAudioRef.current.currentTime);
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibility);
+    return ()=>document.removeEventListener("visibilitychange", onVisibility);
+  }, [nowPlaying]);
   const podcastShows = podcastLatest?.shows || [];
   const podcastPending = podcastShows.flatMap(s=>s.episodios||[]).filter(e=>!podcastDispatched.includes(e.guid));
 
@@ -242,14 +295,46 @@ function AngstApp() {
   // Drag del cuadrado flotante -- pointer events (cubre mouse y touch con
   // una sola API), clampeado para que no se pueda arrastrar fuera del
   // viewport. Se persiste en localStorage al soltar, no en cada frame.
+  // Seek manual: el círculo tiene dos zonas -- la corona externa (donde se
+  // ve el anillo de progreso) es para buscar posición arrastrando; el disco
+  // interior (con el ícono ▶/⏸) sigue siendo tap=play/pausa y drag=mover el
+  // widget, exactamente como antes.
+  function seekFromPointer(e, rect){
+    const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+    // +90° porque el SVG del anillo tiene transform:rotate(-90deg) -- frac 0
+    // queda arriba (12 en punto) y avanza en sentido horario, como se ve.
+    let shifted = Math.atan2(e.clientY-cy, e.clientX-cx) + Math.PI/2;
+    if(shifted < 0) shifted += 2*Math.PI;
+    const frac = shifted/(2*Math.PI);
+    const dur = podcastProgress.duration;
+    if(dur>0 && podcastAudioRef.current){
+      const target = Math.min(dur, Math.max(0, frac*dur));
+      podcastAudioRef.current.currentTime = target;
+      setPodcastProgress(p=>({...p, current:target}));
+    }
+  }
   function podcastPlayerPointerDown(e){
     const el = e.currentTarget;
     const rect = el.getBoundingClientRect();
-    dragState.current = { offsetX: e.clientX-rect.left, offsetY: e.clientY-rect.top, startX: e.clientX, startY: e.clientY, moved:false };
+    const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+    const dist = Math.hypot(e.clientX-cx, e.clientY-cy);
+    const R = (rect.width-3)/2; // debe matchear R del SVG (SIZE-STROKE)/2
+    if(dist >= R-10 && podcastProgress.duration>0){
+      dragState.current = { mode:"seek", moved:false, rect };
+      el.setPointerCapture(e.pointerId);
+      seekFromPointer(e, rect);
+      return;
+    }
+    dragState.current = { mode:"move", offsetX: e.clientX-rect.left, offsetY: e.clientY-rect.top, startX: e.clientX, startY: e.clientY, moved:false };
     el.setPointerCapture(e.pointerId);
   }
   function podcastPlayerPointerMove(e){
     if(!dragState.current) return;
+    if(dragState.current.mode === "seek"){
+      dragState.current.moved = true;
+      seekFromPointer(e, dragState.current.rect);
+      return;
+    }
     if(!dragState.current.moved && Math.hypot(e.clientX-dragState.current.startX, e.clientY-dragState.current.startY) < 4) return;
     dragState.current.moved = true;
     const size = 56;
@@ -259,8 +344,13 @@ function AngstApp() {
   }
   function podcastPlayerPointerUp(e){
     if(!dragState.current) return;
+    const wasSeek = dragState.current.mode === "seek";
     const wasDrag = dragState.current.moved;
     dragState.current = null;
+    if(wasSeek){
+      if(nowPlaying?.guid && podcastAudioRef.current) savePodcastPosition(nowPlaying.guid, podcastAudioRef.current.currentTime);
+      return;
+    }
     try { if(playerPos) localStorage.setItem("angst-podcast-player-pos-v1", JSON.stringify(playerPos)); } catch(err){}
     if(!wasDrag){
       // click sin arrastre real -- togglea play/pause
@@ -1913,7 +2003,9 @@ function AngstApp() {
           const SIZE=56, STROKE=3, R=(SIZE-STROKE)/2, CIRC=2*Math.PI*R;
           const frac = podcastProgress.duration>0 ? Math.min(1, podcastProgress.current/podcastProgress.duration) : 0;
           const pos = playerPos || {x: window.innerWidth-SIZE-16, y: window.innerHeight-SIZE-90};
+          const labelBelow = (pos.y + SIZE + 14) <= window.innerHeight;
           return (
+            <>
             <div
               onPointerDown={podcastPlayerPointerDown}
               onPointerMove={podcastPlayerPointerMove}
@@ -1934,13 +2026,37 @@ function AngstApp() {
                 title="cerrar reproductor (guarda el avance)"
                 style={{position:"absolute",top:-6,right:-6,width:16,height:16,borderRadius:"50%",background:"#222",border:"1px solid #444",color:"#888",fontSize:10,lineHeight:1,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>×</button>
               <audio ref={podcastAudioRef} autoPlay src={nowPlaying.audioUrl} style={{display:"none"}}
-                onEnded={closePodcastPlayer}
+                onEnded={()=>{ if(nowPlaying?.guid) clearPodcastPosition(nowPlaying.guid); closePodcastPlayer(); }}
                 onPlay={()=>setPodcastPlaying(true)}
-                onPause={()=>setPodcastPlaying(false)}
-                onTimeUpdate={e=>setPodcastProgress({current:e.target.currentTime, duration:e.target.duration||0})}
-                onLoadedMetadata={e=>setPodcastProgress(p=>({...p, duration:e.target.duration||0}))}
+                onPause={()=>{
+                  setPodcastPlaying(false);
+                  if(nowPlaying?.guid && podcastAudioRef.current) savePodcastPosition(nowPlaying.guid, podcastAudioRef.current.currentTime);
+                }}
+                onTimeUpdate={e=>{
+                  const cur = e.target.currentTime;
+                  setPodcastProgress(p=>({...p, current:cur}));
+                  const now = Date.now();
+                  if(nowPlaying?.guid && now-lastPosSaveRef.current>5000){
+                    lastPosSaveRef.current = now;
+                    savePodcastPosition(nowPlaying.guid, cur);
+                  }
+                }}
+                onLoadedMetadata={e=>{
+                  const dur = e.target.duration||0;
+                  setPodcastProgress(p=>({...p, duration:dur}));
+                  const saved = nowPlaying?.guid ? getPodcastPositions()[nowPlaying.guid] : null;
+                  if(saved && saved>2 && dur>0 && saved<dur-3){
+                    e.target.currentTime = saved;
+                  }
+                }}
               />
             </div>
+            {podcastProgress.duration>0&&(
+              <div style={{position:"fixed",left:pos.x,top:labelBelow?pos.y+SIZE+2:pos.y-14,width:SIZE,textAlign:"center",fontSize:9,fontFamily:"'DM Sans',sans-serif",color:"#ccc",textShadow:"0 1px 2px #000",zIndex:600,pointerEvents:"none",userSelect:"none"}}>
+                {formatPodcastTime(podcastProgress.current)} / {formatPodcastTime(podcastProgress.duration)}
+              </div>
+            )}
+            </>
           );
         })()}
       </div>
