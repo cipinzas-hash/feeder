@@ -1435,6 +1435,12 @@ var __angst = (() => {
       );
     }), /* @__PURE__ */ React.createElement("circle", { cx, cy, r: 8, fill: "#fff" }), /* @__PURE__ */ React.createElement("line", { x1: 4, y1: cy, x2: 40, y2: cy, stroke: filled > 0 ? "#111" : "#ddd", strokeWidth: "1.5" }), /* @__PURE__ */ React.createElement("circle", { cx, cy, r: 4, fill: "#fff", stroke: filled > 0 ? "#111" : "#ddd", strokeWidth: "1.5" })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb", letterSpacing: 2, textTransform: "uppercase" } }, "buscando"));
   }
+  var ART_CLIP = "inset(9% 6% 41% 6%)";
+  function DarkArt({ src, alt, cons, wrapStyle, imgFit }) {
+    if (cons) return /* @__PURE__ */ React.createElement("img", { src, alt, style: { ...wrapStyle, filter: "none", display: "block" } });
+    const base = { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: imgFit || "cover", display: "block" };
+    return /* @__PURE__ */ React.createElement("div", { style: { position: "relative", overflow: "hidden", ...wrapStyle } }, /* @__PURE__ */ React.createElement("img", { src, alt, style: { ...base, position: "static", filter: "grayscale(1) brightness(0.6)" } }), /* @__PURE__ */ React.createElement("img", { src, alt: "", "aria-hidden": "true", style: { ...base, clipPath: ART_CLIP, pointerEvents: "none" } }));
+  }
   var USD_CLP = 1e3;
   var CONDICIONES = ["NM", "LP", "MP", "HP", "DMG"];
   var CARPETAS_DEFAULT = ["MLP", "Staples & Meta", "Dark Collection", "Price Watch"];
@@ -2410,7 +2416,7 @@ var __angst = (() => {
         setDarkDetailList(list || []);
       });
       const press = bindLongPress(d.imageHd || d.image);
-      if (darkView === "lista") return /* @__PURE__ */ React.createElement("div", { onClick: abrir, ...press, style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: "1px solid #f0f0f0", cursor: "pointer" } }, d.image && /* @__PURE__ */ React.createElement("img", { src: d.image, style: { width: 36, borderRadius: 4, flexShrink: 0, filter: cons ? "none" : "grayscale(1) brightness(0.6)" } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: cons ? "#111" : "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: cons ? 600 : 400 } }, d.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, "#", d.number)), d.tcgMarket && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 14, fontWeight: 700, color: "#5c9cff", flexShrink: 0 } }, fmtUSD(d.tcgMarket)), /* @__PURE__ */ React.createElement("div", { style: { width: 18, height: 18, borderRadius: "50%", border: `1.5px solid ${cons ? "#2e7d52" : "#ddd"}`, background: cons ? "#2e7d52" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, cons && /* @__PURE__ */ React.createElement("span", { style: { color: "#fff", fontSize: 9, fontWeight: 700 } }, "\u2713")));
+      if (darkView === "lista") return /* @__PURE__ */ React.createElement("div", { onClick: abrir, ...press, style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: "1px solid #f0f0f0", cursor: "pointer" } }, d.image && /* @__PURE__ */ React.createElement(DarkArt, { src: d.image, alt: d.name, cons, wrapStyle: { width: 36, borderRadius: 4, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: cons ? "#111" : "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: cons ? 600 : 400 } }, d.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, "#", d.number)), d.tcgMarket && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 14, fontWeight: 700, color: "#5c9cff", flexShrink: 0 } }, fmtUSD(d.tcgMarket)), /* @__PURE__ */ React.createElement("div", { style: { width: 18, height: 18, borderRadius: "50%", border: `1.5px solid ${cons ? "#2e7d52" : "#ddd"}`, background: cons ? "#2e7d52" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, cons && /* @__PURE__ */ React.createElement("span", { style: { color: "#fff", fontSize: 9, fontWeight: 700 } }, "\u2713")));
       const isSmall = darkView === "grid_small";
       return /* @__PURE__ */ React.createElement(
         "div",
@@ -2426,7 +2432,7 @@ var __angst = (() => {
             boxShadow: cons ? "0 2px 8px rgba(46,125,82,0.3)" : "0 1px 3px rgba(0,0,0,0.1)"
           }
         },
-        d.image ? /* @__PURE__ */ React.createElement("img", { src: d.image, alt: d.name, style: { width: "100%", display: "block", filter: cons ? "none" : "grayscale(1) brightness(0.6)" } }) : /* @__PURE__ */ React.createElement("div", { style: { aspectRatio: "2/3", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 } }, "\u26AB"),
+        d.image ? /* @__PURE__ */ React.createElement(DarkArt, { src: d.image, alt: d.name, cons, wrapStyle: { width: "100%" } }) : /* @__PURE__ */ React.createElement("div", { style: { aspectRatio: "2/3", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 } }, "\u26AB"),
         cons && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 2, right: 2, background: "#2e7d52", borderRadius: "50%", width: isSmall ? 12 : 16, height: isSmall ? 12 : 16, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#fff", fontSize: isSmall ? 7 : 9, fontWeight: 700 } }, "\u2713")),
         /* @__PURE__ */ React.createElement("div", { style: { background: "rgba(0,0,0,0.7)", padding: isSmall ? "2px 3px" : "3px 4px", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: isSmall ? 8 : 9, color: "#aac756" } }, d.number), !isSmall && d.tcgMarket && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 8, color: "#5c9cff" } }, fmtUSD(d.tcgMarket)))
       );
@@ -9824,9 +9830,9 @@ Toco reintentar ahora.`);
       if (changed) {
         setDayData(newDayData);
         dayDataRef.current = newDayData;
-        saveToStorage({ dayData: newDayData, lastRollover: todayKey });
+        saveToStorage({ dayData: newDayData, lastRollover: todayKey }, { skipEditMark: true });
       } else if (lr !== todayKey) {
-        saveToStorage({ lastRollover: todayKey });
+        saveToStorage({ lastRollover: todayKey }, { skipEditMark: true });
       }
     }
     useEffect8(() => {
@@ -10057,7 +10063,7 @@ Toco reintentar ahora.`);
       }
       load();
     }, []);
-    async function saveToStorage(overrides = {}) {
+    async function saveToStorage(overrides = {}, opts = {}) {
       const payload = {
         dayData: overrides.dayData ?? dayDataRef.current,
         weekOffset: overrides.weekOffset ?? weekOffsetRef.current,
@@ -10087,7 +10093,7 @@ Toco reintentar ahora.`);
       try {
         const serialized = JSON.stringify(payload);
         await localSet("angst-v12", serialized);
-        markLocalEdit();
+        if (!opts.skipEditMark) markLocalEdit();
         setSaved(true);
         setTimeout(() => setSaved(false), 2e3);
       } catch (e) {

@@ -699,9 +699,9 @@ function AngstApp() {
     if(changed) {
       setDayData(newDayData);
       dayDataRef.current = newDayData;
-      saveToStorage({dayData: newDayData, lastRollover: todayKey});
+      saveToStorage({dayData: newDayData, lastRollover: todayKey}, {skipEditMark:true});
     } else if(lr !== todayKey) {
-      saveToStorage({lastRollover: todayKey});
+      saveToStorage({lastRollover: todayKey}, {skipEditMark:true});
     }
   }
 
@@ -866,7 +866,7 @@ function AngstApp() {
   },[]);
 
   // Save to storage
-  async function saveToStorage(overrides={}) {
+  async function saveToStorage(overrides={}, opts={}) {
     const payload = {
       dayData:    overrides.dayData    ?? dayDataRef.current,
       weekOffset: overrides.weekOffset ?? weekOffsetRef.current,
@@ -896,7 +896,13 @@ function AngstApp() {
     try {
       const serialized = JSON.stringify(payload);
       await localSet("angst-v12", serialized);
-      markLocalEdit();
+      // El rollover diario (housekeeping, corre solo al montar / al volver
+      // a foreground) llama a saveToStorage aunque no haya edición real --
+      // en un navegador nuevo eso marcaba "edición local" con cero datos
+      // reales, y el guard de repoEsMasNuevo() terminaba bloqueando
+      // cualquier lectura del repo (bug real, 26-sep-2026). opts.skipEditMark
+      // lo evita para esos dos llamados puntuales.
+      if(!opts.skipEditMark) markLocalEdit();
       setSaved(true);
       setTimeout(()=>setSaved(false), 2000);
       // El sync a Angst-data ya no es automático desde acá -- es el botón
