@@ -72,7 +72,13 @@ async function main() {
   const html = HTML_HEAD + bundledJS + expose + HTML_TAIL;
   mkdirSync("dist", { recursive: true });
   writeFileSync("dist/angst-modular.html", html);
-  console.log(`OK -> dist/angst-modular.html (${(html.length / 1024).toFixed(1)} KB)`);
+  // index.html en la raíz es lo que sirve GitHub Pages -- hasta el
+  // 26-sep-2026 este script solo escribía dist/ (gitignored), así que
+  // ningún deploy desde acá llegaba nunca a la app en vivo pese a que
+  // "pages build and deployment" mostraba success (publicaba el
+  // index.html viejo, sin cambios). Se escriben los dos siempre.
+  writeFileSync("index.html", html);
+  console.log(`OK -> dist/angst-modular.html + index.html (${(html.length / 1024).toFixed(1)} KB)`);
 }
 
 main().catch((e) => {

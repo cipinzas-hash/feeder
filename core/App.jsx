@@ -421,6 +421,28 @@ function AngstApp() {
   const ANGST_STATE_PATH = "angst-full-state.json";
   const ANGST_STATE_BRANCH = "state-sync";
   const [stateSyncMsg, setStateSyncMsg] = useState(null);
+  // Guard contra pisar edición local más nueva con un repo más viejo
+  // (26-sep-2026 -- pasó de verdad: la lectura automática al abrir bajó
+  // el snapshot sembrado a las 09:56 y pisó datos locales posteriores).
+  // LOCAL_EDIT_KEY se actualiza en cada saveToStorage; se compara contra
+  // exportedAt del payload del repo (lo pone buildExportPayload() en cada
+  // 📤). Si no hay edición local guardada todavía, no hay nada que
+  // perder -- se procede. Si el repo no trae exportedAt (formato viejo),
+  // se trata como "no seguro" antes que arriesgar.
+  const LOCAL_EDIT_KEY = "angst-last-local-edit-v1";
+  function markLocalEdit(){
+    try{ localStorage.setItem(LOCAL_EDIT_KEY, new Date().toISOString()); }catch(e){}
+  }
+  function getLastLocalEdit(){
+    try{ return localStorage.getItem(LOCAL_EDIT_KEY); }catch(e){ return null; }
+  }
+  function repoEsMasNuevo(payload){
+    const localTs = getLastLocalEdit();
+    if(!localTs) return true;
+    if(!payload || !payload.exportedAt) return false;
+    return new Date(payload.exportedAt).getTime() > new Date(localTs).getTime();
+  }
+  const forceRepoReadRef = useRef(false);
   function getAngstStateAuth(){ try{ return localStorage.getItem(ANGST_STATE_AUTH_KEY)||null; }catch(e){ return null; } }
   function pedirAngstStateAuth(){
     const v = prompt("Pegá el AUTH_SECRET del Worker (el mismo que Simkl/podcasts/Pokécripto, una sola vez):");
@@ -507,6 +529,14 @@ function AngstApp() {
       }
       const d = await resp.json();
       if(d.found === false){ setStateSyncMsg("nada guardado todavía en el repo"); setTimeout(()=>setStateSyncMsg(null), 4000); return; }
+      if(!repoEsMasNuevo(d) && !forceRepoReadRef.current){
+        setStateSyncMsg("⚠ tu edición local parece más nueva que el repo -- tocá 📥 de nuevo para traer igual");
+        forceRepoReadRef.current = true;
+        setTimeout(()=>{ forceRepoReadRef.current = false; }, 8000);
+        setTimeout(()=>setStateSyncMsg(null), 8000);
+        return;
+      }
+      forceRepoReadRef.current = false;
       if(restoreFromPayload(d, "Angst-data")){
         setStateSyncMsg("✓ restaurado desde el repo");
       } else {
@@ -540,6 +570,7 @@ function AngstApp() {
         if(!resp.ok) return;
         const d = await resp.json();
         if(d.found === false) return;
+        if(!repoEsMasNuevo(d)) return;
         restoreFromPayload(d, "Angst-data (auto)");
       }catch(e){ /* offline u otro error de red -- se sigue con el estado local */ }
     })();
@@ -865,6 +896,7 @@ function AngstApp() {
     try {
       const serialized = JSON.stringify(payload);
       await localSet("angst-v12", serialized);
+      markLocalEdit();
       setSaved(true);
       setTimeout(()=>setSaved(false), 2000);
       // El sync a Angst-data ya no es automático desde acá -- es el botón
