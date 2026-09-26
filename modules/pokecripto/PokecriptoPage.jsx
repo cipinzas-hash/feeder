@@ -31,6 +31,33 @@ function PokeLoader({ active }) {
   );
 }
 
+// ─── DarkArt: ventana de ilustración a color sobre carta en blanco y negro ────
+// Pedido 26-sep-2026: mantener el marcador de "no conseguida" (b/n) pero
+// dejar reconocible la ilustración para no depender de leer el nombre.
+// Técnica: misma imagen duplicada encima, sin filtro, recortada con
+// clip-path a la zona de arte. ART_CLIP es una aproximación para frame
+// estándar (mayoría de Chaos Rising/Perfect Order) -- las variantes
+// full-art/illustration rare (ya hay en el inventario general, ver Hyper
+// Rare/Special Illustration Rare) NO calzan con este recorte, el arte les
+// ocupa casi toda la carta. Decisión consciente (conversación 26-sep-2026):
+// mejor la mayoría bien que ninguna: si hace falta afinar, tocar solo esta
+// constante. Ajustar acá primero si algún set nuevo se ve mal encuadrado.
+// Solo se usa en lista/grilla (donde hay que identificar entre muchas) --
+// el modal de detalle no lo necesita, ahí ya sabés qué carta abriste, y
+// el maxHeight+objectFit:"contain" de esa vista mete letterboxing que
+// rompería el alineado del recorte.
+const ART_CLIP = "inset(9% 6% 41% 6%)";
+function DarkArt({src,alt,cons,wrapStyle,imgFit}){
+  if(cons) return <img src={src} alt={alt} style={{...wrapStyle,filter:"none",display:"block"}}/>;
+  const base={position:"absolute",inset:0,width:"100%",height:"100%",objectFit:imgFit||"cover",display:"block"};
+  return (
+    <div style={{position:"relative",overflow:"hidden",...wrapStyle}}>
+      <img src={src} alt={alt} style={{...base,position:"static",filter:"grayscale(1) brightness(0.6)"}}/>
+      <img src={src} alt="" aria-hidden="true" style={{...base,clipPath:ART_CLIP,pointerEvents:"none"}}/>
+    </div>
+  );
+}
+
 // ─── PokeCripto — constantes y helpers ────────────────────────────────────────
 const USD_CLP = 1000;
 const CONDICIONES = ["NM","LP","MP","HP","DMG"];
@@ -1064,7 +1091,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const press=bindLongPress(d.imageHd||d.image);
     if(darkView==="lista") return(
       <div onClick={abrir} {...press} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",borderBottom:"1px solid #f0f0f0",cursor:"pointer"}}>
-        {d.image&&<img src={d.image} style={{width:36,borderRadius:4,flexShrink:0,filter:cons?"none":"grayscale(1) brightness(0.6)"}}/>}
+        {d.image&&<DarkArt src={d.image} alt={d.name} cons={cons} wrapStyle={{width:36,borderRadius:4,flexShrink:0}}/>}
         <div style={{flex:1,minWidth:0}}>
           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:cons?"#111":"#888",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontWeight:cons?600:400}}>{d.name}</div>
           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>#{d.number}</div>
@@ -1082,7 +1109,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           border:cons?"2px solid #2e7d52":"2px solid transparent",
           boxShadow:cons?"0 2px 8px rgba(46,125,82,0.3)":"0 1px 3px rgba(0,0,0,0.1)"}}>
         {d.image
-          ?<img src={d.image} alt={d.name} style={{width:"100%",display:"block",filter:cons?"none":"grayscale(1) brightness(0.6)"}}/>
+          ?<DarkArt src={d.image} alt={d.name} cons={cons} wrapStyle={{width:"100%"}}/>
           :<div style={{aspectRatio:"2/3",background:"#1a1a1a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>⚫</div>
         }
         {cons&&<div style={{position:"absolute",top:2,right:2,background:"#2e7d52",borderRadius:"50%",width:isSmall?12:16,height:isSmall?12:16,display:"flex",alignItems:"center",justifyContent:"center"}}>
