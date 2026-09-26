@@ -432,16 +432,29 @@ function AngstApp() {
   // payload parcial de saveToStorage (23 campos, sin los 6 de Feed ni
   // metadata) que usaba el viejo push automático -- ese desacople fue el
   // bug del 25-sep. Con feedback en stateSyncMsg, igual que leerDeRepo.
+  //
+  // Además del "live" (amend -- reescribe el mismo commit, cero
+  // historial), un segundo commit NORMAL (sin amend, sin force) a
+  // state-backups/angst-full-state-<fecha local>.json -- mismo patrón de
+  // fecha que ya usa el resto de la app (d.getFullYear()+"-"+mes+"-"+día).
+  // El Worker ya sabe hacer esto: su camino sin amend (PUT vía Contents
+  // API) es un commit normal de verdad -- probado a mano contra Angst-data
+  // con el backup real de 3.2MB, sin problema (el límite de 1MB de la
+  // Contents API es solo de LECTURA -- de ahí el bug del "unexpected" de
+  // antes -- no de escritura). No hace falta tocar el Worker para esto.
+  // Es la red real contra un guardado "live" pisado por error: un archivo
+  // por día, con historial de verdad en git, recuperable con
+  // git log/checkout aunque el "live" quede mal.
   async function pushStateToRepo(){
     let auth = getAngstStateAuth();
     if(!auth) auth = pedirAngstStateAuth();
     if(!auth) return;
     setStateSyncMsg("guardando en el repo...");
     const payload = buildExportPayload();
-    const post = (a) => fetch(ANGST_STATE_WORKER_URL, {
+    const post = (a, extra) => fetch(ANGST_STATE_WORKER_URL, {
       method: "POST",
       headers: { "X-Angst-Auth": a, "Content-Type": "application/json" },
-      body: JSON.stringify({ path: ANGST_STATE_PATH, branch: ANGST_STATE_BRANCH, amend: true, payload }),
+      body: JSON.stringify({ path: ANGST_STATE_PATH, branch: ANGST_STATE_BRANCH, amend: true, payload, ...extra }),
     });
     try{
       let resp = await post(auth);
@@ -458,11 +471,18 @@ function AngstApp() {
         setTimeout(()=>setStateSyncMsg(null), 5000);
         return;
       }
-      setStateSyncMsg("✓ guardado en el repo");
+      const now = new Date();
+      const dateKey = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+      let backupOk = true;
+      try{
+        const backupResp = await post(auth, { path: `state-backups/angst-full-state-${dateKey}.json`, amend: false });
+        backupOk = backupResp.ok;
+      }catch(e){ backupOk = false; }
+      setStateSyncMsg(backupOk ? "✓ guardado en el repo (con historial)" : "✓ guardado -- backup con historial falló");
     }catch(e){
       setStateSyncMsg(`✗ ${e.message}`);
     }
-    setTimeout(()=>setStateSyncMsg(null), 4000);
+    setTimeout(()=>setStateSyncMsg(null), 5000);
   }
   async function leerDeRepo(){
     let auth = getAngstStateAuth();
