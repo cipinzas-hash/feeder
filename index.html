@@ -5818,40 +5818,7 @@ var __angst = (() => {
     const [deckMenuOpen, setDeckMenuOpen] = useState5(false);
     const [deckEditor, setDeckEditor] = useState5(null);
     const [collapsedMeals, setCollapsedMeals] = useState5({});
-    const [apiFoodResults, setApiFoodResults] = useState5([]);
     const [moveMenuOpen, setMoveMenuOpen] = useState5(null);
-    const [apiLoading, setApiLoading] = useState5(false);
-    const NUTRICION_DB_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/nutricion.json";
-    const NUTRICION_DB_CACHE_KEY = "angst-nutricion-db-v1";
-    const NUTRICION_DB_MAX_AGE_MS = 7 * 864e5;
-    const [foodsDb, setFoodsDb] = useState5(null);
-    useEffect5(() => {
-      let cancelled = false;
-      let cachedGeneratedAt = null;
-      try {
-        const raw = localStorage.getItem(NUTRICION_DB_CACHE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (!cancelled) setFoodsDb(parsed.foods || []);
-          cachedGeneratedAt = parsed.generatedAt;
-        }
-      } catch (e) {
-      }
-      const isStale = !cachedGeneratedAt || Date.now() - new Date(cachedGeneratedAt).getTime() > NUTRICION_DB_MAX_AGE_MS;
-      if (!isStale) return;
-      fetch(NUTRICION_DB_URL).then((r) => r.json()).then((data) => {
-        if (cancelled || !data?.foods) return;
-        setFoodsDb(data.foods);
-        try {
-          localStorage.setItem(NUTRICION_DB_CACHE_KEY, JSON.stringify(data));
-        } catch (e) {
-        }
-      }).catch(() => {
-      });
-      return () => {
-        cancelled = true;
-      };
-    }, []);
     const log = nutriLog[dateKey] || [];
     const totalKcal = Math.round(log.reduce((a, e) => a + e.kcal * e.qty, 0));
     const totalProt = parseFloat(log.reduce((a, e) => a + e.prot * e.qty, 0).toFixed(1));
@@ -5899,7 +5866,8 @@ var __angst = (() => {
     }
     const PORTION_TYPES = [{ k: "", label: "tap directo" }, { k: "weight100", label: "por 50g" }, { k: "size", label: "S/M/L" }, { k: "fraction", label: "fracci\xF3n" }, { k: "calibre", label: "calibre+fracci\xF3n" }];
     function getMergedFoods(catKey) {
-      const base = (NUTRI_FOODS[catKey] || []).map((f) => ({ ...f, ...(foodOverrides || {})[f.id] || {} }));
+      const allBase = NUTRI_CATS.flatMap((c) => (NUTRI_FOODS[c.k] || []).map((f) => ({ ...f, catKey: c.k, ...(foodOverrides || {})[f.id] || {} })));
+      const base = allBase.filter((f) => (f.cat || f.catKey) === catKey);
       const custom = Object.values(customFoods || {}).filter((f) => f.cat === catKey);
       return [...base, ...custom];
     }
@@ -5907,14 +5875,14 @@ var __angst = (() => {
       return NUTRI_CATS.flatMap((c) => getMergedFoods(c.k).map((f) => ({ ...f, catKey: c.k })));
     }
     function openEditModal(food, catKey) {
-      setEditModal({ food: { ...food }, isNew: false, catKey });
+      setEditModal({ food: { ...food }, isNew: false, isCustom: !!(customFoods || {})[food.id], catKey });
     }
     function openNewModal(catKey, prefillName) {
-      setEditModal({ food: { id: "custom-" + Date.now(), emoji: "\u{1F37D}\uFE0F", name: prefillName || "", prep: "", kcal: 0, prot: 0, unit: "unidad", portionType: "", cat: catKey }, isNew: true, catKey });
+      setEditModal({ food: { id: "custom-" + Date.now(), emoji: "\u{1F37D}\uFE0F", name: prefillName || "", prep: "", kcal: 0, prot: 0, unit: "unidad", portionType: "", cat: catKey }, isNew: true, isCustom: true, catKey });
     }
     function saveEdit() {
-      const { food, isNew } = editModal;
-      if (isNew) {
+      const { food, isCustom } = editModal;
+      if (isCustom) {
         saveCustomFoods({ ...customFoods || {}, [food.id]: food });
       } else {
         saveFoodOverrides({ ...foodOverrides || {}, [food.id]: food });
@@ -6002,30 +5970,6 @@ var __angst = (() => {
     const barStyle = (pct, color) => ({ width: `${pct}%`, height: "100%", background: color, borderRadius: 99, transition: "width 0.4s" });
     const trackStyle = { height: 6, background: "#eee", borderRadius: 99, overflow: "hidden", marginTop: 6 };
     const searchResults = searchQuery.trim() ? allFoodsFlat().filter((f) => normalizeSearchText(f.name).includes(normalizeSearchText(searchQuery))).slice(0, 6) : [];
-    function normalizeApiFood(item, idx) {
-      return { id: `db-${item.fdcId ?? idx}`, emoji: "\u{1F310}", name: item.name, prep: "USDA FoodData Central", kcal: item.kcal || 0, prot: item.prot || 0, unit: "porci\xF3n", portionType: "", cat: "otros", catKey: "otros", source: "db" };
-    }
-    useEffect5(() => {
-      const q = searchQuery.trim();
-      if (q.length < 3 || !foodsDb) {
-        setApiFoodResults([]);
-        setApiLoading(false);
-        return;
-      }
-      const localNorm = allFoodsFlat().map((f) => normalizeSearchText(f.name));
-      const qNorm = normalizeSearchText(q);
-      const localMatch = localNorm.some((n) => n.includes(qNorm));
-      if (localMatch && searchResults.length >= 3) {
-        setApiFoodResults([]);
-        setApiLoading(false);
-        return;
-      }
-      setApiLoading(true);
-      const hits = foodsDb.filter((f) => normalizeSearchText(f.name).includes(qNorm));
-      const normalized = hits.map(normalizeApiFood).filter((f) => f.name && !localNorm.includes(normalizeSearchText(f.name))).slice(0, 6);
-      setApiFoodResults(normalized);
-      setApiLoading(false);
-    }, [searchQuery, dateKey, foodsDb]);
     function inferDeckMeal(items) {
       const counts = {};
       (items || []).forEach((it) => {
@@ -6243,7 +6187,7 @@ var __angst = (() => {
         m.emoji,
         " ",
         m.label
-      )))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, de.items.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#ddd", fontStyle: "italic", padding: "4px 2px" } }, "sin alimentos todav\xEDa") : de.items.map((e) => /* @__PURE__ */ React.createElement("div", { key: e.uid, style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16, flexShrink: 0 } }, e.emoji), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333", fontWeight: 600 } }, e.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, "\xD7", e.qty, " ", e.unit, " \xB7 ", Math.round(e.kcal * e.qty), "kcal")), /* @__PURE__ */ React.createElement("button", { onClick: () => removeDeckItem(e.uid), style: { background: "transparent", border: "none", color: "#ddd", fontSize: 16, cursor: "pointer", padding: "0 2px", lineHeight: 1 } }, "\xD7")))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "agregar alimento al mazo"), searchQuery.trim() && /* @__PURE__ */ React.createElement("div", { style: { border: "1.5px dashed #111", borderRadius: 10, marginBottom: 8, overflow: "hidden", background: "#fff" } }, searchResults.map((food) => /* @__PURE__ */ React.createElement("div", { key: food.catKey + "-" + food.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("span", { onClick: () => openModal(food), style: { fontSize: 16, flexShrink: 0, cursor: "pointer" } }, food.emoji), /* @__PURE__ */ React.createElement("div", { onClick: () => openModal(food), style: { flex: 1, minWidth: 0, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333", fontWeight: 600 } }, food.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, food.kcal, "kcal \xB7 ", food.prot, "g / ", food.unit)))), apiLoading && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#aaa" } }, "buscando fuera de tu registro\u2026"), apiFoodResults.map((food) => /* @__PURE__ */ React.createElement("div", { key: food.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderTop: "1px dashed #f0f0f0", background: "#fcfcfc" } }, /* @__PURE__ */ React.createElement("span", { onClick: () => openModal(food), style: { fontSize: 16, flexShrink: 0, cursor: "pointer" } }, food.emoji), /* @__PURE__ */ React.createElement("div", { onClick: () => openModal(food), style: { flex: 1, minWidth: 0, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333", fontWeight: 600 } }, food.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#9aa" } }, food.kcal, "kcal \xB7 ", food.prot, "g \xB7 api")))), searchResults.length === 0 && apiFoodResults.length === 0 && !apiLoading && /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 14px", fontFamily: "'Caveat',cursive", fontSize: 14, color: "#bbb" } }, 'sin resultados \u2014 prob\xE1 desde "explorar por categor\xEDa"')), /* @__PURE__ */ React.createElement(
+      )))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, de.items.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#ddd", fontStyle: "italic", padding: "4px 2px" } }, "sin alimentos todav\xEDa") : de.items.map((e) => /* @__PURE__ */ React.createElement("div", { key: e.uid, style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16, flexShrink: 0 } }, e.emoji), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333", fontWeight: 600 } }, e.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, "\xD7", e.qty, " ", e.unit, " \xB7 ", Math.round(e.kcal * e.qty), "kcal")), /* @__PURE__ */ React.createElement("button", { onClick: () => removeDeckItem(e.uid), style: { background: "transparent", border: "none", color: "#ddd", fontSize: 16, cursor: "pointer", padding: "0 2px", lineHeight: 1 } }, "\xD7")))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "agregar alimento al mazo"), searchQuery.trim() && /* @__PURE__ */ React.createElement("div", { style: { border: "1.5px dashed #111", borderRadius: 10, marginBottom: 8, overflow: "hidden", background: "#fff" } }, searchResults.map((food) => /* @__PURE__ */ React.createElement("div", { key: food.catKey + "-" + food.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("span", { onClick: () => openModal(food), style: { fontSize: 16, flexShrink: 0, cursor: "pointer" } }, food.emoji), /* @__PURE__ */ React.createElement("div", { onClick: () => openModal(food), style: { flex: 1, minWidth: 0, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333", fontWeight: 600 } }, food.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, food.kcal, "kcal \xB7 ", food.prot, "g / ", food.unit)))), searchResults.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 14px", fontFamily: "'Caveat',cursive", fontSize: 14, color: "#bbb" } }, 'sin resultados \u2014 prob\xE1 desde "explorar por categor\xEDa"')), /* @__PURE__ */ React.createElement(
         "input",
         {
           value: searchQuery,
@@ -6324,7 +6268,7 @@ var __angst = (() => {
         style: { width: "100%", background: editModal.food.name?.trim() ? "#111" : "#eee", color: editModal.food.name?.trim() ? "#fff" : "#aaa", border: "none", borderRadius: 8, padding: "14px", fontFamily: "'Caveat',cursive", fontSize: 18, cursor: "pointer", marginBottom: 8 }
       },
       "guardar"
-    ), !editModal.isNew && (foodOverrides || {})[editModal.food.id] && /* @__PURE__ */ React.createElement(
+    ), !editModal.isCustom && (foodOverrides || {})[editModal.food.id] && /* @__PURE__ */ React.createElement(
       "button",
       {
         onClick: () => {
@@ -6336,7 +6280,7 @@ var __angst = (() => {
         style: { width: "100%", background: "transparent", color: "#e53935", border: "1px dashed #e53935", borderRadius: 8, padding: "10px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, cursor: "pointer", marginBottom: 8 }
       },
       "restaurar original"
-    ), /* @__PURE__ */ React.createElement("button", { onClick: () => setEditModal(null), style: { width: "100%", background: "transparent", color: "#bbb", border: "none", padding: "8px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, cursor: "pointer" } }, "cancelar"))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 22, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "registrar ingesta"), searchQuery.trim() && /* @__PURE__ */ React.createElement("div", { style: { border: "1.5px dashed #111", borderRadius: 10, marginBottom: 8, overflow: "hidden", background: "#fff" } }, searchResults.map((food) => /* @__PURE__ */ React.createElement("div", { key: food.catKey + "-" + food.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("span", { onClick: () => openModal(food), style: { fontSize: 16, flexShrink: 0, cursor: "pointer" } }, food.emoji), /* @__PURE__ */ React.createElement("div", { onClick: () => openModal(food), style: { flex: 1, minWidth: 0, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333", fontWeight: 600 } }, food.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, food.kcal, "kcal \xB7 ", food.prot, "g / ", food.unit)), /* @__PURE__ */ React.createElement("button", { onClick: () => openEditModal(food, food.catKey), style: { background: "transparent", border: "none", color: "#ccc", fontSize: 13, cursor: "pointer", padding: "4px 6px", flexShrink: 0 } }, "\u270E"))), apiLoading && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#aaa" } }, "buscando fuera de tu registro\u2026"), apiFoodResults.map((food) => /* @__PURE__ */ React.createElement("div", { key: food.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderTop: "1px dashed #f0f0f0", background: "#fcfcfc" } }, /* @__PURE__ */ React.createElement("span", { onClick: () => openModal(food), style: { fontSize: 16, flexShrink: 0, cursor: "pointer" } }, food.emoji), /* @__PURE__ */ React.createElement("div", { onClick: () => openModal(food), style: { flex: 1, minWidth: 0, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333", fontWeight: 600 } }, food.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#9aa" } }, food.kcal, "kcal \xB7 ", food.prot, "g \xB7 api")), /* @__PURE__ */ React.createElement("button", { onClick: () => saveCustomFoods({ ...customFoods || {}, [food.id]: food }), style: { background: "transparent", border: "none", color: "#bbb", fontSize: 16, cursor: "pointer", padding: "2px 4px", flexShrink: 0 } }, "\uFF0B"))), searchResults.length === 0 && apiFoodResults.length === 0 && !apiLoading && /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React.createElement("button", { onClick: () => setEditModal(null), style: { width: "100%", background: "transparent", color: "#bbb", border: "none", padding: "8px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, cursor: "pointer" } }, "cancelar"))), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 22, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "registrar ingesta"), searchQuery.trim() && /* @__PURE__ */ React.createElement("div", { style: { border: "1.5px dashed #111", borderRadius: 10, marginBottom: 8, overflow: "hidden", background: "#fff" } }, searchResults.map((food) => /* @__PURE__ */ React.createElement("div", { key: food.catKey + "-" + food.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("span", { onClick: () => openModal(food), style: { fontSize: 16, flexShrink: 0, cursor: "pointer" } }, food.emoji), /* @__PURE__ */ React.createElement("div", { onClick: () => openModal(food), style: { flex: 1, minWidth: 0, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333", fontWeight: 600 } }, food.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, food.kcal, "kcal \xB7 ", food.prot, "g / ", food.unit)), /* @__PURE__ */ React.createElement("button", { onClick: () => openEditModal(food, food.catKey), style: { background: "transparent", border: "none", color: "#ccc", fontSize: 13, cursor: "pointer", padding: "4px 6px", flexShrink: 0 } }, "\u270E"))), searchResults.length === 0 && /* @__PURE__ */ React.createElement(
       "div",
       {
         onClick: () => {

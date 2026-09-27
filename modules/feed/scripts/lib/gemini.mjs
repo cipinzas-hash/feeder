@@ -1,7 +1,7 @@
 // lib/gemini.mjs
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper reusable para llamar a la API de Gemini (Google AI) desde cualquier
-// script de build (build-feed.mjs, build-nutricion.mjs, etc.). Reemplaza el
+// script de build (build-feed.mjs, build-pokecripto.mjs, etc.). Reemplaza el
 // uso puntual de Anthropic API que tenía narrateArchiveSummary -- Gemini se
 // usa acá como "la IA del proyecto" por su free tier.
 //

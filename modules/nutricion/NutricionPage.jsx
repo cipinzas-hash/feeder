@@ -268,42 +268,7 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
   const [deckMenuOpen, setDeckMenuOpen] = useState(false);
   const [deckEditor, setDeckEditor] = useState(null); // {id, name, items, isNew}
   const [collapsedMeals, setCollapsedMeals] = useState({});
-  const [apiFoodResults, setApiFoodResults] = useState([]);
   const [moveMenuOpen, setMoveMenuOpen] = useState(null); // uid de la entrada con el popover "mover a otra comida" abierto
-  const [apiLoading, setApiLoading] = useState(false);
-
-  // Base offline de alimentos (USDA FoodData Central, Foundation + SR
-  // Legacy -- armada semanalmente por GitHub Actions, ver
-  // scripts/build-nutricion.mjs). Antes se llamaba a la API de USDA directo
-  // desde el navegador, pero esa API no manda headers CORS -- el fetch
-  // fallaba en silencio siempre. Ahora se trae un JSON estático ya armado
-  // (mismo patrón que feed.json/cine.json) y se cachea en localStorage para
-  // que la búsqueda funcione offline después de la primera carga.
-  const NUTRICION_DB_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/nutricion.json";
-  const NUTRICION_DB_CACHE_KEY = "angst-nutricion-db-v1";
-  const NUTRICION_DB_MAX_AGE_MS = 7 * 86400000; // si el caché tiene más de 7 días, se refresca en segundo plano
-  const [foodsDb, setFoodsDb] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    let cachedGeneratedAt = null;
-    try {
-      const raw = localStorage.getItem(NUTRICION_DB_CACHE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (!cancelled) setFoodsDb(parsed.foods || []);
-        cachedGeneratedAt = parsed.generatedAt;
-      }
-    } catch (e) {}
-    const isStale = !cachedGeneratedAt || (Date.now() - new Date(cachedGeneratedAt).getTime()) > NUTRICION_DB_MAX_AGE_MS;
-    if (!isStale) return;
-    fetch(NUTRICION_DB_URL).then(r => r.json()).then(data => {
-      if (cancelled || !data?.foods) return;
-      setFoodsDb(data.foods);
-      try { localStorage.setItem(NUTRICION_DB_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
-    }).catch(() => {}); // sin conexión o repo aún sin correr el workflow -- se sigue con lo que había en caché (o vacío)
-    return () => { cancelled = true; };
-  }, []);
 
   const log = nutriLog[dateKey] || [];
   const totalKcal = Math.round(log.reduce((a,e)=>a+e.kcal*e.qty,0));
@@ -366,19 +331,40 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
 
   const PORTION_TYPES=[{k:"",label:"tap directo"},{k:"weight100",label:"por 50g"},{k:"size",label:"S/M/L"},{k:"fraction",label:"fracción"},{k:"calibre",label:"calibre+fracción"}];
 
+  // Fix 26-sep-2026 (issue #19, con Cristopher): antes esto agrupaba los
+  // alimentos base por su posición ESTÁTICA en NUTRI_FOODS[catKey], así
+  // que cambiar la categoría desde el editor no movía nada -- el select
+  // de categoría (más abajo) actualizaba food.cat en el override, pero
+  // acá nunca se leía. Ahora se arma la lista base UNA vez con su
+  // categoría efectiva (cat del override si existe, si no la posición
+  // original) y se filtra por esa, así que un cambio de categoría sí
+  // mueve la ficha. Los alimentos personalizados (customFoods) ya
+  // filtraban por su propio campo cat en vivo -- no tenían este bug.
   function getMergedFoods(catKey) {
-    const base=(NUTRI_FOODS[catKey]||[]).map(f=>({...f,...((foodOverrides||{})[f.id]||{})}));
+    const allBase = NUTRI_CATS.flatMap(c=>(NUTRI_FOODS[c.k]||[]).map(f=>({...f,catKey:c.k,...((foodOverrides||{})[f.id]||{})})));
+    const base = allBase.filter(f=>(f.cat||f.catKey)===catKey);
     const custom=Object.values(customFoods||{}).filter(f=>f.cat===catKey);
     return [...base,...custom];
   }
   function allFoodsFlat() {
     return NUTRI_CATS.flatMap(c=>getMergedFoods(c.k).map(f=>({...f, catKey:c.k})));
   }
-  function openEditModal(food,catKey){ setEditModal({food:{...food},isNew:false,catKey}); }
-  function openNewModal(catKey, prefillName){ setEditModal({food:{id:"custom-"+Date.now(),emoji:"🍽️",name:prefillName||"",prep:"",kcal:0,prot:0,unit:"unidad",portionType:"",cat:catKey},isNew:true,catKey}); }
+  // Fix 26-sep-2026 (issue #19): antes esto siempre seteaba isNew:false,
+  // sin importar si la ficha era base o personalizada. saveEdit() decide
+  // el destino según ese flag -- resultado: la SEGUNDA edición de un
+  // alimento personalizado (la primera pasa por openNewModal con
+  // isNew:true) entraba acá, guardaba en foodOverrides en vez de
+  // customFoods, y como ese id no existe en NUTRI_FOODS, getMergedFoods
+  // nunca aplicaba el override a nada -- el cambio quedaba huérfano y el
+  // alimento visible no se movía. Ahora se detecta si el id ya vive en
+  // customFoods y se guarda con ese flag aparte (isCustom, para el
+  // destino del guardado -- isNew sigue existiendo, aparte, solo para
+  // el título del modal y solo lo prende openNewModal).
+  function openEditModal(food,catKey){ setEditModal({food:{...food},isNew:false,isCustom:!!(customFoods||{})[food.id],catKey}); }
+  function openNewModal(catKey, prefillName){ setEditModal({food:{id:"custom-"+Date.now(),emoji:"🍽️",name:prefillName||"",prep:"",kcal:0,prot:0,unit:"unidad",portionType:"",cat:catKey},isNew:true,isCustom:true,catKey}); }
   function saveEdit(){
-    const {food,isNew}=editModal;
-    if(isNew){ saveCustomFoods({...(customFoods||{}),[food.id]:food}); }
+    const {food,isCustom}=editModal;
+    if(isCustom){ saveCustomFoods({...(customFoods||{}),[food.id]:food}); }
     else{ saveFoodOverrides({...(foodOverrides||{}),[food.id]:food}); }
     setEditModal(null);
   }
@@ -464,24 +450,6 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
   const searchResults = searchQuery.trim()
     ? allFoodsFlat().filter(f=>normalizeSearchText(f.name).includes(normalizeSearchText(searchQuery))).slice(0,6)
     : [];
-
-  function normalizeApiFood(item, idx){
-    return { id:`db-${item.fdcId ?? idx}`, emoji:"🌐", name: item.name, prep:"USDA FoodData Central", kcal: item.kcal || 0, prot: item.prot || 0, unit:"porción", portionType:"", cat:"otros", catKey:"otros", source:"db" };
-  }
-
-  useEffect(()=>{
-    const q = searchQuery.trim();
-    if(q.length < 3 || !foodsDb){ setApiFoodResults([]); setApiLoading(false); return; }
-    const localNorm = allFoodsFlat().map(f=>normalizeSearchText(f.name));
-    const qNorm = normalizeSearchText(q);
-    const localMatch = localNorm.some(n=>n.includes(qNorm));
-    if(localMatch && searchResults.length >= 3){ setApiFoodResults([]); setApiLoading(false); return; }
-    setApiLoading(true);
-    const hits = foodsDb.filter(f => normalizeSearchText(f.name).includes(qNorm));
-    const normalized = hits.map(normalizeApiFood).filter(f=>f.name && !localNorm.includes(normalizeSearchText(f.name))).slice(0,6);
-    setApiFoodResults(normalized);
-    setApiLoading(false);
-  }, [searchQuery, dateKey, foodsDb]);
 
 
   function inferDeckMeal(items){
@@ -942,17 +910,7 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
                   </div>
                 </div>
               ))}
-              {apiLoading && <div style={{padding:"10px 12px",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#aaa"}}>buscando fuera de tu registro…</div>}
-              {apiFoodResults.map(food=>(
-                <div key={food.id} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 12px",borderTop:"1px dashed #f0f0f0",background:"#fcfcfc"}}>
-                  <span onClick={()=>openModal(food)} style={{fontSize:16,flexShrink:0,cursor:"pointer"}}>{food.emoji}</span>
-                  <div onClick={()=>openModal(food)} style={{flex:1,minWidth:0,cursor:"pointer"}}>
-                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#333",fontWeight:600}}>{food.name}</div>
-                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#9aa"}}>{food.kcal}kcal · {food.prot}g · api</div>
-                  </div>
-                </div>
-              ))}
-              {searchResults.length===0 && apiFoodResults.length===0 && !apiLoading && (
+              {searchResults.length===0 && (
                 <div style={{padding:"12px 14px",fontFamily:"'Caveat',cursive",fontSize:14,color:"#bbb"}}>sin resultados — probá desde "explorar por categoría"</div>
               )}
             </div>
@@ -1207,7 +1165,7 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
             </div>
             <button onClick={saveEdit} disabled={!editModal.food.name?.trim()}
               style={{width:"100%",background:editModal.food.name?.trim()?"#111":"#eee",color:editModal.food.name?.trim()?"#fff":"#aaa",border:"none",borderRadius:8,padding:"14px",fontFamily:"'Caveat',cursive",fontSize:18,cursor:"pointer",marginBottom:8}}>guardar</button>
-            {!editModal.isNew&&(foodOverrides||{})[editModal.food.id]&&(
+            {!editModal.isCustom&&(foodOverrides||{})[editModal.food.id]&&(
               <button onClick={()=>{const n={...(foodOverrides||{})};delete n[editModal.food.id];saveFoodOverrides(n);setEditModal(null);}}
                 style={{width:"100%",background:"transparent",color:"#e53935",border:"1px dashed #e53935",borderRadius:8,padding:"10px",fontFamily:"'DM Sans',sans-serif",fontSize:12,cursor:"pointer",marginBottom:8}}>restaurar original</button>
             )}
@@ -1231,18 +1189,7 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
                 <button onClick={()=>openEditModal(food,food.catKey)} style={{background:"transparent",border:"none",color:"#ccc",fontSize:13,cursor:"pointer",padding:"4px 6px",flexShrink:0}}>✎</button>
               </div>
             ))}
-            {apiLoading && <div style={{padding:"10px 12px",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#aaa"}}>buscando fuera de tu registro…</div>}
-            {apiFoodResults.map(food=>(
-              <div key={food.id} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 12px",borderTop:"1px dashed #f0f0f0",background:"#fcfcfc"}}>
-                <span onClick={()=>openModal(food)} style={{fontSize:16,flexShrink:0,cursor:"pointer"}}>{food.emoji}</span>
-                <div onClick={()=>openModal(food)} style={{flex:1,minWidth:0,cursor:"pointer"}}>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#333",fontWeight:600}}>{food.name}</div>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#9aa"}}>{food.kcal}kcal · {food.prot}g · api</div>
-                </div>
-                <button onClick={()=>saveCustomFoods({...(customFoods||{}),[food.id]:food})} style={{background:"transparent",border:"none",color:"#bbb",fontSize:16,cursor:"pointer",padding:"2px 4px",flexShrink:0}}>＋</button>
-              </div>
-            ))}
-            {searchResults.length===0 && apiFoodResults.length===0 && !apiLoading && (
+            {searchResults.length===0 && (
               <div onClick={()=>{openNewModal("otros",searchQuery.trim());setSearchQuery("");}}
                 style={{padding:"12px 14px",cursor:"pointer",fontFamily:"'Caveat',cursive",fontSize:15,color:"#555"}}>
                 + agregar "{searchQuery.trim()}" como nuevo alimento
