@@ -335,8 +335,19 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [view,           setView]           = React.useState("coleccion");
   const [fichaId,        setFichaId]        = React.useState(null);
   const [carpetaView,    setCarpetaView]    = React.useState(null); // nombre de carpeta hardcodeada
-  const [carpetaFiltro,  setCarpetaFiltro]  = React.useState("todas");
-  const [filterEstado,   setFilterEstado]   = React.useState("todos");
+  // ── Búsqueda por chips (26-sep-2026, a pedido de Cristopher) ──
+  // Reemplaza los filtros single-select de abajo. Dos modos:
+  // "mostrar" (default: nada visible hasta tocar un chip, lo que aparece
+  // es la intersección de los chips activos) y "descartar" (default: todo
+  // visible, cada chip tocado saca las cartas que matcheen -- unión, no
+  // intersección: "descarto esto Y esto" va sacando de a una, no exige que
+  // una carta matchee TODOS los chips para irse). Mismos chips en los dos
+  // modos, según pidió Cristopher.
+  const [searchMode,    setSearchMode]    = React.useState("mostrar");
+  const [chipCarpetas,  setChipCarpetas]  = React.useState(()=>new Set());
+  const [chipEstado,    setChipEstado]    = React.useState(()=>new Set()); // "inventariada" | "no_inventariada"
+  const [filtrosAbiertos, setFiltrosAbiertos] = React.useState(false);
+  function toggleChip(set,setSet,val){ setSet(prev=>{ const n=new Set(prev); n.has(val)?n.delete(val):n.add(val); return n; }); }
   const [sortBy,         setSortBy]         = React.useState("fecha");
   const [sortAsc,        setSortAsc]        = React.useState(false);
   const [poolView,       setPoolView]       = React.useState("lista");
@@ -364,6 +375,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [apiKeyInput,    setApiKeyInput]    = React.useState("");
   const [diagResult, setDiagResult] = React.useState(null);
   const [diagLoading, setDiagLoading] = React.useState(false);
+  const [diagImgs, setDiagImgs] = React.useState([]); // fotos de los candidatos (26-sep-2026), alineado por índice con diagResult.candidatos
   const [darkPriceModal, setDarkPriceModal] = React.useState(null);
   const [darkPrecioInput,setDarkPrecioInput]= React.useState("");
   const [darkNotaInput,  setDarkNotaInput]  = React.useState("");
@@ -395,7 +407,22 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [resyncStatus,   setResyncStatus]   = React.useState(null);
   const resyncAbort = React.useRef(false);
 
-  // ── Sync ficha ──
+  // ── Limpieza única + guardia permanente: toda carta debe tener carpeta ──
+  // (26-sep-2026, a pedido de Cristopher) Se encontró "Horsea" sin carpeta
+  // en el inventario real -- artefacto de datos de antes de que
+  // agregarCarta/huntingEntryFromCard garantizaran un default. Esos dos
+  // caminos ya siempre asignan carpeta, así que esto es defensivo: si por
+  // el motivo que sea aparece otra carta sin carpeta (edición manual del
+  // JSON, import, etc.), se le asigna cats[0] en vez de quedar invisible
+  // para los chips de carpeta de la búsqueda nueva.
+  React.useEffect(()=>{
+    const sinCarpeta=inv.filter(c=>!c.carpeta);
+    if(!sinCarpeta.length) return;
+    const def=cats[0]||"MLP";
+    saveInventario(prev=>(prev||[]).map(c=>c.carpeta?c:{...c,carpeta:def}));
+  },[inv,cats]);
+
+
   React.useEffect(()=>{
     if(!fichaId) return;
     const c=inv.find(x=>x.id===fichaId);
@@ -620,8 +647,10 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // estado solo lo prenden los 4 íconos hardcodeados del dashboard (línea
   // ~1848). Las carpetas de ilustrador viven en el filtro genérico (cats,
   // carpetaFiltro) y nunca pasan por carpetaView, así que el escaneo nunca
-  // arrancaba. Dispara una sola vez al montar el módulo, en vez de esperar
-  // una vista dedicada que estas carpetas no tienen.
+  // arrancaba. (26-sep-2026: ese filtro genérico ahora es el sistema de
+  // chips/cats, la lógica de esta nota sigue igual.) Dispara una sola vez
+  // al montar el módulo, en vez de esperar una vista dedicada que estas
+  // carpetas no tienen.
   React.useEffect(()=>{
     if(!allSets.length&&!allSetsLoading) loadAllSets();
   },[]);
@@ -1063,8 +1092,19 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
 
   // ── Filtrado y ordenamiento del pool ──
   const filtradas=(()=>{
-    let f=inv.filter(c=>carpetaFiltro==="todas"||c.carpeta===carpetaFiltro);
-    if(filterEstado!=="todos") f=f.filter(c=>c.estado===filterEstado);
+    const hayChips = chipCarpetas.size>0 || chipEstado.size>0;
+    const estadoDe = c=>c.estado==="hunting"?"no_inventariada":"inventariada";
+    let f;
+    if(searchMode==="mostrar"){
+      f = !hayChips ? [] : inv.filter(c=>
+        (chipCarpetas.size===0||chipCarpetas.has(c.carpeta)) &&
+        (chipEstado.size===0||chipEstado.has(estadoDe(c)))
+      );
+    } else { // descartar: arranca con todo, cada chip activo saca (unión, no intersección)
+      f = !hayChips ? inv : inv.filter(c=>
+        !(chipCarpetas.has(c.carpeta) || chipEstado.has(estadoDe(c)))
+      );
+    }
     f=[...f].sort((a,b)=>{
       let v=0;
       if(sortBy==="nombre") v=a.name.localeCompare(b.name);
@@ -1151,12 +1191,41 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     );
   }
 
-  function renderDiagPanel(){
+  // ── Diagnóstico tcgpricelookup.com: fotos + designación manual (26-sep) ──
+  // tcgpricelookup.com no documenta con claridad si sus candidatos traen
+  // imagen, así que no se depende de eso: se busca cada candidato en
+  // pokemontcg.io (gratis, sin key, ya usado en toda la app) por su propio
+  // nombre+número -- en paralelo, para que el panel no se sienta lento.
+  async function cargarImagenesCandidatos(candidatos){
+    const imgs = await Promise.all((candidatos||[]).map(async c=>{
+      try{
+        const q = `name:"${c.name}" number:${c.number}`;
+        const data = await fetchPoke(`${POKE_BASE}/cards?q=${encodeURIComponent(q)}&pageSize=1&select=images`);
+        return data.data?.[0]?.images?.small || null;
+      }catch(e){ return null; }
+    }));
+    setDiagImgs(imgs);
+  }
+  // Aplica el precio de un candidato ya mismo Y guarda cuál elegiste
+  // (tcgOverride) para que refreshPrecio use directo este candidato la
+  // próxima vez, en vez de volver a depender del matching automático.
+  function usarCandidato(cartaId, c){
+    if(!cartaId||c.market==null) return;
+    const carta=inv.find(x=>x.id===cartaId);
+    if(!carta) return;
+    updCarta(cartaId,{
+      tcgMarket:c.market, tcgLow:c.low, tcgHigh:c.high, tcgUpdated:hoy,
+      priceHistory:addSnapshot(carta.priceHistory,c.market,c.low,c.high,hoy),
+      tcgOverride:{name:c.name,number:c.number,setId:c.setId,setCode:c.setCode},
+    });
+    setDiagResult(null); setDiagImgs([]);
+  }
+  function renderDiagPanel(cartaId){
     return (
       <div style={{background:"#fafafa",border:"1px dashed #ccc",borderRadius:10,padding:"10px 12px",marginBottom:12,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#444",lineHeight:1.6}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
           <span style={{fontWeight:700}}>diagnóstico tcgpricelookup.com</span>
-          <button onClick={()=>setDiagResult(null)} style={{background:"transparent",border:"none",color:"#999",cursor:"pointer",fontSize:14}}>✕</button>
+          <button onClick={()=>{setDiagResult(null);setDiagImgs([]);}} style={{background:"transparent",border:"none",color:"#999",cursor:"pointer",fontSize:14}}>✕</button>
         </div>
         {diagResult.error
           ? <div>error: {diagResult.error}{diagResult.query?` (query: "${diagResult.query}")`:""}</div>
@@ -1175,7 +1244,22 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                     <div style={{marginTop:4}}>
                       <div style={{color:"#888"}}>candidatos que trajo la búsqueda:</div>
                       {diagResult.candidatos.map((c,i)=>(
-                        <div key={i} style={{marginLeft:8}}>· {c.name} #{c.number} ({c.setId||c.setCode||"sin set"}){c.tieneRaw?"":" — sin precio raw"}</div>
+                        <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginLeft:4,marginTop:6,paddingBottom:6,borderBottom:i<diagResult.candidatos.length-1?"1px dashed #eee":"none"}}>
+                          {diagImgs[i]
+                            ?<img src={diagImgs[i]} alt="" style={{width:32,borderRadius:3,flexShrink:0}}/>
+                            :<div style={{width:32,height:44,borderRadius:3,background:"#eee",flexShrink:0}}/>
+                          }
+                          <div style={{flex:1,minWidth:0}}>
+                            <div>{c.name} #{c.number} ({c.setId||c.setCode||"sin set"})</div>
+                            <div style={{color:c.market?"#2e7d52":"#999"}}>{c.market?fmtUSD(c.market):"sin precio raw"}</div>
+                          </div>
+                          {c.market!=null&&(
+                            <button onClick={()=>usarCandidato(cartaId,c)}
+                              style={{flexShrink:0,fontFamily:"'DM Sans',sans-serif",fontSize:10,fontWeight:700,border:"1px solid #111",borderRadius:8,padding:"4px 8px",background:"#111",color:"#fff",cursor:"pointer"}}>
+                              usar esta
+                            </button>
+                          )}
+                        </div>
                       ))}
                     </div>
                   ) : <div style={{color:"#888"}}>la búsqueda no devolvió ningún candidato</div>}
@@ -1246,9 +1330,10 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               }
               {!detalle.tcgMarket && (
                 <button onClick={async()=>{
-                  setDiagLoading(true); setDiagResult(null);
+                  setDiagLoading(true); setDiagResult(null); setDiagImgs([]);
                   const d = await fetchTCGPriceDiag(detalle.name, detalle.set, detalle.number, detalle.setCode, apiKey);
                   setDiagLoading(false); setDiagResult(d);
+                  if(d.candidatos?.length) cargarImagenesCandidatos(d.candidatos);
                 }} style={{marginTop:4,fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.25)",borderRadius:10,padding:"3px 8px",background:"transparent",color:"rgba(255,255,255,0.6)",cursor:"pointer"}}>
                   {diagLoading?"buscando…":"🔍 diagnosticar"}
                 </button>
@@ -1263,7 +1348,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             </div>}
           </div>
 
-          {diagResult && renderDiagPanel()}
+          {diagResult && renderDiagPanel(detalle.id)}
           {/* ATH / ATL / Volatilidad — mismo cálculo y nivel de detalle que la
               ficha de inventario, para cualquier carta que junte snapshots
               (Dark Collection o Hunting, da igual el origen). */}
@@ -1390,9 +1475,10 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               }
               {!carta.tcgMarket && (
                 <button onClick={async()=>{
-                  setDiagLoading(true); setDiagResult(null);
+                  setDiagLoading(true); setDiagResult(null); setDiagImgs([]);
                   const d = await fetchTCGPriceDiag(carta.name, carta.set, carta.number, carta.setCode, apiKey);
                   setDiagLoading(false); setDiagResult(d);
+                  if(d.candidatos?.length) cargarImagenesCandidatos(d.candidatos);
                 }} style={{marginTop:4,fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.25)",borderRadius:10,padding:"3px 8px",background:"transparent",color:"rgba(255,255,255,0.6)",cursor:"pointer"}}>
                   {diagLoading?"buscando…":"🔍 diagnosticar"}
                 </button>
@@ -1404,7 +1490,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           </div>
         </div>
 
-        {diagResult && renderDiagPanel()}
+        {diagResult && renderDiagPanel(carta.id)}
 
         {/* ATH / ATL / Volatilidad */}
         {hist.length>=2&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
@@ -2151,30 +2237,50 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         }
       </div>
 
-      {/* Filtros línea 1 — por carpeta */}
-      {/* Las 9 colecciones automáticas (Dark + 8 ilustrador) salieron de acá
-          (22-sep-2026, a pedido de Cristopher) -- viven exclusivamente en el
-          menú "Colecciones" del dashboard ahora, para no duplicar el acceso. */}
-      <div style={{display:"flex",gap:4,marginBottom:8,overflowX:"auto",paddingBottom:2}}>
-        {["todas",...cats.filter(c=>c!=="Dark Collection"&&!COLECCIONES_ILUSTRADOR.some(d=>d.carpeta===c))].map(c=>(
-          <button key={c} onClick={()=>setCarpetaFiltro(c)}
-            style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,padding:"4px 10px",borderRadius:12,border:"1px dashed",cursor:"pointer",flexShrink:0,
-              background:carpetaFiltro===c?"#111":"transparent",color:carpetaFiltro===c?"#fff":"#aaa",borderColor:carpetaFiltro===c?"#111":"#ddd"}}>
-            {c}
-          </button>
-        ))}
+      {/* Búsqueda por chips (26-sep-2026, a pedido de Cristopher) — colapsada
+          por defecto para que toda la vista entre en pantalla sin scroll; el
+          ícono despliega modo + chips. Mismas 9 colecciones automáticas
+          (Dark + 8 ilustrador) excluidas de los chips de carpeta, igual que
+          antes (22-sep-2026): viven solo en el menú "Colecciones". */}
+      <div style={{marginBottom:10}}>
+        <button onClick={()=>setFiltrosAbiertos(v=>!v)}
+          style={{display:"flex",alignItems:"center",gap:6,background:"transparent",border:"1px dashed #ddd",borderRadius:12,padding:"5px 12px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888"}}>
+          🔍 {(chipCarpetas.size+chipEstado.size)>0?`${chipCarpetas.size+chipEstado.size} filtro(s) · ${searchMode}`:"buscar / filtrar"}
+          <span style={{marginLeft:4,fontSize:9}}>{filtrosAbiertos?"▲":"▼"}</span>
+        </button>
+        {filtrosAbiertos&&(
+          <div style={{marginTop:8}}>
+            <div style={{display:"flex",gap:4,marginBottom:8}}>
+              {[["mostrar","mostrar"],["descartar","descartar"]].map(([k,l])=>(
+                <button key={k} onClick={()=>setSearchMode(k)}
+                  style={{flex:1,fontFamily:"'DM Sans',sans-serif",fontSize:11,padding:"6px 10px",borderRadius:8,border:"1px solid",cursor:"pointer",
+                    background:searchMode===k?"#111":"transparent",color:searchMode===k?"#fff":"#888",borderColor:searchMode===k?"#111":"#ddd"}}>
+                  {l}
+                </button>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:4,marginBottom:8,flexWrap:"wrap"}}>
+              {[["inventariada","● inventariada"],["no_inventariada","○ no inventariada"]].map(([k,l])=>(
+                <button key={k} onClick={()=>toggleChip(chipEstado,setChipEstado,k)}
+                  style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,padding:"4px 10px",borderRadius:12,border:"1px dashed",cursor:"pointer",flexShrink:0,
+                    background:chipEstado.has(k)?"#111":"transparent",color:chipEstado.has(k)?"#fff":"#aaa",borderColor:chipEstado.has(k)?"#111":"#ddd"}}>
+                  {l}
+                </button>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:4,marginBottom:4,overflowX:"auto",paddingBottom:2}}>
+              {cats.filter(c=>c!=="Dark Collection"&&!COLECCIONES_ILUSTRADOR.some(d=>d.carpeta===c)).map(c=>(
+                <button key={c} onClick={()=>toggleChip(chipCarpetas,setChipCarpetas,c)}
+                  style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,padding:"4px 10px",borderRadius:12,border:"1px dashed",cursor:"pointer",flexShrink:0,
+                    background:chipCarpetas.has(c)?"#111":"transparent",color:chipCarpetas.has(c)?"#fff":"#aaa",borderColor:chipCarpetas.has(c)?"#111":"#ddd"}}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Filtros línea 2 — por estado */}
-      <div style={{display:"flex",gap:4,marginBottom:10,flexWrap:"wrap"}}>
-        {[["todos","todas"],["hunting","🗡️ hunting"],["sin_publicar","sin publicar"],["a_la_venta","a la venta"],["vendida","vendida"]].map(([k,l])=>(
-          <button key={k} onClick={()=>setFilterEstado(k)}
-            style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,padding:"4px 10px",borderRadius:12,border:"1px dashed",cursor:"pointer",flexShrink:0,
-              background:filterEstado===k?"#111":"transparent",color:filterEstado===k?"#fff":"#aaa",borderColor:filterEstado===k?"#111":"#ddd"}}>
-            {l}
-          </button>
-        ))}
-      </div>
 
       {/* Ordenamiento + toggle visualización */}
       <div style={{display:"flex",gap:4,marginBottom:12,alignItems:"center"}}>
@@ -2198,7 +2304,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       {/* Pool de cartas */}
       {filtradas.length===0&&(
         <div style={{padding:"40px 0",textAlign:"center"}}>
-          <div style={{fontFamily:"'Caveat',cursive",fontSize:18,color:"#ccc"}}>{inv.length===0?"colección vacía":"sin cartas en esta vista"}</div>
+          <div style={{fontFamily:"'Caveat',cursive",fontSize:18,color:"#ccc"}}>
+            {inv.length===0?"colección vacía":(searchMode==="mostrar"&&chipCarpetas.size+chipEstado.size===0?"elegí un filtro arriba para buscar":"sin cartas en esta vista")}
+          </div>
         </div>
       )}
 

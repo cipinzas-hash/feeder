@@ -88,7 +88,11 @@ export async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey) 
     const match =
       (number && setCode && cards.find(c => normName(c.name) === nameNorm && normNum(c.number) === numNorm && (c.set?.ptcgoCode?.toLowerCase() === setCodeLow || c.set?.id?.toLowerCase() === setCodeLow))) ||
       (number && cards.find(c => normName(c.name) === nameNorm && normNum(c.number) === numNorm));
-    const candidatos = cards.slice(0, 10).map(c => ({ name: c.name, number: c.number, setId: c.set?.id, setCode: c.set?.ptcgoCode, tieneRaw: !!c.prices?.raw }));
+    const candidatos = cards.slice(0, 10).map(c => {
+      const nm = c.prices?.raw?.near_mint?.tcgplayer, lp = c.prices?.raw?.lightly_played?.tcgplayer;
+      const best = nm || lp;
+      return { name: c.name, number: c.number, setId: c.set?.id, setCode: c.set?.ptcgoCode, tieneRaw: !!best, market: best?.market || null, low: best?.low || null, high: best?.high || null };
+    });
     if (!match) return { query: q, candidatos, matchEncontrado: false };
     const nm = match.prices?.raw?.near_mint?.tcgplayer, lp = match.prices?.raw?.lightly_played?.tcgplayer;
     const best = nm || lp;
@@ -121,6 +125,13 @@ export function addSnapshot(history, market, low, high, dateISO) {
 // como respaldo solo si el primario no trajo nada. No persiste nada --
 // eso lo decide quien llama (el bot arma el JSON completo, el cliente
 // actualiza su propio estado React).
+//
+// tcgOverride (26-sep-2026, designación manual desde el panel de
+// diagnóstico): si la carta tiene guardado el candidato exacto que
+// Cristopher eligió a mano en tcgpricelookup.com (name/number/setId,
+// tal como los devuelve esa API), se usa ESO en vez de carta.name/number/
+// setCode para la búsqueda de respaldo -- evita depender del matching
+// automático que ya sabemos que le falla a estas cartas puntuales.
 export async function refreshPrecio(carta, apiKey) {
   let market = null, low = null, high = null, fuente = null;
   if (carta.cardId) {
@@ -131,8 +142,11 @@ export async function refreshPrecio(carta, apiKey) {
     } catch (e) { /* cae a tcgpricelookup */ }
   }
   if (!market) {
-    const p = await fetchTCGPrice(carta.name, carta.set, carta.number, carta.setCode, apiKey);
-    if (p?.market) { market = p.market; low = p.low || null; high = p.high || null; fuente = "tcgpricelookup"; }
+    const ov = carta.tcgOverride;
+    const p = ov
+      ? await fetchTCGPrice(ov.name, carta.set, ov.number, ov.setId || ov.setCode, apiKey)
+      : await fetchTCGPrice(carta.name, carta.set, carta.number, carta.setCode, apiKey);
+    if (p?.market) { market = p.market; low = p.low || null; high = p.high || null; fuente = ov ? "tcgpricelookup(override)" : "tcgpricelookup"; }
   }
   return { market, low, high, fuente };
 }
