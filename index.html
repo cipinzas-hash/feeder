@@ -1802,6 +1802,11 @@ var __angst = (() => {
       saveInventario((prev) => (prev || []).map((c) => c.carpeta ? c : { ...c, carpeta: def }));
     }, [inv, cats]);
     React.useEffect(() => {
+      const hayCambio = inv.some((c) => c.carpeta === "Cambio");
+      if (hayCambio) saveInventario((prev) => (prev || []).map((c) => c.carpeta === "Cambio" ? { ...c, carpeta: "MLP" } : c));
+      if (cats.includes("Cambio")) saveCarpetas(cats.filter((c) => c !== "Cambio"));
+    }, [inv, cats]);
+    React.useEffect(() => {
       if (!fichaId) return;
       const c = inv.find((x) => x.id === fichaId);
       if (!c) return;

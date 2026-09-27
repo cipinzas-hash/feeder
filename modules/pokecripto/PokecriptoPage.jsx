@@ -422,6 +422,16 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     saveInventario(prev=>(prev||[]).map(c=>c.carpeta?c:{...c,carpeta:def}));
   },[inv,cats]);
 
+  // ── Merge único: "Cambio" pasa a ser "MLP" (26-sep-2026, confirmado por
+  // Cristopher: son la misma carpeta para él, dos nombres por accidente).
+  // Mueve las cartas y saca "Cambio" de la lista de carpetas para que no
+  // quede como chip fantasma con 0 cartas en la búsqueda nueva.
+  React.useEffect(()=>{
+    const hayCambio=inv.some(c=>c.carpeta==="Cambio");
+    if(hayCambio) saveInventario(prev=>(prev||[]).map(c=>c.carpeta==="Cambio"?{...c,carpeta:"MLP"}:c));
+    if(cats.includes("Cambio")) saveCarpetas(cats.filter(c=>c!=="Cambio"));
+  },[inv,cats]);
+
 
   React.useEffect(()=>{
     if(!fichaId) return;
