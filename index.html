@@ -2505,6 +2505,18 @@ var __angst = (() => {
         await new Promise((res) => setTimeout(res, 200));
       }
     }
+    function aplicarDiagSiMatchea(cartaId, d) {
+      if (!cartaId || !d?.match || d.market == null) return;
+      const carta = inv.find((x) => x.id === cartaId);
+      if (!carta) return;
+      updCarta(cartaId, {
+        tcgMarket: d.market,
+        tcgLow: d.low,
+        tcgHigh: d.high,
+        tcgUpdated: hoy,
+        priceHistory: addSnapshot(carta.priceHistory, d.market, d.low, d.high, hoy)
+      });
+    }
     function usarCandidato(cartaId, c) {
       if (!cartaId || c.market == null) return;
       const carta = inv.find((x) => x.id === cartaId);
@@ -2567,6 +2579,7 @@ var __angst = (() => {
         const d = await fetchTCGPriceDiag(detalle.name, detalle.set, detalle.number, detalle.setCode, apiKey);
         setDiagLoading(false);
         setDiagResult(d);
+        aplicarDiagSiMatchea(detalle.id, d);
         if (d.candidatos?.length) cargarImagenesCandidatos(d.candidatos);
       }, style: { marginTop: 4, fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 10, padding: "3px 8px", background: "transparent", color: "rgba(255,255,255,0.6)", cursor: "pointer" } }, diagLoading ? "buscando\u2026" : "\u{1F50D} diagnosticar"), (detalle.tcgLow || detalle.tcgHigh) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, "rango ", detalle.tcgLow ? fmtUSD(detalle.tcgLow) : "\u2014", " \u2013 ", detalle.tcgHigh ? fmtUSD(detalle.tcgHigh) : "\u2014")), cons && detalle.precioUSD && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 } }, "pagu\xE9"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: "#fff" } }, fmtUSD(detalle.precioUSD)))), diagResult && renderDiagPanel(detalle.id), hist.length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 } }, [
         { label: "ATH", val: ath, date: athDate, color: "#4caf80" },
@@ -2659,6 +2672,7 @@ var __angst = (() => {
         const d = await fetchTCGPriceDiag(carta.name, carta.set, carta.number, carta.setCode, apiKey);
         setDiagLoading(false);
         setDiagResult(d);
+        aplicarDiagSiMatchea(carta.id, d);
         if (d.candidatos?.length) cargarImagenesCandidatos(d.candidatos);
       }, style: { marginTop: 4, fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 10, padding: "3px 8px", background: "transparent", color: "rgba(255,255,255,0.6)", cursor: "pointer" } }, diagLoading ? "buscando\u2026" : "\u{1F50D} diagnosticar"), (carta.tcgLow || carta.tcgHigh) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 } }, "rango ", carta.tcgLow ? fmtUSD(carta.tcgLow) : "\u2014", " \u2013 ", carta.tcgHigh ? fmtUSD(carta.tcgHigh) : "\u2014")))), diagResult && renderDiagPanel(carta.id), hist.length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 } }, [
         { label: "ATH", val: ath, date: athDate, color: "#2e7d52" },

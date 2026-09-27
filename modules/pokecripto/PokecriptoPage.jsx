@@ -1215,6 +1215,21 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // Aplica el precio de un candidato ya mismo Y guarda cuál elegiste
   // (tcgOverride) para que refreshPrecio use directo este candidato la
   // próxima vez, en vez de volver a depender del matching automático.
+  // Si el diagnóstico encuentra match automático CON precio, se guarda
+  // de inmediato -- no tiene sentido mostrarle a Cristopher "✓ match,
+  // tiene precio" y dejar la carta en "sin precio" hasta el próximo
+  // refresh (26-sep-2026, a pedido de Cristopher). Sin tcgOverride: el
+  // match salió con el nombre/número propios de la carta, así que el
+  // refresh automático de siempre lo va a encontrar de nuevo solo.
+  function aplicarDiagSiMatchea(cartaId, d){
+    if(!cartaId||!d?.match||d.market==null) return;
+    const carta=inv.find(x=>x.id===cartaId);
+    if(!carta) return;
+    updCarta(cartaId,{
+      tcgMarket:d.market, tcgLow:d.low, tcgHigh:d.high, tcgUpdated:hoy,
+      priceHistory:addSnapshot(carta.priceHistory,d.market,d.low,d.high,hoy),
+    });
+  }
   function usarCandidato(cartaId, c){
     if(!cartaId||c.market==null) return;
     const carta=inv.find(x=>x.id===cartaId);
@@ -1339,6 +1354,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                   setDiagLoading(true); setDiagResult(null); setDiagImgs([]);
                   const d = await fetchTCGPriceDiag(detalle.name, detalle.set, detalle.number, detalle.setCode, apiKey);
                   setDiagLoading(false); setDiagResult(d);
+                  aplicarDiagSiMatchea(detalle.id, d);
                   if(d.candidatos?.length) cargarImagenesCandidatos(d.candidatos);
                 }} style={{marginTop:4,fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.25)",borderRadius:10,padding:"3px 8px",background:"transparent",color:"rgba(255,255,255,0.6)",cursor:"pointer"}}>
                   {diagLoading?"buscando…":"🔍 diagnosticar"}
@@ -1484,6 +1500,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                   setDiagLoading(true); setDiagResult(null); setDiagImgs([]);
                   const d = await fetchTCGPriceDiag(carta.name, carta.set, carta.number, carta.setCode, apiKey);
                   setDiagLoading(false); setDiagResult(d);
+                  aplicarDiagSiMatchea(carta.id, d);
                   if(d.candidatos?.length) cargarImagenesCandidatos(d.candidatos);
                 }} style={{marginTop:4,fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.25)",borderRadius:10,padding:"3px 8px",background:"transparent",color:"rgba(255,255,255,0.6)",cursor:"pointer"}}>
                   {diagLoading?"buscando…":"🔍 diagnosticar"}
