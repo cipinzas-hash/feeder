@@ -2492,16 +2492,18 @@ var __angst = (() => {
       ), /* @__PURE__ */ React.createElement("button", { onClick: saveDarkModal, style: { width: "100%", background: "#2e7d52", border: "none", borderRadius: 10, padding: "13px", fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", cursor: "pointer" } }, "\u2713 marcar conseguida")));
     }
     async function cargarImagenesCandidatos(candidatos) {
-      const imgs = await Promise.all((candidatos || []).map(async (c) => {
+      const imgs = [];
+      for (const c of candidatos || []) {
         try {
           const q = `name:"${c.name}" number:${c.number}`;
           const data = await fetchPoke(`${POKE_BASE}/cards?q=${encodeURIComponent(q)}&pageSize=1&select=images`);
-          return data.data?.[0]?.images?.small || null;
+          imgs.push(data.data?.[0]?.images?.small || null);
         } catch (e) {
-          return null;
+          imgs.push(null);
         }
-      }));
-      setDiagImgs(imgs);
+        setDiagImgs([...imgs]);
+        await new Promise((res) => setTimeout(res, 200));
+      }
     }
     function usarCandidato(cartaId, c) {
       if (!cartaId || c.market == null) return;

@@ -1196,15 +1196,21 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // imagen, así que no se depende de eso: se busca cada candidato en
   // pokemontcg.io (gratis, sin key, ya usado en toda la app) por su propio
   // nombre+número -- en paralelo, para que el panel no se sienta lento.
+  // Secuencial con pausa (no Promise.all): pokemontcg.io sin key tiene un
+  // límite estricto -- 10 pedidos en paralelo volvían casi todos con 429 y
+  // el catch lo tragaba en silencio, dejando las miniaturas vacías
+  // (encontrado 26-sep-2026 con Cristopher). Más lento pero confiable.
   async function cargarImagenesCandidatos(candidatos){
-    const imgs = await Promise.all((candidatos||[]).map(async c=>{
+    const imgs=[];
+    for(const c of (candidatos||[])){
       try{
         const q = `name:"${c.name}" number:${c.number}`;
         const data = await fetchPoke(`${POKE_BASE}/cards?q=${encodeURIComponent(q)}&pageSize=1&select=images`);
-        return data.data?.[0]?.images?.small || null;
-      }catch(e){ return null; }
-    }));
-    setDiagImgs(imgs);
+        imgs.push(data.data?.[0]?.images?.small || null);
+      }catch(e){ imgs.push(null); }
+      setDiagImgs([...imgs]); // progresivo: las que ya llegaron se ven sin esperar al resto
+      await new Promise(res=>setTimeout(res,200));
+    }
   }
   // Aplica el precio de un candidato ya mismo Y guarda cuál elegiste
   // (tcgOverride) para que refreshPrecio use directo este candidato la
