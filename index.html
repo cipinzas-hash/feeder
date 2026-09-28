@@ -3324,7 +3324,7 @@ var __angst = (() => {
       { label: "ganancia mes", val: fmtUSD(ganMes), sub: `${vendMes.length} vendidas`, color: ganMes >= 0 ? "#aac756" : "#e53935" }
     ].map(({ label, val, sub, color }, i) => /* @__PURE__ */ React.createElement("div", { key: label, style: { textAlign: i === 0 ? "left" : "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: color || "#fff", lineHeight: 1 } }, val), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginTop: 3 } }, label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.25)", marginTop: 2 } }, sub))))), (() => {
       const porFecha = /* @__PURE__ */ new Map();
-      const carpetasHistorial = [...new Set(inv.map((c) => c.carpeta).filter(Boolean))].sort();
+      const carpetasHistorial = [...new Set(inv.map((c) => c.carpeta).filter(Boolean))].filter((c) => c !== "Dark Collection" && !COLECCIONES_ILUSTRADOR.some((d) => d.carpeta === c)).sort();
       const invHist = historialCarpetas.size === 0 ? inv : inv.filter((c) => historialCarpetas.has(c.carpeta));
       for (const c of invHist) {
         const hist = c.priceHistory || [];
@@ -3498,7 +3498,7 @@ var __angst = (() => {
         }
       },
       l
-    ))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, marginBottom: 4, overflowX: "auto", paddingBottom: 2 } }, cats.filter((c) => c !== "Dark Collection" && !COLECCIONES_ILUSTRADOR.some((d) => d.carpeta === c)).map((c) => /* @__PURE__ */ React.createElement(
+    ))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, marginBottom: 4, overflowX: "auto", paddingBottom: 2 } }, [.../* @__PURE__ */ new Set([...cats, "Dark Collection", ...COLECCIONES_ILUSTRADOR.map((d) => d.carpeta)])].map((c) => /* @__PURE__ */ React.createElement(
       "button",
       {
         key: c,

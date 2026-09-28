@@ -2258,7 +2258,12 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           para armar el delta del día. */}
       {(()=>{
         const porFecha = new Map(); // fecha -> [{carta, prevMarket, newMarket, delta}]
-        const carpetasHistorial = [...new Set(inv.map(c=>c.carpeta).filter(Boolean))].sort();
+        // Corrección 27-sep-2026 (a pedido de Cristopher): Dark Collection y
+        // las colecciones de ilustrador NO van acá, van en los chips de la
+        // búsqueda principal (más abajo) -- las había puesto al revés.
+        const carpetasHistorial = [...new Set(inv.map(c=>c.carpeta).filter(Boolean))]
+          .filter(c=>c!=="Dark Collection"&&!COLECCIONES_ILUSTRADOR.some(d=>d.carpeta===c))
+          .sort();
         const invHist = historialCarpetas.size===0 ? inv : inv.filter(c=>historialCarpetas.has(c.carpeta));
         for (const c of invHist) {
           const hist = c.priceHistory || [];
@@ -2295,9 +2300,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             {historialOpen&&(
               <div style={{background:"#fff",border:"1px solid #f0f0f0",borderRadius:8,marginBottom:8}}>
                 {/* Filtro por carpeta (26-sep-2026, a pedido de Cristopher) --
-                    vacío = todas. Dark Collection entra acá también, a
-                    diferencia de los chips de la búsqueda principal donde se
-                    excluye a propósito (22-sep-2026): acá sí importa verla. */}
+                    vacío = todas. Dark Collection + ilustrador NO entran acá
+                    (corrección 27-sep-2026): van en los chips de la búsqueda
+                    principal, los había puesto al revés. */}
                 <div style={{display:"flex",gap:4,padding:"8px 10px",borderBottom:"1px solid #f0f0f0",overflowX:"auto"}}>
                   {carpetasHistorial.map(c=>(
                     <button key={c} onClick={()=>setHistorialCarpetas(prev=>{const n=new Set(prev);n.has(c)?n.delete(c):n.add(c);return n;})}
@@ -2374,9 +2379,12 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
 
       {/* Búsqueda por chips (26-sep-2026, a pedido de Cristopher) — colapsada
           por defecto para que toda la vista entre en pantalla sin scroll; el
-          ícono despliega modo + chips. Mismas 9 colecciones automáticas
-          (Dark + 8 ilustrador) excluidas de los chips de carpeta, igual que
-          antes (22-sep-2026): viven solo en el menú "Colecciones". */}
+          ícono despliega modo + chips. Dark Collection + las 8 colecciones de
+          ilustrador SÍ están en los chips de carpeta (corrección 27-sep-2026:
+          habían quedado afuera por error, la exclusión del 22-sep era para
+          el filtro single-select viejo, no para esto -- ahora viven acá y
+          NO en el filtro del historial de snapshots, que las tenía al
+          revés). */}
       <div style={{marginBottom:10}}>
         <button onClick={()=>setFiltrosAbiertos(v=>!v)}
           style={{display:"flex",alignItems:"center",gap:6,background:"transparent",border:"1px dashed #ddd",borderRadius:12,padding:"5px 12px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888"}}>
@@ -2404,7 +2412,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               ))}
             </div>
             <div style={{display:"flex",gap:4,marginBottom:4,overflowX:"auto",paddingBottom:2}}>
-              {cats.filter(c=>c!=="Dark Collection"&&!COLECCIONES_ILUSTRADOR.some(d=>d.carpeta===c)).map(c=>(
+              {[...new Set([...cats,"Dark Collection",...COLECCIONES_ILUSTRADOR.map(d=>d.carpeta)])].map(c=>(
                 <button key={c} onClick={()=>toggleChip(chipCarpetas,setChipCarpetas,c)}
                   style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,padding:"4px 10px",borderRadius:12,border:"1px dashed",cursor:"pointer",flexShrink:0,
                     background:chipCarpetas.has(c)?"#111":"transparent",color:chipCarpetas.has(c)?"#fff":"#aaa",borderColor:chipCarpetas.has(c)?"#111":"#ddd"}}>
