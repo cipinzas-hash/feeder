@@ -99,19 +99,22 @@ async function main() {
     const carta = candidatas[i];
     if (i > 0) await sleep(POKE_THROTTLE_MS); // ver nota de POKE_THROTTLE_MS arriba
     try {
-      // Presupuesto de tcgpricelookup.com agotado -- no aborta la corrida,
-      // simplemente esta carta puntual (y las que sigan necesitando
-      // fallback) esperan a la corrida de mañana. pokemontcg.io sigue
-      // disponible sin restricción.
-      const necesitaFallbackSiFalla = !carta.cardId;
-      if (necesitaFallbackSiFalla && tcgUsadas >= RESERVA_TCG_DIARIA) {
-        console.log(`⏭ (${i + 1}/${candidatas.length}) ${carta.name}: sin cardId y cupo de tcgpricelookup.com agotado por hoy, se pospone`);
-        continue;
-      }
-      const { market, low, high, fuente } = await refreshPrecio(carta, TCG_API_KEY);
-      if (fuente === "tcgpricelookup") tcgUsadas++;
+      // Fix 28-sep-2026 (Cristopher notó que la actualización se hace
+      // difícil a medida que crece el inventario): esto ANTES solo miraba
+      // si la carta tenía cardId para decidir si el cupo real importaba --
+      // pero una carta CON cardId cuyo precio en pokemontcg.io viene vacío
+      // (cada vez más común: sets nuevos que TCGplayer todavía no indexó)
+      // también termina necesitando el respaldo, sin que nada la frenara
+      // una vez agotado el cupo. Ahora se corta por cupo real en el
+      // momento, no por una suposición de antemano -- pokemontcg.io sigue
+      // intentándose siempre (gratis, sin restricción).
+      const permitirFallback = tcgUsadas < RESERVA_TCG_DIARIA;
+      const { market, low, high, fuente } = await refreshPrecio(carta, TCG_API_KEY, permitirFallback);
+      if (fuente?.startsWith("tcgpricelookup")) tcgUsadas++; // cuenta también las designadas a mano (tcgpricelookup(override)), antes se colaban sin contar
       if (market == null) {
-        console.log(`✗ (${i + 1}/${candidatas.length}) ${carta.name}: sin precio de ninguna fuente`);
+        console.log(!permitirFallback
+          ? `⏭ (${i + 1}/${candidatas.length}) ${carta.name}: cupo de tcgpricelookup.com agotado por hoy, se pospone`
+          : `✗ (${i + 1}/${candidatas.length}) ${carta.name}: sin precio de ninguna fuente`);
         failCount++;
         continue;
       }

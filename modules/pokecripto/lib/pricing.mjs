@@ -132,7 +132,15 @@ export function addSnapshot(history, market, low, high, dateISO) {
 // tal como los devuelve esa API), se usa ESO en vez de carta.name/number/
 // setCode para la búsqueda de respaldo -- evita depender del matching
 // automático que ya sabemos que le falla a estas cartas puntuales.
-export async function refreshPrecio(carta, apiKey) {
+//
+// permitirFallback (28-sep-2026): el bot decidía de antemano si una
+// carta iba a necesitar el respaldo mirando solo si tenía cardId --
+// pero una carta CON cardId cuyo precio en pokemontcg.io viene vacío
+// (bastante común en sets muy nuevos) también cae acá, sin que nada la
+// frenara si el cupo real ya se había gastado. Ahora el bot puede cortar
+// el respaldo desde afuera, carta por carta, según el cupo que le quede
+// en ESE momento -- no según de antemano.
+export async function refreshPrecio(carta, apiKey, permitirFallback = true) {
   let market = null, low = null, high = null, fuente = null;
   if (carta.cardId) {
     try {
@@ -141,7 +149,7 @@ export async function refreshPrecio(carta, apiKey) {
       if (pp?.market) { market = pp.market; low = pp.low || null; high = pp.high || null; fuente = "pokemontcg"; }
     } catch (e) { /* cae a tcgpricelookup */ }
   }
-  if (!market) {
+  if (!market && permitirFallback) {
     const ov = carta.tcgOverride;
     const p = ov
       ? await fetchTCGPrice(ov.name, carta.set, ov.number, ov.setId || ov.setCode, apiKey)
