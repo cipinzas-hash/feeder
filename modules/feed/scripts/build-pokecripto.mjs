@@ -12,9 +12,11 @@
 // cola de "más antiguas" sin necesitar lógica de prioridad aparte.
 //
 // Política (issue #9): ordenar TODAS las cartas activas por antigüedad de
-// snapshot, tomar las 300 más viejas (ver CARTAS_POR_CORRIDA más abajo,
-// subido de 100 el 9-sep-2026), consultar, snapshot, persistir. Una
-// carta actualizada pasa al final de la cola para la próxima corrida.
+// snapshot, tomar las CARTAS_POR_CORRIDA más viejas (100, ver más abajo --
+// bajado de 300 el 28-sep-2026, el inventario pasó de ~128 a más de 1000
+// cartas con las colecciones de ilustrador y 300 ya no entraba con margen
+// en los 20 min del workflow). Una carta actualizada pasa al final de la
+// cola para la próxima corrida.
 //
 // Presupuesto de API: pokemontcg.io (gratis, sin key) va primero y cubre
 // casi todo el inventario real (todo lo que tiene cardId, incluida Dark
@@ -34,14 +36,21 @@ const TCG_API_KEY = process.env.TCG_API_KEY || null;
 // Con el throttle de POKE_THROTTLE_MS (más abajo) y timeout-minutes:20 del
 // workflow, el presupuesto de tiempo real de una corrida permite bastante
 // más que 100 cartas: ~3.7-4.2s por carta (throttle + latencia real de red)
-// x 300 cartas ≈ 18-21 min, todavía dentro del margen. Se sube de 100 a 300
-// (9-sep-2026, Cristopher pidió maximizar cobertura ya que pokemontcg.io es
-// gratis) -- con esto el inventario activo de hoy (128) entra ENTERO en una
-// sola corrida diaria, todos los días, en vez de ir rotando entre corridas.
-// Si el inventario crece bastante más allá de ~250-280 cartas activas, esta
-// cuenta hay que rehacerla (subir timeout-minutes, o recién ahí sí
-// considerar correr más de una vez al día).
-const CARTAS_POR_CORRIDA = 300;
+// x 300 cartas ≈ 18-21 min -- ese cálculo ya estaba pegado al límite. Se
+// había subido de 100 a 300 el 9-sep-2026 porque el inventario activo de
+// entonces (128) entraba entero en una corrida.
+//
+// Vuelta a 100 (28-sep-2026): con las colecciones de ilustrador el
+// inventario activo pasó de ~128 a más de 1000 cartas -- a 300/corrida el
+// cálculo de arriba ya no da margen, se corre real riesgo de que el
+// workflow mate el proceso a los 20 min ANTES de llegar al writeFile()
+// del final (ver más abajo), perdiendo TODO el trabajo de ese día, no
+// solo el de las cartas que faltaron. Con inventario tan grande, una
+// rotación completa ya no entra en una corrida ni por asomo -- se
+// prioriza por antigüedad de snapshot (ver política arriba), así que
+// las cartas más viejas rotan primero y con el tiempo todas se van
+// cubriendo, más lento que antes pero sin arriesgar la corrida entera.
+const CARTAS_POR_CORRIDA = 100;
 const RESERVA_TCG_DIARIA = 80; // de 100 reales -- margen para uso manual
 
 if (!INVENTARIO_PATH || !PENDING_PATH) {
