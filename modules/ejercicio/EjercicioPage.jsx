@@ -1,3 +1,5 @@
+import { RUTINA, RUTINA_DESDE, diaSugerido } from "./rutina.js";
+import { DIBUJOS, FIG_VIEWBOX } from "./figuras.js";
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
 const MUSCLE_GROUPS = [
@@ -18,6 +20,8 @@ const EJERCICIOS_DEFAULT = [
   {id:"press-banca",    name:"Press banca",             emoji:"🏋️", muscles:[{g:"pecho",pct:0.7},{g:"triceps",pct:0.2},{g:"hombro",pct:0.1}],   series:4, repMin:8,  repMax:12, weightStep:2.5, restSecs:90,  plateUnit:"lb", barWeightKg:20, how:"Acostado en el banco de press. Agarre al ancho de hombros, baja controlado hasta el pecho, empuja explosivo."},
   {id:"apertura-cable", name:"Aperturas en cable",      emoji:"🦅", muscles:[{g:"pecho",pct:0.8},{g:"hombro",pct:0.2}],                          series:3, repMin:10, repMax:15, weightStep:2.5, restSecs:60,  how:"Torre de cable dual a la altura del pecho. Brazos semi-extendidos, junta las manos al frente en arco."},
   {id:"press-cerrado",  name:"Press cerrado",            emoji:"🤏", muscles:[{g:"pecho",pct:0.3},{g:"triceps",pct:0.6},{g:"hombro",pct:0.1}],   series:3, repMin:8,  repMax:12, weightStep:2.5, restSecs:75,  plateUnit:"lb", barWeightKg:20, how:"Banco de press, agarre angosto (manos casi juntas). Codos pegados al cuerpo al bajar."},
+  // Press banca del Día B (issue #22): id propio para que su progresión no se mezcle con la del Día A
+  {id:"press-banca-b",  name:"Press banca (Día B)",     emoji:"🏋️", muscles:[{g:"pecho",pct:0.7},{g:"triceps",pct:0.2},{g:"hombro",pct:0.1}],   series:3, repMin:8,  repMax:10, weightStep:2.27, restSecs:120, plateUnit:"lb", barWeightKg:20, how:"Igual que el press banca del Día A, con pausa de 1 s con la barra tocando el pecho."},
   // Espalda
   {id:"dominadas",      name:"Dominadas asistidas",      emoji:"🧗", muscles:[{g:"espalda",pct:0.7},{g:"biceps",pct:0.3}],                       series:3, repMin:6,  repMax:10, weightStep:-2.5,restSecs:90,  variantes:["Neutro","Supino","Prono"], how:"Máquina de asistencia — menos peso de asistencia = más difícil. Jala el pecho hacia la barra, controla la bajada. La máquina tiene 3 posiciones de agarre (elegir arriba) -- no ejercitan exactamente igual, neutro suele sentirse más cómodo, supino carga algo más bíceps, prono suele ser el más duro de dorsal."},
   {id:"jalon-pecho",    name:"Jalón al pecho",           emoji:"⬇️", muscles:[{g:"espalda",pct:0.75},{g:"biceps",pct:0.25}],                     series:3, repMin:10, repMax:15, weightStep:2.5, restSecs:75,  how:"Torre de cable dual con barra alta. Jala hacia el pecho apretando omóplatos, sube controlado."},
@@ -41,6 +45,8 @@ const EJERCICIOS_DEFAULT = [
   {id:"prensa",         name:"Prensa de piernas",        emoji:"🦵", muscles:[{g:"cuadriceps",pct:0.55},{g:"gluteo",pct:0.3},{g:"isquio",pct:0.15}],  series:3, repMin:10, repMax:15, weightStep:5, restSecs:90, plateUnit:"lb", barWeightKg:0, how:"Máquina de prensa — acostado, empujás la plataforma con las piernas hacia arriba. Peso base del carro desconocido, se cuenta solo lo agregado (ver nota en discos)."},
   {id:"ext-cuadriceps", name:"Extensión de cuádriceps",  emoji:"🦵", muscles:[{g:"cuadriceps",pct:0.95},{g:"gluteo",pct:0.05}],                  series:3, repMin:10, repMax:15, weightStep:2.5, restSecs:60,  how:"Máquina sentado, extiende las piernas contra la resistencia hasta casi estirar del todo."},
   {id:"peso-muerto",    name:"Peso muerto con KB",       emoji:"🏋️", muscles:[{g:"isquio",pct:0.5},{g:"gluteo",pct:0.3},{g:"espalda",pct:0.2}], series:3, repMin:8,  repMax:12, weightStep:2.5, restSecs:90,  how:"Kettlebell o mancuernas frente a los muslos. Inclina el torso bajando por las piernas, espalda recta."},
+  {id:"peso-muerto-rumano", name:"Peso muerto rumano",  emoji:"🏋️", muscles:[{g:"isquio",pct:0.5},{g:"gluteo",pct:0.35},{g:"espalda",pct:0.15}], series:3, repMin:8, repMax:10, weightStep:2.27, restSecs:120, plateUnit:"lb", barWeightKg:20, how:"Barra pegada a los muslos. Caderas hacia atrás con espalda neutra, baja bajo la rodilla, sube empujando la cadera."},
+  {id:"hip-thrust-kb",  name:"Hip thrust con kettlebells", emoji:"🌉", muscles:[{g:"gluteo",pct:0.75},{g:"isquio",pct:0.25}],                   series:3, repMin:10, repMax:15, weightStep:2.27, restSecs:75, how:"Espalda alta apoyada en el banco, una kettlebell a cada lado de la cadera. Sube hasta torso recto y aprieta el glúteo."},
   {id:"zancadas",       name:"Zancadas",                 emoji:"🚶", muscles:[{g:"cuadriceps",pct:0.45},{g:"gluteo",pct:0.4},{g:"isquio",pct:0.15}], series:3, repMin:10, repMax:14, weightStep:2.5, restSecs:75, how:"Kettlebells a los costados. Paso largo adelante, baja la rodilla trasera casi al suelo."},
   {id:"sent-goblet",    name:"Sentadilla goblet",        emoji:"🍷", muscles:[{g:"cuadriceps",pct:0.5},{g:"gluteo",pct:0.3},{g:"abdominales",pct:0.2}], series:3, repMin:10, repMax:15, weightStep:2.5, restSecs:75, how:"Kettlebell sostenida frente al pecho con ambas manos. Baja entre las piernas controlado."},
   // Abdominales
@@ -221,7 +227,7 @@ function weeksWithData(ejercicioLog) {
   return Array.from(mondays).sort((a,b)=>b.localeCompare(a));
 }
 
-function BodyHeatmap({ totals, onTap }) {
+function BodyHeatmap({ totals, onTap, compact }) {
   const FRONT_SHAPES = {
     hombro:      [{x:8,y:18,w:14,h:10},{x:58,y:18,w:14,h:10}],
     pecho:       [{x:24,y:18,w:32,h:16}],
@@ -238,8 +244,8 @@ function BodyHeatmap({ totals, onTap }) {
   function pctOf(k){ return (totals[k]||0)/WEEKLY_MUSCLE_TARGET; }
   function Body({shapes, title}) {
     return (
-      <div onClick={onTap} style={{cursor:"pointer",textAlign:"center"}}>
-        <svg width="80" height="100" viewBox="0 0 80 100">
+      <div onClick={onTap} style={{cursor:onTap?"pointer":"default",textAlign:"center"}}>
+        <svg width={compact?56:80} height={compact?70:100} viewBox="0 0 80 100">
           <ellipse cx="40" cy="8" rx="9" ry="9" fill="#2a2a2a"/>
           <rect x="22" y="16" width="36" height="2" fill="#2a2a2a"/>
           {Object.entries(shapes).map(([k,rects])=>{
@@ -254,7 +260,7 @@ function BodyHeatmap({ totals, onTap }) {
     );
   }
   return (
-    <div style={{background:"#111",borderRadius:14,padding:"14px 16px",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"center",gap:28}}>
+    <div style={{background:"#111",borderRadius:compact?10:14,padding:compact?"8px 10px":"14px 16px",marginBottom:compact?0:16,display:"flex",alignItems:"center",justifyContent:"center",gap:compact?14:28,flexShrink:0}}>
       <Body shapes={FRONT_SHAPES} title="frente"/>
       <Body shapes={BACK_SHAPES} title="espalda"/>
     </div>
@@ -327,6 +333,42 @@ const KG_TO_LB = 2.2046;
 function toDisplay(kg, unit){ return unit==="lb" ? parseFloat((kg*KG_TO_LB).toFixed(1)) : kg; }
 function toKg(val, unit){ return unit==="lb" ? parseFloat((val/KG_TO_LB).toFixed(2)) : val; }
 
+// ── Rutina A/B (issue #22): formato de cargas ──────────────────────────────
+// Ejercicios con discos (plateUnit "lb"): se muestra lo que se carga físicamente
+// (lb de discos), igual que en el registro. Máquina de asistencia (weightStep<0):
+// se aclara que el número es asistencia, no carga.
+function fmtCarga(kg, ex, unit) {
+  if(kg==null) return "peso corporal";
+  if(ex.plateUnit==="lb") {
+    const base = ex.barWeightKg||0;
+    const d = Math.round(toDisplay(Math.max(0,kg-base),"lb"));
+    return base>0 ? `${d} lb de discos (${kg.toFixed(1)} kg total)` : `${d} lb de discos`;
+  }
+  const num = `${toDisplay(kg,unit)} ${unit}` + (unit==="kg" ? ` (${Math.round(toDisplay(kg,"lb"))} lb)` : ` (${kg.toFixed(1)} kg)`);
+  return ex.weightStep<0 ? `asistencia ${num}` : num;
+}
+// Peso de una serie ya hecha, en la unidad natural del ejercicio.
+function fmtPesoSerie(kg, ex, unit) {
+  if(kg==null) return "";
+  if(ex.plateUnit==="lb") return `${Math.round(toDisplay(Math.max(0,kg-(ex.barWeightKg||0)),"lb"))} lb discos`;
+  return `${toDisplay(kg,unit)}${unit}`;
+}
+// Calentamiento: solo guía en pantalla, NO se registra como serie (el heatmap
+// cuenta cada serie marcada como serie efectiva).
+function calentamientoTexto(calent, kgBase, ex, unit) {
+  if(kgBase==null) return null;
+  const base = ex.barWeightKg||0;
+  return (calent.pasos||[]).map(([a,reps]) => {
+    if(calent.tipo==="asist") return `${reps} × asistencia ${toDisplay(kgBase+a,unit)} ${unit}`;
+    const kgW = kgBase*a;
+    if(ex.plateUnit==="lb") {
+      const lb = Math.max(0, Math.round(toDisplay(Math.max(0,kgW-base),"lb")/5)*5);
+      return lb===0 ? `${reps} × ${base>0?`barra sola (${base} kg)`:"sin discos"}` : `${reps} × ${lb} lb de discos`;
+    }
+    return `${reps} × ${toDisplay(Math.round(kgW*2)/2,unit)} ${unit}`;
+  }).join(" · ");
+}
+
 function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveCustomEjercicios, ejercicioDecks, saveEjercicioDecks }) {
   const todayKey = (() => {
     const d = new Date();
@@ -334,7 +376,6 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
   })();
 
   const [view,         setView]         = useState("session");
-  const [openGroup,    setOpenGroup]    = useState(null);
   const [openEx,       setOpenEx]       = useState(null);
   const [varianteElegida, setVarianteElegida] = useState({}); // exId -> variante elegida hoy (se resetea al recargar, no persiste entre días -- se guarda por serie al marcarla, ver markSerie)
   const [timerSecs,    setTimerSecs]    = useState(0);
@@ -347,6 +388,8 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
   const [pesoUnit,     setPesoUnit]     = useState("kg"); // "kg" | "lb" — UI only, storage always kg
   const [deckMenuOpen, setDeckMenuOpen] = useState(false);
   const [newDeckName,  setNewDeckName]  = useState("");
+  const [diaSel,       setDiaSel]       = useState(() => diaSugerido()); // "A" | "B" — solo pestaña inicial, se elige a mano (issue #22)
+  const [guiaAbierta,  setGuiaAbierta]  = useState({}); // exId -> bool; si no está, se abre sola hasta marcar la primera serie del día
   const timerRef = useRef(null);
 
   // allExercicios: los overrides de customEjercicios tienen que GANAR sobre
@@ -363,9 +406,6 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
   const todaySeries    = ejercicioLog[todayKey] || {};
   const decks = ejercicioDecks || [];
 
-  const groupedExercises = MUSCLE_GROUPS
-    .map(g => ({...g, exercises: allExercicios.filter(e => !e.archivado && (e.muscles||[]).some(m=>m.g===g.k))}))
-    .filter(g => g.exercises.length > 0);
 
   useEffect(() => () => clearInterval(timerRef.current), []);
 
@@ -402,29 +442,16 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
     setTimerMax(m => m + extra); // si no, el anillo de progreso se ve raro al agregar tiempo
   }
 
-  function groupProgress(g) {
-    let done = 0, total = 0;
-    g.exercises.forEach(ex => {
-      for(let si = 0; si < (ex.series||3); si++){
-        total++;
-        if(isSerieDone(todaySeries[`${ex.id}_${si}`])) done++;
-      }
-    });
-    return {done, total};
-  }
+  // Progreso de la sesión del día elegido: series hechas / series de la rutina (issue #22)
+  const rutinaDia   = RUTINA[diaSel];
+  const rutinaItems = rutinaDia.items.map(item => ({item, rx: rutinaEx(item)})).filter(x => x.rx);
+  const seriesTotal = rutinaItems.reduce((n,x) => n + (x.rx.series||3), 0);
+  const seriesHechas = rutinaItems.reduce((n,x) => n + Array.from({length:x.rx.series||3},(_,si)=>isSerieDone(todaySeries[`${x.rx.id}_${si}`])?1:0).reduce((a,b)=>a+b,0), 0);
+  const pct     = seriesTotal > 0 ? Math.round(seriesHechas / seriesTotal * 100) : 0;
+  const allDone = seriesTotal > 0 && seriesHechas === seriesTotal;
 
-  // Progreso por grupos musculares con ≥1 serie completada
-  const gruposConEjercicios = groupedExercises.length;
-  const gruposConAlgoHecho  = groupedExercises.filter(g =>
-    g.exercises.some(ex =>
-      Array.from({length: ex.series||3}, (_,si) => isSerieDone(todaySeries[`${ex.id}_${si}`])).some(Boolean)
-    )
-  ).length;
-  const pct     = gruposConEjercicios > 0 ? Math.round(gruposConAlgoHecho / gruposConEjercicios * 100) : 0;
-  const allDone = gruposConAlgoHecho === gruposConEjercicios && gruposConEjercicios > 0;
-
-  function getExHistory(exId) {
-    const ex   = allExercicios.find(e => e.id === exId);
+  function getExHistory(exId, exOverride) {
+    const ex   = exOverride || allExercicios.find(e => e.id === exId);
     const days = Object.keys(ejercicioLog).sort();
     const result = [];
     days.forEach(dk => {
@@ -448,36 +475,291 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
     return result;
   }
 
-  function getProgressionSuggestion(ex) {
-    if(!ex.weightStep) return null;
-    const hist = getExHistory(ex.id);
-    if(hist.length < 2) return null;
-    const last2 = hist.slice(-2);
-    const bothAtTop = last2.every(h=>h.allTop && h.reps>=ex.repMax);
-    if(!bothAtTop) return null;
-    const lastPeso = last2[last2.length-1].peso;
-    if(!lastPeso) return null;
-    return Math.max(0, lastPeso + ex.weightStep);
+  // ── Rutina A/B (issue #22) ────────────────────────────────────────────────
+  // Reemplaza getProgressionSuggestion / getCalisteniaProgression / applyProgression
+  // y el acordeón por grupo muscular de la vista de sesión (obsoletos; siguen en el historial de git).
+
+  // Ejercicio del catálogo con la prescripción de la rutina aplicada SOLO en esta vista.
+  function rutinaEx(item) {
+    const base = allExercicios.find(e => e.id === item.exId);
+    if(!base) return null;
+    return {...base, series:item.series, repMin:item.repMin, repMax:item.repMax, restSecs:item.rest, weightStep: item.paso ?? base.weightStep};
   }
 
-  // Doble progresión calistenia: 2 sesiones con allTop → sugerir nextVariant
-  function getCalisteniaProgression(ex) {
-    if(ex.weightStep !== 0 || !ex.nextVariant) return null;
-    const hist = getExHistory(ex.id);
-    if(hist.length < 2) return null;
-    const last2 = hist.slice(-2);
-    if(last2.every(h=>h.allTop && h.reps>=ex.repMax)) return ex.nextVariant;
-    return null;
+  // Series hechas de un ejercicio, por fecha, en orden cronológico (solo lectura de ejercicioLog).
+  function setsPorFecha(exId) {
+    const out = [];
+    Object.keys(ejercicioLog).sort().forEach(dk => {
+      const dayLog = ejercicioLog[dk] || {};
+      const sets = [];
+      Object.keys(dayLog).forEach(k => {
+        const m = k.match(/^(.*)_(\d+)$/);
+        if(!m || m[1] !== exId) return;
+        const sv = getSerieValue(dayLog[k]);
+        if(sv?.done) sets[parseInt(m[2],10)] = {reps: sv.reps||null, peso: sv.peso||null};
+      });
+      if(sets.some(Boolean)) out.push({date: dk, sets});
+    });
+    return out;
   }
 
-  function applyProgression(ex, newPeso) {
-    // ex ya es el objeto fusionado completo (via allExercicios) - hay que
-    // preservarlo entero en el override, igual que hace el toggle de
-    // archivado (`{...ex, archivado:...}`). Antes solo se guardaba
-    // {id, pesoActual}, lo que BORRABA muscles/name/etc del override y
-    // hacia que el ejercicio desapareciera de toda la UI (ambas vistas
-    // filtran por muscles). Ver issue #1.
-    saveCustomEjercicios({...(customEjercicios||{}), [ex.id]: {...ex, pesoActual:newPeso}});
+  // Peso que se propone en cada serie. Prioridad: subida confirmada a mano (si es posterior a la
+  // última marca) > último peso marcado desde RUTINA_DESDE > peso sugerido de la rutina.
+  // Las marcas anteriores a la rutina nueva NO fijan el peso (p. ej. la asistencia pasa a 12 kg).
+  function pesoPorDefecto(item, rx) {
+    const sesiones = setsPorFecha(rx.id).filter(x => x.date >= RUTINA_DESDE);
+    const ultima = sesiones[sesiones.length-1];
+    let ultimoPeso = null, ultimaFecha = null;
+    if(ultima) {
+      const conPeso = ultima.sets.filter(x => x && x.peso);
+      if(conPeso.length) { ultimoPeso = conPeso[conPeso.length-1].peso; ultimaFecha = ultima.date; }
+    }
+    const pr = customEjercicios?.[rx.id]?.pesoRutina;
+    if(pr && pr.kg!=null && (!ultimaFecha || pr.fecha >= ultimaFecha)) return pr.kg;
+    if(ultimoPeso!=null) return ultimoPeso;
+    return item.sugeridoKg ?? null;
+  }
+
+  // Aviso de progresión: la última sesión de la rutina completó todas las series en el tope del rango.
+  function progresionRutina(item, rx) {
+    const sesiones = setsPorFecha(rx.id).filter(x => x.date >= RUTINA_DESDE);
+    const ult = sesiones[sesiones.length-1];
+    if(!ult) return null;
+    const hechas = ult.sets.filter(Boolean);
+    const alTope = hechas.length >= rx.series && hechas.every(x => (x.reps||0) >= rx.repMax);
+    if(!alTope) return null;
+    if(item.paso != null) {
+      const pesos = hechas.filter(x => x.peso);
+      if(!pesos.length) return null;
+      const kg = Math.max(0, parseFloat((pesos[pesos.length-1].peso + item.paso).toFixed(2)));
+      const pr = customEjercicios?.[rx.id]?.pesoRutina;
+      const ya = pr && pr.fecha >= ult.date && (item.paso > 0 ? pr.kg >= kg - 0.01 : pr.kg <= kg + 0.01);
+      return ya ? null : {tipo:"peso", kg};
+    }
+    return item.progTexto ? {tipo:"texto", texto:item.progTexto} : null;
+  }
+
+  // Aplicar una subida confirmada por Cristopher. Se guarda el ejercicio fusionado COMPLETO en el
+  // override (igual que el toggle de archivado; ver issue #1) más `pesoRutina: {kg, fecha}`.
+  // Solo ocurre al tocar el botón; no se escribe nada de forma implícita.
+  function aplicarPesoRutina(rx, kg) {
+    const base = allExercicios.find(e => e.id === rx.id);
+    if(!base) return;
+    saveCustomEjercicios({...(customEjercicios||{}), [rx.id]: {...base, pesoRutina:{kg, fecha:todayKey}}});
+  }
+
+  function renderRutinaItem(item, idx) {
+    const rx = rutinaEx(item);
+    if(!rx) return null;
+    const ex = rx;
+    const nS = ex.series||3;
+    const allExDone = Array.from({length:nS},(_,si)=>isSerieDone(todaySeries[`${ex.id}_${si}`])).every(Boolean);
+    const algunaHecha = Array.from({length:nS},(_,si)=>isSerieDone(todaySeries[`${ex.id}_${si}`])).some(Boolean);
+    const isOpenE   = openEx===ex.id;
+    const exHist    = getExHistory(ex.id, rx);
+    const lastHist  = exHist.length>0 ? exHist[exHist.length-1] : null;
+    const usePeso   = item.sugeridoKg != null;
+    const defaultPesoKg = pesoPorDefecto(item, rx);
+    const prog      = progresionRutina(item, rx);
+    const sesPrev   = setsPorFecha(ex.id).filter(x => x.date < todayKey);
+    const prevSets  = sesPrev.length ? sesPrev[sesPrev.length-1].sets : [];
+    const guiaOpen  = guiaAbierta[ex.id] ?? !algunaHecha;
+    const dib       = DIBUJOS[ex.id];
+    const mapaTotals = {};
+    (ex.muscles||[]).forEach(m => { mapaTotals[m.g] = m.pct * WEEKLY_MUSCLE_TARGET; });
+    const calentTxt = item.calent ? calentamientoTexto(item.calent, defaultPesoKg, ex, pesoUnit) : null;
+    const lbl = {fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:4};
+    const txt = {fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#555",lineHeight:1.55};
+
+    return (
+      <div key={ex.id} style={{border:`1px solid ${allExDone?"#c8e6c9":"#eee"}`,borderRadius:12,marginBottom:8,overflow:"hidden",background:"#fff"}}>
+        <div onClick={()=>setOpenEx(isOpenE?null:ex.id)} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",cursor:"pointer"}}>
+          <span style={{fontFamily:"'Caveat',cursive",fontSize:20,color:"#bbb",width:18,textAlign:"center"}}>{idx+1}</span>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,fontWeight:600,color:allExDone?"#aaa":"#222",textDecoration:allExDone?"line-through":"none"}}>{ex.emoji} {ex.name}</div>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888"}}>{nS}×{ex.repMin}-{ex.repMax} · {usePeso ? fmtCarga(defaultPesoKg, ex, pesoUnit) : "peso corporal"}</div>
+            {!allExDone && lastHist && (
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa"}}>
+                último: {lastHist.reps?(lastHist.peso?`${lastHist.reps}r×${toDisplay(lastHist.peso,pesoUnit)}${pesoUnit}`:`${lastHist.reps}r`):"hecho"}
+              </div>
+            )}
+          </div>
+          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#ccc"}}>{Array.from({length:nS},(_,si)=>isSerieDone(todaySeries[`${ex.id}_${si}`])?"●":"○").join(" ")}</div>
+          <span style={{color:"#ccc",fontSize:11}}>{isOpenE?"▴":"▾"}</span>
+        </div>
+
+        {isOpenE && (
+          <div style={{padding:"10px 14px 14px",background:"#fafafa",borderTop:"1px solid #f0f0f0"}}>
+            <div style={{...txt,fontSize:11,color:"#999",marginBottom:8}}>descanso {ex.restSecs}s · ritmo: {item.ritmo}</div>
+
+            {calentTxt && (
+              <div style={{background:"#fff8e1",border:"1px solid #ffe9a8",borderRadius:8,padding:"8px 12px",marginBottom:10}}>
+                <div style={{...lbl,color:"#b58900"}}>calentamiento · no se registra</div>
+                <div style={{...txt,color:"#7a5c00"}}>{calentTxt}</div>
+              </div>
+            )}
+
+            {prog?.tipo==="peso" && (
+              <button onClick={()=>aplicarPesoRutina(ex,prog.kg)}
+                style={{width:"100%",background:"#2e7d52",border:"none",borderRadius:8,padding:"10px",fontFamily:"'Caveat',cursive",fontSize:16,color:"#fff",cursor:"pointer",marginBottom:10,fontWeight:700}}>
+                {ex.weightStep<0 ? "⬆ Menos asistencia: " : "⬆ Subir a "}{fmtCarga(prog.kg, ex, pesoUnit)}
+              </button>
+            )}
+            {prog?.tipo==="texto" && (
+              <div style={{background:"#e8f5e9",border:"1px solid #c8e6c9",borderRadius:8,padding:"10px 12px",marginBottom:10}}>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#2e7d52",fontWeight:600,marginBottom:2}}>listo para progresar</div>
+                <div style={{...txt,color:"#1b5e20"}}>⬆ {prog.texto}</div>
+              </div>
+            )}
+
+            {/* Guía de ejecución: dibujo, mapa de músculos y criterios de serie limpia */}
+            <button onClick={()=>setGuiaAbierta(g=>({...g,[ex.id]:!guiaOpen}))}
+              style={{width:"100%",display:"flex",justifyContent:"space-between",alignItems:"center",background:"transparent",border:"1px dashed #ddd",borderRadius:8,padding:"7px 12px",cursor:"pointer",marginBottom:guiaOpen?8:10}}>
+              <span style={{fontFamily:"'Caveat',cursive",fontSize:15,color:"#777"}}>📖 guía de ejecución</span>
+              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#bbb"}}>{guiaOpen?"▴":"▾"}</span>
+            </button>
+            {guiaOpen && (
+              <div style={{background:"#fff",border:"1px solid #eee",borderRadius:10,padding:"10px 12px",marginBottom:10}}>
+                {dib && (
+                  <div style={{display:"flex",gap:8,marginBottom:10}}>
+                    {["inicio","final"].map(k=>(
+                      <div key={k} style={{flex:1,textAlign:"center"}}>
+                        <svg viewBox={FIG_VIEWBOX} style={{width:"100%",display:"block",background:"#fff",border:"1px solid #eee",borderRadius:8}} dangerouslySetInnerHTML={{__html:dib[k]}}/>
+                        <div style={{...lbl,marginTop:4,marginBottom:0}}>{k}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:10}}>
+                  <BodyHeatmap totals={mapaTotals} compact/>
+                  <div style={{flex:1}}>
+                    <div style={lbl}>qué trabaja</div>
+                    {(ex.muscles||[]).map(m=>{
+                      const mg = MUSCLE_GROUPS.find(g2=>g2.k===m.g);
+                      return <div key={m.g} style={{...txt,fontSize:12}}>{mg?.label||m.g} <span style={{color:"#bbb"}}>{Math.round(m.pct*100)}%</span></div>;
+                    })}
+                  </div>
+                </div>
+                <div style={lbl}>antes de la primera repetición</div>
+                <div style={{...txt,marginBottom:8}}>{item.montaje.map((t,i)=><div key={i}>• {t}</div>)}</div>
+                <div style={lbl}>recorrido</div>
+                <div style={{...txt,marginBottom:8}}>{item.recorrido}</div>
+                <div style={{...lbl,color:"#2e7d52"}}>va bien si</div>
+                <div style={{...txt,marginBottom:8}}>{item.bien.map((t,i)=><div key={i}>✓ {t}</div>)}</div>
+                <div style={{...lbl,color:"#c0392b"}}>corrige si</div>
+                <div style={{...txt,marginBottom:8}}>{item.corrige.map((t,i)=><div key={i}>✗ {t}</div>)}</div>
+                <div style={lbl}>cuándo cortar la serie</div>
+                <div style={txt}>{item.parada}</div>
+              </div>
+            )}
+
+            {ex.variantes && ex.variantes.length>0 && (
+                            <div style={{marginBottom:10}}>
+                              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:5}}>agarre/variante de hoy</div>
+                              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                                {ex.variantes.map(v=>{
+                                  const activa = (varianteElegida[ex.id]||ex.variantes[0])===v;
+                                  return (
+                                    <button key={v} onClick={()=>setVarianteElegida(s=>({...s,[ex.id]:v}))}
+                                      style={{padding:"5px 11px",borderRadius:14,border:"1px solid "+(activa?"#111":"#ddd"),background:activa?"#111":"#fff",color:activa?"#fff":"#777",fontFamily:"'DM Sans',sans-serif",fontSize:11,cursor:"pointer"}}>
+                                      {v}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+            {exHist.length>=2 && <div style={{background:"#fff",border:"1px solid #f0f0f0",borderRadius:8,padding:"8px 10px",marginBottom:10}}><ProgresionChart history={exHist} compact ex={ex}/></div>}
+
+            <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                            {Array.from({length:nS},(_,si)=>{
+                              const sv      = getSerieValue(todaySeries[`${ex.id}_${si}`]);
+                              const isDone  = !!sv?.done;
+                              const locked2 = si>0 && !isSerieDone(todaySeries[`${ex.id}_${si-1}`]);
+                              const rKey    = `${ex.id}_${si}`;
+                              const curReps = repsInput[rKey]?.reps ?? (isDone&&sv?.reps?sv.reps:ex.repMin);
+                              // curPesoKg: valor en kg para storage; display convierte según unidad
+                              const curPesoKg = repsInput[rKey]?.peso ?? (isDone&&sv?.peso?sv.peso:defaultPesoKg);
+                              const displayPeso = curPesoKg!=null ? toDisplay(curPesoKg, pesoUnit) : "";
+
+                              return (
+                                <div key={si}>
+                                <div style={{display:"flex",alignItems:"center",gap:6,opacity:locked2?0.3:1,background:isDone?"#f0faf4":"#fff",borderRadius:8,padding:"8px 10px",border:`1px dashed ${isDone?"#c8e6c9":locked2?"#f0f0f0":"#e0e0e0"}`}}>
+                                  <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#bbb",width:20,textAlign:"center",flexShrink:0}}>S{si+1}</span>
+                                  <button onClick={()=>!locked2&&!isDone&&setRepsInput(r=>({...r,[rKey]:{...r[rKey],reps:Math.max(1,(curReps||1)-1)}}))} disabled={locked2||isDone} style={{width:26,height:26,borderRadius:4,border:"1px dashed #ddd",background:"transparent",cursor:locked2||isDone?"default":"pointer",fontSize:14,color:"#aaa",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,flexShrink:0}}>−</button>
+                                  <span style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:isDone?"#2e7d52":"#111",minWidth:30,textAlign:"center"}}>{curReps}</span>
+                                  <button onClick={()=>!locked2&&!isDone&&setRepsInput(r=>({...r,[rKey]:{...r[rKey],reps:(curReps||1)+1}}))} disabled={locked2||isDone} style={{width:26,height:26,borderRadius:4,border:"1px dashed #ddd",background:"transparent",cursor:locked2||isDone?"default":"pointer",fontSize:14,color:"#aaa",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,flexShrink:0}}>+</button>
+                                  <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb",marginRight:4}}>r</span>
+                                  {usePeso && (
+                                    <div style={{display:"flex",alignItems:"center",gap:3,marginLeft:4}}>
+                                      {ex.plateUnit==="lb" ? (() => {
+                                        // Modo discos: la barra/base tiene su propio peso fijo en kg
+                                        // (barWeightKg) y lo que se carga son discos en libras -- el
+                                        // selector kg/lb global no alcanza acá porque son DOS unidades
+                                        // mezcladas en el mismo objeto físico, no una elección de una
+                                        // sola. Se tipea solo lo que se ve físicamente (libras de
+                                        // discos, sumando ambos lados), y la app suma la base y
+                                        // convierte sola -- el kg total sigue siendo lo que se guarda
+                                        // (mismo storage canónico de siempre, no cambia nada del
+                                        // historial/progresión).
+                                        const base = ex.barWeightKg || 0;
+                                        const curDiscosLb = curPesoKg!=null ? Math.round(toDisplay(Math.max(0,curPesoKg-base),"lb")) : "";
+                                        const defaultDiscosLb = defaultPesoKg!=null ? Math.round(toDisplay(Math.max(0,defaultPesoKg-base),"lb")) : null;
+                                        return (
+                                          <>
+                                            <input type="number" step="5" min="0"
+                                              value={curDiscosLb}
+                                              onChange={e=>{
+                                                const rawLb = e.target.value!=="" ? parseFloat(e.target.value) : null;
+                                                const kg = rawLb!=null ? parseFloat((base + toKg(rawLb,"lb")).toFixed(2)) : null;
+                                                setRepsInput(r=>({...r,[rKey]:{...r[rKey],peso:kg}}));
+                                              }}
+                                              disabled={isDone||locked2}
+                                              placeholder={defaultDiscosLb!=null ? String(defaultDiscosLb) : "lb"}
+                                              title={base>0 ? `+ ${base}kg de barra = ${curPesoKg!=null?curPesoKg.toFixed(1):"?"}kg total` : "peso base del carro no cargado, solo discos"}
+                                              style={{width:46,border:"1px dashed #ddd",borderRadius:6,padding:"3px 5px",fontSize:12,fontFamily:"'DM Sans',sans-serif",textAlign:"right",outline:"none",background:isDone?"#f0faf4":"#fff",color:"#333"}}/>
+                                            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>lb discos</span>
+                                          </>
+                                        );
+                                      })() : (
+                                        <>
+                                          <input type="number" step={pesoUnit==="lb"?"5":"2.5"} min="0"
+                                            value={displayPeso}
+                                            onChange={e=>{
+                                              const raw = e.target.value!=="" ? parseFloat(e.target.value) : null;
+                                              const kg  = raw!=null ? toKg(raw, pesoUnit) : null;
+                                              setRepsInput(r=>({...r,[rKey]:{...r[rKey],peso:kg}}));
+                                            }}
+                                            disabled={isDone||locked2}
+                                            placeholder={defaultPesoKg!=null ? String(toDisplay(defaultPesoKg,pesoUnit)) : pesoUnit}
+                                            style={{width:50,border:"1px dashed #ddd",borderRadius:6,padding:"3px 5px",fontSize:12,fontFamily:"'DM Sans',sans-serif",textAlign:"right",outline:"none",background:isDone?"#f0faf4":"#fff",color:"#333"}}/>
+                                          <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>{pesoUnit}</span>
+                                        </>
+                                      )}
+                                    </div>
+                                  )}
+                                  <button onClick={()=>{
+                                    if(locked2||isDone) return;
+                                    const ri = repsInput[rKey];
+                                    markSerie(ex.id, si, ri?.reps!==undefined?ri.reps:curReps, ri?.peso!==undefined?ri.peso:(curPesoKg||null), ex.restSecs, varianteElegida[ex.id]||ex.variantes?.[0]);
+                                  }} disabled={locked2||isDone}
+                                    style={{marginLeft:"auto",width:36,height:36,borderRadius:8,border:isDone?"none":"1px dashed #bbb",background:isDone?"#2e7d52":locked2?"#f5f5f5":"#111",color:isDone?"#fff":locked2?"#ddd":"#fff",cursor:locked2||isDone?"default":"pointer",fontSize:isDone?15:12,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s"}}>
+                                    {isDone?"✓":"→"}
+                                  </button>
+                                </div>
+                                {prevSets[si] && !isDone && (
+                                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",padding:"2px 10px 0"}}>
+                                    última vez: {prevSets[si].reps?`${prevSets[si].reps}r`:"hecho"}{prevSets[si].peso?` × ${fmtPesoSerie(prevSets[si].peso, ex, pesoUnit)}`:""}
+                                  </div>
+                                )}
+                                </div>
+                              );
+                            })}
+                          </div>
+          </div>
+        )}
+      </div>
+    );
   }
 
   function buildStats() {
@@ -1024,7 +1306,7 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
         <div style={{height:6,background:"#eee",borderRadius:99,overflow:"hidden"}}>
           <div style={{width:`${pct}%`,height:"100%",background:allDone?"#2e7d52":"#111",borderRadius:99,transition:"width 0.4s"}}/>
         </div>
-        <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#bbb",marginTop:6}}>{gruposConAlgoHecho} de {gruposConEjercicios} grupos musculares</div>
+        <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#bbb",marginTop:6}}>{seriesHechas} de {seriesTotal} series · {rutinaDia.label}</div>
       </div>
 
       {/* Mazos */}
@@ -1065,186 +1347,21 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
         </div>
       </div>
 
-      {/* Grupos musculares */}
-      {groupedExercises.map(g=>{
-        const {done,total} = groupProgress(g);
-        const gDone   = done===total && total>0;
-        const isOpenG = openGroup===g.k;
-        return (
-          <div key={g.k} style={{border:`1px solid ${gDone?"#c8e6c9":"#eee"}`,borderRadius:12,marginBottom:8,overflow:"hidden",background:"#fff"}}>
-            <div onClick={()=>setOpenGroup(isOpenG?null:g.k)} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",cursor:"pointer"}}>
-              <span style={{fontSize:20}}>{g.emoji}</span>
-              <div style={{flex:1}}>
-                <div style={{fontFamily:"'Caveat',cursive",fontSize:17,fontWeight:700,color:gDone?"#aaa":"#111",textDecoration:gDone?"line-through":"none"}}>{g.label}</div>
-                <div style={{height:3,background:"#f0f0f0",borderRadius:99,overflow:"hidden",marginTop:4,width:"80%"}}>
-                  <div style={{width:`${total>0?done/total*100:0}%`,height:"100%",background:gDone?"#2e7d52":"#111",borderRadius:99,transition:"width 0.3s"}}/>
-                </div>
-              </div>
-              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#bbb",marginRight:4}}>{done}/{total}</span>
-              <span style={{color:"#ccc",fontSize:12}}>{isOpenG?"▴":"▾"}</span>
-            </div>
-            {isOpenG && (
-              <div style={{borderTop:"1px solid #f0f0f0"}}>
-                {g.exercises.map(ex=>{
-                  const nS        = ex.series||3;
-                  const allExDone = Array.from({length:nS},(_,si)=>isSerieDone(todaySeries[`${ex.id}_${si}`])).every(Boolean);
-                  const isOpenE   = openEx===ex.id;
-                  const exHist    = getExHistory(ex.id);
-                  const lastHist  = exHist.length>0 ? exHist[exHist.length-1] : null;
-                  const pesoActual = customEjercicios?.[ex.id]?.pesoActual;
-                  const usePeso   = ex.weightStep !== 0;
-                  const suggestion     = getProgressionSuggestion(ex);
-                  const calSuggestion  = getCalisteniaProgression(ex);
-
-                  return (
-                    <div key={ex.id} style={{borderBottom:"1px dashed #f5f5f5"}}>
-                      <div onClick={()=>setOpenEx(isOpenE?null:ex.id)} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",cursor:"pointer"}}>
-                        <span style={{fontSize:18}}>{ex.emoji}</span>
-                        <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:600,color:allExDone?"#aaa":"#333",textDecoration:allExDone?"line-through":"none"}}>{ex.name}</div>
-                          {!allExDone && lastHist && (
-                            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa"}}>
-                              último: {lastHist.reps?(lastHist.peso?`${lastHist.reps}r×${toDisplay(lastHist.peso,pesoUnit)}${pesoUnit}`:`${lastHist.reps}r`):"hecho"}
-                            </div>
-                          )}
-                          <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:2}}>
-                            {(ex.muscles||[]).map(m=>{
-                              const mg = MUSCLE_GROUPS.find(g2=>g2.k===m.g);
-                              return <span key={m.g} style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb"}}>{mg?.emoji}{Math.round(m.pct*100)}%</span>;
-                            })}
-                          </div>
-                        </div>
-                        <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#ccc"}}>{Array.from({length:nS},(_,si)=>isSerieDone(todaySeries[`${ex.id}_${si}`])?"●":"○").join(" ")}</div>
-                        <span style={{color:"#ccc",fontSize:11}}>{isOpenE?"▴":"▾"}</span>
-                      </div>
-
-                      {isOpenE && (
-                        <div style={{padding:"10px 14px 14px",background:"#fafafa"}}>
-                          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#666",lineHeight:1.6,marginBottom:10,padding:"10px 12px",background:"#fff",borderRadius:8,border:"1px dashed #eee"}}>{ex.how}</div>
-                          {ex.variantes && ex.variantes.length>0 && (
-                            <div style={{marginBottom:10}}>
-                              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#aaa",letterSpacing:1,textTransform:"uppercase",marginBottom:5}}>agarre/variante de hoy</div>
-                              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                                {ex.variantes.map(v=>{
-                                  const activa = (varianteElegida[ex.id]||ex.variantes[0])===v;
-                                  return (
-                                    <button key={v} onClick={()=>setVarianteElegida(s=>({...s,[ex.id]:v}))}
-                                      style={{padding:"5px 11px",borderRadius:14,border:"1px solid "+(activa?"#111":"#ddd"),background:activa?"#111":"#fff",color:activa?"#fff":"#777",fontFamily:"'DM Sans',sans-serif",fontSize:11,cursor:"pointer"}}>
-                                      {v}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10,alignItems:"center"}}>
-                            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>rango {ex.repMin}-{ex.repMax} reps · descanso {ex.restSecs||90}s</span>
-                          </div>
-                          {/* Progresión peso */}
-                          {suggestion!=null && (
-                            <button onClick={()=>applyProgression(ex,suggestion)}
-                              style={{width:"100%",background:"#2e7d52",border:"none",borderRadius:8,padding:"10px",fontFamily:"'Caveat',cursive",fontSize:16,color:"#fff",cursor:"pointer",marginBottom:10,fontWeight:700}}>
-                              ⬆ Subir a {toDisplay(suggestion,pesoUnit)}{pesoUnit}
-                            </button>
-                          )}
-                          {/* Progresión calistenia */}
-                          {calSuggestion && (
-                            <div style={{background:"#e8f5e9",border:"1px solid #c8e6c9",borderRadius:8,padding:"10px 12px",marginBottom:10}}>
-                              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#2e7d52",fontWeight:600,marginBottom:2}}>listo para progresar</div>
-                              <div style={{fontFamily:"'Caveat',cursive",fontSize:16,color:"#1b5e20",fontWeight:700}}>⬆ {calSuggestion}</div>
-                            </div>
-                          )}
-                          {exHist.length>=2 && <div style={{background:"#fff",border:"1px solid #f0f0f0",borderRadius:8,padding:"8px 10px",marginBottom:10}}><ProgresionChart history={exHist} compact ex={ex}/></div>}
-
-                          <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                            {Array.from({length:nS},(_,si)=>{
-                              const sv      = getSerieValue(todaySeries[`${ex.id}_${si}`]);
-                              const isDone  = !!sv?.done;
-                              const locked2 = si>0 && !isSerieDone(todaySeries[`${ex.id}_${si-1}`]);
-                              const rKey    = `${ex.id}_${si}`;
-                              const defaultPesoKg = pesoActual ?? lastHist?.peso ?? null;
-                              const curReps = repsInput[rKey]?.reps ?? (isDone&&sv?.reps?sv.reps:ex.repMin);
-                              // curPesoKg: valor en kg para storage; display convierte según unidad
-                              const curPesoKg = repsInput[rKey]?.peso ?? (isDone&&sv?.peso?sv.peso:defaultPesoKg);
-                              const displayPeso = curPesoKg!=null ? toDisplay(curPesoKg, pesoUnit) : "";
-
-                              return (
-                                <div key={si} style={{display:"flex",alignItems:"center",gap:6,opacity:locked2?0.3:1,background:isDone?"#f0faf4":"#fff",borderRadius:8,padding:"8px 10px",border:`1px dashed ${isDone?"#c8e6c9":locked2?"#f0f0f0":"#e0e0e0"}`}}>
-                                  <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#bbb",width:20,textAlign:"center",flexShrink:0}}>S{si+1}</span>
-                                  <button onClick={()=>!locked2&&!isDone&&setRepsInput(r=>({...r,[rKey]:{...r[rKey],reps:Math.max(1,(curReps||1)-1)}}))} disabled={locked2||isDone} style={{width:26,height:26,borderRadius:4,border:"1px dashed #ddd",background:"transparent",cursor:locked2||isDone?"default":"pointer",fontSize:14,color:"#aaa",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,flexShrink:0}}>−</button>
-                                  <span style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:isDone?"#2e7d52":"#111",minWidth:30,textAlign:"center"}}>{curReps}</span>
-                                  <button onClick={()=>!locked2&&!isDone&&setRepsInput(r=>({...r,[rKey]:{...r[rKey],reps:(curReps||1)+1}}))} disabled={locked2||isDone} style={{width:26,height:26,borderRadius:4,border:"1px dashed #ddd",background:"transparent",cursor:locked2||isDone?"default":"pointer",fontSize:14,color:"#aaa",display:"flex",alignItems:"center",justifyContent:"center",lineHeight:1,flexShrink:0}}>+</button>
-                                  <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb",marginRight:4}}>r</span>
-                                  {usePeso && (
-                                    <div style={{display:"flex",alignItems:"center",gap:3,marginLeft:4}}>
-                                      {ex.plateUnit==="lb" ? (() => {
-                                        // Modo discos: la barra/base tiene su propio peso fijo en kg
-                                        // (barWeightKg) y lo que se carga son discos en libras -- el
-                                        // selector kg/lb global no alcanza acá porque son DOS unidades
-                                        // mezcladas en el mismo objeto físico, no una elección de una
-                                        // sola. Se tipea solo lo que se ve físicamente (libras de
-                                        // discos, sumando ambos lados), y la app suma la base y
-                                        // convierte sola -- el kg total sigue siendo lo que se guarda
-                                        // (mismo storage canónico de siempre, no cambia nada del
-                                        // historial/progresión).
-                                        const base = ex.barWeightKg || 0;
-                                        const curDiscosLb = curPesoKg!=null ? Math.round(toDisplay(Math.max(0,curPesoKg-base),"lb")) : "";
-                                        const defaultDiscosLb = defaultPesoKg!=null ? Math.round(toDisplay(Math.max(0,defaultPesoKg-base),"lb")) : null;
-                                        return (
-                                          <>
-                                            <input type="number" step="5" min="0"
-                                              value={curDiscosLb}
-                                              onChange={e=>{
-                                                const rawLb = e.target.value!=="" ? parseFloat(e.target.value) : null;
-                                                const kg = rawLb!=null ? parseFloat((base + toKg(rawLb,"lb")).toFixed(2)) : null;
-                                                setRepsInput(r=>({...r,[rKey]:{...r[rKey],peso:kg}}));
-                                              }}
-                                              disabled={isDone||locked2}
-                                              placeholder={defaultDiscosLb!=null ? String(defaultDiscosLb) : "lb"}
-                                              title={base>0 ? `+ ${base}kg de barra = ${curPesoKg!=null?curPesoKg.toFixed(1):"?"}kg total` : "peso base del carro no cargado, solo discos"}
-                                              style={{width:46,border:"1px dashed #ddd",borderRadius:6,padding:"3px 5px",fontSize:12,fontFamily:"'DM Sans',sans-serif",textAlign:"right",outline:"none",background:isDone?"#f0faf4":"#fff",color:"#333"}}/>
-                                            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>lb discos</span>
-                                          </>
-                                        );
-                                      })() : (
-                                        <>
-                                          <input type="number" step={pesoUnit==="lb"?"5":"2.5"} min="0"
-                                            value={displayPeso}
-                                            onChange={e=>{
-                                              const raw = e.target.value!=="" ? parseFloat(e.target.value) : null;
-                                              const kg  = raw!=null ? toKg(raw, pesoUnit) : null;
-                                              setRepsInput(r=>({...r,[rKey]:{...r[rKey],peso:kg}}));
-                                            }}
-                                            disabled={isDone||locked2}
-                                            placeholder={defaultPesoKg!=null ? String(toDisplay(defaultPesoKg,pesoUnit)) : pesoUnit}
-                                            style={{width:50,border:"1px dashed #ddd",borderRadius:6,padding:"3px 5px",fontSize:12,fontFamily:"'DM Sans',sans-serif",textAlign:"right",outline:"none",background:isDone?"#f0faf4":"#fff",color:"#333"}}/>
-                                          <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>{pesoUnit}</span>
-                                        </>
-                                      )}
-                                    </div>
-                                  )}
-                                  <button onClick={()=>{
-                                    if(locked2||isDone) return;
-                                    const ri = repsInput[rKey];
-                                    markSerie(ex.id, si, ri?.reps!==undefined?ri.reps:curReps, ri?.peso!==undefined?ri.peso:(curPesoKg||null), ex.restSecs, varianteElegida[ex.id]||ex.variantes?.[0]);
-                                  }} disabled={locked2||isDone}
-                                    style={{marginLeft:"auto",width:36,height:36,borderRadius:8,border:isDone?"none":"1px dashed #bbb",background:isDone?"#2e7d52":locked2?"#f5f5f5":"#111",color:isDone?"#fff":locked2?"#ddd":"#fff",cursor:locked2||isDone?"default":"pointer",fontSize:isDone?15:12,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s"}}>
-                                    {isDone?"✓":"→"}
-                                  </button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {/* Rutina — Día A / Día B (issue #22). Reemplaza el acordeón por grupo muscular. */}
+      <div style={{display:"flex",gap:8,marginBottom:12}}>
+        {Object.entries(RUTINA).map(([k,d])=>{
+          const activa = diaSel===k;
+          const sugerido = diaSugerido()===k;
+          return (
+            <button key={k} onClick={()=>setDiaSel(k)}
+              style={{flex:1,padding:"10px 8px",borderRadius:10,border:"1px solid "+(activa?"#111":"#e0e0e0"),background:activa?"#111":"#fff",color:activa?"#fff":"#777",cursor:"pointer"}}>
+              <div style={{fontFamily:"'Caveat',cursive",fontSize:18,fontWeight:700,lineHeight:1.1}}>{d.label}</div>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,opacity:0.7}}>{d.dia}{sugerido?" · toca hoy":""}</div>
+            </button>
+          );
+        })}
+      </div>
+      {rutinaItems.map(({item},idx)=>renderRutinaItem(item, idx))}
       <div style={{height:32}}/>
     </div>
   );

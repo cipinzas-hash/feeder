@@ -275,11 +275,11 @@ var __angst = (() => {
       return time.m / 60 * 360 - 90;
     }
     function getAngle(e) {
-      const rect = svgRef.current.getBoundingClientRect();
+      const rect2 = svgRef.current.getBoundingClientRect();
       const cx = e.touches ? e.touches[0].clientX : e.clientX;
       const cy = e.touches ? e.touches[0].clientY : e.clientY;
-      const x = (cx - rect.left) * (120 / rect.width) - CX;
-      const y = (cy - rect.top) * (120 / rect.height) - CY;
+      const x = (cx - rect2.left) * (120 / rect2.width) - CX;
+      const y = (cy - rect2.top) * (120 / rect2.height) - CY;
       let a = Math.atan2(y, x) * (180 / Math.PI) + 90;
       if (a < 0) a += 360;
       return a;
@@ -906,7 +906,7 @@ var __angst = (() => {
         }
       });
       if (cat === "all" || cat === "salud") {
-        const familyNames = Object.fromEntries((kidsHealth?.family || []).map((f) => [f.id, f.name]));
+        const familyNames = Object.fromEntries((kidsHealth?.family || []).map((f2) => [f2.id, f2.name]));
         (kidsHealth?.episodes || []).forEach((ep) => {
           const hayMatch = (ep.hazardLevel || "").toLowerCase().includes(norm) || (ep.notas || "").toLowerCase().includes(norm) || (ep.lastSintomas || []).some((sid) => sid.toLowerCase().includes(norm)) || (ep.days || []).some((d) => (d.nota || "").toLowerCase().includes(norm) || (d.temperatura || "").includes(norm));
           if (hayMatch) hits.push({ type: "salud", persona: familyNames[ep.kidId] || ep.kidId, ep });
@@ -1632,8 +1632,8 @@ var __angst = (() => {
         style: { display: "block", maxWidth: W, overflow: "visible", cursor: compact ? "default" : "crosshair" },
         onClick: compact ? null : (e) => {
           if (!onSelectPoint) return;
-          const rect = e.currentTarget.getBoundingClientRect();
-          const mx = (e.clientX - rect.left) * (W / rect.width);
+          const rect2 = e.currentTarget.getBoundingClientRect();
+          const mx = (e.clientX - rect2.left) * (W / rect2.width);
           let closest = null, minDist = 999;
           filtered.forEach((h) => {
             const d = Math.abs(px(h.date) - mx);
@@ -1645,9 +1645,9 @@ var __angst = (() => {
           if (closest && minDist < 20) onSelectPoint(closest);
         }
       },
-      !compact && [0.25, 0.5, 0.75].map((f) => {
-        const v = minV + f * rng;
-        return /* @__PURE__ */ React.createElement("line", { key: f, x1: padL, y1: py(v), x2: W - padR, y2: py(v), stroke: "#f0f0f0", strokeWidth: "1" });
+      !compact && [0.25, 0.5, 0.75].map((f2) => {
+        const v = minV + f2 * rng;
+        return /* @__PURE__ */ React.createElement("line", { key: f2, x1: padL, y1: py(v), x2: W - padR, y2: py(v), stroke: "#f0f0f0", strokeWidth: "1" });
       }),
       precioVenta && !compact && /* @__PURE__ */ React.createElement(
         "line",
@@ -2469,17 +2469,17 @@ var __angst = (() => {
     const filtradas = (() => {
       const hayChips = chipCarpetas.size > 0 || chipEstado.size > 0;
       const estadoDe = (c) => c.estado === "hunting" ? "no_inventariada" : "inventariada";
-      let f;
+      let f2;
       if (searchMode === "mostrar") {
-        f = !hayChips ? [] : inv.filter(
+        f2 = !hayChips ? [] : inv.filter(
           (c) => (chipCarpetas.size === 0 || chipCarpetas.has(c.carpeta)) && (chipEstado.size === 0 || chipEstado.has(estadoDe(c)))
         );
       } else {
-        f = !hayChips ? inv : inv.filter(
+        f2 = !hayChips ? inv : inv.filter(
           (c) => !(chipCarpetas.has(c.carpeta) || chipEstado.has(estadoDe(c)))
         );
       }
-      f = [...f].sort((a, b) => {
+      f2 = [...f2].sort((a, b) => {
         let v = 0;
         if (sortBy === "nombre") v = a.name.localeCompare(b.name);
         else if (sortBy === "precio") v = (b.precioVentaUSD || 0) - (a.precioVentaUSD || 0);
@@ -2487,7 +2487,7 @@ var __angst = (() => {
         else v = (b.fechaCompra || "").localeCompare(a.fechaCompra || "");
         return sortAsc ? -v : v;
       });
-      return f;
+      return f2;
     })();
     function toggleSort(key) {
       if (sortBy === key) setSortAsc((a) => !a);
@@ -2838,14 +2838,14 @@ var __angst = (() => {
           type: "number",
           step: "0.01",
           value: editFields[k] || "",
-          onChange: (e) => setEditFields((f) => ({ ...f, [k]: e.target.value })),
+          onChange: (e) => setEditFields((f2) => ({ ...f2, [k]: e.target.value })),
           style: { width: "100%", border: "1px dashed #ccc", borderRadius: 6, padding: "6px 8px", fontSize: 14, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box", color: "#111" }
         }
-      )))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 6 } }, "Cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setEditFields((f) => ({ ...f, cantidad: Math.max(1, (f.cantidad || 1) - 1) })), style: { width: 28, height: 28, borderRadius: 6, border: "1px dashed #ddd", background: "transparent", fontSize: 16, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#111", minWidth: 28, textAlign: "center" } }, editFields.cantidad || 1), /* @__PURE__ */ React.createElement("button", { onClick: () => setEditFields((f) => ({ ...f, cantidad: (f.cantidad || 1) + 1 })), style: { width: 28, height: 28, borderRadius: 6, border: "1px dashed #ddd", background: "transparent", fontSize: 16, cursor: "pointer", color: "#555" } }, "+"))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 6 } }, "Carpeta"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" } }, cats.map((c) => /* @__PURE__ */ React.createElement(
+      )))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 6 } }, "Cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setEditFields((f2) => ({ ...f2, cantidad: Math.max(1, (f2.cantidad || 1) - 1) })), style: { width: 28, height: 28, borderRadius: 6, border: "1px dashed #ddd", background: "transparent", fontSize: 16, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#111", minWidth: 28, textAlign: "center" } }, editFields.cantidad || 1), /* @__PURE__ */ React.createElement("button", { onClick: () => setEditFields((f2) => ({ ...f2, cantidad: (f2.cantidad || 1) + 1 })), style: { width: 28, height: 28, borderRadius: 6, border: "1px dashed #ddd", background: "transparent", fontSize: 16, cursor: "pointer", color: "#555" } }, "+"))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 6 } }, "Carpeta"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" } }, cats.map((c) => /* @__PURE__ */ React.createElement(
         "button",
         {
           key: c,
-          onClick: () => setEditFields((f) => ({ ...f, carpeta: c })),
+          onClick: () => setEditFields((f2) => ({ ...f2, carpeta: c })),
           style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, padding: "4px 10px", borderRadius: 8, border: "1px dashed #ddd", background: editFields.carpeta === c ? "#111" : "transparent", color: editFields.carpeta === c ? "#fff" : "#555", cursor: "pointer" }
         },
         c
@@ -2853,7 +2853,7 @@ var __angst = (() => {
         "button",
         {
           key: c,
-          onClick: () => setEditFields((f) => ({ ...f, condicion: c })),
+          onClick: () => setEditFields((f2) => ({ ...f2, condicion: c })),
           style: { flex: 1, fontFamily: "'DM Sans',sans-serif", fontSize: 11, padding: "5px 4px", borderRadius: 6, border: "1px dashed #ddd", background: editFields.condicion === c ? "#111" : "transparent", color: editFields.condicion === c ? "#fff" : "#555", cursor: "pointer" }
         },
         c
@@ -2861,7 +2861,7 @@ var __angst = (() => {
         "textarea",
         {
           value: editFields.notas || "",
-          onChange: (e) => setEditFields((f) => ({ ...f, notas: e.target.value })),
+          onChange: (e) => setEditFields((f2) => ({ ...f2, notas: e.target.value })),
           rows: 2,
           style: { width: "100%", border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none", resize: "none", boxSizing: "border-box", color: "#111" }
         }
@@ -2871,7 +2871,7 @@ var __angst = (() => {
           type: "number",
           step: "0.01",
           value: editFields.precioObjetivo || "",
-          onChange: (e) => setEditFields((f) => ({ ...f, precioObjetivo: e.target.value })),
+          onChange: (e) => setEditFields((f2) => ({ ...f2, precioObjetivo: e.target.value })),
           style: { width: "100%", border: "1px dashed #ccc", borderRadius: 6, padding: "6px 8px", fontSize: 14, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box", color: "#111" }
         }
       )), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement(
@@ -2973,7 +2973,7 @@ var __angst = (() => {
           {
             onClick: () => {
               setAddingCard(card);
-              setNewForm((f) => ({ ...f, precioVentaUSD: tcgPrice ? tcgPrice.toFixed(2) : "", carpeta: isDarkCard(card) ? "Dark Collection" : cats[0] || "MLP" }));
+              setNewForm((f2) => ({ ...f2, precioVentaUSD: tcgPrice ? tcgPrice.toFixed(2) : "", carpeta: isDarkCard(card) ? "Dark Collection" : cats[0] || "MLP" }));
             },
             style: { background: "#111", border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontFamily: "'Caveat',cursive", fontSize: 14, color: "#fff", flexShrink: 0, alignSelf: "center" }
           },
@@ -2983,7 +2983,7 @@ var __angst = (() => {
         "button",
         {
           key: k,
-          onClick: () => setNewForm((f) => ({ ...f, destino: k })),
+          onClick: () => setNewForm((f2) => ({ ...f2, destino: k })),
           style: {
             flex: 1,
             padding: "8px 0",
@@ -3001,7 +3001,7 @@ var __angst = (() => {
         "button",
         {
           key: c,
-          onClick: () => setNewForm((f) => ({ ...f, carpeta: c })),
+          onClick: () => setNewForm((f2) => ({ ...f2, carpeta: c })),
           style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, padding: "5px 12px", borderRadius: 8, border: "1px dashed #ddd", background: newForm.carpeta === c ? "#111" : "transparent", color: newForm.carpeta === c ? "#fff" : "#555", cursor: "pointer" }
         },
         c
@@ -3011,7 +3011,7 @@ var __angst = (() => {
           type: "number",
           step: "0.01",
           value: newForm.costoUSD,
-          onChange: (e) => setNewForm((f) => ({ ...f, costoUSD: e.target.value })),
+          onChange: (e) => setNewForm((f2) => ({ ...f2, costoUSD: e.target.value })),
           placeholder: "ej: 8.50",
           style: { width: "100%", border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontSize: 16, fontFamily: "'Caveat',cursive", outline: "none", boxSizing: "border-box", color: "#111" }
         }
@@ -3021,15 +3021,15 @@ var __angst = (() => {
           type: "number",
           step: "0.01",
           value: newForm.precioVentaUSD,
-          onChange: (e) => setNewForm((f) => ({ ...f, precioVentaUSD: e.target.value })),
+          onChange: (e) => setNewForm((f2) => ({ ...f2, precioVentaUSD: e.target.value })),
           placeholder: "ej: 15.00",
           style: { width: "100%", border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontSize: 16, fontFamily: "'Caveat',cursive", outline: "none", boxSizing: "border-box", color: "#111" }
         }
-      ))), newForm.destino !== "hunting" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 6 } }, "Cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setNewForm((f) => ({ ...f, cantidad: Math.max(1, (f.cantidad || 1) - 1) })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#111", minWidth: 32, textAlign: "center" } }, newForm.cantidad || 1), /* @__PURE__ */ React.createElement("button", { onClick: () => setNewForm((f) => ({ ...f, cantidad: (f.cantidad || 1) + 1 })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "+"))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 6 } }, "Condici\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, CONDICIONES.map((c) => /* @__PURE__ */ React.createElement(
+      ))), newForm.destino !== "hunting" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 6 } }, "Cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setNewForm((f2) => ({ ...f2, cantidad: Math.max(1, (f2.cantidad || 1) - 1) })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#111", minWidth: 32, textAlign: "center" } }, newForm.cantidad || 1), /* @__PURE__ */ React.createElement("button", { onClick: () => setNewForm((f2) => ({ ...f2, cantidad: (f2.cantidad || 1) + 1 })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "+"))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 6 } }, "Condici\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, CONDICIONES.map((c) => /* @__PURE__ */ React.createElement(
         "button",
         {
           key: c,
-          onClick: () => setNewForm((f) => ({ ...f, condicion: c })),
+          onClick: () => setNewForm((f2) => ({ ...f2, condicion: c })),
           style: { flex: 1, fontFamily: "'DM Sans',sans-serif", fontSize: 11, padding: "6px 4px", borderRadius: 8, border: "1px dashed #ddd", background: newForm.condicion === c ? "#111" : "transparent", color: newForm.condicion === c ? "#fff" : "#555", cursor: "pointer" }
         },
         c
@@ -3038,7 +3038,7 @@ var __angst = (() => {
         {
           type: "date",
           value: newForm.fechaCompra,
-          onChange: (e) => setNewForm((f) => ({ ...f, fechaCompra: e.target.value })),
+          onChange: (e) => setNewForm((f2) => ({ ...f2, fechaCompra: e.target.value })),
           style: { border: "1px dashed #ddd", borderRadius: 8, padding: "7px 10px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none", color: "#111" }
         }
       )), /* @__PURE__ */ React.createElement(
@@ -3759,7 +3759,7 @@ var __angst = (() => {
       setNewMemberDraft({ name: "", dob: "", icon: "\u{1F642}", sex: "m" });
     }
     function removeFamilyMember(id) {
-      saveKidsHealth({ ...kidsHealth, family: family.filter((f) => f.id !== id) });
+      saveKidsHealth({ ...kidsHealth, family: family.filter((f2) => f2.id !== id) });
     }
     const [addingCita, setAddingCita] = React.useState(false);
     const [growthInput, setGrowthInput] = React.useState({ peso: "", talla: "", date: today });
@@ -3899,7 +3899,7 @@ var __angst = (() => {
     function proyectarCita(personId, cita) {
       if (!updateDay || !cita.hora) return;
       const [h, m] = cita.hora.split(":").map(Number);
-      const persona = family.find((f) => f.id === personId);
+      const persona = family.find((f2) => f2.id === personId);
       const texto = `${cita.tipo} ${persona?.name || ""} \u2014 ${cita.medico || ""}`.trim();
       const hoy = /* @__PURE__ */ new Date();
       let fechaBase = new Date(hoy);
@@ -3940,7 +3940,7 @@ var __angst = (() => {
         const nextYear = /* @__PURE__ */ new Date(entry.date + "T12:00:00");
         nextYear.setFullYear(nextYear.getFullYear() + 1);
         const nextStr = nextYear.getFullYear() + "-" + String(nextYear.getMonth() + 1).padStart(2, "0") + "-" + String(nextYear.getDate()).padStart(2, "0");
-        const persona = family.find((f) => f.id === personId);
+        const persona = family.find((f2) => f2.id === personId);
         const rid = Date.now().toString() + Math.random().toString(36).slice(2);
         updateDay(nextStr, { tasks: [...dayData?.[nextStr]?.tasks || [], { id: rid, text: `medir a ${persona?.name || personId}`, fixed: false, done: false }] });
         addDoctorMark(nextStr);
@@ -3973,7 +3973,7 @@ var __angst = (() => {
       }, deleteCita = function(idx) {
         setDraft((d) => ({ ...d, citasRegulares: (d.citasRegulares || []).filter((_, i) => i !== idx) }));
       };
-      const persona = family.find((f) => f.id === selPersonId);
+      const persona = family.find((f2) => f2.id === selPersonId);
       const perfil = getProfile(selPersonId);
       const [draft, setDraft] = React.useState({ ...perfil });
       const [addingItem, setAddingItem] = React.useState(null);
@@ -4032,7 +4032,7 @@ var __angst = (() => {
       ), /* @__PURE__ */ React.createElement("button", { onClick: () => setAddingCita(false), style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "9px 14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#999" } }, "cancelar"))) : /* @__PURE__ */ React.createElement("button", { onClick: () => setAddingCita(true), style: { marginTop: 6, background: "transparent", border: "1px dashed #e0e0e0", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#aaa" } }, "+ agregar cita")), /* @__PURE__ */ React.createElement("button", { onClick: guardarPerfil, style: { width: "100%", background: "#111", border: "none", borderRadius: 10, padding: "12px", fontFamily: "'Caveat',cursive", fontSize: 17, color: "#fff", cursor: "pointer" } }, "guardar perfil"), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
     }
     if (view === "crecimiento" && selPersonId) {
-      const persona = family.find((f) => f.id === selPersonId);
+      const persona = family.find((f2) => f2.id === selPersonId);
       const perfil = getProfile(selPersonId);
       const growthLog = (perfil.growthLog || []).sort((a, b) => a.date.localeCompare(b.date));
       const isCristopher = selPersonId === "cristopher";
@@ -4086,7 +4086,7 @@ var __angst = (() => {
       }, updMissed = function(id, n) {
         saveAll({ episodes: episodes.map((e) => e.id === id ? { ...e, missedDays: Math.max(0, (e.missedDays || 0) + n) } : e) });
       };
-      const persona = family.find((f) => f.id === selPersonId);
+      const persona = family.find((f2) => f2.id === selPersonId);
       const ep = getActiveEpisode(selPersonId);
       const allEps = episodes.filter((e) => e.kidId === selPersonId).sort((a, b) => b.startDate.localeCompare(a.startDate));
       const HAZARD_LABELS = { CLEAR: "Clear", WATCH: "Watch", ADVISORY: "Advisory", WARNING: "Warning", CRITICAL: "Critical" };
@@ -4112,14 +4112,14 @@ var __angst = (() => {
         ));
       }), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
     }
-    const checkedToday = family.filter((f) => getDayLog(f.id, dateKey) !== null).length;
+    const checkedToday = family.filter((f2) => getDayLog(f2.id, dateKey) !== null).length;
     return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 480, margin: "0 auto" } }, /* @__PURE__ */ React.createElement("style", null, `
         @keyframes hazardPulse {
           0%,100%{opacity:1;} 50%{opacity:0.7;}
         }
         .hazard-pulse { animation: hazardPulse 1.8s ease-in-out infinite; }
       `), slideOpen && (() => {
-      const persona = family.find((f) => f.id === slideOpen);
+      const persona = family.find((f2) => f2.id === slideOpen);
       const ep = getActiveEpisode(slideOpen);
       const perfil = getProfile(slideOpen);
       const haz = hazardActual;
@@ -4218,7 +4218,7 @@ var __angst = (() => {
           return s ? /* @__PURE__ */ React.createElement("div", { key: sid, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 8, color: "rgba(255,255,255,0.5)", textAlign: "center", lineHeight: 1.2, padding: "0 2px" } }, s.label) : null;
         })) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.2)", textAlign: "center", marginTop: 4 } }, checked ? "sin nov." : "tap = ok")
       );
-    })), family.some((f) => getActiveEpisode(f.id)) && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "activos"), family.filter((f) => getActiveEpisode(f.id)).map((persona) => {
+    })), family.some((f2) => getActiveEpisode(f2.id)) && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "activos"), family.filter((f2) => getActiveEpisode(f2.id)).map((persona) => {
       const ep = getActiveEpisode(persona.id);
       const cfg = HAZARD_CONFIG[ep.hazardLevel || "CLEAR"] || HAZARD_CONFIG.CLEAR;
       const dias = Math.round((/* @__PURE__ */ new Date(dateKey + "T12:00:00") - /* @__PURE__ */ new Date(ep.startDate + "T12:00:00")) / 864e5) + 1;
@@ -4346,20 +4346,20 @@ var __angst = (() => {
           onChange: (e) => setLogDate(e.target.value),
           style: { marginLeft: "auto", fontFamily: "'DM Sans',sans-serif", fontSize: 11, background: "#1a1a1a", border: "1px dashed #333", color: "#666", borderRadius: 6, padding: "4px 8px", outline: "none" }
         }
-      )), /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", display: "flex", flexDirection: "column", gap: 14 } }, dt === "dose" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, background: "#1a2200", border: "1px solid #aac756", borderRadius: 8, padding: "12px 14px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20 } }, "\u{1F344}"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#aac756" } }, "dosis tomada")), /* @__PURE__ */ React.createElement("button", { onClick: () => saveLog(logDate, "dosed", !lg.dosed), style: { background: lg.dosed ? "#aac756" : "transparent", border: `1px dashed #aac756`, borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: lg.dosed ? "#111" : "#aac756" } }, lg.dosed ? "\u2713 s\xED" : "marcar")), SCALE_FIELDS.map((f) => /* @__PURE__ */ React.createElement("div", { key: f }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#444", letterSpacing: 1, marginBottom: 6 } }, MES_LABELS[f].toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4 } }, [1, 2, 3, 4, 5].map((n) => /* @__PURE__ */ React.createElement(
+      )), /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", display: "flex", flexDirection: "column", gap: 14 } }, dt === "dose" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, background: "#1a2200", border: "1px solid #aac756", borderRadius: 8, padding: "12px 14px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20 } }, "\u{1F344}"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#aac756" } }, "dosis tomada")), /* @__PURE__ */ React.createElement("button", { onClick: () => saveLog(logDate, "dosed", !lg.dosed), style: { background: lg.dosed ? "#aac756" : "transparent", border: `1px dashed #aac756`, borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: lg.dosed ? "#111" : "#aac756" } }, lg.dosed ? "\u2713 s\xED" : "marcar")), SCALE_FIELDS.map((f2) => /* @__PURE__ */ React.createElement("div", { key: f2 }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#444", letterSpacing: 1, marginBottom: 6 } }, MES_LABELS[f2].toUpperCase()), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4 } }, [1, 2, 3, 4, 5].map((n) => /* @__PURE__ */ React.createElement(
         "button",
         {
           key: n,
-          onClick: () => saveLog(logDate, f, n === (lg[f] || 0) ? 0 : n),
-          style: { flex: 1, background: (lg[f] || 0) >= n ? "#fff" : "#1a1a1a", border: `1px dashed ${(lg[f] || 0) >= n ? "#fff" : "#333"}`, borderRadius: 6, padding: "8px 4px", cursor: "pointer", fontFamily: "'Caveat',cursive", fontSize: 18, color: (lg[f] || 0) >= n ? "#111" : "#555", transition: "all 0.15s" }
+          onClick: () => saveLog(logDate, f2, n === (lg[f2] || 0) ? 0 : n),
+          style: { flex: 1, background: (lg[f2] || 0) >= n ? "#fff" : "#1a1a1a", border: `1px dashed ${(lg[f2] || 0) >= n ? "#fff" : "#333"}`, borderRadius: 6, padding: "8px 4px", cursor: "pointer", fontFamily: "'Caveat',cursive", fontSize: 18, color: (lg[f2] || 0) >= n ? "#111" : "#555", transition: "all 0.15s" }
         },
         n
-      ))))), TEXT_FIELDS.map((f) => /* @__PURE__ */ React.createElement("div", { key: f }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#444", letterSpacing: 1, marginBottom: 6 } }, MES_LABELS[f].toUpperCase()), /* @__PURE__ */ React.createElement(
+      ))))), TEXT_FIELDS.map((f2) => /* @__PURE__ */ React.createElement("div", { key: f2 }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#444", letterSpacing: 1, marginBottom: 6 } }, MES_LABELS[f2].toUpperCase()), /* @__PURE__ */ React.createElement(
         "textarea",
         {
-          value: lg[f] || "",
-          onChange: (e) => saveLog(logDate, f, e.target.value),
-          placeholder: f === "sensaciones" ? "tensi\xF3n, ligereza, temperatura..." : "observaciones del d\xEDa...",
+          value: lg[f2] || "",
+          onChange: (e) => saveLog(logDate, f2, e.target.value),
+          placeholder: f2 === "sensaciones" ? "tensi\xF3n, ligereza, temperatura..." : "observaciones del d\xEDa...",
           style: { width: "100%", fontFamily: "'DM Sans',sans-serif", fontSize: 13, background: "#1a1a1a", border: "1px dashed #333", color: "#ccc", borderRadius: 8, padding: "10px 12px", outline: "none", boxSizing: "border-box", resize: "vertical", minHeight: 70 }
         }
       )))));
@@ -4373,10 +4373,10 @@ var __angst = (() => {
       return /* @__PURE__ */ React.createElement("div", { key: d, onClick: () => {
         setLogDate(d);
         setView("log");
-      }, style: { display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: isTod ? "#1a2200" : "#111", border: isTod ? "1px solid #aac756" : "1px dashed #1a1a1a", borderRadius: 8, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, "\u{1F344}"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, color: isTod ? "#aac756" : "#fff", fontWeight: 700 } }, fmt2(d), isTod ? " \u2014 hoy" : "")), lg.dosed && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aac756" } }, "\u2713"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 3 } }, ["estado", "energia", "foco", "sueno"].map((f) => lg[f] ? /* @__PURE__ */ React.createElement("div", { key: f, style: { width: 4, height: 4, borderRadius: "50%", background: "#aac756" } }) : /* @__PURE__ */ React.createElement("div", { key: f, style: { width: 4, height: 4, borderRadius: "50%", background: "#2a2a2a" } }))));
+      }, style: { display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: isTod ? "#1a2200" : "#111", border: isTod ? "1px solid #aac756" : "1px dashed #1a1a1a", borderRadius: 8, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, "\u{1F344}"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, color: isTod ? "#aac756" : "#fff", fontWeight: 700 } }, fmt2(d), isTod ? " \u2014 hoy" : "")), lg.dosed && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aac756" } }, "\u2713"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 3 } }, ["estado", "energia", "foco", "sueno"].map((f2) => lg[f2] ? /* @__PURE__ */ React.createElement("div", { key: f2, style: { width: 4, height: 4, borderRadius: "50%", background: "#aac756" } }) : /* @__PURE__ */ React.createElement("div", { key: f2, style: { width: 4, height: 4, borderRadius: "50%", background: "#2a2a2a" } }))));
     })), pastDoses.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#333", letterSpacing: 1, marginBottom: 10 } }, "HISTORIAL"), pastDoses.slice(0, 10).map((d) => {
       const lg = logs[d] || {};
-      const avg = ["estado", "energia", "foco", "sueno"].filter((f) => lg[f]).reduce((s, f, _, arr) => s + lg[f] / arr.length, 0);
+      const avg = ["estado", "energia", "foco", "sueno"].filter((f2) => lg[f2]).reduce((s, f2, _, arr) => s + lg[f2] / arr.length, 0);
       return /* @__PURE__ */ React.createElement("div", { key: d, onClick: () => {
         setLogDate(d);
         setView("log");
@@ -4979,6 +4979,302 @@ var __angst = (() => {
   }
   var NutriaPage_default = NutriaPage;
 
+  // modules/ejercicio/rutina.js
+  var RUTINA_DESDE = "2026-10-02";
+  var LB = 2.2046;
+  var kgDeDiscos = (lb, baseKg) => Math.round((baseKg + lb / LB) * 100) / 100;
+  var RUTINA = {
+    A: {
+      label: "D\xEDa A",
+      dia: "lunes",
+      items: [
+        {
+          exId: "press-banca",
+          series: 4,
+          repMin: 6,
+          repMax: 8,
+          rest: 120,
+          sugeridoKg: kgDeDiscos(40, 20),
+          paso: 2.27,
+          ritmo: "Baja 2 s, sin pausa, sube firme",
+          montaje: [
+            "Pies firmes en el piso, esc\xE1pulas juntas y hacia abajo",
+            "Gl\xFAteos, espalda alta y cabeza pegados al banco",
+            "Mu\xF1ecas rectas sobre los antebrazos"
+          ],
+          recorrido: "Baja hasta rozar el pecho bajo, sin rebote. Codos a ~45-60\xB0 del torso, nunca abiertos a 90\xB0. Sube extendiendo sin bloquear.",
+          bien: ["Al fondo los antebrazos quedan verticales", "La barra sube pareja, sin desviarse"],
+          corrige: ["Se despegan los gl\xFAteos del banco", "Los codos se abren", "Rebotas en el pecho"],
+          parada: "Termina la serie si se despegan los gl\xFAteos o la barra sube torcida. Sin ayudante, deja 1-2 reps en reserva y usa los topes de seguridad.",
+          calent: { tipo: "pct", pasos: [[0.5, 8], [0.75, 4]] }
+        },
+        {
+          exId: "dominadas",
+          series: 3,
+          repMin: 6,
+          repMax: 8,
+          rest: 120,
+          sugeridoKg: 12,
+          paso: -2.5,
+          ritmo: "Sube firme, baja 2-3 s",
+          montaje: [
+            "Mismo agarre durante todo el bloque (neutro o supino)",
+            "Hombros bajos, sin encogerlos",
+            "Pecho alto antes de tirar"
+          ],
+          recorrido: "Tira del pecho hacia la barra llevando los codos a las costillas. Arriba, la barbilla pasa la barra. Baja hasta casi extender los brazos, sin colgarte pasivo.",
+          bien: ["Sientes dorsales y espalda, no solo b\xEDceps", "El cuerpo no se balancea"],
+          corrige: ["Los hombros suben a las orejas", "Tiras con el cuello", "Rebotas abajo"],
+          parada: "Termina la serie si necesitas balanceo para subir o la barbilla no llega a la barra."
+        },
+        {
+          exId: "peso-muerto-rumano",
+          series: 3,
+          repMin: 8,
+          repMax: 10,
+          rest: 120,
+          sugeridoKg: kgDeDiscos(35, 20),
+          paso: 2.27,
+          ritmo: "Baja 2-3 s, sube empujando la cadera",
+          montaje: [
+            "Pies a ancho de caderas, rodillas apenas flexionadas y fijas",
+            "Espalda neutra, pecho alto",
+            "Barra pegada a los muslos"
+          ],
+          recorrido: "Lleva las caderas hacia atr\xE1s, como cerrando una puerta con el gl\xFAteo. La barra baja rozando muslos y rodillas hasta debajo de la rodilla. Para cuando sientas el estiramiento atr\xE1s del muslo. Sube empujando la cadera hacia delante y aprieta el gl\xFAteo arriba, sin arquear la lumbar.",
+          bien: ["La tensi\xF3n est\xE1 en gl\xFAteos e isquios, no en la espalda baja", "La barra no se despega de las piernas"],
+          corrige: ["Las rodillas se doblan m\xE1s al bajar", "La barra se aleja de las piernas", "La espalda se redondea (ya bajaste demasiado)"],
+          parada: "Termina la serie en cuanto la espalda se redondee o la barra se despegue de las piernas."
+        },
+        {
+          exId: "prensa",
+          series: 3,
+          repMin: 10,
+          repMax: 12,
+          rest: 120,
+          sugeridoKg: kgDeDiscos(155, 0),
+          paso: 2.27,
+          ritmo: "Baja 2 s, sin rebote, sube 1 s",
+          montaje: [
+            "Pies altos y separados en la plataforma",
+            "Espalda y pelvis pegadas al respaldo",
+            "Rodillas alineadas con la punta de los pies"
+          ],
+          recorrido: "Baja hasta ~90\xB0 de rodilla, con los muslos casi paralelos a la plataforma; es el punto de parada, no una meta de profundidad. Extiende casi del todo, dejando 5-10\xB0 de flexi\xF3n (sin bloquear).",
+          bien: ["Sientes gl\xFAteo y cu\xE1driceps", "Las rodillas siguen la l\xEDnea de los pies"],
+          corrige: ["La pelvis se levanta del respaldo", "Las rodillas colapsan hacia dentro", "La espalda baja se despega"],
+          parada: "Para antes de la profundidad si la pelvis se despega. Si las primeras series salen muy duras, baja ~15 lb de discos. Si duele la rodilla, acorta hasta el rango sin dolor."
+        },
+        {
+          exId: "elev-lateral",
+          series: 3,
+          repMin: 12,
+          repMax: 15,
+          rest: 60,
+          sugeridoKg: 4.5,
+          paso: 1,
+          ritmo: "Sube controlado, baja 2-3 s",
+          montaje: [
+            "Torso apenas inclinado hacia delante, sin balanceo",
+            "Codos suavemente flexionados, fijos toda la serie",
+            "Hombros abajo, lejos de las orejas"
+          ],
+          recorrido: "Sube los brazos hacia los lados, como abriendo alas, hasta la altura del hombro, paralelos al suelo. El codo va un poco m\xE1s alto que la mano, como vertiendo una jarra por el lado del me\xF1ique. Baja despacio hasta los costados de los muslos.",
+          bien: ["Ardor en el costado del hombro, no en el cuello", "Solo se mueven los brazos", "Terminas con 1-2 reps en reserva"],
+          corrige: ["Sientes el cuello o el trapecio: baja el peso", "Te balanceas con la cadera: baja el peso", "Subes por encima del hombro: corta ah\xED", "Bajas de golpe"],
+          parada: "Termina la serie en cuanto necesites impulso de cadera o el trapecio tome el trabajo."
+        }
+      ]
+    },
+    B: {
+      label: "D\xEDa B",
+      dia: "viernes",
+      items: [
+        {
+          exId: "dip-asistido",
+          series: 4,
+          repMin: 6,
+          repMax: 8,
+          rest: 120,
+          sugeridoKg: 12,
+          paso: -2.5,
+          ritmo: "Baja 2 s, sube firme",
+          montaje: [
+            "Torso vertical, codos hacia atr\xE1s y pegados al cuerpo",
+            "Hombros abajo y atr\xE1s",
+            "Primer ejercicio del d\xEDa: llegas fresco"
+          ],
+          recorrido: "Baja hasta ~90\xB0 de codo, con los hombros a la altura de los codos, no m\xE1s abajo. Sube hasta extender casi del todo, sin bloquear.",
+          bien: ["Sientes tr\xEDceps y pecho bajo", "Sin presi\xF3n en la parte delantera del hombro"],
+          corrige: ["Los hombros suben a las orejas", "Los codos se abren", "Te balanceas"],
+          parada: "Termina la serie si te balanceas o duele el hombro; en ese caso corta la profundidad.",
+          calent: { tipo: "asist", pasos: [[10, 5], [5, 5]] }
+        },
+        {
+          exId: "press-banca-b",
+          series: 3,
+          repMin: 8,
+          repMax: 10,
+          rest: 120,
+          sugeridoKg: kgDeDiscos(30, 20),
+          paso: 2.27,
+          ritmo: "Baja 2 s, pausa de 1 s tocando el pecho, sube sin impulso",
+          montaje: [
+            "Pies firmes en el piso, esc\xE1pulas juntas y hacia abajo",
+            "Gl\xFAteos, espalda alta y cabeza pegados al banco",
+            "Mu\xF1ecas rectas sobre los antebrazos"
+          ],
+          recorrido: "Igual que el D\xEDa A, pero con pausa de 1 s con la barra tocando el pecho, sin rebote. Codos a ~45-60\xB0 del torso.",
+          bien: ["Subes sin impulso tras la pausa", "Las 3 series salen con t\xE9cnica limpia"],
+          corrige: ["Rebotas en el pecho", "Se despegan los gl\xFAteos", "Los codos se abren"],
+          parada: "Termina la serie si ya no puedes pausar 1 s o se despegan los gl\xFAteos."
+        },
+        {
+          exId: "remo-polea",
+          series: 3,
+          repMin: 10,
+          repMax: 12,
+          rest: 75,
+          sugeridoKg: 29.48,
+          paso: 2.27,
+          ritmo: "Tira, aprieta 1 s, vuelve en 2 s",
+          montaje: [
+            "Pecho alto, espalda neutra",
+            "Rodillas ligeramente flexionadas",
+            "Brazos estirados sin redondear la espalda"
+          ],
+          recorrido: "Tira hacia el ombligo con los codos rozando las costillas. Aprieta las esc\xE1pulas 1 s y vuelve en 2 s hasta estirar los brazos.",
+          bien: ["Sientes espalda media y dorsales", "El torso casi no se mueve"],
+          corrige: ["Te inclinas atr\xE1s para ayudar", "Encoges los hombros", "Solo trabajas b\xEDceps"],
+          parada: "Termina la serie si tienes que inclinarte hacia atr\xE1s para completar la rep."
+        },
+        {
+          exId: "hip-thrust-kb",
+          series: 3,
+          repMin: 10,
+          repMax: 15,
+          rest: 75,
+          sugeridoKg: 31.75,
+          paso: null,
+          progTexto: "Con 15 reps en las 3 series: agrega pausa de 2 s arriba. Cuando eso sea c\xF3modo, pasa a una pierna con una kettlebell de 35 lb, 3\xD78-12 por lado. Para una semana de poca energ\xEDa: 25 + 25 lb.",
+          ritmo: "Sube firme, aprieta 1-2 s arriba, baja controlado",
+          montaje: [
+            "Parte baja de las esc\xE1pulas apoyada en el borde del banco (contra una pared para que no se mueva)",
+            "Una kettlebell a cada lado del pliegue de la cadera, cada una sujeta con una mano, asa hacia fuera",
+            "Pies a ancho de caderas, talones plantados"
+          ],
+          recorrido: "Sube hasta que el torso quede recto y las tibias verticales. Ment\xF3n recogido, costillas abajo. Aprieta 1-2 s arriba y baja controlado.",
+          bien: ["Sientes el gl\xFAteo, no la espalda baja", "Las kettlebells no ruedan"],
+          corrige: ["Arqueas la lumbar arriba", "Sientes m\xE1s cu\xE1driceps: acerca los pies", "Sientes m\xE1s isquios: aleja los pies"],
+          parada: "Termina la serie si arqueas la lumbar para completar la rep."
+        },
+        {
+          exId: "ext-triceps",
+          series: 3,
+          repMin: 10,
+          repMax: 12,
+          rest: 75,
+          sugeridoKg: 29.48,
+          paso: 2.27,
+          ritmo: "Extiende, aprieta, vuelve en 2 s",
+          montaje: [
+            "Codos pegados a los costados y fijos",
+            "Torso quieto, sin inclinarlo para empujar"
+          ],
+          recorrido: "Extiende hasta casi bloquear, abriendo un poco la cuerda al final. Vuelve en 2 s hasta ~90\xB0 de codo.",
+          bien: ["Solo se mueven los antebrazos", "Las mu\xF1ecas se mantienen rectas"],
+          corrige: ["Los codos se adelantan", "El torso se inclina para empujar", "Pasas de 12 reps con facilidad: sube 5 lb"],
+          parada: "Termina la serie si los codos se adelantan o el torso empieza a empujar."
+        },
+        {
+          exId: "ext-cuadriceps",
+          series: 2,
+          repMin: 12,
+          repMax: 15,
+          rest: 75,
+          sugeridoKg: 49.9,
+          paso: 2.27,
+          ritmo: "Sube, pausa 1 s apretando, baja 2-3 s",
+          montaje: [
+            "Respaldo ajustado: rodilla alineada con el eje de la m\xE1quina",
+            "Almohadilla en la parte baja de la espinilla",
+            "Caderas pegadas al asiento"
+          ],
+          recorrido: "Extiende casi del todo, pausa de 1 s apretando el cu\xE1driceps, y baja en 2-3 s hasta ~90\xB0.",
+          bien: ["Movimiento suave, sin golpe arriba ni balanceo"],
+          corrige: ["Levantas las caderas del asiento", "Bloqueas con un golpe arriba", "Sientes molestia en la rodilla: acorta el rango"],
+          parada: "Termina la serie si se levantan las caderas o aparece molestia en la rodilla."
+        },
+        {
+          exId: "elev-piernas-banco",
+          series: 3,
+          repMin: 10,
+          repMax: 15,
+          rest: 60,
+          sugeridoKg: null,
+          paso: null,
+          progTexto: "Con 15 reps en las 3 series, agrega carga (por ejemplo una mancuerna chica entre los pies).",
+          ritmo: "Sube controlado, baja sin tocar el banco",
+          montaje: [
+            "Acostado, manos sujetando el banco detr\xE1s de la cabeza",
+            "Espalda baja pegada al banco"
+          ],
+          recorrido: "Sube las piernas juntas hasta que la pelvis se despegue levemente. Baja controlado sin arquear la lumbar.",
+          bien: ["Sientes el abdomen bajo", "La lumbar sigue pegada al banco"],
+          corrige: ["La lumbar se arquea: flexiona las rodillas o acorta el rango", "Solo sientes el frente de la cadera"],
+          parada: "Termina la serie si la lumbar se despega del banco."
+        }
+      ]
+    }
+  };
+  function diaSugerido(date = /* @__PURE__ */ new Date()) {
+    const d = date.getDay();
+    if (d === 1) return "A";
+    if (d >= 2 && d <= 5) return "B";
+    return "A";
+  }
+
+  // modules/ejercicio/figuras.js
+  var FIG_VIEWBOX = "0 0 120 80";
+  var INK = "#222";
+  var HL = "#e8590c";
+  var GEAR = "#8a8a8a";
+  var GUIDE = "#c4c4c4";
+  var f = (n) => Math.round(n * 10) / 10;
+  var line = (x1, y1, x2, y2, o = {}) => `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${o.c || INK}" stroke-width="${o.w || 2.6}" stroke-linecap="round"${o.dash ? ` stroke-dasharray="${o.dash}"` : ""}${o.op ? ` opacity="${o.op}"` : ""}/>`;
+  var dot = (cx, cy, r, fill, op) => `<circle cx="${f(cx)}" cy="${f(cy)}" r="${r}" fill="${fill}"${op ? ` opacity="${op}"` : ""}/>`;
+  var head = (cx, cy) => `<circle cx="${f(cx)}" cy="${f(cy)}" r="6.5" fill="#fff" stroke="${INK}" stroke-width="2.6"/>`;
+  var rect = (x, y, w, h, fill, rx = 1.5) => `<rect x="${f(x)}" y="${f(y)}" width="${w}" height="${h}" rx="${rx}" fill="${fill}"/>`;
+  function arrow(x1, y1, x2, y2) {
+    const a = Math.atan2(y2 - y1, x2 - x1);
+    const s = 4.6;
+    const p1 = [x2 - s * Math.cos(a - 0.5), y2 - s * Math.sin(a - 0.5)];
+    const p2 = [x2 - s * Math.cos(a + 0.5), y2 - s * Math.sin(a + 0.5)];
+    return line(x1, y1, x2, y2, { c: HL, w: 1.6 }) + `<polygon points="${f(x2)},${f(y2)} ${f(p1[0])},${f(p1[1])} ${f(p2[0])},${f(p2[1])}" fill="${HL}"/>`;
+  }
+  var dumbbell = (x, y) => line(x - 4, y, x + 4, y, { c: GEAR, w: 1.6 }) + rect(x - 5.5, y - 3, 2.6, 6, GEAR, 1) + rect(x + 2.9, y - 3, 2.6, 6, GEAR, 1);
+  function frontalBase() {
+    return head(60, 12) + line(60, 18.5, 60, 46) + // tronco
+    line(50, 23, 70, 23) + // línea de hombros
+    line(60, 46, 55, 62) + line(55, 62, 54, 77) + // pierna izquierda
+    line(60, 46, 65, 62) + line(65, 62, 66, 77);
+  }
+  var laterales = {
+    inicio: (
+      // brazos a los costados, mancuernas junto a los muslos
+      frontalBase() + dot(46.5, 24, 4.6, HL, 0.9) + dot(73.5, 24, 4.6, HL, 0.9) + // deltoides lateral
+      line(50, 23, 47.5, 35) + line(47.5, 35, 47, 45) + line(70, 23, 72.5, 35) + line(72.5, 35, 73, 45) + dumbbell(47, 46.5) + dumbbell(73, 46.5)
+    ),
+    final: (
+      // brazos a la altura del hombro, codo apenas doblado y un poco más alto que la mano
+      line(6, 23, 114, 23, { c: GUIDE, w: 1, dash: "2 2.5" }) + // altura del hombro (detrás del cuerpo)
+      frontalBase() + dot(46.5, 23.5, 4.6, HL, 0.9) + dot(73.5, 23.5, 4.6, HL, 0.9) + line(50, 23, 33, 22.2) + line(33, 22.2, 17, 24.6) + line(70, 23, 87, 22.2) + line(87, 22.2, 103, 24.6) + dumbbell(15.5, 25.4) + dumbbell(104.5, 25.4) + arrow(24, 42, 24, 30) + arrow(96, 42, 96, 30)
+    )
+  };
+  var DIBUJOS = {
+    "elev-lateral": laterales
+  };
+
   // modules/ejercicio/EjercicioPage.jsx
   var { useState: useState4, useEffect: useEffect4, useRef: useRef4, useMemo: useMemo4, useCallback: useCallback4 } = React;
   var MUSCLE_GROUPS = [
@@ -4998,6 +5294,8 @@ var __angst = (() => {
     { id: "press-banca", name: "Press banca", emoji: "\u{1F3CB}\uFE0F", muscles: [{ g: "pecho", pct: 0.7 }, { g: "triceps", pct: 0.2 }, { g: "hombro", pct: 0.1 }], series: 4, repMin: 8, repMax: 12, weightStep: 2.5, restSecs: 90, plateUnit: "lb", barWeightKg: 20, how: "Acostado en el banco de press. Agarre al ancho de hombros, baja controlado hasta el pecho, empuja explosivo." },
     { id: "apertura-cable", name: "Aperturas en cable", emoji: "\u{1F985}", muscles: [{ g: "pecho", pct: 0.8 }, { g: "hombro", pct: 0.2 }], series: 3, repMin: 10, repMax: 15, weightStep: 2.5, restSecs: 60, how: "Torre de cable dual a la altura del pecho. Brazos semi-extendidos, junta las manos al frente en arco." },
     { id: "press-cerrado", name: "Press cerrado", emoji: "\u{1F90F}", muscles: [{ g: "pecho", pct: 0.3 }, { g: "triceps", pct: 0.6 }, { g: "hombro", pct: 0.1 }], series: 3, repMin: 8, repMax: 12, weightStep: 2.5, restSecs: 75, plateUnit: "lb", barWeightKg: 20, how: "Banco de press, agarre angosto (manos casi juntas). Codos pegados al cuerpo al bajar." },
+    // Press banca del Día B (issue #22): id propio para que su progresión no se mezcle con la del Día A
+    { id: "press-banca-b", name: "Press banca (D\xEDa B)", emoji: "\u{1F3CB}\uFE0F", muscles: [{ g: "pecho", pct: 0.7 }, { g: "triceps", pct: 0.2 }, { g: "hombro", pct: 0.1 }], series: 3, repMin: 8, repMax: 10, weightStep: 2.27, restSecs: 120, plateUnit: "lb", barWeightKg: 20, how: "Igual que el press banca del D\xEDa A, con pausa de 1 s con la barra tocando el pecho." },
     // Espalda
     { id: "dominadas", name: "Dominadas asistidas", emoji: "\u{1F9D7}", muscles: [{ g: "espalda", pct: 0.7 }, { g: "biceps", pct: 0.3 }], series: 3, repMin: 6, repMax: 10, weightStep: -2.5, restSecs: 90, variantes: ["Neutro", "Supino", "Prono"], how: "M\xE1quina de asistencia \u2014 menos peso de asistencia = m\xE1s dif\xEDcil. Jala el pecho hacia la barra, controla la bajada. La m\xE1quina tiene 3 posiciones de agarre (elegir arriba) -- no ejercitan exactamente igual, neutro suele sentirse m\xE1s c\xF3modo, supino carga algo m\xE1s b\xEDceps, prono suele ser el m\xE1s duro de dorsal." },
     { id: "jalon-pecho", name: "Jal\xF3n al pecho", emoji: "\u2B07\uFE0F", muscles: [{ g: "espalda", pct: 0.75 }, { g: "biceps", pct: 0.25 }], series: 3, repMin: 10, repMax: 15, weightStep: 2.5, restSecs: 75, how: "Torre de cable dual con barra alta. Jala hacia el pecho apretando om\xF3platos, sube controlado." },
@@ -5021,6 +5319,8 @@ var __angst = (() => {
     { id: "prensa", name: "Prensa de piernas", emoji: "\u{1F9B5}", muscles: [{ g: "cuadriceps", pct: 0.55 }, { g: "gluteo", pct: 0.3 }, { g: "isquio", pct: 0.15 }], series: 3, repMin: 10, repMax: 15, weightStep: 5, restSecs: 90, plateUnit: "lb", barWeightKg: 0, how: "M\xE1quina de prensa \u2014 acostado, empuj\xE1s la plataforma con las piernas hacia arriba. Peso base del carro desconocido, se cuenta solo lo agregado (ver nota en discos)." },
     { id: "ext-cuadriceps", name: "Extensi\xF3n de cu\xE1driceps", emoji: "\u{1F9B5}", muscles: [{ g: "cuadriceps", pct: 0.95 }, { g: "gluteo", pct: 0.05 }], series: 3, repMin: 10, repMax: 15, weightStep: 2.5, restSecs: 60, how: "M\xE1quina sentado, extiende las piernas contra la resistencia hasta casi estirar del todo." },
     { id: "peso-muerto", name: "Peso muerto con KB", emoji: "\u{1F3CB}\uFE0F", muscles: [{ g: "isquio", pct: 0.5 }, { g: "gluteo", pct: 0.3 }, { g: "espalda", pct: 0.2 }], series: 3, repMin: 8, repMax: 12, weightStep: 2.5, restSecs: 90, how: "Kettlebell o mancuernas frente a los muslos. Inclina el torso bajando por las piernas, espalda recta." },
+    { id: "peso-muerto-rumano", name: "Peso muerto rumano", emoji: "\u{1F3CB}\uFE0F", muscles: [{ g: "isquio", pct: 0.5 }, { g: "gluteo", pct: 0.35 }, { g: "espalda", pct: 0.15 }], series: 3, repMin: 8, repMax: 10, weightStep: 2.27, restSecs: 120, plateUnit: "lb", barWeightKg: 20, how: "Barra pegada a los muslos. Caderas hacia atr\xE1s con espalda neutra, baja bajo la rodilla, sube empujando la cadera." },
+    { id: "hip-thrust-kb", name: "Hip thrust con kettlebells", emoji: "\u{1F309}", muscles: [{ g: "gluteo", pct: 0.75 }, { g: "isquio", pct: 0.25 }], series: 3, repMin: 10, repMax: 15, weightStep: 2.27, restSecs: 75, how: "Espalda alta apoyada en el banco, una kettlebell a cada lado de la cadera. Sube hasta torso recto y aprieta el gl\xFAteo." },
     { id: "zancadas", name: "Zancadas", emoji: "\u{1F6B6}", muscles: [{ g: "cuadriceps", pct: 0.45 }, { g: "gluteo", pct: 0.4 }, { g: "isquio", pct: 0.15 }], series: 3, repMin: 10, repMax: 14, weightStep: 2.5, restSecs: 75, how: "Kettlebells a los costados. Paso largo adelante, baja la rodilla trasera casi al suelo." },
     { id: "sent-goblet", name: "Sentadilla goblet", emoji: "\u{1F377}", muscles: [{ g: "cuadriceps", pct: 0.5 }, { g: "gluteo", pct: 0.3 }, { g: "abdominales", pct: 0.2 }], series: 3, repMin: 10, repMax: 15, weightStep: 2.5, restSecs: 75, how: "Kettlebell sostenida frente al pecho con ambas manos. Baja entre las piernas controlado." },
     // Abdominales
@@ -5104,9 +5404,9 @@ var __angst = (() => {
         const exId = key.split("_").slice(0, -1).join("_") || key.split("_")[0];
         const ex = allExercicios.find((e) => e.id === exId);
         if (!ex) return;
-        const f = serieFactor(sv);
+        const f2 = serieFactor(sv);
         (ex.muscles || []).forEach((m) => {
-          totals[m.g] = (totals[m.g] || 0) + f * m.pct;
+          totals[m.g] = (totals[m.g] || 0) + f2 * m.pct;
         });
       });
     });
@@ -5138,7 +5438,7 @@ var __angst = (() => {
     });
     return Array.from(mondays).sort((a, b) => b.localeCompare(a));
   }
-  function BodyHeatmap({ totals, onTap }) {
+  function BodyHeatmap({ totals, onTap, compact }) {
     const FRONT_SHAPES = {
       hombro: [{ x: 8, y: 18, w: 14, h: 10 }, { x: 58, y: 18, w: 14, h: 10 }],
       pecho: [{ x: 24, y: 18, w: 32, h: 16 }],
@@ -5156,12 +5456,12 @@ var __angst = (() => {
       return (totals[k] || 0) / WEEKLY_MUSCLE_TARGET;
     }
     function Body({ shapes, title }) {
-      return /* @__PURE__ */ React.createElement("div", { onClick: onTap, style: { cursor: "pointer", textAlign: "center" } }, /* @__PURE__ */ React.createElement("svg", { width: "80", height: "100", viewBox: "0 0 80 100" }, /* @__PURE__ */ React.createElement("ellipse", { cx: "40", cy: "8", rx: "9", ry: "9", fill: "#2a2a2a" }), /* @__PURE__ */ React.createElement("rect", { x: "22", y: "16", width: "36", height: "2", fill: "#2a2a2a" }), Object.entries(shapes).map(([k, rects]) => {
+      return /* @__PURE__ */ React.createElement("div", { onClick: onTap, style: { cursor: onTap ? "pointer" : "default", textAlign: "center" } }, /* @__PURE__ */ React.createElement("svg", { width: compact ? 56 : 80, height: compact ? 70 : 100, viewBox: "0 0 80 100" }, /* @__PURE__ */ React.createElement("ellipse", { cx: "40", cy: "8", rx: "9", ry: "9", fill: "#2a2a2a" }), /* @__PURE__ */ React.createElement("rect", { x: "22", y: "16", width: "36", height: "2", fill: "#2a2a2a" }), Object.entries(shapes).map(([k, rects]) => {
         const c = colorForPct(pctOf(k));
         return rects.map((r, i) => /* @__PURE__ */ React.createElement("rect", { key: k + i, x: r.x, y: r.y, width: r.w, height: r.h, rx: "3", fill: c, stroke: "rgba(255,255,255,0.08)" }));
       })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginTop: 2 } }, title));
     }
-    return /* @__PURE__ */ React.createElement("div", { style: { background: "#111", borderRadius: 14, padding: "14px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 28 } }, /* @__PURE__ */ React.createElement(Body, { shapes: FRONT_SHAPES, title: "frente" }), /* @__PURE__ */ React.createElement(Body, { shapes: BACK_SHAPES, title: "espalda" }));
+    return /* @__PURE__ */ React.createElement("div", { style: { background: "#111", borderRadius: compact ? 10 : 14, padding: compact ? "8px 10px" : "14px 16px", marginBottom: compact ? 0 : 16, display: "flex", alignItems: "center", justifyContent: "center", gap: compact ? 14 : 28, flexShrink: 0 } }, /* @__PURE__ */ React.createElement(Body, { shapes: FRONT_SHAPES, title: "frente" }), /* @__PURE__ */ React.createElement(Body, { shapes: BACK_SHAPES, title: "espalda" }));
   }
   function ProgresionChart({ history, compact, ex }) {
     if (!history || history.length < 2) return null;
@@ -5211,6 +5511,34 @@ var __angst = (() => {
   function toKg(val, unit) {
     return unit === "lb" ? parseFloat((val / KG_TO_LB).toFixed(2)) : val;
   }
+  function fmtCarga(kg, ex, unit) {
+    if (kg == null) return "peso corporal";
+    if (ex.plateUnit === "lb") {
+      const base = ex.barWeightKg || 0;
+      const d = Math.round(toDisplay(Math.max(0, kg - base), "lb"));
+      return base > 0 ? `${d} lb de discos (${kg.toFixed(1)} kg total)` : `${d} lb de discos`;
+    }
+    const num = `${toDisplay(kg, unit)} ${unit}` + (unit === "kg" ? ` (${Math.round(toDisplay(kg, "lb"))} lb)` : ` (${kg.toFixed(1)} kg)`);
+    return ex.weightStep < 0 ? `asistencia ${num}` : num;
+  }
+  function fmtPesoSerie(kg, ex, unit) {
+    if (kg == null) return "";
+    if (ex.plateUnit === "lb") return `${Math.round(toDisplay(Math.max(0, kg - (ex.barWeightKg || 0)), "lb"))} lb discos`;
+    return `${toDisplay(kg, unit)}${unit}`;
+  }
+  function calentamientoTexto(calent, kgBase, ex, unit) {
+    if (kgBase == null) return null;
+    const base = ex.barWeightKg || 0;
+    return (calent.pasos || []).map(([a, reps]) => {
+      if (calent.tipo === "asist") return `${reps} \xD7 asistencia ${toDisplay(kgBase + a, unit)} ${unit}`;
+      const kgW = kgBase * a;
+      if (ex.plateUnit === "lb") {
+        const lb = Math.max(0, Math.round(toDisplay(Math.max(0, kgW - base), "lb") / 5) * 5);
+        return lb === 0 ? `${reps} \xD7 ${base > 0 ? `barra sola (${base} kg)` : "sin discos"}` : `${reps} \xD7 ${lb} lb de discos`;
+      }
+      return `${reps} \xD7 ${toDisplay(Math.round(kgW * 2) / 2, unit)} ${unit}`;
+    }).join(" \xB7 ");
+  }
   function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveCustomEjercicios, ejercicioDecks, saveEjercicioDecks }) {
     const todayKey = (() => {
       const d = /* @__PURE__ */ new Date();
@@ -5230,6 +5558,8 @@ var __angst = (() => {
     const [pesoUnit, setPesoUnit] = useState4("kg");
     const [deckMenuOpen, setDeckMenuOpen] = useState4(false);
     const [newDeckName, setNewDeckName] = useState4("");
+    const [diaSel, setDiaSel] = useState4(() => diaSugerido());
+    const [guiaAbierta, setGuiaAbierta] = useState4({});
     const timerRef = useRef4(null);
     const customOverrides = customEjercicios || {};
     const allExercicios = [
@@ -5238,7 +5568,6 @@ var __angst = (() => {
     ];
     const todaySeries = ejercicioLog[todayKey] || {};
     const decks = ejercicioDecks || [];
-    const groupedExercises = MUSCLE_GROUPS.map((g) => ({ ...g, exercises: allExercicios.filter((e) => !e.archivado && (e.muscles || []).some((m) => m.g === g.k)) })).filter((g) => g.exercises.length > 0);
     useEffect4(() => () => clearInterval(timerRef.current), []);
     function markSerie(exId, si, reps, pesoKg, restSecs, variante) {
       const key = `${exId}_${si}`;
@@ -5273,26 +5602,14 @@ var __angst = (() => {
       setTimerSecs((s) => s + extra);
       setTimerMax((m) => m + extra);
     }
-    function groupProgress(g) {
-      let done = 0, total = 0;
-      g.exercises.forEach((ex) => {
-        for (let si = 0; si < (ex.series || 3); si++) {
-          total++;
-          if (isSerieDone(todaySeries[`${ex.id}_${si}`])) done++;
-        }
-      });
-      return { done, total };
-    }
-    const gruposConEjercicios = groupedExercises.length;
-    const gruposConAlgoHecho = groupedExercises.filter(
-      (g) => g.exercises.some(
-        (ex) => Array.from({ length: ex.series || 3 }, (_, si) => isSerieDone(todaySeries[`${ex.id}_${si}`])).some(Boolean)
-      )
-    ).length;
-    const pct = gruposConEjercicios > 0 ? Math.round(gruposConAlgoHecho / gruposConEjercicios * 100) : 0;
-    const allDone = gruposConAlgoHecho === gruposConEjercicios && gruposConEjercicios > 0;
-    function getExHistory(exId) {
-      const ex = allExercicios.find((e) => e.id === exId);
+    const rutinaDia = RUTINA[diaSel];
+    const rutinaItems = rutinaDia.items.map((item) => ({ item, rx: rutinaEx(item) })).filter((x) => x.rx);
+    const seriesTotal = rutinaItems.reduce((n, x) => n + (x.rx.series || 3), 0);
+    const seriesHechas = rutinaItems.reduce((n, x) => n + Array.from({ length: x.rx.series || 3 }, (_, si) => isSerieDone(todaySeries[`${x.rx.id}_${si}`]) ? 1 : 0).reduce((a, b) => a + b, 0), 0);
+    const pct = seriesTotal > 0 ? Math.round(seriesHechas / seriesTotal * 100) : 0;
+    const allDone = seriesTotal > 0 && seriesHechas === seriesTotal;
+    function getExHistory(exId, exOverride) {
+      const ex = exOverride || allExercicios.find((e) => e.id === exId);
       const days = Object.keys(ejercicioLog).sort();
       const result = [];
       days.forEach((dk) => {
@@ -5318,27 +5635,178 @@ var __angst = (() => {
       });
       return result;
     }
-    function getProgressionSuggestion(ex) {
-      if (!ex.weightStep) return null;
-      const hist = getExHistory(ex.id);
-      if (hist.length < 2) return null;
-      const last2 = hist.slice(-2);
-      const bothAtTop = last2.every((h) => h.allTop && h.reps >= ex.repMax);
-      if (!bothAtTop) return null;
-      const lastPeso = last2[last2.length - 1].peso;
-      if (!lastPeso) return null;
-      return Math.max(0, lastPeso + ex.weightStep);
+    function rutinaEx(item) {
+      const base = allExercicios.find((e) => e.id === item.exId);
+      if (!base) return null;
+      return { ...base, series: item.series, repMin: item.repMin, repMax: item.repMax, restSecs: item.rest, weightStep: item.paso ?? base.weightStep };
     }
-    function getCalisteniaProgression(ex) {
-      if (ex.weightStep !== 0 || !ex.nextVariant) return null;
-      const hist = getExHistory(ex.id);
-      if (hist.length < 2) return null;
-      const last2 = hist.slice(-2);
-      if (last2.every((h) => h.allTop && h.reps >= ex.repMax)) return ex.nextVariant;
-      return null;
+    function setsPorFecha(exId) {
+      const out = [];
+      Object.keys(ejercicioLog).sort().forEach((dk) => {
+        const dayLog = ejercicioLog[dk] || {};
+        const sets = [];
+        Object.keys(dayLog).forEach((k) => {
+          const m = k.match(/^(.*)_(\d+)$/);
+          if (!m || m[1] !== exId) return;
+          const sv = getSerieValue(dayLog[k]);
+          if (sv?.done) sets[parseInt(m[2], 10)] = { reps: sv.reps || null, peso: sv.peso || null };
+        });
+        if (sets.some(Boolean)) out.push({ date: dk, sets });
+      });
+      return out;
     }
-    function applyProgression(ex, newPeso) {
-      saveCustomEjercicios({ ...customEjercicios || {}, [ex.id]: { ...ex, pesoActual: newPeso } });
+    function pesoPorDefecto(item, rx) {
+      const sesiones = setsPorFecha(rx.id).filter((x) => x.date >= RUTINA_DESDE);
+      const ultima = sesiones[sesiones.length - 1];
+      let ultimoPeso = null, ultimaFecha = null;
+      if (ultima) {
+        const conPeso = ultima.sets.filter((x) => x && x.peso);
+        if (conPeso.length) {
+          ultimoPeso = conPeso[conPeso.length - 1].peso;
+          ultimaFecha = ultima.date;
+        }
+      }
+      const pr = customEjercicios?.[rx.id]?.pesoRutina;
+      if (pr && pr.kg != null && (!ultimaFecha || pr.fecha >= ultimaFecha)) return pr.kg;
+      if (ultimoPeso != null) return ultimoPeso;
+      return item.sugeridoKg ?? null;
+    }
+    function progresionRutina(item, rx) {
+      const sesiones = setsPorFecha(rx.id).filter((x) => x.date >= RUTINA_DESDE);
+      const ult = sesiones[sesiones.length - 1];
+      if (!ult) return null;
+      const hechas = ult.sets.filter(Boolean);
+      const alTope = hechas.length >= rx.series && hechas.every((x) => (x.reps || 0) >= rx.repMax);
+      if (!alTope) return null;
+      if (item.paso != null) {
+        const pesos = hechas.filter((x) => x.peso);
+        if (!pesos.length) return null;
+        const kg = Math.max(0, parseFloat((pesos[pesos.length - 1].peso + item.paso).toFixed(2)));
+        const pr = customEjercicios?.[rx.id]?.pesoRutina;
+        const ya = pr && pr.fecha >= ult.date && (item.paso > 0 ? pr.kg >= kg - 0.01 : pr.kg <= kg + 0.01);
+        return ya ? null : { tipo: "peso", kg };
+      }
+      return item.progTexto ? { tipo: "texto", texto: item.progTexto } : null;
+    }
+    function aplicarPesoRutina(rx, kg) {
+      const base = allExercicios.find((e) => e.id === rx.id);
+      if (!base) return;
+      saveCustomEjercicios({ ...customEjercicios || {}, [rx.id]: { ...base, pesoRutina: { kg, fecha: todayKey } } });
+    }
+    function renderRutinaItem(item, idx) {
+      const rx = rutinaEx(item);
+      if (!rx) return null;
+      const ex = rx;
+      const nS = ex.series || 3;
+      const allExDone = Array.from({ length: nS }, (_, si) => isSerieDone(todaySeries[`${ex.id}_${si}`])).every(Boolean);
+      const algunaHecha = Array.from({ length: nS }, (_, si) => isSerieDone(todaySeries[`${ex.id}_${si}`])).some(Boolean);
+      const isOpenE = openEx === ex.id;
+      const exHist = getExHistory(ex.id, rx);
+      const lastHist = exHist.length > 0 ? exHist[exHist.length - 1] : null;
+      const usePeso = item.sugeridoKg != null;
+      const defaultPesoKg = pesoPorDefecto(item, rx);
+      const prog = progresionRutina(item, rx);
+      const sesPrev = setsPorFecha(ex.id).filter((x) => x.date < todayKey);
+      const prevSets = sesPrev.length ? sesPrev[sesPrev.length - 1].sets : [];
+      const guiaOpen = guiaAbierta[ex.id] ?? !algunaHecha;
+      const dib = DIBUJOS[ex.id];
+      const mapaTotals = {};
+      (ex.muscles || []).forEach((m) => {
+        mapaTotals[m.g] = m.pct * WEEKLY_MUSCLE_TARGET;
+      });
+      const calentTxt = item.calent ? calentamientoTexto(item.calent, defaultPesoKg, ex, pesoUnit) : null;
+      const lbl = { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#aaa", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 };
+      const txt = { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#555", lineHeight: 1.55 };
+      return /* @__PURE__ */ React.createElement("div", { key: ex.id, style: { border: `1px solid ${allExDone ? "#c8e6c9" : "#eee"}`, borderRadius: 12, marginBottom: 8, overflow: "hidden", background: "#fff" } }, /* @__PURE__ */ React.createElement("div", { onClick: () => setOpenEx(isOpenE ? null : ex.id), style: { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#bbb", width: 18, textAlign: "center" } }, idx + 1), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 600, color: allExDone ? "#aaa" : "#222", textDecoration: allExDone ? "line-through" : "none" } }, ex.emoji, " ", ex.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#888" } }, nS, "\xD7", ex.repMin, "-", ex.repMax, " \xB7 ", usePeso ? fmtCarga(defaultPesoKg, ex, pesoUnit) : "peso corporal"), !allExDone && lastHist && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa" } }, "\xFAltimo: ", lastHist.reps ? lastHist.peso ? `${lastHist.reps}r\xD7${toDisplay(lastHist.peso, pesoUnit)}${pesoUnit}` : `${lastHist.reps}r` : "hecho")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#ccc" } }, Array.from({ length: nS }, (_, si) => isSerieDone(todaySeries[`${ex.id}_${si}`]) ? "\u25CF" : "\u25CB").join(" ")), /* @__PURE__ */ React.createElement("span", { style: { color: "#ccc", fontSize: 11 } }, isOpenE ? "\u25B4" : "\u25BE")), isOpenE && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 14px 14px", background: "#fafafa", borderTop: "1px solid #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { ...txt, fontSize: 11, color: "#999", marginBottom: 8 } }, "descanso ", ex.restSecs, "s \xB7 ritmo: ", item.ritmo), calentTxt && /* @__PURE__ */ React.createElement("div", { style: { background: "#fff8e1", border: "1px solid #ffe9a8", borderRadius: 8, padding: "8px 12px", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { ...lbl, color: "#b58900" } }, "calentamiento \xB7 no se registra"), /* @__PURE__ */ React.createElement("div", { style: { ...txt, color: "#7a5c00" } }, calentTxt)), prog?.tipo === "peso" && /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          onClick: () => aplicarPesoRutina(ex, prog.kg),
+          style: { width: "100%", background: "#2e7d52", border: "none", borderRadius: 8, padding: "10px", fontFamily: "'Caveat',cursive", fontSize: 16, color: "#fff", cursor: "pointer", marginBottom: 10, fontWeight: 700 }
+        },
+        ex.weightStep < 0 ? "\u2B06 Menos asistencia: " : "\u2B06 Subir a ",
+        fmtCarga(prog.kg, ex, pesoUnit)
+      ), prog?.tipo === "texto" && /* @__PURE__ */ React.createElement("div", { style: { background: "#e8f5e9", border: "1px solid #c8e6c9", borderRadius: 8, padding: "10px 12px", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#2e7d52", fontWeight: 600, marginBottom: 2 } }, "listo para progresar"), /* @__PURE__ */ React.createElement("div", { style: { ...txt, color: "#1b5e20" } }, "\u2B06 ", prog.texto)), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          onClick: () => setGuiaAbierta((g) => ({ ...g, [ex.id]: !guiaOpen })),
+          style: { width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "7px 12px", cursor: "pointer", marginBottom: guiaOpen ? 8 : 10 }
+        },
+        /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 15, color: "#777" } }, "\u{1F4D6} gu\xEDa de ejecuci\xF3n"),
+        /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#bbb" } }, guiaOpen ? "\u25B4" : "\u25BE")
+      ), guiaOpen && /* @__PURE__ */ React.createElement("div", { style: { background: "#fff", border: "1px solid #eee", borderRadius: 10, padding: "10px 12px", marginBottom: 10 } }, dib && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 10 } }, ["inicio", "final"].map((k) => /* @__PURE__ */ React.createElement("div", { key: k, style: { flex: 1, textAlign: "center" } }, /* @__PURE__ */ React.createElement("svg", { viewBox: FIG_VIEWBOX, style: { width: "100%", display: "block", background: "#fff", border: "1px solid #eee", borderRadius: 8 }, dangerouslySetInnerHTML: { __html: dib[k] } }), /* @__PURE__ */ React.createElement("div", { style: { ...lbl, marginTop: 4, marginBottom: 0 } }, k)))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 12, alignItems: "center", marginBottom: 10 } }, /* @__PURE__ */ React.createElement(BodyHeatmap, { totals: mapaTotals, compact: true }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: lbl }, "qu\xE9 trabaja"), (ex.muscles || []).map((m) => {
+        const mg = MUSCLE_GROUPS.find((g2) => g2.k === m.g);
+        return /* @__PURE__ */ React.createElement("div", { key: m.g, style: { ...txt, fontSize: 12 } }, mg?.label || m.g, " ", /* @__PURE__ */ React.createElement("span", { style: { color: "#bbb" } }, Math.round(m.pct * 100), "%"));
+      }))), /* @__PURE__ */ React.createElement("div", { style: lbl }, "antes de la primera repetici\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { ...txt, marginBottom: 8 } }, item.montaje.map((t, i) => /* @__PURE__ */ React.createElement("div", { key: i }, "\u2022 ", t))), /* @__PURE__ */ React.createElement("div", { style: lbl }, "recorrido"), /* @__PURE__ */ React.createElement("div", { style: { ...txt, marginBottom: 8 } }, item.recorrido), /* @__PURE__ */ React.createElement("div", { style: { ...lbl, color: "#2e7d52" } }, "va bien si"), /* @__PURE__ */ React.createElement("div", { style: { ...txt, marginBottom: 8 } }, item.bien.map((t, i) => /* @__PURE__ */ React.createElement("div", { key: i }, "\u2713 ", t))), /* @__PURE__ */ React.createElement("div", { style: { ...lbl, color: "#c0392b" } }, "corrige si"), /* @__PURE__ */ React.createElement("div", { style: { ...txt, marginBottom: 8 } }, item.corrige.map((t, i) => /* @__PURE__ */ React.createElement("div", { key: i }, "\u2717 ", t))), /* @__PURE__ */ React.createElement("div", { style: lbl }, "cu\xE1ndo cortar la serie"), /* @__PURE__ */ React.createElement("div", { style: txt }, item.parada)), ex.variantes && ex.variantes.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#aaa", letterSpacing: 1, textTransform: "uppercase", marginBottom: 5 } }, "agarre/variante de hoy"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" } }, ex.variantes.map((v) => {
+        const activa = (varianteElegida[ex.id] || ex.variantes[0]) === v;
+        return /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            key: v,
+            onClick: () => setVarianteElegida((s) => ({ ...s, [ex.id]: v })),
+            style: { padding: "5px 11px", borderRadius: 14, border: "1px solid " + (activa ? "#111" : "#ddd"), background: activa ? "#111" : "#fff", color: activa ? "#fff" : "#777", fontFamily: "'DM Sans',sans-serif", fontSize: 11, cursor: "pointer" }
+          },
+          v
+        );
+      }))), exHist.length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { background: "#fff", border: "1px solid #f0f0f0", borderRadius: 8, padding: "8px 10px", marginBottom: 10 } }, /* @__PURE__ */ React.createElement(ProgresionChart, { history: exHist, compact: true, ex })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, Array.from({ length: nS }, (_, si) => {
+        const sv = getSerieValue(todaySeries[`${ex.id}_${si}`]);
+        const isDone = !!sv?.done;
+        const locked2 = si > 0 && !isSerieDone(todaySeries[`${ex.id}_${si - 1}`]);
+        const rKey = `${ex.id}_${si}`;
+        const curReps = repsInput[rKey]?.reps ?? (isDone && sv?.reps ? sv.reps : ex.repMin);
+        const curPesoKg = repsInput[rKey]?.peso ?? (isDone && sv?.peso ? sv.peso : defaultPesoKg);
+        const displayPeso = curPesoKg != null ? toDisplay(curPesoKg, pesoUnit) : "";
+        return /* @__PURE__ */ React.createElement("div", { key: si }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, opacity: locked2 ? 0.3 : 1, background: isDone ? "#f0faf4" : "#fff", borderRadius: 8, padding: "8px 10px", border: `1px dashed ${isDone ? "#c8e6c9" : locked2 ? "#f0f0f0" : "#e0e0e0"}` } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#bbb", width: 20, textAlign: "center", flexShrink: 0 } }, "S", si + 1), /* @__PURE__ */ React.createElement("button", { onClick: () => !locked2 && !isDone && setRepsInput((r) => ({ ...r, [rKey]: { ...r[rKey], reps: Math.max(1, (curReps || 1) - 1) } })), disabled: locked2 || isDone, style: { width: 26, height: 26, borderRadius: 4, border: "1px dashed #ddd", background: "transparent", cursor: locked2 || isDone ? "default" : "pointer", fontSize: 14, color: "#aaa", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: isDone ? "#2e7d52" : "#111", minWidth: 30, textAlign: "center" } }, curReps), /* @__PURE__ */ React.createElement("button", { onClick: () => !locked2 && !isDone && setRepsInput((r) => ({ ...r, [rKey]: { ...r[rKey], reps: (curReps || 1) + 1 } })), disabled: locked2 || isDone, style: { width: 26, height: 26, borderRadius: 4, border: "1px dashed #ddd", background: "transparent", cursor: locked2 || isDone ? "default" : "pointer", fontSize: 14, color: "#aaa", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 } }, "+"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb", marginRight: 4 } }, "r"), usePeso && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 3, marginLeft: 4 } }, ex.plateUnit === "lb" ? (() => {
+          const base = ex.barWeightKg || 0;
+          const curDiscosLb = curPesoKg != null ? Math.round(toDisplay(Math.max(0, curPesoKg - base), "lb")) : "";
+          const defaultDiscosLb = defaultPesoKg != null ? Math.round(toDisplay(Math.max(0, defaultPesoKg - base), "lb")) : null;
+          return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
+            "input",
+            {
+              type: "number",
+              step: "5",
+              min: "0",
+              value: curDiscosLb,
+              onChange: (e) => {
+                const rawLb = e.target.value !== "" ? parseFloat(e.target.value) : null;
+                const kg = rawLb != null ? parseFloat((base + toKg(rawLb, "lb")).toFixed(2)) : null;
+                setRepsInput((r) => ({ ...r, [rKey]: { ...r[rKey], peso: kg } }));
+              },
+              disabled: isDone || locked2,
+              placeholder: defaultDiscosLb != null ? String(defaultDiscosLb) : "lb",
+              title: base > 0 ? `+ ${base}kg de barra = ${curPesoKg != null ? curPesoKg.toFixed(1) : "?"}kg total` : "peso base del carro no cargado, solo discos",
+              style: { width: 46, border: "1px dashed #ddd", borderRadius: 6, padding: "3px 5px", fontSize: 12, fontFamily: "'DM Sans',sans-serif", textAlign: "right", outline: "none", background: isDone ? "#f0faf4" : "#fff", color: "#333" }
+            }
+          ), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, "lb discos"));
+        })() : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
+          "input",
+          {
+            type: "number",
+            step: pesoUnit === "lb" ? "5" : "2.5",
+            min: "0",
+            value: displayPeso,
+            onChange: (e) => {
+              const raw = e.target.value !== "" ? parseFloat(e.target.value) : null;
+              const kg = raw != null ? toKg(raw, pesoUnit) : null;
+              setRepsInput((r) => ({ ...r, [rKey]: { ...r[rKey], peso: kg } }));
+            },
+            disabled: isDone || locked2,
+            placeholder: defaultPesoKg != null ? String(toDisplay(defaultPesoKg, pesoUnit)) : pesoUnit,
+            style: { width: 50, border: "1px dashed #ddd", borderRadius: 6, padding: "3px 5px", fontSize: 12, fontFamily: "'DM Sans',sans-serif", textAlign: "right", outline: "none", background: isDone ? "#f0faf4" : "#fff", color: "#333" }
+          }
+        ), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, pesoUnit))), /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            onClick: () => {
+              if (locked2 || isDone) return;
+              const ri = repsInput[rKey];
+              markSerie(ex.id, si, ri?.reps !== void 0 ? ri.reps : curReps, ri?.peso !== void 0 ? ri.peso : curPesoKg || null, ex.restSecs, varianteElegida[ex.id] || ex.variantes?.[0]);
+            },
+            disabled: locked2 || isDone,
+            style: { marginLeft: "auto", width: 36, height: 36, borderRadius: 8, border: isDone ? "none" : "1px dashed #bbb", background: isDone ? "#2e7d52" : locked2 ? "#f5f5f5" : "#111", color: isDone ? "#fff" : locked2 ? "#ddd" : "#fff", cursor: locked2 || isDone ? "default" : "pointer", fontSize: isDone ? 15 : 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s" }
+          },
+          isDone ? "\u2713" : "\u2192"
+        )), prevSets[si] && !isDone && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", padding: "2px 10px 0" } }, "\xFAltima vez: ", prevSets[si].reps ? `${prevSets[si].reps}r` : "hecho", prevSets[si].peso ? ` \xD7 ${fmtPesoSerie(prevSets[si].peso, ex, pesoUnit)}` : ""));
+      }))));
     }
     function buildStats() {
       const allDates = Object.keys(ejercicioLog).sort().reverse();
@@ -5610,7 +6078,7 @@ var __angst = (() => {
     }
     const weeklyTotals = computeWeeklyMuscleEffort(ejercicioLog, allExercicios, todayKey);
     const timerMins = Math.floor(timerSecs / 60), timerSec2 = timerSecs % 60;
-    return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 720, margin: "0 auto" } }, timerActive && /* @__PURE__ */ React.createElement(FloatingRestTimer, { secs: timerSecs, maxSecs: timerMax, onSkip: skipTimer, onAddTime: addTimerSecs }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 0, marginBottom: 16, background: "#fff", border: "1px solid #eee", borderRadius: 10, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: "'Caveat',cursive", fontSize: 18, padding: "10px", background: "#111", color: "#fff", textAlign: "center" } }, "\u{1F3CB}\uFE0F sesi\xF3n"), [["historial", "\u{1F4C8}"], ["semanas", "\u{1F5D3}\uFE0F"], ["stats", "\u{1F4CA}"], ["editor", "\u270E"]].map(([v, icon]) => /* @__PURE__ */ React.createElement("button", { key: v, onClick: () => setView(v), style: { padding: "10px 14px", background: "transparent", color: "#aaa", border: "none", borderLeft: "1px solid #eee", cursor: "pointer", fontSize: 14, lineHeight: 1 } }, icon))), /* @__PURE__ */ React.createElement(BodyHeatmap, { totals: weeklyTotals, onTap: () => setView("stats") }), /* @__PURE__ */ React.createElement("div", { style: { background: "#fff", border: "1px solid #eee", borderRadius: 12, padding: "14px 16px", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#111", fontWeight: 700 } }, allDone ? "sesi\xF3n completa \u2713" : "progreso"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#555", fontWeight: 700 } }, pct, "%")), /* @__PURE__ */ React.createElement("div", { style: { height: 6, background: "#eee", borderRadius: 99, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${pct}%`, height: "100%", background: allDone ? "#2e7d52" : "#111", borderRadius: 99, transition: "width 0.4s" } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#bbb", marginTop: 6 } }, gruposConAlgoHecho, " de ", gruposConEjercicios, " grupos musculares")), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setDeckMenuOpen((v) => !v), style: { width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "8px 14px", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 15, color: "#777" } }, "\u{1F0CF} mazos \u2014 sesiones completas"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#bbb" } }, deckMenuOpen ? "\u25B4" : "\u25BE")), deckMenuOpen && /* @__PURE__ */ React.createElement("div", { style: { border: "1px dashed #eee", borderRadius: 8, marginTop: 6, padding: 10, display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement("input", { value: newDeckName, onChange: (e) => setNewDeckName(e.target.value), placeholder: "nombre del mazo...", style: { flex: 1, border: "1px dashed #ccc", borderRadius: 6, padding: "6px 10px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none" } }), /* @__PURE__ */ React.createElement("button", { onClick: guardarMazo, disabled: !newDeckName.trim() || Object.keys(todaySeries).length === 0, style: { background: newDeckName.trim() && Object.keys(todaySeries).length > 0 ? "#111" : "#eee", color: newDeckName.trim() && Object.keys(todaySeries).length > 0 ? "#fff" : "#bbb", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12, fontFamily: "'DM Sans',sans-serif" } }, "guardar hoy")), decks.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { background: "#fafafa", border: "1px dashed #e5e5e5", borderRadius: 10, padding: "10px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#aaa" } }, "sin mazos guardados"), decks.map((deck) => /* @__PURE__ */ React.createElement("div", { key: deck.id, style: { display: "flex", alignItems: "center", gap: 6, background: "#fafafa", border: "1px solid #e5e5e5", borderRadius: 10, padding: "8px 10px" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => cargarMazo(deck), style: { flex: 1, minWidth: 0, background: "transparent", border: "none", cursor: "pointer", textAlign: "left", padding: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, color: "#111", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, deck.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa" } }, Object.keys(deck.items || {}).length, " series \xB7 cargar")), /* @__PURE__ */ React.createElement("button", { onClick: () => eliminarMazo(deck.id), style: { background: "transparent", border: "none", color: "#ccc", fontSize: 16, cursor: "pointer", padding: "4px 6px" } }, "\xD7"))))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 0, border: "1px solid #e0e0e0", borderRadius: 8, overflow: "hidden" } }, ["kg", "lb"].map((u) => /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 720, margin: "0 auto" } }, timerActive && /* @__PURE__ */ React.createElement(FloatingRestTimer, { secs: timerSecs, maxSecs: timerMax, onSkip: skipTimer, onAddTime: addTimerSecs }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 0, marginBottom: 16, background: "#fff", border: "1px solid #eee", borderRadius: 10, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: "'Caveat',cursive", fontSize: 18, padding: "10px", background: "#111", color: "#fff", textAlign: "center" } }, "\u{1F3CB}\uFE0F sesi\xF3n"), [["historial", "\u{1F4C8}"], ["semanas", "\u{1F5D3}\uFE0F"], ["stats", "\u{1F4CA}"], ["editor", "\u270E"]].map(([v, icon]) => /* @__PURE__ */ React.createElement("button", { key: v, onClick: () => setView(v), style: { padding: "10px 14px", background: "transparent", color: "#aaa", border: "none", borderLeft: "1px solid #eee", cursor: "pointer", fontSize: 14, lineHeight: 1 } }, icon))), /* @__PURE__ */ React.createElement(BodyHeatmap, { totals: weeklyTotals, onTap: () => setView("stats") }), /* @__PURE__ */ React.createElement("div", { style: { background: "#fff", border: "1px solid #eee", borderRadius: 12, padding: "14px 16px", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#111", fontWeight: 700 } }, allDone ? "sesi\xF3n completa \u2713" : "progreso"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#555", fontWeight: 700 } }, pct, "%")), /* @__PURE__ */ React.createElement("div", { style: { height: 6, background: "#eee", borderRadius: 99, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${pct}%`, height: "100%", background: allDone ? "#2e7d52" : "#111", borderRadius: 99, transition: "width 0.4s" } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#bbb", marginTop: 6 } }, seriesHechas, " de ", seriesTotal, " series \xB7 ", rutinaDia.label)), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setDeckMenuOpen((v) => !v), style: { width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "8px 14px", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 15, color: "#777" } }, "\u{1F0CF} mazos \u2014 sesiones completas"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#bbb" } }, deckMenuOpen ? "\u25B4" : "\u25BE")), deckMenuOpen && /* @__PURE__ */ React.createElement("div", { style: { border: "1px dashed #eee", borderRadius: 8, marginTop: 6, padding: 10, display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement("input", { value: newDeckName, onChange: (e) => setNewDeckName(e.target.value), placeholder: "nombre del mazo...", style: { flex: 1, border: "1px dashed #ccc", borderRadius: 6, padding: "6px 10px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none" } }), /* @__PURE__ */ React.createElement("button", { onClick: guardarMazo, disabled: !newDeckName.trim() || Object.keys(todaySeries).length === 0, style: { background: newDeckName.trim() && Object.keys(todaySeries).length > 0 ? "#111" : "#eee", color: newDeckName.trim() && Object.keys(todaySeries).length > 0 ? "#fff" : "#bbb", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12, fontFamily: "'DM Sans',sans-serif" } }, "guardar hoy")), decks.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { background: "#fafafa", border: "1px dashed #e5e5e5", borderRadius: 10, padding: "10px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#aaa" } }, "sin mazos guardados"), decks.map((deck) => /* @__PURE__ */ React.createElement("div", { key: deck.id, style: { display: "flex", alignItems: "center", gap: 6, background: "#fafafa", border: "1px solid #e5e5e5", borderRadius: 10, padding: "8px 10px" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => cargarMazo(deck), style: { flex: 1, minWidth: 0, background: "transparent", border: "none", cursor: "pointer", textAlign: "left", padding: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, color: "#111", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, deck.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa" } }, Object.keys(deck.items || {}).length, " series \xB7 cargar")), /* @__PURE__ */ React.createElement("button", { onClick: () => eliminarMazo(deck.id), style: { background: "transparent", border: "none", color: "#ccc", fontSize: 16, cursor: "pointer", padding: "4px 6px" } }, "\xD7"))))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 0, border: "1px solid #e0e0e0", borderRadius: 8, overflow: "hidden" } }, ["kg", "lb"].map((u) => /* @__PURE__ */ React.createElement(
       "button",
       {
         key: u,
@@ -5618,106 +6086,20 @@ var __angst = (() => {
         style: { padding: "5px 14px", background: pesoUnit === u ? "#111" : "transparent", color: pesoUnit === u ? "#fff" : "#aaa", border: "none", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600, transition: "all 0.15s" }
       },
       u
-    )))), groupedExercises.map((g) => {
-      const { done, total } = groupProgress(g);
-      const gDone = done === total && total > 0;
-      const isOpenG = openGroup === g.k;
-      return /* @__PURE__ */ React.createElement("div", { key: g.k, style: { border: `1px solid ${gDone ? "#c8e6c9" : "#eee"}`, borderRadius: 12, marginBottom: 8, overflow: "hidden", background: "#fff" } }, /* @__PURE__ */ React.createElement("div", { onClick: () => setOpenGroup(isOpenG ? null : g.k), style: { display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20 } }, g.emoji), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, fontWeight: 700, color: gDone ? "#aaa" : "#111", textDecoration: gDone ? "line-through" : "none" } }, g.label), /* @__PURE__ */ React.createElement("div", { style: { height: 3, background: "#f0f0f0", borderRadius: 99, overflow: "hidden", marginTop: 4, width: "80%" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${total > 0 ? done / total * 100 : 0}%`, height: "100%", background: gDone ? "#2e7d52" : "#111", borderRadius: 99, transition: "width 0.3s" } }))), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#bbb", marginRight: 4 } }, done, "/", total), /* @__PURE__ */ React.createElement("span", { style: { color: "#ccc", fontSize: 12 } }, isOpenG ? "\u25B4" : "\u25BE")), isOpenG && /* @__PURE__ */ React.createElement("div", { style: { borderTop: "1px solid #f0f0f0" } }, g.exercises.map((ex) => {
-        const nS = ex.series || 3;
-        const allExDone = Array.from({ length: nS }, (_, si) => isSerieDone(todaySeries[`${ex.id}_${si}`])).every(Boolean);
-        const isOpenE = openEx === ex.id;
-        const exHist = getExHistory(ex.id);
-        const lastHist = exHist.length > 0 ? exHist[exHist.length - 1] : null;
-        const pesoActual = customEjercicios?.[ex.id]?.pesoActual;
-        const usePeso = ex.weightStep !== 0;
-        const suggestion = getProgressionSuggestion(ex);
-        const calSuggestion = getCalisteniaProgression(ex);
-        return /* @__PURE__ */ React.createElement("div", { key: ex.id, style: { borderBottom: "1px dashed #f5f5f5" } }, /* @__PURE__ */ React.createElement("div", { onClick: () => setOpenEx(isOpenE ? null : ex.id), style: { display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18 } }, ex.emoji), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 600, color: allExDone ? "#aaa" : "#333", textDecoration: allExDone ? "line-through" : "none" } }, ex.name), !allExDone && lastHist && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa" } }, "\xFAltimo: ", lastHist.reps ? lastHist.peso ? `${lastHist.reps}r\xD7${toDisplay(lastHist.peso, pesoUnit)}${pesoUnit}` : `${lastHist.reps}r` : "hecho"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, flexWrap: "wrap", marginTop: 2 } }, (ex.muscles || []).map((m) => {
-          const mg = MUSCLE_GROUPS.find((g2) => g2.k === m.g);
-          return /* @__PURE__ */ React.createElement("span", { key: m.g, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb" } }, mg?.emoji, Math.round(m.pct * 100), "%");
-        }))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#ccc" } }, Array.from({ length: nS }, (_, si) => isSerieDone(todaySeries[`${ex.id}_${si}`]) ? "\u25CF" : "\u25CB").join(" ")), /* @__PURE__ */ React.createElement("span", { style: { color: "#ccc", fontSize: 11 } }, isOpenE ? "\u25B4" : "\u25BE")), isOpenE && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 14px 14px", background: "#fafafa" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#666", lineHeight: 1.6, marginBottom: 10, padding: "10px 12px", background: "#fff", borderRadius: 8, border: "1px dashed #eee" } }, ex.how), ex.variantes && ex.variantes.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#aaa", letterSpacing: 1, textTransform: "uppercase", marginBottom: 5 } }, "agarre/variante de hoy"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" } }, ex.variantes.map((v) => {
-          const activa = (varianteElegida[ex.id] || ex.variantes[0]) === v;
-          return /* @__PURE__ */ React.createElement(
-            "button",
-            {
-              key: v,
-              onClick: () => setVarianteElegida((s) => ({ ...s, [ex.id]: v })),
-              style: { padding: "5px 11px", borderRadius: 14, border: "1px solid " + (activa ? "#111" : "#ddd"), background: activa ? "#111" : "#fff", color: activa ? "#fff" : "#777", fontFamily: "'DM Sans',sans-serif", fontSize: 11, cursor: "pointer" }
-            },
-            v
-          );
-        }))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10, alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, "rango ", ex.repMin, "-", ex.repMax, " reps \xB7 descanso ", ex.restSecs || 90, "s")), suggestion != null && /* @__PURE__ */ React.createElement(
-          "button",
-          {
-            onClick: () => applyProgression(ex, suggestion),
-            style: { width: "100%", background: "#2e7d52", border: "none", borderRadius: 8, padding: "10px", fontFamily: "'Caveat',cursive", fontSize: 16, color: "#fff", cursor: "pointer", marginBottom: 10, fontWeight: 700 }
-          },
-          "\u2B06 Subir a ",
-          toDisplay(suggestion, pesoUnit),
-          pesoUnit
-        ), calSuggestion && /* @__PURE__ */ React.createElement("div", { style: { background: "#e8f5e9", border: "1px solid #c8e6c9", borderRadius: 8, padding: "10px 12px", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#2e7d52", fontWeight: 600, marginBottom: 2 } }, "listo para progresar"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#1b5e20", fontWeight: 700 } }, "\u2B06 ", calSuggestion)), exHist.length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { background: "#fff", border: "1px solid #f0f0f0", borderRadius: 8, padding: "8px 10px", marginBottom: 10 } }, /* @__PURE__ */ React.createElement(ProgresionChart, { history: exHist, compact: true, ex })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, Array.from({ length: nS }, (_, si) => {
-          const sv = getSerieValue(todaySeries[`${ex.id}_${si}`]);
-          const isDone = !!sv?.done;
-          const locked2 = si > 0 && !isSerieDone(todaySeries[`${ex.id}_${si - 1}`]);
-          const rKey = `${ex.id}_${si}`;
-          const defaultPesoKg = pesoActual ?? lastHist?.peso ?? null;
-          const curReps = repsInput[rKey]?.reps ?? (isDone && sv?.reps ? sv.reps : ex.repMin);
-          const curPesoKg = repsInput[rKey]?.peso ?? (isDone && sv?.peso ? sv.peso : defaultPesoKg);
-          const displayPeso = curPesoKg != null ? toDisplay(curPesoKg, pesoUnit) : "";
-          return /* @__PURE__ */ React.createElement("div", { key: si, style: { display: "flex", alignItems: "center", gap: 6, opacity: locked2 ? 0.3 : 1, background: isDone ? "#f0faf4" : "#fff", borderRadius: 8, padding: "8px 10px", border: `1px dashed ${isDone ? "#c8e6c9" : locked2 ? "#f0f0f0" : "#e0e0e0"}` } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#bbb", width: 20, textAlign: "center", flexShrink: 0 } }, "S", si + 1), /* @__PURE__ */ React.createElement("button", { onClick: () => !locked2 && !isDone && setRepsInput((r) => ({ ...r, [rKey]: { ...r[rKey], reps: Math.max(1, (curReps || 1) - 1) } })), disabled: locked2 || isDone, style: { width: 26, height: 26, borderRadius: 4, border: "1px dashed #ddd", background: "transparent", cursor: locked2 || isDone ? "default" : "pointer", fontSize: 14, color: "#aaa", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: isDone ? "#2e7d52" : "#111", minWidth: 30, textAlign: "center" } }, curReps), /* @__PURE__ */ React.createElement("button", { onClick: () => !locked2 && !isDone && setRepsInput((r) => ({ ...r, [rKey]: { ...r[rKey], reps: (curReps || 1) + 1 } })), disabled: locked2 || isDone, style: { width: 26, height: 26, borderRadius: 4, border: "1px dashed #ddd", background: "transparent", cursor: locked2 || isDone ? "default" : "pointer", fontSize: 14, color: "#aaa", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 } }, "+"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb", marginRight: 4 } }, "r"), usePeso && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 3, marginLeft: 4 } }, ex.plateUnit === "lb" ? (() => {
-            const base = ex.barWeightKg || 0;
-            const curDiscosLb = curPesoKg != null ? Math.round(toDisplay(Math.max(0, curPesoKg - base), "lb")) : "";
-            const defaultDiscosLb = defaultPesoKg != null ? Math.round(toDisplay(Math.max(0, defaultPesoKg - base), "lb")) : null;
-            return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
-              "input",
-              {
-                type: "number",
-                step: "5",
-                min: "0",
-                value: curDiscosLb,
-                onChange: (e) => {
-                  const rawLb = e.target.value !== "" ? parseFloat(e.target.value) : null;
-                  const kg = rawLb != null ? parseFloat((base + toKg(rawLb, "lb")).toFixed(2)) : null;
-                  setRepsInput((r) => ({ ...r, [rKey]: { ...r[rKey], peso: kg } }));
-                },
-                disabled: isDone || locked2,
-                placeholder: defaultDiscosLb != null ? String(defaultDiscosLb) : "lb",
-                title: base > 0 ? `+ ${base}kg de barra = ${curPesoKg != null ? curPesoKg.toFixed(1) : "?"}kg total` : "peso base del carro no cargado, solo discos",
-                style: { width: 46, border: "1px dashed #ddd", borderRadius: 6, padding: "3px 5px", fontSize: 12, fontFamily: "'DM Sans',sans-serif", textAlign: "right", outline: "none", background: isDone ? "#f0faf4" : "#fff", color: "#333" }
-              }
-            ), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, "lb discos"));
-          })() : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
-            "input",
-            {
-              type: "number",
-              step: pesoUnit === "lb" ? "5" : "2.5",
-              min: "0",
-              value: displayPeso,
-              onChange: (e) => {
-                const raw = e.target.value !== "" ? parseFloat(e.target.value) : null;
-                const kg = raw != null ? toKg(raw, pesoUnit) : null;
-                setRepsInput((r) => ({ ...r, [rKey]: { ...r[rKey], peso: kg } }));
-              },
-              disabled: isDone || locked2,
-              placeholder: defaultPesoKg != null ? String(toDisplay(defaultPesoKg, pesoUnit)) : pesoUnit,
-              style: { width: 50, border: "1px dashed #ddd", borderRadius: 6, padding: "3px 5px", fontSize: 12, fontFamily: "'DM Sans',sans-serif", textAlign: "right", outline: "none", background: isDone ? "#f0faf4" : "#fff", color: "#333" }
-            }
-          ), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb" } }, pesoUnit))), /* @__PURE__ */ React.createElement(
-            "button",
-            {
-              onClick: () => {
-                if (locked2 || isDone) return;
-                const ri = repsInput[rKey];
-                markSerie(ex.id, si, ri?.reps !== void 0 ? ri.reps : curReps, ri?.peso !== void 0 ? ri.peso : curPesoKg || null, ex.restSecs, varianteElegida[ex.id] || ex.variantes?.[0]);
-              },
-              disabled: locked2 || isDone,
-              style: { marginLeft: "auto", width: 36, height: 36, borderRadius: 8, border: isDone ? "none" : "1px dashed #bbb", background: isDone ? "#2e7d52" : locked2 ? "#f5f5f5" : "#111", color: isDone ? "#fff" : locked2 ? "#ddd" : "#fff", cursor: locked2 || isDone ? "default" : "pointer", fontSize: isDone ? 15 : 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s" }
-            },
-            isDone ? "\u2713" : "\u2192"
-          ));
-        }))));
-      })));
-    }), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
+    )))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 12 } }, Object.entries(RUTINA).map(([k, d]) => {
+      const activa = diaSel === k;
+      const sugerido = diaSugerido() === k;
+      return /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          key: k,
+          onClick: () => setDiaSel(k),
+          style: { flex: 1, padding: "10px 8px", borderRadius: 10, border: "1px solid " + (activa ? "#111" : "#e0e0e0"), background: activa ? "#111" : "#fff", color: activa ? "#fff" : "#777", cursor: "pointer" }
+        },
+        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, lineHeight: 1.1 } }, d.label),
+        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, opacity: 0.7 } }, d.dia, sugerido ? " \xB7 toca hoy" : "")
+      );
+    })), rutinaItems.map(({ item }, idx) => renderRutinaItem(item, idx)), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
   }
   var EjercicioPage_default = EjercicioPage;
 
@@ -5972,13 +6354,13 @@ var __angst = (() => {
     }
     const PORTION_TYPES = [{ k: "", label: "tap directo" }, { k: "weight100", label: "por 50g" }, { k: "size", label: "S/M/L" }, { k: "fraction", label: "fracci\xF3n" }, { k: "calibre", label: "calibre+fracci\xF3n" }];
     function getMergedFoods(catKey) {
-      const allBase = NUTRI_CATS.flatMap((c) => (NUTRI_FOODS[c.k] || []).map((f) => ({ ...f, catKey: c.k, ...(foodOverrides || {})[f.id] || {} })));
-      const base = allBase.filter((f) => (f.cat || f.catKey) === catKey);
-      const custom = Object.values(customFoods || {}).filter((f) => f.cat === catKey);
+      const allBase = NUTRI_CATS.flatMap((c) => (NUTRI_FOODS[c.k] || []).map((f2) => ({ ...f2, catKey: c.k, ...(foodOverrides || {})[f2.id] || {} })));
+      const base = allBase.filter((f2) => (f2.cat || f2.catKey) === catKey);
+      const custom = Object.values(customFoods || {}).filter((f2) => f2.cat === catKey);
       return [...base, ...custom];
     }
     function allFoodsFlat() {
-      return NUTRI_CATS.flatMap((c) => getMergedFoods(c.k).map((f) => ({ ...f, catKey: c.k })));
+      return NUTRI_CATS.flatMap((c) => getMergedFoods(c.k).map((f2) => ({ ...f2, catKey: c.k })));
     }
     function openEditModal(food, catKey) {
       setEditModal({ food: { ...food }, isNew: false, isCustom: !!(customFoods || {})[food.id], catKey });
@@ -6075,7 +6457,7 @@ var __angst = (() => {
     const dateLabel = dateKey === todayKey ? "hoy" : `${DOW_ES[dObj.getDay()]} ${dObj.getDate()} ${MONTHS_ES[dObj.getMonth()]}`;
     const barStyle = (pct, color) => ({ width: `${pct}%`, height: "100%", background: color, borderRadius: 99, transition: "width 0.4s" });
     const trackStyle = { height: 6, background: "#eee", borderRadius: 99, overflow: "hidden", marginTop: 6 };
-    const searchResults = searchQuery.trim() ? allFoodsFlat().filter((f) => normalizeSearchText(f.name).includes(normalizeSearchText(searchQuery))).slice(0, 6) : [];
+    const searchResults = searchQuery.trim() ? allFoodsFlat().filter((f2) => normalizeSearchText(f2.name).includes(normalizeSearchText(searchQuery))).slice(0, 6) : [];
     function inferDeckMeal(items) {
       const counts = {};
       (items || []).forEach((it) => {
@@ -6165,7 +6547,7 @@ var __angst = (() => {
         m.emoji,
         " ",
         m.label
-      )))), pt === "size" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "calibre"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, [["S", "~100g"], ["M", "~150g"], ["L", "~200g"]].map(([k, sub]) => /* @__PURE__ */ React.createElement("button", { key: k, onClick: () => setSizeKey(k), style: sizeKey === k ? btnActive : btnBase }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700 } }, k), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: sizeKey === k ? "rgba(255,255,255,0.5)" : "#bbb" } }, sub))))), pt === "calibre" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "calibre"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, [["S", "~120g"], ["M", "~175g"], ["L", "~245g"], ["XL", "~350g"]].map(([k, sub]) => /* @__PURE__ */ React.createElement("button", { key: k, onClick: () => setSizeKey(k), style: sizeKey === k ? btnActive : btnBase }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700 } }, k), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: sizeKey === k ? "rgba(255,255,255,0.5)" : "#bbb" } }, sub))))), (pt === "fraction" || pt === "calibre" || pt === "size") && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "porci\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, (pt === "fraction" ? [[1, "completa"], [0.5, "\xBD"], [2 / 3, "\u2154"], [0.333, "\u2153"], [0.25, "\xBC"]] : pt === "calibre" ? [[1, "entera"], [0.5, "\xBD"], [0.25, "\xBC"]] : FRUIT_FRACTIONS).map(([f, label]) => /* @__PURE__ */ React.createElement("button", { key: f, onClick: () => setFraction(f), style: fraction === f ? btnActive : btnBase }, label)))), pt === "weight100" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 24 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setQty((q) => Math.max(1, q - 1)), style: { width: 44, height: 44, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 22, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 44, fontWeight: 700, color: "#111", minWidth: 90, textAlign: "center" } }, qty * 50, "g"), /* @__PURE__ */ React.createElement("button", { onClick: () => setQty((q) => Math.min(20, q + 1)), style: { width: 44, height: 44, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 22, cursor: "pointer", color: "#555" } }, "+")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", gap: 6, marginTop: 10, flexWrap: "wrap" } }, [50, 100, 150, 200, 300].map((g) => /* @__PURE__ */ React.createElement(
+      )))), pt === "size" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "calibre"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, [["S", "~100g"], ["M", "~150g"], ["L", "~200g"]].map(([k, sub]) => /* @__PURE__ */ React.createElement("button", { key: k, onClick: () => setSizeKey(k), style: sizeKey === k ? btnActive : btnBase }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700 } }, k), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: sizeKey === k ? "rgba(255,255,255,0.5)" : "#bbb" } }, sub))))), pt === "calibre" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "calibre"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, [["S", "~120g"], ["M", "~175g"], ["L", "~245g"], ["XL", "~350g"]].map(([k, sub]) => /* @__PURE__ */ React.createElement("button", { key: k, onClick: () => setSizeKey(k), style: sizeKey === k ? btnActive : btnBase }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700 } }, k), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: sizeKey === k ? "rgba(255,255,255,0.5)" : "#bbb" } }, sub))))), (pt === "fraction" || pt === "calibre" || pt === "size") && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "porci\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, (pt === "fraction" ? [[1, "completa"], [0.5, "\xBD"], [2 / 3, "\u2154"], [0.333, "\u2153"], [0.25, "\xBC"]] : pt === "calibre" ? [[1, "entera"], [0.5, "\xBD"], [0.25, "\xBC"]] : FRUIT_FRACTIONS).map(([f2, label]) => /* @__PURE__ */ React.createElement("button", { key: f2, onClick: () => setFraction(f2), style: fraction === f2 ? btnActive : btnBase }, label)))), pt === "weight100" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 24 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setQty((q) => Math.max(1, q - 1)), style: { width: 44, height: 44, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 22, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 44, fontWeight: 700, color: "#111", minWidth: 90, textAlign: "center" } }, qty * 50, "g"), /* @__PURE__ */ React.createElement("button", { onClick: () => setQty((q) => Math.min(20, q + 1)), style: { width: 44, height: 44, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 22, cursor: "pointer", color: "#555" } }, "+")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center", gap: 6, marginTop: 10, flexWrap: "wrap" } }, [50, 100, 150, 200, 300].map((g) => /* @__PURE__ */ React.createElement(
         "button",
         {
           key: g,
@@ -6264,7 +6646,7 @@ var __angst = (() => {
       const margenTotalKcal = margenAjustadoKcal + margenNoAjustadoKcal;
       const diasExcedidos = diasAjustados + diasNoAjustados;
       const margenGramos = Math.round(margenTotalKcal / 9);
-      return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 480, margin: "0 auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 18 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setView("hoy"), style: { background: "transparent", border: "none", fontSize: 20, color: "#bbb", cursor: "pointer", padding: 0, lineHeight: 1 } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#111" } }, "\u{1F4CA} stats")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", { style: CARD }, /* @__PURE__ */ React.createElement("div", { style: SL }, "racha actual"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 32, fontWeight: 700 } }, streak), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)" } }, "d\xEDas cumpliendo meta")), /* @__PURE__ */ React.createElement("div", { style: CARD }, /* @__PURE__ */ React.createElement("div", { style: SL }, "promedio 7d"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700 } }, avgKcal7, " kcal"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)" } }, avgProt7, "g prote\xEDna"))), alert2 && /* @__PURE__ */ React.createElement("div", { style: { background: "#2a1515", border: "1px solid rgba(255,100,100,0.3)", borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#ff9b9b" } }, "\u26A0\uFE0F ", alert2), margenTotalKcal > 0 && /* @__PURE__ */ React.createElement("div", { style: CARD }, /* @__PURE__ */ React.createElement("div", { style: SL }, "margen acumulado"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 32, fontWeight: 700 } }, Math.round(margenTotalKcal)), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)" } }, "kcal por sobre la meta ajustada")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: margenAjustadoKcal > 0 && margenNoAjustadoKcal > 0 ? 10 : 0 } }, "\u2248 ", margenGramos, "g \xB7 ", diasExcedidos, " d\xEDa", diasExcedidos !== 1 ? "s" : "", " con exceso neto al cierre"), margenAjustadoKcal > 0 && margenNoAjustadoKcal > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: "8px 10px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: "#aac756" } }, Math.round(margenAjustadoKcal)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, "en ", diasAjustados, " d\xEDa", diasAjustados !== 1 ? "s" : "", " ajustado", diasAjustados !== 1 ? "s" : "", " por carga")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: "8px 10px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: "rgba(255,255,255,0.7)" } }, Math.round(margenNoAjustadoKcal)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, "en ", diasNoAjustados, " d\xEDa", diasNoAjustados !== 1 ? "s" : "", " sin ajuste")))), topFoods.length > 0 && /* @__PURE__ */ React.createElement("div", { style: CARD }, /* @__PURE__ */ React.createElement("div", { style: SL }, "alimentos frecuentes (30d)"), topFoods.map((f, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: i < topFoods.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15 } }, f.emoji), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.85)" } }, f.name), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: "#aac756" } }, "\xD7", f.count)))), topFoods.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 15, color: "#ccc", textAlign: "center", padding: "24px 0" } }, "a\xFAn no hay suficientes datos"), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
+      return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 480, margin: "0 auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 18 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setView("hoy"), style: { background: "transparent", border: "none", fontSize: 20, color: "#bbb", cursor: "pointer", padding: 0, lineHeight: 1 } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#111" } }, "\u{1F4CA} stats")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", { style: CARD }, /* @__PURE__ */ React.createElement("div", { style: SL }, "racha actual"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 32, fontWeight: 700 } }, streak), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)" } }, "d\xEDas cumpliendo meta")), /* @__PURE__ */ React.createElement("div", { style: CARD }, /* @__PURE__ */ React.createElement("div", { style: SL }, "promedio 7d"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700 } }, avgKcal7, " kcal"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)" } }, avgProt7, "g prote\xEDna"))), alert2 && /* @__PURE__ */ React.createElement("div", { style: { background: "#2a1515", border: "1px solid rgba(255,100,100,0.3)", borderRadius: 10, padding: "10px 14px", marginBottom: 14, fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#ff9b9b" } }, "\u26A0\uFE0F ", alert2), margenTotalKcal > 0 && /* @__PURE__ */ React.createElement("div", { style: CARD }, /* @__PURE__ */ React.createElement("div", { style: SL }, "margen acumulado"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 32, fontWeight: 700 } }, Math.round(margenTotalKcal)), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)" } }, "kcal por sobre la meta ajustada")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: margenAjustadoKcal > 0 && margenNoAjustadoKcal > 0 ? 10 : 0 } }, "\u2248 ", margenGramos, "g \xB7 ", diasExcedidos, " d\xEDa", diasExcedidos !== 1 ? "s" : "", " con exceso neto al cierre"), margenAjustadoKcal > 0 && margenNoAjustadoKcal > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: "8px 10px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: "#aac756" } }, Math.round(margenAjustadoKcal)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, "en ", diasAjustados, " d\xEDa", diasAjustados !== 1 ? "s" : "", " ajustado", diasAjustados !== 1 ? "s" : "", " por carga")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: "8px 10px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: "rgba(255,255,255,0.7)" } }, Math.round(margenNoAjustadoKcal)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, "en ", diasNoAjustados, " d\xEDa", diasNoAjustados !== 1 ? "s" : "", " sin ajuste")))), topFoods.length > 0 && /* @__PURE__ */ React.createElement("div", { style: CARD }, /* @__PURE__ */ React.createElement("div", { style: SL }, "alimentos frecuentes (30d)"), topFoods.map((f2, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: i < topFoods.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15 } }, f2.emoji), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.85)" } }, f2.name), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: "#aac756" } }, "\xD7", f2.count)))), topFoods.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 15, color: "#ccc", textAlign: "center", padding: "24px 0" } }, "a\xFAn no hay suficientes datos"), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
     }
     if (view === "deck") {
       if (!deckEditor) {
@@ -7463,17 +7845,17 @@ ${item.link}`);
   function wrapCanvasText(ctx, text, maxWidth) {
     const words = (text || "").split(/\s+/);
     const lines = [];
-    let line = "";
+    let line2 = "";
     for (const w of words) {
-      const test = line ? `${line} ${w}` : w;
-      if (ctx.measureText(test).width > maxWidth && line) {
-        lines.push(line);
-        line = w;
+      const test = line2 ? `${line2} ${w}` : w;
+      if (ctx.measureText(test).width > maxWidth && line2) {
+        lines.push(line2);
+        line2 = w;
       } else {
-        line = test;
+        line2 = test;
       }
     }
-    if (line) lines.push(line);
+    if (line2) lines.push(line2);
     return lines;
   }
   async function exportCineShareImage(item, onError) {
@@ -7509,8 +7891,8 @@ ${item.link}`);
     ctx.fillStyle = "#ffffff";
     ctx.font = "700 58px 'DM Sans', sans-serif";
     const titleLines = wrapCanvasText(ctx, item.title, W - marginX * 2).slice(0, 2);
-    for (const line of titleLines) {
-      ctx.fillText(line, marginX, y);
+    for (const line2 of titleLines) {
+      ctx.fillText(line2, marginX, y);
       y += 66;
     }
     y += 10;
@@ -7531,8 +7913,8 @@ ${item.link}`);
     ctx.fillStyle = "rgba(255,255,255,0.8)";
     ctx.font = "400 32px 'DM Sans', sans-serif";
     const summaryLines = wrapCanvasText(ctx, item.summary || "", W - marginX * 2).slice(0, 7);
-    for (const line of summaryLines) {
-      ctx.fillText(line, marginX, y);
+    for (const line2 of summaryLines) {
+      ctx.fillText(line2, marginX, y);
       y += 42;
     }
     ctx.fillStyle = "rgba(255,255,255,0.3)";
@@ -9589,8 +9971,8 @@ Toco reintentar ahora.`);
         setAddPodcastBusy(false);
       }
     }
-    function seekFromPointer(e, rect) {
-      const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+    function seekFromPointer(e, rect2) {
+      const cx = rect2.left + rect2.width / 2, cy = rect2.top + rect2.height / 2;
       let shifted = Math.atan2(e.clientY - cy, e.clientX - cx) + Math.PI / 2;
       if (shifted < 0) shifted += 2 * Math.PI;
       const frac = shifted / (2 * Math.PI);
@@ -9603,17 +9985,17 @@ Toco reintentar ahora.`);
     }
     function podcastPlayerPointerDown(e) {
       const el = e.currentTarget;
-      const rect = el.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+      const rect2 = el.getBoundingClientRect();
+      const cx = rect2.left + rect2.width / 2, cy = rect2.top + rect2.height / 2;
       const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
-      const R = (rect.width - 3) / 2;
+      const R = (rect2.width - 3) / 2;
       if (dist >= R - 10 && podcastProgress.duration > 0) {
-        dragState.current = { mode: "seek", moved: false, rect };
+        dragState.current = { mode: "seek", moved: false, rect: rect2 };
         el.setPointerCapture(e.pointerId);
-        seekFromPointer(e, rect);
+        seekFromPointer(e, rect2);
         return;
       }
-      dragState.current = { mode: "move", offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top, startX: e.clientX, startY: e.clientY, moved: false };
+      dragState.current = { mode: "move", offsetX: e.clientX - rect2.left, offsetY: e.clientY - rect2.top, startX: e.clientX, startY: e.clientY, moved: false };
       el.setPointerCapture(e.pointerId);
     }
     function podcastPlayerPointerMove(e) {
@@ -10577,10 +10959,10 @@ Toco reintentar ahora.`);
             return nm;
           }
           if (!hasPurchases && hasCompras) {
-            const f = cur.filter((v) => v !== "compras");
+            const f2 = cur.filter((v) => v !== "compras");
             const nm = { ...cm };
-            if (f.length === 0) delete nm[dateKey];
-            else nm[dateKey] = f;
+            if (f2.length === 0) delete nm[dateKey];
+            else nm[dateKey] = f2;
             calMarksRef.current = nm;
             saveToStorage({ calMarks: nm });
             return nm;
@@ -11161,7 +11543,7 @@ Toco reintentar ahora.`);
         fields.push(day.sleep);
         const hasNutri = (nutriLog[dateKey] || []).length > 0;
         fields.push(hasNutri ? "ok" : void 0);
-        const filled = fields.filter((f) => f !== void 0 && f !== null && f !== "").length;
+        const filled = fields.filter((f2) => f2 !== void 0 && f2 !== null && f2 !== "").length;
         const pct = Math.round(filled / fields.length * 100);
         const batColor = pct <= 30 ? "#e53935" : pct <= 60 ? "#ff9800" : pct <= 90 ? "#ffcc00" : "#4caf50";
         return /* @__PURE__ */ React.createElement("div", { title: `registro: ${pct}%`, style: { display: "flex", alignItems: "center", gap: 2, marginLeft: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 12, height: 18, border: `1.5px solid ${isWeekend ? "#555" : "rgba(255,255,255,0.3)"}`, borderRadius: 2, padding: 1, position: "relative", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: "-3px", left: "50%", transform: "translateX(-50%)", width: 4, height: 2, background: isWeekend ? "#555" : "rgba(255,255,255,0.3)", borderRadius: "1px 1px 0 0" } }), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", height: `${pct}%`, background: batColor, borderRadius: 1, position: "absolute", bottom: 1, left: 1, right: 1, width: "calc(100% - 2px)", transition: "height 0.3s" } })));
