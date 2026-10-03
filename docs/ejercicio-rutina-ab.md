@@ -27,5 +27,5 @@ Acordeón por grupo muscular de la sesión, `getProgressionSuggestion`, `getCali
 ## Validación
 Sintaxis y build (`npm run build`); contenido del bundle final (`index.html`); prueba de humo con jsdom: render de sesión con el backup real, pestañas, guía, calentamiento, marcar serie (formato `{done,reps,peso}` bajo `<id>_<n>`), aviso y aplicación de progresión, y render de historial, semanas, stats y editor.
 
-## Pendiente
-Dibujos del resto de los ejercicios (hoy solo `elev-lateral`).
+## Dibujos
+Los 12 ejercicios de la rutina tienen dibujo (inicio/final). Las figuras de perfil se resuelven por cinemática inversa con los largos reales (`ik`, `brazo`, `pierna`, `cuerpo` en `figuras.js`). Las flechas naranjas indican el sentido del movimiento entre el dibujo de inicio y el de final.
