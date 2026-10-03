@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-03T14:35:32.819Z",
+  "generatedAt": "2026-10-03T20:42:11.129Z",
   "categories": [
     {
       "cat": "Películas",
@@ -9,7 +9,7 @@
           "title": "Resident Evil",
           "link": "https://www.themoviedb.org/movie/1423191",
           "summary": "Película basada en la saga de videojuegos de Capcom del mismo nombre. En una reinvención totalmente nueva, el mensajero médico Bryan se ve inmerso en una carrera de acción sin descanso por la supervivencia, mientras el caos se desata a su alrededor.",
-          "image": "https://image.tmdb.org/t/p/w500/3d8D5tZXiPUE2VmRjnrTNzFORBa.jpg",
+          "image": "https://image.tmdb.org/t/p/w500/ntmaNFJ7O60n45E1E6HZlXeSV5e.jpg",
           "pubDate": "2026-09-16",
           "source": "TMDb",
           "categoria": "Películas",
@@ -181,7 +181,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 7.4
+            "tmdb": 7.3
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -696,7 +696,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1101412",
@@ -778,6 +778,87 @@
             }
           ],
           "trending": false
+        },
+        {
+          "guid": "tmdb-movie-977942",
+          "title": "El hombre que desafió al rey",
+          "link": "https://www.themoviedb.org/movie/977942",
+          "summary": "En la Inglaterra del siglo XIV, asolada por la peste, un campesino desencadena una rebelión contra el rey Ricardo II y se convierte involuntariamente en una leyenda de la resistencia.",
+          "image": "https://image.tmdb.org/t/p/w500/7TUl15TOsIvndKlgMWTtLgtEzZP.jpg",
+          "pubDate": "2026-09-10",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-29T16:22:09.129Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": 53,
+            "tmdb": 7.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "lyhCxZN4Ro8",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Andrew Garfield",
+              "character": "Ploughman",
+              "order": 0
+            },
+            {
+              "name": "Jamie Bell",
+              "character": "John Ball",
+              "order": 1
+            },
+            {
+              "name": "Stephen Dillane",
+              "character": "Archbishop Sudbury",
+              "order": 2
+            },
+            {
+              "name": "Tom Hollander",
+              "character": "Treasurer Hales",
+              "order": 3
+            },
+            {
+              "name": "Cosmo Jarvis",
+              "character": "Wat Tyler",
+              "order": 4
+            },
+            {
+              "name": "Thomasin McKenzie",
+              "character": "Alyce",
+              "order": 5
+            },
+            {
+              "name": "Jonny Lee Miller",
+              "character": "Mayor Walworth",
+              "order": 6
+            },
+            {
+              "name": "Woody Norman",
+              "character": "King Richard II",
+              "order": 7
+            },
+            {
+              "name": "Katherine Waterston",
+              "character": "Countess",
+              "order": 8
+            },
+            {
+              "name": "Stanley Townsend",
+              "character": "Chief Justice Bealknap",
+              "order": 9
+            }
+          ],
+          "trending": true
         },
         {
           "guid": "tmdb-movie-1377237",
@@ -942,168 +1023,6 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-977942",
-          "title": "El hombre que desafió al rey",
-          "link": "https://www.themoviedb.org/movie/977942",
-          "summary": "En la Inglaterra del siglo XIV, asolada por la peste, un campesino desencadena una rebelión contra el rey Ricardo II y se convierte involuntariamente en una leyenda de la resistencia.",
-          "image": "https://image.tmdb.org/t/p/w500/7TUl15TOsIvndKlgMWTtLgtEzZP.jpg",
-          "pubDate": "2026-09-10",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-29T16:22:09.129Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": 53,
-            "tmdb": 7.3
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "lyhCxZN4Ro8",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Andrew Garfield",
-              "character": "Ploughman",
-              "order": 0
-            },
-            {
-              "name": "Jamie Bell",
-              "character": "John Ball",
-              "order": 1
-            },
-            {
-              "name": "Stephen Dillane",
-              "character": "Archbishop Sudbury",
-              "order": 2
-            },
-            {
-              "name": "Tom Hollander",
-              "character": "Treasurer Hales",
-              "order": 3
-            },
-            {
-              "name": "Cosmo Jarvis",
-              "character": "Wat Tyler",
-              "order": 4
-            },
-            {
-              "name": "Thomasin McKenzie",
-              "character": "Alyce",
-              "order": 5
-            },
-            {
-              "name": "Jonny Lee Miller",
-              "character": "Mayor Walworth",
-              "order": 6
-            },
-            {
-              "name": "Woody Norman",
-              "character": "King Richard II",
-              "order": 7
-            },
-            {
-              "name": "Katherine Waterston",
-              "character": "Countess",
-              "order": 8
-            },
-            {
-              "name": "Stanley Townsend",
-              "character": "Chief Justice Bealknap",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-969681",
-          "title": "Spider-Man: Brand New Day",
-          "link": "https://www.themoviedb.org/movie/969681",
-          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
-          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
-          "pubDate": "2026-07-29",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-29T21:59:04.958Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.1,
-            "rt": 89,
-            "metascore": 66,
-            "tmdb": 7.9
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "P3uI5sLosKU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Tom Holland",
-              "character": "Peter Parker / Spider-Man",
-              "order": 0
-            },
-            {
-              "name": "Zendaya",
-              "character": "MJ",
-              "order": 1
-            },
-            {
-              "name": "Mark Ruffalo",
-              "character": "Bruce Banner / Hulk",
-              "order": 2
-            },
-            {
-              "name": "Jon Bernthal",
-              "character": "Frank Castle / Punisher",
-              "order": 3
-            },
-            {
-              "name": "Jacob Batalon",
-              "character": "Ned Leeds",
-              "order": 4
-            },
-            {
-              "name": "Sadie Sink",
-              "character": "Jean Grey",
-              "order": 5
-            },
-            {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova / Black Widow",
-              "order": 6
-            },
-            {
-              "name": "Liza Colón-Zayas",
-              "character": "Detective Jean DeWolff",
-              "order": 7
-            },
-            {
-              "name": "Tramell Tillman",
-              "character": "William 'Bill' Metzger",
-              "order": 8
-            },
-            {
-              "name": "Marisa Tomei",
-              "character": "May Parker",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
           "guid": "tmdb-movie-1339713",
           "title": "Obsession",
           "link": "https://www.themoviedb.org/movie/1339713",
@@ -1192,6 +1111,87 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-969681",
+          "title": "Spider-Man: Brand New Day",
+          "link": "https://www.themoviedb.org/movie/969681",
+          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
+          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
+          "pubDate": "2026-07-29",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-29T21:59:04.958Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.1,
+            "rt": 89,
+            "metascore": 66,
+            "tmdb": 7.9
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "P3uI5sLosKU",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Holland",
+              "character": "Peter Parker / Spider-Man",
+              "order": 0
+            },
+            {
+              "name": "Zendaya",
+              "character": "MJ",
+              "order": 1
+            },
+            {
+              "name": "Mark Ruffalo",
+              "character": "Bruce Banner / Hulk",
+              "order": 2
+            },
+            {
+              "name": "Jon Bernthal",
+              "character": "Frank Castle / Punisher",
+              "order": 3
+            },
+            {
+              "name": "Jacob Batalon",
+              "character": "Ned Leeds",
+              "order": 4
+            },
+            {
+              "name": "Sadie Sink",
+              "character": "Jean Grey",
+              "order": 5
+            },
+            {
+              "name": "Florence Pugh",
+              "character": "Yelena Belova / Black Widow",
+              "order": 6
+            },
+            {
+              "name": "Liza Colón-Zayas",
+              "character": "Detective Jean DeWolff",
+              "order": 7
+            },
+            {
+              "name": "Tramell Tillman",
+              "character": "William 'Bill' Metzger",
+              "order": 8
+            },
+            {
+              "name": "Marisa Tomei",
+              "character": "May Parker",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1003596",
           "title": "Vengadores: Doomsday",
           "link": "https://www.themoviedb.org/movie/1003596",
@@ -1270,7 +1270,88 @@
               "order": 9
             }
           ],
-          "trending": false
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1400940",
+          "title": "Clayface",
+          "link": "https://www.themoviedb.org/movie/1400940",
+          "summary": "Una criatura cambiante hecha de arcilla mágica acecha Ciudad Gótica, alternando entre villano y aliado de Batman. Varias figuras trágicas han asumido el manto de Cara de Barro a lo largo de los años.",
+          "image": "https://image.tmdb.org/t/p/w500/6ihSDJlBNcvoTWzSA0jonZyOXTs.jpg",
+          "pubDate": "2026-10-21",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-19T20:10:41.997Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Post Production",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "KCR-rz0YfD4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Rhys Harries",
+              "character": "Matt Hagen / Clayface",
+              "order": 0
+            },
+            {
+              "name": "Naomi Ackie",
+              "character": "Caitlyn Corr",
+              "order": 1
+            },
+            {
+              "name": "Eddie Marsan",
+              "character": "",
+              "order": 2
+            },
+            {
+              "name": "Max Minghella",
+              "character": "John Borrelli",
+              "order": 3
+            },
+            {
+              "name": "David Dencik",
+              "character": "",
+              "order": 4
+            },
+            {
+              "name": "Francesca Corney",
+              "character": "",
+              "order": 5
+            },
+            {
+              "name": "Ruby Sear",
+              "character": "Theresa",
+              "order": 6
+            },
+            {
+              "name": "Wil Coban",
+              "character": "Bones",
+              "order": 7
+            },
+            {
+              "name": "Joshua James",
+              "character": "Corey Bowery",
+              "order": 8
+            },
+            {
+              "name": "Jake Curran",
+              "character": "Patches",
+              "order": 9
+            }
+          ],
+          "trending": true
         },
         {
           "guid": "tmdb-movie-1375441",
@@ -1429,87 +1510,6 @@
             {
               "name": "Hudson Meek",
               "character": "Kaden",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1400940",
-          "title": "Clayface",
-          "link": "https://www.themoviedb.org/movie/1400940",
-          "summary": "Una criatura cambiante hecha de arcilla mágica acecha Ciudad Gótica, alternando entre villano y aliado de Batman. Varias figuras trágicas han asumido el manto de Cara de Barro a lo largo de los años.",
-          "image": "https://image.tmdb.org/t/p/w500/6ihSDJlBNcvoTWzSA0jonZyOXTs.jpg",
-          "pubDate": "2026-10-21",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-19T20:10:41.997Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Post Production",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "KCR-rz0YfD4",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Tom Rhys Harries",
-              "character": "Matt Hagen / Clayface",
-              "order": 0
-            },
-            {
-              "name": "Naomi Ackie",
-              "character": "Caitlyn Corr",
-              "order": 1
-            },
-            {
-              "name": "Eddie Marsan",
-              "character": "",
-              "order": 2
-            },
-            {
-              "name": "Max Minghella",
-              "character": "John Borrelli",
-              "order": 3
-            },
-            {
-              "name": "David Dencik",
-              "character": "",
-              "order": 4
-            },
-            {
-              "name": "Francesca Corney",
-              "character": "",
-              "order": 5
-            },
-            {
-              "name": "Ruby Sear",
-              "character": "Theresa",
-              "order": 6
-            },
-            {
-              "name": "Wil Coban",
-              "character": "Bones",
-              "order": 7
-            },
-            {
-              "name": "Joshua James",
-              "character": "Corey Bowery",
-              "order": 8
-            },
-            {
-              "name": "Jake Curran",
-              "character": "Patches",
               "order": 9
             }
           ],
@@ -3609,87 +3609,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-movie-1480574",
-          "title": "Just Play Dead",
-          "link": "https://www.themoviedb.org/movie/1480574",
-          "summary": "Un hombre planea fingir su muerte y culpar al amante de su esposa por dinero del seguro. Ella trama matarlo de verdad y quedarse todo, iniciando un juego mortal.",
-          "image": "https://image.tmdb.org/t/p/w500/glALx6QaIgw1u4joXsnfHTjWi6D.jpg",
-          "pubDate": "2026-08-28",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-03T16:15:46.591Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.5,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.7
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "LlAajeOoFBo",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Samuel L. Jackson",
-              "character": "Jack Wolfe",
-              "order": 0
-            },
-            {
-              "name": "Eva Green",
-              "character": "Nora Wolfe",
-              "order": 1
-            },
-            {
-              "name": "María Pedraza",
-              "character": "Bianca",
-              "order": 2
-            },
-            {
-              "name": "Eoin Macken",
-              "character": "Dani",
-              "order": 3
-            },
-            {
-              "name": "Jason Fernández",
-              "character": "Chad",
-              "order": 4
-            },
-            {
-              "name": "Paulo Rivera",
-              "character": "Dr.Castro",
-              "order": 5
-            },
-            {
-              "name": "Nicole Ansari-Cox",
-              "character": "Sister Rachel",
-              "order": 6
-            },
-            {
-              "name": "Lee Boardman",
-              "character": "Miguel",
-              "order": 7
-            },
-            {
-              "name": "Dar Dash",
-              "character": "Mr. Brody",
-              "order": 8
-            },
-            {
-              "name": "Eduardo Aladro",
-              "character": "Martinez",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
           "guid": "tmdb-movie-1081003",
           "title": "Supergirl",
           "link": "https://www.themoviedb.org/movie/1081003",
@@ -3857,86 +3776,6 @@
             {
               "name": "James Duval",
               "character": "Justice of the Peace",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1506560",
-          "title": "Clash of the Thundermans",
-          "link": "https://www.themoviedb.org/movie/1506560",
-          "summary": "When Chloe develops a destructive new superpower, the Hero League orders her to an elite boarding school for superheroes to learn control of her abilities. Faced with the prospect of sending Chloe away for years, the Thundermans split apart, with Phoebe, Barb and Billy taking her into hiding. Max, Hank, and Nora track their rogue family members, until the two factions face off against each other in a full-on battle for the Thundermans’ future.",
-          "image": "https://image.tmdb.org/t/p/w500/16oqRrWVzQm6qdGfBxvziZ2UiMT.jpg",
-          "pubDate": "2026-09-03",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-03T16:15:45.850Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Post Production",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "KnH-neozeTM",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Kira Kosarin",
-              "character": "Phoebe Thunderman",
-              "order": 0
-            },
-            {
-              "name": "Jack Griffo",
-              "character": "Max Thunderman",
-              "order": 1
-            },
-            {
-              "name": "Maya Le Clark",
-              "character": "Chloe Thunderman",
-              "order": 2
-            },
-            {
-              "name": "Rosa Blasi",
-              "character": "Barb Thunderman",
-              "order": 3
-            },
-            {
-              "name": "Chris Tallman",
-              "character": "Hank Thunderman",
-              "order": 4
-            },
-            {
-              "name": "Diego Velazquez",
-              "character": "Billy Thunderman",
-              "order": 5
-            },
-            {
-              "name": "Addison Riecke",
-              "character": "Nora Thunderman",
-              "order": 6
-            },
-            {
-              "name": "Ariel Winter",
-              "character": "Cognita",
-              "order": 7
-            },
-            {
-              "name": "Dana Snyder",
-              "character": "Dr. Colosso (voice)",
-              "order": 8
-            },
-            {
-              "name": "Daniele Gaither",
-              "character": "President  Kickbutt",
               "order": 9
             }
           ],
@@ -5370,6 +5209,365 @@
           "trending": false
         },
         {
+          "guid": "tmdb-tv-1413",
+          "title": "American Horror Story",
+          "link": "https://www.themoviedb.org/tv/1413",
+          "summary": "American Horror Story es una serie antológica de televisión, creada y producida por Ryan Murphy y Brad Falchuk. Cada una de sus temporadas narra una trama independiente, ambientada en lugares diferentes y cerrando siempre la historia; donde muchos actores repiten, pero siempre interpretando personajes distintos.",
+          "image": "https://image.tmdb.org/t/p/w500/yCkPLQ10qKIUgRBXmQVVMF1h96d.jpg",
+          "pubDate": "2011-10-05",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-09-26T07:10:12.586Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.9,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.1
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-01",
+          "numberOfSeasons": 13,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 12,
+              "fechaEstreno": "2011-10-05"
+            },
+            {
+              "numero": 2,
+              "episodios": 13,
+              "fechaEstreno": "2012-10-17"
+            },
+            {
+              "numero": 3,
+              "episodios": 13,
+              "fechaEstreno": "2013-10-09"
+            },
+            {
+              "numero": 4,
+              "episodios": 13,
+              "fechaEstreno": "2014-10-08"
+            },
+            {
+              "numero": 5,
+              "episodios": 12,
+              "fechaEstreno": "2015-10-07"
+            },
+            {
+              "numero": 6,
+              "episodios": 10,
+              "fechaEstreno": "2016-09-14"
+            },
+            {
+              "numero": 7,
+              "episodios": 11,
+              "fechaEstreno": "2017-09-05"
+            },
+            {
+              "numero": 8,
+              "episodios": 10,
+              "fechaEstreno": "2018-09-12"
+            },
+            {
+              "numero": 9,
+              "episodios": 9,
+              "fechaEstreno": "2019-09-18"
+            },
+            {
+              "numero": 10,
+              "episodios": 10,
+              "fechaEstreno": "2021-08-25"
+            },
+            {
+              "numero": 11,
+              "episodios": 10,
+              "fechaEstreno": "2022-10-19"
+            },
+            {
+              "numero": 12,
+              "episodios": 9,
+              "fechaEstreno": "2023-09-20"
+            },
+            {
+              "numero": 13,
+              "episodios": 13,
+              "fechaEstreno": "2026-09-24"
+            }
+          ],
+          "currentSeason": 13,
+          "reviews": {
+            "top": {
+              "rating": 8,
+              "text": "Esta serie me genera sentimientos encontrados ya que, desde la temporada 10 (Double Feature) hacia atrás la encuentro fabulosa, con historias muy interesante, rebuscadas pero entretenidas, pero ya las últimas 2 temporadas han sido un asco, la 11 me forcé a terminal de verla pero ya la 12 la dejé abandonada, para mí es intolerable… no la recomiendo por su actualidad pero si la quieres ver, recomiendo hasta la temporada 9 o 10.",
+              "author": "tmdb48995709"
+            },
+            "bottom": {
+              "rating": 8,
+              "text": "Esta serie me genera sentimientos encontrados. Si bien considero que desde la temporada 10 (Double Feature) hacia atrás la trama es fabulosa, con historias muy interesantes, complejas pero entretenidas, las últimas dos temporadas me han parecido decepcionantes. La temporada 11 me resultó difícil de terminar y la 12 la abandoné. En mi opinión, es intolerable. No la recomiendo en su actualidad, pero si deseas verla, le sugiero las temporadas 9 o 10 hacia atrás.",
+              "author": "tmdb48995709"
+            }
+          },
+          "trailer": {
+            "key": "nLJR2twdK00",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Sarah Paulson",
+              "character": "Cordelia Goode / Sally McKenna / Ms. Wilhemina Venable / Tuberculosis Karen / Mamie Eisenhower",
+              "order": 1
+            },
+            {
+              "name": "Evan Peters",
+              "character": "Tate Langdon / James Patrick March / Kai Anderson",
+              "order": 3
+            },
+            {
+              "name": "Leslie Grossman",
+              "character": "Coco St. Pierre Vanderbilt",
+              "order": 4
+            },
+            {
+              "name": "Emma Roberts",
+              "character": "Madison Montgomery",
+              "order": 6
+            },
+            {
+              "name": "Kathy Bates",
+              "character": "Delphine LaLaurie",
+              "order": 9
+            },
+            {
+              "name": "Gabourey Sidibe",
+              "character": "Queenie",
+              "order": 10
+            },
+            {
+              "name": "Angela Bassett",
+              "character": "Marie Laveau",
+              "order": 13
+            },
+            {
+              "name": "Billie Lourd",
+              "character": "Mallory / Winter Anderson",
+              "order": 15
+            },
+            {
+              "name": "Jessica Lange",
+              "character": "Constance Langdon / Sister Jude Martin / Fiona Goode / Elsa Mars",
+              "order": 17
+            },
+            {
+              "name": "Joey Pollari",
+              "character": "Ben DeSoto",
+              "order": 131
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-tv-4656",
+          "title": "Raw",
+          "link": "https://www.themoviedb.org/tv/4656",
+          "summary": "A regularly scheduled, live, year-round program featuring some of the biggest WWE Superstars.",
+          "image": "https://image.tmdb.org/t/p/w500/fstEe6RsyNyPUnMwNcL20iNl0nE.jpg",
+          "pubDate": "1993-01-11",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-09-19T13:43:53.848Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.8,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.8
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-09-21",
+          "numberOfSeasons": 34,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 45,
+              "fechaEstreno": "1993-01-10"
+            },
+            {
+              "numero": 2,
+              "episodios": 47,
+              "fechaEstreno": "1994-01-03"
+            },
+            {
+              "numero": 3,
+              "episodios": 48,
+              "fechaEstreno": "1995-01-02"
+            },
+            {
+              "numero": 4,
+              "episodios": 51,
+              "fechaEstreno": "1996-01-01"
+            },
+            {
+              "numero": 5,
+              "episodios": 52,
+              "fechaEstreno": "1997-01-06"
+            },
+            {
+              "numero": 6,
+              "episodios": 52,
+              "fechaEstreno": "1998-01-05"
+            },
+            {
+              "numero": 7,
+              "episodios": 52,
+              "fechaEstreno": "1999-01-04"
+            },
+            {
+              "numero": 8,
+              "episodios": 52,
+              "fechaEstreno": "2000-01-03"
+            },
+            {
+              "numero": 9,
+              "episodios": 53,
+              "fechaEstreno": "2001-01-01"
+            },
+            {
+              "numero": 10,
+              "episodios": 52,
+              "fechaEstreno": "2002-01-07"
+            },
+            {
+              "numero": 11,
+              "episodios": 52,
+              "fechaEstreno": "2003-01-06"
+            },
+            {
+              "numero": 12,
+              "episodios": 52,
+              "fechaEstreno": "2004-01-05"
+            },
+            {
+              "numero": 13,
+              "episodios": 52,
+              "fechaEstreno": "2005-01-03"
+            },
+            {
+              "numero": 14,
+              "episodios": 52,
+              "fechaEstreno": "2006-01-02"
+            },
+            {
+              "numero": 15,
+              "episodios": 53,
+              "fechaEstreno": "2007-01-01"
+            },
+            {
+              "numero": 16,
+              "episodios": 52,
+              "fechaEstreno": "2008-01-07"
+            },
+            {
+              "numero": 17,
+              "episodios": 52,
+              "fechaEstreno": "2009-01-05"
+            },
+            {
+              "numero": 18,
+              "episodios": 52,
+              "fechaEstreno": "2010-01-04"
+            },
+            {
+              "numero": 19,
+              "episodios": 52,
+              "fechaEstreno": "2011-01-03"
+            },
+            {
+              "numero": 20,
+              "episodios": 53,
+              "fechaEstreno": "2012-01-02"
+            },
+            {
+              "numero": 21,
+              "episodios": 52,
+              "fechaEstreno": "2013-01-07"
+            },
+            {
+              "numero": 22,
+              "episodios": 52,
+              "fechaEstreno": "2014-01-05"
+            },
+            {
+              "numero": 23,
+              "episodios": 52,
+              "fechaEstreno": "2015-01-04"
+            },
+            {
+              "numero": 24,
+              "episodios": 52,
+              "fechaEstreno": "2016-01-03"
+            },
+            {
+              "numero": 25,
+              "episodios": 52,
+              "fechaEstreno": "2017-01-01"
+            },
+            {
+              "numero": 26,
+              "episodios": 53,
+              "fechaEstreno": "2017-12-31"
+            },
+            {
+              "numero": 27,
+              "episodios": 52,
+              "fechaEstreno": "2019-01-06"
+            },
+            {
+              "numero": 28,
+              "episodios": 52,
+              "fechaEstreno": "2020-01-05"
+            },
+            {
+              "numero": 29,
+              "episodios": 52,
+              "fechaEstreno": "2021-01-03"
+            },
+            {
+              "numero": 30,
+              "episodios": 52,
+              "fechaEstreno": "2022-01-02"
+            },
+            {
+              "numero": 31,
+              "episodios": 52,
+              "fechaEstreno": "2023-01-01"
+            },
+            {
+              "numero": 32,
+              "episodios": 53,
+              "fechaEstreno": "2023-12-29"
+            },
+            {
+              "numero": 33,
+              "episodios": 52,
+              "fechaEstreno": "2024-12-31"
+            },
+            {
+              "numero": 34,
+              "episodios": 41,
+              "fechaEstreno": "2026-01-05"
+            }
+          ],
+          "currentSeason": 34,
+          "reviews": null,
+          "trailer": {
+            "key": "FVO6mUQMon8",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
           "guid": "tmdb-tv-97546",
           "title": "Ted Lasso",
           "link": "https://www.themoviedb.org/tv/97546",
@@ -5802,207 +6000,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-tv-4656",
-          "title": "Raw",
-          "link": "https://www.themoviedb.org/tv/4656",
-          "summary": "A regularly scheduled, live, year-round program featuring some of the biggest WWE Superstars.",
-          "image": "https://image.tmdb.org/t/p/w500/fstEe6RsyNyPUnMwNcL20iNl0nE.jpg",
-          "pubDate": "1993-01-11",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-19T13:43:53.848Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.8,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.8
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-21",
-          "numberOfSeasons": 34,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 45,
-              "fechaEstreno": "1993-01-10"
-            },
-            {
-              "numero": 2,
-              "episodios": 47,
-              "fechaEstreno": "1994-01-03"
-            },
-            {
-              "numero": 3,
-              "episodios": 48,
-              "fechaEstreno": "1995-01-02"
-            },
-            {
-              "numero": 4,
-              "episodios": 51,
-              "fechaEstreno": "1996-01-01"
-            },
-            {
-              "numero": 5,
-              "episodios": 52,
-              "fechaEstreno": "1997-01-06"
-            },
-            {
-              "numero": 6,
-              "episodios": 52,
-              "fechaEstreno": "1998-01-05"
-            },
-            {
-              "numero": 7,
-              "episodios": 52,
-              "fechaEstreno": "1999-01-04"
-            },
-            {
-              "numero": 8,
-              "episodios": 52,
-              "fechaEstreno": "2000-01-03"
-            },
-            {
-              "numero": 9,
-              "episodios": 53,
-              "fechaEstreno": "2001-01-01"
-            },
-            {
-              "numero": 10,
-              "episodios": 52,
-              "fechaEstreno": "2002-01-07"
-            },
-            {
-              "numero": 11,
-              "episodios": 52,
-              "fechaEstreno": "2003-01-06"
-            },
-            {
-              "numero": 12,
-              "episodios": 52,
-              "fechaEstreno": "2004-01-05"
-            },
-            {
-              "numero": 13,
-              "episodios": 52,
-              "fechaEstreno": "2005-01-03"
-            },
-            {
-              "numero": 14,
-              "episodios": 52,
-              "fechaEstreno": "2006-01-02"
-            },
-            {
-              "numero": 15,
-              "episodios": 53,
-              "fechaEstreno": "2007-01-01"
-            },
-            {
-              "numero": 16,
-              "episodios": 52,
-              "fechaEstreno": "2008-01-07"
-            },
-            {
-              "numero": 17,
-              "episodios": 52,
-              "fechaEstreno": "2009-01-05"
-            },
-            {
-              "numero": 18,
-              "episodios": 52,
-              "fechaEstreno": "2010-01-04"
-            },
-            {
-              "numero": 19,
-              "episodios": 52,
-              "fechaEstreno": "2011-01-03"
-            },
-            {
-              "numero": 20,
-              "episodios": 53,
-              "fechaEstreno": "2012-01-02"
-            },
-            {
-              "numero": 21,
-              "episodios": 52,
-              "fechaEstreno": "2013-01-07"
-            },
-            {
-              "numero": 22,
-              "episodios": 52,
-              "fechaEstreno": "2014-01-05"
-            },
-            {
-              "numero": 23,
-              "episodios": 52,
-              "fechaEstreno": "2015-01-04"
-            },
-            {
-              "numero": 24,
-              "episodios": 52,
-              "fechaEstreno": "2016-01-03"
-            },
-            {
-              "numero": 25,
-              "episodios": 52,
-              "fechaEstreno": "2017-01-01"
-            },
-            {
-              "numero": 26,
-              "episodios": 53,
-              "fechaEstreno": "2017-12-31"
-            },
-            {
-              "numero": 27,
-              "episodios": 52,
-              "fechaEstreno": "2019-01-06"
-            },
-            {
-              "numero": 28,
-              "episodios": 52,
-              "fechaEstreno": "2020-01-05"
-            },
-            {
-              "numero": 29,
-              "episodios": 52,
-              "fechaEstreno": "2021-01-03"
-            },
-            {
-              "numero": 30,
-              "episodios": 52,
-              "fechaEstreno": "2022-01-02"
-            },
-            {
-              "numero": 31,
-              "episodios": 52,
-              "fechaEstreno": "2023-01-01"
-            },
-            {
-              "numero": 32,
-              "episodios": 53,
-              "fechaEstreno": "2023-12-29"
-            },
-            {
-              "numero": 33,
-              "episodios": 52,
-              "fechaEstreno": "2024-12-31"
-            },
-            {
-              "numero": 34,
-              "episodios": 41,
-              "fechaEstreno": "2026-01-05"
-            }
-          ],
-          "currentSeason": 34,
-          "reviews": null,
-          "trailer": {
-            "key": "FVO6mUQMon8",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
           "guid": "tmdb-tv-70672",
           "title": "Hombres en una Misión",
           "link": "https://www.themoviedb.org/tv/70672",
@@ -6274,164 +6271,6 @@
               "name": "Luce Mouchel",
               "character": "Marianne Delcourt",
               "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-1413",
-          "title": "American Horror Story",
-          "link": "https://www.themoviedb.org/tv/1413",
-          "summary": "American Horror Story es una serie antológica de televisión, creada y producida por Ryan Murphy y Brad Falchuk. Cada una de sus temporadas narra una trama independiente, ambientada en lugares diferentes y cerrando siempre la historia; donde muchos actores repiten, pero siempre interpretando personajes distintos.",
-          "image": "https://image.tmdb.org/t/p/w500/yCkPLQ10qKIUgRBXmQVVMF1h96d.jpg",
-          "pubDate": "2011-10-05",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-26T07:10:12.586Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.9,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.1
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-01",
-          "numberOfSeasons": 13,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 12,
-              "fechaEstreno": "2011-10-05"
-            },
-            {
-              "numero": 2,
-              "episodios": 13,
-              "fechaEstreno": "2012-10-17"
-            },
-            {
-              "numero": 3,
-              "episodios": 13,
-              "fechaEstreno": "2013-10-09"
-            },
-            {
-              "numero": 4,
-              "episodios": 13,
-              "fechaEstreno": "2014-10-08"
-            },
-            {
-              "numero": 5,
-              "episodios": 12,
-              "fechaEstreno": "2015-10-07"
-            },
-            {
-              "numero": 6,
-              "episodios": 10,
-              "fechaEstreno": "2016-09-14"
-            },
-            {
-              "numero": 7,
-              "episodios": 11,
-              "fechaEstreno": "2017-09-05"
-            },
-            {
-              "numero": 8,
-              "episodios": 10,
-              "fechaEstreno": "2018-09-12"
-            },
-            {
-              "numero": 9,
-              "episodios": 9,
-              "fechaEstreno": "2019-09-18"
-            },
-            {
-              "numero": 10,
-              "episodios": 10,
-              "fechaEstreno": "2021-08-25"
-            },
-            {
-              "numero": 11,
-              "episodios": 10,
-              "fechaEstreno": "2022-10-19"
-            },
-            {
-              "numero": 12,
-              "episodios": 9,
-              "fechaEstreno": "2023-09-20"
-            },
-            {
-              "numero": 13,
-              "episodios": 13,
-              "fechaEstreno": "2026-09-24"
-            }
-          ],
-          "currentSeason": 13,
-          "reviews": {
-            "top": {
-              "rating": 8,
-              "text": "Esta serie me genera sentimientos encontrados ya que, desde la temporada 10 (Double Feature) hacia atrás la encuentro fabulosa, con historias muy interesante, rebuscadas pero entretenidas, pero ya las últimas 2 temporadas han sido un asco, la 11 me forcé a terminal de verla pero ya la 12 la dejé abandonada, para mí es intolerable… no la recomiendo por su actualidad pero si la quieres ver, recomiendo hasta la temporada 9 o 10.",
-              "author": "tmdb48995709"
-            },
-            "bottom": {
-              "rating": 8,
-              "text": "Esta serie me genera sentimientos encontrados. Si bien considero que desde la temporada 10 (Double Feature) hacia atrás la trama es fabulosa, con historias muy interesantes, complejas pero entretenidas, las últimas dos temporadas me han parecido decepcionantes. La temporada 11 me resultó difícil de terminar y la 12 la abandoné. En mi opinión, es intolerable. No la recomiendo en su actualidad, pero si deseas verla, le sugiero las temporadas 9 o 10 hacia atrás.",
-              "author": "tmdb48995709"
-            }
-          },
-          "trailer": {
-            "key": "nLJR2twdK00",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Sarah Paulson",
-              "character": "Cordelia Goode / Sally McKenna / Ms. Wilhemina Venable / Tuberculosis Karen / Mamie Eisenhower",
-              "order": 1
-            },
-            {
-              "name": "Evan Peters",
-              "character": "Tate Langdon / James Patrick March / Kai Anderson",
-              "order": 3
-            },
-            {
-              "name": "Leslie Grossman",
-              "character": "Coco St. Pierre Vanderbilt",
-              "order": 4
-            },
-            {
-              "name": "Emma Roberts",
-              "character": "Madison Montgomery",
-              "order": 6
-            },
-            {
-              "name": "Kathy Bates",
-              "character": "Delphine LaLaurie",
-              "order": 9
-            },
-            {
-              "name": "Gabourey Sidibe",
-              "character": "Queenie",
-              "order": 10
-            },
-            {
-              "name": "Angela Bassett",
-              "character": "Marie Laveau",
-              "order": 13
-            },
-            {
-              "name": "Billie Lourd",
-              "character": "Mallory / Winter Anderson",
-              "order": 15
-            },
-            {
-              "name": "Jessica Lange",
-              "character": "Constance Langdon / Sister Jude Martin / Fiona Goode / Elsa Mars",
-              "order": 17
-            },
-            {
-              "name": "Joey Pollari",
-              "character": "Ben DeSoto",
-              "order": 131
             }
           ],
           "trending": false
@@ -8862,338 +8701,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-tv-16807",
-          "title": "Jornal Nacional",
-          "link": "https://www.themoviedb.org/tv/16807",
-          "summary": "Jornal Nacional is a Brazilian Emmy-winning primetime news program aired by Rede Globo since September 1, 1969. It was the first news program broadcast live by a television network throughout Brazil.",
-          "image": "https://image.tmdb.org/t/p/w500/g0x9tcHp8SV8UH4yq40g5zu6phu.jpg",
-          "pubDate": "1969-09-01",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-03T16:15:47.581Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 4.9,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-09",
-          "numberOfSeasons": 58,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 105,
-              "fechaEstreno": "1969-09-01"
-            },
-            {
-              "numero": 2,
-              "episodios": 313,
-              "fechaEstreno": "1970-01-01"
-            },
-            {
-              "numero": 3,
-              "episodios": 10,
-              "fechaEstreno": "1971-01-01"
-            },
-            {
-              "numero": 4,
-              "episodios": 10,
-              "fechaEstreno": "1972-01-01"
-            },
-            {
-              "numero": 5,
-              "episodios": 10,
-              "fechaEstreno": "1973-01-01"
-            },
-            {
-              "numero": 6,
-              "episodios": 10,
-              "fechaEstreno": "1974-01-01"
-            },
-            {
-              "numero": 7,
-              "episodios": 10,
-              "fechaEstreno": "1975-01-01"
-            },
-            {
-              "numero": 8,
-              "episodios": 10,
-              "fechaEstreno": "1976-01-01"
-            },
-            {
-              "numero": 9,
-              "episodios": 10,
-              "fechaEstreno": "1977-01-01"
-            },
-            {
-              "numero": 10,
-              "episodios": 10,
-              "fechaEstreno": "1978-01-02"
-            },
-            {
-              "numero": 11,
-              "episodios": 10,
-              "fechaEstreno": "1979-01-01"
-            },
-            {
-              "numero": 12,
-              "episodios": 10,
-              "fechaEstreno": "1980-01-01"
-            },
-            {
-              "numero": 13,
-              "episodios": 10,
-              "fechaEstreno": "1981-01-01"
-            },
-            {
-              "numero": 14,
-              "episodios": 10,
-              "fechaEstreno": "1982-01-01"
-            },
-            {
-              "numero": 15,
-              "episodios": 10,
-              "fechaEstreno": "1983-01-01"
-            },
-            {
-              "numero": 16,
-              "episodios": 10,
-              "fechaEstreno": "1984-01-02"
-            },
-            {
-              "numero": 17,
-              "episodios": 10,
-              "fechaEstreno": "1985-01-01"
-            },
-            {
-              "numero": 18,
-              "episodios": 10,
-              "fechaEstreno": "1986-01-01"
-            },
-            {
-              "numero": 19,
-              "episodios": 10,
-              "fechaEstreno": "1987-01-01"
-            },
-            {
-              "numero": 20,
-              "episodios": 10,
-              "fechaEstreno": "1988-01-01"
-            },
-            {
-              "numero": 21,
-              "episodios": 10,
-              "fechaEstreno": "1989-01-02"
-            },
-            {
-              "numero": 22,
-              "episodios": 10,
-              "fechaEstreno": "1990-01-01"
-            },
-            {
-              "numero": 23,
-              "episodios": 10,
-              "fechaEstreno": "1991-01-01"
-            },
-            {
-              "numero": 24,
-              "episodios": 100,
-              "fechaEstreno": "1992-01-01"
-            },
-            {
-              "numero": 25,
-              "episodios": 313,
-              "fechaEstreno": "1993-01-01"
-            },
-            {
-              "numero": 26,
-              "episodios": 313,
-              "fechaEstreno": "1994-01-01"
-            },
-            {
-              "numero": 27,
-              "episodios": 312,
-              "fechaEstreno": "1995-01-02"
-            },
-            {
-              "numero": 28,
-              "episodios": 314,
-              "fechaEstreno": "1996-01-01"
-            },
-            {
-              "numero": 29,
-              "episodios": 313,
-              "fechaEstreno": "1997-01-01"
-            },
-            {
-              "numero": 30,
-              "episodios": 313,
-              "fechaEstreno": "1998-01-01"
-            },
-            {
-              "numero": 31,
-              "episodios": 313,
-              "fechaEstreno": "1999-01-01"
-            },
-            {
-              "numero": 32,
-              "episodios": 313,
-              "fechaEstreno": "2000-01-01"
-            },
-            {
-              "numero": 33,
-              "episodios": 313,
-              "fechaEstreno": "2001-01-01"
-            },
-            {
-              "numero": 34,
-              "episodios": 313,
-              "fechaEstreno": "2002-01-01"
-            },
-            {
-              "numero": 35,
-              "episodios": 313,
-              "fechaEstreno": "2003-01-01"
-            },
-            {
-              "numero": 36,
-              "episodios": 314,
-              "fechaEstreno": "2004-01-01"
-            },
-            {
-              "numero": 37,
-              "episodios": 313,
-              "fechaEstreno": "2005-01-01"
-            },
-            {
-              "numero": 38,
-              "episodios": 312,
-              "fechaEstreno": "2006-01-02"
-            },
-            {
-              "numero": 39,
-              "episodios": 313,
-              "fechaEstreno": "2007-01-01"
-            },
-            {
-              "numero": 40,
-              "episodios": 314,
-              "fechaEstreno": "2008-01-01"
-            },
-            {
-              "numero": 41,
-              "episodios": 313,
-              "fechaEstreno": "2009-01-01"
-            },
-            {
-              "numero": 42,
-              "episodios": 313,
-              "fechaEstreno": "2010-01-01"
-            },
-            {
-              "numero": 43,
-              "episodios": 313,
-              "fechaEstreno": "2011-01-01"
-            },
-            {
-              "numero": 44,
-              "episodios": 313,
-              "fechaEstreno": "2012-01-02"
-            },
-            {
-              "numero": 45,
-              "episodios": 313,
-              "fechaEstreno": "2013-01-01"
-            },
-            {
-              "numero": 46,
-              "episodios": 313,
-              "fechaEstreno": "2014-01-01"
-            },
-            {
-              "numero": 47,
-              "episodios": 313,
-              "fechaEstreno": "2015-01-01"
-            },
-            {
-              "numero": 48,
-              "episodios": 314,
-              "fechaEstreno": "2016-01-01"
-            },
-            {
-              "numero": 49,
-              "episodios": 311,
-              "fechaEstreno": "2017-01-02"
-            },
-            {
-              "numero": 50,
-              "episodios": 313,
-              "fechaEstreno": "2018-01-01"
-            },
-            {
-              "numero": 51,
-              "episodios": 313,
-              "fechaEstreno": "2019-01-01"
-            },
-            {
-              "numero": 52,
-              "episodios": 314,
-              "fechaEstreno": "2020-01-01"
-            },
-            {
-              "numero": 53,
-              "episodios": 313,
-              "fechaEstreno": "2021-01-01"
-            },
-            {
-              "numero": 54,
-              "episodios": 313,
-              "fechaEstreno": "2022-01-01"
-            },
-            {
-              "numero": 55,
-              "episodios": 312,
-              "fechaEstreno": "2023-01-02"
-            },
-            {
-              "numero": 56,
-              "episodios": 314,
-              "fechaEstreno": "2024-01-01"
-            },
-            {
-              "numero": 57,
-              "episodios": 313,
-              "fechaEstreno": "2025-01-01"
-            },
-            {
-              "numero": 58,
-              "episodios": 313,
-              "fechaEstreno": "2026-01-01"
-            }
-          ],
-          "currentSeason": 58,
-          "reviews": null,
-          "trailer": {
-            "key": "Y4qSjOehs80",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Renata Vasconcellos",
-              "character": "Self - Host",
-              "order": 3
-            },
-            {
-              "name": "César Tralli",
-              "character": "Self - Host",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
           "guid": "tmdb-tv-37528",
           "title": "Gran hermano",
           "link": "https://www.themoviedb.org/tv/37528",
@@ -10651,33 +10158,6 @@
           "reviews": null,
           "trailer": {
             "key": "u_TQJHga6k8",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "mal-58929",
-          "title": "Koukaku Kidoutai (TV)",
-          "link": "https://myanimelist.net/anime/58929/Koukaku_Kidoutai_TV",
-          "summary": "In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetics, its citizens are able to replace their limbs with robotic parts. The world is now more interconnected than ever before, and the city's Public Security Section 9 is responsible for combating corruption, terrorism, and other dangerous threats following this shift toward globalization.\n\nThe strong-willed Major Motoko Kusanagi of Section 9 spearheads a case involving a mysterious hacker known only as the \"Puppet Master,\" who leaves a trail of victims stripped of their memories. Like many in this futuristic world, the Puppet Master's body is almost entirely robotic, giving them incredible power.\n\nAs Motoko and her subordinates follow the enigmatic criminal's trail, other parties—including Section 6—start to get involved, forcing her to confront the extremely complicated nature of the case. Pondering about various philosophical questions, such as her own life's meaning, Motoko soon realizes that the one who will provide these answers is none other than the Puppet Master themself.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1474/158937l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-03T16:16:10.868Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.02
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "7yE9MHlifmw",
             "site": "YouTube"
           },
           "cast": [],
