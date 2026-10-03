@@ -4,7 +4,9 @@
 La vista de sesión del módulo Ejercicio muestra solo la rutina vigente, con guía por ejercicio para favorecer series limpias.
 
 ## Comportamiento
-- Dos pestañas: **Día A** (lunes) y **Día B** (viernes). Pestaña inicial: lunes → A, martes a viernes → B, sábado y domingo → A. Se elige a mano; no se persiste.
+- Dos pestañas: **Día A** (lunes) y **Día B** (viernes).
+- **Último día hecho:** una línea bajo las pestañas ("Último: Día A · lun 5-oct (hace 5 días) → toca Día B"). Se infiere de `ejercicioLog`: cada ejercicio pertenece a un solo día (`DIA_DE` en `rutina.js`) y se cuentan las series hechas desde `RUTINA_DESDE`; en una fecha con series de ambos días gana el que tenga más (empate: A). No se guarda nada.
+- **Pestaña inicial:** el día opuesto al último hecho; si hoy ya hay series marcadas, ese mismo día ("Hoy: Día A en curso"). Sin registros desde `RUTINA_DESDE` se usa el día de la semana (lunes → A, martes a viernes → B, sábado y domingo → A). Se puede elegir a mano; la elección no se persiste.
 - Cada ejercicio: prescripción de la rutina (series × rango, descanso, ritmo), peso de hoy, última marca, marca de la última vez por serie, calentamiento (solo guía), aviso de progresión y guía de ejecución (dibujo en 2 posiciones, mapa de músculos, señales de montaje, recorrido, "va bien si", "corrige si", cuándo cortar la serie).
 - La guía se abre sola hasta marcar la primera serie del día.
 - Progresión: si la última sesión de la rutina completó todas las series en el tope del rango, aparece "Subir a …" (o "Menos asistencia …" en dominadas y dips). Hip thrust y elevación de piernas muestran un texto de progresión sin regla de peso.
@@ -22,7 +24,9 @@ La vista de sesión del módulo Ejercicio muestra solo la rutina vigente, con gu
 - El calentamiento no se registra como serie (el heatmap cuenta cada serie marcada como serie efectiva).
 
 ## Obsoleto (reemplazado en esta vista)
-Acordeón por grupo muscular de la sesión, `getProgressionSuggestion`, `getCalisteniaProgression`, `applyProgression` y el estado `openGroup`. Siguen en el historial de git. Los mazos no se usan como plan de rutina y no se tocaron.
+Acordeón por grupo muscular de la sesión, `getProgressionSuggestion`, `getCalisteniaProgression`, `applyProgression` y el estado `openGroup`. Siguen en el historial de git.
+
+**Mazos dados de baja** (botón, panel y funciones guardar/cargar/eliminar en `EjercicioPage.jsx`). La clave de datos `ejercicioDecks` se conserva intacta en `core/App.jsx` y en el manifest para no cambiar el formato de exportación/importación ni el sync; un mazo guardado previamente queda oculto pero conservado. Los mazos de nutrición no se tocan.
 
 ## Validación
 Sintaxis y build (`npm run build`); contenido del bundle final (`index.html`); prueba de humo con jsdom: render de sesión con el backup real, pestañas, guía, calentamiento, marcar serie (formato `{done,reps,peso}` bajo `<id>_<n>`), aviso y aplicación de progresión, y render de historial, semanas, stats y editor.

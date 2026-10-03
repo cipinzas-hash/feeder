@@ -1,4 +1,4 @@
-import { RUTINA, RUTINA_DESDE, diaSugerido } from "./rutina.js";
+import { RUTINA, RUTINA_DESDE, diaSugerido, ultimoDiaRutina, fechaCorta, haceTexto } from "./rutina.js";
 import { DIBUJOS, FIG_VIEWBOX } from "./figuras.js";
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
@@ -369,7 +369,7 @@ function calentamientoTexto(calent, kgBase, ex, unit) {
   }).join(" · ");
 }
 
-function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveCustomEjercicios, ejercicioDecks, saveEjercicioDecks }) {
+function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveCustomEjercicios }) {
   const todayKey = (() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -386,9 +386,7 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
   const [histWeek,      setHistWeek]     = useState(null); // lunes de la semana elegida en la vista "semanas"
   const [repsInput,    setRepsInput]    = useState({});
   const [pesoUnit,     setPesoUnit]     = useState("kg"); // "kg" | "lb" — UI only, storage always kg
-  const [deckMenuOpen, setDeckMenuOpen] = useState(false);
-  const [newDeckName,  setNewDeckName]  = useState("");
-  const [diaSel,       setDiaSel]       = useState(() => diaSugerido()); // "A" | "B" — solo pestaña inicial, se elige a mano (issue #22)
+  const [diaManual,    setDiaSel]       = useState(null); // "A" | "B" elegido a mano; null = sigue la sugerencia (issue #22)
   const [guiaAbierta,  setGuiaAbierta]  = useState({}); // exId -> bool; si no está, se abre sola hasta marcar la primera serie del día
   const timerRef = useRef(null);
 
@@ -404,7 +402,6 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
     ...Object.values(customOverrides).filter(e => !EJERCICIOS_DEFAULT.some(d=>d.id===e.id)),
   ];
   const todaySeries    = ejercicioLog[todayKey] || {};
-  const decks = ejercicioDecks || [];
 
 
   useEffect(() => () => clearInterval(timerRef.current), []);
@@ -443,6 +440,10 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
   }
 
   // Progreso de la sesión del día elegido: series hechas / series de la rutina (issue #22)
+  // Último día de la rutina hecho (lectura del registro). Pestaña inicial: el otro día; si hoy ya hay series, ese mismo.
+  const ultimoDia = ultimoDiaRutina(ejercicioLog, isSerieDone);
+  const diaInicial = ultimoDia ? (ultimoDia.fecha===todayKey ? ultimoDia.dia : (ultimoDia.dia==="A"?"B":"A")) : diaSugerido();
+  const diaSel     = diaManual ?? diaInicial;
   const rutinaDia   = RUTINA[diaSel];
   const rutinaItems = rutinaDia.items.map(item => ({item, rx: rutinaEx(item)})).filter(x => x.rx);
   const seriesTotal = rutinaItems.reduce((n,x) => n + (x.rx.series||3), 0);
@@ -828,18 +829,6 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
     setEditEx(null);
   }
   function deleteCustomEx(id){ const n = {...(customEjercicios||{})}; delete n[id]; saveCustomEjercicios(n); }
-
-  function guardarMazo() {
-    if(!newDeckName.trim() || Object.keys(todaySeries).length===0) return;
-    const deck = {id:Date.now().toString(), name:newDeckName.trim(), items:{...todaySeries}};
-    saveEjercicioDecks([deck, ...decks]);
-    setNewDeckName("");
-  }
-  function cargarMazo(deck){
-    saveEjercicioLog({...ejercicioLog, [todayKey]: {...deck.items}});
-    setDeckMenuOpen(false);
-  }
-  function eliminarMazo(id){ saveEjercicioDecks(decks.filter(d=>d.id!==id)); }
 
   const DARK = {background:"#1a1a1a",borderRadius:12,padding:"14px 16px",color:"#fff",marginBottom:12};
   const SL   = {fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:2,textTransform:"uppercase",marginBottom:8};
@@ -1309,32 +1298,6 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
         <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#bbb",marginTop:6}}>{seriesHechas} de {seriesTotal} series · {rutinaDia.label}</div>
       </div>
 
-      {/* Mazos */}
-      <div style={{marginBottom:16}}>
-        <button onClick={()=>setDeckMenuOpen(v=>!v)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",background:"transparent",border:"1px dashed #ddd",borderRadius:8,padding:"8px 14px",cursor:"pointer"}}>
-          <span style={{fontFamily:"'Caveat',cursive",fontSize:15,color:"#777"}}>🃏 mazos — sesiones completas</span>
-          <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#bbb"}}>{deckMenuOpen?"▴":"▾"}</span>
-        </button>
-        {deckMenuOpen && (
-          <div style={{border:"1px dashed #eee",borderRadius:8,marginTop:6,padding:10,display:"flex",flexDirection:"column",gap:8}}>
-            <div style={{display:"flex",gap:6}}>
-              <input value={newDeckName} onChange={e=>setNewDeckName(e.target.value)} placeholder="nombre del mazo..." style={{flex:1,border:"1px dashed #ccc",borderRadius:6,padding:"6px 10px",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none"}}/>
-              <button onClick={guardarMazo} disabled={!newDeckName.trim()||Object.keys(todaySeries).length===0} style={{background:newDeckName.trim()&&Object.keys(todaySeries).length>0?"#111":"#eee",color:newDeckName.trim()&&Object.keys(todaySeries).length>0?"#fff":"#bbb",border:"none",borderRadius:6,padding:"6px 14px",cursor:"pointer",fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>guardar hoy</button>
-            </div>
-            {decks.length===0 && <div style={{background:"#fafafa",border:"1px dashed #e5e5e5",borderRadius:10,padding:"10px 12px",fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#aaa"}}>sin mazos guardados</div>}
-            {decks.map(deck=>(
-              <div key={deck.id} style={{display:"flex",alignItems:"center",gap:6,background:"#fafafa",border:"1px solid #e5e5e5",borderRadius:10,padding:"8px 10px"}}>
-                <button onClick={()=>cargarMazo(deck)} style={{flex:1,minWidth:0,background:"transparent",border:"none",cursor:"pointer",textAlign:"left",padding:0}}>
-                  <div style={{fontFamily:"'Caveat',cursive",fontSize:17,color:"#111",fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{deck.name}</div>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa"}}>{Object.keys(deck.items||{}).length} series · cargar</div>
-                </button>
-                <button onClick={()=>eliminarMazo(deck.id)} style={{background:"transparent",border:"none",color:"#ccc",fontSize:16,cursor:"pointer",padding:"4px 6px"}}>×</button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* Toggle kg/lb — global para toda la sesión */}
       <div style={{display:"flex",justifyContent:"flex-end",marginBottom:12}}>
         <div style={{display:"flex",gap:0,border:"1px solid #e0e0e0",borderRadius:8,overflow:"hidden"}}>
@@ -1351,15 +1314,20 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
       <div style={{display:"flex",gap:8,marginBottom:12}}>
         {Object.entries(RUTINA).map(([k,d])=>{
           const activa = diaSel===k;
-          const sugerido = diaSugerido()===k;
+          const sugerido = diaInicial===k;
           return (
             <button key={k} onClick={()=>setDiaSel(k)}
               style={{flex:1,padding:"10px 8px",borderRadius:10,border:"1px solid "+(activa?"#111":"#e0e0e0"),background:activa?"#111":"#fff",color:activa?"#fff":"#777",cursor:"pointer"}}>
               <div style={{fontFamily:"'Caveat',cursive",fontSize:18,fontWeight:700,lineHeight:1.1}}>{d.label}</div>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,opacity:0.7}}>{d.dia}{sugerido?" · toca hoy":""}</div>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,opacity:0.7}}>{d.dia}{sugerido?(ultimoDia?.fecha===todayKey?" · en curso":" · toca hoy"):""}</div>
             </button>
           );
         })}
+      </div>
+      <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888",marginBottom:10}}>
+        {!ultimoDia && "aún sin registro de la rutina nueva"}
+        {ultimoDia && ultimoDia.fecha===todayKey && `Hoy: ${RUTINA[ultimoDia.dia].label} en curso`}
+        {ultimoDia && ultimoDia.fecha!==todayKey && `Último: ${RUTINA[ultimoDia.dia].label} · ${fechaCorta(ultimoDia.fecha)} (${haceTexto(ultimoDia.fecha, todayKey)}) → toca ${RUTINA[ultimoDia.dia==="A"?"B":"A"].label}`}
       </div>
       {rutinaItems.map(({item},idx)=>renderRutinaItem(item, idx))}
       <div style={{height:32}}/>

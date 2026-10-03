@@ -5233,6 +5233,34 @@ var __angst = (() => {
     if (d >= 2 && d <= 5) return "B";
     return "A";
   }
+  var DIA_DE = Object.fromEntries(
+    Object.entries(RUTINA).flatMap(([dia, d]) => d.items.map((i) => [i.exId, dia]))
+  );
+  function ultimoDiaRutina(log, isDone) {
+    const fechas = Object.keys(log || {}).filter((k) => k >= RUTINA_DESDE).sort().reverse();
+    for (const fecha of fechas) {
+      const n = { A: 0, B: 0 };
+      for (const [k, v] of Object.entries(log[fecha] || {})) {
+        const m = k.match(/^(.*)_(\d+)$/);
+        const dia = m && DIA_DE[m[1]];
+        if (dia && isDone(v)) n[dia]++;
+      }
+      if (n.A || n.B) return { dia: n.A >= n.B ? "A" : "B", fecha };
+    }
+    return null;
+  }
+  var DIAS_CORTOS = ["dom", "lun", "mar", "mi\xE9", "jue", "vie", "s\xE1b"];
+  var MESES_CORTOS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  var partes = (key) => key.split("-").map(Number);
+  function fechaCorta(key) {
+    const [y, m, d] = partes(key);
+    return `${DIAS_CORTOS[new Date(y, m - 1, d).getDay()]} ${d}-${MESES_CORTOS[m - 1]}`;
+  }
+  function haceTexto(key, hoyKey) {
+    const [y, m, d] = partes(key), [y2, m2, d2] = partes(hoyKey);
+    const n = Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y, m - 1, d)) / 864e5);
+    return n <= 0 ? "hoy" : n === 1 ? "ayer" : `hace ${n} d\xEDas`;
+  }
 
   // modules/ejercicio/figuras.js
   var FIG_VIEWBOX = "0 0 120 80";
@@ -5790,7 +5818,7 @@ var __angst = (() => {
       return `${reps} \xD7 ${toDisplay(Math.round(kgW * 2) / 2, unit2)} ${unit2}`;
     }).join(" \xB7 ");
   }
-  function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveCustomEjercicios, ejercicioDecks, saveEjercicioDecks }) {
+  function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveCustomEjercicios }) {
     const todayKey = (() => {
       const d = /* @__PURE__ */ new Date();
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -5806,9 +5834,7 @@ var __angst = (() => {
     const [histWeek, setHistWeek] = useState4(null);
     const [repsInput, setRepsInput] = useState4({});
     const [pesoUnit, setPesoUnit] = useState4("kg");
-    const [deckMenuOpen, setDeckMenuOpen] = useState4(false);
-    const [newDeckName, setNewDeckName] = useState4("");
-    const [diaSel, setDiaSel] = useState4(() => diaSugerido());
+    const [diaManual, setDiaSel] = useState4(null);
     const [guiaAbierta, setGuiaAbierta] = useState4({});
     const timerRef = useRef4(null);
     const customOverrides = customEjercicios || {};
@@ -5817,7 +5843,6 @@ var __angst = (() => {
       ...Object.values(customOverrides).filter((e) => !EJERCICIOS_DEFAULT.some((d) => d.id === e.id))
     ];
     const todaySeries = ejercicioLog[todayKey] || {};
-    const decks = ejercicioDecks || [];
     useEffect4(() => () => clearInterval(timerRef.current), []);
     function markSerie(exId, si, reps, pesoKg, restSecs, variante) {
       const key = `${exId}_${si}`;
@@ -5852,6 +5877,9 @@ var __angst = (() => {
       setTimerSecs((s) => s + extra);
       setTimerMax((m) => m + extra);
     }
+    const ultimoDia = ultimoDiaRutina(ejercicioLog, isSerieDone);
+    const diaInicial = ultimoDia ? ultimoDia.fecha === todayKey ? ultimoDia.dia : ultimoDia.dia === "A" ? "B" : "A" : diaSugerido();
+    const diaSel = diaManual ?? diaInicial;
     const rutinaDia = RUTINA[diaSel];
     const rutinaItems = rutinaDia.items.map((item) => ({ item, rx: rutinaEx(item) })).filter((x) => x.rx);
     const seriesTotal = rutinaItems.reduce((n, x) => n + (x.rx.series || 3), 0);
@@ -6131,19 +6159,6 @@ var __angst = (() => {
       delete n[id];
       saveCustomEjercicios(n);
     }
-    function guardarMazo() {
-      if (!newDeckName.trim() || Object.keys(todaySeries).length === 0) return;
-      const deck = { id: Date.now().toString(), name: newDeckName.trim(), items: { ...todaySeries } };
-      saveEjercicioDecks([deck, ...decks]);
-      setNewDeckName("");
-    }
-    function cargarMazo(deck) {
-      saveEjercicioLog({ ...ejercicioLog, [todayKey]: { ...deck.items } });
-      setDeckMenuOpen(false);
-    }
-    function eliminarMazo(id) {
-      saveEjercicioDecks(decks.filter((d) => d.id !== id));
-    }
     const DARK = { background: "#1a1a1a", borderRadius: 12, padding: "14px 16px", color: "#fff", marginBottom: 12 };
     const SL = { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 };
     if (view === "historial") {
@@ -6328,7 +6343,7 @@ var __angst = (() => {
     }
     const weeklyTotals = computeWeeklyMuscleEffort(ejercicioLog, allExercicios, todayKey);
     const timerMins = Math.floor(timerSecs / 60), timerSec2 = timerSecs % 60;
-    return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 720, margin: "0 auto" } }, timerActive && /* @__PURE__ */ React.createElement(FloatingRestTimer, { secs: timerSecs, maxSecs: timerMax, onSkip: skipTimer, onAddTime: addTimerSecs }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 0, marginBottom: 16, background: "#fff", border: "1px solid #eee", borderRadius: 10, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: "'Caveat',cursive", fontSize: 18, padding: "10px", background: "#111", color: "#fff", textAlign: "center" } }, "\u{1F3CB}\uFE0F sesi\xF3n"), [["historial", "\u{1F4C8}"], ["semanas", "\u{1F5D3}\uFE0F"], ["stats", "\u{1F4CA}"], ["editor", "\u270E"]].map(([v, icon]) => /* @__PURE__ */ React.createElement("button", { key: v, onClick: () => setView(v), style: { padding: "10px 14px", background: "transparent", color: "#aaa", border: "none", borderLeft: "1px solid #eee", cursor: "pointer", fontSize: 14, lineHeight: 1 } }, icon))), /* @__PURE__ */ React.createElement(BodyHeatmap, { totals: weeklyTotals, onTap: () => setView("stats") }), /* @__PURE__ */ React.createElement("div", { style: { background: "#fff", border: "1px solid #eee", borderRadius: 12, padding: "14px 16px", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#111", fontWeight: 700 } }, allDone ? "sesi\xF3n completa \u2713" : "progreso"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#555", fontWeight: 700 } }, pct, "%")), /* @__PURE__ */ React.createElement("div", { style: { height: 6, background: "#eee", borderRadius: 99, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${pct}%`, height: "100%", background: allDone ? "#2e7d52" : "#111", borderRadius: 99, transition: "width 0.4s" } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#bbb", marginTop: 6 } }, seriesHechas, " de ", seriesTotal, " series \xB7 ", rutinaDia.label)), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setDeckMenuOpen((v) => !v), style: { width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "8px 14px", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 15, color: "#777" } }, "\u{1F0CF} mazos \u2014 sesiones completas"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#bbb" } }, deckMenuOpen ? "\u25B4" : "\u25BE")), deckMenuOpen && /* @__PURE__ */ React.createElement("div", { style: { border: "1px dashed #eee", borderRadius: 8, marginTop: 6, padding: 10, display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement("input", { value: newDeckName, onChange: (e) => setNewDeckName(e.target.value), placeholder: "nombre del mazo...", style: { flex: 1, border: "1px dashed #ccc", borderRadius: 6, padding: "6px 10px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none" } }), /* @__PURE__ */ React.createElement("button", { onClick: guardarMazo, disabled: !newDeckName.trim() || Object.keys(todaySeries).length === 0, style: { background: newDeckName.trim() && Object.keys(todaySeries).length > 0 ? "#111" : "#eee", color: newDeckName.trim() && Object.keys(todaySeries).length > 0 ? "#fff" : "#bbb", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12, fontFamily: "'DM Sans',sans-serif" } }, "guardar hoy")), decks.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { background: "#fafafa", border: "1px dashed #e5e5e5", borderRadius: 10, padding: "10px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#aaa" } }, "sin mazos guardados"), decks.map((deck) => /* @__PURE__ */ React.createElement("div", { key: deck.id, style: { display: "flex", alignItems: "center", gap: 6, background: "#fafafa", border: "1px solid #e5e5e5", borderRadius: 10, padding: "8px 10px" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => cargarMazo(deck), style: { flex: 1, minWidth: 0, background: "transparent", border: "none", cursor: "pointer", textAlign: "left", padding: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, color: "#111", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, deck.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa" } }, Object.keys(deck.items || {}).length, " series \xB7 cargar")), /* @__PURE__ */ React.createElement("button", { onClick: () => eliminarMazo(deck.id), style: { background: "transparent", border: "none", color: "#ccc", fontSize: 16, cursor: "pointer", padding: "4px 6px" } }, "\xD7"))))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 0, border: "1px solid #e0e0e0", borderRadius: 8, overflow: "hidden" } }, ["kg", "lb"].map((u) => /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 720, margin: "0 auto" } }, timerActive && /* @__PURE__ */ React.createElement(FloatingRestTimer, { secs: timerSecs, maxSecs: timerMax, onSkip: skipTimer, onAddTime: addTimerSecs }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 0, marginBottom: 16, background: "#fff", border: "1px solid #eee", borderRadius: 10, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: "'Caveat',cursive", fontSize: 18, padding: "10px", background: "#111", color: "#fff", textAlign: "center" } }, "\u{1F3CB}\uFE0F sesi\xF3n"), [["historial", "\u{1F4C8}"], ["semanas", "\u{1F5D3}\uFE0F"], ["stats", "\u{1F4CA}"], ["editor", "\u270E"]].map(([v, icon]) => /* @__PURE__ */ React.createElement("button", { key: v, onClick: () => setView(v), style: { padding: "10px 14px", background: "transparent", color: "#aaa", border: "none", borderLeft: "1px solid #eee", cursor: "pointer", fontSize: 14, lineHeight: 1 } }, icon))), /* @__PURE__ */ React.createElement(BodyHeatmap, { totals: weeklyTotals, onTap: () => setView("stats") }), /* @__PURE__ */ React.createElement("div", { style: { background: "#fff", border: "1px solid #eee", borderRadius: 12, padding: "14px 16px", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#111", fontWeight: 700 } }, allDone ? "sesi\xF3n completa \u2713" : "progreso"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#555", fontWeight: 700 } }, pct, "%")), /* @__PURE__ */ React.createElement("div", { style: { height: 6, background: "#eee", borderRadius: 99, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${pct}%`, height: "100%", background: allDone ? "#2e7d52" : "#111", borderRadius: 99, transition: "width 0.4s" } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#bbb", marginTop: 6 } }, seriesHechas, " de ", seriesTotal, " series \xB7 ", rutinaDia.label)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 0, border: "1px solid #e0e0e0", borderRadius: 8, overflow: "hidden" } }, ["kg", "lb"].map((u) => /* @__PURE__ */ React.createElement(
       "button",
       {
         key: u,
@@ -6338,7 +6353,7 @@ var __angst = (() => {
       u
     )))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 12 } }, Object.entries(RUTINA).map(([k, d]) => {
       const activa = diaSel === k;
-      const sugerido = diaSugerido() === k;
+      const sugerido = diaInicial === k;
       return /* @__PURE__ */ React.createElement(
         "button",
         {
@@ -6347,9 +6362,9 @@ var __angst = (() => {
           style: { flex: 1, padding: "10px 8px", borderRadius: 10, border: "1px solid " + (activa ? "#111" : "#e0e0e0"), background: activa ? "#111" : "#fff", color: activa ? "#fff" : "#777", cursor: "pointer" }
         },
         /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, lineHeight: 1.1 } }, d.label),
-        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, opacity: 0.7 } }, d.dia, sugerido ? " \xB7 toca hoy" : "")
+        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, opacity: 0.7 } }, d.dia, sugerido ? ultimoDia?.fecha === todayKey ? " \xB7 en curso" : " \xB7 toca hoy" : "")
       );
-    })), rutinaItems.map(({ item }, idx) => renderRutinaItem(item, idx)), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
+    })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#888", marginBottom: 10 } }, !ultimoDia && "a\xFAn sin registro de la rutina nueva", ultimoDia && ultimoDia.fecha === todayKey && `Hoy: ${RUTINA[ultimoDia.dia].label} en curso`, ultimoDia && ultimoDia.fecha !== todayKey && `\xDAltimo: ${RUTINA[ultimoDia.dia].label} \xB7 ${fechaCorta(ultimoDia.fecha)} (${haceTexto(ultimoDia.fecha, todayKey)}) \u2192 toca ${RUTINA[ultimoDia.dia === "A" ? "B" : "A"].label}`), rutinaItems.map(({ item }, idx) => renderRutinaItem(item, idx)), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
   }
   var EjercicioPage_default = EjercicioPage;
 

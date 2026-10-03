@@ -215,3 +215,41 @@ export function diaSugerido(date = new Date()) {
   if (d >= 2 && d <= 5) return "B";
   return "A";
 }
+
+// ── Último día de la rutina hecho (A o B) ─────────────────────────────────
+// Cada ejercicio pertenece a un solo día, así que el día se infiere de las series
+// marcadas en `ejercicioLog` (solo lectura, no se guarda nada). Cuentan las fechas
+// desde RUTINA_DESDE: los registros del ciclo anterior no se pueden clasificar como A o B.
+export const DIA_DE = Object.fromEntries(
+  Object.entries(RUTINA).flatMap(([dia, d]) => d.items.map((i) => [i.exId, dia]))
+);
+
+// `isDone(valor)` decide si una serie está hecha (mismo criterio que la vista de sesión).
+// En una fecha con series de ambos días gana el que tenga más series hechas (empate: A).
+// Devuelve {dia, fecha} o null si aún no hay registros de la rutina nueva.
+export function ultimoDiaRutina(log, isDone) {
+  const fechas = Object.keys(log || {}).filter((k) => k >= RUTINA_DESDE).sort().reverse();
+  for (const fecha of fechas) {
+    const n = { A: 0, B: 0 };
+    for (const [k, v] of Object.entries(log[fecha] || {})) {
+      const m = k.match(/^(.*)_(\d+)$/);
+      const dia = m && DIA_DE[m[1]];
+      if (dia && isDone(v)) n[dia]++;
+    }
+    if (n.A || n.B) return { dia: n.A >= n.B ? "A" : "B", fecha };
+  }
+  return null;
+}
+
+const DIAS_CORTOS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+const MESES_CORTOS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const partes = (key) => key.split("-").map(Number); // "2026-10-05" -> [2026, 10, 5]
+export function fechaCorta(key) {
+  const [y, m, d] = partes(key);
+  return `${DIAS_CORTOS[new Date(y, m - 1, d).getDay()]} ${d}-${MESES_CORTOS[m - 1]}`;
+}
+export function haceTexto(key, hoyKey) {
+  const [y, m, d] = partes(key), [y2, m2, d2] = partes(hoyKey);
+  const n = Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y, m - 1, d)) / 86400000);
+  return n <= 0 ? "hoy" : n === 1 ? "ayer" : `hace ${n} días`;
+}
