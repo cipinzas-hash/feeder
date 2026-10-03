@@ -12,7 +12,7 @@ La vista de sesión del módulo Ejercicio muestra solo la rutina vigente, con gu
 
 ## Archivos
 - `modules/ejercicio/rutina.js` — datos estáticos de la rutina y guías (nuevo).
-- `modules/ejercicio/figuras.js` — dibujos SVG por id de ejercicio (nuevo). Ejercicios sin dibujo muestran guía y mapa sin él.
+- `modules/ejercicio/figuras.js` — dibujos SVG por id de ejercicio (nuevo). Ejercicios sin dibujo muestran guía y mapa sin él. Las figuras se construyen con helpers de proporciones reales (fracciones de la estatura: brazo 0,186 · antebrazo 0,146 · muslo 0,245 · pierna 0,246 · hombros a 0,818 · cadera a 0,53); todo dibujo nuevo debe usarlos.
 - `modules/ejercicio/EjercicioPage.jsx` — vista de sesión; catálogo con 3 ejercicios nuevos (`press-banca-b`, `peso-muerto-rumano`, `hip-thrust-kb`); `BodyHeatmap` con variante `compact`; `getExHistory(exId, exOverride)`.
 
 ## Persistencia / migración

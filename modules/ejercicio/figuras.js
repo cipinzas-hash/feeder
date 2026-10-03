@@ -43,36 +43,72 @@ const dumbbell = (x, y) =>
   rect(x - 5.5, y - 3, 2.6, 6, GEAR, 1) +
   rect(x + 2.9, y - 3, 2.6, 6, GEAR, 1);
 
-// ── elevación lateral (vista de frente) ──────────────────────────────────
-// Cuerpo de frente: cabeza, tronco, piernas ligeramente separadas.
+// ── proporciones reales ──────────────────────────────────────────────────
+// Todos los dibujos usan estas medidas (antropometría estándar, fracciones de la
+// estatura H; Drillis & Contini). Los dibujos nuevos se construyen con estos
+// helpers para que ninguna extremidad quede desproporcionada.
+//   cabeza 0.13H · hombros a 0.818H del piso · cadera a 0.53H · rodilla a 0.285H
+//   ancho de hombros 0.26H · brazo 0.186H · antebrazo 0.146H · mano 0.108H
+//   muslo 0.245H · pierna 0.246H
+const H = 72; // estatura en unidades del viewBox (pies en y=77, coronilla en y=5)
+const PISO = 77;
+const yAlt = (frac) => PISO - frac * H;
+const LEN = { brazo: 0.186 * H, antebrazo: 0.146 * H, mano: 0.108 * H, muslo: 0.245 * H, pierna: 0.246 * H };
+const SH_Y = yAlt(0.818), HIP_Y = yAlt(0.53);
+const SH_DX = (0.26 * H) / 2; // medio ancho de hombros
+const HIP_DX = 3.6;           // media separación de las articulaciones de cadera
+// punto a `len` desde (x,y), con `deg` medido desde "hacia abajo" (0°) hacia afuera
+// (90° = horizontal); lado -1 = izquierda del dibujo, +1 = derecha.
+const polar = (x, y, side, deg, len) => {
+  const r = (deg * Math.PI) / 180;
+  return [x + side * Math.sin(r) * len, y + Math.cos(r) * len];
+};
+// disco de mancuerna visto de frente (el eje apunta hacia delante, así que se ve de canto como círculo)
+const discoMancuerna = (x, y) => dot(x, y, 2.9, GEAR) + dot(x, y, 1.1, "#fff", 0.9);
+
+// figura de frente: cabeza, cuello, tronco, pelvis y piernas (de pie, pies a ancho de cadera)
 function frontalBase() {
-  return (
-    head(60, 12) +
-    line(60, 18.5, 60, 46) + // tronco
-    line(50, 23, 70, 23) + // línea de hombros
-    line(60, 46, 55, 62) + line(55, 62, 54, 77) + // pierna izquierda
-    line(60, 46, 65, 62) + line(65, 62, 66, 77) // pierna derecha
-  );
+  const chinY = 5 + 0.13 * H;
+  let out = head(60, 5 + 0.065 * H);
+  out += line(60, chinY, 60, SH_Y); // cuello
+  out += line(60 - SH_DX, SH_Y, 60 + SH_DX, SH_Y); // hombros
+  out += line(60, SH_Y, 60, HIP_Y); // tronco
+  out += line(60 - HIP_DX, HIP_Y, 60 + HIP_DX, HIP_Y, { w: 2.2 }); // pelvis
+  for (const side of [-1, 1]) {
+    const hx = 60 + side * HIP_DX;
+    const knee = [hx + side * 0.8, HIP_Y + LEN.muslo];
+    const ankle = [hx + side * 2.2, HIP_Y + LEN.muslo + LEN.pierna];
+    out += line(hx, HIP_Y, knee[0], knee[1]) + line(knee[0], knee[1], ankle[0], ankle[1]);
+    out += line(ankle[0], PISO - 1.2, ankle[0] + side * 4.2, PISO - 1.2); // pie
+  }
+  return out + line(26, PISO, 94, PISO, { c: GUIDE, w: 0.8 }); // piso
 }
 
-const laterales = {
-  inicio:
-    // brazos a los costados, mancuernas junto a los muslos
-    frontalBase() +
-    dot(46.5, 24, 4.6, HL, 0.9) + dot(73.5, 24, 4.6, HL, 0.9) + // deltoides lateral
-    line(50, 23, 47.5, 35) + line(47.5, 35, 47, 45) +
-    line(70, 23, 72.5, 35) + line(72.5, 35, 73, 45) +
-    dumbbell(47, 46.5) + dumbbell(73, 46.5),
-  final:
-    // brazos a la altura del hombro, codo apenas doblado y un poco más alto que la mano
-    line(6, 23, 114, 23, { c: GUIDE, w: 1, dash: "2 2.5" }) + // altura del hombro (detrás del cuerpo)
-    frontalBase() +
-    dot(46.5, 23.5, 4.6, HL, 0.9) + dot(73.5, 23.5, 4.6, HL, 0.9) +
-    line(50, 23, 33, 22.2) + line(33, 22.2, 17, 24.6) +
-    line(70, 23, 87, 22.2) + line(87, 22.2, 103, 24.6) +
-    dumbbell(15.5, 25.4) + dumbbell(104.5, 25.4) +
-    arrow(24, 42, 24, 30) + arrow(96, 42, 96, 30),
-};
+// brazo de frente: `ab` = abducción del brazo (0° colgando, 90° horizontal), `ab2` = dirección del antebrazo.
+// Devuelve el trazo y el punto de la mano (para la mancuerna).
+function brazoFrontal(side, ab, ab2) {
+  const sx = 60 + side * SH_DX;
+  const [ex, ey] = polar(sx, SH_Y, side, ab, LEN.brazo);
+  const [wx, wy] = polar(ex, ey, side, ab2, LEN.antebrazo * 0.97); // el antebrazo se acorta un poco por la flexión hacia delante
+  const [hx, hy] = polar(wx, wy, side, ab2, LEN.mano * 0.5);
+  return { svg: line(sx, SH_Y, ex, ey) + line(ex, ey, wx, wy), mano: [hx, hy], hombro: [sx, SH_Y] };
+}
+
+const laterales = (() => {
+  const deltoide = (sx, side) => dot(sx + side * 2.4, SH_Y + 1.4, 3.9, HL, 0.9);
+  // inicio: brazos colgando apenas separados del cuerpo, mancuernas junto a los muslos
+  let ini = frontalBase();
+  // final: brazos a la altura del hombro, codo apenas más alto que la mano
+  let fin = line(8, SH_Y, 112, SH_Y, { c: GUIDE, w: 1, dash: "2 2.5" }) + frontalBase();
+  for (const side of [-1, 1]) {
+    const a0 = brazoFrontal(side, 7, 4);
+    ini += deltoide(a0.hombro[0], side) + a0.svg + discoMancuerna(a0.mano[0], a0.mano[1]);
+    const a1 = brazoFrontal(side, 92, 82);
+    fin += deltoide(a1.hombro[0], side) + a1.svg + discoMancuerna(a1.mano[0], a1.mano[1]);
+    fin += arrow(a1.mano[0] + side * -1, a1.mano[1] + 17, a1.mano[0] + side * -1, a1.mano[1] + 6);
+  }
+  return { inicio: ini, final: fin };
+})();
 
 // ── catálogo de dibujos por id de ejercicio ──────────────────────────────
 // Ejercicios sin dibujo todavía (o que no tengan uno) se muestran solo con
