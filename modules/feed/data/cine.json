@@ -1,9 +1,90 @@
 {
-  "generatedAt": "2026-10-03T00:58:58.003Z",
+  "generatedAt": "2026-10-03T07:43:40.638Z",
   "categories": [
     {
       "cat": "Películas",
       "items": [
+        {
+          "guid": "tmdb-movie-1423191",
+          "title": "Resident Evil",
+          "link": "https://www.themoviedb.org/movie/1423191",
+          "summary": "Película basada en la saga de videojuegos de Capcom del mismo nombre. En una reinvención totalmente nueva, el mensajero médico Bryan se ve inmerso en una carrera de acción sin descanso por la supervivencia, mientras el caos se desata a su alrededor.",
+          "image": "https://image.tmdb.org/t/p/w500/3d8D5tZXiPUE2VmRjnrTNzFORBa.jpg",
+          "pubDate": "2026-09-16",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-03T07:43:32.597Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "mNd1gb19A-c",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Austin Abrams",
+              "character": "Bryan",
+              "order": 0
+            },
+            {
+              "name": "Paul Walter Hauser",
+              "character": "Paul",
+              "order": 1
+            },
+            {
+              "name": "Kali Reis",
+              "character": "Maxine",
+              "order": 2
+            },
+            {
+              "name": "Zach Cherry",
+              "character": "Carl",
+              "order": 3
+            },
+            {
+              "name": "Johnno Wilson",
+              "character": "Officer Wilson",
+              "order": 4
+            },
+            {
+              "name": "Shaun W. Loeser",
+              "character": "Puker",
+              "order": 5
+            },
+            {
+              "name": "Zach Cregger",
+              "character": "Intercom (voice)",
+              "order": 6
+            },
+            {
+              "name": "Emily Piggford",
+              "character": "Dr. Maria Stokes",
+              "order": 7
+            },
+            {
+              "name": "Will Merrick",
+              "character": "Dave",
+              "order": 8
+            },
+            {
+              "name": "Zoé Bellas",
+              "character": "Birdie",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
         {
           "guid": "tmdb-movie-1204680",
           "title": "Coyote vs. Acme",
@@ -80,6 +161,87 @@
             {
               "name": "Kenneth Choi",
               "character": "Oscar Jeon",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1248832",
+          "title": "Digger",
+          "link": "https://www.themoviedb.org/movie/1248832",
+          "summary": "El hombre más poderoso del mundo se embarca en una misión frenética para demostrar que es el salvador de la humanidad antes de que el desastre que ha desencadenado lo destruya todo.",
+          "image": "https://image.tmdb.org/t/p/w500/koqE0V2IgIPVy5o2vVkoGJvnB8b.jpg",
+          "pubDate": "2026-09-28",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-16T20:58:58.204Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.5
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "job8V254NAE",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Cruise",
+              "character": "Rockwell",
+              "order": 0
+            },
+            {
+              "name": "Riz Ahmed",
+              "character": "Ganesh",
+              "order": 1
+            },
+            {
+              "name": "John Goodman",
+              "character": "President Compson",
+              "order": 2
+            },
+            {
+              "name": "Sandra Hüller",
+              "character": "Emma",
+              "order": 3
+            },
+            {
+              "name": "Michael Stuhlbarg",
+              "character": "Vice President",
+              "order": 4
+            },
+            {
+              "name": "Jesse Plemons",
+              "character": "Kenny",
+              "order": 5
+            },
+            {
+              "name": "Robert John Burke",
+              "character": "Fitzgerald",
+              "order": 6
+            },
+            {
+              "name": "Emma D'Arcy",
+              "character": "Lena",
+              "order": 7
+            },
+            {
+              "name": "Burn Gorman",
+              "character": "Amos",
+              "order": 8
+            },
+            {
+              "name": "Sophie Wilde",
+              "character": "Hannah",
               "order": 9
             }
           ],
@@ -164,7 +326,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1288445",
@@ -248,87 +410,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-movie-1248832",
-          "title": "Digger",
-          "link": "https://www.themoviedb.org/movie/1248832",
-          "summary": "El hombre más poderoso del mundo se embarca en una misión frenética para demostrar que es el salvador de la humanidad antes de que el desastre que ha desencadenado lo destruya todo.",
-          "image": "https://image.tmdb.org/t/p/w500/koqE0V2IgIPVy5o2vVkoGJvnB8b.jpg",
-          "pubDate": "2026-09-28",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-16T20:58:58.204Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.7
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "job8V254NAE",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Tom Cruise",
-              "character": "Rockwell",
-              "order": 0
-            },
-            {
-              "name": "Riz Ahmed",
-              "character": "Ganesh",
-              "order": 1
-            },
-            {
-              "name": "John Goodman",
-              "character": "President Compson",
-              "order": 2
-            },
-            {
-              "name": "Sandra Hüller",
-              "character": "Emma",
-              "order": 3
-            },
-            {
-              "name": "Michael Stuhlbarg",
-              "character": "Vice President",
-              "order": 4
-            },
-            {
-              "name": "Jesse Plemons",
-              "character": "Kenny",
-              "order": 5
-            },
-            {
-              "name": "Robert John Burke",
-              "character": "Fitzgerald",
-              "order": 6
-            },
-            {
-              "name": "Emma D'Arcy",
-              "character": "Lena",
-              "order": 7
-            },
-            {
-              "name": "Burn Gorman",
-              "character": "Amos",
-              "order": 8
-            },
-            {
-              "name": "Sophie Wilde",
-              "character": "Hannah",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
           "guid": "tmdb-movie-1263337",
           "title": "En el corazón de la bestia",
           "link": "https://www.themoviedb.org/movie/1263337",
@@ -370,6 +451,87 @@
               "name": "Anna Lambe",
               "character": "",
               "order": 2
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1283515",
+          "title": "Verity. La sombra de un engaño",
+          "link": "https://www.themoviedb.org/movie/1283515",
+          "summary": "Lowen Ashleigh es contratada como escritora fantasma por Jeremy Crawford para escribir las novelas de su esposa Verity, autora de bestsellers, impedida tras un accidente. Lowen descubre las inquietantes verdades de Verity mientras reside en casa de los Crawford para trabajar.",
+          "image": "https://image.tmdb.org/t/p/w500/dGSsPovyUW5XVekXcy7F2GyhTEh.jpg",
+          "pubDate": "2026-09-30",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-28T17:59:13.757Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.6
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "xdPMKhjMSFs",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Dakota Johnson",
+              "character": "Lowen Ashleigh",
+              "order": 0
+            },
+            {
+              "name": "Anne Hathaway",
+              "character": "Verity Crawford",
+              "order": 1
+            },
+            {
+              "name": "Josh Hartnett",
+              "character": "Jeremy Crawford",
+              "order": 2
+            },
+            {
+              "name": "Brady Wagner",
+              "character": "Crew Crawford",
+              "order": 3
+            },
+            {
+              "name": "Ismael Cruz Cordova",
+              "character": "Corey",
+              "order": 4
+            },
+            {
+              "name": "Irina Dvorovenko",
+              "character": "Anna",
+              "order": 5
+            },
+            {
+              "name": "Sienna Kulovitz",
+              "character": "Harper Crawford",
+              "order": 6
+            },
+            {
+              "name": "K.K. Moggie",
+              "character": "Amanda Thomas",
+              "order": 7
+            },
+            {
+              "name": "Tom Galantich",
+              "character": "Barron Stephens",
+              "order": 8
+            },
+            {
+              "name": "Lou Martini Jr.",
+              "character": "Limo Driver",
+              "order": 9
             }
           ],
           "trending": true
@@ -454,87 +616,6 @@
             }
           ],
           "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1283515",
-          "title": "Verity. La sombra de un engaño",
-          "link": "https://www.themoviedb.org/movie/1283515",
-          "summary": "Lowen Ashleigh es contratada como escritora fantasma por Jeremy Crawford para escribir las novelas de su esposa Verity, autora de bestsellers, impedida tras un accidente. Lowen descubre las inquietantes verdades de Verity mientras reside en casa de los Crawford para trabajar.",
-          "image": "https://image.tmdb.org/t/p/w500/dGSsPovyUW5XVekXcy7F2GyhTEh.jpg",
-          "pubDate": "2026-09-30",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-28T17:59:13.757Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.6
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "xdPMKhjMSFs",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Dakota Johnson",
-              "character": "Lowen Ashleigh",
-              "order": 0
-            },
-            {
-              "name": "Anne Hathaway",
-              "character": "Verity Crawford",
-              "order": 1
-            },
-            {
-              "name": "Josh Hartnett",
-              "character": "Jeremy Crawford",
-              "order": 2
-            },
-            {
-              "name": "Brady Wagner",
-              "character": "Crew Crawford",
-              "order": 3
-            },
-            {
-              "name": "Ismael Cruz Cordova",
-              "character": "Corey",
-              "order": 4
-            },
-            {
-              "name": "Irina Dvorovenko",
-              "character": "Anna",
-              "order": 5
-            },
-            {
-              "name": "Sienna Kulovitz",
-              "character": "Harper Crawford",
-              "order": 6
-            },
-            {
-              "name": "K.K. Moggie",
-              "character": "Amanda Thomas",
-              "order": 7
-            },
-            {
-              "name": "Tom Galantich",
-              "character": "Barron Stephens",
-              "order": 8
-            },
-            {
-              "name": "Lou Martini Jr.",
-              "character": "Limo Driver",
-              "order": 9
-            }
-          ],
-          "trending": true
         },
         {
           "guid": "tmdb-movie-1465063",
@@ -697,6 +778,87 @@
             }
           ],
           "trending": false
+        },
+        {
+          "guid": "tmdb-movie-1377237",
+          "title": "Entrega al límite",
+          "link": "https://www.themoviedb.org/movie/1377237",
+          "summary": "Un exsoldado se ve envuelto en una brutal carrera contrarreloj cuando una entrega médica crucial los convierte, a él y a su inesperada compañera, en el objetivo de un cártel despiadado. A medida que la misión se transforma en una cacería mortal, cada desvío, retraso y bala los acerca más al fracaso. Acosados ​​por la traición desde todos los frentes, deberán sobrevivir a la persecución y entregar su carga para salvar la vida de una niña.",
+          "image": "https://image.tmdb.org/t/p/w500/pmjSjZtFOYDWhAs4B2AbBE8hTQf.jpg",
+          "pubDate": "2026-09-07",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-13T23:55:28.090Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.6,
+            "rt": null,
+            "metascore": 55,
+            "tmdb": 7.9
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "B6Z9MM1LhEA",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Alan Ritchson",
+              "character": "Hank Malone",
+              "order": 0
+            },
+            {
+              "name": "Owen Wilson",
+              "character": "Ben",
+              "order": 1
+            },
+            {
+              "name": "Rodrigo Santoro",
+              "character": "Damian Zaldivar",
+              "order": 2
+            },
+            {
+              "name": "Leila George",
+              "character": "Kate Baker",
+              "order": 3
+            },
+            {
+              "name": "Kate Box",
+              "character": "Dr. Ainsley",
+              "order": 4
+            },
+            {
+              "name": "Adriana Barraza",
+              "character": "Donna",
+              "order": 5
+            },
+            {
+              "name": "Peta Sergeant",
+              "character": "Nurse Julie",
+              "order": 6
+            },
+            {
+              "name": "Scarlett Crabtree",
+              "character": "Ellie Baker",
+              "order": 7
+            },
+            {
+              "name": "Geraldine Hakewill",
+              "character": "Monica",
+              "order": 8
+            },
+            {
+              "name": "Goran D. Kleut",
+              "character": "Luke",
+              "order": 9
+            }
+          ],
+          "trending": true
         },
         {
           "guid": "tmdb-movie-977942",
@@ -949,20 +1111,20 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1377237",
-          "title": "Entrega al límite",
-          "link": "https://www.themoviedb.org/movie/1377237",
-          "summary": "Un exsoldado se ve envuelto en una brutal carrera contrarreloj cuando una entrega médica crucial los convierte, a él y a su inesperada compañera, en el objetivo de un cártel despiadado. A medida que la misión se transforma en una cacería mortal, cada desvío, retraso y bala los acerca más al fracaso. Acosados ​​por la traición desde todos los frentes, deberán sobrevivir a la persecución y entregar su carga para salvar la vida de una niña.",
-          "image": "https://image.tmdb.org/t/p/w500/pmjSjZtFOYDWhAs4B2AbBE8hTQf.jpg",
-          "pubDate": "2026-09-07",
+          "guid": "tmdb-movie-969681",
+          "title": "Spider-Man: Brand New Day",
+          "link": "https://www.themoviedb.org/movie/969681",
+          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
+          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
+          "pubDate": "2026-07-29",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-09-13T23:55:28.090Z",
+          "firstSeenAt": "2026-09-29T21:59:04.958Z",
           "fullText": null,
           "rating": {
-            "imdb": 6.6,
-            "rt": null,
-            "metascore": 55,
+            "imdb": 8.1,
+            "rt": 89,
+            "metascore": 66,
             "tmdb": 7.9
           },
           "status": "Released",
@@ -972,301 +1134,58 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "B6Z9MM1LhEA",
+            "key": "P3uI5sLosKU",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Alan Ritchson",
-              "character": "Hank Malone",
+              "name": "Tom Holland",
+              "character": "Peter Parker / Spider-Man",
               "order": 0
             },
             {
-              "name": "Owen Wilson",
-              "character": "Ben",
+              "name": "Zendaya",
+              "character": "MJ",
               "order": 1
             },
             {
-              "name": "Rodrigo Santoro",
-              "character": "Damian Zaldivar",
+              "name": "Mark Ruffalo",
+              "character": "Bruce Banner / Hulk",
               "order": 2
             },
             {
-              "name": "Leila George",
-              "character": "Kate Baker",
+              "name": "Jon Bernthal",
+              "character": "Frank Castle / Punisher",
               "order": 3
             },
             {
-              "name": "Kate Box",
-              "character": "Dr. Ainsley",
+              "name": "Jacob Batalon",
+              "character": "Ned Leeds",
               "order": 4
             },
             {
-              "name": "Adriana Barraza",
-              "character": "Donna",
+              "name": "Sadie Sink",
+              "character": "Jean Grey",
               "order": 5
             },
             {
-              "name": "Peta Sergeant",
-              "character": "Nurse Julie",
+              "name": "Florence Pugh",
+              "character": "Yelena Belova / Black Widow",
               "order": 6
             },
             {
-              "name": "Scarlett Crabtree",
-              "character": "Ellie Baker",
+              "name": "Liza Colón-Zayas",
+              "character": "Detective Jean DeWolff",
               "order": 7
             },
             {
-              "name": "Geraldine Hakewill",
-              "character": "Monica",
+              "name": "Tramell Tillman",
+              "character": "William 'Bill' Metzger",
               "order": 8
             },
             {
-              "name": "Goran D. Kleut",
-              "character": "Luke",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1375441",
-          "title": "Primetime",
-          "link": "https://www.themoviedb.org/movie/1375441",
-          "summary": "En 2006, Chris Hansen, presentador de *To Catch a Predator*, se propone hacer historia en la televisión.",
-          "image": "https://image.tmdb.org/t/p/w500/lmrulvLbmaejTix1YaMxo1oGhH1.jpg",
-          "pubDate": "2026-09-23",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-26T00:24:35.388Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.7,
-            "rt": 95,
-            "metascore": 75,
-            "tmdb": 7
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "C0NZa01qTRU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Robert Pattinson",
-              "character": "Chris Hansen",
-              "order": 0
-            },
-            {
-              "name": "Merritt Wever",
-              "character": "Andie Bender",
-              "order": 1
-            },
-            {
-              "name": "Skyler Gisondo",
-              "character": "Dan Plumb",
-              "order": 2
-            },
-            {
-              "name": "Matthew Maher",
-              "character": "Xavier Von Erck",
-              "order": 4
-            },
-            {
-              "name": "Bokeem Woodbine",
-              "character": "Cortland Gunn",
-              "order": 5
-            },
-            {
-              "name": "Alex Winter",
-              "character": "Bill Conradt",
-              "order": 6
-            },
-            {
-              "name": "Anna Faris",
-              "character": "Mary Hansen",
-              "order": 7
-            },
-            {
-              "name": "Eric Rahill",
-              "character": "Troy",
-              "order": 8
-            },
-            {
-              "name": "Bill Heck",
-              "character": "Stone Phillips",
-              "order": 9
-            },
-            {
-              "name": "Tony Revolori",
-              "character": "MarriedAndLookingForFun31313",
-              "order": 10
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1101383",
-          "title": "El final de Oak Street",
-          "link": "https://www.themoviedb.org/movie/1101383",
-          "summary": "Después de que un misterioso fenómeno cósmico arranque Oak Street de su entorno suburbano y transporte a sus habitantes a un lugar desconocido, la familia Platt pronto descubre que su propia supervivencia depende de que permanezcan unidos mientras se orientan en un entorno que ya no reconocen.",
-          "image": "https://image.tmdb.org/t/p/w500/g9DUGw8ufetrwhCIrwq3h1NlpWO.jpg",
-          "pubDate": "2026-08-12",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-09T23:52:02.565Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.6,
-            "rt": 86,
-            "metascore": 69,
-            "tmdb": 6.4
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "u4tgctWuHc0",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Anne Hathaway",
-              "character": "Denise Platt",
-              "order": 0
-            },
-            {
-              "name": "Ewan McGregor",
-              "character": "Greg Platt",
-              "order": 1
-            },
-            {
-              "name": "Maisy Stella",
-              "character": "Audrey Platt",
-              "order": 2
-            },
-            {
-              "name": "Christian Convery",
-              "character": "Brian Platt",
-              "order": 3
-            },
-            {
-              "name": "Jordan Alexa Davis",
-              "character": "Jeannette Christiansen",
-              "order": 4
-            },
-            {
-              "name": "P.J. Byrne",
-              "character": "Mel Jacobs",
-              "order": 5
-            },
-            {
-              "name": "Bethany Anne Lind",
-              "character": "Mary Bagrowski",
-              "order": 6
-            },
-            {
-              "name": "Emily Kuroda",
-              "character": "Mrs. Valcour",
-              "order": 7
-            },
-            {
-              "name": "Denitra Isler",
-              "character": "Mae",
-              "order": 8
-            },
-            {
-              "name": "Hudson Meek",
-              "character": "Kaden",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1400940",
-          "title": "Clayface",
-          "link": "https://www.themoviedb.org/movie/1400940",
-          "summary": "Una criatura cambiante hecha de arcilla mágica acecha Ciudad Gótica, alternando entre villano y aliado de Batman. Varias figuras trágicas han asumido el manto de Cara de Barro a lo largo de los años.",
-          "image": "https://image.tmdb.org/t/p/w500/6ihSDJlBNcvoTWzSA0jonZyOXTs.jpg",
-          "pubDate": "2026-10-21",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-19T20:10:41.997Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Post Production",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "KCR-rz0YfD4",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Tom Rhys Harries",
-              "character": "Matt Hagen / Clayface",
-              "order": 0
-            },
-            {
-              "name": "Naomi Ackie",
-              "character": "Caitlyn Corr",
-              "order": 1
-            },
-            {
-              "name": "Eddie Marsan",
-              "character": "",
-              "order": 2
-            },
-            {
-              "name": "Max Minghella",
-              "character": "John Borrelli",
-              "order": 3
-            },
-            {
-              "name": "David Dencik",
-              "character": "",
-              "order": 4
-            },
-            {
-              "name": "Francesca Corney",
-              "character": "",
-              "order": 5
-            },
-            {
-              "name": "Ruby Sear",
-              "character": "Theresa",
-              "order": 6
-            },
-            {
-              "name": "Wil Coban",
-              "character": "Bones",
-              "order": 7
-            },
-            {
-              "name": "Joshua James",
-              "character": "Corey Bowery",
-              "order": 8
-            },
-            {
-              "name": "Jake Curran",
-              "character": "Patches",
+              "name": "Marisa Tomei",
+              "character": "May Parker",
               "order": 9
             }
           ],
@@ -1351,6 +1270,249 @@
               "order": 9
             }
           ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1375441",
+          "title": "Primetime",
+          "link": "https://www.themoviedb.org/movie/1375441",
+          "summary": "En 2006, Chris Hansen, presentador de *To Catch a Predator*, se propone hacer historia en la televisión.",
+          "image": "https://image.tmdb.org/t/p/w500/lmrulvLbmaejTix1YaMxo1oGhH1.jpg",
+          "pubDate": "2026-09-23",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-26T00:24:35.388Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.7,
+            "rt": 95,
+            "metascore": 75,
+            "tmdb": 7
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "C0NZa01qTRU",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Robert Pattinson",
+              "character": "Chris Hansen",
+              "order": 0
+            },
+            {
+              "name": "Merritt Wever",
+              "character": "Andie Bender",
+              "order": 1
+            },
+            {
+              "name": "Skyler Gisondo",
+              "character": "Dan Plumb",
+              "order": 2
+            },
+            {
+              "name": "Matthew Maher",
+              "character": "Xavier Von Erck",
+              "order": 4
+            },
+            {
+              "name": "Bokeem Woodbine",
+              "character": "Cortland Gunn",
+              "order": 5
+            },
+            {
+              "name": "Alex Winter",
+              "character": "Bill Conradt",
+              "order": 6
+            },
+            {
+              "name": "Anna Faris",
+              "character": "Mary Hansen",
+              "order": 7
+            },
+            {
+              "name": "Eric Rahill",
+              "character": "Troy",
+              "order": 8
+            },
+            {
+              "name": "Bill Heck",
+              "character": "Stone Phillips",
+              "order": 9
+            },
+            {
+              "name": "Tony Revolori",
+              "character": "MarriedAndLookingForFun31313",
+              "order": 10
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-movie-1101383",
+          "title": "El final de Oak Street",
+          "link": "https://www.themoviedb.org/movie/1101383",
+          "summary": "Después de que un misterioso fenómeno cósmico arranque Oak Street de su entorno suburbano y transporte a sus habitantes a un lugar desconocido, la familia Platt pronto descubre que su propia supervivencia depende de que permanezcan unidos mientras se orientan en un entorno que ya no reconocen.",
+          "image": "https://image.tmdb.org/t/p/w500/g9DUGw8ufetrwhCIrwq3h1NlpWO.jpg",
+          "pubDate": "2026-08-12",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-09T23:52:02.565Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.6,
+            "rt": 86,
+            "metascore": 69,
+            "tmdb": 6.4
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "u4tgctWuHc0",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Anne Hathaway",
+              "character": "Denise Platt",
+              "order": 0
+            },
+            {
+              "name": "Ewan McGregor",
+              "character": "Greg Platt",
+              "order": 1
+            },
+            {
+              "name": "Maisy Stella",
+              "character": "Audrey Platt",
+              "order": 2
+            },
+            {
+              "name": "Christian Convery",
+              "character": "Brian Platt",
+              "order": 3
+            },
+            {
+              "name": "Jordan Alexa Davis",
+              "character": "Jeannette Christiansen",
+              "order": 4
+            },
+            {
+              "name": "P.J. Byrne",
+              "character": "Mel Jacobs",
+              "order": 5
+            },
+            {
+              "name": "Bethany Anne Lind",
+              "character": "Mary Bagrowski",
+              "order": 6
+            },
+            {
+              "name": "Emily Kuroda",
+              "character": "Mrs. Valcour",
+              "order": 7
+            },
+            {
+              "name": "Denitra Isler",
+              "character": "Mae",
+              "order": 8
+            },
+            {
+              "name": "Hudson Meek",
+              "character": "Kaden",
+              "order": 9
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-movie-1400940",
+          "title": "Clayface",
+          "link": "https://www.themoviedb.org/movie/1400940",
+          "summary": "Una criatura cambiante hecha de arcilla mágica acecha Ciudad Gótica, alternando entre villano y aliado de Batman. Varias figuras trágicas han asumido el manto de Cara de Barro a lo largo de los años.",
+          "image": "https://image.tmdb.org/t/p/w500/6ihSDJlBNcvoTWzSA0jonZyOXTs.jpg",
+          "pubDate": "2026-10-21",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-19T20:10:41.997Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Post Production",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "KCR-rz0YfD4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Rhys Harries",
+              "character": "Matt Hagen / Clayface",
+              "order": 0
+            },
+            {
+              "name": "Naomi Ackie",
+              "character": "Caitlyn Corr",
+              "order": 1
+            },
+            {
+              "name": "Eddie Marsan",
+              "character": "",
+              "order": 2
+            },
+            {
+              "name": "Max Minghella",
+              "character": "John Borrelli",
+              "order": 3
+            },
+            {
+              "name": "David Dencik",
+              "character": "",
+              "order": 4
+            },
+            {
+              "name": "Francesca Corney",
+              "character": "",
+              "order": 5
+            },
+            {
+              "name": "Ruby Sear",
+              "character": "Theresa",
+              "order": 6
+            },
+            {
+              "name": "Wil Coban",
+              "character": "Bones",
+              "order": 7
+            },
+            {
+              "name": "Joshua James",
+              "character": "Corey Bowery",
+              "order": 8
+            },
+            {
+              "name": "Jake Curran",
+              "character": "Patches",
+              "order": 9
+            }
+          ],
           "trending": false
         },
         {
@@ -1410,87 +1572,6 @@
               "name": "Danielle Moné Truitt",
               "character": "",
               "order": 5
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-969681",
-          "title": "Spider-Man: Brand New Day",
-          "link": "https://www.themoviedb.org/movie/969681",
-          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
-          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
-          "pubDate": "2026-07-29",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-29T21:59:04.958Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.1,
-            "rt": 89,
-            "metascore": 66,
-            "tmdb": 7.9
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "P3uI5sLosKU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Tom Holland",
-              "character": "Peter Parker / Spider-Man",
-              "order": 0
-            },
-            {
-              "name": "Zendaya",
-              "character": "MJ",
-              "order": 1
-            },
-            {
-              "name": "Mark Ruffalo",
-              "character": "Bruce Banner / Hulk",
-              "order": 2
-            },
-            {
-              "name": "Jon Bernthal",
-              "character": "Frank Castle / Punisher",
-              "order": 3
-            },
-            {
-              "name": "Jacob Batalon",
-              "character": "Ned Leeds",
-              "order": 4
-            },
-            {
-              "name": "Sadie Sink",
-              "character": "Jean Grey",
-              "order": 5
-            },
-            {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova / Black Widow",
-              "order": 6
-            },
-            {
-              "name": "Liza Colón-Zayas",
-              "character": "Detective Jean DeWolff",
-              "order": 7
-            },
-            {
-              "name": "Tramell Tillman",
-              "character": "William 'Bill' Metzger",
-              "order": 8
-            },
-            {
-              "name": "Marisa Tomei",
-              "character": "May Parker",
-              "order": 9
             }
           ],
           "trending": false
@@ -3867,6 +3948,157 @@
       "cat": "Series",
       "items": [
         {
+          "guid": "tmdb-tv-22980",
+          "title": "Watch What Happens Live with Andy Cohen",
+          "link": "https://www.themoviedb.org/tv/22980",
+          "summary": "Bravo network executive Andy Cohen discusses pop culture topics with celebrities and reality show personalities.",
+          "image": "https://image.tmdb.org/t/p/w500/onSD9UXfJwrMXWhq7UY7hGF2S1h.jpg",
+          "pubDate": "2009-07-16",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-10-03T07:43:33.451Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 5.6,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 5
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-04",
+          "numberOfSeasons": 23,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 22,
+              "fechaEstreno": "2009-07-16"
+            },
+            {
+              "numero": 2,
+              "episodios": 29,
+              "fechaEstreno": "2010-01-14"
+            },
+            {
+              "numero": 3,
+              "episodios": 44,
+              "fechaEstreno": "2010-09-09"
+            },
+            {
+              "numero": 4,
+              "episodios": 57,
+              "fechaEstreno": "2011-01-06"
+            },
+            {
+              "numero": 5,
+              "episodios": 26,
+              "fechaEstreno": "2011-09-25"
+            },
+            {
+              "numero": 6,
+              "episodios": 91,
+              "fechaEstreno": "2012-01-08"
+            },
+            {
+              "numero": 7,
+              "episodios": 35,
+              "fechaEstreno": "2012-06-17"
+            },
+            {
+              "numero": 8,
+              "episodios": 64,
+              "fechaEstreno": "2012-09-09"
+            },
+            {
+              "numero": 9,
+              "episodios": 91,
+              "fechaEstreno": "2013-01-06"
+            },
+            {
+              "numero": 10,
+              "episodios": 111,
+              "fechaEstreno": "2013-06-16"
+            },
+            {
+              "numero": 11,
+              "episodios": 210,
+              "fechaEstreno": "2014-01-05"
+            },
+            {
+              "numero": 12,
+              "episodios": 206,
+              "fechaEstreno": "2015-01-04"
+            },
+            {
+              "numero": 13,
+              "episodios": 208,
+              "fechaEstreno": "2016-01-03"
+            },
+            {
+              "numero": 14,
+              "episodios": 208,
+              "fechaEstreno": "2017-01-03"
+            },
+            {
+              "numero": 15,
+              "episodios": 209,
+              "fechaEstreno": "2018-01-07"
+            },
+            {
+              "numero": 16,
+              "episodios": 208,
+              "fechaEstreno": "2019-01-06"
+            },
+            {
+              "numero": 17,
+              "episodios": 208,
+              "fechaEstreno": "2020-01-05"
+            },
+            {
+              "numero": 18,
+              "episodios": 208,
+              "fechaEstreno": "2021-01-03"
+            },
+            {
+              "numero": 19,
+              "episodios": 209,
+              "fechaEstreno": "2022-01-05"
+            },
+            {
+              "numero": 20,
+              "episodios": 203,
+              "fechaEstreno": "2023-01-02"
+            },
+            {
+              "numero": 21,
+              "episodios": 208,
+              "fechaEstreno": "2024-01-07"
+            },
+            {
+              "numero": 22,
+              "episodios": 203,
+              "fechaEstreno": "2025-01-06"
+            },
+            {
+              "numero": 23,
+              "episodios": 159,
+              "fechaEstreno": "2026-01-05"
+            }
+          ],
+          "currentSeason": 23,
+          "reviews": null,
+          "trailer": {
+            "key": "0qC8iy0PXq0",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Andy Cohen",
+              "character": "Self - Host",
+              "order": 0
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-59941",
           "title": "The Tonight Show Starring Jimmy Fallon",
           "link": "https://www.themoviedb.org/tv/59941",
@@ -3972,6 +4204,92 @@
             }
           ],
           "trending": false
+        },
+        {
+          "guid": "tmdb-tv-33238",
+          "title": "Running Man",
+          "link": "https://www.themoviedb.org/tv/33238",
+          "summary": "Running Man es un espectáculo de variedades de Corea del Sur transmitido desde el 11 de julio de 2010 hasta ahora a través de SBS. El programa forma parte de la formación de \"Good Sunday\". El programa fue creado por Jo Hyo-jin, Kim Joo-hyung y Im Hyung-taek.",
+          "image": "https://image.tmdb.org/t/p/w500/15SMnscZqd7HZ0bzruatOcKUlOV.jpg",
+          "pubDate": "2010-07-11",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-09-27T15:01:12.478Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 9.1,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.2
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-04",
+          "numberOfSeasons": 1,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 824,
+              "fechaEstreno": "2010-07-11"
+            }
+          ],
+          "currentSeason": 1,
+          "reviews": null,
+          "trailer": {
+            "key": "v90RObJapJI",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "유재석",
+              "character": "Self",
+              "order": 0
+            },
+            {
+              "name": "지석진",
+              "character": "Self",
+              "order": 1
+            },
+            {
+              "name": "김종국",
+              "character": "Self",
+              "order": 2
+            },
+            {
+              "name": "하하",
+              "character": "Self",
+              "order": 3
+            },
+            {
+              "name": "Song Ji-hyo",
+              "character": "Self",
+              "order": 4
+            },
+            {
+              "name": "양세찬",
+              "character": "Self",
+              "order": 5
+            },
+            {
+              "name": "지예은",
+              "character": "Self",
+              "order": 6
+            },
+            {
+              "name": "전소민",
+              "character": "Self – Former Member",
+              "order": 7
+            },
+            {
+              "name": "이광수",
+              "character": "Self – Former Member",
+              "order": 8
+            },
+            {
+              "name": "강개리",
+              "character": "Self – Former Member",
+              "order": 10
+            }
+          ]
         },
         {
           "guid": "tmdb-tv-2734",
@@ -4180,92 +4498,6 @@
           ]
         },
         {
-          "guid": "tmdb-tv-33238",
-          "title": "Running Man",
-          "link": "https://www.themoviedb.org/tv/33238",
-          "summary": "Running Man es un espectáculo de variedades de Corea del Sur transmitido desde el 11 de julio de 2010 hasta ahora a través de SBS. El programa forma parte de la formación de \"Good Sunday\". El programa fue creado por Jo Hyo-jin, Kim Joo-hyung y Im Hyung-taek.",
-          "image": "https://image.tmdb.org/t/p/w500/15SMnscZqd7HZ0bzruatOcKUlOV.jpg",
-          "pubDate": "2010-07-11",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-27T15:01:12.478Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 9.1,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.2
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-04",
-          "numberOfSeasons": 1,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 824,
-              "fechaEstreno": "2010-07-11"
-            }
-          ],
-          "currentSeason": 1,
-          "reviews": null,
-          "trailer": {
-            "key": "v90RObJapJI",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "유재석",
-              "character": "Self",
-              "order": 0
-            },
-            {
-              "name": "지석진",
-              "character": "Self",
-              "order": 1
-            },
-            {
-              "name": "김종국",
-              "character": "Self",
-              "order": 2
-            },
-            {
-              "name": "하하",
-              "character": "Self",
-              "order": 3
-            },
-            {
-              "name": "Song Ji-hyo",
-              "character": "Self",
-              "order": 4
-            },
-            {
-              "name": "양세찬",
-              "character": "Self",
-              "order": 5
-            },
-            {
-              "name": "지예은",
-              "character": "Self",
-              "order": 6
-            },
-            {
-              "name": "전소민",
-              "character": "Self – Former Member",
-              "order": 7
-            },
-            {
-              "name": "이광수",
-              "character": "Self – Former Member",
-              "order": 8
-            },
-            {
-              "name": "강개리",
-              "character": "Self – Former Member",
-              "order": 10
-            }
-          ]
-        },
-        {
           "guid": "tmdb-tv-549",
           "title": "Ley y orden",
           "link": "https://www.themoviedb.org/tv/549",
@@ -4452,6 +4684,191 @@
           ]
         },
         {
+          "guid": "tmdb-tv-2224",
+          "title": "The Daily Show",
+          "link": "https://www.themoviedb.org/tv/2224",
+          "summary": "Presentado por el humorista Jon Stewart, es el formato de sátira política más popular de la televisión norteamericana. Ha estado en antena en Comedy Central desde 1996 y ha ganado 18 Primetime Emmys. Se autodefine como un programa de noticias falso y enfoca su particular punto de vista en la actualidad, las noticias, los personajes políticos y de los medios de comunicación fundamentalmente con el objetivo de hacer reír. Generalmente el show comienza con un monólogo de Jon Stewart relacionado con los principales titulares de la actualidad. Después de este monólogo da paso a sus numerosos corresponsales y finalmente suele acabar con una entrevista a un personaje conocido.",
+          "image": "https://image.tmdb.org/t/p/w500/ixcfyK7it6FjRM36Te4OdblAq4X.jpg",
+          "pubDate": "1996-07-22",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-10-03T07:43:33.918Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.3,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.4
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-05",
+          "numberOfSeasons": 31,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 7,
+              "fechaEstreno": "1996-07-22"
+            },
+            {
+              "numero": 2,
+              "episodios": 16,
+              "fechaEstreno": "1997-01-06"
+            },
+            {
+              "numero": 3,
+              "episodios": 33,
+              "fechaEstreno": "1998-03-09"
+            },
+            {
+              "numero": 4,
+              "episodios": 159,
+              "fechaEstreno": "1999-01-11"
+            },
+            {
+              "numero": 5,
+              "episodios": 166,
+              "fechaEstreno": "2000-01-04"
+            },
+            {
+              "numero": 6,
+              "episodios": 158,
+              "fechaEstreno": "2001-01-09"
+            },
+            {
+              "numero": 7,
+              "episodios": 160,
+              "fechaEstreno": "2002-01-08"
+            },
+            {
+              "numero": 8,
+              "episodios": 161,
+              "fechaEstreno": "2003-01-07"
+            },
+            {
+              "numero": 9,
+              "episodios": 161,
+              "fechaEstreno": "2004-01-06"
+            },
+            {
+              "numero": 10,
+              "episodios": 159,
+              "fechaEstreno": "2005-01-04"
+            },
+            {
+              "numero": 11,
+              "episodios": 161,
+              "fechaEstreno": "2006-01-04"
+            },
+            {
+              "numero": 12,
+              "episodios": 138,
+              "fechaEstreno": "2007-01-08"
+            },
+            {
+              "numero": 13,
+              "episodios": 160,
+              "fechaEstreno": "2008-01-07"
+            },
+            {
+              "numero": 14,
+              "episodios": 161,
+              "fechaEstreno": "2009-01-05"
+            },
+            {
+              "numero": 15,
+              "episodios": 161,
+              "fechaEstreno": "2010-01-04"
+            },
+            {
+              "numero": 16,
+              "episodios": 124,
+              "fechaEstreno": "2011-01-03"
+            },
+            {
+              "numero": 17,
+              "episodios": 157,
+              "fechaEstreno": "2011-10-03"
+            },
+            {
+              "numero": 18,
+              "episodios": 158,
+              "fechaEstreno": "2012-10-01"
+            },
+            {
+              "numero": 19,
+              "episodios": 159,
+              "fechaEstreno": "2013-09-30"
+            },
+            {
+              "numero": 20,
+              "episodios": 142,
+              "fechaEstreno": "2014-09-29"
+            },
+            {
+              "numero": 21,
+              "episodios": 161,
+              "fechaEstreno": "2015-09-28"
+            },
+            {
+              "numero": 22,
+              "episodios": 163,
+              "fechaEstreno": "2016-10-03"
+            },
+            {
+              "numero": 23,
+              "episodios": 157,
+              "fechaEstreno": "2017-10-02"
+            },
+            {
+              "numero": 24,
+              "episodios": 158,
+              "fechaEstreno": "2018-10-01"
+            },
+            {
+              "numero": 25,
+              "episodios": 160,
+              "fechaEstreno": "2019-09-30"
+            },
+            {
+              "numero": 26,
+              "episodios": 116,
+              "fechaEstreno": "2020-09-28"
+            },
+            {
+              "numero": 27,
+              "episodios": 140,
+              "fechaEstreno": "2021-09-27"
+            },
+            {
+              "numero": 28,
+              "episodios": 122,
+              "fechaEstreno": "2022-10-03"
+            },
+            {
+              "numero": 29,
+              "episodios": 138,
+              "fechaEstreno": "2024-02-12"
+            },
+            {
+              "numero": 30,
+              "episodios": 142,
+              "fechaEstreno": "2025-01-06"
+            },
+            {
+              "numero": 31,
+              "episodios": 122,
+              "fechaEstreno": "2026-01-05"
+            }
+          ],
+          "currentSeason": 31,
+          "reviews": null,
+          "trailer": {
+            "key": "f31fBMgYfWY",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
           "guid": "tmdb-tv-4614",
           "title": "Navy: Investigación criminal",
           "link": "https://www.themoviedb.org/tv/4614",
@@ -4636,6 +5053,105 @@
               "order": 18
             }
           ]
+        },
+        {
+          "guid": "tmdb-tv-247718",
+          "title": "Tierra de mafiosos",
+          "link": "https://www.themoviedb.org/tv/247718",
+          "summary": "El poder está en juego cuando los Harrigan y los Stevenson, dos familias criminales londinenses en guerra, se enfrentan en una batalla de matar o morir que amenaza con derribar imperios y arruinar vidas. Atrapado en el fuego cruzado está Harry Da Souza, el astuto \"solucionador\" tan peligroso como atractivo, que sabe muy bien dónde están las lealtades cuando las fuerzas opuestas chocan. A medida que los reinos se enfrentan, se cruzarán las líneas, y la única gracia salvadora es una garantía de vida o muerte: la familia por encima de todo.",
+          "image": "https://image.tmdb.org/t/p/w500/xOBnonAeHiZuiTPOLBFMFSPI6jy.jpg",
+          "pubDate": "2025-03-30",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-09-19T07:06:56.670Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.3,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.4
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-09-25",
+          "numberOfSeasons": 2,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 10,
+              "fechaEstreno": "2025-03-30"
+            },
+            {
+              "numero": 2,
+              "episodios": 10,
+              "fechaEstreno": "2026-09-18"
+            }
+          ],
+          "currentSeason": 2,
+          "reviews": {
+            "top": {
+              "rating": 8,
+              "text": "(CASTELLANO) Hay series que entran por pura presencia, y esta es de esas. Desde los primeros minutos, Tierra de mafiosos deja claro que su mayor arma no es la trama –que ya la hemos visto mil veces– sino ese desfile de actores que parece estar disfrutando más que nadie. Tom Hardy está brutal, pero quien me ha dejado loco es Harry (Paddy Considine): cada gesto, cada silencio, cada mirada… es de esos personajes que te incomodan sin levantar la voz. Y luego está Helen Mirren, que aquí directamente da miedo. Una frialdad que corta, una maldad sin freno. Impone muchísimo.\r\n\r\nLa historia no sorprende demasiado, pero funciona. Tiene ese punto reconocible de las ficciones de mafias familiares, con traiciones, tensiones y conversaciones que parecen una calma tensa a punto de estallar. Podría tener ",
+              "author": "Marco-Hugo Landeta Vacas"
+            },
+            "bottom": null
+          },
+          "trailer": {
+            "key": "qKGgw7Ob5f4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Hardy",
+              "character": "Harry Da Souza",
+              "order": 0
+            },
+            {
+              "name": "Pierce Brosnan",
+              "character": "Conrad Harrigan",
+              "order": 1
+            },
+            {
+              "name": "Paddy Considine",
+              "character": "Kevin Harrigan",
+              "order": 2
+            },
+            {
+              "name": "Joanne Froggatt",
+              "character": "Jan Da Souza",
+              "order": 3
+            },
+            {
+              "name": "Lara Pulver",
+              "character": "Bella Harrigan",
+              "order": 4
+            },
+            {
+              "name": "Anson Boon",
+              "character": "Eddie Harrigan",
+              "order": 5
+            },
+            {
+              "name": "Mandeep Dhillon",
+              "character": "Seraphina Harrigan",
+              "order": 6
+            },
+            {
+              "name": "Jasmine Jobson",
+              "character": "Zosia",
+              "order": 8
+            },
+            {
+              "name": "Teddie Allen",
+              "character": "Gina Da Souza",
+              "order": 9
+            },
+            {
+              "name": "Emmett J. Scanlan",
+              "character": "Paul",
+              "order": 10
+            }
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-tv-11890",
@@ -4851,105 +5367,6 @@
             "site": "YouTube"
           },
           "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-247718",
-          "title": "Tierra de mafiosos",
-          "link": "https://www.themoviedb.org/tv/247718",
-          "summary": "El poder está en juego cuando los Harrigan y los Stevenson, dos familias criminales londinenses en guerra, se enfrentan en una batalla de matar o morir que amenaza con derribar imperios y arruinar vidas. Atrapado en el fuego cruzado está Harry Da Souza, el astuto \"solucionador\" tan peligroso como atractivo, que sabe muy bien dónde están las lealtades cuando las fuerzas opuestas chocan. A medida que los reinos se enfrentan, se cruzarán las líneas, y la única gracia salvadora es una garantía de vida o muerte: la familia por encima de todo.",
-          "image": "https://image.tmdb.org/t/p/w500/xOBnonAeHiZuiTPOLBFMFSPI6jy.jpg",
-          "pubDate": "2025-03-30",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-19T07:06:56.670Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.3,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.4
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-25",
-          "numberOfSeasons": 2,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 10,
-              "fechaEstreno": "2025-03-30"
-            },
-            {
-              "numero": 2,
-              "episodios": 10,
-              "fechaEstreno": "2026-09-18"
-            }
-          ],
-          "currentSeason": 2,
-          "reviews": {
-            "top": {
-              "rating": 8,
-              "text": "(CASTELLANO) Hay series que entran por pura presencia, y esta es de esas. Desde los primeros minutos, Tierra de mafiosos deja claro que su mayor arma no es la trama –que ya la hemos visto mil veces– sino ese desfile de actores que parece estar disfrutando más que nadie. Tom Hardy está brutal, pero quien me ha dejado loco es Harry (Paddy Considine): cada gesto, cada silencio, cada mirada… es de esos personajes que te incomodan sin levantar la voz. Y luego está Helen Mirren, que aquí directamente da miedo. Una frialdad que corta, una maldad sin freno. Impone muchísimo.\r\n\r\nLa historia no sorprende demasiado, pero funciona. Tiene ese punto reconocible de las ficciones de mafias familiares, con traiciones, tensiones y conversaciones que parecen una calma tensa a punto de estallar. Podría tener ",
-              "author": "Marco-Hugo Landeta Vacas"
-            },
-            "bottom": null
-          },
-          "trailer": {
-            "key": "qKGgw7Ob5f4",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Tom Hardy",
-              "character": "Harry Da Souza",
-              "order": 0
-            },
-            {
-              "name": "Pierce Brosnan",
-              "character": "Conrad Harrigan",
-              "order": 1
-            },
-            {
-              "name": "Paddy Considine",
-              "character": "Kevin Harrigan",
-              "order": 2
-            },
-            {
-              "name": "Joanne Froggatt",
-              "character": "Jan Da Souza",
-              "order": 3
-            },
-            {
-              "name": "Lara Pulver",
-              "character": "Bella Harrigan",
-              "order": 4
-            },
-            {
-              "name": "Anson Boon",
-              "character": "Eddie Harrigan",
-              "order": 5
-            },
-            {
-              "name": "Mandeep Dhillon",
-              "character": "Seraphina Harrigan",
-              "order": 6
-            },
-            {
-              "name": "Jasmine Jobson",
-              "character": "Zosia",
-              "order": 8
-            },
-            {
-              "name": "Teddie Allen",
-              "character": "Gina Da Souza",
-              "order": 9
-            },
-            {
-              "name": "Emmett J. Scanlan",
-              "character": "Paul",
-              "order": 10
-            }
-          ],
           "trending": false
         },
         {
@@ -7635,103 +8052,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-tv-113962",
-          "title": "Operaciones Especiales: Lioness",
-          "link": "https://www.themoviedb.org/tv/113962",
-          "summary": "Cruz Manuelos, una joven infante de marina ruda pero apasionada, es reclutada para unirse al Equipo Lioness Engagement de la CIA para ayudar a acabar con una organización terrorista desde adentro. Joe, el jefe de estación del programa Lioness, tiene la tarea de capacitar, administrar y liderar a sus agentes encubiertos.",
-          "image": "https://image.tmdb.org/t/p/w500/d0r0rxI9UjMVvD5Krc5oET2O0gU.jpg",
-          "pubDate": "2023-07-23",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-03T03:55:45.305Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.8,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.1
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-06",
-          "numberOfSeasons": 3,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 8,
-              "fechaEstreno": "2023-07-23"
-            },
-            {
-              "numero": 2,
-              "episodios": 8,
-              "fechaEstreno": "2024-10-27"
-            },
-            {
-              "numero": 3,
-              "episodios": 8,
-              "fechaEstreno": "2026-08-02"
-            }
-          ],
-          "currentSeason": 3,
-          "reviews": null,
-          "trailer": {
-            "key": "7YunYBwleJM",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Zoe Saldaña",
-              "character": "Joe McNamara",
-              "order": 0
-            },
-            {
-              "name": "Laysla De Oliveira",
-              "character": "Cruz Manuelos",
-              "order": 1
-            },
-            {
-              "name": "Dave Annable",
-              "character": "Neal McNamara",
-              "order": 2
-            },
-            {
-              "name": "Jill Wagner",
-              "character": "Bobby",
-              "order": 3
-            },
-            {
-              "name": "LaMonica Garrett",
-              "character": "Tucker",
-              "order": 4
-            },
-            {
-              "name": "James Jordan",
-              "character": "Two Cups",
-              "order": 5
-            },
-            {
-              "name": "Genesis Rodriguez",
-              "character": "Captain Josephina 'Josie' Carrillo",
-              "order": 6
-            },
-            {
-              "name": "Michael Kelly",
-              "character": "Byron Westfield",
-              "order": 7
-            },
-            {
-              "name": "Austin Hébert",
-              "character": "Randy",
-              "order": 8
-            },
-            {
-              "name": "Jonah Wharton",
-              "character": "Tex",
-              "order": 10
-            }
-          ],
-          "trending": false
-        },
-        {
           "guid": "tmdb-tv-2527",
           "title": "Emmerdale",
           "link": "https://www.themoviedb.org/tv/2527",
@@ -8032,212 +8352,6 @@
           "reviews": null,
           "trailer": {
             "key": "ZhZXAOBJFxM",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-13945",
-          "title": "Gute Zeiten, schlechte Zeiten",
-          "link": "https://www.themoviedb.org/tv/13945",
-          "summary": "Gute Zeiten, schlechte Zeiten is a long-running German television soap opera, first broadcast on RTL in 1992. The programme concerns the lives of a fictional neighborhood in Germany's capital city Berlin. Over the years the soap opera tends to have an overhaul of young people in their late teens and early twenties; targeting a young viewership.",
-          "image": "https://image.tmdb.org/t/p/w500/qujVFLAlBnPU9mZElV4NZgL8iXT.jpg",
-          "pubDate": "1992-05-11",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-03T03:55:46.576Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 2.9,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 5.5
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-04",
-          "numberOfSeasons": 35,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 160,
-              "fechaEstreno": "1992-05-11"
-            },
-            {
-              "numero": 2,
-              "episodios": 242,
-              "fechaEstreno": "1993-01-01"
-            },
-            {
-              "numero": 3,
-              "episodios": 245,
-              "fechaEstreno": "1994-01-03"
-            },
-            {
-              "numero": 4,
-              "episodios": 241,
-              "fechaEstreno": "1995-01-02"
-            },
-            {
-              "numero": 5,
-              "episodios": 249,
-              "fechaEstreno": "1996-01-02"
-            },
-            {
-              "numero": 6,
-              "episodios": 245,
-              "fechaEstreno": "1997-01-02"
-            },
-            {
-              "numero": 7,
-              "episodios": 253,
-              "fechaEstreno": "1998-01-02"
-            },
-            {
-              "numero": 8,
-              "episodios": 253,
-              "fechaEstreno": "1999-01-04"
-            },
-            {
-              "numero": 9,
-              "episodios": 250,
-              "fechaEstreno": "2000-01-03"
-            },
-            {
-              "numero": 10,
-              "episodios": 244,
-              "fechaEstreno": "2001-01-02"
-            },
-            {
-              "numero": 11,
-              "episodios": 250,
-              "fechaEstreno": "2002-01-02"
-            },
-            {
-              "numero": 12,
-              "episodios": 249,
-              "fechaEstreno": "2003-01-02"
-            },
-            {
-              "numero": 13,
-              "episodios": 253,
-              "fechaEstreno": "2004-01-02"
-            },
-            {
-              "numero": 14,
-              "episodios": 255,
-              "fechaEstreno": "2005-01-03"
-            },
-            {
-              "numero": 15,
-              "episodios": 257,
-              "fechaEstreno": "2006-01-02"
-            },
-            {
-              "numero": 16,
-              "episodios": 249,
-              "fechaEstreno": "2007-01-02"
-            },
-            {
-              "numero": 17,
-              "episodios": 252,
-              "fechaEstreno": "2008-01-02"
-            },
-            {
-              "numero": 18,
-              "episodios": 252,
-              "fechaEstreno": "2009-01-02"
-            },
-            {
-              "numero": 19,
-              "episodios": 248,
-              "fechaEstreno": "2010-01-04"
-            },
-            {
-              "numero": 20,
-              "episodios": 254,
-              "fechaEstreno": "2011-01-03"
-            },
-            {
-              "numero": 21,
-              "episodios": 251,
-              "fechaEstreno": "2012-01-02"
-            },
-            {
-              "numero": 22,
-              "episodios": 250,
-              "fechaEstreno": "2013-01-02"
-            },
-            {
-              "numero": 23,
-              "episodios": 250,
-              "fechaEstreno": "2014-01-02"
-            },
-            {
-              "numero": 24,
-              "episodios": 252,
-              "fechaEstreno": "2015-01-02"
-            },
-            {
-              "numero": 25,
-              "episodios": 256,
-              "fechaEstreno": "2016-01-04"
-            },
-            {
-              "numero": 26,
-              "episodios": 254,
-              "fechaEstreno": "2017-01-02"
-            },
-            {
-              "numero": 27,
-              "episodios": 252,
-              "fechaEstreno": "2018-01-02"
-            },
-            {
-              "numero": 28,
-              "episodios": 251,
-              "fechaEstreno": "2019-01-02"
-            },
-            {
-              "numero": 29,
-              "episodios": 248,
-              "fechaEstreno": "2020-01-02"
-            },
-            {
-              "numero": 30,
-              "episodios": 252,
-              "fechaEstreno": "2021-01-04"
-            },
-            {
-              "numero": 31,
-              "episodios": 256,
-              "fechaEstreno": "2022-01-03"
-            },
-            {
-              "numero": 32,
-              "episodios": 254,
-              "fechaEstreno": "2023-01-02"
-            },
-            {
-              "numero": 33,
-              "episodios": 252,
-              "fechaEstreno": "2024-01-02"
-            },
-            {
-              "numero": 34,
-              "episodios": 250,
-              "fechaEstreno": "2025-01-02"
-            },
-            {
-              "numero": 35,
-              "episodios": 172,
-              "fechaEstreno": "2026-01-02"
-            }
-          ],
-          "currentSeason": 35,
-          "reviews": null,
-          "trailer": {
-            "key": "PW1sFFaV1B8",
             "site": "YouTube"
           },
           "cast": [],
@@ -9990,240 +10104,6 @@
           "cast": []
         },
         {
-          "guid": "mal-60636",
-          "title": "Bleach: Sennen Kessen-hen - Kashin-tan",
-          "link": "https://myanimelist.net/anime/60636/Bleach__Sennen_Kessen-hen_-_Kashin-tan",
-          "summary": "Tomohisa Taguchi  es un animador, director, guionista gráfico y guionista japonés. Algunas de las series que ha dirigido incluyen Sōsei no Onmyōji, Akudama Drive y Bleach: Sennen Kessen-hen.",
-          "image": "https://cdn.myanimelist.net/images/anime/1275/158595l.jpg",
-          "pubDate": "2026-07-25T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-30T21:57:47.535Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Not yet aired",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "DKKZ10FsSBM",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-54000",
-          "title": "Otome Game Sekai wa Mob ni Kibishii Sekai desu 2",
-          "link": "https://myanimelist.net/anime/54000/Otome_Game_Sekai_wa_Mob_ni_Kibishii_Sekai_desu_2",
-          "summary": "Second season of Otome Game Sekai wa Mob ni Kibishii Sekai desu.",
-          "image": "https://cdn.myanimelist.net/images/anime/1285/158337l.jpg",
-          "pubDate": "2026-07-08T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-30T01:13:00.657Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.83
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "JP3ksqOosBY",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-62542",
-          "title": "Grand Blue Season 3",
-          "link": "https://myanimelist.net/anime/62542/Grand_Blue_Season_3",
-          "summary": "Third season of Grand Blue.",
-          "image": "https://cdn.myanimelist.net/images/anime/1615/158194l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-30T01:13:04.605Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.41
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "KJw6ZZaMOWA",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-62542",
-          "title": "Grand Blue Season 3",
-          "link": "https://myanimelist.net/anime/62542/Grand_Blue_Season_3",
-          "summary": "Third season of Grand Blue.",
-          "image": "https://cdn.myanimelist.net/images/anime/1615/158194l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-30T01:13:04.605Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.41
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "KJw6ZZaMOWA",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-48820",
-          "title": "Mahou Shoujo Madoka★Magica Movie 4: Walpurgis no Kaiten",
-          "link": "https://myanimelist.net/anime/48820/Mahou_Shoujo_Madoka★Magica_Movie_4__Walpurgis_no_Kaiten",
-          "summary": "",
-          "image": "https://cdn.myanimelist.net/images/anime/1784/151057l.jpg",
-          "pubDate": "2026-08-28T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-30T16:17:39.325Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Not yet aired",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "TGxyrO-27dQ",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-63403",
-          "title": "Yani Neko",
-          "link": "https://myanimelist.net/anime/63403/Yani_Neko",
-          "summary": "Yani is a catgirl with a seriously bad smoking habit. She smokes so much that her apartment smells like ash and is littered with cigarette butts—and plenty of other trash! Every time she tries to quit, she becomes weak to the cravings and gives in almost instantly. Will she ever get her life together, or is she doomed to live as a chainsmoking slob forever?\n\n(Source: Seven Seas Entertainment)",
-          "image": "https://cdn.myanimelist.net/images/anime/1281/156496l.jpg",
-          "pubDate": "2026-07-03T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-30T21:57:52.718Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.13
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "0e-tPUjYkvA",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-60522",
-          "title": "Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu II",
-          "link": "https://myanimelist.net/anime/60522/Gaikotsu_Kishi-sama_Tadaima_Isekai_e_Odekakechuu_II",
-          "summary": "Second season of Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu.",
-          "image": "https://cdn.myanimelist.net/images/anime/1544/157046l.jpg",
-          "pubDate": "2026-07-06T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-30T21:57:54.475Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.08
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "u_TQJHga6k8",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-58929",
-          "title": "Koukaku Kidoutai (TV)",
-          "link": "https://myanimelist.net/anime/58929/Koukaku_Kidoutai_TV",
-          "summary": "In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetics, its citizens are able to replace their limbs with robotic parts. The world is now more interconnected than ever before, and the city's Public Security Section 9 is responsible for combating corruption, terrorism, and other dangerous threats following this shift toward globalization.\n\nThe strong-willed Major Motoko Kusanagi of Section 9 spearheads a case involving a mysterious hacker known only as the \"Puppet Master,\" who leaves a trail of victims stripped of their memories. Like many in this futuristic world, the Puppet Master's body is almost entirely robotic, giving them incredible power.\n\nAs Motoko and her subordinates follow the enigmatic criminal's trail, other parties—including Section 6—start to get involved, forcing her to confront the extremely complicated nature of the case. Pondering about various philosophical questions, such as her own life's meaning, Motoko soon realizes that the one who will provide these answers is none other than the Puppet Master themself.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1474/158937l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-03T16:16:10.868Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.02
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "7yE9MHlifmw",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
-          "guid": "mal-61126",
-          "title": "Kimi ga Shinu made Koi wo Shitai",
-          "link": "https://myanimelist.net/anime/61126/Kimi_ga_Shinu_made_Koi_wo_Shitai",
-          "summary": "The death of Sheena Totsuki's roommate is casually announced at the start of class, and the day carries on as usual. In an orphanage that raises children as soldiers, death is nothing new to the residents. With their home country embroiled in a war that has dragged on for too many years and shows no signs of stopping, the institution's children are sent off to die in battle every day. In contrast to the other orphans, Sheena is deeply disturbed by the ongoing conflict and wishes for it to end.\n\nOn the night of her roommate's death, Sheena met a blood-covered girl who remained jubilant despite the condition she was in. The next day, the girl appears as a new student in Sheena's class and introduces herself as Mimi Kagari. Initially thought to be a school myth, Mimi is said to be the secret weapon of the orphanage—a girl who cannot die. Assigned as Sheena's new roommate, Mimi hopes to get along with her and get accustomed to school life.\n\nHowever, unsettled by Mimi's carefree attitude toward the war, Sheena struggles to accept the world they live in, all while their unusual friendship flourishes amid the bleak situation.\n\n[Written by MAL Rewrite]",
-          "image": "https://cdn.myanimelist.net/images/anime/1096/158712l.jpg",
-          "pubDate": "2026-07-07T00:00:00+00:00",
-          "source": "MyAnimeList",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-29T07:59:22.309Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.81
-          },
-          "status": "Currently Airing",
-          "nextEpisodeDate": null,
-          "reviews": null,
-          "trailer": {
-            "key": "rSiaUuG1kpM",
-            "site": "YouTube"
-          },
-          "cast": []
-        },
-        {
           "guid": "tmdb-tv-94664",
           "title": "Mushoku Tensei Jobless Reincarnation",
           "link": "https://www.themoviedb.org/tv/94664",
@@ -10609,6 +10489,222 @@
               "order": 4
             }
           ],
+          "trending": false
+        },
+        {
+          "guid": "mal-60636",
+          "title": "Bleach: Sennen Kessen-hen - Kashin-tan",
+          "link": "https://myanimelist.net/anime/60636/Bleach__Sennen_Kessen-hen_-_Kashin-tan",
+          "summary": "Tomohisa Taguchi  es un animador, director, guionista gráfico y guionista japonés. Algunas de las series que ha dirigido incluyen Sōsei no Onmyōji, Akudama Drive y Bleach: Sennen Kessen-hen.",
+          "image": "https://cdn.myanimelist.net/images/anime/1275/158595l.jpg",
+          "pubDate": "2026-07-25T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-30T21:57:47.535Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Not yet aired",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "DKKZ10FsSBM",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-54000",
+          "title": "Otome Game Sekai wa Mob ni Kibishii Sekai desu 2",
+          "link": "https://myanimelist.net/anime/54000/Otome_Game_Sekai_wa_Mob_ni_Kibishii_Sekai_desu_2",
+          "summary": "Second season of Otome Game Sekai wa Mob ni Kibishii Sekai desu.",
+          "image": "https://cdn.myanimelist.net/images/anime/1285/158337l.jpg",
+          "pubDate": "2026-07-08T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-30T01:13:00.657Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.83
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "JP3ksqOosBY",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-62542",
+          "title": "Grand Blue Season 3",
+          "link": "https://myanimelist.net/anime/62542/Grand_Blue_Season_3",
+          "summary": "Third season of Grand Blue.",
+          "image": "https://cdn.myanimelist.net/images/anime/1615/158194l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-30T01:13:04.605Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.41
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "KJw6ZZaMOWA",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-48820",
+          "title": "Mahou Shoujo Madoka★Magica Movie 4: Walpurgis no Kaiten",
+          "link": "https://myanimelist.net/anime/48820/Mahou_Shoujo_Madoka★Magica_Movie_4__Walpurgis_no_Kaiten",
+          "summary": "",
+          "image": "https://cdn.myanimelist.net/images/anime/1784/151057l.jpg",
+          "pubDate": "2026-08-28T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-30T16:17:39.325Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Not yet aired",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "TGxyrO-27dQ",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-63403",
+          "title": "Yani Neko",
+          "link": "https://myanimelist.net/anime/63403/Yani_Neko",
+          "summary": "Yani is a catgirl with a seriously bad smoking habit. She smokes so much that her apartment smells like ash and is littered with cigarette butts—and plenty of other trash! Every time she tries to quit, she becomes weak to the cravings and gives in almost instantly. Will she ever get her life together, or is she doomed to live as a chainsmoking slob forever?\n\n(Source: Seven Seas Entertainment)",
+          "image": "https://cdn.myanimelist.net/images/anime/1281/156496l.jpg",
+          "pubDate": "2026-07-03T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-30T21:57:52.718Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.13
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "0e-tPUjYkvA",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-60522",
+          "title": "Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu II",
+          "link": "https://myanimelist.net/anime/60522/Gaikotsu_Kishi-sama_Tadaima_Isekai_e_Odekakechuu_II",
+          "summary": "Second season of Gaikotsu Kishi-sama, Tadaima Isekai e Odekakechuu.",
+          "image": "https://cdn.myanimelist.net/images/anime/1544/157046l.jpg",
+          "pubDate": "2026-07-06T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-30T21:57:54.475Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.08
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "u_TQJHga6k8",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-58929",
+          "title": "Koukaku Kidoutai (TV)",
+          "link": "https://myanimelist.net/anime/58929/Koukaku_Kidoutai_TV",
+          "summary": "In the year 2029, Niihama City has become a technologically advanced metropolis. Due to great improvements in cybernetics, its citizens are able to replace their limbs with robotic parts. The world is now more interconnected than ever before, and the city's Public Security Section 9 is responsible for combating corruption, terrorism, and other dangerous threats following this shift toward globalization.\n\nThe strong-willed Major Motoko Kusanagi of Section 9 spearheads a case involving a mysterious hacker known only as the \"Puppet Master,\" who leaves a trail of victims stripped of their memories. Like many in this futuristic world, the Puppet Master's body is almost entirely robotic, giving them incredible power.\n\nAs Motoko and her subordinates follow the enigmatic criminal's trail, other parties—including Section 6—start to get involved, forcing her to confront the extremely complicated nature of the case. Pondering about various philosophical questions, such as her own life's meaning, Motoko soon realizes that the one who will provide these answers is none other than the Puppet Master themself.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1474/158937l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-03T16:16:10.868Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.02
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "7yE9MHlifmw",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "mal-61126",
+          "title": "Kimi ga Shinu made Koi wo Shitai",
+          "link": "https://myanimelist.net/anime/61126/Kimi_ga_Shinu_made_Koi_wo_Shitai",
+          "summary": "The death of Sheena Totsuki's roommate is casually announced at the start of class, and the day carries on as usual. In an orphanage that raises children as soldiers, death is nothing new to the residents. With their home country embroiled in a war that has dragged on for too many years and shows no signs of stopping, the institution's children are sent off to die in battle every day. In contrast to the other orphans, Sheena is deeply disturbed by the ongoing conflict and wishes for it to end.\n\nOn the night of her roommate's death, Sheena met a blood-covered girl who remained jubilant despite the condition she was in. The next day, the girl appears as a new student in Sheena's class and introduces herself as Mimi Kagari. Initially thought to be a school myth, Mimi is said to be the secret weapon of the orphanage—a girl who cannot die. Assigned as Sheena's new roommate, Mimi hopes to get along with her and get accustomed to school life.\n\nHowever, unsettled by Mimi's carefree attitude toward the war, Sheena struggles to accept the world they live in, all while their unusual friendship flourishes amid the bleak situation.\n\n[Written by MAL Rewrite]",
+          "image": "https://cdn.myanimelist.net/images/anime/1096/158712l.jpg",
+          "pubDate": "2026-07-07T00:00:00+00:00",
+          "source": "MyAnimeList",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-29T07:59:22.309Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.81
+          },
+          "status": "Currently Airing",
+          "nextEpisodeDate": null,
+          "reviews": null,
+          "trailer": {
+            "key": "rSiaUuG1kpM",
+            "site": "YouTube"
+          },
+          "cast": [],
           "trending": false
         },
         {
