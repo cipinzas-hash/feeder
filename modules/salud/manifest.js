@@ -2,12 +2,13 @@ export default {
   id: "salud",
   tabLabel: "Salud",
 
-  // kidsHealth ya existía como campo persistido; ahora también carga
-  // `family` (antes: const FAMILY hardcodeada con nombres/fechas de
-  // nacimiento reales, en texto plano, en el código fuente). Default vacío
-  // a propósito — se completa una vez desde la UI (onboarding en
-  // SaludPage), nunca queda comprometido en el repo.
+  // kidsHealth (schema v2): `events` es la única colección de eventos de
+  // salud (enfermedades, registros de síntomas, medicación, tratamientos,
+  // citas) — ver modules/salud/saludModel.js. `family` se completa una vez
+  // desde la UI (onboarding en SaludPage), nunca queda en el repo. Los datos
+  // v1 (episodes/dailyLog/citasRegulares) se migran al cargar y quedan en
+  // `legacy` como respaldo.
   state: {
-    kidsHealth: { default: { episodes: [], family: [] } },
+    kidsHealth: { default: { schemaVersion: 2, family: [], profiles: {}, events: [] } },
   },
 };

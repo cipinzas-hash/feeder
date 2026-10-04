@@ -15,6 +15,8 @@ const DEFAULT_HUMORS = [
   {id:"agotado",    emoji:"🥱", label:"Agotado"},
   {id:"contento",   emoji:"😊", label:"Contento"},
 ];
+// Episodios de enfermedad (schema v2 de Salud: kidsHealth.events, type "enfermedad").
+function illnessEvents(kh) { return (kh.events||[]).filter(e=>e.type==="enfermedad"); }
 function computeStressScore(dk, dayData, calMarks, kidsHealth) {
   const d = dayData[dk];
   if(!d) return 0;
@@ -38,9 +40,9 @@ function computeStressScore(dk, dayData, calMarks, kidsHealth) {
     if(marks.includes("romantic")) s+=1.5;
     if(marks.includes("colegio")) s+=1.5;
     if(marks.includes("work")&&marks.includes("social")) s+=1;
-    const activeKidEps = (kh.episodes||[]).filter(e=>e.kidId!=="cristopher"&&!e.endDate&&e.startDate<=dk);
-    const closedKidEps = (kh.episodes||[]).filter(e=>e.kidId!=="cristopher"&&e.endDate&&e.startDate<=dk&&e.endDate>=dk);
-    const sickKids = new Set([...activeKidEps,...closedKidEps].map(e=>e.kidId)).size;
+    const activeKidEps = illnessEvents(kh).filter(e=>e.personId!=="cristopher"&&!e.end&&e.start<=dk);
+    const closedKidEps = illnessEvents(kh).filter(e=>e.personId!=="cristopher"&&e.end&&e.start<=dk&&e.end>=dk);
+    const sickKids = new Set([...activeKidEps,...closedKidEps].map(e=>e.personId)).size;
     if(sickKids>0) s+=sickKids*1.5;
     if(intensity>0) s = s*0.6 + intensity*0.4;
     return Math.min(Math.round(s), 10);
@@ -69,13 +71,13 @@ function computeStressScore(dk, dayData, calMarks, kidsHealth) {
   s += Math.min(urgentNoMedica*0.5, 2);
   if((d.compras||[]).some(c=>!c.done)) s+=0.5;
   // Episodios activos de hijos — usa hazardLevel
-  const activeKidEps = (kh.episodes||[]).filter(e=>e.kidId!=="cristopher"&&!e.endDate&&e.startDate<=dk);
+  const activeKidEps = illnessEvents(kh).filter(e=>e.personId!=="cristopher"&&!e.end&&e.start<=dk);
   activeKidEps.forEach(ep=>{
     const hz = ep.hazardLevel||"CLEAR";
     s += HAZARD_STRESS[hz]||0;
   });
   // Episodios propios de Cristopher
-  const selfEps = (kh.episodes||[]).filter(e=>e.kidId==="cristopher"&&!e.endDate&&e.startDate<=dk);
+  const selfEps = illnessEvents(kh).filter(e=>e.personId==="cristopher"&&!e.end&&e.start<=dk);
   selfEps.forEach(ep=>{
     const hz = ep.hazardLevel||"CLEAR";
     s += (HAZARD_STRESS[hz]||0) * 0.7;

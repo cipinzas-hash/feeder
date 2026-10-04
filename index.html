@@ -72,6 +72,9 @@ var __angst = (() => {
     { id: "agotado", emoji: "\u{1F971}", label: "Agotado" },
     { id: "contento", emoji: "\u{1F60A}", label: "Contento" }
   ];
+  function illnessEvents(kh) {
+    return (kh.events || []).filter((e) => e.type === "enfermedad");
+  }
   function computeStressScore(dk, dayData, calMarks, kidsHealth) {
     const d = dayData[dk];
     if (!d) return 0;
@@ -93,9 +96,9 @@ var __angst = (() => {
       if (marks.includes("romantic")) s2 += 1.5;
       if (marks.includes("colegio")) s2 += 1.5;
       if (marks.includes("work") && marks.includes("social")) s2 += 1;
-      const activeKidEps2 = (kh.episodes || []).filter((e) => e.kidId !== "cristopher" && !e.endDate && e.startDate <= dk);
-      const closedKidEps = (kh.episodes || []).filter((e) => e.kidId !== "cristopher" && e.endDate && e.startDate <= dk && e.endDate >= dk);
-      const sickKids = new Set([...activeKidEps2, ...closedKidEps].map((e) => e.kidId)).size;
+      const activeKidEps2 = illnessEvents(kh).filter((e) => e.personId !== "cristopher" && !e.end && e.start <= dk);
+      const closedKidEps = illnessEvents(kh).filter((e) => e.personId !== "cristopher" && e.end && e.start <= dk && e.end >= dk);
+      const sickKids = new Set([...activeKidEps2, ...closedKidEps].map((e) => e.personId)).size;
       if (sickKids > 0) s2 += sickKids * 1.5;
       if (intensity > 0) s2 = s2 * 0.6 + intensity * 0.4;
       return Math.min(Math.round(s2), 10);
@@ -119,12 +122,12 @@ var __angst = (() => {
     const urgentNoMedica = (d.tasks || []).filter((t) => t.urgent && !t.done && !esTareaMedica(t.text)).length;
     s += Math.min(urgentNoMedica * 0.5, 2);
     if ((d.compras || []).some((c) => !c.done)) s += 0.5;
-    const activeKidEps = (kh.episodes || []).filter((e) => e.kidId !== "cristopher" && !e.endDate && e.startDate <= dk);
+    const activeKidEps = illnessEvents(kh).filter((e) => e.personId !== "cristopher" && !e.end && e.start <= dk);
     activeKidEps.forEach((ep) => {
       const hz = ep.hazardLevel || "CLEAR";
       s += HAZARD_STRESS[hz] || 0;
     });
-    const selfEps = (kh.episodes || []).filter((e) => e.kidId === "cristopher" && !e.endDate && e.startDate <= dk);
+    const selfEps = illnessEvents(kh).filter((e) => e.personId === "cristopher" && !e.end && e.start <= dk);
     selfEps.forEach((ep) => {
       const hz = ep.hazardLevel || "CLEAR";
       s += (HAZARD_STRESS[hz] || 0) * 0.7;
@@ -254,6 +257,470 @@ var __angst = (() => {
     if (CL_HOLIDAYS[key]) return { label: CL_HOLIDAYS[key], type: "cl" };
     if (US_HOLIDAYS[key]) return { label: US_HOLIDAYS[key], type: "us" };
     return null;
+  }
+
+  // modules/salud/saludModel.js
+  var SCHEMA_VERSION = 2;
+  var SYMPTOM_ZONES = [
+    { id: "temp", label: "Temperatura", symptoms: [
+      { id: "temp_sub38", label: "Fiebre leve <38\xB0", peso: 1, flag: null },
+      { id: "temp_38_39", label: "Fiebre 38\u201339\xB0", peso: 2, flag: null },
+      { id: "temp_39_40", label: "Fiebre 39\u201340\xB0", peso: 3, flag: null },
+      { id: "temp_sobre40", label: "Fiebre >40\xB0", peso: 0, flag: "WARNING" },
+      { id: "escalofrios", label: "Escalofr\xEDos", peso: 1, flag: null }
+    ] },
+    { id: "resp", label: "Respiratorio", symptoms: [
+      { id: "tos_seca", label: "Tos seca", peso: 1, flag: null },
+      { id: "tos_flema", label: "Tos con flema", peso: 3, flag: null },
+      { id: "congestion", label: "Congesti\xF3n nasal", peso: 1, flag: null },
+      { id: "goteo", label: "Goteo nasal", peso: 1, flag: null },
+      { id: "dif_resp_leve", label: "Dificultad respiratoria leve", peso: 2, flag: null },
+      { id: "dif_resp_grave", label: "Dificultad respiratoria grave", peso: 0, flag: "CRITICAL" },
+      { id: "sibilancias", label: "Sibilancias/silbidos", peso: 2, flag: null }
+    ] },
+    { id: "garganta", label: "Garganta y boca", symptoms: [
+      { id: "garg_leve", label: "Dolor de garganta leve", peso: 1, flag: null },
+      { id: "garg_intensa", label: "Dolor de garganta intenso", peso: 2, flag: null },
+      { id: "ronquera", label: "Ronquera", peso: 1, flag: null },
+      { id: "dif_tragar", label: "Dificultad para tragar", peso: 2, flag: null },
+      { id: "aftas", label: "Aftas / llagas", peso: 1, flag: null }
+    ] },
+    { id: "digest", label: "Digestivo", symptoms: [
+      { id: "nauseas", label: "N\xE1useas", peso: 1, flag: null },
+      { id: "vomito", label: "V\xF3mito aislado", peso: 2, flag: null },
+      { id: "vomito_rep", label: "V\xF3mito repetido (3+)", peso: 3, flag: null },
+      { id: "diarrea", label: "Diarrea", peso: 2, flag: null },
+      { id: "diarrea_sangre", label: "Diarrea con sangre", peso: 3, flag: null },
+      { id: "dolor_abd_leve", label: "Dolor abdominal leve", peso: 1, flag: null },
+      { id: "dolor_abd_intenso", label: "Dolor abdominal intenso", peso: 3, flag: null },
+      { id: "inapetencia", label: "Inapetencia", peso: 1, flag: null }
+    ] },
+    { id: "oido_ojos", label: "O\xEDdo y ojos", symptoms: [
+      { id: "dolor_oido", label: "Dolor de o\xEDdo", peso: 2, flag: null },
+      { id: "sec_oido", label: "Secreci\xF3n de o\xEDdo", peso: 2, flag: null },
+      { id: "ojo_rojo", label: "Ojo rojo", peso: 1, flag: null },
+      { id: "conjuntivitis", label: "Conjuntivitis", peso: 2, flag: null }
+    ] },
+    { id: "piel", label: "Piel", symptoms: [
+      { id: "erupcion", label: "Erupci\xF3n", peso: 1, flag: null },
+      { id: "erupcion_fiebre", label: "Erupci\xF3n + fiebre", peso: 0, flag: "WARNING" },
+      { id: "urticaria", label: "Urticaria", peso: 1, flag: null },
+      { id: "manchas", label: "Manchas", peso: 1, flag: null },
+      { id: "palidez", label: "Palidez marcada", peso: 2, flag: null }
+    ] },
+    { id: "general", label: "General", symptoms: [
+      { id: "cansancio", label: "Cansancio", peso: 1, flag: null },
+      { id: "irritabilidad", label: "Irritabilidad marcada", peso: 1, flag: null },
+      { id: "decaimiento", label: "Decaimiento general", peso: 2, flag: null },
+      { id: "sangrado_anormal", label: "Sangrado anormal", peso: 0, flag: "WARNING" }
+    ] },
+    { id: "dolor", label: "Dolor", symptoms: [
+      { id: "dolor_muscular", label: "Dolor muscular", peso: 1, flag: null },
+      { id: "dolor_articular", label: "Dolor articular", peso: 2, flag: null },
+      { id: "dolor_espalda", label: "Dolor de espalda", peso: 1, flag: null },
+      { id: "dolor_cabeza", label: "Dolor de cabeza", peso: 2, flag: null },
+      { id: "dolor_orinar", label: "Dolor al orinar", peso: 2, flag: null }
+    ] },
+    { id: "neuro_grave", label: "Neurol\xF3gico grave", symptoms: [
+      { id: "convulsion", label: "Convulsi\xF3n", peso: 0, flag: "CRITICAL" },
+      { id: "rigidez_nuca", label: "Rigidez de nuca", peso: 0, flag: "CRITICAL" },
+      { id: "perdida_conc", label: "P\xE9rdida de consciencia", peso: 0, flag: "CRITICAL" },
+      { id: "dif_despertar", label: "Dificultad para despertar", peso: 0, flag: "CRITICAL" }
+    ] }
+  ];
+  var ALL_SYMPTOMS = SYMPTOM_ZONES.flatMap((z) => z.symptoms);
+  function symptomLabel(id) {
+    const s = ALL_SYMPTOMS.find((x) => x.id === id);
+    return s ? s.label : id;
+  }
+  var FEVER_IDS = ["temp_sub38", "temp_38_39", "temp_39_40", "temp_sobre40"];
+  function localDateKey(d) {
+    d = d || /* @__PURE__ */ new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function localTimeKey(d) {
+    d = d || /* @__PURE__ */ new Date();
+    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+  function parseKey(dk) {
+    const [y, m, d] = dk.split("-").map(Number);
+    return new Date(y, m - 1, d, 12, 0, 0);
+  }
+  function addDaysKey(dk, n) {
+    const d = parseKey(dk);
+    d.setDate(d.getDate() + n);
+    return localDateKey(d);
+  }
+  function addMonthsKey(dk, n) {
+    const [y, m, day] = dk.split("-").map(Number);
+    const t = new Date(y, m - 1 + n, 1, 12, 0, 0);
+    const last = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
+    t.setDate(Math.min(day, last));
+    return localDateKey(t);
+  }
+  function daysInclusive(a, b) {
+    return Math.round((parseKey(b) - parseKey(a)) / 864e5) + 1;
+  }
+  function calcAge(dob) {
+    const b = parseKey(dob), t = /* @__PURE__ */ new Date();
+    let a = t.getFullYear() - b.getFullYear();
+    if (t.getMonth() < b.getMonth() || t.getMonth() === b.getMonth() && t.getDate() < b.getDate()) a--;
+    return a;
+  }
+  function tempScore(temps) {
+    const vals = (temps || []).map((t) => parseFloat(t.v)).filter((v2) => !isNaN(v2));
+    if (!vals.length) return 0;
+    const v = Math.max(...vals);
+    if (v >= 40) return 6;
+    if (v >= 39) return 3;
+    if (v >= 38) return 2;
+    if (v >= 37.5) return 1;
+    return 0;
+  }
+  function calcHazard(sintomas, temps) {
+    let score = 0;
+    for (const sId of sintomas || []) {
+      const s = ALL_SYMPTOMS.find((x) => x.id === sId);
+      if (!s) continue;
+      if (s.flag === "CRITICAL") return "CRITICAL";
+      if (s.flag === "WARNING") {
+        score = Math.max(score, 6);
+        continue;
+      }
+      score += s.peso;
+    }
+    if (!(sintomas || []).some((id) => FEVER_IDS.includes(id))) score += tempScore(temps);
+    if (score <= 0) return "CLEAR";
+    if (score <= 2) return "WATCH";
+    if (score <= 5) return "ADVISORY";
+    return "WARNING";
+  }
+  function emptyKidsHealth() {
+    return { schemaVersion: SCHEMA_VERSION, family: [], profiles: {}, events: [] };
+  }
+  function sortKey(ev) {
+    return (ev.start || "") + " " + (ev.startTime || "00:00");
+  }
+  var byStartAsc = (a, b) => sortKey(a).localeCompare(sortKey(b));
+  var byStartDesc = (a, b) => sortKey(b).localeCompare(sortKey(a));
+  function activeIllness(events, personId) {
+    return (events || []).filter((e) => e.type === "enfermedad" && e.personId === personId && !e.end).sort(byStartDesc)[0] || null;
+  }
+  function childrenOf(events, parentId) {
+    return (events || []).filter((e) => e.parentId === parentId && e.type !== "enfermedad").sort(byStartAsc);
+  }
+  function recomputeIllness(events, illId) {
+    const logs = events.filter((e) => e.parentId === illId && e.type === "sintoma").sort(byStartAsc);
+    if (!logs.length) return events;
+    const last = logs[logs.length - 1];
+    return events.map((e) => e.id === illId ? { ...e, hazardLevel: last.hazardLevel || "CLEAR" } : e);
+  }
+  function upsertEvent(kh, ev) {
+    const events = kh.events || [];
+    const exists = events.some((e) => e.id === ev.id);
+    let next = exists ? events.map((e) => e.id === ev.id ? ev : e) : [...events, ev];
+    if (ev.type === "sintoma" && ev.parentId) next = recomputeIllness(next, ev.parentId);
+    return { ...kh, events: next };
+  }
+  function deleteEvent(kh, id) {
+    const events = kh.events || [];
+    const ev = events.find((e) => e.id === id);
+    if (!ev) return kh;
+    let next = events.filter((e) => e.id !== id && e.parentId !== id);
+    if (ev.parentId && ev.type === "sintoma") next = recomputeIllness(next, ev.parentId);
+    return { ...kh, events: next };
+  }
+  function closeIllness(kh, id, endDate) {
+    return { ...kh, events: (kh.events || []).map((e) => e.id === id ? { ...e, end: endDate } : e) };
+  }
+  function addSymptomEntry(kh, form, ids) {
+    const events = kh.events || [];
+    const temps = (form.temps || []).filter((t) => !isNaN(parseFloat(t.v))).map((t) => ({ t: t.t || null, v: parseFloat(t.v) }));
+    const hazard = calcHazard(form.sintomas, temps);
+    let ill = activeIllness(events, form.personId);
+    let created = false;
+    let next = [...events];
+    if (!ill) {
+      ill = {
+        id: ids.illness,
+        personId: form.personId,
+        type: "enfermedad",
+        start: form.date,
+        end: null,
+        title: "",
+        hazardLevel: hazard,
+        missedDays: 0
+      };
+      next = [...next, ill];
+      created = true;
+    } else if (form.date < ill.start) {
+      next = next.map((e) => e.id === ill.id ? { ...e, start: form.date } : e);
+      ill = { ...ill, start: form.date };
+    }
+    const log = {
+      id: ids.entry,
+      personId: form.personId,
+      type: "sintoma",
+      parentId: ill.id,
+      start: form.date,
+      startTime: form.time || null,
+      sintomas: form.sintomas || [],
+      temps,
+      hazardLevel: hazard,
+      note: form.note || ""
+    };
+    next = [...next, log];
+    next = recomputeIllness(next, ill.id);
+    return {
+      kh: { ...kh, events: next },
+      illnessId: ill.id,
+      doctorMarkDate: created && (hazard === "WARNING" || hazard === "CRITICAL") ? form.date : null
+    };
+  }
+  var norm = (m) => Array.isArray(m) ? m : m ? [m] : [];
+  function citaDates(ev, count) {
+    const n = ev.repeatMonths ? count || 4 : 1;
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(i === 0 ? ev.start : addMonthsKey(ev.start, (ev.repeatMonths || 0) * i));
+    return out;
+  }
+  function citaTasks(ev, personName) {
+    const [h, m] = (ev.startTime || "09:00").split(":").map(Number);
+    const text = `${ev.title || "cita"} ${personName || ""} \u2014 ${ev.medico || ""}`.replace(/\s+/g, " ").replace(/ — $/, "").trim();
+    const out = [];
+    citaDates(ev).forEach((dk, i) => {
+      out.push({ dk, task: { id: `${ev.id}_${i}`, text, fixed: true, done: false, deadline: { h, m }, healthEventId: ev.id } });
+      out.push({ dk: addDaysKey(dk, -1), task: { id: `${ev.id}_${i}p`, text: `preparar: ${text}`, fixed: false, done: false, deadline: { h: 21, m: 30 }, healthEventId: ev.id } });
+    });
+    return out;
+  }
+  function planCita({ events, dayData, marks, prevEv, nextEv, personName }) {
+    const patches = {};
+    const tasksOf = (dk) => patches[dk] || (dayData && dayData[dk] && dayData[dk].tasks || []);
+    if (prevEv) {
+      Object.keys(dayData || {}).forEach((dk) => {
+        const t = dayData[dk].tasks || [];
+        if (t.some((x) => x.healthEventId === prevEv.id)) patches[dk] = t.filter((x) => x.healthEventId !== prevEv.id);
+      });
+    }
+    let marksNext = { ...marks || {} };
+    let marksChanged = false;
+    let markedDates = [];
+    if (nextEv) {
+      citaTasks(nextEv, personName).forEach(({ dk, task }) => {
+        patches[dk] = [...tasksOf(dk), task];
+      });
+      citaDates(nextEv).forEach((dk) => {
+        const cur = norm(marksNext[dk]);
+        if (!cur.includes("doctor")) {
+          marksNext[dk] = [...cur, "doctor"];
+          marksChanged = true;
+          markedDates.push(dk);
+        } else if ((prevEv && prevEv.markedDates || []).includes(dk)) markedDates.push(dk);
+      });
+    }
+    if (prevEv) {
+      const keep = new Set(markedDates);
+      (prevEv.markedDates || []).forEach((dk) => {
+        if (keep.has(dk)) return;
+        const usedByOther = (events || []).some((e) => e.type === "cita" && e.id !== prevEv.id && citaDates(e).includes(dk));
+        if (usedByOther) return;
+        const cur = norm(marksNext[dk]).filter((x) => x !== "doctor");
+        if (cur.length) marksNext[dk] = cur;
+        else delete marksNext[dk];
+        marksChanged = true;
+      });
+    }
+    return { ev: nextEv ? { ...nextEv, markedDates } : null, dayPatches: patches, marks: marksChanged ? marksNext : null };
+  }
+  function migrateKidsHealth(kh, today) {
+    if (kh && kh.schemaVersion >= SCHEMA_VERSION) return kh;
+    kh = kh || {};
+    today = today || localDateKey();
+    const events = [];
+    (kh.episodes || []).forEach((ep) => {
+      if (!ep || !ep.id || !ep.startDate) return;
+      const illId = "ep_" + ep.id;
+      events.push({
+        id: illId,
+        personId: ep.kidId,
+        type: "enfermedad",
+        start: ep.startDate,
+        end: ep.endDate || null,
+        title: "",
+        hazardLevel: ep.hazardLevel || "CLEAR",
+        missedDays: ep.missedDays || 0,
+        note: ep.notas || ""
+      });
+      const days = ep.days || [];
+      days.forEach((d) => {
+        const v = parseFloat(d.temperatura);
+        events.push({
+          id: `sx_${ep.id}_${d.date}`,
+          personId: ep.kidId,
+          type: "sintoma",
+          parentId: illId,
+          start: d.date,
+          startTime: null,
+          sintomas: d.sintomas || [],
+          temps: isNaN(v) ? [] : [{ t: null, v }],
+          hazardLevel: d.hazardLevel || calcHazard(d.sintomas),
+          note: d.nota || ""
+        });
+      });
+      if (!days.length && (ep.lastSintomas || []).length) {
+        events.push({
+          id: `sx_${ep.id}_${ep.startDate}`,
+          personId: ep.kidId,
+          type: "sintoma",
+          parentId: illId,
+          start: ep.startDate,
+          startTime: null,
+          sintomas: ep.lastSintomas,
+          temps: [],
+          hazardLevel: ep.hazardLevel || calcHazard(ep.lastSintomas),
+          note: ""
+        });
+      }
+    });
+    const profiles = {};
+    const legacyCitas = {};
+    Object.entries(kh.profiles || {}).forEach(([pid, p]) => {
+      const { citasRegulares, ...rest } = p || {};
+      profiles[pid] = rest;
+      if ((citasRegulares || []).length) {
+        legacyCitas[pid] = citasRegulares;
+        citasRegulares.forEach((c, i) => {
+          const freq = c.frecMeses || 6;
+          const created = new Date(parseInt(c.id, 10) || Date.now());
+          let dk = localDateKey(created);
+          let guard = 0;
+          while (dk < today && guard++ < 400) dk = addMonthsKey(dk, freq);
+          events.push({
+            id: `ct_${pid}_${c.id || i}`,
+            personId: pid,
+            type: "cita",
+            title: c.tipo || "cita",
+            medico: c.medico || "",
+            start: dk,
+            startTime: c.hora || "09:00",
+            repeatMonths: freq,
+            markedDates: [],
+            legacy: true
+          });
+        });
+      }
+    });
+    const hadLegacy = (kh.episodes || []).length || Object.keys(kh.dailyLog || {}).length || Object.keys(legacyCitas).length;
+    const out = { schemaVersion: SCHEMA_VERSION, family: kh.family || [], profiles, events };
+    if (hadLegacy) out.legacy = { episodes: kh.episodes || [], dailyLog: kh.dailyLog || {}, citasRegulares: legacyCitas, migratedAt: today };
+    return out;
+  }
+  function buildTimeline(events, { personId, today }) {
+    const evs = (events || []).filter((e) => !personId || e.personId === personId);
+    const ids = new Set(evs.filter((e) => e.type === "enfermedad").map((e) => e.id));
+    const upcoming = evs.filter((e) => e.type === "cita" && e.start >= today).sort(byStartAsc);
+    const items = [];
+    evs.forEach((e) => {
+      if (e.type === "enfermedad") items.push({ kind: "illness", ev: e, children: childrenOf(evs, e.id) });
+      else if (e.parentId && ids.has(e.parentId)) return;
+      else if (e.type === "cita" && e.start >= today) return;
+      else items.push({ kind: "event", ev: e });
+    });
+    items.sort((a, b) => byStartDesc(a.ev, b.ev));
+    return { upcoming, items };
+  }
+  function illnessLabel(kh, ill) {
+    if (ill.title) return ill.title;
+    const logs = childrenOf(kh.events || [], ill.id).filter((e) => e.type === "sintoma");
+    const ids = [...new Set(logs.flatMap((l) => l.sintomas || []))].filter((id) => !FEVER_IDS.includes(id));
+    if (ids.length) return ids.slice(0, 2).map(symptomLabel).join(", ");
+    return "enfermedad";
+  }
+  function eventLine(ev) {
+    const bits = { enfermedad: "enfermedad", sintoma: "s\xEDntomas", medicamento: "medicamento", tratamiento: "tratamiento", cita: "cita" };
+    return `${bits[ev.type] || ev.type}${ev.title ? " " + ev.title : ""} \xB7 ${ev.start || ""}`;
+  }
+  function eventMatches(ev, q) {
+    const hay = [
+      ev.title,
+      ev.note,
+      ev.medico,
+      ev.dosis,
+      ev.freq,
+      ev.hazardLevel,
+      ...(ev.sintomas || []).map(symptomLabel),
+      ...(ev.temps || []).map((t) => String(t.v))
+    ];
+    return hay.some((x) => x && String(x).toLowerCase().includes(q));
+  }
+  var shortDate = (dk) => dk.slice(8) + "/" + dk.slice(5, 7);
+  function buildSummary({ person, profile, events, from, to, today }) {
+    profile = profile || {};
+    const L = [];
+    const evs = (events || []).filter((e) => e.personId === person.id);
+    const edad = person.dob ? ` (${calcAge(person.dob)} a\xF1os)` : "";
+    L.push(`Resumen de salud \u2014 ${person.name}${edad}`);
+    L.push(`Per\xEDodo: ${from} a ${to}`);
+    const list = (k, t) => {
+      if ((profile[k] || []).length) L.push(`${t}: ${profile[k].join(", ")}`);
+    };
+    list("alergias", "Alergias");
+    list("condicionesCronicas", "Condiciones cr\xF3nicas");
+    list("medicacionHabitual", "Medicaci\xF3n habitual");
+    const gl = (profile.growthLog || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+    if (gl.length) {
+      const g = gl[gl.length - 1];
+      L.push(`\xDAltima medici\xF3n (${g.date}): ${[g.peso ? g.peso + " kg" : null, g.talla ? g.talla + " cm" : null].filter(Boolean).join(" \xB7 ")}`);
+    }
+    const ills = evs.filter((e) => e.type === "enfermedad" && e.start <= to && (e.end || today) >= from).sort(byStartAsc);
+    if (ills.length) L.push("", "EPISODIOS");
+    ills.forEach((ill) => {
+      const logs = childrenOf(evs, ill.id);
+      const sx = logs.filter((l) => l.type === "sintoma");
+      const dur = daysInclusive(ill.start, ill.end || today);
+      L.push(`\u2022 ${ill.start} \u2192 ${ill.end || "en curso"} (${dur} ${dur === 1 ? "d\xEDa" : "d\xEDas"}${ill.end ? "" : ", a\xFAn activo"})${ill.title ? " \u2014 " + ill.title : ""}`);
+      const readings = sx.flatMap((l) => (l.temps || []).map((t) => ({ v: t.v, dk: l.start, t: t.t || l.startTime })));
+      if (readings.length) {
+        const max = readings.reduce((a, b) => b.v > a.v ? b : a);
+        const feverDays = new Set(readings.filter((r) => r.v >= 38).map((r) => r.dk)).size;
+        L.push(`  Temperatura m\xE1xima: ${max.v} \xB0C (${max.dk}${max.t ? " " + max.t : ""}); d\xEDas con \u226538 \xB0C: ${feverDays}`);
+      }
+      const all = [...new Set(sx.flatMap((l) => l.sintomas || []))].filter((id) => !FEVER_IDS.includes(id)).map(symptomLabel);
+      if (all.length) L.push(`  S\xEDntomas: ${all.join(", ")}`);
+      if (sx.length) {
+        L.push("  Evoluci\xF3n:");
+        sx.forEach((l) => {
+          const parts = [];
+          const sl = (l.sintomas || []).filter((id) => !FEVER_IDS.includes(id)).map(symptomLabel);
+          if (sl.length) parts.push(sl.join(", "));
+          if ((l.temps || []).length) parts.push(l.temps.map((t) => t.v + " \xB0C" + (t.t ? " (" + t.t + ")" : "")).join(", "));
+          if (l.note) parts.push(l.note);
+          L.push(`  - ${shortDate(l.start)}${l.startTime ? " " + l.startTime : ""}: ${parts.join(" \xB7 ") || "sin detalle"}`);
+        });
+      }
+      const meds2 = logs.filter((l) => l.type === "medicamento" || l.type === "tratamiento");
+      if (meds2.length) {
+        L.push("  Medicaci\xF3n y tratamientos:");
+        meds2.forEach((m) => L.push(`  - ${m.title}${m.dosis ? " " + m.dosis : ""}${m.freq ? " (" + m.freq + ")" : ""}: ${shortDate(m.start)}${m.startTime ? " " + m.startTime : ""}${m.end ? " \u2192 " + shortDate(m.end) : ""}${m.note ? " \xB7 " + m.note : ""}`));
+      }
+      if (ill.missedDays) L.push(`  D\xEDas sin colegio: ${ill.missedDays}`);
+      if (ill.note) L.push(`  Nota: ${ill.note}`);
+    });
+    const ids = new Set(ills.map((i) => i.id));
+    const loose = evs.filter((e) => e.type !== "enfermedad" && e.type !== "sintoma" && !(e.parentId && ids.has(e.parentId)) && e.start >= from && e.start <= to).sort(byStartAsc);
+    const meds = loose.filter((e) => e.type === "medicamento" || e.type === "tratamiento");
+    const citas = loose.filter((e) => e.type === "cita");
+    if (meds.length) {
+      L.push("", "MEDICACI\xD3N Y TRATAMIENTOS (fuera de episodios)");
+      meds.forEach((m) => L.push(`- ${m.title}${m.dosis ? " " + m.dosis : ""}${m.freq ? " (" + m.freq + ")" : ""}: ${m.start}${m.end ? " \u2192 " + m.end : ""}${m.note ? " \xB7 " + m.note : ""}`));
+    }
+    if (citas.length) {
+      L.push("", "CITAS");
+      citas.forEach((c) => L.push(`- ${c.start}${c.startTime ? " " + c.startTime : ""} \xB7 ${c.title}${c.medico ? " \u2014 " + c.medico : ""}`));
+    }
+    if (!ills.length && !loose.length) L.push("", "Sin registros en el per\xEDodo.");
+    return L.join("\n");
   }
 
   // core/ui.jsx
@@ -503,7 +970,7 @@ var __angst = (() => {
       const sdDate = /* @__PURE__ */ new Date(selectedDay + "T12:00:00");
       const DOW_ES2 = ["dom", "lun", "mar", "mi\xE9", "jue", "vie", "s\xE1b"];
       const MONTHS2 = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-      const activeKidEps = (kidsHealth?.episodes || []).filter((e) => !e.endDate && e.startDate <= selectedDay && e.kidId !== "cristopher");
+      const activeKidEps = (kidsHealth?.events || []).filter((e) => e.type === "enfermedad" && !e.end && e.start <= selectedDay && e.personId !== "cristopher");
       return /* @__PURE__ */ React.createElement("div", { style: { margin: "10px 16px 0", background: "#1a1a1a", borderRadius: 12, padding: "14px 16px", color: "#fff" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: "#fff" } }, DOW_ES2[sdDate.getDay()], " ", d, " ", MONTHS2[m - 1]), /* @__PURE__ */ React.createElement(
         "button",
         {
@@ -516,7 +983,7 @@ var __angst = (() => {
           style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 6, padding: "4px 10px", color: "rgba(255,255,255,0.6)", cursor: "pointer", letterSpacing: 1 }
         },
         "ir al d\xEDa \u2192"
-      )), sdMarks.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 } }, sdMarks.map((mk) => /* @__PURE__ */ React.createElement("div", { key: mk, style: { display: "flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.1)", borderRadius: 6, padding: "3px 8px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, display: "flex", alignItems: "center" } }, MARK_ICONS_CAL[mk] || "\u{1F4CC}"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.55)" } }, mk)))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 5, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${sdLoad / 10 * 100}%`, background: sdLoad <= 2 ? "rgba(255,255,255,0.3)" : sdLoad <= 5 ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.9)", borderRadius: 99 } })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 14, color: "rgba(255,255,255,0.5)", minWidth: 36 } }, "carga ", sdLoad)), sdTasks.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, fixedTasks > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.45)", background: "rgba(255,255,255,0.06)", borderRadius: 5, padding: "2px 7px" } }, fixedTasks, " fija", fixedTasks !== 1 ? "s" : ""), doneTasks > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.45)", background: "rgba(255,255,255,0.06)", borderRadius: 5, padding: "2px 7px" } }, "\u2713 ", doneTasks, " hecha", doneTasks !== 1 ? "s" : ""), pendTasks > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,100,100,0.7)", background: "rgba(255,100,100,0.08)", borderRadius: 5, padding: "2px 7px" } }, "\u23F3 ", pendTasks, " pendiente", pendTasks !== 1 ? "s" : ""))), activeKidEps.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, activeKidEps.map((ep) => /* @__PURE__ */ React.createElement("span", { key: ep.id, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,150,150,0.8)", background: "rgba(255,100,100,0.1)", borderRadius: 5, padding: "2px 7px" } }, "\u{1F912} ", ep.kidId, " \xB7 ", ep.label))), sd.summary && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 14, color: "rgba(255,255,255,0.4)", marginTop: 8, lineHeight: 1.5, fontStyle: "italic" } }, '"', sd.summary, '"'));
+      )), sdMarks.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 } }, sdMarks.map((mk) => /* @__PURE__ */ React.createElement("div", { key: mk, style: { display: "flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.1)", borderRadius: 6, padding: "3px 8px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, display: "flex", alignItems: "center" } }, MARK_ICONS_CAL[mk] || "\u{1F4CC}"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.55)" } }, mk)))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 5, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${sdLoad / 10 * 100}%`, background: sdLoad <= 2 ? "rgba(255,255,255,0.3)" : sdLoad <= 5 ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.9)", borderRadius: 99 } })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 14, color: "rgba(255,255,255,0.5)", minWidth: 36 } }, "carga ", sdLoad)), sdTasks.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, fixedTasks > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.45)", background: "rgba(255,255,255,0.06)", borderRadius: 5, padding: "2px 7px" } }, fixedTasks, " fija", fixedTasks !== 1 ? "s" : ""), doneTasks > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.45)", background: "rgba(255,255,255,0.06)", borderRadius: 5, padding: "2px 7px" } }, "\u2713 ", doneTasks, " hecha", doneTasks !== 1 ? "s" : ""), pendTasks > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,100,100,0.7)", background: "rgba(255,100,100,0.08)", borderRadius: 5, padding: "2px 7px" } }, "\u23F3 ", pendTasks, " pendiente", pendTasks !== 1 ? "s" : ""))), activeKidEps.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, activeKidEps.map((ep) => /* @__PURE__ */ React.createElement("span", { key: ep.id, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,150,150,0.8)", background: "rgba(255,100,100,0.1)", borderRadius: 5, padding: "2px 7px" } }, "\u{1F912} ", ((kidsHealth?.family || []).find((f2) => f2.id === ep.personId) || {}).name || ep.personId, " \xB7 ", illnessLabel(kidsHealth, ep)))), sd.summary && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 14, color: "rgba(255,255,255,0.4)", marginTop: 8, lineHeight: 1.5, fontStyle: "italic" } }, '"', sd.summary, '"'));
     })()));
   }
   function EF({ value, placeholder, multiline, onSave, dark, small }) {
@@ -870,57 +1337,56 @@ var __angst = (() => {
   function SearchModal({ dayData, nutria, kidsHealth, routines, onClose }) {
     const [q, setQ] = React.useState("");
     const [cat, setCat] = React.useState("all");
-    const MONTHS_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    const MONTHS_ES2 = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
     const fmtKey = (dk) => {
       const [, m, d] = dk.split("-").map(Number);
-      return `${d} ${MONTHS_ES[m - 1]}`;
+      return `${d} ${MONTHS_ES2[m - 1]}`;
     };
-    const DOW_ES = ["dom", "lun", "mar", "mi\xE9", "jue", "vie", "s\xE1b"];
+    const DOW_ES2 = ["dom", "lun", "mar", "mi\xE9", "jue", "vie", "s\xE1b"];
     const results = React.useMemo(() => {
       if (!q.trim()) return [];
-      const norm = q.toLowerCase().trim();
+      const norm2 = q.toLowerCase().trim();
       const hits = [];
       Object.keys(dayData).sort().reverse().forEach((dk) => {
         const day = dayData[dk];
         if (cat === "all" || cat === "tareas") {
           (day.tasks || []).forEach((t) => {
-            if ((t.text || "").toLowerCase().includes(norm))
+            if ((t.text || "").toLowerCase().includes(norm2))
               hits.push({ dk, type: "tarea", task: t });
           });
         }
         if (cat === "all" || cat === "cierres") {
-          if ((day.summary || "").toLowerCase().includes(norm))
+          if ((day.summary || "").toLowerCase().includes(norm2))
             hits.push({ dk, type: "cierre", text: day.summary });
         }
         if (cat === "all" || cat === "comida") {
-          if ((day.menu || "").toLowerCase().includes(norm))
+          if ((day.menu || "").toLowerCase().includes(norm2))
             hits.push({ dk, type: "comida", text: day.menu });
-          if ((day.abasto || "").toLowerCase().includes(norm))
+          if ((day.abasto || "").toLowerCase().includes(norm2))
             hits.push({ dk, type: "abasto", text: day.abasto });
         }
         if (cat === "all" || cat === "compras") {
           (day.compras || []).forEach((c) => {
-            if ((c.name || c.text || "").toLowerCase().includes(norm))
+            if ((c.name || c.text || "").toLowerCase().includes(norm2))
               hits.push({ dk, type: "compra", item: c });
           });
         }
       });
       if (cat === "all" || cat === "salud") {
         const familyNames = Object.fromEntries((kidsHealth?.family || []).map((f2) => [f2.id, f2.name]));
-        (kidsHealth?.episodes || []).forEach((ep) => {
-          const hayMatch = (ep.hazardLevel || "").toLowerCase().includes(norm) || (ep.notas || "").toLowerCase().includes(norm) || (ep.lastSintomas || []).some((sid) => sid.toLowerCase().includes(norm)) || (ep.days || []).some((d) => (d.nota || "").toLowerCase().includes(norm) || (d.temperatura || "").includes(norm));
-          if (hayMatch) hits.push({ type: "salud", persona: familyNames[ep.kidId] || ep.kidId, ep });
+        (kidsHealth?.events || []).forEach((ev) => {
+          if (eventMatches(ev, norm2)) hits.push({ type: "salud", persona: familyNames[ev.personId] || ev.personId, ev });
         });
       }
       if (cat === "all" || cat === "rutinas") {
         (routines || []).forEach((r) => {
-          const hayMatch = (r.name || "").toLowerCase().includes(norm) || (r.steps || []).some((s) => (s.name || "").toLowerCase().includes(norm));
+          const hayMatch = (r.name || "").toLowerCase().includes(norm2) || (r.steps || []).some((s) => (s.name || "").toLowerCase().includes(norm2));
           if (hayMatch) hits.push({ type: "rutina", rutina: r });
         });
       }
       if (cat === "all" || cat === "ventas") {
         (nutria?.ventas || []).forEach((v) => {
-          const hayMatch = (v.producto || "").toLowerCase().includes(norm) || (v.nombre_tapa || "").toLowerCase().includes(norm) || (v.diseno || "").toLowerCase().includes(norm) || (v.tipo_agenda || "").toLowerCase().includes(norm);
+          const hayMatch = (v.producto || "").toLowerCase().includes(norm2) || (v.nombre_tapa || "").toLowerCase().includes(norm2) || (v.diseno || "").toLowerCase().includes(norm2) || (v.tipo_agenda || "").toLowerCase().includes(norm2);
           if (hayMatch) hits.push({ type: "venta", venta: v });
         });
       }
@@ -981,26 +1447,26 @@ var __angst = (() => {
       let meta = null;
       if (hit.dk) {
         const d = /* @__PURE__ */ new Date(hit.dk + "T12:00:00");
-        meta = /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 13, color: "#aaa", minWidth: 64, paddingTop: 2, flexShrink: 0 } }, DOW_ES[d.getDay()], " ", fmtKey(hit.dk));
+        meta = /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 13, color: "#aaa", minWidth: 64, paddingTop: 2, flexShrink: 0 } }, DOW_ES2[d.getDay()], " ", fmtKey(hit.dk));
       }
       if (hit.task) mainText = hit.task.text || "";
       else if (hit.text) mainText = hit.text;
       else if (hit.item) mainText = hit.item.name || hit.item.text || "";
-      else if (hit.type === "salud") mainText = `${hit.persona} \u2014 ${hit.ep.hazardLevel || "episodio"} \xB7 ${hit.ep.startDate || ""}`;
+      else if (hit.type === "salud") mainText = `${hit.persona} \u2014 ${eventLine(hit.ev)}`;
       else if (hit.type === "rutina") mainText = hit.rutina.name || "";
       else if (hit.type === "venta") mainText = `${hit.venta.producto || ""}${hit.venta.nombre_tapa ? " / " + hit.venta.nombre_tapa : ""}`;
       return /* @__PURE__ */ React.createElement("div", { key: i, style: { padding: "10px 16px", borderBottom: "1px solid #f8f8f8", display: "flex", gap: 10, alignItems: "flex-start" } }, meta || /* @__PURE__ */ React.createElement("div", { style: { minWidth: 64 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, alignItems: "center", marginBottom: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#fff", background: color, borderRadius: 4, padding: "1px 5px", letterSpacing: 0.5, textTransform: "uppercase", flexShrink: 0 } }, label), hit.type === "tarea" && hit.task?.done && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#aaa", background: "#f0f0f0", borderRadius: 4, padding: "1px 5px" } }, "hecha"), hit.type === "tarea" && hit.task?.notDone && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#e55", background: "#fff0f0", borderRadius: 4, padding: "1px 5px" } }, "no hecha"), hit.type === "tarea" && hit.task?.carried && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#f90", background: "#fff8f0", borderRadius: 4, padding: "1px 5px" } }, "arrastrada"), hit.type === "venta" && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#555", background: "#f0f0f0", borderRadius: 4, padding: "1px 5px" } }, hit.venta.emprendimiento)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: hit.task?.done ? "#bbb" : "#111", textDecoration: hit.task?.done ? "line-through" : "none", lineHeight: 1.4, wordBreak: "break-word" } }, mainText), hit.type === "venta" && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#888", marginTop: 2 } }, hit.venta.tamano && `${hit.venta.tamano} \xB7 `, hit.venta.precio ? `$${hit.venta.precio.toLocaleString("es-CL")}` : ""), hit.type === "rutina" && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#aaa", marginTop: 2 } }, (hit.rutina.steps || []).length, " pasos")));
     }), !q.trim() && /* @__PURE__ */ React.createElement("div", { style: { padding: "32px", textAlign: "center", fontFamily: "'Caveat',cursive", fontSize: 17, color: "#ddd" } }, "escribe para buscar")), /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 16px", borderTop: "1px solid #f0f0f0", textAlign: "right" } }, /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, background: "transparent", border: "1px dashed #ddd", borderRadius: 6, padding: "6px 16px", cursor: "pointer", color: "#999", letterSpacing: 1 } }, "cerrar"))));
   }
   function ScheduleModal({ dateKey, day, isWork, isColegio, onSave, onClose, onNavigate }) {
-    const MONTHS_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-    const DOW_ES = ["dom", "lun", "mar", "mi\xE9", "jue", "vie", "s\xE1b"];
+    const MONTHS_ES2 = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    const DOW_ES2 = ["dom", "lun", "mar", "mi\xE9", "jue", "vie", "s\xE1b"];
     const fmtDate = (dk) => {
       const [, m, d] = dk.split("-").map(Number);
       const dt = /* @__PURE__ */ new Date(dk + "T12:00:00");
-      return `${DOW_ES[dt.getDay()]} ${d} ${MONTHS_ES[m - 1]}`;
+      return `${DOW_ES2[dt.getDay()]} ${d} ${MONTHS_ES2[m - 1]}`;
     };
-    const addDaysKey = (dk, n) => {
+    const addDaysKey2 = (dk, n) => {
       const d = /* @__PURE__ */ new Date(dk + "T12:00:00");
       d.setDate(d.getDate() + n);
       return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
@@ -1096,7 +1562,7 @@ var __angst = (() => {
           onClick: (e) => e.stopPropagation(),
           style: { width: "100%", background: "#fff", borderRadius: "16px 16px 0 0", maxHeight: "92vh", display: "flex", flexDirection: "column", boxShadow: "0 -8px 40px rgba(0,0,0,0.3)" }
         },
-        /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 20px 10px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onNavigate(addDaysKey(dateKey, -1)), style: { background: "transparent", border: "none", color: "#bbb", fontSize: 20, cursor: "pointer", lineHeight: 1, padding: "0 4px" } }, "\u2039"), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#111" } }, fmtDate(dateKey)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 2, flexWrap: "wrap" } }, isWork && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#5c7a99", background: "#e3eaf0", borderRadius: 4, padding: "1px 6px" } }, "\u{1F4BC} embajada"), isColegio && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#7b4fd4", background: "#ede7f6", borderRadius: 4, padding: "1px 6px" } }, "\u{1F392} colegio"))), /* @__PURE__ */ React.createElement("button", { onClick: () => onNavigate(addDaysKey(dateKey, 1)), style: { background: "transparent", border: "none", color: "#bbb", fontSize: 20, cursor: "pointer", lineHeight: 1, padding: "0 4px" } }, "\u203A")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center" } }, /* @__PURE__ */ React.createElement(
+        /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 20px 10px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onNavigate(addDaysKey2(dateKey, -1)), style: { background: "transparent", border: "none", color: "#bbb", fontSize: 20, cursor: "pointer", lineHeight: 1, padding: "0 4px" } }, "\u2039"), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#111" } }, fmtDate(dateKey)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, marginTop: 2, flexWrap: "wrap" } }, isWork && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#5c7a99", background: "#e3eaf0", borderRadius: 4, padding: "1px 6px" } }, "\u{1F4BC} embajada"), isColegio && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#7b4fd4", background: "#ede7f6", borderRadius: 4, padding: "1px 6px" } }, "\u{1F392} colegio"))), /* @__PURE__ */ React.createElement("button", { onClick: () => onNavigate(addDaysKey2(dateKey, 1)), style: { background: "transparent", border: "none", color: "#bbb", fontSize: 20, cursor: "pointer", lineHeight: 1, padding: "0 4px" } }, "\u203A")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center" } }, /* @__PURE__ */ React.createElement(
           "button",
           {
             onClick: () => setAddingBlock((a) => !a),
@@ -2047,8 +2513,8 @@ var __angst = (() => {
       const carta = inv.find((c) => c.id === fichaId);
       if (carta) refreshPrecio2(carta);
     }, [view, fichaId]);
-    const norm = (d) => (d || "").replace(/\//g, "-");
-    const darkSetsScope = allSets.filter((s) => norm(s.releaseDate) >= "2025-09-26" || MEGA_PROMO_SETS.some((p) => p.id === s.id));
+    const norm2 = (d) => (d || "").replace(/\//g, "-");
+    const darkSetsScope = allSets.filter((s) => norm2(s.releaseDate) >= "2025-09-26" || MEGA_PROMO_SETS.some((p) => p.id === s.id));
     React.useEffect(() => {
       if (!allSets.length) return;
       const idsSetsValidos = new Set(darkSetsScope.map((s) => s.id));
@@ -3929,107 +4395,7 @@ var __angst = (() => {
   }
   var PokecriptoPage_default = PokecriptoPage;
 
-  // modules/salud/SaludPage.jsx
-  function calcAge(dob) {
-    const b = /* @__PURE__ */ new Date(dob + "T12:00:00"), t = /* @__PURE__ */ new Date();
-    let a = t.getFullYear() - b.getFullYear();
-    if (t.getMonth() < b.getMonth() || t.getMonth() === b.getMonth() && t.getDate() < b.getDate()) a--;
-    return a;
-  }
-  var SYMPTOM_ZONES = [
-    { id: "temp", label: "Temperatura", symptoms: [
-      { id: "temp_sub38", label: "Fiebre leve <38\xB0", peso: 1, flag: null },
-      { id: "temp_38_39", label: "Fiebre 38\u201339\xB0", peso: 2, flag: null },
-      { id: "temp_39_40", label: "Fiebre 39\u201340\xB0", peso: 3, flag: null },
-      { id: "temp_sobre40", label: "Fiebre >40\xB0", peso: 0, flag: "WARNING" },
-      { id: "escalofrios", label: "Escalofr\xEDos", peso: 1, flag: null }
-    ] },
-    { id: "resp", label: "Respiratorio", symptoms: [
-      { id: "tos_seca", label: "Tos seca", peso: 1, flag: null },
-      { id: "tos_flema", label: "Tos con flema", peso: 3, flag: null },
-      { id: "congestion", label: "Congesti\xF3n nasal", peso: 1, flag: null },
-      { id: "goteo", label: "Goteo nasal", peso: 1, flag: null },
-      { id: "dif_resp_leve", label: "Dificultad respiratoria leve", peso: 2, flag: null },
-      { id: "dif_resp_grave", label: "Dificultad respiratoria grave", peso: 0, flag: "CRITICAL" },
-      { id: "sibilancias", label: "Sibilancias/silbidos", peso: 2, flag: null }
-    ] },
-    { id: "garganta", label: "Garganta y boca", symptoms: [
-      { id: "garg_leve", label: "Dolor de garganta leve", peso: 1, flag: null },
-      { id: "garg_intensa", label: "Dolor de garganta intenso", peso: 2, flag: null },
-      { id: "ronquera", label: "Ronquera", peso: 1, flag: null },
-      { id: "dif_tragar", label: "Dificultad para tragar", peso: 2, flag: null },
-      { id: "aftas", label: "Aftas / llagas", peso: 1, flag: null }
-    ] },
-    { id: "digest", label: "Digestivo", symptoms: [
-      { id: "nauseas", label: "N\xE1useas", peso: 1, flag: null },
-      { id: "vomito", label: "V\xF3mito aislado", peso: 2, flag: null },
-      { id: "vomito_rep", label: "V\xF3mito repetido (3+)", peso: 3, flag: null },
-      { id: "diarrea", label: "Diarrea", peso: 2, flag: null },
-      { id: "diarrea_sangre", label: "Diarrea con sangre", peso: 3, flag: null },
-      { id: "dolor_abd_leve", label: "Dolor abdominal leve", peso: 1, flag: null },
-      { id: "dolor_abd_intenso", label: "Dolor abdominal intenso", peso: 3, flag: null },
-      { id: "inapetencia", label: "Inapetencia", peso: 1, flag: null }
-    ] },
-    { id: "oido_ojos", label: "O\xEDdo y ojos", symptoms: [
-      { id: "dolor_oido", label: "Dolor de o\xEDdo", peso: 2, flag: null },
-      { id: "sec_oido", label: "Secreci\xF3n de o\xEDdo", peso: 2, flag: null },
-      { id: "ojo_rojo", label: "Ojo rojo", peso: 1, flag: null },
-      { id: "conjuntivitis", label: "Conjuntivitis", peso: 2, flag: null }
-    ] },
-    { id: "piel", label: "Piel", symptoms: [
-      { id: "erupcion", label: "Erupci\xF3n", peso: 1, flag: null },
-      { id: "erupcion_fiebre", label: "Erupci\xF3n + fiebre", peso: 0, flag: "WARNING" },
-      { id: "urticaria", label: "Urticaria", peso: 1, flag: null },
-      { id: "manchas", label: "Manchas", peso: 1, flag: null },
-      { id: "palidez", label: "Palidez marcada", peso: 2, flag: null }
-    ] },
-    { id: "general", label: "General", symptoms: [
-      { id: "cansancio", label: "Cansancio", peso: 1, flag: null },
-      { id: "irritabilidad", label: "Irritabilidad marcada", peso: 1, flag: null },
-      { id: "decaimiento", label: "Decaimiento general", peso: 2, flag: null },
-      { id: "sangrado_anormal", label: "Sangrado anormal", peso: 0, flag: "WARNING" }
-    ] },
-    { id: "dolor", label: "Dolor", symptoms: [
-      { id: "dolor_muscular", label: "Dolor muscular", peso: 1, flag: null },
-      { id: "dolor_articular", label: "Dolor articular", peso: 2, flag: null },
-      { id: "dolor_espalda", label: "Dolor de espalda", peso: 1, flag: null },
-      { id: "dolor_cabeza", label: "Dolor de cabeza", peso: 2, flag: null },
-      { id: "dolor_orinar", label: "Dolor al orinar", peso: 2, flag: null }
-    ] },
-    { id: "neuro_grave", label: "Neurol\xF3gico grave", symptoms: [
-      { id: "convulsion", label: "Convulsi\xF3n", peso: 0, flag: "CRITICAL" },
-      { id: "rigidez_nuca", label: "Rigidez de nuca", peso: 0, flag: "CRITICAL" },
-      { id: "perdida_conc", label: "P\xE9rdida de consciencia", peso: 0, flag: "CRITICAL" },
-      { id: "dif_despertar", label: "Dificultad para despertar", peso: 0, flag: "CRITICAL" }
-    ] }
-  ];
-  function calcHazard(sintomas) {
-    if (!sintomas || !sintomas.length) return "CLEAR";
-    let score = 0;
-    for (const sId of sintomas) {
-      for (const zone of SYMPTOM_ZONES) {
-        const s = zone.symptoms.find((x) => x.id === sId);
-        if (!s) continue;
-        if (s.flag === "CRITICAL") return "CRITICAL";
-        if (s.flag === "WARNING") {
-          score = Math.max(score, 6);
-          continue;
-        }
-        score += s.peso;
-      }
-    }
-    if (score <= 0) return "CLEAR";
-    if (score <= 2) return "WATCH";
-    if (score <= 5) return "ADVISORY";
-    return "WARNING";
-  }
-  var HAZARD_CONFIG = {
-    CLEAR: { color: "#2a2a2a", bg: "#1a1a1a", text: "#fff", label: "Clear", emoji: "\u{1F7E2}", pulse: false },
-    WATCH: { color: "#b8860b", bg: "#2a2200", text: "#ffd700", label: "Watch", emoji: "\u{1F7E1}", pulse: false },
-    ADVISORY: { color: "#c05000", bg: "#2a1400", text: "#ff8c00", label: "Advisory", emoji: "\u{1F7E0}", pulse: false },
-    WARNING: { color: "#c0392b", bg: "#2a0800", text: "#ff4444", label: "Warning", emoji: "\u{1F534}", pulse: true },
-    CRITICAL: { color: "#7b0000", bg: "#1a0000", text: "#ff0000", label: "Critical", emoji: "\u26AB", pulse: true }
-  };
+  // modules/salud/GrowthView.jsx
   var WHO_HEIGHT = {
     f: {
       24: { p3: 79.3, p15: 81.5, p50: 84.6, p85: 87.7, p97: 90 },
@@ -4058,532 +4424,472 @@ var __angst = (() => {
       144: { p3: 141.6, p15: 146.4, p50: 153, p85: 159.9, p97: 165.7 }
     }
   };
-  function SaludPage({ kidsHealth, saveKidsHealth, dayData, updateDay, calMarks, saveCalMarks }) {
-    const family = kidsHealth.family || [];
-    const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-    const [dateKey, setDateKey] = React.useState(today);
-    const [view, setView] = React.useState("home");
-    const [selPersonId, setSelPersonId] = React.useState(null);
-    const [slideOpen, setSlideOpen] = React.useState(null);
-    const [slideMode, setSlideMode] = React.useState("update");
-    const [sintomas, setSintomas] = React.useState([]);
-    const [nota, setNota] = React.useState("");
-    const [temperatura, setTemperatura] = React.useState("");
-    const [editPerfilId, setEditPerfilId] = React.useState(null);
-    const [perfilDraft, setPerfilDraft] = React.useState({});
-    const [newCita, setNewCita] = React.useState({ tipo: "", frecMeses: 6, medico: "", hora: "09:00" });
-    const [newMemberDraft, setNewMemberDraft] = React.useState({ name: "", dob: "", icon: "\u{1F642}", sex: "m" });
-    function addFamilyMember() {
-      const d = newMemberDraft;
-      if (!d.name.trim() || !d.dob) return;
-      const id = d.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "") || "p" + Date.now();
-      const member = { id, name: d.name.trim(), dob: d.dob, icon: d.icon || "\u{1F642}", sex: d.sex || "m" };
-      saveKidsHealth({ ...kidsHealth, family: [...family, member] });
-      setNewMemberDraft({ name: "", dob: "", icon: "\u{1F642}", sex: "m" });
-    }
-    function removeFamilyMember(id) {
-      saveKidsHealth({ ...kidsHealth, family: family.filter((f2) => f2.id !== id) });
-    }
-    const [addingCita, setAddingCita] = React.useState(false);
+  function GrowthView({ persona, perfil, today, onBack, onSave }) {
     const [growthInput, setGrowthInput] = React.useState({ peso: "", talla: "", date: today });
     const [addingGrowth, setAddingGrowth] = React.useState(false);
-    if (family.length === 0) {
-      return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 480, margin: "0 auto" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#555", marginBottom: 4 } }, "Familia"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#999", marginBottom: 16 } }, "Todav\xEDa no hay nadie cargado. Agreg\xE1 cada persona una vez \u2014 queda guardado en tus datos, no en el c\xF3digo."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 } }, /* @__PURE__ */ React.createElement(
-        "input",
-        {
-          value: newMemberDraft.name,
-          onChange: (e) => setNewMemberDraft({ ...newMemberDraft, name: e.target.value }),
-          placeholder: "Nombre",
-          style: { border: "1px solid #ddd", borderRadius: 8, padding: "10px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 14 }
-        }
-      ), /* @__PURE__ */ React.createElement(
-        "input",
-        {
-          type: "date",
-          value: newMemberDraft.dob,
-          onChange: (e) => setNewMemberDraft({ ...newMemberDraft, dob: e.target.value }),
-          style: { border: "1px solid #ddd", borderRadius: 8, padding: "10px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 14 }
-        }
-      ), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement(
-        "input",
-        {
-          value: newMemberDraft.icon,
-          onChange: (e) => setNewMemberDraft({ ...newMemberDraft, icon: e.target.value }),
-          placeholder: "\xCDcono",
-          style: { width: 70, border: "1px solid #ddd", borderRadius: 8, padding: "10px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 14, textAlign: "center" }
-        }
-      ), /* @__PURE__ */ React.createElement(
-        "select",
-        {
-          value: newMemberDraft.sex,
-          onChange: (e) => setNewMemberDraft({ ...newMemberDraft, sex: e.target.value }),
-          style: { flex: 1, border: "1px solid #ddd", borderRadius: 8, padding: "10px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 14 }
-        },
-        /* @__PURE__ */ React.createElement("option", { value: "m" }, "m"),
-        /* @__PURE__ */ React.createElement("option", { value: "f" }, "f")
-      )), /* @__PURE__ */ React.createElement("button", { onClick: addFamilyMember, style: { background: "#aac756", border: "none", borderRadius: 8, padding: "10px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 700, color: "#111" } }, "Agregar")));
-    }
-    const episodes = kidsHealth.episodes || [];
-    const dailyLog = kidsHealth.dailyLog || {};
-    const profiles = kidsHealth.profiles || {};
-    function saveAll(updates) {
-      saveKidsHealth({ ...kidsHealth, ...updates });
-    }
-    function getProfile(personId) {
-      return profiles[personId] || { condicionesCronicas: [], alergias: [], medicacionHabitual: [], vacunas: [], citasRegulares: [], growthLog: [] };
-    }
-    function saveProfile(personId, data) {
-      saveAll({ profiles: { ...profiles, [personId]: data } });
-    }
-    function getActiveEpisode(personId) {
-      return episodes.filter((e) => e.kidId === personId && !e.endDate).sort((a, b) => b.startDate.localeCompare(a.startDate))[0] || null;
-    }
-    function getDayLog(personId, dk) {
-      return (dailyLog[dk] || {})[personId] || null;
-    }
-    function hazardForPerson(personId) {
-      const ep = getActiveEpisode(personId);
-      if (!ep) {
-        const dl2 = getDayLog(personId, dateKey);
-        if (!dl2) return null;
-        if (dl2.sinNovedad) return "CLEAR";
-        return calcHazard(dl2.sintomas || []);
-      }
-      const dl = getDayLog(personId, dateKey);
-      const sints = dl?.sintomas || ep.lastSintomas || [];
-      return calcHazard(sints);
-    }
-    function openSlide(personId) {
-      const ep = getActiveEpisode(personId);
-      const dl = getDayLog(personId, dateKey);
-      setSintomas(dl?.sintomas || ep?.lastSintomas || []);
-      setNota(dl?.nota || "");
-      setTemperatura(dl?.temperatura || "");
-      setSlideMode(ep ? "update" : "nuevo");
-      setSlideOpen(personId);
-    }
-    function tapClear(personId) {
-      const ep = getActiveEpisode(personId);
-      if (ep) {
-        openSlide(personId);
-        return;
-      }
-      const dl = getDayLog(personId, dateKey);
-      if (dl) {
-        openSlide(personId);
-        return;
-      }
-      const newLog = { ...dailyLog[dateKey] || {}, [personId]: { sinNovedad: true, sintomas: [], hazardLevel: "CLEAR", nota: "", temperatura: "" } };
-      saveAll({ dailyLog: { ...dailyLog, [dateKey]: newLog } });
-    }
-    function saveSlide() {
-      const personId = slideOpen;
-      const hazard = calcHazard(sintomas);
-      const logEntry = { sinNovedad: sintomas.length === 0 && !nota && !temperatura, sintomas, hazardLevel: hazard, nota, temperatura };
-      const newDayLog = { ...dailyLog[dateKey] || {}, [personId]: logEntry };
-      const ep = getActiveEpisode(personId);
-      let newEpisodes = [...episodes];
-      if (sintomas.length > 0 && !ep) {
-        const epNuevo = {
-          id: Date.now().toString(),
-          kidId: personId,
-          startDate: dateKey,
-          endDate: null,
-          lastSintomas: sintomas,
-          hazardLevel: hazard,
-          notas: "",
-          missedDays: 0,
-          days: [{ date: dateKey, sintomas, hazardLevel: hazard, nota, temperatura }]
-        };
-        newEpisodes = [epNuevo, ...episodes];
-        if (hazard === "WARNING" || hazard === "CRITICAL") {
-          addDoctorMark(dateKey);
-        }
-      } else if (ep) {
-        const newDay = { date: dateKey, sintomas, hazardLevel: hazard, nota, temperatura };
-        const days = ep.days || [];
-        const existIdx = days.findIndex((d) => d.date === dateKey);
-        const newDays = existIdx >= 0 ? days.map((d, i) => i === existIdx ? newDay : d) : [...days, newDay].sort((a, b) => a.date.localeCompare(b.date));
-        newEpisodes = episodes.map((e) => e.id === ep.id ? { ...e, lastSintomas: sintomas, hazardLevel: hazard, days: newDays } : e);
-      }
-      saveAll({ dailyLog: { ...dailyLog, [dateKey]: newDayLog }, episodes: newEpisodes });
-      setSlideOpen(null);
-      setSintomas([]);
-      setNota("");
-      setTemperatura("");
-    }
-    function addDoctorMark(dk) {
-      if (!saveCalMarks) return;
-      const cur = Array.isArray(calMarks?.[dk]) ? calMarks[dk] : calMarks?.[dk] ? [calMarks[dk]] : [];
-      if (!cur.includes("doctor")) {
-        saveCalMarks({ ...calMarks, [dk]: [...cur, "doctor"] });
-      }
-    }
-    function proyectarCita(personId, cita) {
-      if (!updateDay || !cita.hora) return;
-      const [h, m] = cita.hora.split(":").map(Number);
-      const persona = family.find((f2) => f2.id === personId);
-      const texto = `${cita.tipo} ${persona?.name || ""} \u2014 ${cita.medico || ""}`.trim();
-      const hoy = /* @__PURE__ */ new Date();
-      let fechaBase = new Date(hoy);
-      for (let i = 0; i < 4; i++) {
-        const fechaStr = fechaBase.getFullYear() + "-" + String(fechaBase.getMonth() + 1).padStart(2, "0") + "-" + String(fechaBase.getDate()).padStart(2, "0");
-        const id = Date.now().toString() + Math.random().toString(36).slice(2);
-        setDayDataWithCita(fechaStr, { id, text: texto, fixed: true, done: false, deadline: { h, m } });
-        const prevDate = new Date(fechaBase);
-        prevDate.setDate(prevDate.getDate() - 1);
-        const prevStr = prevDate.getFullYear() + "-" + String(prevDate.getMonth() + 1).padStart(2, "0") + "-" + String(prevDate.getDate()).padStart(2, "0");
-        const prepId = Date.now().toString() + Math.random().toString(36).slice(2) + "p";
-        setDayDataWithCita(prevStr, { id: prepId, text: `preparar: ${texto}`, fixed: false, done: false, deadline: { h: 21, m: 30 } });
-        addDoctorMark(fechaStr);
-        fechaBase.setMonth(fechaBase.getMonth() + (cita.frecMeses || 6));
-      }
-    }
-    function setDayDataWithCita(dk, task) {
-      if (!updateDay) return;
-      updateDay(dk, { tasks: [...dayData?.[dk]?.tasks || [], task] });
-    }
-    function saveCita(personId) {
-      if (!newCita.tipo.trim()) return;
-      const perfil = getProfile(personId);
-      const citaConId = { ...newCita, id: Date.now().toString() };
-      const newPerfil = { ...perfil, citasRegulares: [...perfil.citasRegulares || [], citaConId] };
-      saveProfile(personId, newPerfil);
-      proyectarCita(personId, citaConId);
-      setNewCita({ tipo: "", frecMeses: 6, medico: "", hora: "09:00" });
-      setAddingCita(false);
-    }
-    function saveGrowth(personId) {
+    function submit() {
       if (!growthInput.talla && !growthInput.peso) return;
-      const perfil = getProfile(personId);
-      const entry = { date: growthInput.date || today, peso: parseFloat(growthInput.peso) || null, talla: parseFloat(growthInput.talla) || null };
-      const newLog = [...(perfil.growthLog || []).filter((g) => g.date !== entry.date), entry].sort((a, b) => a.date.localeCompare(b.date));
-      saveProfile(personId, { ...perfil, growthLog: newLog });
-      if (updateDay) {
-        const nextYear = /* @__PURE__ */ new Date(entry.date + "T12:00:00");
-        nextYear.setFullYear(nextYear.getFullYear() + 1);
-        const nextStr = nextYear.getFullYear() + "-" + String(nextYear.getMonth() + 1).padStart(2, "0") + "-" + String(nextYear.getDate()).padStart(2, "0");
-        const persona = family.find((f2) => f2.id === personId);
-        const rid = Date.now().toString() + Math.random().toString(36).slice(2);
-        updateDay(nextStr, { tasks: [...dayData?.[nextStr]?.tasks || [], { id: rid, text: `medir a ${persona?.name || personId}`, fixed: false, done: false }] });
-        addDoctorMark(nextStr);
-      }
+      onSave({ date: growthInput.date || today, peso: parseFloat(growthInput.peso) || null, talla: parseFloat(growthInput.talla) || null });
       setGrowthInput({ peso: "", talla: "", date: today });
       setAddingGrowth(false);
     }
-    const shiftDate = (n) => {
-      const d = /* @__PURE__ */ new Date(dateKey + "T12:00:00");
-      d.setDate(d.getDate() + n);
-      setDateKey(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"));
+    const growthLog = [...perfil.growthLog || []].sort((a, b) => a.date.localeCompare(b.date));
+    const isCristopher = persona.id === "cristopher";
+    const W = 290, H2 = 120, padL = 28, padR = 8, padT = 8, padB = 20;
+    const hasData = growthLog.filter((g) => g.talla).length >= 2;
+    let svgChart = null;
+    if (hasData && !isCristopher) {
+      let ageMos = function(dk) {
+        return Math.round((/* @__PURE__ */ new Date(dk + "T12:00:00") - dobMs) / (30.44 * 24 * 3600 * 1e3));
+      };
+      const tallaPoints = growthLog.filter((g) => g.talla);
+      const dobMs = (/* @__PURE__ */ new Date(persona.dob + "T12:00:00")).getTime();
+      const ages = tallaPoints.map((g) => ageMos(g.date));
+      const tallas = tallaPoints.map((g) => g.talla);
+      const minAge = Math.min(...ages), maxAge = Math.max(...ages, minAge + 12);
+      const minT = Math.min(...tallas) * 0.95, maxT = Math.max(...tallas) * 1.05;
+      const tRng = maxT - minT || 1, aRng = maxAge - minAge || 12;
+      const px = (a) => padL + (a - minAge) / aRng * (W - padL - padR);
+      const py = (t) => padT + H2 - padB - (t - minT) / tRng * (H2 - padT - padB);
+      const sex = persona.sex || "m";
+      const whoKeys = [24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144].filter((k) => k >= minAge - 6 && k <= maxAge + 6);
+      const pLines = ["p3", "p15", "p50", "p85", "p97"];
+      const pColors = { p3: "rgba(100,180,255,0.4)", p15: "rgba(100,180,255,0.5)", p50: "rgba(100,180,255,0.8)", p85: "rgba(100,180,255,0.5)", p97: "rgba(100,180,255,0.4)" };
+      const pPath = (pKey) => {
+        const pts = whoKeys.map((k) => WHO_HEIGHT[sex][k]?.[pKey]).filter(Boolean);
+        if (pts.length < 2) return "";
+        return whoKeys.filter((k) => WHO_HEIGHT[sex][k]?.[pKey]).map((k, i) => `${i === 0 ? "M" : "L"}${px(k).toFixed(1)},${py(WHO_HEIGHT[sex][k][pKey]).toFixed(1)}`).join(" ");
+      };
+      const dataPath = tallaPoints.map((g, i) => `${i === 0 ? "M" : "L"}${px(ageMos(g.date)).toFixed(1)},${py(g.talla).toFixed(1)}`).join(" ");
+      svgChart = /* @__PURE__ */ React.createElement("svg", { width: W, height: H2 + padB, style: { display: "block", overflow: "visible" } }, pLines.map((p) => {
+        const path = pPath(p);
+        return path ? /* @__PURE__ */ React.createElement("path", { key: p, d: path, fill: "none", stroke: pColors[p], strokeWidth: "1", strokeDasharray: "3,2" }) : null;
+      }), /* @__PURE__ */ React.createElement("path", { d: dataPath, fill: "none", stroke: "#2e7d52", strokeWidth: "2", strokeLinejoin: "round", strokeLinecap: "round" }), tallaPoints.map((g, i) => /* @__PURE__ */ React.createElement("circle", { key: i, cx: px(ageMos(g.date)), cy: py(g.talla), r: 3, fill: "#2e7d52" })), ["P3", "P50", "P97"].map((p, i) => {
+        const pk = p.toLowerCase();
+        const lastK = whoKeys[whoKeys.length - 1];
+        if (!WHO_HEIGHT[sex]?.[lastK]?.[pk]) return null;
+        return /* @__PURE__ */ React.createElement("text", { key: p, x: W - padR + 2, y: py(WHO_HEIGHT[sex][lastK][pk]), fontSize: "7", fill: pColors[pk], fontFamily: "DM Sans,sans-serif" }, p);
+      }), /* @__PURE__ */ React.createElement("text", { x: padL, y: H2 + padB - 2, fontSize: "8", fill: "#bbb", fontFamily: "DM Sans,sans-serif" }, Math.round(minAge), "m"), /* @__PURE__ */ React.createElement("text", { x: W - padR, y: H2 + padB - 2, textAnchor: "end", fontSize: "8", fill: "#bbb", fontFamily: "DM Sans,sans-serif" }, Math.round(maxAge), "m"));
+    }
+    return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 480, margin: "0 auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onBack(), style: { background: "transparent", border: "none", fontSize: 20, color: "#bbb", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22 } }, persona?.icon), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#111" } }, persona?.name, " \xB7 curva de crecimiento")), growthLog.length > 0 && (() => {
+      const last = growthLog[growthLog.length - 1];
+      return /* @__PURE__ */ React.createElement("div", { style: { background: "#111", borderRadius: 12, padding: "14px 16px", marginBottom: 16, display: "flex", gap: 20 } }, last.talla && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 28, fontWeight: 700, color: "#fff", lineHeight: 1 } }, last.talla, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: "rgba(255,255,255,0.4)" } }, "cm")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, "talla")), last.peso && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 28, fontWeight: 700, color: "#fff", lineHeight: 1 } }, last.peso, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: "rgba(255,255,255,0.4)" } }, "kg")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, "peso")), /* @__PURE__ */ React.createElement("div", { style: { marginLeft: "auto", textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)" } }, last.date)));
+    })(), svgChart && /* @__PURE__ */ React.createElement("div", { style: { background: "#fafafa", border: "1px solid #eee", borderRadius: 12, padding: "12px 14px", marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "talla / edad \xB7 curvas OMS"), svgChart), !isCristopher && (addingGrowth ? /* @__PURE__ */ React.createElement("div", { style: { background: "#fafafa", border: "1px dashed #ddd", borderRadius: 12, padding: "14px", marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "Talla (cm)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.1", value: growthInput.talla, onChange: (e) => setGrowthInput((g) => ({ ...g, talla: e.target.value })), autoFocus: true, style: { width: "100%", border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontSize: 16, fontFamily: "'Caveat',cursive", outline: "none", boxSizing: "border-box", color: "#111" } })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "Peso (kg)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.1", value: growthInput.peso, onChange: (e) => setGrowthInput((g) => ({ ...g, peso: e.target.value })), style: { width: "100%", border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontSize: 16, fontFamily: "'Caveat',cursive", outline: "none", boxSizing: "border-box", color: "#111" } }))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "Fecha"), /* @__PURE__ */ React.createElement("input", { type: "date", value: growthInput.date, onChange: (e) => setGrowthInput((g) => ({ ...g, date: e.target.value })), style: { border: "1px dashed #ddd", borderRadius: 8, padding: "7px 10px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none", color: "#111" } })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => submit(), style: { flex: 1, background: "#111", border: "none", borderRadius: 8, padding: "9px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", cursor: "pointer", fontWeight: 600 } }, "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => setAddingGrowth(false), style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "9px 14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#999" } }, "cancelar"))) : /* @__PURE__ */ React.createElement("button", { onClick: () => setAddingGrowth(true), style: { width: "100%", background: "#111", border: "none", borderRadius: 10, padding: "12px", fontFamily: "'Caveat',cursive", fontSize: 17, color: "#fff", cursor: "pointer", marginBottom: 14 } }, "+ registrar medici\xF3n")), growthLog.length > 0 && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "historial"), [...growthLog].reverse().map((g, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#aaa", minWidth: 60 } }, g.date), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", gap: 10 } }, g.talla && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: "#111" } }, g.talla, "cm"), g.peso && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: "#555" } }, g.peso, "kg"))))), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
+  }
+  var GrowthView_default = GrowthView;
+
+  // modules/salud/SaludPage.jsx
+  var F_HAND = "'Caveat',cursive";
+  var F_SANS = "'DM Sans',sans-serif";
+  var MONTHS_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  var DOW_ES = ["dom", "lun", "mar", "mi\xE9", "jue", "vie", "s\xE1b"];
+  var HAZARD_CONFIG = {
+    CLEAR: { color: "#2a2a2a", bg: "#1a1a1a", text: "#fff", label: "Clear", emoji: "\u{1F7E2}", pulse: false },
+    WATCH: { color: "#b8860b", bg: "#2a2200", text: "#ffd700", label: "Watch", emoji: "\u{1F7E1}", pulse: false },
+    ADVISORY: { color: "#c05000", bg: "#2a1400", text: "#ff8c00", label: "Advisory", emoji: "\u{1F7E0}", pulse: false },
+    WARNING: { color: "#c0392b", bg: "#2a0800", text: "#ff4444", label: "Warning", emoji: "\u{1F534}", pulse: true },
+    CRITICAL: { color: "#7b0000", bg: "#1a0000", text: "#ff0000", label: "Critical", emoji: "\u26AB", pulse: true }
+  };
+  var TYPE_META = {
+    enfermedad: { icon: "\u{1F912}", label: "Enfermedad" },
+    sintoma: { icon: "\u{1FA7A}", label: "S\xEDntomas / fiebre" },
+    medicamento: { icon: "\u{1F48A}", label: "Medicamento" },
+    tratamiento: { icon: "\u{1F9F4}", label: "Tratamiento" },
+    cita: { icon: "\u{1F5D3}\uFE0F", label: "Cita m\xE9dica" }
+  };
+  var ADD_TYPES = ["sintoma", "medicamento", "tratamiento", "cita"];
+  var REPEAT_OPTS = [{ v: 0, l: "no repite" }, { v: 1, l: "mensual" }, { v: 3, l: "c/3 meses" }, { v: 6, l: "semestral" }, { v: 12, l: "anual" }, { v: 24, l: "c/2 a\xF1os" }];
+  var PAGE = { padding: "16px", maxWidth: 480, margin: "0 auto" };
+  var INP = { border: "1px dashed #ddd", borderRadius: 8, padding: "8px 10px", fontSize: 14, fontFamily: F_SANS, outline: "none", background: "#fafafa", color: "#111", width: "100%", boxSizing: "border-box" };
+  var INP_DARK = { background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 8, padding: "10px 12px", fontFamily: F_SANS, fontSize: 14, color: "#fff", outline: "none", width: "100%", boxSizing: "border-box", colorScheme: "dark" };
+  var LABEL_DARK = { fontFamily: F_SANS, fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 };
+  var nid = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  function fmtDay(dk) {
+    const d = /* @__PURE__ */ new Date(dk + "T12:00:00");
+    return `${DOW_ES[d.getDay()]} ${d.getDate()} ${MONTHS_ES[d.getMonth()]}`;
+  }
+  function nameOf(family, id) {
+    return (family.find((f2) => f2.id === id) || {}).name || id;
+  }
+  function iconOf(family, id) {
+    return (family.find((f2) => f2.id === id) || {}).icon || "\u{1F642}";
+  }
+  function symptomsText(ids, n) {
+    const l = (ids || []).filter((id) => !FEVER_IDS.includes(id)).map(symptomLabel);
+    return l.length > n ? l.slice(0, n).join(", ") + ` +${l.length - n}` : l.join(", ");
+  }
+  function maxTemp(temps) {
+    const v = (temps || []).map((t) => parseFloat(t.v)).filter((x) => !isNaN(x));
+    return v.length ? Math.max(...v) : null;
+  }
+  function SpanBar({ start, end, spanStart, spanEnd, dark }) {
+    const total = Math.max(1, daysInclusive(spanStart, spanEnd));
+    const left = Math.max(0, Math.min(100, (daysInclusive(spanStart, start) - 1) / total * 100));
+    const width = Math.max(4, Math.min(100 - left, daysInclusive(start, end) / total * 100));
+    return /* @__PURE__ */ React.createElement("div", { style: { height: 4, borderRadius: 2, background: dark ? "rgba(255,255,255,0.08)" : "#eee", position: "relative", marginTop: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: left + "%", width: width + "%", top: 0, bottom: 0, borderRadius: 2, background: "#4a90d9" } }));
+  }
+  function ChildRow({ ev, ill, today, onOpen }) {
+    const meta = TYPE_META[ev.type] || { icon: "\u2022" };
+    let text = "";
+    if (ev.type === "sintoma") {
+      const parts = [];
+      const s = symptomsText(ev.sintomas, 3);
+      if (s) parts.push(s);
+      const mt = maxTemp(ev.temps);
+      if (mt !== null) parts.push(mt + " \xB0C");
+      if (ev.note) parts.push(ev.note);
+      text = parts.join(" \xB7 ") || "registro";
+    } else {
+      text = `${ev.title}${ev.dosis ? " \xB7 " + ev.dosis : ""}${ev.freq ? " \xB7 " + ev.freq : ""}`;
+    }
+    const hot = ev.type === "sintoma" && maxTemp(ev.temps) >= 38;
+    const spanEnd = ill.end || (ev.end && ev.end > today ? ev.end : today);
+    return /* @__PURE__ */ React.createElement("div", { onClick: () => onOpen(ev), style: { padding: "6px 0", borderTop: "1px solid rgba(255,255,255,0.05)", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 10, color: "rgba(255,255,255,0.35)", minWidth: 58 } }, ev.start.slice(5), ev.startTime ? " " + ev.startTime : ""), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11 } }, meta.icon), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 11, color: hot ? "#ff6b6b" : "rgba(255,255,255,0.65)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, text)), ev.end && /* @__PURE__ */ React.createElement(SpanBar, { start: ev.start, end: ev.end, spanStart: ill.start, spanEnd, dark: true }));
+  }
+  function IllnessCard({ kh, family, item, today, showPerson, onOpen, onClose, onDelete, onMissed }) {
+    const [all, setAll] = React.useState(false);
+    const ill = item.ev;
+    const cfg = HAZARD_CONFIG[ill.hazardLevel || "CLEAR"] || HAZARD_CONFIG.CLEAR;
+    const dur = daysInclusive(ill.start, ill.end || today);
+    const kids = [...item.children].reverse();
+    const shown = all ? kids : kids.slice(0, 5);
+    return /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 12, padding: "14px 16px", marginBottom: 12, border: `1px solid ${cfg.color}55` } }, /* @__PURE__ */ React.createElement("div", { onClick: () => onOpen(ill), style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, cfg.emoji), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 17, fontWeight: 700, color: cfg.text, lineHeight: 1.1 } }, showPerson && /* @__PURE__ */ React.createElement("span", { style: { marginRight: 6 } }, iconOf(family, ill.personId), " ", nameOf(family, ill.personId), " \xB7"), illnessLabel(kh, ill)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 } }, ill.start, ill.end ? ` \u2192 ${ill.end} \xB7 ${dur}d` : ` \xB7 activo \xB7 d\xEDa ${dur}`)), !ill.end && /* @__PURE__ */ React.createElement("button", { onClick: (e) => {
+      e.stopPropagation();
+      onClose(ill.id);
+    }, style: { fontFamily: F_SANS, fontSize: 10, background: "#e53935", border: "none", borderRadius: 6, padding: "4px 10px", color: "#fff", cursor: "pointer" } }, "cerrar")), ill.personId !== "cristopher" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, margin: "6px 0" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 10, color: "rgba(255,255,255,0.35)" } }, "d\xEDas sin colegio"), /* @__PURE__ */ React.createElement("button", { onClick: () => onMissed(ill.id, -1), style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 5, width: 24, height: 24, color: "#fff", cursor: "pointer", fontSize: 13 } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_HAND, fontSize: 18, fontWeight: 700, color: "#fff", minWidth: 20, textAlign: "center" } }, ill.missedDays || 0), /* @__PURE__ */ React.createElement("button", { onClick: () => onMissed(ill.id, 1), style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 5, width: 24, height: 24, color: "#fff", cursor: "pointer", fontSize: 13 } }, "+")), shown.map((ev) => /* @__PURE__ */ React.createElement(ChildRow, { key: ev.id, ev, ill, today, onOpen })), kids.length > 5 && /* @__PURE__ */ React.createElement("button", { onClick: () => setAll((a) => !a), style: { marginTop: 6, background: "transparent", border: "none", fontFamily: F_SANS, fontSize: 10, color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: 0 } }, all ? "ver menos" : `ver todo (${kids.length})`), kids.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, color: "rgba(255,255,255,0.3)" } }, "sin registros"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", marginTop: 8 } }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        onClick: () => {
+          if (window.confirm("\xBFEliminar este episodio y todos sus registros?")) onDelete(ill);
+        },
+        style: { background: "transparent", border: "1px dashed rgba(255,255,255,0.1)", borderRadius: 6, padding: "4px 10px", fontFamily: F_SANS, fontSize: 10, color: "rgba(255,255,255,0.3)", cursor: "pointer" }
+      },
+      "eliminar"
+    )));
+  }
+  function LooseRow({ ev, family, showPerson, onOpen }) {
+    const meta = TYPE_META[ev.type] || { icon: "\u2022", label: ev.type };
+    return /* @__PURE__ */ React.createElement("div", { onClick: () => onOpen(ev), style: { border: "1px dashed #e0e0e0", borderRadius: 10, padding: "10px 12px", marginBottom: 8, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, meta.icon), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 13, fontWeight: 600, color: "#222" } }, showPerson && /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 400, color: "#888" } }, nameOf(family, ev.personId), " \xB7 "), ev.title || meta.label, ev.dosis ? ` \xB7 ${ev.dosis}` : ""), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, color: "#aaa", marginTop: 2 } }, ev.start, ev.startTime ? " " + ev.startTime : "", ev.end ? ` \u2192 ${ev.end}` : "", ev.medico ? ` \xB7 ${ev.medico}` : "", ev.freq ? ` \xB7 ${ev.freq}` : ""))), ev.end && /* @__PURE__ */ React.createElement(SpanBar, { start: ev.start, end: ev.end, spanStart: ev.start, spanEnd: ev.end }));
+  }
+  function UpcomingRow({ ev, family, showPerson, onOpen }) {
+    return /* @__PURE__ */ React.createElement("div", { onClick: () => onOpen(ev), style: { background: "#f4f8ec", border: "1px solid #dfe9c6", borderRadius: 10, padding: "10px 12px", marginBottom: 8, cursor: "pointer", display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", minWidth: 48 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 17, fontWeight: 700, color: "#111", lineHeight: 1 } }, fmtDay(ev.start)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, color: "#789" } }, ev.startTime || "")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 13, fontWeight: 600, color: "#222" } }, ev.title), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, color: "#888" } }, showPerson ? nameOf(family, ev.personId) : "", ev.medico ? `${showPerson ? " \xB7 " : ""}${ev.medico}` : "", ev.repeatMonths ? ` \xB7 cada ${ev.repeatMonths} m` : "")), /* @__PURE__ */ React.createElement("span", { style: { color: "#999", fontSize: 13 } }, "\u203A"));
+  }
+  function initForm(init, today) {
+    const now = localTimeKey();
+    const ev = init.ev;
+    const base = { date: today, time: now, sintomas: [], temps: [{ t: now, v: "" }], note: "", title: "", dosis: "", freq: "", start: today, startTime: now, end: "", medico: "", repeatMonths: 0, missedDays: 0 };
+    if (!ev) return base;
+    if (ev.type === "sintoma") return { ...base, date: ev.start, time: ev.startTime || "", sintomas: ev.sintomas || [], temps: (ev.temps || []).map((t) => ({ t: t.t || "", v: String(t.v) })), note: ev.note || "" };
+    if (ev.type === "enfermedad") return { ...base, title: ev.title || "", start: ev.start, end: ev.end || "", note: ev.note || "", missedDays: ev.missedDays || 0 };
+    if (ev.type === "cita") return { ...base, title: ev.title || "", medico: ev.medico || "", start: ev.start, startTime: ev.startTime || "09:00", repeatMonths: ev.repeatMonths || 0 };
+    return { ...base, title: ev.title || "", dosis: ev.dosis || "", freq: ev.freq || "", start: ev.start, startTime: ev.startTime || "", end: ev.end || "", note: ev.note || "" };
+  }
+  function Field({ label, children }) {
+    return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: LABEL_DARK }, label), children);
+  }
+  function EntrySheet({ init, family, kh, today, onSave, onDelete, onClose }) {
+    const editing = init.ev || null;
+    const [type, setType] = React.useState(editing ? editing.type : init.type || null);
+    const [personId, setPersonId] = React.useState(editing ? editing.personId : init.personId || null);
+    const [f2, setF] = React.useState(() => initForm(init, today));
+    const [openZone, setOpenZone] = React.useState(null);
+    const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
+    const chooseType = (t) => {
+      setType(t);
+      if (t === "cita") set("startTime", "09:00");
     };
-    const MONTHS_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-    const DOW_ES = ["dom", "lun", "mar", "mi\xE9", "jue", "vie", "s\xE1b"];
-    const dObj = /* @__PURE__ */ new Date(dateKey + "T12:00:00");
-    const dateLabel = dateKey === today ? "hoy" : `${DOW_ES[dObj.getDay()]} ${dObj.getDate()} ${MONTHS_ES[dObj.getMonth()]}`;
-    const hazardActual = calcHazard(sintomas);
-    const hCfg = HAZARD_CONFIG[hazardActual] || HAZARD_CONFIG.CLEAR;
-    if (view === "perfil" && selPersonId) {
-      let addToList = function(key) {
-        if (!newItem.trim()) return;
-        setDraft((d) => ({ ...d, [key]: [...d[key] || [], newItem.trim()] }));
-        setNewItem("");
-        setAddingItem(null);
-      }, removeFromList = function(key, idx) {
-        setDraft((d) => ({ ...d, [key]: (d[key] || []).filter((_, i) => i !== idx) }));
-      }, guardarPerfil = function() {
-        saveProfile(selPersonId, draft);
-        setView("home");
-      }, deleteCita = function(idx) {
-        setDraft((d) => ({ ...d, citasRegulares: (d.citasRegulares || []).filter((_, i) => i !== idx) }));
-      };
-      const persona = family.find((f2) => f2.id === selPersonId);
-      const perfil = getProfile(selPersonId);
-      const [draft, setDraft] = React.useState({ ...perfil });
-      const [addingItem, setAddingItem] = React.useState(null);
-      const [newItem, setNewItem] = React.useState("");
-      const FREQ_OPTS = [{ v: 1, l: "mensual" }, { v: 3, l: "c/3 meses" }, { v: 6, l: "semestral" }, { v: 12, l: "anual" }, { v: 24, l: "c/2 a\xF1os" }];
-      const inpS = { border: "1px dashed #ddd", borderRadius: 8, padding: "8px 10px", fontSize: 14, fontFamily: "'DM Sans',sans-serif", outline: "none", background: "#fafafa", color: "#111", width: "100%", boxSizing: "border-box" };
-      return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 480, margin: "0 auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => {
-        guardarPerfil();
-      }, style: { background: "transparent", border: "none", fontSize: 20, color: "#bbb", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22 } }, persona?.icon), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#111" } }, persona?.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#aaa" } }, "perfil cr\xF3nico \xB7 ", calcAge(persona?.dob), " a\xF1os")), /* @__PURE__ */ React.createElement("button", { onClick: () => {
-        setView("crecimiento");
-      }, style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#888" } }, "\u{1F4CF} crecer")), [
-        { key: "condicionesCronicas", label: "Condiciones cr\xF3nicas", icon: "\u267E\uFE0F", placeholder: "ej: asma, TDAH, alergia al man\xED" },
-        { key: "alergias", label: "Alergias / contraindicaciones", icon: "\u26A0\uFE0F", placeholder: "ej: amoxicilina, ibuprofeno" },
-        { key: "medicacionHabitual", label: "Medicaci\xF3n habitual", icon: "\u{1F48A}", placeholder: "ej: salbutamol seg\xFAn necesidad" },
-        { key: "vacunas", label: "Vacunas", icon: "\u{1F489}", placeholder: "ej: triple viral, hepatitis A" }
-      ].map(({ key, label, icon, placeholder }) => /* @__PURE__ */ React.createElement("div", { key, style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, fontWeight: 700, color: "#111", marginBottom: 8 } }, icon, " ", label), (draft[key] || []).map((item, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 5, height: 5, borderRadius: "50%", background: "#111", flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333" } }, item), /* @__PURE__ */ React.createElement("button", { onClick: () => removeFromList(key, i), style: { background: "transparent", border: "none", color: "#ddd", fontSize: 16, cursor: "pointer", lineHeight: 1 } }, "\xD7"))), addingItem === key ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 6 } }, /* @__PURE__ */ React.createElement(
-        "input",
-        {
-          autoFocus: true,
-          value: newItem,
-          onChange: (e) => setNewItem(e.target.value),
-          onKeyDown: (e) => {
-            if (e.key === "Enter") addToList(key);
-            if (e.key === "Escape") setAddingItem(null);
-          },
-          placeholder,
-          style: inpS
-        }
-      ), /* @__PURE__ */ React.createElement("button", { onClick: () => addToList(key), style: { background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontFamily: "'DM Sans',sans-serif" } }, "+"), /* @__PURE__ */ React.createElement("button", { onClick: () => setAddingItem(null), style: { background: "transparent", border: "none", color: "#bbb", cursor: "pointer", fontSize: 18, lineHeight: 1 } }, "\xD7")) : /* @__PURE__ */ React.createElement("button", { onClick: () => {
-        setAddingItem(key);
-        setNewItem("");
-      }, style: { marginTop: 6, background: "transparent", border: "1px dashed #e0e0e0", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#aaa" } }, "+ agregar"))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, fontWeight: 700, color: "#111", marginBottom: 8 } }, "\u{1F5D3}\uFE0F Citas regulares"), (draft.citasRegulares || []).map((c, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#333", fontWeight: 600 } }, c.tipo), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa" } }, c.medico, " \xB7 cada ", c.frecMeses, " meses \xB7 ", c.hora)), /* @__PURE__ */ React.createElement("button", { onClick: () => deleteCita(i), style: { background: "transparent", border: "none", color: "#ddd", fontSize: 16, cursor: "pointer", lineHeight: 1 } }, "\xD7"))), addingCita ? /* @__PURE__ */ React.createElement("div", { style: { background: "#fafafa", border: "1px dashed #ddd", borderRadius: 10, padding: "12px", marginTop: 8, display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { value: newCita.tipo, onChange: (e) => setNewCita((c) => ({ ...c, tipo: e.target.value })), placeholder: "tipo de cita (ej: control pedi\xE1trico)", style: inpS }), /* @__PURE__ */ React.createElement("input", { value: newCita.medico, onChange: (e) => setNewCita((c) => ({ ...c, medico: e.target.value })), placeholder: "m\xE9dico / especialista", style: inpS }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "Frecuencia"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, flexWrap: "wrap" } }, FREQ_OPTS.map(({ v, l }) => /* @__PURE__ */ React.createElement(
-        "button",
-        {
-          key: v,
-          onClick: () => setNewCita((c) => ({ ...c, frecMeses: v })),
-          style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, padding: "4px 10px", borderRadius: 8, border: "1px dashed #ddd", background: newCita.frecMeses === v ? "#111" : "transparent", color: newCita.frecMeses === v ? "#fff" : "#555", cursor: "pointer" }
-        },
-        l
-      )))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "Hora"), /* @__PURE__ */ React.createElement(
-        "input",
-        {
-          type: "time",
-          value: newCita.hora,
-          onChange: (e) => setNewCita((c) => ({ ...c, hora: e.target.value })),
-          style: { border: "1px dashed #ddd", borderRadius: 8, padding: "6px 8px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none", color: "#111" }
-        }
-      ))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement(
-        "button",
-        {
-          onClick: () => saveCita(selPersonId),
-          disabled: !newCita.tipo.trim(),
-          style: { flex: 1, background: newCita.tipo.trim() ? "#111" : "#eee", color: newCita.tipo.trim() ? "#fff" : "#bbb", border: "none", borderRadius: 8, padding: "9px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 600 }
-        },
-        "guardar y proyectar en agenda"
-      ), /* @__PURE__ */ React.createElement("button", { onClick: () => setAddingCita(false), style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "9px 14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#999" } }, "cancelar"))) : /* @__PURE__ */ React.createElement("button", { onClick: () => setAddingCita(true), style: { marginTop: 6, background: "transparent", border: "1px dashed #e0e0e0", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#aaa" } }, "+ agregar cita")), /* @__PURE__ */ React.createElement("button", { onClick: guardarPerfil, style: { width: "100%", background: "#111", border: "none", borderRadius: 10, padding: "12px", fontFamily: "'Caveat',cursive", fontSize: 17, color: "#fff", cursor: "pointer" } }, "guardar perfil"), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
-    }
-    if (view === "crecimiento" && selPersonId) {
-      const persona = family.find((f2) => f2.id === selPersonId);
-      const perfil = getProfile(selPersonId);
-      const growthLog = (perfil.growthLog || []).sort((a, b) => a.date.localeCompare(b.date));
-      const isCristopher = selPersonId === "cristopher";
-      const W = 290, H2 = 120, padL = 28, padR = 8, padT = 8, padB = 20;
-      const hasData = growthLog.filter((g) => g.talla).length >= 2;
-      let svgChart = null;
-      if (hasData && !isCristopher) {
-        let ageMos = function(dk) {
-          return Math.round((/* @__PURE__ */ new Date(dk + "T12:00:00") - dobMs) / (30.44 * 24 * 3600 * 1e3));
-        };
-        const tallaPoints = growthLog.filter((g) => g.talla);
-        const dobMs = (/* @__PURE__ */ new Date(persona.dob + "T12:00:00")).getTime();
-        const ages = tallaPoints.map((g) => ageMos(g.date));
-        const tallas = tallaPoints.map((g) => g.talla);
-        const minAge = Math.min(...ages), maxAge = Math.max(...ages, minAge + 12);
-        const minT = Math.min(...tallas) * 0.95, maxT = Math.max(...tallas) * 1.05;
-        const tRng = maxT - minT || 1, aRng = maxAge - minAge || 12;
-        const px = (a) => padL + (a - minAge) / aRng * (W - padL - padR);
-        const py = (t) => padT + H2 - padB - (t - minT) / tRng * (H2 - padT - padB);
-        const sex = persona.sex || "m";
-        const whoKeys = [24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144].filter((k) => k >= minAge - 6 && k <= maxAge + 6);
-        const pLines = ["p3", "p15", "p50", "p85", "p97"];
-        const pColors = { p3: "rgba(100,180,255,0.4)", p15: "rgba(100,180,255,0.5)", p50: "rgba(100,180,255,0.8)", p85: "rgba(100,180,255,0.5)", p97: "rgba(100,180,255,0.4)" };
-        const pPath = (pKey) => {
-          const pts = whoKeys.map((k) => WHO_HEIGHT[sex][k]?.[pKey]).filter(Boolean);
-          if (pts.length < 2) return "";
-          return whoKeys.filter((k) => WHO_HEIGHT[sex][k]?.[pKey]).map((k, i) => `${i === 0 ? "M" : "L"}${px(k).toFixed(1)},${py(WHO_HEIGHT[sex][k][pKey]).toFixed(1)}`).join(" ");
-        };
-        const dataPath = tallaPoints.map((g, i) => `${i === 0 ? "M" : "L"}${px(ageMos(g.date)).toFixed(1)},${py(g.talla).toFixed(1)}`).join(" ");
-        svgChart = /* @__PURE__ */ React.createElement("svg", { width: W, height: H2 + padB, style: { display: "block", overflow: "visible" } }, pLines.map((p) => {
-          const path = pPath(p);
-          return path ? /* @__PURE__ */ React.createElement("path", { key: p, d: path, fill: "none", stroke: pColors[p], strokeWidth: "1", strokeDasharray: "3,2" }) : null;
-        }), /* @__PURE__ */ React.createElement("path", { d: dataPath, fill: "none", stroke: "#2e7d52", strokeWidth: "2", strokeLinejoin: "round", strokeLinecap: "round" }), tallaPoints.map((g, i) => /* @__PURE__ */ React.createElement("circle", { key: i, cx: px(ageMos(g.date)), cy: py(g.talla), r: 3, fill: "#2e7d52" })), ["P3", "P50", "P97"].map((p, i) => {
-          const pk = p.toLowerCase();
-          const lastK = whoKeys[whoKeys.length - 1];
-          if (!WHO_HEIGHT[sex]?.[lastK]?.[pk]) return null;
-          return /* @__PURE__ */ React.createElement("text", { key: p, x: W - padR + 2, y: py(WHO_HEIGHT[sex][lastK][pk]), fontSize: "7", fill: pColors[pk], fontFamily: "DM Sans,sans-serif" }, p);
-        }), /* @__PURE__ */ React.createElement("text", { x: padL, y: H2 + padB - 2, fontSize: "8", fill: "#bbb", fontFamily: "DM Sans,sans-serif" }, Math.round(minAge), "m"), /* @__PURE__ */ React.createElement("text", { x: W - padR, y: H2 + padB - 2, textAnchor: "end", fontSize: "8", fill: "#bbb", fontFamily: "DM Sans,sans-serif" }, Math.round(maxAge), "m"));
-      }
-      return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 480, margin: "0 auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setView("perfil"), style: { background: "transparent", border: "none", fontSize: 20, color: "#bbb", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22 } }, persona?.icon), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#111" } }, persona?.name, " \xB7 curva de crecimiento")), growthLog.length > 0 && (() => {
-        const last = growthLog[growthLog.length - 1];
-        return /* @__PURE__ */ React.createElement("div", { style: { background: "#111", borderRadius: 12, padding: "14px 16px", marginBottom: 16, display: "flex", gap: 20 } }, last.talla && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 28, fontWeight: 700, color: "#fff", lineHeight: 1 } }, last.talla, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: "rgba(255,255,255,0.4)" } }, "cm")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, "talla")), last.peso && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 28, fontWeight: 700, color: "#fff", lineHeight: 1 } }, last.peso, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: "rgba(255,255,255,0.4)" } }, "kg")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, "peso")), /* @__PURE__ */ React.createElement("div", { style: { marginLeft: "auto", textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)" } }, last.date)));
-      })(), svgChart && /* @__PURE__ */ React.createElement("div", { style: { background: "#fafafa", border: "1px solid #eee", borderRadius: 12, padding: "12px 14px", marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "talla / edad \xB7 curvas OMS"), svgChart), !isCristopher && (addingGrowth ? /* @__PURE__ */ React.createElement("div", { style: { background: "#fafafa", border: "1px dashed #ddd", borderRadius: 12, padding: "14px", marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "Talla (cm)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.1", value: growthInput.talla, onChange: (e) => setGrowthInput((g) => ({ ...g, talla: e.target.value })), autoFocus: true, style: { width: "100%", border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontSize: 16, fontFamily: "'Caveat',cursive", outline: "none", boxSizing: "border-box", color: "#111" } })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "Peso (kg)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.1", value: growthInput.peso, onChange: (e) => setGrowthInput((g) => ({ ...g, peso: e.target.value })), style: { width: "100%", border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontSize: 16, fontFamily: "'Caveat',cursive", outline: "none", boxSizing: "border-box", color: "#111" } }))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "Fecha"), /* @__PURE__ */ React.createElement("input", { type: "date", value: growthInput.date, onChange: (e) => setGrowthInput((g) => ({ ...g, date: e.target.value })), style: { border: "1px dashed #ddd", borderRadius: 8, padding: "7px 10px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none", color: "#111" } })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => saveGrowth(selPersonId), style: { flex: 1, background: "#111", border: "none", borderRadius: 8, padding: "9px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", cursor: "pointer", fontWeight: 600 } }, "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => setAddingGrowth(false), style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "9px 14px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#999" } }, "cancelar"))) : /* @__PURE__ */ React.createElement("button", { onClick: () => setAddingGrowth(true), style: { width: "100%", background: "#111", border: "none", borderRadius: 10, padding: "12px", fontFamily: "'Caveat',cursive", fontSize: 17, color: "#fff", cursor: "pointer", marginBottom: 14 } }, "+ registrar medici\xF3n")), growthLog.length > 0 && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#bbb", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "historial"), [...growthLog].reverse().map((g, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#aaa", minWidth: 60 } }, g.date), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", gap: 10 } }, g.talla && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: "#111" } }, g.talla, "cm"), g.peso && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: "#555" } }, g.peso, "kg"))))), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
-    }
-    if (view === "ficha" && selPersonId) {
-      let closeEpisode = function(id) {
-        saveAll({ episodes: episodes.map((e) => e.id === id ? { ...e, endDate: today } : e) });
-      }, deleteEpisode = function(id) {
-        saveAll({ episodes: episodes.filter((e) => e.id !== id) });
-        setView("home");
-      }, updMissed = function(id, n) {
-        saveAll({ episodes: episodes.map((e) => e.id === id ? { ...e, missedDays: Math.max(0, (e.missedDays || 0) + n) } : e) });
-      };
-      const persona = family.find((f2) => f2.id === selPersonId);
-      const ep = getActiveEpisode(selPersonId);
-      const allEps = episodes.filter((e) => e.kidId === selPersonId).sort((a, b) => b.startDate.localeCompare(a.startDate));
-      const HAZARD_LABELS = { CLEAR: "Clear", WATCH: "Watch", ADVISORY: "Advisory", WARNING: "Warning", CRITICAL: "Critical" };
-      return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 480, margin: "0 auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 16 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setView("home"), style: { background: "transparent", border: "none", fontSize: 20, color: "#bbb", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22 } }, persona?.icon), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#111" } }, persona?.name, " \xB7 episodios")), allEps.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: "40px 0", textAlign: "center", fontFamily: "'Caveat',cursive", fontSize: 17, color: "#ccc" } }, "sin episodios registrados"), allEps.map((ep2) => {
-        const cfg = HAZARD_CONFIG[ep2.hazardLevel || "CLEAR"] || HAZARD_CONFIG.CLEAR;
-        const days = ep2.days || [];
-        const dur = ep2.endDate ? Math.round((/* @__PURE__ */ new Date(ep2.endDate + "T12:00:00") - /* @__PURE__ */ new Date(ep2.startDate + "T12:00:00")) / 864e5) + 1 : null;
-        return /* @__PURE__ */ React.createElement("div", { key: ep2.id, style: { background: "#1a1a1a", borderRadius: 12, padding: "14px 16px", marginBottom: 12, border: `1px solid ${cfg.color}33` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: cfg.text } }, HAZARD_CONFIG[ep2.hazardLevel || "CLEAR"].emoji, " ", ep2.hazardLevel || "CLEAR"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 } }, ep2.startDate, ep2.endDate ? ` \u2192 ${ep2.endDate}` : ` \xB7 activo`, dur ? ` \xB7 ${dur}d` : ""), !ep2.endDate ? /* @__PURE__ */ React.createElement("button", { onClick: () => closeEpisode(ep2.id), style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, background: "#e53935", border: "none", borderRadius: 6, padding: "4px 10px", color: "#fff", cursor: "pointer" } }, "cerrar") : /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)" } }, "cerrado")), (ep2.lastSintomas || []).length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 } }, ep2.lastSintomas.map((sid) => {
-          const s = SYMPTOM_ZONES.flatMap((z) => z.symptoms).find((x) => x.id === sid);
-          return s ? /* @__PURE__ */ React.createElement("span", { key: sid, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.08)", borderRadius: 6, padding: "2px 7px" } }, s.label) : null;
-        })), selPersonId !== "cristopher" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)" } }, "d\xEDas sin colegio"), /* @__PURE__ */ React.createElement("button", { onClick: () => updMissed(ep2.id, -1), style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 5, width: 24, height: 24, color: "#fff", cursor: "pointer", fontSize: 13 } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: "#fff", minWidth: 20, textAlign: "center" } }, ep2.missedDays || 0), /* @__PURE__ */ React.createElement("button", { onClick: () => updMissed(ep2.id, 1), style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 5, width: 24, height: 24, color: "#fff", cursor: "pointer", fontSize: 13 } }, "+")), days.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 8 } }, [...days].reverse().slice(0, 5).map((d, i) => {
-          const dc = HAZARD_CONFIG[d.hazardLevel || "CLEAR"] || HAZARD_CONFIG.CLEAR;
-          return /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderTop: "1px solid rgba(255,255,255,0.05)" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", minWidth: 50 } }, d.date.slice(5)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11 } }, dc.emoji), d.temperatura && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: parseFloat(d.temperatura) >= 38 ? "#ff6b6b" : "rgba(255,255,255,0.4)" } }, "\u{1F321}\uFE0F", d.temperatura, "\xB0"), d.nota && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 12, color: "rgba(255,255,255,0.5)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, '"', d.nota, '"'));
-        })), /* @__PURE__ */ React.createElement(
-          "button",
-          {
-            onClick: () => {
-              if (window.confirm("\xBFEliminar este episodio?")) deleteEpisode(ep2.id);
-            },
-            style: { background: "transparent", border: "1px dashed rgba(255,255,255,0.1)", borderRadius: 6, padding: "4px 10px", fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)", cursor: "pointer" }
-          },
-          "eliminar"
-        ));
-      }), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
-    }
-    const checkedToday = family.filter((f2) => getDayLog(f2.id, dateKey) !== null).length;
-    return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 480, margin: "0 auto" } }, /* @__PURE__ */ React.createElement("style", null, `
-        @keyframes hazardPulse {
-          0%,100%{opacity:1;} 50%{opacity:0.7;}
-        }
-        .hazard-pulse { animation: hazardPulse 1.8s ease-in-out infinite; }
-      `), slideOpen && (() => {
-      const persona = family.find((f2) => f2.id === slideOpen);
-      const ep = getActiveEpisode(slideOpen);
-      const perfil = getProfile(slideOpen);
-      const haz = hazardActual;
-      const hcfg = HAZARD_CONFIG[haz] || HAZARD_CONFIG.CLEAR;
-      return /* @__PURE__ */ React.createElement("div", { onClick: () => setSlideOpen(null), style: { position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,480px)", background: "#0d0d0d", borderRadius: "16px 16px 0 0", maxHeight: "92vh", display: "flex", flexDirection: "column", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 20px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22 } }, persona?.icon), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff" } }, persona?.name), ep && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)" } }, "episodio activo desde ", ep.startDate)), /* @__PURE__ */ React.createElement("div", { style: { background: hcfg.bg, border: `1px solid ${hcfg.color}`, borderRadius: 8, padding: "6px 12px", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16 } }, hcfg.emoji), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: hcfg.text, letterSpacing: 1, textTransform: "uppercase", marginTop: 2 } }, hcfg.label))), (perfil.alergias || []).length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#e53935", letterSpacing: 1 } }, "ALERGIAS:"), perfil.alergias.map((a, i) => /* @__PURE__ */ React.createElement("span", { key: i, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,100,100,0.8)", background: "rgba(255,100,100,0.1)", borderRadius: 4, padding: "1px 6px" } }, a)))), /* @__PURE__ */ React.createElement("div", { style: { overflowY: "auto", flex: 1, padding: "12px 20px" } }, SYMPTOM_ZONES.map((zone) => /* @__PURE__ */ React.createElement("div", { key: zone.id, style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, zone.label), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, zone.symptoms.map((s) => {
-        const sel = sintomas.includes(s.id);
-        const isCritical = s.flag === "CRITICAL";
-        const isWarning = s.flag === "WARNING";
+    const perfil = (kh.profiles || {})[personId] || {};
+    const hasTemp = f2.temps.some((t) => !isNaN(parseFloat(t.v)));
+    const hz = calcHazard(f2.sintomas, f2.temps.map((t) => ({ v: t.v })));
+    const hcfg = HAZARD_CONFIG[hz];
+    let ok = !!personId;
+    if (type === "sintoma") ok = ok && (f2.sintomas.length > 0 || hasTemp || !!f2.note.trim());
+    else if (type === "medicamento" || type === "tratamiento") ok = ok && !!f2.title.trim() && !!f2.start;
+    else if (type === "cita") ok = ok && !!f2.title.trim() && !!f2.start && !!f2.startTime;
+    else if (type === "enfermedad") ok = ok && !!f2.start;
+    const alergia = type === "medicamento" && f2.title.trim() ? (perfil.alergias || []).find((a) => {
+      const x = String(a).toLowerCase(), y = f2.title.trim().toLowerCase();
+      return x && (x.includes(y) || y.includes(x));
+    }) : null;
+    const zones = SYMPTOM_ZONES.map((z) => ({ ...z, symptoms: z.symptoms.filter((s) => !FEVER_IDS.includes(s.id) || f2.sintomas.includes(s.id)) })).filter((z) => z.symptoms.length);
+    const title = editing ? (TYPE_META[editing.type] || {}).label : type ? TYPE_META[type].label : "Agregar";
+    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,480px)", background: "#0d0d0d", borderRadius: "16px 16px 0 0", maxHeight: "92vh", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 20px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, display: "flex", alignItems: "center", gap: 10 } }, !editing && type && /* @__PURE__ */ React.createElement("button", { onClick: () => setType(null), style: { background: "transparent", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 18, cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: F_HAND, fontSize: 20, fontWeight: 700, color: "#fff" } }, title), type === "sintoma" && /* @__PURE__ */ React.createElement("div", { style: { background: hcfg.bg, border: `1px solid ${hcfg.color}`, borderRadius: 8, padding: "4px 10px", fontFamily: F_SANS, fontSize: 9, color: hcfg.text, letterSpacing: 1, textTransform: "uppercase" } }, hcfg.emoji, " ", hcfg.label), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 22, cursor: "pointer", padding: 0, lineHeight: 1 } }, "\xD7")), !type && /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 20px 32px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } }, ADD_TYPES.map((t) => /* @__PURE__ */ React.createElement("button", { key: t, onClick: () => chooseType(t), style: { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "18px 8px", cursor: "pointer", color: "#fff" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 26 } }, TYPE_META[t].icon), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 12, marginTop: 6 } }, TYPE_META[t].label)))), type && /* @__PURE__ */ React.createElement("div", { style: { overflowY: "auto", flex: 1, padding: "14px 20px" } }, !editing && /* @__PURE__ */ React.createElement(Field, { label: "para" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, family.map((p) => /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        key: p.id,
+        onClick: () => setPersonId(p.id),
+        style: { fontFamily: F_SANS, fontSize: 12, padding: "6px 12px", borderRadius: 16, cursor: "pointer", border: "1px solid " + (personId === p.id ? "#aac756" : "rgba(255,255,255,0.15)"), background: personId === p.id ? "rgba(170,199,86,0.18)" : "transparent", color: personId === p.id ? "#dfeea8" : "rgba(255,255,255,0.6)" }
+      },
+      p.icon,
+      " ",
+      p.name
+    )))), (perfil.alergias || []).length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 14 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 9, color: "#e53935", letterSpacing: 1 } }, "ALERGIAS:"), perfil.alergias.map((a, i) => /* @__PURE__ */ React.createElement("span", { key: i, style: { fontFamily: F_SANS, fontSize: 9, color: "rgba(255,100,100,0.85)", background: "rgba(255,100,100,0.1)", borderRadius: 5, padding: "1px 6px" } }, a))), type === "sintoma" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Field, { label: "cu\xE1ndo" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.date, max: today, onChange: (e) => set("date", e.target.value), style: INP_DARK }), /* @__PURE__ */ React.createElement("input", { type: "time", value: f2.time, onChange: (e) => set("time", e.target.value), style: { ...INP_DARK, width: 120 } }))), /* @__PURE__ */ React.createElement(Field, { label: "temperatura" }, f2.temps.map((t, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", gap: 8, alignItems: "center", marginBottom: 6 } }, /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.1", value: t.v, placeholder: "ej: 38.5", onChange: (e) => set("temps", f2.temps.map((x, j) => j === i ? { ...x, v: e.target.value } : x)), style: INP_DARK }), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 13, color: "rgba(255,255,255,0.4)" } }, "\xB0C"), /* @__PURE__ */ React.createElement("input", { type: "time", value: t.t, onChange: (e) => set("temps", f2.temps.map((x, j) => j === i ? { ...x, t: e.target.value } : x)), style: { ...INP_DARK, width: 110 } }), parseFloat(t.v) >= 38 && /* @__PURE__ */ React.createElement("span", null, "\u26A0\uFE0F"), /* @__PURE__ */ React.createElement("button", { onClick: () => set("temps", f2.temps.filter((_, j) => j !== i)), style: { background: "transparent", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 18, cursor: "pointer" } }, "\xD7"))), /* @__PURE__ */ React.createElement("button", { onClick: () => set("temps", [...f2.temps, { t: localTimeKey(), v: "" }]), style: { background: "transparent", border: "1px dashed rgba(255,255,255,0.2)", borderRadius: 8, padding: "6px 12px", fontFamily: F_SANS, fontSize: 11, color: "rgba(255,255,255,0.5)", cursor: "pointer" } }, "+ otra lectura")), /* @__PURE__ */ React.createElement(Field, { label: `s\xEDntomas${f2.sintomas.length ? ` \xB7 ${f2.sintomas.length}` : " (opcional)"}` }, zones.map((z) => {
+      const n = z.symptoms.filter((s) => f2.sintomas.includes(s.id)).length;
+      const open = openZone === z.id || n > 0;
+      return /* @__PURE__ */ React.createElement("div", { key: z.id, style: { marginBottom: 6 } }, /* @__PURE__ */ React.createElement("div", { onClick: () => setOpenZone(openZone === z.id ? null : z.id), style: { display: "flex", justifyContent: "space-between", padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.04)", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 12, color: "rgba(255,255,255,0.7)" } }, z.label), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 11, color: n ? "#aac756" : "rgba(255,255,255,0.3)" } }, n ? `${n} \u2713` : open ? "\u2212" : "+")), open && z.symptoms.map((s) => {
+        const sel = f2.sintomas.includes(s.id);
+        const crit = s.flag === "CRITICAL", warn = s.flag === "WARNING";
         return /* @__PURE__ */ React.createElement(
           "div",
           {
             key: s.id,
-            onClick: () => setSintomas((prev) => sel ? prev.filter((x) => x !== s.id) : [...prev, s.id]),
+            onClick: () => set("sintomas", sel ? f2.sintomas.filter((x) => x !== s.id) : [...f2.sintomas, s.id]),
             style: {
               display: "flex",
               alignItems: "center",
-              gap: 12,
-              padding: "10px 12px",
+              gap: 10,
+              padding: "8px 10px",
+              marginTop: 4,
               borderRadius: 8,
               cursor: "pointer",
-              background: sel ? isCritical ? "#2a0000" : isWarning ? "#2a0800" : "rgba(255,255,255,0.08)" : "transparent",
-              border: `1px solid ${sel ? isCritical ? "#7b0000" : isWarning ? "#c0392b" : "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.06)"}`,
-              transition: "all 0.15s"
+              background: sel ? crit ? "#2a0000" : warn ? "#2a0800" : "rgba(255,255,255,0.08)" : "transparent",
+              border: `1px solid ${sel ? crit ? "#7b0000" : warn ? "#c0392b" : "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.06)"}`
             }
           },
-          /* @__PURE__ */ React.createElement("div", { style: { width: 20, height: 20, borderRadius: 4, border: `1.5px solid ${sel ? isCritical ? "#ff0000" : isWarning ? "#ff4444" : "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)"}`, background: sel ? isCritical ? "#ff0000" : isWarning ? "#ff4444" : "rgba(255,255,255,0.9)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s" } }, sel && /* @__PURE__ */ React.createElement("span", { style: { color: isCritical || isWarning ? "#fff" : "#111", fontSize: 11, fontWeight: 700, lineHeight: 1 } }, "\u2713")),
-          /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: sel ? isCritical ? "#ff6b6b" : isWarning ? "#ff8c00" : "#fff" : "rgba(255,255,255,0.6)", flex: 1, lineHeight: 1.3 } }, s.label, isCritical && /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 6, fontSize: 10, color: "#ff0000", letterSpacing: 1 } }, " \u26AB CR\xCDTICO"), isWarning && /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 6, fontSize: 10, color: "#ff4444", letterSpacing: 1 } }, " \u{1F534} ALERTA"))
+          /* @__PURE__ */ React.createElement("div", { style: { width: 18, height: 18, borderRadius: 4, border: "1.5px solid rgba(255,255,255,0.4)", background: sel ? "rgba(255,255,255,0.85)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, sel && /* @__PURE__ */ React.createElement("span", { style: { color: "#111", fontSize: 10, fontWeight: 700 } }, "\u2713")),
+          /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 13, color: sel ? "#fff" : "rgba(255,255,255,0.6)" } }, s.label, crit && " \u26AB CR\xCDTICO", warn && " \u{1F534} ALERTA")
         );
-      })))), sintomas.some((s) => s.startsWith("temp_")) && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "temperatura exacta"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement(
-        "input",
-        {
-          type: "number",
-          step: "0.1",
-          value: temperatura,
-          onChange: (e) => setTemperatura(e.target.value),
-          placeholder: "ej: 38.5",
-          style: { flex: 1, background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 8, padding: "10px 12px", fontFamily: "'Caveat',cursive", fontSize: 18, color: parseFloat(temperatura) >= 38 ? "#ff6b6b" : "#fff", outline: "none" }
+      }));
+    })), /* @__PURE__ */ React.createElement(Field, { label: "nota" }, /* @__PURE__ */ React.createElement("textarea", { value: f2.note, rows: 3, onChange: (e) => set("note", e.target.value), placeholder: "observaciones, contexto, evoluci\xF3n...", style: { ...INP_DARK, resize: "none" } }))), (type === "medicamento" || type === "tratamiento") && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Field, { label: type === "medicamento" ? "medicamento" : "tratamiento" }, /* @__PURE__ */ React.createElement("input", { value: f2.title, onChange: (e) => set("title", e.target.value), placeholder: type === "medicamento" ? "ej: ibuprofeno" : "ej: nebulizaciones, kinesiolog\xEDa", style: INP_DARK })), alergia && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 12, color: "#ff6b6b", background: "rgba(255,100,100,0.1)", borderRadius: 8, padding: "8px 10px", marginBottom: 14 } }, "\u26A0\uFE0F Coincide con una alergia registrada: ", alergia), /* @__PURE__ */ React.createElement(Field, { label: "dosis" }, /* @__PURE__ */ React.createElement("input", { value: f2.dosis, onChange: (e) => set("dosis", e.target.value), placeholder: "ej: 5 ml", style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "frecuencia" }, /* @__PURE__ */ React.createElement("input", { value: f2.freq, onChange: (e) => set("freq", e.target.value), placeholder: "ej: cada 8 h", style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "inicio" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.start, onChange: (e) => set("start", e.target.value), style: INP_DARK }), /* @__PURE__ */ React.createElement("input", { type: "time", value: f2.startTime, onChange: (e) => set("startTime", e.target.value), style: { ...INP_DARK, width: 120 } }))), /* @__PURE__ */ React.createElement(Field, { label: "fin (si es un curso)" }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.end, min: f2.start, onChange: (e) => set("end", e.target.value), style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "nota" }, /* @__PURE__ */ React.createElement("input", { value: f2.note, onChange: (e) => set("note", e.target.value), style: INP_DARK }))), type === "cita" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Field, { label: "tipo de cita" }, /* @__PURE__ */ React.createElement("input", { value: f2.title, onChange: (e) => set("title", e.target.value), placeholder: "ej: control pedi\xE1trico", style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "m\xE9dico / especialista" }, /* @__PURE__ */ React.createElement("input", { value: f2.medico, onChange: (e) => set("medico", e.target.value), style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "fecha y hora" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.start, onChange: (e) => set("start", e.target.value), style: INP_DARK }), /* @__PURE__ */ React.createElement("input", { type: "time", value: f2.startTime, onChange: (e) => set("startTime", e.target.value), style: { ...INP_DARK, width: 120 } }))), /* @__PURE__ */ React.createElement(Field, { label: "repetir" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, REPEAT_OPTS.map((o) => /* @__PURE__ */ React.createElement("button", { key: o.v, onClick: () => set("repeatMonths", o.v), style: { fontFamily: F_SANS, fontSize: 11, padding: "5px 10px", borderRadius: 8, cursor: "pointer", border: "1px dashed rgba(255,255,255,0.2)", background: f2.repeatMonths === o.v ? "#fff" : "transparent", color: f2.repeatMonths === o.v ? "#111" : "rgba(255,255,255,0.6)" } }, o.l)))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.5, marginBottom: 14 } }, "Se agrega al planner el d\xEDa de la cita y una tarea de preparaci\xF3n el d\xEDa anterior a las 21:30", f2.repeatMonths ? " (pr\xF3ximas 4 ocurrencias)" : "", ". Si editas o eliminas la cita, esas tareas se actualizan.", editing && editing.legacy && " Esta cita viene de la versi\xF3n anterior: sus tareas ya agendadas no est\xE1n ligadas; al guardar se crean nuevas.")), type === "enfermedad" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Field, { label: "nombre del episodio (opcional)" }, /* @__PURE__ */ React.createElement("input", { value: f2.title, onChange: (e) => set("title", e.target.value), placeholder: "ej: bronquitis", style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "inicio / fin" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.start, onChange: (e) => set("start", e.target.value), style: INP_DARK }), /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.end, min: f2.start, onChange: (e) => set("end", e.target.value), style: INP_DARK }))), /* @__PURE__ */ React.createElement(Field, { label: "nota" }, /* @__PURE__ */ React.createElement("textarea", { value: f2.note, rows: 3, onChange: (e) => set("note", e.target.value), style: { ...INP_DARK, resize: "none" } })))), type && /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 20px 28px", borderTop: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, display: "flex", gap: 8 } }, editing && type !== "enfermedad" && /* @__PURE__ */ React.createElement("button", { onClick: () => {
+      if (window.confirm("\xBFEliminar este registro?")) onDelete(editing);
+    }, style: { background: "transparent", border: "1px dashed rgba(255,255,255,0.2)", borderRadius: 10, padding: "12px 16px", fontFamily: F_SANS, fontSize: 12, color: "rgba(255,255,255,0.5)", cursor: "pointer" } }, "eliminar"), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        disabled: !ok,
+        onClick: () => onSave({ type, personId, f: f2, editing }),
+        style: { flex: 1, background: ok ? type === "sintoma" ? hcfg.color === "#2a2a2a" ? "#333" : hcfg.color : "#2e7d52" : "#222", border: "none", borderRadius: 10, padding: "14px", fontFamily: F_HAND, fontSize: 18, color: ok ? "#fff" : "#666", cursor: ok ? "pointer" : "default" }
+      },
+      editing ? "guardar cambios" : "guardar"
+    ))));
+  }
+  var PERFIL_SECCIONES = [
+    { key: "condicionesCronicas", label: "Condiciones cr\xF3nicas", icon: "\u267E\uFE0F", placeholder: "ej: asma, TDAH" },
+    { key: "alergias", label: "Alergias / contraindicaciones", icon: "\u26A0\uFE0F", placeholder: "ej: amoxicilina, ibuprofeno" },
+    { key: "medicacionHabitual", label: "Medicaci\xF3n habitual", icon: "\u{1F48A}", placeholder: "ej: salbutamol seg\xFAn necesidad" },
+    { key: "vacunas", label: "Vacunas", icon: "\u{1F489}", placeholder: "ej: triple viral, hepatitis A" }
+  ];
+  function PerfilView({ persona, perfil, onBack, onGrowth }) {
+    const [draft, setDraft] = React.useState({ condicionesCronicas: [], alergias: [], medicacionHabitual: [], vacunas: [], ...perfil });
+    const [adding, setAdding] = React.useState(null);
+    const [item, setItem] = React.useState("");
+    function add2(key) {
+      if (!item.trim()) return;
+      setDraft((d) => ({ ...d, [key]: [...d[key] || [], item.trim()] }));
+      setItem("");
+      setAdding(null);
+    }
+    const rm = (key, i) => setDraft((d) => ({ ...d, [key]: (d[key] || []).filter((_, j) => j !== i) }));
+    return /* @__PURE__ */ React.createElement("div", { style: PAGE }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onBack(draft), style: { background: "transparent", border: "none", fontSize: 20, color: "#bbb", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22 } }, persona.icon), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 22, fontWeight: 700, color: "#111" } }, persona.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 11, color: "#aaa" } }, "ficha \xB7 ", persona.dob ? calcAge(persona.dob) + " a\xF1os" : "")), /* @__PURE__ */ React.createElement("button", { onClick: () => onGrowth(draft), style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: F_SANS, fontSize: 11, color: "#888" } }, "\u{1F4CF} crecimiento")), PERFIL_SECCIONES.map(({ key, label, icon, placeholder }) => /* @__PURE__ */ React.createElement("div", { key, style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 17, fontWeight: 700, color: "#111", marginBottom: 8 } }, icon, " ", label), (draft[key] || []).map((it, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 5, height: 5, borderRadius: "50%", background: "#111", flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: F_SANS, fontSize: 13, color: "#333" } }, it), /* @__PURE__ */ React.createElement("button", { onClick: () => rm(key, i), style: { background: "transparent", border: "none", color: "#ccc", fontSize: 16, cursor: "pointer", lineHeight: 1 } }, "\xD7"))), adding === key ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 6 } }, /* @__PURE__ */ React.createElement("input", { autoFocus: true, value: item, onChange: (e) => setItem(e.target.value), onKeyDown: (e) => {
+      if (e.key === "Enter") add2(key);
+      if (e.key === "Escape") setAdding(null);
+    }, placeholder, style: INP }), /* @__PURE__ */ React.createElement("button", { onClick: () => add2(key), style: { background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontFamily: F_SANS } }, "+")) : /* @__PURE__ */ React.createElement("button", { onClick: () => {
+      setAdding(key);
+      setItem("");
+    }, style: { marginTop: 6, background: "transparent", border: "1px dashed #e0e0e0", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: F_SANS, fontSize: 11, color: "#999" } }, "+ agregar"))), /* @__PURE__ */ React.createElement("button", { onClick: () => onBack(draft), style: { width: "100%", background: "#111", border: "none", borderRadius: 10, padding: "12px", fontFamily: F_HAND, fontSize: 17, color: "#fff", cursor: "pointer" } }, "guardar ficha"), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
+  }
+  function ResumenView({ kh, family, initialPersonId, today, onBack }) {
+    const [pid, setPid] = React.useState(initialPersonId || family[0].id);
+    const [from, setFrom] = React.useState(addDaysKey(today, -30));
+    const [to, setTo] = React.useState(today);
+    const [copied, setCopied] = React.useState(false);
+    const person = family.find((p) => p.id === pid) || family[0];
+    const text = buildSummary({ person, profile: (kh.profiles || {})[person.id], events: kh.events || [], from, to, today });
+    function copy() {
+      const done = () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1800);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => fallback());
+      } else fallback();
+      function fallback() {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand("copy");
+          done();
+        } catch (e) {
         }
-      ), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.4)" } }, "\xB0C"), parseFloat(temperatura) >= 38 && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, "\u26A0\uFE0F"))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "nota del d\xEDa"), /* @__PURE__ */ React.createElement(
-        "textarea",
-        {
-          value: nota,
-          onChange: (e) => setNota(e.target.value),
-          rows: 3,
-          placeholder: "observaciones, contexto, evoluci\xF3n...",
-          style: { width: "100%", background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 8, padding: "10px 12px", fontFamily: "'Caveat',cursive", fontSize: 15, color: "rgba(255,255,255,0.8)", outline: "none", resize: "none", lineHeight: 1.5, boxSizing: "border-box" }
+        document.body.removeChild(ta);
+      }
+    }
+    return /* @__PURE__ */ React.createElement("div", { style: PAGE }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 16 } }, /* @__PURE__ */ React.createElement("button", { onClick: onBack, style: { background: "transparent", border: "none", fontSize: 20, color: "#bbb", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 22, fontWeight: 700, color: "#111" } }, "Resumen para compartir")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 } }, family.map((p) => /* @__PURE__ */ React.createElement("button", { key: p.id, onClick: () => setPid(p.id), style: { fontFamily: F_SANS, fontSize: 12, padding: "6px 12px", borderRadius: 16, cursor: "pointer", border: "1px solid " + (pid === p.id ? "#111" : "#ddd"), background: pid === p.id ? "#111" : "transparent", color: pid === p.id ? "#fff" : "#666" } }, p.icon, " ", p.name))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("input", { type: "date", value: from, max: to, onChange: (e) => setFrom(e.target.value), style: INP }), /* @__PURE__ */ React.createElement("span", { style: { color: "#aaa" } }, "\u2192"), /* @__PURE__ */ React.createElement("input", { type: "date", value: to, min: from, onChange: (e) => setTo(e.target.value), style: INP })), /* @__PURE__ */ React.createElement("pre", { style: { whiteSpace: "pre-wrap", wordBreak: "break-word", fontFamily: F_SANS, fontSize: 12, lineHeight: 1.55, color: "#222", background: "#fafafa", border: "1px solid #eee", borderRadius: 10, padding: "12px 14px", margin: "0 0 12px" } }, text), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: copy, style: { flex: 1, background: copied ? "#2e7d52" : "#111", border: "none", borderRadius: 10, padding: "12px", fontFamily: F_HAND, fontSize: 17, color: "#fff", cursor: "pointer" } }, copied ? "copiado \u2713" : "copiar texto"), typeof navigator !== "undefined" && navigator.share && /* @__PURE__ */ React.createElement("button", { onClick: () => navigator.share({ text }).catch(() => {
+    }), style: { background: "transparent", border: "1px dashed #ccc", borderRadius: 10, padding: "12px 16px", fontFamily: F_SANS, fontSize: 12, color: "#666", cursor: "pointer" } }, "compartir")), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
+  }
+  function Onboarding({ kh, save }) {
+    const [d, setD] = React.useState({ name: "", dob: "", icon: "\u{1F642}", sex: "m" });
+    function add2() {
+      if (!d.name.trim() || !d.dob) return;
+      const id = d.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "") || "p" + Date.now();
+      save({ ...kh, family: [...kh.family || [], { id, name: d.name.trim(), dob: d.dob, icon: d.icon || "\u{1F642}", sex: d.sex || "m" }] });
+      setD({ name: "", dob: "", icon: "\u{1F642}", sex: "m" });
+    }
+    const box = { border: "1px solid #ddd", borderRadius: 8, padding: "10px 12px", fontFamily: F_SANS, fontSize: 14 };
+    return /* @__PURE__ */ React.createElement("div", { style: PAGE }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 22, color: "#555", marginBottom: 4 } }, "Familia"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 12, color: "#999", marginBottom: 16 } }, "Todav\xEDa no hay nadie cargado. Agreg\xE1 cada persona una vez \u2014 queda guardado en tus datos, no en el c\xF3digo."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { value: d.name, onChange: (e) => setD({ ...d, name: e.target.value }), placeholder: "Nombre", style: box }), /* @__PURE__ */ React.createElement("input", { type: "date", value: d.dob, onChange: (e) => setD({ ...d, dob: e.target.value }), style: box }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { value: d.icon, onChange: (e) => setD({ ...d, icon: e.target.value }), placeholder: "\xCDcono", style: { ...box, width: 70, textAlign: "center" } }), /* @__PURE__ */ React.createElement("select", { value: d.sex, onChange: (e) => setD({ ...d, sex: e.target.value }), style: { ...box, flex: 1 } }, /* @__PURE__ */ React.createElement("option", { value: "m" }, "m"), /* @__PURE__ */ React.createElement("option", { value: "f" }, "f"))), /* @__PURE__ */ React.createElement("button", { onClick: add2, style: { background: "#aac756", border: "none", borderRadius: 8, padding: "10px 12px", fontFamily: F_SANS, fontSize: 14, fontWeight: 700, color: "#111" } }, "Agregar")));
+  }
+  function SaludPage({ kidsHealth, saveKidsHealth, dayData, updateDay, calMarks, saveCalMarks }) {
+    const today = localDateKey();
+    const kh = React.useMemo(() => migrateKidsHealth(kidsHealth, today), [kidsHealth]);
+    const family = kh.family || [];
+    const [view, setView] = React.useState("timeline");
+    const [filterId, setFilterId] = React.useState(null);
+    const [selId, setSelId] = React.useState(null);
+    const [sheet, setSheet] = React.useState(null);
+    if (family.length === 0) return /* @__PURE__ */ React.createElement(Onboarding, { kh, save: saveKidsHealth });
+    const events = kh.events || [];
+    const persist = (next) => saveKidsHealth(next);
+    function applyPlan(plan) {
+      if (updateDay) Object.entries(plan.dayPatches).forEach(([dk, tasks]) => updateDay(dk, { tasks }));
+      if (plan.marks && saveCalMarks) saveCalMarks(plan.marks);
+    }
+    function markDoctor(dk) {
+      if (!saveCalMarks) return;
+      const cur = Array.isArray(calMarks && calMarks[dk]) ? calMarks[dk] : calMarks && calMarks[dk] ? [calMarks[dk]] : [];
+      if (!cur.includes("doctor")) saveCalMarks({ ...calMarks || {}, [dk]: [...cur, "doctor"] });
+    }
+    function handleSave({ type, personId, f: f2, editing }) {
+      if (type === "sintoma") {
+        if (editing) {
+          const temps = f2.temps.filter((t) => !isNaN(parseFloat(t.v))).map((t) => ({ t: t.t || null, v: parseFloat(t.v) }));
+          persist(upsertEvent(kh, { ...editing, start: f2.date, startTime: f2.time || null, sintomas: f2.sintomas, temps, hazardLevel: calcHazard(f2.sintomas, temps), note: f2.note }));
+        } else {
+          const r = addSymptomEntry(kh, { personId, date: f2.date, time: f2.time, sintomas: f2.sintomas, temps: f2.temps, note: f2.note }, { illness: nid("ep_"), entry: nid("sx_") });
+          persist(r.kh);
+          if (r.doctorMarkDate) markDoctor(r.doctorMarkDate);
         }
-      ))), /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 20px 32px", borderTop: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 } }, /* @__PURE__ */ React.createElement(
-        "button",
-        {
-          onClick: saveSlide,
-          style: { width: "100%", background: hcfg.color || "#333", border: "none", borderRadius: 10, padding: "14px", fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", cursor: "pointer", fontWeight: 700 }
-        },
-        sintomas.length === 0 ? "registrar sin novedades" : "registrar \xB7 " + hcfg.emoji + " " + hcfg.label
-      ))));
-    })(), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "44px 1fr 44px", alignItems: "center", gap: 8, marginBottom: 20 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => shiftDate(-1), style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "8px 14px", cursor: "pointer", color: "#888", fontSize: 20 } }, "\u2039"), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#555" } }, dateLabel), checkedToday > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginTop: 2 } }, checkedToday, "/", family.length, " registrados hoy")), /* @__PURE__ */ React.createElement("button", { onClick: () => shiftDate(1), disabled: dateKey >= today, style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "8px 14px", cursor: "pointer", color: dateKey >= today ? "#ddd" : "#888", fontSize: 20 } }, "\u203A")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 20 } }, family.map((persona) => {
-      const hazard = hazardForPerson(persona.id) || "CLEAR";
-      const cfg = HAZARD_CONFIG[hazard];
-      const ep = getActiveEpisode(persona.id);
-      const dl = getDayLog(persona.id, dateKey);
-      const checked = dl !== null;
-      const edad = calcAge(persona.dob);
-      const isPulse = cfg.pulse;
-      const isClear = hazard === "CLEAR" && !ep;
-      const dias = ep ? Math.round((/* @__PURE__ */ new Date(dateKey + "T12:00:00") - /* @__PURE__ */ new Date(ep.startDate + "T12:00:00")) / 864e5) + 1 : null;
+      } else if (type === "medicamento" || type === "tratamiento") {
+        const ill = editing ? null : activeIllness(events, personId);
+        const parentId = editing ? editing.parentId : ill && f2.start >= ill.start ? ill.id : void 0;
+        persist(upsertEvent(kh, {
+          ...editing || {},
+          id: editing ? editing.id : nid(type === "medicamento" ? "md_" : "tr_"),
+          personId,
+          type,
+          parentId,
+          title: f2.title.trim(),
+          dosis: f2.dosis.trim(),
+          freq: f2.freq.trim(),
+          start: f2.start,
+          startTime: f2.startTime || null,
+          end: f2.end || null,
+          note: f2.note.trim()
+        }));
+      } else if (type === "cita") {
+        const ev = {
+          id: editing ? editing.id : nid("ct_"),
+          personId,
+          type: "cita",
+          title: f2.title.trim(),
+          medico: f2.medico.trim(),
+          start: f2.start,
+          startTime: f2.startTime,
+          repeatMonths: f2.repeatMonths || null,
+          markedDates: editing && editing.markedDates || []
+        };
+        const plan = planCita({ events: events.filter((e) => e.id !== ev.id), dayData, marks: calMarks, prevEv: editing, nextEv: ev, personName: nameOf(family, personId) });
+        persist(upsertEvent(kh, plan.ev));
+        applyPlan(plan);
+      } else if (type === "enfermedad") {
+        persist(upsertEvent(kh, { ...editing, title: f2.title.trim(), start: f2.start, end: f2.end || null, note: f2.note.trim() }));
+      }
+      setSheet(null);
+    }
+    function handleDelete(ev) {
+      if (ev.type === "cita") {
+        const plan = planCita({ events: events.filter((e) => e.id !== ev.id), dayData, marks: calMarks, prevEv: ev, nextEv: null, personName: "" });
+        persist(deleteEvent(kh, ev.id));
+        applyPlan(plan);
+      } else persist(deleteEvent(kh, ev.id));
+      setSheet(null);
+    }
+    const closeEpisode = (id) => persist(closeIllness(kh, id, today));
+    const setMissed = (id, n) => persist({ ...kh, events: events.map((e) => e.id === id ? { ...e, missedDays: Math.max(0, (e.missedDays || 0) + n) } : e) });
+    const saveProfile = (pid, data) => persist({ ...kh, profiles: { ...kh.profiles || {}, [pid]: data } });
+    function saveGrowth(pid, entry) {
+      const perfil = (kh.profiles || {})[pid] || {};
+      const log = [...(perfil.growthLog || []).filter((g) => g.date !== entry.date), entry].sort((a, b) => a.date.localeCompare(b.date));
+      saveProfile(pid, { ...perfil, growthLog: log });
+      if (updateDay) {
+        const nextStr = entry.date.slice(0, 4) * 1 + 1 + entry.date.slice(4);
+        const rid = nid("gr_");
+        updateDay(nextStr, { tasks: [...dayData && dayData[nextStr] && dayData[nextStr].tasks || [], { id: rid, text: `medir a ${nameOf(family, pid)}`, fixed: false, done: false }] });
+        markDoctor(nextStr);
+      }
+    }
+    const selPerson = family.find((f2) => f2.id === selId);
+    if (view === "perfil" && selPerson) {
       return /* @__PURE__ */ React.createElement(
-        "div",
+        PerfilView,
         {
-          key: persona.id,
-          className: isPulse ? "hazard-pulse" : "",
-          style: {
-            background: cfg.bg,
-            border: `1.5px solid ${cfg.color}`,
-            borderRadius: 12,
-            padding: "10px 6px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 6,
-            cursor: "pointer",
-            transition: "all 0.2s",
-            minHeight: isClear ? 130 : 150,
-            position: "relative"
+          key: selId,
+          persona: selPerson,
+          perfil: (kh.profiles || {})[selId] || {},
+          onBack: (d) => {
+            saveProfile(selId, d);
+            setView("timeline");
           },
-          onClick: () => {
-            if (isClear && !dl) tapClear(persona.id);
-            else openSlide(persona.id);
+          onGrowth: (d) => {
+            saveProfile(selId, d);
+            setView("crecimiento");
           }
-        },
-        checked && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 5, right: 5, width: 14, height: 14, borderRadius: "50%", background: "#2e7d52", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#fff", fontSize: 8, fontWeight: 700 } }, "\u2713")),
-        /* @__PURE__ */ React.createElement("div", { style: { fontSize: 24, lineHeight: 1 } }, persona.icon),
-        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 15, fontWeight: 700, color: cfg.text, textAlign: "center", lineHeight: 1 } }, persona.name),
-        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: isClear ? "rgba(255,255,255,0.3)" : cfg.text + "99", textAlign: "center" } }, edad, "a"),
-        ep ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, lineHeight: 1, marginTop: 2 } }, cfg.emoji), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: cfg.text, textAlign: "center", letterSpacing: 0.5, textTransform: "uppercase", lineHeight: 1.2 } }, cfg.label), dias && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", textAlign: "center" } }, "d\xEDa ", dias), (ep.lastSintomas || []).slice(0, 2).map((sid) => {
-          const s = SYMPTOM_ZONES.flatMap((z) => z.symptoms).find((x) => x.id === sid);
-          return s ? /* @__PURE__ */ React.createElement("div", { key: sid, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 8, color: "rgba(255,255,255,0.5)", textAlign: "center", lineHeight: 1.2, padding: "0 2px" } }, s.label) : null;
-        })) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.2)", textAlign: "center", marginTop: 4 } }, checked ? "sin nov." : "tap = ok")
+        }
       );
-    })), family.some((f2) => getActiveEpisode(f2.id)) && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "activos"), family.filter((f2) => getActiveEpisode(f2.id)).map((persona) => {
-      const ep = getActiveEpisode(persona.id);
-      const cfg = HAZARD_CONFIG[ep.hazardLevel || "CLEAR"] || HAZARD_CONFIG.CLEAR;
-      const dias = Math.round((/* @__PURE__ */ new Date(dateKey + "T12:00:00") - /* @__PURE__ */ new Date(ep.startDate + "T12:00:00")) / 864e5) + 1;
+    }
+    if (view === "crecimiento" && selPerson) {
       return /* @__PURE__ */ React.createElement(
-        "div",
+        GrowthView_default,
         {
-          key: persona.id,
-          style: { background: "#1a1a1a", borderRadius: 10, padding: "10px 14px", marginBottom: 6, display: "flex", alignItems: "center", gap: 10, cursor: "pointer" },
-          onClick: () => {
-            setSelPersonId(persona.id);
-            setView("ficha");
-          }
-        },
-        /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18 } }, persona.icon),
-        /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", fontWeight: 600 } }, persona.name), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: cfg.text, background: cfg.bg, border: `1px solid ${cfg.color}`, borderRadius: 5, padding: "1px 6px" } }, cfg.emoji, " ", cfg.label)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, "d\xEDa ", dias, " \xB7 ", ep.startDate)),
-        /* @__PURE__ */ React.createElement("span", { style: { color: "#555", fontSize: 13 } }, "\u203A")
+          key: selId,
+          persona: selPerson,
+          perfil: (kh.profiles || {})[selId] || {},
+          today,
+          onBack: () => setView("perfil"),
+          onSave: (e) => saveGrowth(selId, e)
+        }
       );
-    })), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6 } }, family.map((persona) => /* @__PURE__ */ React.createElement("div", { key: persona.id, style: { display: "flex", flexDirection: "column", gap: 4 } }, /* @__PURE__ */ React.createElement(
-      "button",
+    }
+    if (view === "resumen") {
+      return /* @__PURE__ */ React.createElement(ResumenView, { kh, family, initialPersonId: filterId, today, onBack: () => setView("timeline") });
+    }
+    const tl = buildTimeline(events, { personId: filterId, today });
+    const showPerson = !filterId;
+    const open = (ev) => setSheet({ ev, personId: ev.personId });
+    const chip = (active) => ({ fontFamily: F_SANS, fontSize: 12, padding: "6px 12px", borderRadius: 16, cursor: "pointer", whiteSpace: "nowrap", border: "1px solid " + (active ? "#111" : "#ddd"), background: active ? "#111" : "transparent", color: active ? "#fff" : "#666" });
+    return /* @__PURE__ */ React.createElement("div", { style: PAGE }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: F_HAND, fontSize: 24, color: "#555" } }, "Salud"), filterId && /* @__PURE__ */ React.createElement("button", { onClick: () => {
+      setSelId(filterId);
+      setView("perfil");
+    }, style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: F_SANS, fontSize: 11, color: "#888" } }, "\u267E\uFE0F ficha"), /* @__PURE__ */ React.createElement("button", { onClick: () => setView("resumen"), style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: F_SANS, fontSize: 11, color: "#888" } }, "\u{1F4C4} resumen")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, overflowX: "auto", paddingBottom: 6, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setFilterId(null), style: chip(!filterId) }, "Familia"), family.map((p) => {
+      const ill = activeIllness(events, p.id);
+      return /* @__PURE__ */ React.createElement("button", { key: p.id, onClick: () => setFilterId(p.id), style: chip(filterId === p.id) }, p.icon, " ", p.name, ill ? " " + (HAZARD_CONFIG[ill.hazardLevel || "CLEAR"] || HAZARD_CONFIG.CLEAR).emoji : "");
+    })), /* @__PURE__ */ React.createElement("button", { onClick: () => setSheet({ personId: filterId }), style: { width: "100%", background: "#111", border: "none", borderRadius: 10, padding: "12px", fontFamily: F_HAND, fontSize: 18, color: "#fff", cursor: "pointer", marginBottom: 16 } }, "+ agregar"), tl.upcoming.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 9, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "pr\xF3ximas citas"), tl.upcoming.map((ev) => /* @__PURE__ */ React.createElement(UpcomingRow, { key: ev.id, ev, family, showPerson, onOpen: open }))), tl.items.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 9, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "historial"), tl.items.map((it) => it.kind === "illness" ? /* @__PURE__ */ React.createElement(
+      IllnessCard,
       {
-        onClick: () => {
-          setSelPersonId(persona.id);
-          setView("ficha");
-        },
-        style: { background: "transparent", border: "1px dashed #e0e0e0", borderRadius: 8, padding: "6px 4px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", textAlign: "center", lineHeight: 1.3 }
-      },
-      "\u{1F4CB}",
-      /* @__PURE__ */ React.createElement("br", null),
-      "historial"
-    ), /* @__PURE__ */ React.createElement(
-      "button",
+        key: it.ev.id,
+        kh,
+        family,
+        item: it,
+        today,
+        showPerson,
+        onOpen: open,
+        onClose: closeEpisode,
+        onMissed: setMissed,
+        onDelete: (ill) => persist(deleteEvent(kh, ill.id))
+      }
+    ) : /* @__PURE__ */ React.createElement(LooseRow, { key: it.ev.id, ev: it.ev, family, showPerson, onOpen: open })), tl.items.length === 0 && tl.upcoming.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: "40px 0", textAlign: "center", fontFamily: F_HAND, fontSize: 17, color: "#ccc" } }, "sin registros todav\xEDa"), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }), sheet && /* @__PURE__ */ React.createElement(
+      EntrySheet,
       {
-        onClick: () => {
-          setSelPersonId(persona.id);
-          setView("perfil");
-        },
-        style: { background: "transparent", border: "1px dashed #e0e0e0", borderRadius: 8, padding: "6px 4px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", textAlign: "center", lineHeight: 1.3 }
-      },
-      "\u267E\uFE0F",
-      /* @__PURE__ */ React.createElement("br", null),
-      "perfil"
-    )))), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
+        key: sheet.ev ? sheet.ev.id : "new",
+        init: sheet,
+        family,
+        kh,
+        today,
+        onSave: handleSave,
+        onDelete: handleDelete,
+        onClose: () => setSheet(null)
+      }
+    ));
   }
   var SaludPage_default = SaludPage;
 
@@ -7039,10 +7345,10 @@ var __angst = (() => {
       });
       return out;
     }
-    const MONTHS_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-    const DOW_ES = ["dom", "lun", "mar", "mi\xE9", "jue", "vie", "s\xE1b"];
+    const MONTHS_ES2 = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    const DOW_ES2 = ["dom", "lun", "mar", "mi\xE9", "jue", "vie", "s\xE1b"];
     const dObj = /* @__PURE__ */ new Date(dateKey + "T12:00:00");
-    const dateLabel = dateKey === todayKey ? "hoy" : `${DOW_ES[dObj.getDay()]} ${dObj.getDate()} ${MONTHS_ES[dObj.getMonth()]}`;
+    const dateLabel = dateKey === todayKey ? "hoy" : `${DOW_ES2[dObj.getDay()]} ${dObj.getDate()} ${MONTHS_ES2[dObj.getMonth()]}`;
     const barStyle = (pct, color) => ({ width: `${pct}%`, height: "100%", background: color, borderRadius: 99, transition: "width 0.4s" });
     const trackStyle = { height: 6, background: "#eee", borderRadius: 99, overflow: "hidden", marginTop: 6 };
     const searchResults = searchQuery.trim() ? allFoodsFlat().filter((f2) => normalizeSearchText(f2.name).includes(normalizeSearchText(searchQuery))).slice(0, 6) : [];
@@ -7694,10 +8000,10 @@ var __angst = (() => {
       return new Date(t.getFullYear(), t.getMonth(), 1);
     });
     const day = dayData[selectedKey] || { tasks: [], humors: [], schedule: [] };
-    const MONTHS_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    const MONTHS_ES2 = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
     const fmtShort = (dk) => {
       const [, m, d] = dk.split("-").map(Number);
-      return `${d} ${MONTHS_ES[m - 1]}`;
+      return `${d} ${MONTHS_ES2[m - 1]}`;
     };
     function getCycle(off = 0) {
       const t = /* @__PURE__ */ new Date();
@@ -7725,7 +8031,7 @@ var __angst = (() => {
         days.push(fmtKey(new Date(cur)));
         cur.setDate(cur.getDate() + 1);
       }
-      const label = `${MONTHS_ES[endMon]} ${endYear}`;
+      const label = `${MONTHS_ES2[endMon]} ${endYear}`;
       return { days, start, end, label };
     }
     const cycle = getCycle(cycleOff);
@@ -10642,8 +10948,9 @@ Toco reintentar ahora.`);
     const taskTouchX = useRef8(0);
     const taskTouchY = useRef8(0);
     const [openFMenu, setOpenFMenu] = useState8(null);
-    const [kidsHealth, setKidsHealth] = useState8({ episodes: [] });
-    const kidsHealthRef = useRef8({ episodes: [] });
+    const [kidsHealth, setKidsHealth] = useState8(emptyKidsHealth);
+    const kidsHealthRef = useRef8(null);
+    if (kidsHealthRef.current === null) kidsHealthRef.current = emptyKidsHealth();
     const [pokeInventario, setPokeInventario] = useState8([]);
     const pokeInventarioRef = useRef8([]);
     const [pokeCarpetas, setPokeCarpetas] = useState8([...CARPETAS_DEFAULT]);
@@ -11101,8 +11408,9 @@ Toco reintentar ahora.`);
               calMarksRef.current = d.calMarks;
             }
             if (d.kidsHealth) {
-              setKidsHealth(d.kidsHealth);
-              kidsHealthRef.current = d.kidsHealth;
+              const khm = migrateKidsHealth(d.kidsHealth);
+              setKidsHealth(khm);
+              kidsHealthRef.current = khm;
             }
             if (d.pokeInventario) {
               setPokeInventario(d.pokeInventario);
@@ -11332,10 +11640,10 @@ Toco reintentar ahora.`);
         const committedTask = newTasks.find((t) => t.id === tid);
         if (committedTask && !committedTask.fixed && editText.trim()) {
           setTimeout(() => {
-            const norm = editText.trim().toLowerCase();
+            const norm2 = editText.trim().toLowerCase();
             const dd = dayDataRef.current || {};
-            const matchDays = Object.keys(dd).filter((dk) => dk !== dateKey && (dd[dk].tasks || []).some((t) => !t.fixed && t.text && t.text.toLowerCase() === norm && !t.carried));
-            const alreadyRecurring = recurringRef.current.some((r) => r.text.toLowerCase() === norm);
+            const matchDays = Object.keys(dd).filter((dk) => dk !== dateKey && (dd[dk].tasks || []).some((t) => !t.fixed && t.text && t.text.toLowerCase() === norm2 && !t.carried));
+            const alreadyRecurring = recurringRef.current.some((r) => r.text.toLowerCase() === norm2);
             if (matchDays.length >= 2 && !alreadyRecurring) {
               const ok = window.confirm(`"${editText.trim()}" aparece en ${matchDays.length + 1} d\xEDas. \xBFConvertirla en rutina autom\xE1tica?`);
               if (ok) saveRecurringTask({ id: Date.now().toString(), text: editText.trim(), freq: "daily", createdAt: dateKey });
@@ -11671,8 +11979,9 @@ Toco reintentar ahora.`);
         lastRolloverRef.current = d.lastRollover;
       }
       if (d.kidsHealth) {
-        setKidsHealth(d.kidsHealth);
-        kidsHealthRef.current = d.kidsHealth;
+        const khm = migrateKidsHealth(d.kidsHealth);
+        setKidsHealth(khm);
+        kidsHealthRef.current = khm;
       }
       if (d.custody !== void 0) {
         setCustody(d.custody);
@@ -12076,10 +12385,10 @@ Toco reintentar ahora.`);
       }));
     })(), /* @__PURE__ */ React.createElement("div", { className: "sub-bar" }, /* @__PURE__ */ React.createElement("div", { className: "sub-text" }, CYNICAL_SUBTITLES[subIdx])), page === 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 0, padding: "8px 16px 0", background: "#fff", borderBottom: "1px solid #eee" } }, [{ k: "semana", label: "\u{1F4C5} semana" }, { k: "rutinas", label: "\u{1F331} pr\xE1cticas" }].map(({ k, label }) => /* @__PURE__ */ React.createElement("button", { key: k, onClick: () => setSemanaTab(k), style: { fontFamily: "'Caveat',cursive", fontSize: 15, padding: "6px 16px", background: "transparent", border: "none", borderBottom: semanaTab === k ? "2px solid #111" : "2px solid transparent", color: semanaTab === k ? "#111" : "#aaa", cursor: "pointer", transition: "all 0.15s" } }, label))), semanaTab === "rutinas" && /* @__PURE__ */ React.createElement(RoutinesPage_default, { routines, onSave: saveRoutines, onAddToDay: (name, emoji) => {
       const tk = fmtFull(/* @__PURE__ */ new Date());
-      const nid = Date.now();
+      const nid2 = Date.now();
       const dd = dayDataRef.current || {};
       const d = dd[tk] || makeEmptyDay();
-      const nx = { ...dd, [tk]: { ...d, tasks: [...d.tasks, { id: nid, text: (emoji ? emoji + " " : "") + name, fixed: false, done: false }] } };
+      const nx = { ...dd, [tk]: { ...d, tasks: [...d.tasks, { id: nid2, text: (emoji ? emoji + " " : "") + name, fixed: false, done: false }] } };
       setDayData(nx);
       dayDataRef.current = nx;
       saveToStorage({ dayData: nx });
@@ -12273,8 +12582,8 @@ Toco reintentar ahora.`);
                   updateTask(dateKey, task.id, { notDone: true });
                   const ndd = { ...dayDataRef.current };
                   const nd = ndd[nextDay] || makeEmptyDay();
-                  const nid = Date.now().toString() + Math.random().toString(36).slice(2);
-                  ndd[nextDay] = { ...nd, tasks: [...nd.tasks, { ...task, id: nid, carried: true, carriedFrom: dateKey, done: false, notDone: false }] };
+                  const nid2 = Date.now().toString() + Math.random().toString(36).slice(2);
+                  ndd[nextDay] = { ...nd, tasks: [...nd.tasks, { ...task, id: nid2, carried: true, carriedFrom: dateKey, done: false, notDone: false }] };
                   setDayData(ndd);
                   dayDataRef.current = ndd;
                   saveToStorage({ dayData: ndd });

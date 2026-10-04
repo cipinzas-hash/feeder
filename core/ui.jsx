@@ -1,6 +1,7 @@
 import { computeStressScore, DEFAULT_HUMORS } from "./stress.js";
 import { requestNotifPermission } from "./notifications.js";
 import { MONTH_NAMES, getHoliday, addDays, fmtFull } from "./dates.js";
+import { illnessLabel, eventLine, eventMatches } from "../modules/salud/saludModel.js";
 
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
@@ -233,7 +234,7 @@ function CalendarModal({ weekStart, marks, onMark, onWeekSelect, onClose, dayDat
           const sdDate=new Date(selectedDay+"T12:00:00");
           const DOW_ES2=["dom","lun","mar","mié","jue","vie","sáb"];
           const MONTHS2=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
-          const activeKidEps=(kidsHealth?.episodes||[]).filter(e=>!e.endDate&&e.startDate<=selectedDay&&e.kidId!=="cristopher");
+          const activeKidEps=(kidsHealth?.events||[]).filter(e=>e.type==="enfermedad"&&!e.end&&e.start<=selectedDay&&e.personId!=="cristopher");
           return (
             <div style={{margin:"10px 16px 0",background:"#1a1a1a",borderRadius:12,padding:"14px 16px",color:"#fff"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
@@ -271,7 +272,7 @@ function CalendarModal({ weekStart, marks, onMark, onWeekSelect, onClose, dayDat
               </div>}
               {/* Salud activa */}
               {activeKidEps.length>0&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {activeKidEps.map(ep=><span key={ep.id} style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,150,150,0.8)",background:"rgba(255,100,100,0.1)",borderRadius:5,padding:"2px 7px"}}>🤒 {ep.kidId} · {ep.label}</span>)}
+                {activeKidEps.map(ep=><span key={ep.id} style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,150,150,0.8)",background:"rgba(255,100,100,0.1)",borderRadius:5,padding:"2px 7px"}}>🤒 {((kidsHealth?.family||[]).find(f=>f.id===ep.personId)||{}).name||ep.personId} · {illnessLabel(kidsHealth,ep)}</span>)}
               </div>}
               {/* Cierre */}
               {sd.summary&&<div style={{fontFamily:"'Caveat',cursive",fontSize:14,color:"rgba(255,255,255,0.4)",marginTop:8,lineHeight:1.5,fontStyle:"italic"}}>"{sd.summary}"</div>}
@@ -745,16 +746,11 @@ function SearchModal({ dayData, nutria, kidsHealth, routines, onClose }) {
         });
       }
     });
-    // Salud — schema nuevo: kidsHealth.episodes[]
+    // Salud — schema v2: kidsHealth.events[] (enfermedades, registros, medicación, citas)
     if(cat==="all"||cat==="salud") {
       const familyNames = Object.fromEntries((kidsHealth?.family||[]).map(f=>[f.id,f.name]));
-      (kidsHealth?.episodes||[]).forEach(ep => {
-        const hayMatch =
-          (ep.hazardLevel||"").toLowerCase().includes(norm) ||
-          (ep.notas||"").toLowerCase().includes(norm) ||
-          (ep.lastSintomas||[]).some(sid=>sid.toLowerCase().includes(norm)) ||
-          (ep.days||[]).some(d=>(d.nota||"").toLowerCase().includes(norm)||(d.temperatura||"").includes(norm));
-        if(hayMatch) hits.push({ type:"salud", persona:familyNames[ep.kidId]||ep.kidId, ep });
+      (kidsHealth?.events||[]).forEach(ev => {
+        if(eventMatches(ev, norm)) hits.push({ type:"salud", persona:familyNames[ev.personId]||ev.personId, ev });
       });
     }
     // Rutinas
@@ -841,7 +837,7 @@ function SearchModal({ dayData, nutria, kidsHealth, routines, onClose }) {
             if(hit.task) mainText = hit.task.text||"";
             else if(hit.text) mainText = hit.text;
             else if(hit.item) mainText = hit.item.name||hit.item.text||"";
-            else if(hit.type==="salud") mainText = `${hit.persona} — ${hit.ep.hazardLevel||"episodio"} · ${hit.ep.startDate||""}`;
+            else if(hit.type==="salud") mainText = `${hit.persona} — ${eventLine(hit.ev)}`;
             else if(hit.type==="rutina") mainText = hit.rutina.name||"";
             else if(hit.type==="venta") mainText = `${hit.venta.producto||""}${hit.venta.nombre_tapa?" / "+hit.venta.nombre_tapa:""}`;
             return (

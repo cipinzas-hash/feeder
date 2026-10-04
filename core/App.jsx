@@ -5,6 +5,7 @@ import { downloadBackupJSON } from "./persistence.js";
 import { fmt, fmtFull, getHoliday, addDays } from "./dates.js";
 import PokecriptoPage, { CARPETAS_DEFAULT } from "../modules/pokecripto/PokecriptoPage.jsx";
 import SaludPage from "../modules/salud/SaludPage.jsx";
+import { migrateKidsHealth, emptyKidsHealth } from "../modules/salud/saludModel.js";
 import FadimanPage from "../modules/fadiman/FadimanPage.jsx";
 import RoutinesPage from "../modules/rutinas/RoutinesPage.jsx";
 import NutriaPage from "../modules/nutria/NutriaPage.jsx";
@@ -384,8 +385,9 @@ function AngstApp() {
   const taskTouchX = useRef(0);
   const taskTouchY = useRef(0);
   const [openFMenu, setOpenFMenu] = useState(null); // "dateKey:taskId:menuId"
-  const [kidsHealth, setKidsHealth] = useState({episodes:[]});
-  const kidsHealthRef = useRef({episodes:[]});
+  const [kidsHealth, setKidsHealth] = useState(emptyKidsHealth);
+  const kidsHealthRef = useRef(null);
+  if(kidsHealthRef.current===null) kidsHealthRef.current = emptyKidsHealth();
   const [pokeInventario, setPokeInventario] = useState([]);
   const pokeInventarioRef = useRef([]);
   const [pokeCarpetas, setPokeCarpetas] = useState([...CARPETAS_DEFAULT]);
@@ -795,7 +797,7 @@ function AngstApp() {
           if(d.recurring){ setRecurring(d.recurring); recurringRef.current=d.recurring; }
           if(d.lastRollover){ setLastRollover(d.lastRollover); lastRolloverRef.current=d.lastRollover; }
           if(d.calMarks){ setCalMarks(d.calMarks); calMarksRef.current=d.calMarks; }
-          if(d.kidsHealth){ setKidsHealth(d.kidsHealth); kidsHealthRef.current=d.kidsHealth; }
+          if(d.kidsHealth){ const khm=migrateKidsHealth(d.kidsHealth); setKidsHealth(khm); kidsHealthRef.current=khm; }
           if(d.pokeInventario){ setPokeInventario(d.pokeInventario); pokeInventarioRef.current=d.pokeInventario; }
           if(d.pokeCarpetas){ setPokeCarpetas(d.pokeCarpetas); pokeCarpetasRef.current=d.pokeCarpetas; }
           if(d.pokeDarkCatalogo){ setPokeDarkCatalogo(d.pokeDarkCatalogo); pokeDarkCatalogoRef.current=d.pokeDarkCatalogo; }
@@ -1325,7 +1327,7 @@ function AngstApp() {
     if(d.routines){ setRoutines(d.routines); routinesRef.current=d.routines; }
     if(d.recurring){ setRecurring(d.recurring); recurringRef.current=d.recurring; }
     if(d.lastRollover){ setLastRollover(d.lastRollover); lastRolloverRef.current=d.lastRollover; }
-    if(d.kidsHealth){ setKidsHealth(d.kidsHealth); kidsHealthRef.current=d.kidsHealth; }
+    if(d.kidsHealth){ const khm=migrateKidsHealth(d.kidsHealth); setKidsHealth(khm); kidsHealthRef.current=khm; }
     if(d.custody !== undefined){ setCustody(d.custody); }
     if(d.fadimanData){ setFadimanData(d.fadimanData); fadimanDataRef.current=d.fadimanData; }
     if(d.nutriLog){ setNutriLog(d.nutriLog); nutriLogRef.current=d.nutriLog; }
