@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-04T07:52:55.099Z",
+  "generatedAt": "2026-10-04T15:10:44.137Z",
   "categories": [
     {
       "cat": "Películas",
@@ -326,7 +326,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1288445",
@@ -470,7 +470,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.6
+            "tmdb": 6.7
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -780,87 +780,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-movie-1377237",
-          "title": "Entrega al límite",
-          "link": "https://www.themoviedb.org/movie/1377237",
-          "summary": "Un exsoldado se ve envuelto en una brutal carrera contrarreloj cuando una entrega médica crucial los convierte, a él y a su inesperada compañera, en el objetivo de un cártel despiadado. A medida que la misión se transforma en una cacería mortal, cada desvío, retraso y bala los acerca más al fracaso. Acosados ​​por la traición desde todos los frentes, deberán sobrevivir a la persecución y entregar su carga para salvar la vida de una niña.",
-          "image": "https://image.tmdb.org/t/p/w500/pmjSjZtFOYDWhAs4B2AbBE8hTQf.jpg",
-          "pubDate": "2026-09-07",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-13T23:55:28.090Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.6,
-            "rt": null,
-            "metascore": 55,
-            "tmdb": 7.9
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "B6Z9MM1LhEA",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Alan Ritchson",
-              "character": "Hank Malone",
-              "order": 0
-            },
-            {
-              "name": "Owen Wilson",
-              "character": "Ben",
-              "order": 1
-            },
-            {
-              "name": "Rodrigo Santoro",
-              "character": "Damian Zaldivar",
-              "order": 2
-            },
-            {
-              "name": "Leila George",
-              "character": "Kate Baker",
-              "order": 3
-            },
-            {
-              "name": "Kate Box",
-              "character": "Dr. Ainsley",
-              "order": 4
-            },
-            {
-              "name": "Adriana Barraza",
-              "character": "Donna",
-              "order": 5
-            },
-            {
-              "name": "Peta Sergeant",
-              "character": "Nurse Julie",
-              "order": 6
-            },
-            {
-              "name": "Scarlett Crabtree",
-              "character": "Ellie Baker",
-              "order": 7
-            },
-            {
-              "name": "Geraldine Hakewill",
-              "character": "Monica",
-              "order": 8
-            },
-            {
-              "name": "Goran D. Kleut",
-              "character": "Luke",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
           "guid": "tmdb-movie-977942",
           "title": "El hombre que desafió al rey",
           "link": "https://www.themoviedb.org/movie/977942",
@@ -942,6 +861,87 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1377237",
+          "title": "Entrega al límite",
+          "link": "https://www.themoviedb.org/movie/1377237",
+          "summary": "Un exsoldado se ve envuelto en una brutal carrera contrarreloj cuando una entrega médica crucial los convierte, a él y a su inesperada compañera, en el objetivo de un cártel despiadado. A medida que la misión se transforma en una cacería mortal, cada desvío, retraso y bala los acerca más al fracaso. Acosados ​​por la traición desde todos los frentes, deberán sobrevivir a la persecución y entregar su carga para salvar la vida de una niña.",
+          "image": "https://image.tmdb.org/t/p/w500/pmjSjZtFOYDWhAs4B2AbBE8hTQf.jpg",
+          "pubDate": "2026-09-07",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-13T23:55:28.090Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.6,
+            "rt": null,
+            "metascore": 55,
+            "tmdb": 7.9
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "B6Z9MM1LhEA",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Alan Ritchson",
+              "character": "Hank Malone",
+              "order": 0
+            },
+            {
+              "name": "Owen Wilson",
+              "character": "Ben",
+              "order": 1
+            },
+            {
+              "name": "Rodrigo Santoro",
+              "character": "Damian Zaldivar",
+              "order": 2
+            },
+            {
+              "name": "Leila George",
+              "character": "Kate Baker",
+              "order": 3
+            },
+            {
+              "name": "Kate Box",
+              "character": "Dr. Ainsley",
+              "order": 4
+            },
+            {
+              "name": "Adriana Barraza",
+              "character": "Donna",
+              "order": 5
+            },
+            {
+              "name": "Peta Sergeant",
+              "character": "Nurse Julie",
+              "order": 6
+            },
+            {
+              "name": "Scarlett Crabtree",
+              "character": "Ellie Baker",
+              "order": 7
+            },
+            {
+              "name": "Geraldine Hakewill",
+              "character": "Monica",
+              "order": 8
+            },
+            {
+              "name": "Goran D. Kleut",
+              "character": "Luke",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1492640",
           "title": "UNABOMBER",
           "link": "https://www.themoviedb.org/movie/1492640",
@@ -1017,6 +1017,87 @@
             {
               "name": "Bruce Ramsay",
               "character": "Turk Kaczynski",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1003596",
+          "title": "Vengadores: Doomsday",
+          "link": "https://www.themoviedb.org/movie/1003596",
+          "summary": "Quinta entrega de la saga 'Vengadores' incluida en el Universo Cinematográfico Marvel (UCM). Sinopsis desconocido.",
+          "image": "https://image.tmdb.org/t/p/w500/7bQczUMnjz8iwxNP9YrmLkfI8od.jpg",
+          "pubDate": "2026-12-16",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-22T00:37:45.956Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Post Production",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "X1aFkAkFASk",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Robert Downey Jr.",
+              "character": "Victor von Doom  / Doctor Doom",
+              "order": 0
+            },
+            {
+              "name": "Chris Evans",
+              "character": "Steve Rogers",
+              "order": 1
+            },
+            {
+              "name": "Chris Hemsworth",
+              "character": "Thor",
+              "order": 2
+            },
+            {
+              "name": "Pedro Pascal",
+              "character": "Reed Richards / Mister Fantastic",
+              "order": 3
+            },
+            {
+              "name": "Paul Rudd",
+              "character": "Scott Lang / Ant-Man",
+              "order": 4
+            },
+            {
+              "name": "Anthony Mackie",
+              "character": "Sam Wilson / Captain America",
+              "order": 5
+            },
+            {
+              "name": "Florence Pugh",
+              "character": "Yelena Belova",
+              "order": 6
+            },
+            {
+              "name": "Vanessa Kirby",
+              "character": "Sue Storm / Invisible Woman",
+              "order": 7
+            },
+            {
+              "name": "Ebon Moss-Bachrach",
+              "character": "Ben Grimm / The Thing",
+              "order": 8
+            },
+            {
+              "name": "Wyatt Russell",
+              "character": "John Walker",
               "order": 9
             }
           ],
@@ -1186,87 +1267,6 @@
             {
               "name": "Anthony Casabianca",
               "character": "Chris",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1003596",
-          "title": "Vengadores: Doomsday",
-          "link": "https://www.themoviedb.org/movie/1003596",
-          "summary": "Quinta entrega de la saga 'Vengadores' incluida en el Universo Cinematográfico Marvel (UCM). Sinopsis desconocido.",
-          "image": "https://image.tmdb.org/t/p/w500/7bQczUMnjz8iwxNP9YrmLkfI8od.jpg",
-          "pubDate": "2026-12-15",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-22T00:37:45.956Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Post Production",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "X1aFkAkFASk",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Robert Downey Jr.",
-              "character": "Victor von Doom  / Doctor Doom",
-              "order": 0
-            },
-            {
-              "name": "Chris Evans",
-              "character": "Steve Rogers",
-              "order": 1
-            },
-            {
-              "name": "Chris Hemsworth",
-              "character": "Thor",
-              "order": 2
-            },
-            {
-              "name": "Pedro Pascal",
-              "character": "Reed Richards / Mister Fantastic",
-              "order": 3
-            },
-            {
-              "name": "Paul Rudd",
-              "character": "Scott Lang / Ant-Man",
-              "order": 4
-            },
-            {
-              "name": "Anthony Mackie",
-              "character": "Sam Wilson / Captain America",
-              "order": 5
-            },
-            {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova",
-              "order": 6
-            },
-            {
-              "name": "Vanessa Kirby",
-              "character": "Sue Storm / Invisible Woman",
-              "order": 7
-            },
-            {
-              "name": "Ebon Moss-Bachrach",
-              "character": "Ben Grimm / The Thing",
-              "order": 8
-            },
-            {
-              "name": "Wyatt Russell",
-              "character": "John Walker",
               "order": 9
             }
           ],
@@ -4034,92 +4034,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-tv-33238",
-          "title": "Running Man",
-          "link": "https://www.themoviedb.org/tv/33238",
-          "summary": "Running Man es un espectáculo de variedades de Corea del Sur transmitido desde el 11 de julio de 2010 hasta ahora a través de SBS. El programa forma parte de la formación de \"Good Sunday\". El programa fue creado por Jo Hyo-jin, Kim Joo-hyung y Im Hyung-taek.",
-          "image": "https://image.tmdb.org/t/p/w500/15SMnscZqd7HZ0bzruatOcKUlOV.jpg",
-          "pubDate": "2010-07-11",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-27T15:01:12.478Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 9.1,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.2
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-04",
-          "numberOfSeasons": 1,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 824,
-              "fechaEstreno": "2010-07-11"
-            }
-          ],
-          "currentSeason": 1,
-          "reviews": null,
-          "trailer": {
-            "key": "v90RObJapJI",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "유재석",
-              "character": "Self",
-              "order": 0
-            },
-            {
-              "name": "지석진",
-              "character": "Self",
-              "order": 1
-            },
-            {
-              "name": "김종국",
-              "character": "Self",
-              "order": 2
-            },
-            {
-              "name": "하하",
-              "character": "Self",
-              "order": 3
-            },
-            {
-              "name": "Song Ji-hyo",
-              "character": "Self",
-              "order": 4
-            },
-            {
-              "name": "양세찬",
-              "character": "Self",
-              "order": 5
-            },
-            {
-              "name": "지예은",
-              "character": "Self",
-              "order": 6
-            },
-            {
-              "name": "전소민",
-              "character": "Self – Former Member",
-              "order": 7
-            },
-            {
-              "name": "이광수",
-              "character": "Self – Former Member",
-              "order": 8
-            },
-            {
-              "name": "강개리",
-              "character": "Self – Former Member",
-              "order": 10
-            }
-          ]
-        },
-        {
           "guid": "tmdb-tv-2734",
           "title": "Ley y orden: Unidad de Víctimas Especiales",
           "link": "https://www.themoviedb.org/tv/2734",
@@ -4322,6 +4236,92 @@
               "name": "Corey Cott",
               "character": "Jake Griffin",
               "order": 25
+            }
+          ]
+        },
+        {
+          "guid": "tmdb-tv-33238",
+          "title": "Running Man",
+          "link": "https://www.themoviedb.org/tv/33238",
+          "summary": "Running Man es un espectáculo de variedades de Corea del Sur transmitido desde el 11 de julio de 2010 hasta ahora a través de SBS. El programa forma parte de la formación de \"Good Sunday\". El programa fue creado por Jo Hyo-jin, Kim Joo-hyung y Im Hyung-taek.",
+          "image": "https://image.tmdb.org/t/p/w500/15SMnscZqd7HZ0bzruatOcKUlOV.jpg",
+          "pubDate": "2010-07-11",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-09-27T15:01:12.478Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 9.1,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.2
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-04",
+          "numberOfSeasons": 1,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 824,
+              "fechaEstreno": "2010-07-11"
+            }
+          ],
+          "currentSeason": 1,
+          "reviews": null,
+          "trailer": {
+            "key": "v90RObJapJI",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "유재석",
+              "character": "Self",
+              "order": 0
+            },
+            {
+              "name": "지석진",
+              "character": "Self",
+              "order": 1
+            },
+            {
+              "name": "김종국",
+              "character": "Self",
+              "order": 2
+            },
+            {
+              "name": "하하",
+              "character": "Self",
+              "order": 3
+            },
+            {
+              "name": "Song Ji-hyo",
+              "character": "Self",
+              "order": 4
+            },
+            {
+              "name": "양세찬",
+              "character": "Self",
+              "order": 5
+            },
+            {
+              "name": "지예은",
+              "character": "Self",
+              "order": 6
+            },
+            {
+              "name": "전소민",
+              "character": "Self – Former Member",
+              "order": 7
+            },
+            {
+              "name": "이광수",
+              "character": "Self – Former Member",
+              "order": 8
+            },
+            {
+              "name": "강개리",
+              "character": "Self – Former Member",
+              "order": 10
             }
           ]
         },
@@ -4982,6 +4982,382 @@
           ]
         },
         {
+          "guid": "tmdb-tv-95350",
+          "title": "Linternas",
+          "link": "https://www.themoviedb.org/tv/95350",
+          "summary": "Sigue al nuevo recluta John Stewart y al legendario Linterna Hal Jordan, dos policías intergalácticos que se ven envueltos en un oscuro misterio terrestre mientras investigan un asesinato en el corazón de Estados Unidos. Esto les lleva a misterios y ajustes de cuentas más oscuros.",
+          "image": "https://image.tmdb.org/t/p/w500/20ZcwtRQ4zMczKg3eBcIpC3FAuW.jpg",
+          "pubDate": "2026-08-16",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-09-17T14:44:26.886Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.4,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.3
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-09-20",
+          "numberOfSeasons": 1,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 8,
+              "fechaEstreno": "2026-08-16"
+            }
+          ],
+          "currentSeason": 1,
+          "reviews": null,
+          "trailer": {
+            "key": "7UIBOsuUwc4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Kyle Chandler",
+              "character": "Hal Jordan",
+              "order": 0
+            },
+            {
+              "name": "Aaron Pierre",
+              "character": "John Stewart",
+              "order": 1
+            },
+            {
+              "name": "Kelly Macdonald",
+              "character": "Sheriff Kerry Kane",
+              "order": 2
+            },
+            {
+              "name": "Garret Dillahunt",
+              "character": "William 'Will' Macon",
+              "order": 3
+            },
+            {
+              "name": "Poorna Jagannathan",
+              "character": "Zoe Macon",
+              "order": 4
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-tv-4656",
+          "title": "Raw",
+          "link": "https://www.themoviedb.org/tv/4656",
+          "summary": "A regularly scheduled, live, year-round program featuring some of the biggest WWE Superstars.",
+          "image": "https://image.tmdb.org/t/p/w500/fstEe6RsyNyPUnMwNcL20iNl0nE.jpg",
+          "pubDate": "1993-01-11",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-09-19T13:43:53.848Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.8,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.8
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-09-21",
+          "numberOfSeasons": 34,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 45,
+              "fechaEstreno": "1993-01-10"
+            },
+            {
+              "numero": 2,
+              "episodios": 47,
+              "fechaEstreno": "1994-01-03"
+            },
+            {
+              "numero": 3,
+              "episodios": 48,
+              "fechaEstreno": "1995-01-02"
+            },
+            {
+              "numero": 4,
+              "episodios": 51,
+              "fechaEstreno": "1996-01-01"
+            },
+            {
+              "numero": 5,
+              "episodios": 52,
+              "fechaEstreno": "1997-01-06"
+            },
+            {
+              "numero": 6,
+              "episodios": 52,
+              "fechaEstreno": "1998-01-05"
+            },
+            {
+              "numero": 7,
+              "episodios": 52,
+              "fechaEstreno": "1999-01-04"
+            },
+            {
+              "numero": 8,
+              "episodios": 52,
+              "fechaEstreno": "2000-01-03"
+            },
+            {
+              "numero": 9,
+              "episodios": 53,
+              "fechaEstreno": "2001-01-01"
+            },
+            {
+              "numero": 10,
+              "episodios": 52,
+              "fechaEstreno": "2002-01-07"
+            },
+            {
+              "numero": 11,
+              "episodios": 52,
+              "fechaEstreno": "2003-01-06"
+            },
+            {
+              "numero": 12,
+              "episodios": 52,
+              "fechaEstreno": "2004-01-05"
+            },
+            {
+              "numero": 13,
+              "episodios": 52,
+              "fechaEstreno": "2005-01-03"
+            },
+            {
+              "numero": 14,
+              "episodios": 52,
+              "fechaEstreno": "2006-01-02"
+            },
+            {
+              "numero": 15,
+              "episodios": 53,
+              "fechaEstreno": "2007-01-01"
+            },
+            {
+              "numero": 16,
+              "episodios": 52,
+              "fechaEstreno": "2008-01-07"
+            },
+            {
+              "numero": 17,
+              "episodios": 52,
+              "fechaEstreno": "2009-01-05"
+            },
+            {
+              "numero": 18,
+              "episodios": 52,
+              "fechaEstreno": "2010-01-04"
+            },
+            {
+              "numero": 19,
+              "episodios": 52,
+              "fechaEstreno": "2011-01-03"
+            },
+            {
+              "numero": 20,
+              "episodios": 53,
+              "fechaEstreno": "2012-01-02"
+            },
+            {
+              "numero": 21,
+              "episodios": 52,
+              "fechaEstreno": "2013-01-07"
+            },
+            {
+              "numero": 22,
+              "episodios": 52,
+              "fechaEstreno": "2014-01-05"
+            },
+            {
+              "numero": 23,
+              "episodios": 52,
+              "fechaEstreno": "2015-01-04"
+            },
+            {
+              "numero": 24,
+              "episodios": 52,
+              "fechaEstreno": "2016-01-03"
+            },
+            {
+              "numero": 25,
+              "episodios": 52,
+              "fechaEstreno": "2017-01-01"
+            },
+            {
+              "numero": 26,
+              "episodios": 53,
+              "fechaEstreno": "2017-12-31"
+            },
+            {
+              "numero": 27,
+              "episodios": 52,
+              "fechaEstreno": "2019-01-06"
+            },
+            {
+              "numero": 28,
+              "episodios": 52,
+              "fechaEstreno": "2020-01-05"
+            },
+            {
+              "numero": 29,
+              "episodios": 52,
+              "fechaEstreno": "2021-01-03"
+            },
+            {
+              "numero": 30,
+              "episodios": 52,
+              "fechaEstreno": "2022-01-02"
+            },
+            {
+              "numero": 31,
+              "episodios": 52,
+              "fechaEstreno": "2023-01-01"
+            },
+            {
+              "numero": 32,
+              "episodios": 53,
+              "fechaEstreno": "2023-12-29"
+            },
+            {
+              "numero": 33,
+              "episodios": 52,
+              "fechaEstreno": "2024-12-31"
+            },
+            {
+              "numero": 34,
+              "episodios": 41,
+              "fechaEstreno": "2026-01-05"
+            }
+          ],
+          "currentSeason": 34,
+          "reviews": null,
+          "trailer": {
+            "key": "FVO6mUQMon8",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-tv-97546",
+          "title": "Ted Lasso",
+          "link": "https://www.themoviedb.org/tv/97546",
+          "summary": "Un ingenuo entrenador de fútbol americano decide probar suerte en un club de fútbol inglés, pero su inexperiencia despierta recelo y desdén entre jugadores y aficionados. ¿Logrará conquistarlos con sus peculiares métodos?",
+          "image": "https://image.tmdb.org/t/p/w500/6YUzArR2TElmGMj1HmnnfVlgunL.jpg",
+          "pubDate": "2020-08-14",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-09-06T22:06:55.294Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.7,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.4
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-09-08",
+          "numberOfSeasons": 4,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 10,
+              "fechaEstreno": "2020-08-14"
+            },
+            {
+              "numero": 2,
+              "episodios": 12,
+              "fechaEstreno": "2021-07-23"
+            },
+            {
+              "numero": 3,
+              "episodios": 12,
+              "fechaEstreno": "2023-03-14"
+            },
+            {
+              "numero": 4,
+              "episodios": 10,
+              "fechaEstreno": "2026-08-04"
+            }
+          ],
+          "currentSeason": 4,
+          "reviews": {
+            "top": {
+              "rating": 10,
+              "text": "Ted Lasso (Jason Sudeikis) es un entrenador de fútbol americano que decide entrenar a un club de fútbol inglés, el AFC Richmond, pero su inexperiencia despierta al principio recelo y desdén entre jugadores y aficionados. La propietaria del equipo, Rebecca Welton, contrata a Lasso con la esperanza de que fracase y así vengarse del anterior propietario del equipo, su infiel ex esposo. Pero, la personalidad y el humor de Ted comienzan a ganarse el respeto de Rebecca, del equipo y de todos aquellos que habían sido escépticos sobre su fichaje como entrenador.\r\n\r\n_**NO TODO ES SER BUENO EN EL CAMPO**_\r\n\r\n_**CON RESPETO GANAMOS TODOS**_\r\n\r\n_**LAS PERSONAS CAMBIAN**_\r\n\r\n_**EL FÚTBOL DA LA VIDA**_\r\n\r\n\r\nToda mi vida había jugado al fútbol hasta los 14 años, se me daba muy bien, pero no he sido nunca",
+              "author": "RichieValero"
+            },
+            "bottom": {
+              "rating": 5,
+              "text": "**Payasadas sin sentido**\r\n\r\nNo es que me desagrade _Ted Lasso_ después de ver las dos primeras temporadas de forma maratoniana, el problema es que, a juzgar por las críticas y los reconocimientos profesionales, uno se espera un torrente fluido de humor sarcástico al más puro estilo británico, pero en realidad se topa con una cursilada pegajosa _“made in USA”_ repleta de gags infantiles, y de la mano de un personaje que, en la vida real, no tendría puta gracia, y nadie aguantaría más de 10 minutos.\r\n\r\nNo voy a negar que existen frases inteligentes que pueden desencajar a más de un espectador exigente, pero la mayoría de chistes y sus contextos son tan absolutamente pueriles que, incluso, da miedo el enorme éxito que esta serie ha tenido entre los mayores de 12 años. Se antoja aterrador el ",
+              "author": "Martin Oaks"
+            }
+          },
+          "trailer": {
+            "key": "TMPUlfH-stE",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Jason Sudeikis",
+              "character": "Ted Lasso",
+              "order": 0
+            },
+            {
+              "name": "Hannah Waddingham",
+              "character": "Rebecca Welton",
+              "order": 1
+            },
+            {
+              "name": "Jeremy Swift",
+              "character": "Leslie Higgins",
+              "order": 2
+            },
+            {
+              "name": "Brett Goldstein",
+              "character": "Roy Kent",
+              "order": 4
+            },
+            {
+              "name": "Brendan Hunt",
+              "character": "Coach Beard",
+              "order": 5
+            },
+            {
+              "name": "Juno Temple",
+              "character": "Keeley Jones",
+              "order": 14
+            },
+            {
+              "name": "Tanya Reynolds",
+              "character": "Alice Chilton",
+              "order": 15
+            },
+            {
+              "name": "Jude Mack",
+              "character": "Katie Quinn",
+              "order": 16
+            },
+            {
+              "name": "Rex Hayes",
+              "character": "Siobhan Harrigan",
+              "order": 17
+            },
+            {
+              "name": "Sophie Simnett",
+              "character": "Claudine",
+              "order": 18
+            }
+          ],
+          "trending": false
+        },
+        {
           "guid": "tmdb-tv-11890",
           "title": "Goede Tijden, Slechte Tijden",
           "link": "https://www.themoviedb.org/tv/11890",
@@ -5351,382 +5727,6 @@
               "name": "Joey Pollari",
               "character": "Ben DeSoto",
               "order": 131
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-4656",
-          "title": "Raw",
-          "link": "https://www.themoviedb.org/tv/4656",
-          "summary": "A regularly scheduled, live, year-round program featuring some of the biggest WWE Superstars.",
-          "image": "https://image.tmdb.org/t/p/w500/fstEe6RsyNyPUnMwNcL20iNl0nE.jpg",
-          "pubDate": "1993-01-11",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-19T13:43:53.848Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.8,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.8
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-21",
-          "numberOfSeasons": 34,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 45,
-              "fechaEstreno": "1993-01-10"
-            },
-            {
-              "numero": 2,
-              "episodios": 47,
-              "fechaEstreno": "1994-01-03"
-            },
-            {
-              "numero": 3,
-              "episodios": 48,
-              "fechaEstreno": "1995-01-02"
-            },
-            {
-              "numero": 4,
-              "episodios": 51,
-              "fechaEstreno": "1996-01-01"
-            },
-            {
-              "numero": 5,
-              "episodios": 52,
-              "fechaEstreno": "1997-01-06"
-            },
-            {
-              "numero": 6,
-              "episodios": 52,
-              "fechaEstreno": "1998-01-05"
-            },
-            {
-              "numero": 7,
-              "episodios": 52,
-              "fechaEstreno": "1999-01-04"
-            },
-            {
-              "numero": 8,
-              "episodios": 52,
-              "fechaEstreno": "2000-01-03"
-            },
-            {
-              "numero": 9,
-              "episodios": 53,
-              "fechaEstreno": "2001-01-01"
-            },
-            {
-              "numero": 10,
-              "episodios": 52,
-              "fechaEstreno": "2002-01-07"
-            },
-            {
-              "numero": 11,
-              "episodios": 52,
-              "fechaEstreno": "2003-01-06"
-            },
-            {
-              "numero": 12,
-              "episodios": 52,
-              "fechaEstreno": "2004-01-05"
-            },
-            {
-              "numero": 13,
-              "episodios": 52,
-              "fechaEstreno": "2005-01-03"
-            },
-            {
-              "numero": 14,
-              "episodios": 52,
-              "fechaEstreno": "2006-01-02"
-            },
-            {
-              "numero": 15,
-              "episodios": 53,
-              "fechaEstreno": "2007-01-01"
-            },
-            {
-              "numero": 16,
-              "episodios": 52,
-              "fechaEstreno": "2008-01-07"
-            },
-            {
-              "numero": 17,
-              "episodios": 52,
-              "fechaEstreno": "2009-01-05"
-            },
-            {
-              "numero": 18,
-              "episodios": 52,
-              "fechaEstreno": "2010-01-04"
-            },
-            {
-              "numero": 19,
-              "episodios": 52,
-              "fechaEstreno": "2011-01-03"
-            },
-            {
-              "numero": 20,
-              "episodios": 53,
-              "fechaEstreno": "2012-01-02"
-            },
-            {
-              "numero": 21,
-              "episodios": 52,
-              "fechaEstreno": "2013-01-07"
-            },
-            {
-              "numero": 22,
-              "episodios": 52,
-              "fechaEstreno": "2014-01-05"
-            },
-            {
-              "numero": 23,
-              "episodios": 52,
-              "fechaEstreno": "2015-01-04"
-            },
-            {
-              "numero": 24,
-              "episodios": 52,
-              "fechaEstreno": "2016-01-03"
-            },
-            {
-              "numero": 25,
-              "episodios": 52,
-              "fechaEstreno": "2017-01-01"
-            },
-            {
-              "numero": 26,
-              "episodios": 53,
-              "fechaEstreno": "2017-12-31"
-            },
-            {
-              "numero": 27,
-              "episodios": 52,
-              "fechaEstreno": "2019-01-06"
-            },
-            {
-              "numero": 28,
-              "episodios": 52,
-              "fechaEstreno": "2020-01-05"
-            },
-            {
-              "numero": 29,
-              "episodios": 52,
-              "fechaEstreno": "2021-01-03"
-            },
-            {
-              "numero": 30,
-              "episodios": 52,
-              "fechaEstreno": "2022-01-02"
-            },
-            {
-              "numero": 31,
-              "episodios": 52,
-              "fechaEstreno": "2023-01-01"
-            },
-            {
-              "numero": 32,
-              "episodios": 53,
-              "fechaEstreno": "2023-12-29"
-            },
-            {
-              "numero": 33,
-              "episodios": 52,
-              "fechaEstreno": "2024-12-31"
-            },
-            {
-              "numero": 34,
-              "episodios": 41,
-              "fechaEstreno": "2026-01-05"
-            }
-          ],
-          "currentSeason": 34,
-          "reviews": null,
-          "trailer": {
-            "key": "FVO6mUQMon8",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-97546",
-          "title": "Ted Lasso",
-          "link": "https://www.themoviedb.org/tv/97546",
-          "summary": "Un ingenuo entrenador de fútbol americano decide probar suerte en un club de fútbol inglés, pero su inexperiencia despierta recelo y desdén entre jugadores y aficionados. ¿Logrará conquistarlos con sus peculiares métodos?",
-          "image": "https://image.tmdb.org/t/p/w500/6YUzArR2TElmGMj1HmnnfVlgunL.jpg",
-          "pubDate": "2020-08-14",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-06T22:06:55.294Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.7,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.4
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-08",
-          "numberOfSeasons": 4,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 10,
-              "fechaEstreno": "2020-08-14"
-            },
-            {
-              "numero": 2,
-              "episodios": 12,
-              "fechaEstreno": "2021-07-23"
-            },
-            {
-              "numero": 3,
-              "episodios": 12,
-              "fechaEstreno": "2023-03-14"
-            },
-            {
-              "numero": 4,
-              "episodios": 10,
-              "fechaEstreno": "2026-08-04"
-            }
-          ],
-          "currentSeason": 4,
-          "reviews": {
-            "top": {
-              "rating": 10,
-              "text": "Ted Lasso (Jason Sudeikis) es un entrenador de fútbol americano que decide entrenar a un club de fútbol inglés, el AFC Richmond, pero su inexperiencia despierta al principio recelo y desdén entre jugadores y aficionados. La propietaria del equipo, Rebecca Welton, contrata a Lasso con la esperanza de que fracase y así vengarse del anterior propietario del equipo, su infiel ex esposo. Pero, la personalidad y el humor de Ted comienzan a ganarse el respeto de Rebecca, del equipo y de todos aquellos que habían sido escépticos sobre su fichaje como entrenador.\r\n\r\n_**NO TODO ES SER BUENO EN EL CAMPO**_\r\n\r\n_**CON RESPETO GANAMOS TODOS**_\r\n\r\n_**LAS PERSONAS CAMBIAN**_\r\n\r\n_**EL FÚTBOL DA LA VIDA**_\r\n\r\n\r\nToda mi vida había jugado al fútbol hasta los 14 años, se me daba muy bien, pero no he sido nunca",
-              "author": "RichieValero"
-            },
-            "bottom": {
-              "rating": 5,
-              "text": "**Payasadas sin sentido**\r\n\r\nNo es que me desagrade _Ted Lasso_ después de ver las dos primeras temporadas de forma maratoniana, el problema es que, a juzgar por las críticas y los reconocimientos profesionales, uno se espera un torrente fluido de humor sarcástico al más puro estilo británico, pero en realidad se topa con una cursilada pegajosa _“made in USA”_ repleta de gags infantiles, y de la mano de un personaje que, en la vida real, no tendría puta gracia, y nadie aguantaría más de 10 minutos.\r\n\r\nNo voy a negar que existen frases inteligentes que pueden desencajar a más de un espectador exigente, pero la mayoría de chistes y sus contextos son tan absolutamente pueriles que, incluso, da miedo el enorme éxito que esta serie ha tenido entre los mayores de 12 años. Se antoja aterrador el ",
-              "author": "Martin Oaks"
-            }
-          },
-          "trailer": {
-            "key": "TMPUlfH-stE",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Jason Sudeikis",
-              "character": "Ted Lasso",
-              "order": 0
-            },
-            {
-              "name": "Hannah Waddingham",
-              "character": "Rebecca Welton",
-              "order": 1
-            },
-            {
-              "name": "Jeremy Swift",
-              "character": "Leslie Higgins",
-              "order": 2
-            },
-            {
-              "name": "Brett Goldstein",
-              "character": "Roy Kent",
-              "order": 4
-            },
-            {
-              "name": "Brendan Hunt",
-              "character": "Coach Beard",
-              "order": 5
-            },
-            {
-              "name": "Juno Temple",
-              "character": "Keeley Jones",
-              "order": 14
-            },
-            {
-              "name": "Tanya Reynolds",
-              "character": "Alice Chilton",
-              "order": 15
-            },
-            {
-              "name": "Jude Mack",
-              "character": "Katie Quinn",
-              "order": 16
-            },
-            {
-              "name": "Rex Hayes",
-              "character": "Siobhan Harrigan",
-              "order": 17
-            },
-            {
-              "name": "Sophie Simnett",
-              "character": "Claudine",
-              "order": 18
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-95350",
-          "title": "Linternas",
-          "link": "https://www.themoviedb.org/tv/95350",
-          "summary": "Sigue al nuevo recluta John Stewart y al legendario Linterna Hal Jordan, dos policías intergalácticos que se ven envueltos en un oscuro misterio terrestre mientras investigan un asesinato en el corazón de Estados Unidos. Esto les lleva a misterios y ajustes de cuentas más oscuros.",
-          "image": "https://image.tmdb.org/t/p/w500/20ZcwtRQ4zMczKg3eBcIpC3FAuW.jpg",
-          "pubDate": "2026-08-16",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-17T14:44:26.886Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.4,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.3
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-20",
-          "numberOfSeasons": 1,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 8,
-              "fechaEstreno": "2026-08-16"
-            }
-          ],
-          "currentSeason": 1,
-          "reviews": null,
-          "trailer": {
-            "key": "7UIBOsuUwc4",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Kyle Chandler",
-              "character": "Hal Jordan",
-              "order": 0
-            },
-            {
-              "name": "Aaron Pierre",
-              "character": "John Stewart",
-              "order": 1
-            },
-            {
-              "name": "Kelly Macdonald",
-              "character": "Sheriff Kerry Kane",
-              "order": 2
-            },
-            {
-              "name": "Garret Dillahunt",
-              "character": "William 'Will' Macon",
-              "order": 3
-            },
-            {
-              "name": "Poorna Jagannathan",
-              "character": "Zoe Macon",
-              "order": 4
             }
           ],
           "trending": false
