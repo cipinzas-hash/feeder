@@ -1468,32 +1468,32 @@ var __angst = (() => {
   function variantesNombre(name) {
     const base = String(name || "").trim();
     const out = [];
-    const add = (s) => {
+    const add2 = (s) => {
       const v = String(s || "").replace(/\s+/g, " ").trim();
       if (v.length >= 3 && !out.some((x) => x.toLowerCase() === v.toLowerCase())) out.push(v);
     };
     const limpio = base.replace(/\s*[-–—]\s*\d+\/\d+\s*$/, "");
-    add(base);
-    add(limpio);
-    add(limpio.replace(/\s+ex$/i, ""));
-    add(limpio.replace(/^mega\s+/i, ""));
-    add(limpio.replace(/^mega\s+/i, "").replace(/\s+ex$/i, ""));
-    add(limpio.replace(PREFIJOS, ""));
-    add(limpio.replace(/\s+(V|VMAX|VSTAR|GX|EX)$/i, ""));
-    add(limpio.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
-    add(limpio.replace(/[^a-zA-Z0-9\s]/g, " "));
+    add2(base);
+    add2(limpio);
+    add2(limpio.replace(/\s+ex$/i, ""));
+    add2(limpio.replace(/^mega\s+/i, ""));
+    add2(limpio.replace(/^mega\s+/i, "").replace(/\s+ex$/i, ""));
+    add2(limpio.replace(PREFIJOS, ""));
+    add2(limpio.replace(/\s+(V|VMAX|VSTAR|GX|EX)$/i, ""));
+    add2(limpio.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+    add2(limpio.replace(/[^a-zA-Z0-9\s]/g, " "));
     return out;
   }
   function planBusquedas(carta) {
     const num = String(carta?.number || "").trim();
     const vars = variantesNombre(carta?.name);
     const plan = [];
-    const add = (q) => {
+    const add2 = (q) => {
       const s = q.replace(/\s+/g, " ").trim();
       if (s && !plan.some((p) => p.q.toLowerCase() === s.toLowerCase())) plan.push({ q: s });
     };
-    vars.forEach((v) => add(num ? `${v} ${num}` : v));
-    vars.forEach((v) => add(v));
+    vars.forEach((v) => add2(num ? `${v} ${num}` : v));
+    vars.forEach((v) => add2(v));
     return plan;
   }
   function claveCandidato(c) {
