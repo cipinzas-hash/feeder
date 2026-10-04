@@ -1887,7 +1887,12 @@ var __angst = (() => {
           setName: c.set?.name || null,
           market: best?.market || null,
           low: best?.low || null,
-          high: best?.high || null
+          high: best?.high || null,
+          // Para diagnosticar "calzó nombre y número pero sin precio": qué precios sí trae la API
+          // (ej. raw.moderately_played.tcgplayer). Solo informativo; el precio que se usa sigue siendo NM/LP.
+          preciosDisponibles: Object.entries(c.prices || {}).flatMap(([grupo, v]) => v && typeof v === "object" ? Object.entries(v).flatMap(([cond, fuentes]) => fuentes && typeof fuentes === "object" ? Object.keys(fuentes).map((f2) => `${grupo}.${cond}.${f2}`) : [`${grupo}.${cond}`]) : [grupo]).slice(0, 8),
+          // la API no documenta si trae foto: si la trae se usa primero, si no se arma por set+número
+          image: c.image || c.image_url || c.imageUrl || c.images?.small || c.images?.large || null
         };
       });
       return { query: q, candidatos };
@@ -1962,16 +1967,30 @@ var __angst = (() => {
     vars.forEach((v) => add2(v));
     return plan;
   }
+  var SERIES = /^(sword\s*&?\s*shield|scarlet\s*&?\s*violet|sun\s*&?\s*moon|mega\s*evolution|black\s*&?\s*white|heartgold\s*&?\s*soulsilver|diamond\s*&?\s*pearl|xy|swsh|sv|sm)\s*[:\-–—]?\s*/i;
+  function normSet(s) {
+    return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/pok[eé]mon\s*(tcg)?/ig, "").replace(SERIES, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+  function mismoSet(carta, c) {
+    const sc = String(carta?.setCode || "").toLowerCase();
+    const porCodigo = !!sc && ((c?.setId || "").toLowerCase() === sc || (c?.setCode || "").toLowerCase() === sc);
+    if (porCodigo) return "codigo";
+    const a = normSet(carta?.set), b = normSet(c?.setName);
+    if (a && b && a === b) return "nombre";
+    return null;
+  }
+  function tieneDatosDeSet(c) {
+    return !!(c?.setId || c?.setCode || c?.setName);
+  }
   function claveCandidato(c) {
     return `${(c.setId || c.setCode || "").toLowerCase()}|${normNum(c.number)}|${normName(c.name)}`;
   }
   function rankCandidatos(carta, candidatos) {
     const num = normNum(carta?.number), nom = normName(carta?.name);
-    const sc = String(carta?.setCode || "").toLowerCase();
     return (candidatos || []).map((c, i) => {
       let p = 0;
       if (num && normNum(c.number) === num) p += 100;
-      if (sc && ((c.setId || "").toLowerCase() === sc || (c.setCode || "").toLowerCase() === sc)) p += 50;
+      if (mismoSet(carta, c)) p += 50;
       if (nom && normName(c.name) === nom) p += 20;
       if (c.market != null) p += 5;
       return { ...c, puntaje: p, _i: i };
@@ -1989,11 +2008,12 @@ var __angst = (() => {
   }
   function matchAutomatico(carta, candidatos) {
     const num = normNum(carta?.number), nom = normName(carta?.name);
-    const sc = String(carta?.setCode || "").toLowerCase();
     if (!num || !nom) return null;
-    return (candidatos || []).find((c) => c.market != null && normNum(c.number) === num && normName(c.name) === nom && // con setCode conocido, el set también tiene que calzar: el mismo nombre+número puede ser
-    // una reimpresión de otro set con otro precio (la "variante equivocada" que el bot evita)
-    (!sc || (c.setId || "").toLowerCase() === sc || (c.setCode || "").toLowerCase() === sc)) || null;
+    const conocemosSet = !!(carta?.setCode || carta?.set);
+    return (candidatos || []).find((c) => c.market != null && normNum(c.number) === num && normName(c.name) === nom && // el mismo nombre+número puede ser una reimpresión de otro set con otro precio (la "variante
+    // equivocada" que el bot evita): si ambos lados traen datos de set, tienen que calzar (código o
+    // nombre). Si el candidato no trae ningún dato de set, no hay con qué contrastar y se acepta.
+    (!conocemosSet || !tieneDatosDeSet(c) || mismoSet(carta, c))) || null;
   }
   function normalizarOverridesRemotos(x) {
     if (!x || typeof x !== "object" || Array.isArray(x)) return {};
@@ -2006,6 +2026,26 @@ var __angst = (() => {
   }
   function mergeOverrides(actual, cartaId, ov) {
     return { ...normalizarOverridesRemotos(actual), [cartaId]: { name: ov.name, number: ov.number, setId: ov.setId || null, setCode: ov.setCode || null } };
+  }
+  function numeroBase(n) {
+    const b = String(n ?? "").split("/")[0].trim();
+    return /^\d+$/.test(b) ? String(parseInt(b, 10)) : b;
+  }
+  function urlsDeSetNumero(set, num) {
+    if (!set || !num) return [];
+    const s = String(set).toLowerCase();
+    return [`https://images.pokemontcg.io/${s}/${num}.png`, `https://images.scrydex.com/pokemon/${s}-${num}/small`];
+  }
+  function urlsFoto({ image, cardId, setId, setCode, number }) {
+    const urls = [];
+    if (image) urls.push(image);
+    if (cardId && String(cardId).includes("-")) {
+      const i = String(cardId).lastIndexOf("-");
+      urls.push(...urlsDeSetNumero(String(cardId).slice(0, i), String(cardId).slice(i + 1)));
+    }
+    const num = numeroBase(number);
+    for (const set of [setId, setCode]) urls.push(...urlsDeSetNumero(set, num));
+    return [...new Set(urls)];
   }
 
   // modules/pokecripto/PokecriptoPage.jsx
@@ -2039,6 +2079,12 @@ var __angst = (() => {
         }
       );
     }), /* @__PURE__ */ React.createElement("circle", { cx, cy, r: 8, fill: "#fff" }), /* @__PURE__ */ React.createElement("line", { x1: 4, y1: cy, x2: 40, y2: cy, stroke: filled > 0 ? "#111" : "#ddd", strokeWidth: "1.5" }), /* @__PURE__ */ React.createElement("circle", { cx, cy, r: 4, fill: "#fff", stroke: filled > 0 ? "#111" : "#ddd", strokeWidth: "1.5" })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#bbb", letterSpacing: 2, textTransform: "uppercase" } }, "buscando"));
+  }
+  function FotoFB({ urls, style, vacio }) {
+    const [i, setI] = React.useState(0);
+    const lista = urls || [];
+    if (i >= lista.length) return vacio || null;
+    return /* @__PURE__ */ React.createElement("img", { src: lista[i], alt: "", referrerPolicy: "no-referrer", onError: () => setI((k) => k + 1), style });
   }
   var ART_CLIP = "inset(9% 6% 41% 6%)";
   function DarkArt({ src, alt, cons, wrapStyle, imgFit }) {
@@ -3331,37 +3377,26 @@ var __angst = (() => {
       setRevCartaId(revActual.id);
       revCargarCarta(revActual);
     }, [revAbierta, revActual && revActual.id]);
-    React.useEffect(() => {
-      if (!revAbierta || revDatos.estado !== "listo") return;
-      const c = revDatos.cands[revDatos.pos];
-      if (!c) return;
+    async function revBuscarFoto(c) {
       const k = claveCandidato(c);
-      if (revImgs[k] !== void 0) return;
-      let vivo = true;
-      (async () => {
-        const num = String(c.number || "").split("/")[0];
-        const intentos = [];
-        if (c.setCode) intentos.push({ q: `name:"${c.name}" number:${num} set.ptcgoCode:${c.setCode}`, exacta: true });
-        if (c.setId) intentos.push({ q: `name:"${c.name}" number:${num} set.id:${c.setId}`, exacta: true });
-        intentos.push({ q: `name:"${c.name}" number:${num}`, exacta: false });
-        let res = { url: null, exacta: false };
-        for (const it of intentos) {
-          try {
-            const d = await fetchPoke(`${POKE_BASE}/cards?q=${encodeURIComponent(it.q)}&pageSize=1&select=images`);
-            const u = d?.data?.[0]?.images?.small;
-            if (u) {
-              res = { url: u, exacta: it.exacta };
-              break;
-            }
-          } catch (e) {
+      setRevImgs((m) => ({ ...m, [k]: { buscando: true } }));
+      const num = String(c.number || "").split("/")[0];
+      const intentos = [`name:"${c.name}" number:${num}${c.setCode ? ` set.ptcgoCode:${c.setCode}` : ""}`, `name:"${c.name}" number:${num}`];
+      let res = { url: null, error: null };
+      for (const q of intentos) {
+        try {
+          const d = await fetchPoke(`${POKE_BASE}/cards?q=${encodeURIComponent(q)}&pageSize=1&select=images`);
+          const u = d?.data?.[0]?.images?.small;
+          if (u) {
+            res = { url: u, error: null };
+            break;
           }
+        } catch (e) {
+          res = { url: null, error: e.message };
         }
-        if (vivo) setRevImgs((m) => ({ ...m, [k]: res }));
-      })();
-      return () => {
-        vivo = false;
-      };
-    }, [revAbierta, revDatos.estado, revDatos.pos, revCartaId]);
+      }
+      setRevImgs((m) => ({ ...m, [k]: res }));
+    }
     function renderRevisionModal() {
       if (!revAbierta) return null;
       const carta = revActual, F = "'DM Sans',sans-serif";
@@ -3373,11 +3408,21 @@ var __angst = (() => {
       const proxima = plan[d.planIdx];
       const chip = (ok, txt) => /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F, fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 10, background: ok ? "#1f3d2b" : "#4a2323", color: ok ? "#8fe0a8" : "#ff9b9b" } }, ok ? "\u2713" : "\u2717", " ", txt);
       const numOk = !!(c && carta && normNum(c.number) === normNum(carta.number));
-      const setOk = c && carta && carta.setCode ? (c.setId || "").toLowerCase() === carta.setCode.toLowerCase() || (c.setCode || "").toLowerCase() === carta.setCode.toLowerCase() : null;
+      const setComo = c && carta ? mismoSet(carta, c) : null;
+      const setOk = c && carta && (carta.setCode || carta.set) && (c.setId || c.setCode || c.setName) ? !!setComo : null;
       const totCand = c && String(c.number || "").includes("/") ? parseInt(String(c.number).split("/")[1], 10) : null;
       const totOk = totCand && d.total ? totCand === parseInt(d.total, 10) : null;
-      const img = c ? revImgs[claveCandidato(c)] : null;
-      return /* @__PURE__ */ React.createElement("div", { onClick: () => setRevAbierta(false), style: { position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,460px)", background: "#111", color: "#fff", borderRadius: "16px 16px 0 0", padding: "16px 16px 28px", maxHeight: "92vh", overflowY: "auto", boxSizing: "border-box", fontFamily: F } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, "\u{1F9ED} Cartas sin precio \xB7 quedan ", revCola.length), /* @__PURE__ */ React.createElement("button", { onClick: () => setRevAbierta(false), style: { background: "transparent", border: "none", color: "#999", fontSize: 18, cursor: "pointer" } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 12 } }, "consultas de hoy \u2248 ", revCupo, "/100 \xB7 ", revCont.elegidas, " elegidas \xB7 ", revCont.solas, " calzaron solas"), !carta ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: "#8fe0a8", padding: "20px 0" } }, "No quedan cartas sin precio en la cola \u{1F389}") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center", background: "#1a1a1a", borderRadius: 12, padding: 10, marginBottom: 12 } }, carta.image ? /* @__PURE__ */ React.createElement("img", { src: carta.image, alt: "", style: { width: 56, borderRadius: 4, flexShrink: 0 } }) : /* @__PURE__ */ React.createElement("div", { style: { width: 56, height: 78, borderRadius: 4, background: "#333", flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "TU CARTA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, carta.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13 } }, "#", carta.number, d.total ? `/${d.total}` : "", " \xB7 ", carta.set), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "c\xF3digo de set: ", carta.setCode || "\u2014"))), d.estado === "cargando" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#aaa", padding: "16px 0" } }, "buscando opciones\u2026"), d.estado === "sincupo" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ffcf70", padding: "12px 0" } }, "Llegaste al l\xEDmite seguro de consultas de hoy (\u2248", revCupo, "/100). Sigue ma\xF1ana: el bot comparte ese cupo."), d.estado === "error" && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ff9b9b", marginBottom: 8 } }, d.msg), /* @__PURE__ */ React.createElement("button", { onClick: () => revCargarCarta(carta), style: btn("#333", "#fff", { marginRight: 8 }) }, "reintentar")), c && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 12, padding: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 6 } }, "OPCI\xD3N ", d.pos + 1, " DE ", d.cands.length), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, img?.url ? /* @__PURE__ */ React.createElement("img", { src: img.url, alt: "", style: { width: 84, borderRadius: 4, flexShrink: 0 } }) : /* @__PURE__ */ React.createElement("div", { style: { width: 84, height: 118, borderRadius: 4, background: "#333", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#777", textAlign: "center" } }, img === void 0 ? "cargando foto\u2026" : "sin foto"), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, c.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 22, fontWeight: 800, margin: "2px 0" } }, "#", c.number), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#bbb" } }, c.setName || "set sin nombre"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, c.setId || c.setCode || "sin c\xF3digo de set"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 700, marginTop: 4, color: c.market != null ? "#8fe0a8" : "#999" } }, c.market != null ? fmtUSD(c.market) : "sin precio raw"))), img?.url && !img.exacta && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#ffcf70", marginTop: 6 } }, "foto referencial: puede ser de otro set; gu\xEDate por la numeraci\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 } }, chip(numOk, "n\xFAmero"), setOk !== null && chip(setOk, "set"), totOk !== null && chip(totOk, `total ${totCand} vs ${d.total}`))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginTop: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setRevDatos((x) => ({ ...x, pos: x.pos + 1 })), style: btn("#333", "#fff", { flex: 1 }) }, "No es"), /* @__PURE__ */ React.createElement("button", { disabled: c.market == null, onClick: () => revSiEs(carta, c), style: btn("#aac756", "#111", { flex: 1, opacity: c.market == null ? 0.35 : 1 }) }, c.market == null ? "Sin precio" : "S\xED es"))), sinMas && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ddd", marginBottom: 8 } }, d.msg || `Ya viste las ${d.cands.length} opciones.`), proxima && /* @__PURE__ */ React.createElement("button", { onClick: () => revOtraVariante(carta), style: btn("#aac756", "#111", { width: "100%", marginBottom: 8 }) }, "Probar otra variante: \xAB", proxima.q, "\xBB"), !proxima && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#888", marginBottom: 8 } }, "No quedan m\xE1s variantes del nombre por probar.")), d.estado !== "cargando" && /* @__PURE__ */ React.createElement("button", { onClick: () => setRevSaltadas((s) => [...s, carta.id]), style: btn("transparent", "#bbb", { width: "100%", marginTop: 8, border: "1px solid #333" }) }, "Saltar esta carta")), revAviso && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#ffcf70", marginTop: 10 } }, revAviso), revFallidas.length > 0 && /* @__PURE__ */ React.createElement("button", { onClick: () => revFallidas.forEach((x) => guardarOverrideRemoto(x.id, x.ov)), style: btn("#333", "#fff", { marginTop: 8, fontSize: 12, padding: "8px 12px" }) }, "\u21BB reintentar ", revFallidas.length, " elecci\xF3n(es) pendientes de enviar al bot")));
+      const imgApi = c ? revImgs[claveCandidato(c)] : null;
+      const urlsCand = c ? [...imgApi?.url ? [imgApi.url] : [], ...urlsFoto({ image: c.image, setId: c.setId, setCode: c.setCode, number: c.number })] : [];
+      return /* @__PURE__ */ React.createElement("div", { onClick: () => setRevAbierta(false), style: { position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,460px)", background: "#111", color: "#fff", borderRadius: "16px 16px 0 0", padding: "16px 16px 28px", maxHeight: "92vh", overflowY: "auto", boxSizing: "border-box", fontFamily: F } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, "\u{1F9ED} Cartas sin precio \xB7 quedan ", revCola.length), /* @__PURE__ */ React.createElement("button", { onClick: () => setRevAbierta(false), style: { background: "transparent", border: "none", color: "#999", fontSize: 18, cursor: "pointer" } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 12 } }, "consultas de hoy \u2248 ", revCupo, "/100 \xB7 ", revCont.elegidas, " elegidas \xB7 ", revCont.solas, " calzaron solas"), !carta ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: "#8fe0a8", padding: "20px 0" } }, "No quedan cartas sin precio en la cola \u{1F389}") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center", background: "#1a1a1a", borderRadius: 12, padding: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement(FotoFB, { key: "t" + carta.id, urls: urlsFoto({ image: carta.image, cardId: carta.cardId }), style: { width: 56, borderRadius: 4, flexShrink: 0 }, vacio: /* @__PURE__ */ React.createElement("div", { style: { width: 56, height: 78, borderRadius: 4, background: "#333", flexShrink: 0 } }) }), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "TU CARTA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, carta.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13 } }, "#", carta.number, d.total ? `/${d.total}` : "", " \xB7 ", carta.set), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "c\xF3digo de set: ", carta.setCode || "\u2014"))), d.estado === "cargando" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#aaa", padding: "16px 0" } }, "buscando opciones\u2026"), d.estado === "sincupo" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ffcf70", padding: "12px 0" } }, "Llegaste al l\xEDmite seguro de consultas de hoy (\u2248", revCupo, "/100). Sigue ma\xF1ana: el bot comparte ese cupo."), d.estado === "error" && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ff9b9b", marginBottom: 8 } }, d.msg), /* @__PURE__ */ React.createElement("button", { onClick: () => revCargarCarta(carta), style: btn("#333", "#fff", { marginRight: 8 }) }, "reintentar")), c && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 12, padding: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 6 } }, "OPCI\xD3N ", d.pos + 1, " DE ", d.cands.length), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement(
+        FotoFB,
+        {
+          key: "c" + urlsCand.join("|"),
+          urls: urlsCand,
+          style: { width: 84, borderRadius: 4, flexShrink: 0 },
+          vacio: /* @__PURE__ */ React.createElement("div", { style: { width: 84, height: 118, borderRadius: 4, background: "#333", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 10, color: "#999", textAlign: "center", padding: 4, boxSizing: "border-box" } }, imgApi?.buscando ? "buscando\u2026" : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", null, imgApi && imgApi.url === null ? imgApi.error ? "fall\xF3: " + imgApi.error : "sin foto" : "sin foto"), /* @__PURE__ */ React.createElement("button", { onClick: () => revBuscarFoto(c), style: { background: "#333", border: "1px solid #555", borderRadius: 6, color: "#ddd", fontSize: 10, padding: "4px 6px", cursor: "pointer" } }, "\u{1F50E} buscar foto")))
+        }
+      ), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, c.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 22, fontWeight: 800, margin: "2px 0" } }, "#", c.number), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#bbb" } }, c.setName || "set sin nombre"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, c.setId || c.setCode || "sin c\xF3digo de set"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 700, marginTop: 4, color: c.market != null ? "#8fe0a8" : "#999" } }, c.market != null ? fmtUSD(c.market) : "sin precio NM/LP"), c.market == null && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#888", marginTop: 2 } }, c.preciosDisponibles && c.preciosDisponibles.length ? `la API trae: ${c.preciosDisponibles.join(", ")}` : "la API no trae ning\xFAn precio para esta opci\xF3n"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 } }, chip(numOk, "n\xFAmero"), setOk !== null && chip(setOk, setComo === "nombre" ? "set (mismo nombre)" : "set"), totOk !== null && chip(totOk, `total ${totCand} vs ${d.total}`))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginTop: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setRevDatos((x) => ({ ...x, pos: x.pos + 1 })), style: btn("#333", "#fff", { flex: 1 }) }, "No es"), /* @__PURE__ */ React.createElement("button", { disabled: c.market == null, onClick: () => revSiEs(carta, c), style: btn("#aac756", "#111", { flex: 1, opacity: c.market == null ? 0.35 : 1 }) }, c.market == null ? "Sin precio" : "S\xED es"))), sinMas && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ddd", marginBottom: 8 } }, d.msg || `Ya viste las ${d.cands.length} opciones.`), proxima && /* @__PURE__ */ React.createElement("button", { onClick: () => revOtraVariante(carta), style: btn("#aac756", "#111", { width: "100%", marginBottom: 8 }) }, "Probar otra variante: \xAB", proxima.q, "\xBB"), !proxima && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#888", marginBottom: 8 } }, "No quedan m\xE1s variantes del nombre por probar.")), d.estado !== "cargando" && /* @__PURE__ */ React.createElement("button", { onClick: () => setRevSaltadas((s) => [...s, carta.id]), style: btn("transparent", "#bbb", { width: "100%", marginTop: 8, border: "1px solid #333" }) }, "Saltar esta carta")), revAviso && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#ffcf70", marginTop: 10 } }, revAviso), revFallidas.length > 0 && /* @__PURE__ */ React.createElement("button", { onClick: () => revFallidas.forEach((x) => guardarOverrideRemoto(x.id, x.ov)), style: btn("#333", "#fff", { marginTop: 8, fontSize: 12, padding: "8px 12px" }) }, "\u21BB reintentar ", revFallidas.length, " elecci\xF3n(es) pendientes de enviar al bot")));
     }
     function renderDarkDetailModal() {
       if (!darkDetailId) return null;

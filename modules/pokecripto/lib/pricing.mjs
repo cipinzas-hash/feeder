@@ -132,6 +132,15 @@ export async function fetchTCGCandidatos(q, apiKey) {
         name: c.name, number: c.number,
         setId: c.set?.id || null, setCode: c.set?.ptcgoCode || null, setName: c.set?.name || null,
         market: best?.market || null, low: best?.low || null, high: best?.high || null,
+        // Para diagnosticar "calzó nombre y número pero sin precio": qué precios sí trae la API
+        // (ej. raw.moderately_played.tcgplayer). Solo informativo; el precio que se usa sigue siendo NM/LP.
+        preciosDisponibles: Object.entries(c.prices || {}).flatMap(([grupo, v]) =>
+          (v && typeof v === "object")
+            ? Object.entries(v).flatMap(([cond, fuentes]) => (fuentes && typeof fuentes === "object")
+                ? Object.keys(fuentes).map(f => `${grupo}.${cond}.${f}`) : [`${grupo}.${cond}`])
+            : [grupo]).slice(0, 8),
+        // la API no documenta si trae foto: si la trae se usa primero, si no se arma por set+número
+        image: c.image || c.image_url || c.imageUrl || c.images?.small || c.images?.large || null,
       };
     });
     return { query: q, candidatos };

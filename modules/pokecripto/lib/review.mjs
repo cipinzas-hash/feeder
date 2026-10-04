@@ -82,18 +82,40 @@ export function planBusquedas(carta) {
   return plan;
 }
 
+// ── Comparar sets: por código O por nombre (4-oct-2026) ─────────────────
+// Bug encontrado con Cristopher (sets Aquapolis/Skyridge/Expedition): la carta y el candidato
+// mostraban el MISMO nombre de set, pero tcgpricelookup.com indexa los sets con otro código que
+// pokemontcg.io ("ecard2" vs el suyo) y yo exigía igualdad de código: ni se marcaba el set como
+// coincidente ni se autodetectaba el match. Ahora el set coincide si el código calza O si el nombre
+// del set, normalizado, es el mismo.
+const SERIES = /^(sword\s*&?\s*shield|scarlet\s*&?\s*violet|sun\s*&?\s*moon|mega\s*evolution|black\s*&?\s*white|heartgold\s*&?\s*soulsilver|diamond\s*&?\s*pearl|xy|swsh|sv|sm)\s*[:\-–—]?\s*/i;
+export function normSet(s) {
+  return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/pok[eé]mon\s*(tcg)?/ig, "").replace(SERIES, "")
+    .toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+export function mismoSet(carta, c) {
+  const sc = String(carta?.setCode || "").toLowerCase();
+  const porCodigo = !!sc && ((c?.setId || "").toLowerCase() === sc || (c?.setCode || "").toLowerCase() === sc);
+  if (porCodigo) return "codigo";
+  const a = normSet(carta?.set), b = normSet(c?.setName);
+  if (a && b && a === b) return "nombre";
+  return null;
+}
+// ¿El candidato trae algún dato de set? Si no trae ninguno no hay con qué contrastar.
+export function tieneDatosDeSet(c) { return !!(c?.setId || c?.setCode || c?.setName); }
+
 // ── Ordenar candidatos: primero los que más se parecen a la carta ───────
 export function claveCandidato(c) {
   return `${(c.setId || c.setCode || "").toLowerCase()}|${normNum(c.number)}|${normName(c.name)}`;
 }
 export function rankCandidatos(carta, candidatos) {
   const num = normNum(carta?.number), nom = normName(carta?.name);
-  const sc = String(carta?.setCode || "").toLowerCase();
   return (candidatos || [])
     .map((c, i) => {
       let p = 0;
       if (num && normNum(c.number) === num) p += 100;
-      if (sc && ((c.setId || "").toLowerCase() === sc || (c.setCode || "").toLowerCase() === sc)) p += 50;
+      if (mismoSet(carta, c)) p += 50;
       if (nom && normName(c.name) === nom) p += 20;
       if (c.market != null) p += 5;
       return { ...c, puntaje: p, _i: i };
@@ -110,13 +132,14 @@ export function mezclarCandidatos(carta, vistos, nuevos) {
 // Match automático seguro: mismo nombre normalizado + mismo número + precio.
 export function matchAutomatico(carta, candidatos) {
   const num = normNum(carta?.number), nom = normName(carta?.name);
-  const sc = String(carta?.setCode || "").toLowerCase();
   if (!num || !nom) return null;
+  const conocemosSet = !!(carta?.setCode || carta?.set);
   return (candidatos || []).find(c =>
     c.market != null && normNum(c.number) === num && normName(c.name) === nom &&
-    // con setCode conocido, el set también tiene que calzar: el mismo nombre+número puede ser
-    // una reimpresión de otro set con otro precio (la "variante equivocada" que el bot evita)
-    (!sc || (c.setId || "").toLowerCase() === sc || (c.setCode || "").toLowerCase() === sc)) || null;
+    // el mismo nombre+número puede ser una reimpresión de otro set con otro precio (la "variante
+    // equivocada" que el bot evita): si ambos lados traen datos de set, tienen que calzar (código o
+    // nombre). Si el candidato no trae ningún dato de set, no hay con qué contrastar y se acepta.
+    (!conocemosSet || !tieneDatosDeSet(c) || mismoSet(carta, c))) || null;
 }
 
 // ── Overrides (designaciones manuales) compartidos con el bot ───────────
@@ -137,4 +160,32 @@ export function mergeOverrides(actual, cartaId, ov) {
 export function aplicarOverrides(inventario, overrides) {
   const ovs = normalizarOverridesRemotos(overrides);
   return (Array.isArray(inventario) ? inventario : []).map(c => (ovs[c.id] ? { ...c, tcgOverride: ovs[c.id] } : c));
+}
+
+// ── Fotos sin gastar consultas (4-oct-2026) ─────────────────────────────
+// Las fotos de los candidatos se buscaban por API en pokemontcg.io, que sin key corta con 429 y
+// además NO tiene los sets más nuevos (justo los que no tienen precio): quedaban "sin foto".
+// Las dos CDN que ya usa Angst tienen URL predecible por set+número, sin API:
+//   pokemontcg.io -> https://images.pokemontcg.io/<set>/<número>.png
+//   scrydex       -> https://images.scrydex.com/pokemon/<set>-<número>/small
+// Se devuelve la lista ordenada para probar una por una (onError pasa a la siguiente).
+export function numeroBase(n) {
+  const b = String(n ?? "").split("/")[0].trim();
+  return /^\d+$/.test(b) ? String(parseInt(b, 10)) : b; // "090/084" -> "90"; "TG05" queda igual
+}
+function urlsDeSetNumero(set, num) {
+  if (!set || !num) return [];
+  const s = String(set).toLowerCase();
+  return [`https://images.pokemontcg.io/${s}/${num}.png`, `https://images.scrydex.com/pokemon/${s}-${num}/small`];
+}
+export function urlsFoto({ image, cardId, setId, setCode, number }) {
+  const urls = [];
+  if (image) urls.push(image);
+  if (cardId && String(cardId).includes("-")) {
+    const i = String(cardId).lastIndexOf("-");
+    urls.push(...urlsDeSetNumero(String(cardId).slice(0, i), String(cardId).slice(i + 1)));
+  }
+  const num = numeroBase(number);
+  for (const set of [setId, setCode]) urls.push(...urlsDeSetNumero(set, num));
+  return [...new Set(urls)];
 }

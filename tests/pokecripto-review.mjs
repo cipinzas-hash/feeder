@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   mergePreciosBot, colaSinPrecio, variantesNombre, planBusquedas, rankCandidatos,
   mezclarCandidatos, matchAutomatico, normalizarOverridesRemotos, mergeOverrides, aplicarOverrides,
+  normSet, mismoSet, urlsFoto, numeroBase,
 } from "../modules/pokecripto/lib/review.mjs";
 
 let n = 0;
@@ -99,5 +100,33 @@ t("aplicarOverrides pone tcgOverride solo a las cartas designadas y no toca lo d
   assert.equal(out[0].tcgOverride.name, "A real"); assert.equal(out[1].tcgOverride, undefined);
   assert.equal(out[0].name, "A");
   assert.deepEqual(aplicarOverrides(inv, { found: false }), inv);
+});
+t("Aquapolis: mismo nombre de set con otro código SÍ calza (era el bug) y se autodetecta", () => {
+  const carta = { name: "Jumpluff", number: "17", set: "Aquapolis", setCode: "ecard2" };
+  const c = { name: "Jumpluff", number: "17/147", setId: "aquapolis", setCode: "AQ", setName: "Aquapolis", market: 2.1 };
+  assert.equal(mismoSet(carta, c), "nombre");
+  assert.equal(matchAutomatico(carta, [c]).market, 2.1);
+});
+t("mismoSet: el código gana, y sets distintos no calzan aunque el nombre y número sean iguales", () => {
+  assert.equal(mismoSet({ set: "X", setCode: "ecard2" }, { setId: "ECARD2", setName: "Otro" }), "codigo");
+  assert.equal(mismoSet({ set: "Aquapolis", setCode: "ecard2" }, { setId: "skyridge", setCode: "SK", setName: "Skyridge" }), null);
+  const carta = { name: "Jumpluff", number: "17", set: "Aquapolis", setCode: "ecard2" };
+  assert.equal(matchAutomatico(carta, [{ name: "Jumpluff", number: "17/147", setId: "skyridge", setName: "Skyridge", market: 9 }]), null);
+});
+t("matchAutomatico acepta un candidato sin ningún dato de set (no hay con qué contrastar)", () => {
+  assert.equal(matchAutomatico({ name: "Pikachu", number: "25", set: "Base", setCode: "base1" }, [{ name: "Pikachu", number: "25", market: 3 }]).market, 3);
+});
+t("normSet ignora el prefijo de serie y los acentos", () => {
+  assert.equal(normSet("Sword & Shield: Brilliant Stars"), normSet("Brilliant Stars"));
+  assert.equal(normSet("Scarlet & Violet—Paldea Evolved"), normSet("Paldea Evolved"));
+  assert.notEqual(normSet("Base Set"), normSet("Base Set 2"));
+});
+t("urlsFoto: arma las URLs por set+número sin API, sin ceros a la izquierda y sin repetidos", () => {
+  assert.equal(numeroBase("090/084"), "90"); assert.equal(numeroBase("TG05"), "TG05");
+  const u = urlsFoto({ setId: "me4", setCode: "ME4", number: "116/084" });
+  assert.deepEqual(u, ["https://images.pokemontcg.io/me4/116.png", "https://images.scrydex.com/pokemon/me4-116/small"]);
+  const v = urlsFoto({ image: "https://x/y.png", cardId: "ecard2-H13" });
+  assert.equal(v[0], "https://x/y.png"); assert.ok(v.includes("https://images.pokemontcg.io/ecard2/H13.png"));
+  assert.deepEqual(urlsFoto({}), []);
 });
 console.log(`\n${n} pruebas en verde`);

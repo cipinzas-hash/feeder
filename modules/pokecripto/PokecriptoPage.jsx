@@ -2,7 +2,7 @@
 // (build-pokecripto.mjs) -- se importa acá para que cliente y bot nunca
 // diverjan en matching/normalización (issue #9).
 import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPriceDiag, fetchTCGPrice, fetchTCGCandidatos, addSnapshot, refreshPrecio } from "./lib/pricing.mjs";
-import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarCandidatos, matchAutomatico, mergeOverrides, claveCandidato } from "./lib/review.mjs";
+import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarCandidatos, matchAutomatico, mergeOverrides, claveCandidato, urlsFoto, mismoSet } from "./lib/review.mjs";
 
 // ─── PokeLoader ───────────────────────────────────────────────────────────────
 function PokeLoader({ active }) {
@@ -47,6 +47,14 @@ function PokeLoader({ active }) {
 // el modal de detalle no lo necesita, ahí ya sabés qué carta abriste, y
 // el maxHeight+objectFit:"contain" de esa vista mete letterboxing que
 // rompería el alineado del recorte.
+// Foto que prueba una lista de URLs en orden: si una falla (onError) pasa a la siguiente; si
+// ninguna carga muestra `vacio`. key={urls.join("|")} en el uso reinicia el intento al cambiar de carta.
+function FotoFB({urls,style,vacio}){
+  const [i,setI]=React.useState(0);
+  const lista=urls||[];
+  if(i>=lista.length) return vacio||null;
+  return <img src={lista[i]} alt="" referrerPolicy="no-referrer" onError={()=>setI(k=>k+1)} style={style}/>;
+}
 const ART_CLIP = "inset(9% 6% 41% 6%)";
 function DarkArt({src,alt,cons,wrapStyle,imgFit}){
   if(cons) return <img src={src} alt={alt} style={{...wrapStyle,filter:"none",display:"block"}}/>;
@@ -1471,27 +1479,20 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     setRevCartaId(revActual.id);
     revCargarCarta(revActual);
   },[revAbierta,revActual&&revActual.id]);
-  // Foto del candidato que se está viendo (solo ese, para no gastar el límite de pokemontcg.io):
-  // primero con el set exacto; si no hay, por nombre+número y se avisa que es referencial.
-  React.useEffect(()=>{
-    if(!revAbierta||revDatos.estado!=="listo") return;
-    const c=revDatos.cands[revDatos.pos]; if(!c) return;
-    const k=claveCandidato(c); if(revImgs[k]!==undefined) return;
-    let vivo=true;
-    (async()=>{
-      const num=String(c.number||"").split("/")[0];
-      const intentos=[];
-      if(c.setCode) intentos.push({q:`name:"${c.name}" number:${num} set.ptcgoCode:${c.setCode}`,exacta:true});
-      if(c.setId) intentos.push({q:`name:"${c.name}" number:${num} set.id:${c.setId}`,exacta:true});
-      intentos.push({q:`name:"${c.name}" number:${num}`,exacta:false});
-      let res={url:null,exacta:false};
-      for(const it of intentos){
-        try{ const d=await fetchPoke(`${POKE_BASE}/cards?q=${encodeURIComponent(it.q)}&pageSize=1&select=images`); const u=d?.data?.[0]?.images?.small; if(u){ res={url:u,exacta:it.exacta}; break; } }catch(e){}
-      }
-      if(vivo) setRevImgs(m=>({...m,[k]:res}));
-    })();
-    return ()=>{ vivo=false; };
-  },[revAbierta,revDatos.estado,revDatos.pos,revCartaId]);
+  // Búsqueda de foto por API SOLO cuando el usuario la pide (botón en el hueco de la foto): sin key,
+  // pokemontcg.io corta con 429 y antes eso se tragaba en silencio y quedaba "sin foto" para siempre.
+  async function revBuscarFoto(c){
+    const k=claveCandidato(c);
+    setRevImgs(m=>({...m,[k]:{buscando:true}}));
+    const num=String(c.number||"").split("/")[0];
+    const intentos=[`name:"${c.name}" number:${num}${c.setCode?` set.ptcgoCode:${c.setCode}`:""}`,`name:"${c.name}" number:${num}`];
+    let res={url:null,error:null};
+    for(const q of intentos){
+      try{ const d=await fetchPoke(`${POKE_BASE}/cards?q=${encodeURIComponent(q)}&pageSize=1&select=images`); const u=d?.data?.[0]?.images?.small; if(u){ res={url:u,error:null}; break; } }
+      catch(e){ res={url:null,error:e.message}; }
+    }
+    setRevImgs(m=>({...m,[k]:res}));
+  }
 
   function renderRevisionModal(){
     if(!revAbierta) return null;
@@ -1506,10 +1507,12 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const proxima=plan[d.planIdx];
     const chip=(ok,txt)=><span style={{fontFamily:F,fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:10,background:ok?"#1f3d2b":"#4a2323",color:ok?"#8fe0a8":"#ff9b9b"}}>{ok?"✓":"✗"} {txt}</span>;
     const numOk=!!(c&&carta&&normNum(c.number)===normNum(carta.number));
-    const setOk=c&&carta&&carta.setCode?((c.setId||"").toLowerCase()===carta.setCode.toLowerCase()||(c.setCode||"").toLowerCase()===carta.setCode.toLowerCase()):null;
+    const setComo=c&&carta?mismoSet(carta,c):null;                 // "codigo" | "nombre" | null
+    const setOk=c&&carta&&(carta.setCode||carta.set)&&(c.setId||c.setCode||c.setName)?!!setComo:null;
     const totCand=c&&String(c.number||"").includes("/")?parseInt(String(c.number).split("/")[1],10):null;
     const totOk=totCand&&d.total?totCand===parseInt(d.total,10):null;
-    const img=c?revImgs[claveCandidato(c)]:null;
+    const imgApi=c?revImgs[claveCandidato(c)]:null;
+    const urlsCand=c?[...(imgApi?.url?[imgApi.url]:[]),...urlsFoto({image:c.image,setId:c.setId,setCode:c.setCode,number:c.number})]:[];
     return(
       <div onClick={()=>setRevAbierta(false)} style={{position:"fixed",inset:0,zIndex:700,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
         <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,460px)",background:"#111",color:"#fff",borderRadius:"16px 16px 0 0",padding:"16px 16px 28px",maxHeight:"92vh",overflowY:"auto",boxSizing:"border-box",fontFamily:F}}>
@@ -1522,7 +1525,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             <div style={{fontSize:14,color:"#8fe0a8",padding:"20px 0"}}>No quedan cartas sin precio en la cola 🎉</div>
           ):(<>
             <div style={{display:"flex",gap:10,alignItems:"center",background:"#1a1a1a",borderRadius:12,padding:10,marginBottom:12}}>
-              {carta.image?<img src={carta.image} alt="" style={{width:56,borderRadius:4,flexShrink:0}}/>:<div style={{width:56,height:78,borderRadius:4,background:"#333",flexShrink:0}}/>}
+              <FotoFB key={"t"+carta.id} urls={urlsFoto({image:carta.image,cardId:carta.cardId})} style={{width:56,borderRadius:4,flexShrink:0}} vacio={<div style={{width:56,height:78,borderRadius:4,background:"#333",flexShrink:0}}/>}/>
               <div style={{minWidth:0}}>
                 <div style={{fontSize:11,color:"#888"}}>TU CARTA</div>
                 <div style={{fontSize:15,fontWeight:700}}>{carta.name}</div>
@@ -1540,18 +1543,24 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               <div style={{background:"#1a1a1a",borderRadius:12,padding:10}}>
                 <div style={{fontSize:11,color:"#888",marginBottom:6}}>OPCIÓN {d.pos+1} DE {d.cands.length}</div>
                 <div style={{display:"flex",gap:10}}>
-                  {img?.url?<img src={img.url} alt="" style={{width:84,borderRadius:4,flexShrink:0}}/>:<div style={{width:84,height:118,borderRadius:4,background:"#333",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#777",textAlign:"center"}}>{img===undefined?"cargando foto…":"sin foto"}</div>}
+                  <FotoFB key={"c"+urlsCand.join("|")} urls={urlsCand} style={{width:84,borderRadius:4,flexShrink:0}}
+                    vacio={<div style={{width:84,height:118,borderRadius:4,background:"#333",flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,fontSize:10,color:"#999",textAlign:"center",padding:4,boxSizing:"border-box"}}>
+                      {imgApi?.buscando?"buscando…":<>
+                        <span>{imgApi&&imgApi.url===null?(imgApi.error?"falló: "+imgApi.error:"sin foto"):"sin foto"}</span>
+                        <button onClick={()=>revBuscarFoto(c)} style={{background:"#333",border:"1px solid #555",borderRadius:6,color:"#ddd",fontSize:10,padding:"4px 6px",cursor:"pointer"}}>🔎 buscar foto</button>
+                      </>}
+                    </div>}/>
                   <div style={{minWidth:0}}>
                     <div style={{fontSize:15,fontWeight:700}}>{c.name}</div>
                     <div style={{fontSize:22,fontWeight:800,margin:"2px 0"}}>#{c.number}</div>
                     <div style={{fontSize:12,color:"#bbb"}}>{c.setName||"set sin nombre"}</div>
                     <div style={{fontSize:11,color:"#888"}}>{c.setId||c.setCode||"sin código de set"}</div>
-                    <div style={{fontSize:14,fontWeight:700,marginTop:4,color:c.market!=null?"#8fe0a8":"#999"}}>{c.market!=null?fmtUSD(c.market):"sin precio raw"}</div>
+                    <div style={{fontSize:14,fontWeight:700,marginTop:4,color:c.market!=null?"#8fe0a8":"#999"}}>{c.market!=null?fmtUSD(c.market):"sin precio NM/LP"}</div>
+                    {c.market==null&&<div style={{fontSize:10,color:"#888",marginTop:2}}>{c.preciosDisponibles&&c.preciosDisponibles.length?`la API trae: ${c.preciosDisponibles.join(", ")}`:"la API no trae ningún precio para esta opción"}</div>}
                   </div>
                 </div>
-                {img?.url&&!img.exacta&&<div style={{fontSize:10,color:"#ffcf70",marginTop:6}}>foto referencial: puede ser de otro set; guíate por la numeración</div>}
                 <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:8}}>
-                  {chip(numOk,"número")}{setOk!==null&&chip(setOk,"set")}{totOk!==null&&chip(totOk,`total ${totCand} vs ${d.total}`)}
+                  {chip(numOk,"número")}{setOk!==null&&chip(setOk,setComo==="nombre"?"set (mismo nombre)":"set")}{totOk!==null&&chip(totOk,`total ${totCand} vs ${d.total}`)}
                 </div>
               </div>
               <div style={{display:"flex",gap:10,marginTop:12}}>
