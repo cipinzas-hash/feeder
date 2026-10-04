@@ -28,10 +28,15 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import { refreshPrecio } from "../../pokecripto/lib/pricing.mjs";
+import { aplicarOverrides, normalizarOverridesRemotos } from "../../pokecripto/lib/review.mjs";
 
 const INVENTARIO_PATH = process.env.POKECRIPTO_INVENTARIO_PATH;
 const PENDING_PATH = process.env.POKECRIPTO_PENDING_PATH;
 const TCG_API_KEY = process.env.TCG_API_KEY || null;
+// Designaciones manuales de Cristopher (revisión de cartas sin precio, 3-oct-2026):
+// { idCarta: {name, number, setId, setCode} }. Opcional -- si la variable no está
+// o el archivo no existe, el bot corre igual que antes.
+const OVERRIDES_PATH = process.env.POKECRIPTO_OVERRIDES_PATH || null;
 
 // Con el throttle de POKE_THROTTLE_MS (más abajo) y timeout-minutes:20 del
 // workflow, el presupuesto de tiempo real de una corrida permite bastante
@@ -77,6 +82,17 @@ async function readJsonSafe(path, fallback) {
 const POKE_THROTTLE_MS = 3200;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+async function readOverridesSafe(path) {
+  if (!path) return {};
+  try {
+    const parsed = JSON.parse(await readFile(path, "utf-8"));
+    return normalizarOverridesRemotos(parsed);
+  } catch (e) {
+    console.log(`ℹ Sin overrides (${e.message}), se sigue sin ellos`);
+    return {};
+  }
+}
+
 async function main() {
   const inventario = await readJsonSafe(INVENTARIO_PATH, []);
   const pending = await readJsonSafe(PENDING_PATH, []);
@@ -86,7 +102,10 @@ async function main() {
   // llegó a vaciar pending).
   const idsExistentes = new Set(inventario.map(c => c.id));
   const nuevas = pending.filter(c => !idsExistentes.has(c.id));
-  const inventarioFusionado = [...inventario, ...nuevas];
+  const overrides = await readOverridesSafe(OVERRIDES_PATH);
+  // Los overrides se aplican ANTES de ordenar/preciar: refreshPrecio ya sabe usar carta.tcgOverride.
+  const inventarioFusionado = aplicarOverrides([...inventario, ...nuevas], overrides);
+  if (Object.keys(overrides).length) console.log(`✓ ${Object.keys(overrides).length} designación(es) manual(es) aplicada(s)`);
   if (nuevas.length) console.log(`✓ ${nuevas.length} carta(s) nueva(s) fusionada(s) desde pending`);
 
   // 2. Ordenar por antigüedad de snapshot (tcgUpdated null = más viejo

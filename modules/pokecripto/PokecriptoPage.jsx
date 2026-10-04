@@ -1,7 +1,8 @@
 // modules/pokecripto/lib/pricing.mjs es la misma lógica que usa el bot
 // (build-pokecripto.mjs) -- se importa acá para que cliente y bot nunca
 // diverjan en matching/normalización (issue #9).
-import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPriceDiag, fetchTCGPrice, addSnapshot, refreshPrecio } from "./lib/pricing.mjs";
+import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPriceDiag, fetchTCGPrice, fetchTCGCandidatos, addSnapshot, refreshPrecio } from "./lib/pricing.mjs";
+import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarCandidatos, matchAutomatico, mergeOverrides, claveCandidato } from "./lib/review.mjs";
 
 // ─── PokeLoader ───────────────────────────────────────────────────────────────
 function PokeLoader({ active }) {
@@ -399,6 +400,18 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [diagResult, setDiagResult] = React.useState(null);
   const [diagLoading, setDiagLoading] = React.useState(false);
   const [diagImgs, setDiagImgs] = React.useState([]); // fotos de los candidatos (26-sep-2026), alineado por índice con diagResult.candidatos
+  // ── Revisión de cartas sin precio (3-oct-2026, a pedido de Cristopher) ──
+  const [revAbierta,  setRevAbierta]  = React.useState(false);
+  const [revSaltadas, setRevSaltadas] = React.useState([]);   // ids saltadas en esta sesión
+  const [revCartaId,  setRevCartaId]  = React.useState(null); // carta cuyos candidatos están cargados
+  const [revDatos,    setRevDatos]    = React.useState({cartaId:null,estado:"idle",cands:[],pos:0,planIdx:1,msg:null,total:null});
+  const [revImgs,     setRevImgs]     = React.useState({});    // claveCandidato -> {url, exacta}
+  const [revCupo,     setRevCupo]     = React.useState(0);     // consultas manuales a tcgpricelookup.com hechas hoy (estimado)
+  const [revCont,     setRevCont]     = React.useState({elegidas:0,solas:0});
+  const [revAviso,    setRevAviso]    = React.useState(null);
+  const [revFallidas, setRevFallidas] = React.useState([]);    // elecciones que no llegaron al Worker: [{id,ov}]
+  const revTok = React.useRef(0);                              // descarta respuestas de una búsqueda si ya cambió la carta
+  const revCadena = React.useRef(Promise.resolve());          // serializa los guardados al Worker (leer-modificar-escribir)
   const [darkPriceModal, setDarkPriceModal] = React.useState(null);
   const [darkPrecioInput,setDarkPrecioInput]= React.useState("");
   const [darkNotaInput,  setDarkNotaInput]  = React.useState("");
@@ -857,8 +870,10 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       .then(r=>r.ok?r.json():null)
       .then(remote=>{
         if(!Array.isArray(remote) || !remote.length) return;
-        const preciosPorId = new Map(remote.map(c=>[c.id,{tcgMarket:c.tcgMarket,tcgLow:c.tcgLow,tcgHigh:c.tcgHigh,tcgUpdated:c.tcgUpdated,priceHistory:c.priceHistory}]));
-        saveInventario(prev=>(prev||[]).map(c=>preciosPorId.has(c.id)?{...c,...preciosPorId.get(c.id)}:c));
+        // 3-oct-2026: antes esto superponía también las cartas que el bot NO había podido preciar
+        // (tcgMarket null) y borraba al abrir el módulo los precios elegidos a mano. Ahora solo
+        // se superpone cuando el bot sí tiene precio (ver lib/review.mjs).
+        saveInventario(prev=>mergePreciosBot(prev||[],remote));
       })
       .catch(()=>{});
   },[]);
@@ -1360,6 +1375,200 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               )}
             </>
         }
+      </div>
+    );
+  }
+
+  // ── Revisión de cartas sin precio (3-oct-2026, a pedido de Cristopher) ──
+  // Recorre las cartas sin precio (ordenadas por set y número), muestra los candidatos de a UNO con
+  // su numeración, "No es" pasa al siguiente y "Sí es" guarda precio + designación (tcgOverride) y
+  // la manda al Worker (pokecripto-overrides.json) para que el bot la use todos los días.
+  // Cada búsqueda gasta una de las 100 consultas diarias de tcgpricelookup.com (compartidas con el
+  // bot): se cuentan acá y se frena antes de agotarlas.
+  const REV_CUPO_KEY="angst-pokecripto-tcgcalls-v1";
+  const REV_CUPO_STOP=95;
+  function leerCupoHoy(){ try{ const o=JSON.parse(localStorage.getItem(REV_CUPO_KEY)||"null"); return o&&o.d===hoy?o.n:0; }catch(e){ return 0; } }
+  function sumarCupo(){ const n=leerCupoHoy()+1; try{ localStorage.setItem(REV_CUPO_KEY,JSON.stringify({d:hoy,n})); }catch(e){} setRevCupo(n); return n; }
+  const revCola=React.useMemo(()=>colaSinPrecio(inv,new Set(revSaltadas)),[inv,revSaltadas]);
+  const revActual=revCola[0]||null;
+
+  function revAplicar(cartaId,c,conOverride){
+    const ov={name:c.name,number:c.number,setId:c.setId||null,setCode:c.setCode||null};
+    // saveInventario con función: siempre sobre el inventario más reciente (no el de este render)
+    saveInventario(prev=>(prev||[]).map(x=>x.id===cartaId?{...x,tcgMarket:c.market,tcgLow:c.low,tcgHigh:c.high,tcgUpdated:hoy,priceHistory:addSnapshot(x.priceHistory,c.market,c.low,c.high,hoy),...(conOverride?{tcgOverride:ov}:{})}:x));
+    return ov;
+  }
+  function guardarOverrideRemoto(cartaId,ov){
+    const auth=getPokecriptoAuth();
+    if(!auth){
+      setRevFallidas(f=>[...f.filter(x=>x.id!==cartaId),{id:cartaId,ov}]);
+      setRevAviso("Elegida solo en este dispositivo: conecta el bot de precios (botón de la pantalla principal) y usa «reintentar» para que la use cada día.");
+      return;
+    }
+    // En fila: cada guardado lee el archivo, agrega su entrada y lo escribe; dos a la vez se pisarían.
+    revCadena.current=revCadena.current.then(async()=>{
+      try{
+        const g=await fetch(`${POKECRIPTO_WORKER_URL}?path=pokecripto-overrides.json`,{headers:{"X-Angst-Auth":auth}});
+        if(!g.ok&&g.status!==404) throw new Error("lectura HTTP "+g.status);
+        const remoto=g.ok?await g.json():{};
+        const p=await fetch(POKECRIPTO_WORKER_URL,{method:"POST",headers:{"X-Angst-Auth":auth,"Content-Type":"application/json"},body:JSON.stringify({path:"pokecripto-overrides.json",payload:mergeOverrides(remoto,cartaId,ov)})});
+        if(!p.ok) throw new Error("escritura HTTP "+p.status);
+        setRevFallidas(f=>f.filter(x=>x.id!==cartaId));
+      }catch(e){
+        setRevFallidas(f=>[...f.filter(x=>x.id!==cartaId),{id:cartaId,ov}]);
+        setRevAviso(`No llegó al bot (${e.message}). Queda en este dispositivo; usa «reintentar».`);
+      }
+    });
+  }
+  async function revCargarCarta(carta){
+    setRevAviso(null);
+    const tok=++revTok.current, cid=carta.id;
+    if(!apiKey){ setRevDatos({cartaId:cid,estado:"error",cands:[],pos:0,planIdx:1,msg:"Falta la API key de TCG Price Lookup (la misma que usa el botón de diagnosticar).",total:null}); return; }
+    if(leerCupoHoy()>=REV_CUPO_STOP){ setRevDatos({cartaId:cid,estado:"sincupo",cands:[],pos:0,planIdx:1,msg:null,total:null}); return; }
+    setRevDatos({cartaId:cid,estado:"cargando",cands:[],pos:0,planIdx:1,msg:null,total:null});
+    // total del set (para comparar la numeración 116/084): pokemontcg.io, gratis, tolerante a fallos
+    const totalP=carta.cardId?fetchPoke(`${POKE_BASE}/cards/${carta.cardId}?select=set`).then(d=>d?.data?.set?.printedTotal||null).catch(()=>null):Promise.resolve(null);
+    const plan=planBusquedas(carta);
+    sumarCupo();
+    const r=await fetchTCGCandidatos(plan[0].q,apiKey);
+    const total=await totalP;
+    if(tok!==revTok.current) return; // el usuario ya pasó a otra carta
+    if(r.error){ setRevDatos({cartaId:cid,estado:"error",cands:[],pos:0,planIdx:1,msg:`No se pudo buscar (${r.error}).`,total}); return; }
+    const cands=rankCandidatos(carta,r.candidatos);
+    const auto=matchAutomatico(carta,cands);
+    if(auto){
+      revAplicar(carta.id,auto,false); // calza solo (nombre+número+set): sin override, el bot la encuentra igual
+      setRevCont(k=>({...k,solas:k.solas+1}));
+      return; // sale de la cola y el efecto carga la siguiente
+    }
+    setRevDatos({cartaId:cid,estado:cands.length?"listo":"agotado",cands,pos:0,planIdx:1,msg:cands.length?null:`«${plan[0].q}» no devolvió opciones.`,total});
+  }
+  async function revOtraVariante(carta){
+    if(revDatos.cartaId!==carta.id) return;
+    const tok=++revTok.current, cid=carta.id;
+    const plan=planBusquedas(carta), idx=revDatos.planIdx;
+    if(idx>=plan.length){ setRevAviso("No quedan más variantes por probar para esta carta."); return; }
+    if(leerCupoHoy()>=REV_CUPO_STOP){ setRevDatos(d=>({...d,estado:"sincupo"})); return; }
+    const previas=revDatos.cands;
+    setRevDatos(d=>({...d,estado:"cargando"}));
+    sumarCupo();
+    const r=await fetchTCGCandidatos(plan[idx].q,apiKey);
+    if(tok!==revTok.current) return;
+    if(r.error){ setRevDatos(d=>({...d,estado:"agotado",planIdx:idx+1,msg:`«${plan[idx].q}»: ${r.error}`})); return; }
+    const m=mezclarCandidatos(carta,previas,r.candidatos);
+    setRevDatos(d=>({...d,estado:m.agregados.length?"listo":"agotado",cands:m.todos,pos:previas.length,planIdx:idx+1,msg:m.agregados.length?null:`«${plan[idx].q}» no trajo opciones nuevas.`}));
+  }
+  function revSiEs(carta,c){
+    if(c.market==null||revDatos.cartaId!==carta.id) return; // nunca asignar candidatos de otra carta
+    const ov=revAplicar(carta.id,c,true);
+    setRevCont(k=>({...k,elegidas:k.elegidas+1}));
+    guardarOverrideRemoto(carta.id,ov);
+  }
+  React.useEffect(()=>{
+    if(!revAbierta) return;
+    if(!revActual){ if(revCartaId!==null) setRevCartaId(null); return; }
+    if(revActual.id===revCartaId) return;
+    setRevCartaId(revActual.id);
+    revCargarCarta(revActual);
+  },[revAbierta,revActual&&revActual.id]);
+  // Foto del candidato que se está viendo (solo ese, para no gastar el límite de pokemontcg.io):
+  // primero con el set exacto; si no hay, por nombre+número y se avisa que es referencial.
+  React.useEffect(()=>{
+    if(!revAbierta||revDatos.estado!=="listo") return;
+    const c=revDatos.cands[revDatos.pos]; if(!c) return;
+    const k=claveCandidato(c); if(revImgs[k]!==undefined) return;
+    let vivo=true;
+    (async()=>{
+      const num=String(c.number||"").split("/")[0];
+      const intentos=[];
+      if(c.setCode) intentos.push({q:`name:"${c.name}" number:${num} set.ptcgoCode:${c.setCode}`,exacta:true});
+      if(c.setId) intentos.push({q:`name:"${c.name}" number:${num} set.id:${c.setId}`,exacta:true});
+      intentos.push({q:`name:"${c.name}" number:${num}`,exacta:false});
+      let res={url:null,exacta:false};
+      for(const it of intentos){
+        try{ const d=await fetchPoke(`${POKE_BASE}/cards?q=${encodeURIComponent(it.q)}&pageSize=1&select=images`); const u=d?.data?.[0]?.images?.small; if(u){ res={url:u,exacta:it.exacta}; break; } }catch(e){}
+      }
+      if(vivo) setRevImgs(m=>({...m,[k]:res}));
+    })();
+    return ()=>{ vivo=false; };
+  },[revAbierta,revDatos.estado,revDatos.pos,revCartaId]);
+
+  function renderRevisionModal(){
+    if(!revAbierta) return null;
+    const carta=revActual, F="'DM Sans',sans-serif";
+    // Los candidatos solo valen si pertenecen a la carta que se muestra: entre que la cola pasa a la
+    // siguiente y se cargan sus opciones, se muestra "buscando" (nunca las de la carta anterior).
+    const d=(carta&&revDatos.cartaId===carta.id)?revDatos:{cartaId:null,estado:"cargando",cands:[],pos:0,planIdx:1,msg:null,total:null};
+    const btn=(bg,fg,extra)=>({fontFamily:F,fontSize:14,fontWeight:700,border:"none",borderRadius:12,padding:"12px 14px",background:bg,color:fg,cursor:"pointer",...(extra||{})});
+    const c=d.estado==="listo"?d.cands[d.pos]:null;
+    const sinMas=d.estado==="agotado"||(d.estado==="listo"&&!c);
+    const plan=carta?planBusquedas(carta):[];
+    const proxima=plan[d.planIdx];
+    const chip=(ok,txt)=><span style={{fontFamily:F,fontSize:11,fontWeight:700,padding:"3px 8px",borderRadius:10,background:ok?"#1f3d2b":"#4a2323",color:ok?"#8fe0a8":"#ff9b9b"}}>{ok?"✓":"✗"} {txt}</span>;
+    const numOk=!!(c&&carta&&normNum(c.number)===normNum(carta.number));
+    const setOk=c&&carta&&carta.setCode?((c.setId||"").toLowerCase()===carta.setCode.toLowerCase()||(c.setCode||"").toLowerCase()===carta.setCode.toLowerCase()):null;
+    const totCand=c&&String(c.number||"").includes("/")?parseInt(String(c.number).split("/")[1],10):null;
+    const totOk=totCand&&d.total?totCand===parseInt(d.total,10):null;
+    const img=c?revImgs[claveCandidato(c)]:null;
+    return(
+      <div onClick={()=>setRevAbierta(false)} style={{position:"fixed",inset:0,zIndex:700,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+        <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,460px)",background:"#111",color:"#fff",borderRadius:"16px 16px 0 0",padding:"16px 16px 28px",maxHeight:"92vh",overflowY:"auto",boxSizing:"border-box",fontFamily:F}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+            <div style={{fontSize:15,fontWeight:700}}>🧭 Cartas sin precio · quedan {revCola.length}</div>
+            <button onClick={()=>setRevAbierta(false)} style={{background:"transparent",border:"none",color:"#999",fontSize:18,cursor:"pointer"}}>✕</button>
+          </div>
+          <div style={{fontSize:11,color:"#888",marginBottom:12}}>consultas de hoy ≈ {revCupo}/100 · {revCont.elegidas} elegidas · {revCont.solas} calzaron solas</div>
+          {!carta?(
+            <div style={{fontSize:14,color:"#8fe0a8",padding:"20px 0"}}>No quedan cartas sin precio en la cola 🎉</div>
+          ):(<>
+            <div style={{display:"flex",gap:10,alignItems:"center",background:"#1a1a1a",borderRadius:12,padding:10,marginBottom:12}}>
+              {carta.image?<img src={carta.image} alt="" style={{width:56,borderRadius:4,flexShrink:0}}/>:<div style={{width:56,height:78,borderRadius:4,background:"#333",flexShrink:0}}/>}
+              <div style={{minWidth:0}}>
+                <div style={{fontSize:11,color:"#888"}}>TU CARTA</div>
+                <div style={{fontSize:15,fontWeight:700}}>{carta.name}</div>
+                <div style={{fontSize:13}}>#{carta.number}{d.total?`/${d.total}`:""} · {carta.set}</div>
+                <div style={{fontSize:11,color:"#888"}}>código de set: {carta.setCode||"—"}</div>
+              </div>
+            </div>
+            {d.estado==="cargando"&&<div style={{fontSize:13,color:"#aaa",padding:"16px 0"}}>buscando opciones…</div>}
+            {d.estado==="sincupo"&&<div style={{fontSize:13,color:"#ffcf70",padding:"12px 0"}}>Llegaste al límite seguro de consultas de hoy (≈{revCupo}/100). Sigue mañana: el bot comparte ese cupo.</div>}
+            {d.estado==="error"&&(<div style={{padding:"8px 0"}}>
+              <div style={{fontSize:13,color:"#ff9b9b",marginBottom:8}}>{d.msg}</div>
+              <button onClick={()=>revCargarCarta(carta)} style={btn("#333","#fff",{marginRight:8})}>reintentar</button>
+            </div>)}
+            {c&&(<>
+              <div style={{background:"#1a1a1a",borderRadius:12,padding:10}}>
+                <div style={{fontSize:11,color:"#888",marginBottom:6}}>OPCIÓN {d.pos+1} DE {d.cands.length}</div>
+                <div style={{display:"flex",gap:10}}>
+                  {img?.url?<img src={img.url} alt="" style={{width:84,borderRadius:4,flexShrink:0}}/>:<div style={{width:84,height:118,borderRadius:4,background:"#333",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#777",textAlign:"center"}}>{img===undefined?"cargando foto…":"sin foto"}</div>}
+                  <div style={{minWidth:0}}>
+                    <div style={{fontSize:15,fontWeight:700}}>{c.name}</div>
+                    <div style={{fontSize:22,fontWeight:800,margin:"2px 0"}}>#{c.number}</div>
+                    <div style={{fontSize:12,color:"#bbb"}}>{c.setName||"set sin nombre"}</div>
+                    <div style={{fontSize:11,color:"#888"}}>{c.setId||c.setCode||"sin código de set"}</div>
+                    <div style={{fontSize:14,fontWeight:700,marginTop:4,color:c.market!=null?"#8fe0a8":"#999"}}>{c.market!=null?fmtUSD(c.market):"sin precio raw"}</div>
+                  </div>
+                </div>
+                {img?.url&&!img.exacta&&<div style={{fontSize:10,color:"#ffcf70",marginTop:6}}>foto referencial: puede ser de otro set; guíate por la numeración</div>}
+                <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:8}}>
+                  {chip(numOk,"número")}{setOk!==null&&chip(setOk,"set")}{totOk!==null&&chip(totOk,`total ${totCand} vs ${d.total}`)}
+                </div>
+              </div>
+              <div style={{display:"flex",gap:10,marginTop:12}}>
+                <button onClick={()=>setRevDatos(x=>({...x,pos:x.pos+1}))} style={btn("#333","#fff",{flex:1})}>No es</button>
+                <button disabled={c.market==null} onClick={()=>revSiEs(carta,c)} style={btn("#aac756","#111",{flex:1,opacity:c.market==null?0.35:1})}>{c.market==null?"Sin precio":"Sí es"}</button>
+              </div>
+            </>)}
+            {sinMas&&(<div style={{padding:"8px 0"}}>
+              <div style={{fontSize:13,color:"#ddd",marginBottom:8}}>{d.msg||`Ya viste las ${d.cands.length} opciones.`}</div>
+              {proxima&&<button onClick={()=>revOtraVariante(carta)} style={btn("#aac756","#111",{width:"100%",marginBottom:8})}>Probar otra variante: «{proxima.q}»</button>}
+              {!proxima&&<div style={{fontSize:12,color:"#888",marginBottom:8}}>No quedan más variantes del nombre por probar.</div>}
+            </div>)}
+            {d.estado!=="cargando"&&<button onClick={()=>setRevSaltadas(s=>[...s,carta.id])} style={btn("transparent","#bbb",{width:"100%",marginTop:8,border:"1px solid #333"})}>Saltar esta carta</button>}
+          </>)}
+          {revAviso&&<div style={{fontSize:12,color:"#ffcf70",marginTop:10}}>{revAviso}</div>}
+          {revFallidas.length>0&&<button onClick={()=>revFallidas.forEach(x=>guardarOverrideRemoto(x.id,x.ov))} style={btn("#333","#fff",{marginTop:8,fontSize:12,padding:"8px 12px"})}>↻ reintentar {revFallidas.length} elección(es) pendientes de enviar al bot</button>}
+        </div>
       </div>
     );
   }
@@ -2209,6 +2418,12 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           </div>
         </div>
       )}
+      {colaSinPrecio(inv).length>0&&(
+        <button onClick={()=>{setRevCupo(leerCupoHoy());setRevAbierta(true);}}
+          style={{width:"100%",background:"#111",border:"1px solid #aac756",borderRadius:12,padding:"12px 14px",marginBottom:12,fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:"#aac756",cursor:"pointer",textAlign:"left"}}>
+          🧭 revisar cartas sin precio ({colaSinPrecio(inv).length})
+        </button>
+      )}
       {!pokecriptoConectado&&(
         <div style={{background:"#1a1a1a",border:"1px solid #333",borderRadius:12,padding:"12px 14px",marginBottom:12}}>
           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#bbb",marginBottom:8}}>
@@ -2234,6 +2449,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       )}
       {renderDarkPriceModal()}
       {renderDarkDetailModal()}
+      {renderRevisionModal()}
       {/* Header métricas */}
       <div style={{background:"#111",borderRadius:12,padding:"14px 16px",marginBottom:12,cursor:"pointer"}} onClick={()=>{}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>

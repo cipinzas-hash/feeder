@@ -46,6 +46,7 @@ jobs:
           TCG_API_KEY: ${{ secrets.TCG_API_KEY }}
           POKECRIPTO_INVENTARIO_PATH: ${{ github.workspace }}/angst-data/pokecripto-inventario.json
           POKECRIPTO_PENDING_PATH: ${{ github.workspace }}/angst-data/pokecripto-pending.json
+          POKECRIPTO_OVERRIDES_PATH: ${{ github.workspace }}/angst-data/pokecripto-overrides.json
         run: node build-pokecripto.mjs
 
       - name: Commitear y pushear a Angst-data, con reintento si hay conflicto

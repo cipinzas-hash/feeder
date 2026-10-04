@@ -107,6 +107,37 @@ export async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey) 
   } catch (e) { return { error: e.message }; }
 }
 
+// Búsqueda de candidatos para el flujo de revisión (3-oct-2026): devuelve
+// TODOS los resultados de UNA consulta (hasta 20, a diferencia del panel
+// "diagnosticar" que recorta a 10), ya normalizados. Una llamada = una de
+// las 100 consultas diarias de tcgpricelookup.com; el reintento por 429
+// respeta Retry-After igual que fetchTCGPriceDiag.
+export async function fetchTCGCandidatos(q, apiKey) {
+  if (!apiKey) return { error: "sin API key", candidatos: [] };
+  try {
+    let r, intento = 0;
+    while (true) {
+      r = await fetch(`${TCG_BASE}/cards/search?q=${encodeURIComponent(q)}&game=pokemon&limit=20`,
+        { headers: { "X-API-Key": apiKey }, signal: AbortSignal.timeout(8000) });
+      if (r.status !== 429 || intento >= 2) break;
+      const retryAfter = parseInt(r.headers.get("retry-after") || "", 10);
+      await new Promise(res => setTimeout(res, Number.isFinite(retryAfter) ? retryAfter * 1000 : 2000 * Math.pow(2, intento)));
+      intento++;
+    }
+    if (!r.ok) return { error: `HTTP ${r.status}`, query: q, candidatos: [] };
+    const data = await r.json();
+    const candidatos = (data.data || []).map(c => {
+      const best = c.prices?.raw?.near_mint?.tcgplayer || c.prices?.raw?.lightly_played?.tcgplayer;
+      return {
+        name: c.name, number: c.number,
+        setId: c.set?.id || null, setCode: c.set?.ptcgoCode || null, setName: c.set?.name || null,
+        market: best?.market || null, low: best?.low || null, high: best?.high || null,
+      };
+    });
+    return { query: q, candidatos };
+  } catch (e) { return { error: e.message, query: q, candidatos: [] }; }
+}
+
 export async function fetchTCGPrice(name, setName, number, setCode, apiKey) {
   const price = await fetchTCGPriceDiag(name, setName, number, setCode, apiKey);
   return price?.match ? { market: price.market, low: price.low, high: price.high } : null;
