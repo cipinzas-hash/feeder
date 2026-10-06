@@ -3278,7 +3278,31 @@ var __angst = (() => {
       setRevCupo(n);
       return n;
     }
-    const revCola = React.useMemo(() => colaSinPrecio(inv, new Set(revSaltadas)), [inv, revSaltadas]);
+    const REV_AGOTADA_KEY = "angst-pokecripto-agotadas-v1";
+    const REV_AGOTADA_DIAS = 7;
+    function leerAgotadas() {
+      try {
+        return JSON.parse(localStorage.getItem(REV_AGOTADA_KEY) || "{}");
+      } catch (e) {
+        return {};
+      }
+    }
+    const [agotadas, setAgotadas] = React.useState(leerAgotadas);
+    function marcarAgotada(cardId, intentos) {
+      const m = { ...agotadas, [cardId]: { fecha: hoy, intentos } };
+      try {
+        localStorage.setItem(REV_AGOTADA_KEY, JSON.stringify(m));
+      } catch (e) {
+      }
+      setAgotadas(m);
+    }
+    function diasDesde(fecha) {
+      return Math.floor((new Date(hoy) - new Date(fecha)) / 864e5);
+    }
+    const idsAgotadasRecientes = React.useMemo(() => new Set(
+      Object.entries(agotadas).filter(([, v]) => diasDesde(v.fecha) < REV_AGOTADA_DIAS).map(([id]) => id)
+    ), [agotadas, hoy]);
+    const revCola = React.useMemo(() => colaSinPrecio(inv, /* @__PURE__ */ new Set([...revSaltadas, ...idsAgotadasRecientes])), [inv, revSaltadas, idsAgotadasRecientes]);
     const revActual = revCola[0] || null;
     function revAplicar(cartaId, c, conOverride) {
       const ov = { name: c.name, number: c.number, setId: c.setId || null, setCode: c.setCode || null };
@@ -3342,7 +3366,8 @@ var __angst = (() => {
       const tok = ++revTok.current, cid = carta.id;
       const plan = planBusquedas(carta), idx = revDatos.planIdx;
       if (idx >= plan.length) {
-        setRevAviso("No quedan m\xE1s variantes por probar para esta carta.");
+        marcarAgotada(cid, idx);
+        setRevAviso(`Probadas las ${idx} variantes sin match \u2014 no la vuelve a mostrar por ${REV_AGOTADA_DIAS} d\xEDas (vas a seguir con otras cartas mientras tanto).`);
         return;
       }
       if (leerCupoHoy() >= REV_CUPO_STOP) {
@@ -3414,7 +3439,7 @@ var __angst = (() => {
       const totOk = totCand && d.total ? totCand === parseInt(d.total, 10) : null;
       const imgApi = c ? revImgs[claveCandidato(c)] : null;
       const urlsCand = c ? [...imgApi?.url ? [imgApi.url] : [], ...urlsFoto({ image: c.image, setId: c.setId, setCode: c.setCode, number: c.number })] : [];
-      return /* @__PURE__ */ React.createElement("div", { onClick: () => setRevAbierta(false), style: { position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,460px)", background: "#111", color: "#fff", borderRadius: "16px 16px 0 0", padding: "16px 16px 28px", maxHeight: "92vh", overflowY: "auto", boxSizing: "border-box", fontFamily: F } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, "\u{1F9ED} Cartas sin precio \xB7 quedan ", revCola.length), /* @__PURE__ */ React.createElement("button", { onClick: () => setRevAbierta(false), style: { background: "transparent", border: "none", color: "#999", fontSize: 18, cursor: "pointer" } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 12 } }, "consultas de hoy \u2248 ", revCupo, "/100 \xB7 ", revCont.elegidas, " elegidas \xB7 ", revCont.solas, " calzaron solas"), !carta ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: "#8fe0a8", padding: "20px 0" } }, "No quedan cartas sin precio en la cola \u{1F389}") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center", background: "#1a1a1a", borderRadius: 12, padding: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement(FotoFB, { key: "t" + carta.id, urls: urlsFoto({ image: carta.image, cardId: carta.cardId }), style: { width: 56, borderRadius: 4, flexShrink: 0 }, vacio: /* @__PURE__ */ React.createElement("div", { style: { width: 56, height: 78, borderRadius: 4, background: "#333", flexShrink: 0 } }) }), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "TU CARTA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, carta.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13 } }, "#", carta.number, d.total ? `/${d.total}` : "", " \xB7 ", carta.set), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "c\xF3digo de set: ", carta.setCode || "\u2014"))), d.estado === "cargando" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#aaa", padding: "16px 0" } }, "buscando opciones\u2026"), d.estado === "sincupo" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ffcf70", padding: "12px 0" } }, "Llegaste al l\xEDmite seguro de consultas de hoy (\u2248", revCupo, "/100). Sigue ma\xF1ana: el bot comparte ese cupo."), d.estado === "error" && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ff9b9b", marginBottom: 8 } }, d.msg), /* @__PURE__ */ React.createElement("button", { onClick: () => revCargarCarta(carta), style: btn("#333", "#fff", { marginRight: 8 }) }, "reintentar")), c && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 12, padding: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 6 } }, "OPCI\xD3N ", d.pos + 1, " DE ", d.cands.length), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement(
+      return /* @__PURE__ */ React.createElement("div", { onClick: () => setRevAbierta(false), style: { position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,460px)", background: "#111", color: "#fff", borderRadius: "16px 16px 0 0", padding: "16px 16px 28px", maxHeight: "92vh", overflowY: "auto", boxSizing: "border-box", fontFamily: F } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, "\u{1F9ED} Cartas sin precio \xB7 quedan ", revCola.length), /* @__PURE__ */ React.createElement("button", { onClick: () => setRevAbierta(false), style: { background: "transparent", border: "none", color: "#999", fontSize: 18, cursor: "pointer" } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 12 } }, "consultas de hoy \u2248 ", revCupo, "/100 \xB7 ", revCont.elegidas, " elegidas \xB7 ", revCont.solas, " calzaron solas", idsAgotadasRecientes.size > 0 ? ` \xB7 ${idsAgotadasRecientes.size} en pausa (sin match, reintenta en unos d\xEDas)` : ""), !carta ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: "#8fe0a8", padding: "20px 0" } }, "No quedan cartas sin precio en la cola \u{1F389}") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center", background: "#1a1a1a", borderRadius: 12, padding: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement(FotoFB, { key: "t" + carta.id, urls: urlsFoto({ image: carta.image, cardId: carta.cardId }), style: { width: 56, borderRadius: 4, flexShrink: 0 }, vacio: /* @__PURE__ */ React.createElement("div", { style: { width: 56, height: 78, borderRadius: 4, background: "#333", flexShrink: 0 } }) }), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "TU CARTA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, carta.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13 } }, "#", carta.number, d.total ? `/${d.total}` : "", " \xB7 ", carta.set), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "c\xF3digo de set: ", carta.setCode || "\u2014"))), d.estado === "cargando" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#aaa", padding: "16px 0" } }, "buscando opciones\u2026"), d.estado === "sincupo" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ffcf70", padding: "12px 0" } }, "Llegaste al l\xEDmite seguro de consultas de hoy (\u2248", revCupo, "/100). Sigue ma\xF1ana: el bot comparte ese cupo."), d.estado === "error" && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ff9b9b", marginBottom: 8 } }, d.msg), /* @__PURE__ */ React.createElement("button", { onClick: () => revCargarCarta(carta), style: btn("#333", "#fff", { marginRight: 8 }) }, "reintentar")), c && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 12, padding: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 6 } }, "OPCI\xD3N ", d.pos + 1, " DE ", d.cands.length), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement(
         FotoFB,
         {
           key: "c" + urlsCand.join("|"),

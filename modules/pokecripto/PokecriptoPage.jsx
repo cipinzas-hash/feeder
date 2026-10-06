@@ -1397,7 +1397,34 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const REV_CUPO_STOP=95;
   function leerCupoHoy(){ try{ const o=JSON.parse(localStorage.getItem(REV_CUPO_KEY)||"null"); return o&&o.d===hoy?o.n:0; }catch(e){ return 0; } }
   function sumarCupo(){ const n=leerCupoHoy()+1; try{ localStorage.setItem(REV_CUPO_KEY,JSON.stringify({d:hoy,n})); }catch(e){} setRevCupo(n); return n; }
-  const revCola=React.useMemo(()=>colaSinPrecio(inv,new Set(revSaltadas)),[inv,revSaltadas]);
+  // ── Cartas "agotadas" (6-oct-2026, a pedido de Cristopher: "si no calzó en
+  // ninguna de las 20 búsquedas, que sepa cuáles fueron para que en la
+  // siguiente corrida salgan otros, y así hasta que salga") ──
+  // Antes: al terminar las variantes de planBusquedas() sin match, la carta
+  // se quedaba trabada en el tope de la cola (revCola[0]) -- había que
+  // tocar "Saltar esta carta" a mano cada vez que se abría la revisión, y
+  // si no, el próximo día se repetían las MISMAS 18-20 búsquedas ya
+  // confirmadas sin resultado, gastando cuota en vano. Ahora, al agotar el
+  // plan, la carta se marca acá (persistido, con la fecha y cuántas
+  // variantes se probaron) y sale de la cola por REV_AGOTADA_DIAS -- no
+  // hay variantes NUEVAS que probar con el generador actual, así que
+  // "otros" es, en la práctica, otras CARTAS mientras tanto; pasado el
+  // cooldown vuelve a aparecer y se reintenta el mismo plan por si
+  // tcgpricelookup.com ya indexó la carta para entonces ("hasta que salga").
+  const REV_AGOTADA_KEY="angst-pokecripto-agotadas-v1";
+  const REV_AGOTADA_DIAS=7;
+  function leerAgotadas(){ try{ return JSON.parse(localStorage.getItem(REV_AGOTADA_KEY)||"{}"); }catch(e){ return {}; } }
+  const [agotadas,setAgotadas]=React.useState(leerAgotadas);
+  function marcarAgotada(cardId,intentos){
+    const m={...agotadas,[cardId]:{fecha:hoy,intentos}};
+    try{ localStorage.setItem(REV_AGOTADA_KEY,JSON.stringify(m)); }catch(e){}
+    setAgotadas(m);
+  }
+  function diasDesde(fecha){ return Math.floor((new Date(hoy)-new Date(fecha))/86400000); }
+  const idsAgotadasRecientes=React.useMemo(()=>new Set(
+    Object.entries(agotadas).filter(([,v])=>diasDesde(v.fecha)<REV_AGOTADA_DIAS).map(([id])=>id)
+  ),[agotadas,hoy]);
+  const revCola=React.useMemo(()=>colaSinPrecio(inv,new Set([...revSaltadas,...idsAgotadasRecientes])),[inv,revSaltadas,idsAgotadasRecientes]);
   const revActual=revCola[0]||null;
 
   function revAplicar(cartaId,c,conOverride){
@@ -1455,7 +1482,11 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     if(revDatos.cartaId!==carta.id) return;
     const tok=++revTok.current, cid=carta.id;
     const plan=planBusquedas(carta), idx=revDatos.planIdx;
-    if(idx>=plan.length){ setRevAviso("No quedan más variantes por probar para esta carta."); return; }
+    if(idx>=plan.length){
+      marcarAgotada(cid,idx);
+      setRevAviso(`Probadas las ${idx} variantes sin match — no la vuelve a mostrar por ${REV_AGOTADA_DIAS} días (vas a seguir con otras cartas mientras tanto).`);
+      return;
+    }
     if(leerCupoHoy()>=REV_CUPO_STOP){ setRevDatos(d=>({...d,estado:"sincupo"})); return; }
     const previas=revDatos.cands;
     setRevDatos(d=>({...d,estado:"cargando"}));
@@ -1520,7 +1551,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             <div style={{fontSize:15,fontWeight:700}}>🧭 Cartas sin precio · quedan {revCola.length}</div>
             <button onClick={()=>setRevAbierta(false)} style={{background:"transparent",border:"none",color:"#999",fontSize:18,cursor:"pointer"}}>✕</button>
           </div>
-          <div style={{fontSize:11,color:"#888",marginBottom:12}}>consultas de hoy ≈ {revCupo}/100 · {revCont.elegidas} elegidas · {revCont.solas} calzaron solas</div>
+          <div style={{fontSize:11,color:"#888",marginBottom:12}}>consultas de hoy ≈ {revCupo}/100 · {revCont.elegidas} elegidas · {revCont.solas} calzaron solas{idsAgotadasRecientes.size>0?` · ${idsAgotadasRecientes.size} en pausa (sin match, reintenta en unos días)`:""}</div>
           {!carta?(
             <div style={{fontSize:14,color:"#8fe0a8",padding:"20px 0"}}>No quedan cartas sin precio en la cola 🎉</div>
           ):(<>
