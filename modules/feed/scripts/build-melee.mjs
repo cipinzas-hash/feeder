@@ -21,7 +21,7 @@
 // Ver fetchMeleeItems() más abajo.
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { callGemini } from "./lib/gemini.mjs";
+import { narrateResult } from "./lib/melee-narration.mjs";
 
 const OUTPUT_PATH = new URL("../data/melee.json", import.meta.url);
 const STATE_PATH = new URL("../data/melee-state.json", import.meta.url);
@@ -1081,23 +1081,13 @@ async function narrateArchiveSummary(tournamentName, standings, upsets) {
     `${stripSponsorTag(u.ganador.nombre)}${u.ganador.seed != null ? ` (seed ${u.ganador.seed})` : u.ganador.ssbmrank != null ? ` (SSBMRank #${u.ganador.ssbmrank})` : ""} venció a ${stripSponsorTag(u.perdedor.nombre)}${u.perdedor.seed != null ? ` (seed ${u.perdedor.seed})` : u.perdedor.ssbmrank != null ? ` (SSBMRank #${u.perdedor.ssbmrank})` : ""} -- ${u.ronda}`
   ).join("\n");
 
-  const prompt = `Redactá el resumen de resultado final de un torneo de Super Smash Bros. Melee, en español, en prosa narrativa -- NO como una lista de posiciones ("1° X · 2° Y · 3° Z"), sino contando cómo se dio el resultado. Un ejemplo del tono buscado (dos o tres oraciones, standings integrados a la narración + upsets con contexto real):
-
-"Hungrybox se quedó con el título tras remontarle la gran final a Cody Schwab, que había llegado invicto desde winners. Wizzrobe completó el podio en tercer lugar. Entre los resultados más sorprendentes: lloD sorprendió a Hungrybox en un reverse 3-0 que lo mandó directo a Top 8 -- su primera victoria sobre él --, y Kola, entrando como seed 72, llegó hasta noveno lugar derrotando a Maher, Drephen, Zuppy y SluG en el camino."
-
-Nombres SIN el tag de equipo/sponsor (solo el nombre de jugador, ya vienen así abajo -- no los reconstruyas con equipo).
-
-Torneo: ${tournamentName}
-Standings finales: ${top8Line}
+  const datos = `Standings finales: ${top8Line}
 Upsets detectados (por seed o SSBMRank, no necesariamente en orden de importancia):
-${upsetsData || "(ninguno detectado por el criterio automático)"}
+${upsetsData || "(ninguno detectado por el criterio automático)"}`;
 
-Usá la búsqueda web para confirmar contexto real: rachas, primera vez que X le gana a Y, importancia de un resultado dentro de la temporada, etc. -- SOLO si lo podés confirmar con una fuente real. Si no encontrás contexto verificable para un upset, simplemente describilo sin inventar superlativos ("primera vez", "el único", "el más joven en...") sin haberlo confirmado. Es preferible un resumen más plano y correcto que uno rico pero con datos inventados.
-
-Devolvé SOLO el texto del resumen final en prosa, sin preámbulo, sin markdown, sin comillas.`;
-
-  const texto = await callGemini(prompt, { useSearch: true, maxOutputTokens: 1024, timeoutMs: 90000 });
-  return texto ? texto.trim() : null; // cae al resumen mecánico en buildTournamentArchiveItem si Gemini no responde
+  // Plan A con búsqueda web; plan B (solo con estos datos) si no hay cuota de grounding.
+  // null -> cae al resumen mecánico en buildTournamentArchiveItem.
+  return await narrateResult(tournamentName, datos);
 }
 
 // El registro permanente del torneo: se arma UNA sola vez, en la misma

@@ -7,16 +7,28 @@
 //
 // Requiere GEMINI_API_KEY en el entorno del workflow que llame a esto.
 //
-// Modelo: Google recicla nombres de modelo seguido -- Gemini 2.0 Flash se dio
-// de baja en jun-2026, Gemini 1.x ya devuelve 404. gemini-2.5-flash es el
-// estable documentado en ai.google.dev al momento de escribir esto
-// (2026-08-21). Si esto empieza a devolver 404 con "model not found", revisar
-// https://ai.google.dev/gemini-api/docs/models y actualizar GEMINI_MODEL acá
-// o vía la variable de entorno del mismo nombre (no hace falta tocar código
-// para probar un modelo nuevo).
+// Modelo: Google recicla nombres de modelo seguido. gemini-2.0-flash y 1.x se
+// dieron de baja, y gemini-2.5-flash responde 404 "no longer available to new
+// users" con la key de este proyecto (verificado 2026-10-07 desde Actions de
+// ANGSTsongeditor, que usa la misma key). Modelo que SÍ responde: gemini-3.1-flash-lite.
+// Cadena de respaldo ante 404/5xx: gemini-flash-latest, gemini-3.5-flash. Para
+// probar otro modelo sin tocar código: variable de entorno GEMINI_MODEL.
+//
+// OJO grounding (useSearch): con el free tier de esta key, las llamadas con
+// google_search devuelven 429 (cuota) en TODOS los modelos, mientras que las
+// llamadas normales funcionan. Cuando eso pasa callGemini devuelve null y deja
+// el motivo en geminiStatus.lastError; quien llama decide el plan B (ver
+// lib/melee-narration.mjs: reintenta sin búsqueda y con un prompt más estricto).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
+const FALLBACK_MODELS = ["gemini-flash-latest", "gemini-3.5-flash"];
+
+// Último resultado (para logs/diagnóstico de quien llama). La API key viaja en
+// un header, nunca en la URL ni en estos mensajes.
+export const geminiStatus = { lastError: null, lastModel: null };
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // Contrato: nunca tira excepción. Devuelve el texto generado, o null si algo
 // falló (sin key, HTTP no-ok, respuesta sin texto utilizable) -- el llamador
@@ -37,40 +49,61 @@ export async function callGemini(prompt, { systemInstruction, temperature, maxOu
   // usamos acá, así que no aplica).
   if (useSearch) body.tools = [{ google_search: {} }];
 
-  let controller, timeoutId;
-  if (timeoutMs) {
-    controller = new AbortController();
-    timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  }
+  const chain = [GEMINI_MODEL, ...FALLBACK_MODELS.filter(m => m !== GEMINI_MODEL)];
 
-  let res, raw;
-  try {
-    res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-      body: JSON.stringify(body),
-      signal: controller?.signal,
-    });
-    raw = await res.text();
-  } catch (e) {
-    console.error(`✗ Gemini (${GEMINI_MODEL}) -- error de red${e.name === "AbortError" ? ` (timeout ${timeoutMs}ms)` : ""}: ${e.message}`);
-    return null;
-  } finally {
-    if (timeoutId) clearTimeout(timeoutId);
-  }
+  for (const model of chain) {
+    // 429/5xx/timeout son reintentables con espera; 404/400/403 no (siguiente modelo).
+    for (const waitMs of [0, 3000, 8000]) {
+      if (waitMs) await sleep(waitMs);
 
-  if (!res.ok) {
-    console.error(`✗ Gemini (${GEMINI_MODEL}) falló: ${res.status} -- ${raw.slice(0, 300)}`);
-    return null;
-  }
+      let controller, timeoutId;
+      if (timeoutMs) {
+        controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      }
 
-  let data;
-  try { data = JSON.parse(raw); } catch (e) {
-    console.error(`✗ Gemini devolvió algo no-JSON: ${raw.slice(0, 300)}`);
-    return null;
-  }
+      let res, raw;
+      try {
+        res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+          body: JSON.stringify(body),
+          signal: controller?.signal,
+        });
+        raw = await res.text();
+      } catch (e) {
+        geminiStatus.lastError = `red/timeout con ${model}: ${e.message}`;
+        console.error(`✗ Gemini (${model}) -- error de red${e.name === "AbortError" ? ` (timeout ${timeoutMs}ms)` : ""}: ${e.message}`);
+        continue;
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+      }
 
-  const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || null;
-  if (!text) console.error(`✗ Gemini (${GEMINI_MODEL}) respondió sin texto utilizable: ${raw.slice(0, 300)}`);
-  return text;
+      if (!res.ok) {
+        geminiStatus.lastError = `${res.status} con ${model}${useSearch ? " (grounding)" : ""}: ${raw.slice(0, 200)}`;
+        console.error(`✗ Gemini (${model}) falló: ${res.status} -- ${raw.slice(0, 300)}`);
+        if (res.status === 429 && useSearch) return null; // cuota de grounding: reintentar o cambiar de modelo no sirve
+        if (![429, 500, 502, 503, 504].includes(res.status)) break; // 404/400/403 -> siguiente modelo
+        continue;
+      }
+
+      let data;
+      try { data = JSON.parse(raw); } catch (e) {
+        geminiStatus.lastError = `no-JSON con ${model}`;
+        console.error(`✗ Gemini devolvió algo no-JSON: ${raw.slice(0, 300)}`);
+        break;
+      }
+
+      const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text || "").join("") || null;
+      if (text) {
+        geminiStatus.lastModel = model;
+        geminiStatus.lastError = null;
+        return text;
+      }
+      geminiStatus.lastError = `sin texto utilizable con ${model}`;
+      console.error(`✗ Gemini (${model}) respondió sin texto utilizable: ${raw.slice(0, 300)}`);
+      break;
+    }
+  }
+  return null;
 }

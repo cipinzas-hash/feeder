@@ -7,6 +7,7 @@
     "build": "node scripts/build-feed.mjs",
     "build:cine": "node scripts/build-cine.mjs",
     "build:melee": "node scripts/build-melee.mjs",
+    "regen:melee-summaries": "node scripts/regen-melee-summaries.mjs",
     "build:podcasts": "node scripts/build-podcasts.mjs"
   },
   "dependencies": {
