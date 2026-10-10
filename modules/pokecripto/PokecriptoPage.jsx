@@ -1,7 +1,7 @@
 // modules/pokecripto/lib/pricing.mjs es la misma lógica que usa el bot
 // (build-pokecripto.mjs) -- se importa acá para que cliente y bot nunca
 // diverjan en matching/normalización (issue #9).
-import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPriceDiag, fetchTCGPrice, fetchTCGCandidatos, addSnapshot, refreshPrecio } from "./lib/pricing.mjs";
+import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPrice, fetchTCGCandidatos, addSnapshot, refreshPrecio } from "./lib/pricing.mjs";
 import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarCandidatos, matchAutomatico, mergeOverrides, claveCandidato, urlsFoto, mismoSet } from "./lib/review.mjs";
 
 // ─── PokeLoader ───────────────────────────────────────────────────────────────
@@ -405,13 +405,11 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [historialFecha, setHistorialFecha] = React.useState(null);
   const [historialCarpetas, setHistorialCarpetas] = React.useState(()=>new Set()); // vacío = todas (26-sep-2026, a pedido de Cristopher)
   const [apiKeyInput,    setApiKeyInput]    = React.useState("");
-  const [diagResult, setDiagResult] = React.useState(null);
-  const [diagLoading, setDiagLoading] = React.useState(false);
-  const [diagImgs, setDiagImgs] = React.useState([]); // fotos de los candidatos (26-sep-2026), alineado por índice con diagResult.candidatos
   // ── Revisión de cartas sin precio (3-oct-2026, a pedido de Cristopher) ──
   const [revAbierta,  setRevAbierta]  = React.useState(false);
   const [revSaltadas, setRevSaltadas] = React.useState([]);   // ids saltadas en esta sesión
   const [revCartaId,  setRevCartaId]  = React.useState(null); // carta cuyos candidatos están cargados
+  const [revFocoId,   setRevFocoId]   = React.useState(null); // revisar UNA carta puntual (aunque ya tenga precio)
   const [revDatos,    setRevDatos]    = React.useState({cartaId:null,estado:"idle",cands:[],pos:0,planIdx:1,msg:null,total:null});
   const [revImgs,     setRevImgs]     = React.useState({});    // claveCandidato -> {url, exacta}
   const [revCupo,     setRevCupo]     = React.useState(0);     // consultas manuales a tcgpricelookup.com hechas hoy (estimado)
@@ -1072,7 +1070,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const idx=darkDetailList.indexOf(darkDetailId);
     if(idx<0||!darkDetailList.length) return;
     const nextId=darkDetailList[(idx+delta+darkDetailList.length)%darkDetailList.length];
-    setDarkDetailId(nextId); setDarkDetailRange("todo"); setSelectedPoint(null); setDiagResult(null);
+    setDarkDetailId(nextId); setDarkDetailRange("todo"); setSelectedPoint(null);
     if(zoomImage){
       setZoomCardId(nextId);
       const img=imagenDeCard(nextId);
@@ -1101,7 +1099,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const idx=fichaList.indexOf(fichaId);
     if(idx<0||!fichaList.length) return;
     const nextId=fichaList[(idx+delta+fichaList.length)%fichaList.length];
-    setFichaId(nextId); setDiagResult(null); setDiagImgs([]);
+    setFichaId(nextId);
     if(zoomImage){ const c=inv.find(x=>x.id===nextId); const img=c?.imageHd||c?.image||null; if(img) setZoomImage(img); }
   }
   // Snapshot inicial para cartas recién descubiertas (22-sep-2026, a pedido
@@ -1286,107 +1284,6 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     );
   }
 
-  // ── Diagnóstico tcgpricelookup.com: fotos + designación manual (26-sep) ──
-  // tcgpricelookup.com no documenta con claridad si sus candidatos traen
-  // imagen, así que no se depende de eso: se busca cada candidato en
-  // pokemontcg.io (gratis, sin key, ya usado en toda la app) por su propio
-  // nombre+número -- en paralelo, para que el panel no se sienta lento.
-  // Secuencial con pausa (no Promise.all): pokemontcg.io sin key tiene un
-  // límite estricto -- 10 pedidos en paralelo volvían casi todos con 429 y
-  // el catch lo tragaba en silencio, dejando las miniaturas vacías
-  // (encontrado 26-sep-2026 con Cristopher). Más lento pero confiable.
-  async function cargarImagenesCandidatos(candidatos){
-    const imgs=[];
-    for(const c of (candidatos||[])){
-      try{
-        const q = `name:"${c.name}" number:${c.number}`;
-        const data = await fetchPoke(`${POKE_BASE}/cards?q=${encodeURIComponent(q)}&pageSize=1&select=images`);
-        imgs.push(data.data?.[0]?.images?.small || null);
-      }catch(e){ imgs.push(null); }
-      setDiagImgs([...imgs]); // progresivo: las que ya llegaron se ven sin esperar al resto
-      await new Promise(res=>setTimeout(res,200));
-    }
-  }
-  // Aplica el precio de un candidato ya mismo Y guarda cuál elegiste
-  // (tcgOverride) para que refreshPrecio use directo este candidato la
-  // próxima vez, en vez de volver a depender del matching automático.
-  // Si el diagnóstico encuentra match automático CON precio, se guarda
-  // de inmediato -- no tiene sentido mostrarle a Cristopher "✓ match,
-  // tiene precio" y dejar la carta en "sin precio" hasta el próximo
-  // refresh (26-sep-2026, a pedido de Cristopher). Sin tcgOverride: el
-  // match salió con el nombre/número propios de la carta, así que el
-  // refresh automático de siempre lo va a encontrar de nuevo solo.
-  function aplicarDiagSiMatchea(cartaId, d){
-    if(!cartaId||!d?.match||d.market==null) return;
-    const carta=inv.find(x=>x.id===cartaId);
-    if(!carta) return;
-    updCarta(cartaId,{
-      tcgMarket:d.market, tcgLow:d.low, tcgHigh:d.high, tcgUpdated:hoy,
-      priceHistory:addSnapshot(carta.priceHistory,d.market,d.low,d.high,hoy),
-    });
-  }
-  function usarCandidato(cartaId, c){
-    if(!cartaId||c.market==null) return;
-    const carta=inv.find(x=>x.id===cartaId);
-    if(!carta) return;
-    updCarta(cartaId,{
-      tcgMarket:c.market, tcgLow:c.low, tcgHigh:c.high, tcgUpdated:hoy,
-      priceHistory:addSnapshot(carta.priceHistory,c.market,c.low,c.high,hoy),
-      tcgOverride:{name:c.name,number:c.number,setId:c.setId,setCode:c.setCode},
-    });
-    setDiagResult(null); setDiagImgs([]);
-  }
-  function renderDiagPanel(cartaId){
-    return (
-      <div style={{background:"#fafafa",border:"1px dashed #ccc",borderRadius:10,padding:"10px 12px",marginBottom:12,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#444",lineHeight:1.6}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-          <span style={{fontWeight:700}}>diagnóstico tcgpricelookup.com</span>
-          <button onClick={()=>{setDiagResult(null);setDiagImgs([]);}} style={{background:"transparent",border:"none",color:"#999",cursor:"pointer",fontSize:14}}>✕</button>
-        </div>
-        {diagResult.error
-          ? <div>error: {diagResult.error}{diagResult.query?` (query: "${diagResult.query}")`:""}</div>
-          : <>
-              <div>query: "{diagResult.query}"</div>
-              {diagResult.matchEncontrado ? (
-                <>
-                  <div>✓ match: "{diagResult.matchNombre}" #{diagResult.matchNumero}</div>
-                  <div>precios disponibles en la carta: {diagResult.preciosDisponibles?.length?diagResult.preciosDisponibles.join(", "):"ninguno"}</div>
-                  <div>{diagResult.tienePrecioTcgplayer?"✓":"✗"} tiene precio tcgplayer en raw/near_mint o lightly_played</div>
-                </>
-              ) : (
-                <>
-                  <div>✗ ningún candidato matcheó por nombre+número</div>
-                  {diagResult.candidatos?.length ? (
-                    <div style={{marginTop:4}}>
-                      <div style={{color:"#888"}}>candidatos que trajo la búsqueda:</div>
-                      {diagResult.candidatos.map((c,i)=>(
-                        <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginLeft:4,marginTop:6,paddingBottom:6,borderBottom:i<diagResult.candidatos.length-1?"1px dashed #eee":"none"}}>
-                          {diagImgs[i]
-                            ?<img src={diagImgs[i]} alt="" style={{width:32,borderRadius:3,flexShrink:0}}/>
-                            :<div style={{width:32,height:44,borderRadius:3,background:"#eee",flexShrink:0}}/>
-                          }
-                          <div style={{flex:1,minWidth:0}}>
-                            <div>{c.name} #{c.number} ({c.setId||c.setCode||"sin set"})</div>
-                            <div style={{color:c.market?"#2e7d52":"#999"}}>{c.market?fmtUSD(c.market):"sin precio raw"}</div>
-                          </div>
-                          {c.market!=null&&(
-                            <button onClick={()=>usarCandidato(cartaId,c)}
-                              style={{flexShrink:0,fontFamily:"'DM Sans',sans-serif",fontSize:10,fontWeight:700,border:"1px solid #111",borderRadius:8,padding:"4px 8px",background:"#111",color:"#fff",cursor:"pointer"}}>
-                              usar esta
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : <div style={{color:"#888"}}>la búsqueda no devolvió ningún candidato</div>}
-                </>
-              )}
-            </>
-        }
-      </div>
-    );
-  }
-
   // ── Revisión de cartas sin precio (3-oct-2026, a pedido de Cristopher) ──
   // Recorre las cartas sin precio (ordenadas por set y número), muestra los candidatos de a UNO con
   // su numeración, "No es" pasa al siguiente y "Sí es" guarda precio + designación (tcgOverride) y
@@ -1424,9 +1321,16 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const idsAgotadasRecientes=React.useMemo(()=>new Set(
     Object.entries(agotadas).filter(([,v])=>diasDesde(v.fecha)<REV_AGOTADA_DIAS).map(([id])=>id)
   ),[agotadas,hoy]);
-  const revCola=React.useMemo(()=>colaSinPrecio(inv,new Set([...revSaltadas,...idsAgotadasRecientes])),[inv,revSaltadas,idsAgotadasRecientes]);
+  const revCola=React.useMemo(()=>revFocoId?inv.filter(c=>c.id===revFocoId):colaSinPrecio(inv,new Set([...revSaltadas,...idsAgotadasRecientes])),[inv,revSaltadas,idsAgotadasRecientes,revFocoId]);
   const revActual=revCola[0]||null;
 
+  // Un solo diagnóstico (4-oct-2026, a pedido de Cristopher: "hay dos diagnósticos corriendo
+  // simultáneos y es confuso"): el panel "🔍 diagnosticar" por carta que había antes (renderDiagPanel,
+  // usarCandidato, aplicarDiagSiMatchea, cargarImagenesCandidatos) quedó OBSOLETO y se eliminó. Su botón
+  // ahora abre este mismo flujo ("No es / Sí es") para esa carta, tenga o no precio.
+  function abrirRevisionCarta(id){ setRevFocoId(id); setRevCartaId(null); setRevCupo(leerCupoHoy()); setRevAbierta(true); }
+  function abrirRevisionCola(){ setRevFocoId(null); setRevCartaId(null); setRevCupo(leerCupoHoy()); setRevAbierta(true); }
+  function cerrarRevision(){ setRevAbierta(false); setRevFocoId(null); setRevCartaId(null); }
   function revAplicar(cartaId,c,conOverride){
     const ov={name:c.name,number:c.number,setId:c.setId||null,setCode:c.setCode||null};
     // saveInventario con función: siempre sobre el inventario más reciente (no el de este render)
@@ -1458,7 +1362,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   async function revCargarCarta(carta){
     setRevAviso(null);
     const tok=++revTok.current, cid=carta.id;
-    if(!apiKey){ setRevDatos({cartaId:cid,estado:"error",cands:[],pos:0,planIdx:1,msg:"Falta la API key de TCG Price Lookup (la misma que usa el botón de diagnosticar).",total:null}); return; }
+    if(!apiKey){ setRevDatos({cartaId:cid,estado:"error",cands:[],pos:0,planIdx:1,msg:"Falta la API key de TCG Price Lookup (la misma que usa el bot).",total:null}); return; }
     if(leerCupoHoy()>=REV_CUPO_STOP){ setRevDatos({cartaId:cid,estado:"sincupo",cands:[],pos:0,planIdx:1,msg:null,total:null}); return; }
     setRevDatos({cartaId:cid,estado:"cargando",cands:[],pos:0,planIdx:1,msg:null,total:null});
     // total del set (para comparar la numeración 116/084): pokemontcg.io, gratis, tolerante a fallos
@@ -1471,7 +1375,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     if(r.error){ setRevDatos({cartaId:cid,estado:"error",cands:[],pos:0,planIdx:1,msg:`No se pudo buscar (${r.error}).`,total}); return; }
     const cands=rankCandidatos(carta,r.candidatos);
     const auto=matchAutomatico(carta,cands);
-    if(auto){
+    if(auto&&!revFocoId){ // en modo carta puntual no se aplica solo: se muestran las opciones para elegir
       revAplicar(carta.id,auto,false); // calza solo (nombre+número+set): sin override, el bot la encuentra igual
       setRevCont(k=>({...k,solas:k.solas+1}));
       return; // sale de la cola y el efecto carga la siguiente
@@ -1482,6 +1386,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     if(revDatos.cartaId!==carta.id) return;
     const tok=++revTok.current, cid=carta.id;
     const plan=planBusquedas(carta), idx=revDatos.planIdx;
+    if(idx>=plan.length&&revFocoId){ setRevAviso(`Ya probaste las ${idx} variantes de esta carta.`); return; }
     if(idx>=plan.length){
       marcarAgotada(cid,idx);
       setRevAviso(`Probadas las ${idx} variantes sin match — no la vuelve a mostrar por ${REV_AGOTADA_DIAS} días (vas a seguir con otras cartas mientras tanto).`);
@@ -1502,6 +1407,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const ov=revAplicar(carta.id,c,true);
     setRevCont(k=>({...k,elegidas:k.elegidas+1}));
     guardarOverrideRemoto(carta.id,ov);
+    if(revFocoId) cerrarRevision(); // carta puntual: listo, se vuelve a la pantalla de donde se vino
   }
   React.useEffect(()=>{
     if(!revAbierta) return;
@@ -1545,11 +1451,11 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const imgApi=c?revImgs[claveCandidato(c)]:null;
     const urlsCand=c?[...(imgApi?.url?[imgApi.url]:[]),...urlsFoto({image:c.image,setId:c.setId,setCode:c.setCode,number:c.number})]:[];
     return(
-      <div onClick={()=>setRevAbierta(false)} style={{position:"fixed",inset:0,zIndex:700,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+      <div onClick={cerrarRevision} style={{position:"fixed",inset:0,zIndex:720,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
         <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,460px)",background:"#111",color:"#fff",borderRadius:"16px 16px 0 0",padding:"16px 16px 28px",maxHeight:"92vh",overflowY:"auto",boxSizing:"border-box",fontFamily:F}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-            <div style={{fontSize:15,fontWeight:700}}>🧭 Cartas sin precio · quedan {revCola.length}</div>
-            <button onClick={()=>setRevAbierta(false)} style={{background:"transparent",border:"none",color:"#999",fontSize:18,cursor:"pointer"}}>✕</button>
+            <div style={{fontSize:15,fontWeight:700}}>{revFocoId?"🔍 Revisar precio de esta carta":`🧭 Cartas sin precio · quedan ${revCola.length}`}</div>
+            <button onClick={cerrarRevision} style={{background:"transparent",border:"none",color:"#999",fontSize:18,cursor:"pointer"}}>✕</button>
           </div>
           <div style={{fontSize:11,color:"#888",marginBottom:12}}>consultas de hoy ≈ {revCupo}/100 · {revCont.elegidas} elegidas · {revCont.solas} calzaron solas{idsAgotadasRecientes.size>0?` · ${idsAgotadasRecientes.size} en pausa (sin match, reintenta en unos días)`:""}</div>
           {!carta?(
@@ -1562,6 +1468,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                 <div style={{fontSize:15,fontWeight:700}}>{carta.name}</div>
                 <div style={{fontSize:13}}>#{carta.number}{d.total?`/${d.total}`:""} · {carta.set}</div>
                 <div style={{fontSize:11,color:"#888"}}>código de set: {carta.setCode||"—"}</div>
+                {carta.tcgMarket!=null&&<div style={{fontSize:12,color:"#5c9cff",marginTop:2}}>precio actual: {fmtUSD(carta.tcgMarket)}</div>}
               </div>
             </div>
             {d.estado==="cargando"&&<div style={{fontSize:13,color:"#aaa",padding:"16px 0"}}>buscando opciones…</div>}
@@ -1587,6 +1494,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                     <div style={{fontSize:12,color:"#bbb"}}>{c.setName||"set sin nombre"}</div>
                     <div style={{fontSize:11,color:"#888"}}>{c.setId||c.setCode||"sin código de set"}</div>
                     <div style={{fontSize:14,fontWeight:700,marginTop:4,color:c.market!=null?"#8fe0a8":"#999"}}>{c.market!=null?fmtUSD(c.market):"sin precio NM/LP"}</div>
+                    {c.market!=null&&carta.tcgMarket!=null&&Math.abs(c.market-carta.tcgMarket)<0.005&&<div style={{fontSize:10,color:"#5c9cff",marginTop:2}}>= el precio que tiene hoy tu carta</div>}
                     {c.market==null&&<div style={{fontSize:10,color:"#888",marginTop:2}}>{c.preciosDisponibles&&c.preciosDisponibles.length?`la API trae: ${c.preciosDisponibles.join(", ")}`:"la API no trae ningún precio para esta opción"}</div>}
                   </div>
                 </div>
@@ -1604,7 +1512,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               {proxima&&<button onClick={()=>revOtraVariante(carta)} style={btn("#aac756","#111",{width:"100%",marginBottom:8})}>Probar otra variante: «{proxima.q}»</button>}
               {!proxima&&<div style={{fontSize:12,color:"#888",marginBottom:8}}>No quedan más variantes del nombre por probar.</div>}
             </div>)}
-            {d.estado!=="cargando"&&<button onClick={()=>setRevSaltadas(s=>[...s,carta.id])} style={btn("transparent","#bbb",{width:"100%",marginTop:8,border:"1px solid #333"})}>Saltar esta carta</button>}
+            {d.estado!=="cargando"&&<button onClick={()=>{ if(revFocoId) cerrarRevision(); else setRevSaltadas(s=>[...s,carta.id]); }} style={btn("transparent","#bbb",{width:"100%",marginTop:8,border:"1px solid #333"})}>{revFocoId?"Cerrar sin cambios":"Saltar esta carta"}</button>}
           </>)}
           {revAviso&&<div style={{fontSize:12,color:"#ffcf70",marginTop:10}}>{revAviso}</div>}
           {revFallidas.length>0&&<button onClick={()=>revFallidas.forEach(x=>guardarOverrideRemoto(x.id,x.ov))} style={btn("#333","#fff",{marginTop:8,fontSize:12,padding:"8px 12px"})}>↻ reintentar {revFallidas.length} elección(es) pendientes de enviar al bot</button>}
@@ -1670,17 +1578,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                 ?<div style={{fontFamily:"'Caveat',cursive",fontSize:26,fontWeight:700,color:"#5c9cff"}}>{fmtUSD(detalle.tcgMarket)}</div>
                 :<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"rgba(255,255,255,0.3)"}}>sin precio aún</div>
               }
-              {!detalle.tcgMarket && (
-                <button onClick={async()=>{
-                  setDiagLoading(true); setDiagResult(null); setDiagImgs([]);
-                  const d = await fetchTCGPriceDiag(detalle.name, detalle.set, detalle.number, detalle.setCode, apiKey);
-                  setDiagLoading(false); setDiagResult(d);
-                  aplicarDiagSiMatchea(detalle.id, d);
-                  if(d.candidatos?.length) cargarImagenesCandidatos(d.candidatos);
-                }} style={{marginTop:4,fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.25)",borderRadius:10,padding:"3px 8px",background:"transparent",color:"rgba(255,255,255,0.6)",cursor:"pointer"}}>
-                  {diagLoading?"buscando…":"🔍 diagnosticar"}
+              <button onClick={()=>abrirRevisionCarta(detalle.id)} style={{marginTop:4,fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.25)",borderRadius:10,padding:"3px 8px",background:"transparent",color:"rgba(255,255,255,0.6)",cursor:"pointer"}}>
+                  🔍 revisar precio
                 </button>
-              )}
               {(detalle.tcgLow||detalle.tcgHigh)&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.35)",marginTop:2}}>
                 rango {detalle.tcgLow?fmtUSD(detalle.tcgLow):"—"} – {detalle.tcgHigh?fmtUSD(detalle.tcgHigh):"—"}
               </div>}
@@ -1690,8 +1590,6 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               <div style={{fontFamily:"'Caveat',cursive",fontSize:18,fontWeight:700,color:"#fff"}}>{fmtUSD(detalle.precioUSD)}</div>
             </div>}
           </div>
-
-          {diagResult && renderDiagPanel(detalle.id)}
           {/* ATH / ATL / Volatilidad — mismo cálculo y nivel de detalle que la
               ficha de inventario, para cualquier carta que junte snapshots
               (Dark Collection o Hunting, da igual el origen). */}
@@ -1834,25 +1732,15 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                 ?<div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"rgba(255,255,255,0.7)"}}>{fmtUSD(carta.tcgMarket)}</div>
                 :<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"rgba(255,255,255,0.3)"}}>sin precio</div>
               }
-              {!carta.tcgMarket && (
-                <button onClick={async()=>{
-                  setDiagLoading(true); setDiagResult(null); setDiagImgs([]);
-                  const d = await fetchTCGPriceDiag(carta.name, carta.set, carta.number, carta.setCode, apiKey);
-                  setDiagLoading(false); setDiagResult(d);
-                  aplicarDiagSiMatchea(carta.id, d);
-                  if(d.candidatos?.length) cargarImagenesCandidatos(d.candidatos);
-                }} style={{marginTop:4,fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.25)",borderRadius:10,padding:"3px 8px",background:"transparent",color:"rgba(255,255,255,0.6)",cursor:"pointer"}}>
-                  {diagLoading?"buscando…":"🔍 diagnosticar"}
+              <button onClick={()=>abrirRevisionCarta(carta.id)} style={{marginTop:4,fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.25)",borderRadius:10,padding:"3px 8px",background:"transparent",color:"rgba(255,255,255,0.6)",cursor:"pointer"}}>
+                  🔍 revisar precio
                 </button>
-              )}
               {(carta.tcgLow||carta.tcgHigh)&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:2}}>
                 rango {carta.tcgLow?fmtUSD(carta.tcgLow):"—"} – {carta.tcgHigh?fmtUSD(carta.tcgHigh):"—"}
               </div>}
             </div>
           </div>
         </div>
-
-        {diagResult && renderDiagPanel(carta.id)}
 
         {/* ATH / ATL / Volatilidad */}
         {hist.length>=2&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
@@ -2030,6 +1918,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             </div>
           </div>
         )}
+        {renderRevisionModal()}
       </div>
     );
   }
@@ -2347,6 +2236,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         )}
         {renderDarkPriceModal()}
         {renderDarkDetailModal()}
+        {renderRevisionModal()}
 
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
           <button onClick={()=>setAutocolCarpeta(null)} style={{background:"transparent",border:"none",fontSize:20,color:"#444",cursor:"pointer",padding:0}}>←</button>
@@ -2459,7 +2349,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         </div>
       )}
       {colaSinPrecio(inv).length>0&&(
-        <button onClick={()=>{setRevCupo(leerCupoHoy());setRevAbierta(true);}}
+        <button onClick={abrirRevisionCola}
           style={{width:"100%",background:"#111",border:"1px solid #aac756",borderRadius:12,padding:"12px 14px",marginBottom:12,fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:"#aac756",cursor:"pointer",textAlign:"left"}}>
           🧭 revisar cartas sin precio ({colaSinPrecio(inv).length})
         </button>
