@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-10T08:11:23.708Z",
+  "generatedAt": "2026-10-10T15:45:49.240Z",
   "categories": [
     {
       "cat": "Películas",
@@ -424,7 +424,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.4
+            "tmdb": 6.2
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -875,7 +875,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 7.4
+            "tmdb": 7.6
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -936,6 +936,87 @@
             {
               "name": "Daniel Bernhardt",
               "character": "Falko",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1236045",
+          "title": "Animales",
+          "link": "https://www.themoviedb.org/movie/1236045",
+          "summary": "El secuestro de su hijo obliga a un candidato a la alcaldía de Los Ángeles y a su mujer a reunir el dinero del rescate y a tomar decisiones que podrían destruir sus vidas.",
+          "image": "https://image.tmdb.org/t/p/w500/hhycOr6ji35RMGHnstHN4UKAvR4.jpg",
+          "pubDate": "2026-10-09",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-09T08:34:33.968Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.4
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "ZkN2M4ODdys",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Ben Affleck",
+              "character": "Mark Kimball",
+              "order": 0
+            },
+            {
+              "name": "Kerry Washington",
+              "character": "Abigail Kimball",
+              "order": 1
+            },
+            {
+              "name": "Gillian Anderson",
+              "character": "Dayle Burton",
+              "order": 2
+            },
+            {
+              "name": "Steven Yeun",
+              "character": "Sam Allison",
+              "order": 3
+            },
+            {
+              "name": "Adriana Paz",
+              "character": "Cecilia Trujillo",
+              "order": 4
+            },
+            {
+              "name": "Luis Gerardo Méndez",
+              "character": "Ramon",
+              "order": 5
+            },
+            {
+              "name": "Christopher Woodley",
+              "character": "Denny Kimball",
+              "order": 6
+            },
+            {
+              "name": "Jacob Estrada",
+              "character": "Hector",
+              "order": 7
+            },
+            {
+              "name": "Ray Fisher",
+              "character": "Ron Sperling",
+              "order": 8
+            },
+            {
+              "name": "Taylor Cooper",
+              "character": "Hannah",
               "order": 9
             }
           ],
@@ -1017,87 +1098,6 @@
             {
               "name": "Laura Gordon",
               "character": "Ingrid Lilith Hall",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1236045",
-          "title": "Animales",
-          "link": "https://www.themoviedb.org/movie/1236045",
-          "summary": "El secuestro de su hijo obliga a un candidato a la alcaldía de Los Ángeles y a su mujer a reunir el dinero del rescate y a tomar decisiones que podrían destruir sus vidas.",
-          "image": "https://image.tmdb.org/t/p/w500/hhycOr6ji35RMGHnstHN4UKAvR4.jpg",
-          "pubDate": "2026-10-09",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-09T08:34:33.968Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.1
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "ZkN2M4ODdys",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Ben Affleck",
-              "character": "Mark Kimball",
-              "order": 0
-            },
-            {
-              "name": "Kerry Washington",
-              "character": "Abigail Kimball",
-              "order": 1
-            },
-            {
-              "name": "Gillian Anderson",
-              "character": "Dayle Burton",
-              "order": 2
-            },
-            {
-              "name": "Steven Yeun",
-              "character": "Sam Allison",
-              "order": 3
-            },
-            {
-              "name": "Adriana Paz",
-              "character": "Cecilia Trujillo",
-              "order": 4
-            },
-            {
-              "name": "Luis Gerardo Méndez",
-              "character": "Ramon",
-              "order": 5
-            },
-            {
-              "name": "Christopher Woodley",
-              "character": "Denny Kimball",
-              "order": 6
-            },
-            {
-              "name": "Jacob Estrada",
-              "character": "Hector",
-              "order": 7
-            },
-            {
-              "name": "Ray Fisher",
-              "character": "Ron Sperling",
-              "order": 8
-            },
-            {
-              "name": "Taylor Cooper",
-              "character": "Hannah",
               "order": 9
             }
           ],
@@ -4439,6 +4439,105 @@
           ]
         },
         {
+          "guid": "tmdb-tv-247718",
+          "title": "Tierra de mafiosos",
+          "link": "https://www.themoviedb.org/tv/247718",
+          "summary": "El poder está en juego cuando los Harrigan y los Stevenson, dos familias criminales londinenses en guerra, se enfrentan en una batalla de matar o morir que amenaza con derribar imperios y arruinar vidas. Atrapado en el fuego cruzado está Harry Da Souza, el astuto \"solucionador\" tan peligroso como atractivo, que sabe muy bien dónde están las lealtades cuando las fuerzas opuestas chocan. A medida que los reinos se enfrentan, se cruzarán las líneas, y la única gracia salvadora es una garantía de vida o muerte: la familia por encima de todo.",
+          "image": "https://image.tmdb.org/t/p/w500/xOBnonAeHiZuiTPOLBFMFSPI6jy.jpg",
+          "pubDate": "2025-03-30",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-09-19T07:06:56.670Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.3,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.4
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-09-25",
+          "numberOfSeasons": 2,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 10,
+              "fechaEstreno": "2025-03-30"
+            },
+            {
+              "numero": 2,
+              "episodios": 10,
+              "fechaEstreno": "2026-09-18"
+            }
+          ],
+          "currentSeason": 2,
+          "reviews": {
+            "top": {
+              "rating": 8,
+              "text": "(CASTELLANO) Hay series que entran por pura presencia, y esta es de esas. Desde los primeros minutos, Tierra de mafiosos deja claro que su mayor arma no es la trama –que ya la hemos visto mil veces– sino ese desfile de actores que parece estar disfrutando más que nadie. Tom Hardy está brutal, pero quien me ha dejado loco es Harry (Paddy Considine): cada gesto, cada silencio, cada mirada… es de esos personajes que te incomodan sin levantar la voz. Y luego está Helen Mirren, que aquí directamente da miedo. Una frialdad que corta, una maldad sin freno. Impone muchísimo.\r\n\r\nLa historia no sorprende demasiado, pero funciona. Tiene ese punto reconocible de las ficciones de mafias familiares, con traiciones, tensiones y conversaciones que parecen una calma tensa a punto de estallar. Podría tener ",
+              "author": "Marco-Hugo Landeta Vacas"
+            },
+            "bottom": null
+          },
+          "trailer": {
+            "key": "qKGgw7Ob5f4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Hardy",
+              "character": "Harry Da Souza",
+              "order": 0
+            },
+            {
+              "name": "Pierce Brosnan",
+              "character": "Conrad Harrigan",
+              "order": 1
+            },
+            {
+              "name": "Paddy Considine",
+              "character": "Kevin Harrigan",
+              "order": 2
+            },
+            {
+              "name": "Joanne Froggatt",
+              "character": "Jan Da Souza",
+              "order": 3
+            },
+            {
+              "name": "Lara Pulver",
+              "character": "Bella Harrigan",
+              "order": 4
+            },
+            {
+              "name": "Anson Boon",
+              "character": "Eddie Harrigan",
+              "order": 5
+            },
+            {
+              "name": "Mandeep Dhillon",
+              "character": "Seraphina Harrigan",
+              "order": 6
+            },
+            {
+              "name": "Jasmine Jobson",
+              "character": "Zosia",
+              "order": 8
+            },
+            {
+              "name": "Teddie Allen",
+              "character": "Gina Da Souza",
+              "order": 9
+            },
+            {
+              "name": "Emmett J. Scanlan",
+              "character": "Paul",
+              "order": 10
+            }
+          ],
+          "trending": false
+        },
+        {
           "guid": "tmdb-tv-4614",
           "title": "Navy: Investigación criminal",
           "link": "https://www.themoviedb.org/tv/4614",
@@ -4625,103 +4724,100 @@
           ]
         },
         {
-          "guid": "tmdb-tv-247718",
-          "title": "Tierra de mafiosos",
-          "link": "https://www.themoviedb.org/tv/247718",
-          "summary": "El poder está en juego cuando los Harrigan y los Stevenson, dos familias criminales londinenses en guerra, se enfrentan en una batalla de matar o morir que amenaza con derribar imperios y arruinar vidas. Atrapado en el fuego cruzado está Harry Da Souza, el astuto \"solucionador\" tan peligroso como atractivo, que sabe muy bien dónde están las lealtades cuando las fuerzas opuestas chocan. A medida que los reinos se enfrentan, se cruzarán las líneas, y la única gracia salvadora es una garantía de vida o muerte: la familia por encima de todo.",
-          "image": "https://image.tmdb.org/t/p/w500/xOBnonAeHiZuiTPOLBFMFSPI6jy.jpg",
-          "pubDate": "2025-03-30",
+          "guid": "tmdb-tv-95480",
+          "title": "Slow Horses",
+          "link": "https://www.themoviedb.org/tv/95480",
+          "summary": "Drama de espías con tintes de comedia negra centrado en las andanzas de un incompetente equipo de agentes del MI5 y en su jefe, el irreverente Jackson Lamb, a medida que desmontan los artificios del espionaje para defender Inglaterra de las fuerzas del mal.",
+          "image": "https://image.tmdb.org/t/p/w500/3YwDLuIScomV0ea3RNL6kHpbi7Y.jpg",
+          "pubDate": "2022-04-01",
           "source": "TMDb",
           "categoria": "Series",
-          "firstSeenAt": "2026-09-19T07:06:56.670Z",
+          "firstSeenAt": "2026-10-07T17:19:01.213Z",
           "fullText": null,
           "rating": {
-            "imdb": 8.3,
+            "imdb": 8.4,
             "rt": null,
             "metascore": null,
-            "tmdb": 8.4
+            "tmdb": 8
           },
           "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-25",
-          "numberOfSeasons": 2,
+          "nextEpisodeDate": "2026-10-07",
+          "numberOfSeasons": 6,
           "seasons": [
             {
               "numero": 1,
-              "episodios": 10,
-              "fechaEstreno": "2025-03-30"
+              "episodios": 6,
+              "fechaEstreno": "2022-04-01"
             },
             {
               "numero": 2,
-              "episodios": 10,
-              "fechaEstreno": "2026-09-18"
+              "episodios": 6,
+              "fechaEstreno": "2022-12-02"
+            },
+            {
+              "numero": 3,
+              "episodios": 6,
+              "fechaEstreno": "2023-11-29"
+            },
+            {
+              "numero": 4,
+              "episodios": 6,
+              "fechaEstreno": "2024-09-04"
+            },
+            {
+              "numero": 5,
+              "episodios": 6,
+              "fechaEstreno": "2025-09-24"
+            },
+            {
+              "numero": 6,
+              "episodios": 6,
+              "fechaEstreno": "2026-09-16"
             }
           ],
-          "currentSeason": 2,
-          "reviews": {
-            "top": {
-              "rating": 8,
-              "text": "(CASTELLANO) Hay series que entran por pura presencia, y esta es de esas. Desde los primeros minutos, Tierra de mafiosos deja claro que su mayor arma no es la trama –que ya la hemos visto mil veces– sino ese desfile de actores que parece estar disfrutando más que nadie. Tom Hardy está brutal, pero quien me ha dejado loco es Harry (Paddy Considine): cada gesto, cada silencio, cada mirada… es de esos personajes que te incomodan sin levantar la voz. Y luego está Helen Mirren, que aquí directamente da miedo. Una frialdad que corta, una maldad sin freno. Impone muchísimo.\r\n\r\nLa historia no sorprende demasiado, pero funciona. Tiene ese punto reconocible de las ficciones de mafias familiares, con traiciones, tensiones y conversaciones que parecen una calma tensa a punto de estallar. Podría tener ",
-              "author": "Marco-Hugo Landeta Vacas"
-            },
-            "bottom": null
-          },
+          "currentSeason": 6,
+          "reviews": null,
           "trailer": {
-            "key": "qKGgw7Ob5f4",
+            "key": "O9ZJChzPn0U",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Tom Hardy",
-              "character": "Harry Da Souza",
+              "name": "Gary Oldman",
+              "character": "Jackson Lamb",
               "order": 0
             },
             {
-              "name": "Pierce Brosnan",
-              "character": "Conrad Harrigan",
+              "name": "Jack Lowden",
+              "character": "River Cartwright",
               "order": 1
             },
             {
-              "name": "Paddy Considine",
-              "character": "Kevin Harrigan",
+              "name": "Kristin Scott Thomas",
+              "character": "Diana Taverner",
               "order": 2
             },
             {
-              "name": "Joanne Froggatt",
-              "character": "Jan Da Souza",
+              "name": "Hugo Weaving",
+              "character": "Frank Harkness",
               "order": 3
             },
             {
-              "name": "Lara Pulver",
-              "character": "Bella Harrigan",
-              "order": 4
-            },
-            {
-              "name": "Anson Boon",
-              "character": "Eddie Harrigan",
+              "name": "Saskia Reeves",
+              "character": "Catherine Standish",
               "order": 5
             },
             {
-              "name": "Mandeep Dhillon",
-              "character": "Seraphina Harrigan",
+              "name": "Christopher Chung",
+              "character": "Roddy Ho",
               "order": 6
             },
             {
-              "name": "Jasmine Jobson",
-              "character": "Zosia",
+              "name": "Aimee-Ffion Edwards",
+              "character": "Shirley Dander",
               "order": 8
-            },
-            {
-              "name": "Teddie Allen",
-              "character": "Gina Da Souza",
-              "order": 9
-            },
-            {
-              "name": "Emmett J. Scanlan",
-              "character": "Paul",
-              "order": 10
             }
-          ],
-          "trending": false
+          ]
         },
         {
           "guid": "tmdb-tv-11890",
@@ -4938,102 +5034,6 @@
           },
           "cast": [],
           "trending": false
-        },
-        {
-          "guid": "tmdb-tv-95480",
-          "title": "Slow Horses",
-          "link": "https://www.themoviedb.org/tv/95480",
-          "summary": "Drama de espías con tintes de comedia negra centrado en las andanzas de un incompetente equipo de agentes del MI5 y en su jefe, el irreverente Jackson Lamb, a medida que desmontan los artificios del espionaje para defender Inglaterra de las fuerzas del mal.",
-          "image": "https://image.tmdb.org/t/p/w500/3YwDLuIScomV0ea3RNL6kHpbi7Y.jpg",
-          "pubDate": "2022-04-01",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-10-07T17:19:01.213Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.4,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-07",
-          "numberOfSeasons": 6,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 6,
-              "fechaEstreno": "2022-04-01"
-            },
-            {
-              "numero": 2,
-              "episodios": 6,
-              "fechaEstreno": "2022-12-02"
-            },
-            {
-              "numero": 3,
-              "episodios": 6,
-              "fechaEstreno": "2023-11-29"
-            },
-            {
-              "numero": 4,
-              "episodios": 6,
-              "fechaEstreno": "2024-09-04"
-            },
-            {
-              "numero": 5,
-              "episodios": 6,
-              "fechaEstreno": "2025-09-24"
-            },
-            {
-              "numero": 6,
-              "episodios": 6,
-              "fechaEstreno": "2026-09-16"
-            }
-          ],
-          "currentSeason": 6,
-          "reviews": null,
-          "trailer": {
-            "key": "O9ZJChzPn0U",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Gary Oldman",
-              "character": "Jackson Lamb",
-              "order": 0
-            },
-            {
-              "name": "Jack Lowden",
-              "character": "River Cartwright",
-              "order": 1
-            },
-            {
-              "name": "Kristin Scott Thomas",
-              "character": "Diana Taverner",
-              "order": 2
-            },
-            {
-              "name": "Hugo Weaving",
-              "character": "Frank Harkness",
-              "order": 3
-            },
-            {
-              "name": "Saskia Reeves",
-              "character": "Catherine Standish",
-              "order": 5
-            },
-            {
-              "name": "Christopher Chung",
-              "character": "Roddy Ho",
-              "order": 6
-            },
-            {
-              "name": "Aimee-Ffion Edwards",
-              "character": "Shirley Dander",
-              "order": 8
-            }
-          ]
         },
         {
           "guid": "tmdb-tv-4656",
