@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-10T15:45:49.240Z",
+  "generatedAt": "2026-10-10T21:17:00.633Z",
   "categories": [
     {
       "cat": "Películas",
@@ -424,7 +424,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.2
+            "tmdb": 6.1
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -861,6 +861,87 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1236045",
+          "title": "Animales",
+          "link": "https://www.themoviedb.org/movie/1236045",
+          "summary": "El secuestro de su hijo obliga a un candidato a la alcaldía de Los Ángeles y a su mujer a reunir el dinero del rescate y a tomar decisiones que podrían destruir sus vidas.",
+          "image": "https://image.tmdb.org/t/p/w500/hhycOr6ji35RMGHnstHN4UKAvR4.jpg",
+          "pubDate": "2026-10-09",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-09T08:34:33.968Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.1
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "ZkN2M4ODdys",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Ben Affleck",
+              "character": "Mark Kimball",
+              "order": 0
+            },
+            {
+              "name": "Kerry Washington",
+              "character": "Abigail Kimball",
+              "order": 1
+            },
+            {
+              "name": "Gillian Anderson",
+              "character": "Dayle Burton",
+              "order": 2
+            },
+            {
+              "name": "Steven Yeun",
+              "character": "Sam Allison",
+              "order": 3
+            },
+            {
+              "name": "Adriana Paz",
+              "character": "Cecilia Trujillo",
+              "order": 4
+            },
+            {
+              "name": "Luis Gerardo Méndez",
+              "character": "Ramon",
+              "order": 5
+            },
+            {
+              "name": "Christopher Woodley",
+              "character": "Denny Kimball",
+              "order": 6
+            },
+            {
+              "name": "Jacob Estrada",
+              "character": "Hector",
+              "order": 7
+            },
+            {
+              "name": "Ray Fisher",
+              "character": "Ron Sperling",
+              "order": 8
+            },
+            {
+              "name": "Taylor Cooper",
+              "character": "Hannah",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1148365",
           "title": "Matchbox: La película",
           "link": "https://www.themoviedb.org/movie/1148365",
@@ -936,87 +1017,6 @@
             {
               "name": "Daniel Bernhardt",
               "character": "Falko",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1236045",
-          "title": "Animales",
-          "link": "https://www.themoviedb.org/movie/1236045",
-          "summary": "El secuestro de su hijo obliga a un candidato a la alcaldía de Los Ángeles y a su mujer a reunir el dinero del rescate y a tomar decisiones que podrían destruir sus vidas.",
-          "image": "https://image.tmdb.org/t/p/w500/hhycOr6ji35RMGHnstHN4UKAvR4.jpg",
-          "pubDate": "2026-10-09",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-09T08:34:33.968Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.4
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "ZkN2M4ODdys",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Ben Affleck",
-              "character": "Mark Kimball",
-              "order": 0
-            },
-            {
-              "name": "Kerry Washington",
-              "character": "Abigail Kimball",
-              "order": 1
-            },
-            {
-              "name": "Gillian Anderson",
-              "character": "Dayle Burton",
-              "order": 2
-            },
-            {
-              "name": "Steven Yeun",
-              "character": "Sam Allison",
-              "order": 3
-            },
-            {
-              "name": "Adriana Paz",
-              "character": "Cecilia Trujillo",
-              "order": 4
-            },
-            {
-              "name": "Luis Gerardo Méndez",
-              "character": "Ramon",
-              "order": 5
-            },
-            {
-              "name": "Christopher Woodley",
-              "character": "Denny Kimball",
-              "order": 6
-            },
-            {
-              "name": "Jacob Estrada",
-              "character": "Hector",
-              "order": 7
-            },
-            {
-              "name": "Ray Fisher",
-              "character": "Ron Sperling",
-              "order": 8
-            },
-            {
-              "name": "Taylor Cooper",
-              "character": "Hannah",
               "order": 9
             }
           ],
@@ -1118,7 +1118,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 7.6
+            "tmdb": 7.4
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -4243,6 +4243,192 @@
           ]
         },
         {
+          "guid": "tmdb-tv-4614",
+          "title": "Navy: Investigación criminal",
+          "link": "https://www.themoviedb.org/tv/4614",
+          "summary": "Gibbs, agente especial del servicio de investigación criminal de la armada, dirige un equipo extravagante para resolver crímenes que van desde el terrorismo y el espionaje hasta el terrorismo.",
+          "image": "https://image.tmdb.org/t/p/w500/rkWK3hcCiFwtIhLYnTPKjcZwTTN.jpg",
+          "pubDate": "2003-09-23",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-09-29T16:22:09.960Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.8,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.6
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-06",
+          "numberOfSeasons": 24,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 23,
+              "fechaEstreno": "2003-09-23"
+            },
+            {
+              "numero": 2,
+              "episodios": 23,
+              "fechaEstreno": "2004-09-28"
+            },
+            {
+              "numero": 3,
+              "episodios": 24,
+              "fechaEstreno": "2005-09-20"
+            },
+            {
+              "numero": 4,
+              "episodios": 24,
+              "fechaEstreno": "2006-09-19"
+            },
+            {
+              "numero": 5,
+              "episodios": 19,
+              "fechaEstreno": "2007-09-25"
+            },
+            {
+              "numero": 6,
+              "episodios": 25,
+              "fechaEstreno": "2008-09-23"
+            },
+            {
+              "numero": 7,
+              "episodios": 24,
+              "fechaEstreno": "2009-09-22"
+            },
+            {
+              "numero": 8,
+              "episodios": 24,
+              "fechaEstreno": "2010-09-21"
+            },
+            {
+              "numero": 9,
+              "episodios": 24,
+              "fechaEstreno": "2011-09-20"
+            },
+            {
+              "numero": 10,
+              "episodios": 24,
+              "fechaEstreno": "2012-09-25"
+            },
+            {
+              "numero": 11,
+              "episodios": 24,
+              "fechaEstreno": "2013-09-24"
+            },
+            {
+              "numero": 12,
+              "episodios": 24,
+              "fechaEstreno": "2014-09-23"
+            },
+            {
+              "numero": 13,
+              "episodios": 24,
+              "fechaEstreno": "2015-09-22"
+            },
+            {
+              "numero": 14,
+              "episodios": 24,
+              "fechaEstreno": "2016-09-20"
+            },
+            {
+              "numero": 15,
+              "episodios": 24,
+              "fechaEstreno": "2017-09-26"
+            },
+            {
+              "numero": 16,
+              "episodios": 24,
+              "fechaEstreno": "2018-09-25"
+            },
+            {
+              "numero": 17,
+              "episodios": 20,
+              "fechaEstreno": "2019-09-24"
+            },
+            {
+              "numero": 18,
+              "episodios": 16,
+              "fechaEstreno": "2020-11-17"
+            },
+            {
+              "numero": 19,
+              "episodios": 21,
+              "fechaEstreno": "2021-09-20"
+            },
+            {
+              "numero": 20,
+              "episodios": 22,
+              "fechaEstreno": "2022-09-19"
+            },
+            {
+              "numero": 21,
+              "episodios": 10,
+              "fechaEstreno": "2024-02-12"
+            },
+            {
+              "numero": 22,
+              "episodios": 20,
+              "fechaEstreno": "2024-10-14"
+            },
+            {
+              "numero": 23,
+              "episodios": 20,
+              "fechaEstreno": "2025-10-14"
+            },
+            {
+              "numero": 24,
+              "episodios": 4,
+              "fechaEstreno": "2026-10-06"
+            }
+          ],
+          "currentSeason": 23,
+          "reviews": null,
+          "trailer": {
+            "key": "BhtDgn31XZo",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Sean Murray",
+              "character": "Timothy McGee",
+              "order": 1
+            },
+            {
+              "name": "Wilmer Valderrama",
+              "character": "Nick Torres",
+              "order": 3
+            },
+            {
+              "name": "Katrina Law",
+              "character": "Jessica Knight",
+              "order": 4
+            },
+            {
+              "name": "Brian Dietzen",
+              "character": "Jimmy Palmer",
+              "order": 6
+            },
+            {
+              "name": "Diona Reasonover",
+              "character": "Kasie Hines",
+              "order": 16
+            },
+            {
+              "name": "Gary Cole",
+              "character": "Alden Parker",
+              "order": 17
+            },
+            {
+              "name": "Michael Weatherly",
+              "character": "Anthony DiNozzo",
+              "order": 18
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-1416",
           "title": "Anatomía de Grey",
           "link": "https://www.themoviedb.org/tv/1416",
@@ -4538,288 +4724,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-tv-4614",
-          "title": "Navy: Investigación criminal",
-          "link": "https://www.themoviedb.org/tv/4614",
-          "summary": "Gibbs, agente especial del servicio de investigación criminal de la armada, dirige un equipo extravagante para resolver crímenes que van desde el terrorismo y el espionaje hasta el terrorismo.",
-          "image": "https://image.tmdb.org/t/p/w500/rkWK3hcCiFwtIhLYnTPKjcZwTTN.jpg",
-          "pubDate": "2003-09-23",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-29T16:22:09.960Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.8,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.6
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-06",
-          "numberOfSeasons": 24,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 23,
-              "fechaEstreno": "2003-09-23"
-            },
-            {
-              "numero": 2,
-              "episodios": 23,
-              "fechaEstreno": "2004-09-28"
-            },
-            {
-              "numero": 3,
-              "episodios": 24,
-              "fechaEstreno": "2005-09-20"
-            },
-            {
-              "numero": 4,
-              "episodios": 24,
-              "fechaEstreno": "2006-09-19"
-            },
-            {
-              "numero": 5,
-              "episodios": 19,
-              "fechaEstreno": "2007-09-25"
-            },
-            {
-              "numero": 6,
-              "episodios": 25,
-              "fechaEstreno": "2008-09-23"
-            },
-            {
-              "numero": 7,
-              "episodios": 24,
-              "fechaEstreno": "2009-09-22"
-            },
-            {
-              "numero": 8,
-              "episodios": 24,
-              "fechaEstreno": "2010-09-21"
-            },
-            {
-              "numero": 9,
-              "episodios": 24,
-              "fechaEstreno": "2011-09-20"
-            },
-            {
-              "numero": 10,
-              "episodios": 24,
-              "fechaEstreno": "2012-09-25"
-            },
-            {
-              "numero": 11,
-              "episodios": 24,
-              "fechaEstreno": "2013-09-24"
-            },
-            {
-              "numero": 12,
-              "episodios": 24,
-              "fechaEstreno": "2014-09-23"
-            },
-            {
-              "numero": 13,
-              "episodios": 24,
-              "fechaEstreno": "2015-09-22"
-            },
-            {
-              "numero": 14,
-              "episodios": 24,
-              "fechaEstreno": "2016-09-20"
-            },
-            {
-              "numero": 15,
-              "episodios": 24,
-              "fechaEstreno": "2017-09-26"
-            },
-            {
-              "numero": 16,
-              "episodios": 24,
-              "fechaEstreno": "2018-09-25"
-            },
-            {
-              "numero": 17,
-              "episodios": 20,
-              "fechaEstreno": "2019-09-24"
-            },
-            {
-              "numero": 18,
-              "episodios": 16,
-              "fechaEstreno": "2020-11-17"
-            },
-            {
-              "numero": 19,
-              "episodios": 21,
-              "fechaEstreno": "2021-09-20"
-            },
-            {
-              "numero": 20,
-              "episodios": 22,
-              "fechaEstreno": "2022-09-19"
-            },
-            {
-              "numero": 21,
-              "episodios": 10,
-              "fechaEstreno": "2024-02-12"
-            },
-            {
-              "numero": 22,
-              "episodios": 20,
-              "fechaEstreno": "2024-10-14"
-            },
-            {
-              "numero": 23,
-              "episodios": 20,
-              "fechaEstreno": "2025-10-14"
-            },
-            {
-              "numero": 24,
-              "episodios": 4,
-              "fechaEstreno": "2026-10-06"
-            }
-          ],
-          "currentSeason": 23,
-          "reviews": null,
-          "trailer": {
-            "key": "BhtDgn31XZo",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Sean Murray",
-              "character": "Timothy McGee",
-              "order": 1
-            },
-            {
-              "name": "Wilmer Valderrama",
-              "character": "Nick Torres",
-              "order": 3
-            },
-            {
-              "name": "Katrina Law",
-              "character": "Jessica Knight",
-              "order": 4
-            },
-            {
-              "name": "Brian Dietzen",
-              "character": "Jimmy Palmer",
-              "order": 6
-            },
-            {
-              "name": "Diona Reasonover",
-              "character": "Kasie Hines",
-              "order": 16
-            },
-            {
-              "name": "Gary Cole",
-              "character": "Alden Parker",
-              "order": 17
-            },
-            {
-              "name": "Michael Weatherly",
-              "character": "Anthony DiNozzo",
-              "order": 18
-            }
-          ]
-        },
-        {
-          "guid": "tmdb-tv-95480",
-          "title": "Slow Horses",
-          "link": "https://www.themoviedb.org/tv/95480",
-          "summary": "Drama de espías con tintes de comedia negra centrado en las andanzas de un incompetente equipo de agentes del MI5 y en su jefe, el irreverente Jackson Lamb, a medida que desmontan los artificios del espionaje para defender Inglaterra de las fuerzas del mal.",
-          "image": "https://image.tmdb.org/t/p/w500/3YwDLuIScomV0ea3RNL6kHpbi7Y.jpg",
-          "pubDate": "2022-04-01",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-10-07T17:19:01.213Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.4,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-07",
-          "numberOfSeasons": 6,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 6,
-              "fechaEstreno": "2022-04-01"
-            },
-            {
-              "numero": 2,
-              "episodios": 6,
-              "fechaEstreno": "2022-12-02"
-            },
-            {
-              "numero": 3,
-              "episodios": 6,
-              "fechaEstreno": "2023-11-29"
-            },
-            {
-              "numero": 4,
-              "episodios": 6,
-              "fechaEstreno": "2024-09-04"
-            },
-            {
-              "numero": 5,
-              "episodios": 6,
-              "fechaEstreno": "2025-09-24"
-            },
-            {
-              "numero": 6,
-              "episodios": 6,
-              "fechaEstreno": "2026-09-16"
-            }
-          ],
-          "currentSeason": 6,
-          "reviews": null,
-          "trailer": {
-            "key": "O9ZJChzPn0U",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Gary Oldman",
-              "character": "Jackson Lamb",
-              "order": 0
-            },
-            {
-              "name": "Jack Lowden",
-              "character": "River Cartwright",
-              "order": 1
-            },
-            {
-              "name": "Kristin Scott Thomas",
-              "character": "Diana Taverner",
-              "order": 2
-            },
-            {
-              "name": "Hugo Weaving",
-              "character": "Frank Harkness",
-              "order": 3
-            },
-            {
-              "name": "Saskia Reeves",
-              "character": "Catherine Standish",
-              "order": 5
-            },
-            {
-              "name": "Christopher Chung",
-              "character": "Roddy Ho",
-              "order": 6
-            },
-            {
-              "name": "Aimee-Ffion Edwards",
-              "character": "Shirley Dander",
-              "order": 8
-            }
-          ]
-        },
-        {
           "guid": "tmdb-tv-11890",
           "title": "Goede Tijden, Slechte Tijden",
           "link": "https://www.themoviedb.org/tv/11890",
@@ -5034,6 +4938,318 @@
           },
           "cast": [],
           "trending": false
+        },
+        {
+          "guid": "tmdb-tv-2661",
+          "title": "Kamen Rider",
+          "link": "https://www.themoviedb.org/tv/2661",
+          "summary": "Cada temporada de Kamen Rider presenta una historia diferente con personajes y tramas independientes, aunque todas siguen un esquema similar. El protagonista suele ser un motorista que por diversos medios, la mayor de las veces tecnológicos y a veces mágicos o combinación de ambos según la temporada, se transforma, siempre utilizando la frase Henshin (\"transformación\") en un superhéroe llamado Kamen Rider con un traje blindado y una máscara que generalmente está decorada recordando a un insecto.En unas temporadas hay un solo Kamen Rider, mientras que en otras hay dos o más, habiendo algunas que presentan más de diez Riders diferentes. Estos Riders luchan contra enemigos diversos o incluso a veces entre ellos. Los poderes del Kamen Rider siempre tienen un origen estrechamente relacionado con  los villanos, pero usa esos poderes para el bien en lugar de para el mal, y esta relación se convierte en fuente de conflictos argumentales según la temporada.",
+          "image": "https://image.tmdb.org/t/p/w500/fIJNVBa6MJStPiOvhLV69nAdu0e.jpg",
+          "pubDate": "1971-04-03",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-10-07T08:15:13.011Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.6,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.4
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-11",
+          "numberOfSeasons": 37,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 98,
+              "fechaEstreno": "1971-04-03"
+            },
+            {
+              "numero": 2,
+              "episodios": 52,
+              "fechaEstreno": "1973-02-17"
+            },
+            {
+              "numero": 3,
+              "episodios": 35,
+              "fechaEstreno": "1974-02-16"
+            },
+            {
+              "numero": 4,
+              "episodios": 24,
+              "fechaEstreno": "1974-10-19"
+            },
+            {
+              "numero": 5,
+              "episodios": 39,
+              "fechaEstreno": "1975-04-05"
+            },
+            {
+              "numero": 6,
+              "episodios": 54,
+              "fechaEstreno": "1979-10-05"
+            },
+            {
+              "numero": 7,
+              "episodios": 48,
+              "fechaEstreno": "1980-10-17"
+            },
+            {
+              "numero": 8,
+              "episodios": 51,
+              "fechaEstreno": "1987-10-04"
+            },
+            {
+              "numero": 9,
+              "episodios": 47,
+              "fechaEstreno": "1988-10-23"
+            },
+            {
+              "numero": 10,
+              "episodios": 49,
+              "fechaEstreno": "2000-01-30"
+            },
+            {
+              "numero": 11,
+              "episodios": 51,
+              "fechaEstreno": "2001-01-28"
+            },
+            {
+              "numero": 12,
+              "episodios": 50,
+              "fechaEstreno": "2002-02-03"
+            },
+            {
+              "numero": 13,
+              "episodios": 50,
+              "fechaEstreno": "2003-01-26"
+            },
+            {
+              "numero": 14,
+              "episodios": 49,
+              "fechaEstreno": "2004-01-25"
+            },
+            {
+              "numero": 15,
+              "episodios": 48,
+              "fechaEstreno": "2005-01-30"
+            },
+            {
+              "numero": 16,
+              "episodios": 49,
+              "fechaEstreno": "2006-01-29"
+            },
+            {
+              "numero": 17,
+              "episodios": 49,
+              "fechaEstreno": "2007-01-28"
+            },
+            {
+              "numero": 18,
+              "episodios": 48,
+              "fechaEstreno": "2008-01-27"
+            },
+            {
+              "numero": 19,
+              "episodios": 31,
+              "fechaEstreno": "2009-01-25"
+            },
+            {
+              "numero": 20,
+              "episodios": 49,
+              "fechaEstreno": "2009-09-06"
+            },
+            {
+              "numero": 21,
+              "episodios": 48,
+              "fechaEstreno": "2010-09-05"
+            },
+            {
+              "numero": 22,
+              "episodios": 48,
+              "fechaEstreno": "2011-09-04"
+            },
+            {
+              "numero": 23,
+              "episodios": 53,
+              "fechaEstreno": "2012-09-02"
+            },
+            {
+              "numero": 24,
+              "episodios": 47,
+              "fechaEstreno": "2013-10-06"
+            },
+            {
+              "numero": 25,
+              "episodios": 48,
+              "fechaEstreno": "2014-10-05"
+            },
+            {
+              "numero": 26,
+              "episodios": 50,
+              "fechaEstreno": "2015-10-04"
+            },
+            {
+              "numero": 27,
+              "episodios": 45,
+              "fechaEstreno": "2016-10-02"
+            },
+            {
+              "numero": 28,
+              "episodios": 49,
+              "fechaEstreno": "2017-09-03"
+            },
+            {
+              "numero": 29,
+              "episodios": 49,
+              "fechaEstreno": "2018-09-02"
+            },
+            {
+              "numero": 30,
+              "episodios": 45,
+              "fechaEstreno": "2019-09-01"
+            },
+            {
+              "numero": 31,
+              "episodios": 48,
+              "fechaEstreno": "2020-09-06"
+            },
+            {
+              "numero": 32,
+              "episodios": 50,
+              "fechaEstreno": "2021-09-05"
+            },
+            {
+              "numero": 33,
+              "episodios": 49,
+              "fechaEstreno": "2022-09-04"
+            },
+            {
+              "numero": 34,
+              "episodios": 50,
+              "fechaEstreno": "2023-09-03"
+            },
+            {
+              "numero": 35,
+              "episodios": 50,
+              "fechaEstreno": "2024-09-01"
+            },
+            {
+              "numero": 36,
+              "episodios": 50,
+              "fechaEstreno": "2025-09-07"
+            },
+            {
+              "numero": 37,
+              "episodios": 10,
+              "fechaEstreno": "2026-09-06"
+            }
+          ],
+          "currentSeason": 37,
+          "reviews": null,
+          "trailer": {
+            "key": "FY4TBfTLPEM",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-tv-95480",
+          "title": "Slow Horses",
+          "link": "https://www.themoviedb.org/tv/95480",
+          "summary": "Drama de espías con tintes de comedia negra centrado en las andanzas de un incompetente equipo de agentes del MI5 y en su jefe, el irreverente Jackson Lamb, a medida que desmontan los artificios del espionaje para defender Inglaterra de las fuerzas del mal.",
+          "image": "https://image.tmdb.org/t/p/w500/3YwDLuIScomV0ea3RNL6kHpbi7Y.jpg",
+          "pubDate": "2022-04-01",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-10-07T17:19:01.213Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.4,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-07",
+          "numberOfSeasons": 6,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 6,
+              "fechaEstreno": "2022-04-01"
+            },
+            {
+              "numero": 2,
+              "episodios": 6,
+              "fechaEstreno": "2022-12-02"
+            },
+            {
+              "numero": 3,
+              "episodios": 6,
+              "fechaEstreno": "2023-11-29"
+            },
+            {
+              "numero": 4,
+              "episodios": 6,
+              "fechaEstreno": "2024-09-04"
+            },
+            {
+              "numero": 5,
+              "episodios": 6,
+              "fechaEstreno": "2025-09-24"
+            },
+            {
+              "numero": 6,
+              "episodios": 6,
+              "fechaEstreno": "2026-09-16"
+            }
+          ],
+          "currentSeason": 6,
+          "reviews": null,
+          "trailer": {
+            "key": "O9ZJChzPn0U",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Gary Oldman",
+              "character": "Jackson Lamb",
+              "order": 0
+            },
+            {
+              "name": "Jack Lowden",
+              "character": "River Cartwright",
+              "order": 1
+            },
+            {
+              "name": "Kristin Scott Thomas",
+              "character": "Diana Taverner",
+              "order": 2
+            },
+            {
+              "name": "Hugo Weaving",
+              "character": "Frank Harkness",
+              "order": 3
+            },
+            {
+              "name": "Saskia Reeves",
+              "character": "Catherine Standish",
+              "order": 5
+            },
+            {
+              "name": "Christopher Chung",
+              "character": "Roddy Ho",
+              "order": 6
+            },
+            {
+              "name": "Aimee-Ffion Edwards",
+              "character": "Shirley Dander",
+              "order": 8
+            }
+          ]
         },
         {
           "guid": "tmdb-tv-4656",
@@ -5423,6 +5639,78 @@
           ]
         },
         {
+          "guid": "tmdb-tv-70672",
+          "title": "Hombres en una Misión",
+          "link": "https://www.themoviedb.org/tv/70672",
+          "summary": "Las celebridades masculinas juegan a la fantasía como estudiantes de secundaria, dan la bienvenida a estudiantes de transferencia estelar cada semana y participan en batallas de humor ingenioso y payasadas.",
+          "image": "https://image.tmdb.org/t/p/w500/zak7mqMxJGnnWplSdbjDtV7bg2Y.jpg",
+          "pubDate": "2015-12-05",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-10-01T16:55:04.546Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.1,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.4
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-03",
+          "numberOfSeasons": 1,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 546,
+              "fechaEstreno": "2015-12-05"
+            }
+          ],
+          "currentSeason": 1,
+          "reviews": null,
+          "trailer": {
+            "key": "7Y-ffN5O1ZQ",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "김영철",
+              "character": "Self",
+              "order": 0
+            },
+            {
+              "name": "민경훈",
+              "character": "Self",
+              "order": 1
+            },
+            {
+              "name": "강호동",
+              "character": "Self",
+              "order": 2
+            },
+            {
+              "name": "이수근",
+              "character": "Self",
+              "order": 3
+            },
+            {
+              "name": "김희철",
+              "character": "Self",
+              "order": 4
+            },
+            {
+              "name": "서장훈",
+              "character": "Self",
+              "order": 5
+            },
+            {
+              "name": "이상민",
+              "character": "Self",
+              "order": 6
+            }
+          ],
+          "trending": false
+        },
+        {
           "guid": "tmdb-tv-1413",
           "title": "American Horror Story",
           "link": "https://www.themoviedb.org/tv/1413",
@@ -5578,222 +5866,6 @@
               "order": 131
             }
           ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-2661",
-          "title": "Kamen Rider",
-          "link": "https://www.themoviedb.org/tv/2661",
-          "summary": "Cada temporada de Kamen Rider presenta una historia diferente con personajes y tramas independientes, aunque todas siguen un esquema similar. El protagonista suele ser un motorista que por diversos medios, la mayor de las veces tecnológicos y a veces mágicos o combinación de ambos según la temporada, se transforma, siempre utilizando la frase Henshin (\"transformación\") en un superhéroe llamado Kamen Rider con un traje blindado y una máscara que generalmente está decorada recordando a un insecto.En unas temporadas hay un solo Kamen Rider, mientras que en otras hay dos o más, habiendo algunas que presentan más de diez Riders diferentes. Estos Riders luchan contra enemigos diversos o incluso a veces entre ellos. Los poderes del Kamen Rider siempre tienen un origen estrechamente relacionado con  los villanos, pero usa esos poderes para el bien en lugar de para el mal, y esta relación se convierte en fuente de conflictos argumentales según la temporada.",
-          "image": "https://image.tmdb.org/t/p/w500/fIJNVBa6MJStPiOvhLV69nAdu0e.jpg",
-          "pubDate": "1971-04-03",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-10-07T08:15:13.011Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.6,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.4
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-11",
-          "numberOfSeasons": 37,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 98,
-              "fechaEstreno": "1971-04-03"
-            },
-            {
-              "numero": 2,
-              "episodios": 52,
-              "fechaEstreno": "1973-02-17"
-            },
-            {
-              "numero": 3,
-              "episodios": 35,
-              "fechaEstreno": "1974-02-16"
-            },
-            {
-              "numero": 4,
-              "episodios": 24,
-              "fechaEstreno": "1974-10-19"
-            },
-            {
-              "numero": 5,
-              "episodios": 39,
-              "fechaEstreno": "1975-04-05"
-            },
-            {
-              "numero": 6,
-              "episodios": 54,
-              "fechaEstreno": "1979-10-05"
-            },
-            {
-              "numero": 7,
-              "episodios": 48,
-              "fechaEstreno": "1980-10-17"
-            },
-            {
-              "numero": 8,
-              "episodios": 51,
-              "fechaEstreno": "1987-10-04"
-            },
-            {
-              "numero": 9,
-              "episodios": 47,
-              "fechaEstreno": "1988-10-23"
-            },
-            {
-              "numero": 10,
-              "episodios": 49,
-              "fechaEstreno": "2000-01-30"
-            },
-            {
-              "numero": 11,
-              "episodios": 51,
-              "fechaEstreno": "2001-01-28"
-            },
-            {
-              "numero": 12,
-              "episodios": 50,
-              "fechaEstreno": "2002-02-03"
-            },
-            {
-              "numero": 13,
-              "episodios": 50,
-              "fechaEstreno": "2003-01-26"
-            },
-            {
-              "numero": 14,
-              "episodios": 49,
-              "fechaEstreno": "2004-01-25"
-            },
-            {
-              "numero": 15,
-              "episodios": 48,
-              "fechaEstreno": "2005-01-30"
-            },
-            {
-              "numero": 16,
-              "episodios": 49,
-              "fechaEstreno": "2006-01-29"
-            },
-            {
-              "numero": 17,
-              "episodios": 49,
-              "fechaEstreno": "2007-01-28"
-            },
-            {
-              "numero": 18,
-              "episodios": 48,
-              "fechaEstreno": "2008-01-27"
-            },
-            {
-              "numero": 19,
-              "episodios": 31,
-              "fechaEstreno": "2009-01-25"
-            },
-            {
-              "numero": 20,
-              "episodios": 49,
-              "fechaEstreno": "2009-09-06"
-            },
-            {
-              "numero": 21,
-              "episodios": 48,
-              "fechaEstreno": "2010-09-05"
-            },
-            {
-              "numero": 22,
-              "episodios": 48,
-              "fechaEstreno": "2011-09-04"
-            },
-            {
-              "numero": 23,
-              "episodios": 53,
-              "fechaEstreno": "2012-09-02"
-            },
-            {
-              "numero": 24,
-              "episodios": 47,
-              "fechaEstreno": "2013-10-06"
-            },
-            {
-              "numero": 25,
-              "episodios": 48,
-              "fechaEstreno": "2014-10-05"
-            },
-            {
-              "numero": 26,
-              "episodios": 50,
-              "fechaEstreno": "2015-10-04"
-            },
-            {
-              "numero": 27,
-              "episodios": 45,
-              "fechaEstreno": "2016-10-02"
-            },
-            {
-              "numero": 28,
-              "episodios": 49,
-              "fechaEstreno": "2017-09-03"
-            },
-            {
-              "numero": 29,
-              "episodios": 49,
-              "fechaEstreno": "2018-09-02"
-            },
-            {
-              "numero": 30,
-              "episodios": 45,
-              "fechaEstreno": "2019-09-01"
-            },
-            {
-              "numero": 31,
-              "episodios": 48,
-              "fechaEstreno": "2020-09-06"
-            },
-            {
-              "numero": 32,
-              "episodios": 50,
-              "fechaEstreno": "2021-09-05"
-            },
-            {
-              "numero": 33,
-              "episodios": 49,
-              "fechaEstreno": "2022-09-04"
-            },
-            {
-              "numero": 34,
-              "episodios": 50,
-              "fechaEstreno": "2023-09-03"
-            },
-            {
-              "numero": 35,
-              "episodios": 50,
-              "fechaEstreno": "2024-09-01"
-            },
-            {
-              "numero": 36,
-              "episodios": 50,
-              "fechaEstreno": "2025-09-07"
-            },
-            {
-              "numero": 37,
-              "episodios": 10,
-              "fechaEstreno": "2026-09-06"
-            }
-          ],
-          "currentSeason": 37,
-          "reviews": null,
-          "trailer": {
-            "key": "FY4TBfTLPEM",
-            "site": "YouTube"
-          },
-          "cast": [],
           "trending": false
         },
         {
@@ -6560,78 +6632,6 @@
             "site": "YouTube"
           },
           "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-70672",
-          "title": "Hombres en una Misión",
-          "link": "https://www.themoviedb.org/tv/70672",
-          "summary": "Las celebridades masculinas juegan a la fantasía como estudiantes de secundaria, dan la bienvenida a estudiantes de transferencia estelar cada semana y participan en batallas de humor ingenioso y payasadas.",
-          "image": "https://image.tmdb.org/t/p/w500/zak7mqMxJGnnWplSdbjDtV7bg2Y.jpg",
-          "pubDate": "2015-12-05",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-10-01T16:55:04.546Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.1,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.4
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-03",
-          "numberOfSeasons": 1,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 546,
-              "fechaEstreno": "2015-12-05"
-            }
-          ],
-          "currentSeason": 1,
-          "reviews": null,
-          "trailer": {
-            "key": "7Y-ffN5O1ZQ",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "김영철",
-              "character": "Self",
-              "order": 0
-            },
-            {
-              "name": "민경훈",
-              "character": "Self",
-              "order": 1
-            },
-            {
-              "name": "강호동",
-              "character": "Self",
-              "order": 2
-            },
-            {
-              "name": "이수근",
-              "character": "Self",
-              "order": 3
-            },
-            {
-              "name": "김희철",
-              "character": "Self",
-              "order": 4
-            },
-            {
-              "name": "서장훈",
-              "character": "Self",
-              "order": 5
-            },
-            {
-              "name": "이상민",
-              "character": "Self",
-              "order": 6
-            }
-          ],
           "trending": false
         },
         {
@@ -8416,6 +8416,97 @@
               "name": "Wataru Takagi",
               "character": "Sensei (voice)",
               "order": 9
+            }
+          ]
+        },
+        {
+          "guid": "tmdb-tv-57775",
+          "title": "ちびまる子ちゃん",
+          "link": "https://www.themoviedb.org/tv/57775",
+          "summary": "Meet Maruko, a sweet schoolgirl with a hefty dose of curiosity (and occasional laziness!). She sails through life in a cozy town alongside her loving parents, grandparents, and sister. Maruko has a band of loyal friends, including her closest pal, Tama-chan, but her playful and doting grandpa is at the heart of it all. Life is never dull in this charming series.",
+          "image": "https://image.tmdb.org/t/p/w500/auruoMM9a9c4diotHvI5v7dKFbF.jpg",
+          "pubDate": "1990-01-07",
+          "source": "TMDb",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-10-10T21:17:00.471Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.8
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-11",
+          "numberOfSeasons": 2,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 142,
+              "fechaEstreno": "1990-01-07"
+            },
+            {
+              "numero": 2,
+              "episodios": 1551,
+              "fechaEstreno": "1995-01-08"
+            }
+          ],
+          "currentSeason": 2,
+          "reviews": null,
+          "trailer": {
+            "key": "QhYZOyOiHKI",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "TARAKO",
+              "character": "Momoko 'Maruko' Sakura (voice)",
+              "order": 0
+            },
+            {
+              "name": "水谷優子",
+              "character": "Sakiko Sakura (voice)",
+              "order": 1
+            },
+            {
+              "name": "Yūsaku Yara",
+              "character": "Hiroshi Sakura (voice)",
+              "order": 2
+            },
+            {
+              "name": "一龍斎貞友",
+              "character": "Sumire Sakura (voice)",
+              "order": 3
+            },
+            {
+              "name": "Takeshi Aono",
+              "character": "Tomozo Sakura (voice)",
+              "order": 5
+            },
+            {
+              "name": "佐々木優子",
+              "character": "Kotake Sakura (voice)",
+              "order": 5
+            },
+            {
+              "name": "Naoko Watanabe",
+              "character": "Tamae Honami (voice)",
+              "order": 6
+            },
+            {
+              "name": "Masami Kikuchi",
+              "character": "Kazuhiko Hanawa (voice)",
+              "order": 7
+            },
+            {
+              "name": "Nobuo Tobita",
+              "character": "Sueo Maruo / Ichiro (voice)",
+              "order": 8
+            },
+            {
+              "name": "山本圭子",
+              "character": "Shota Yamada (voice)",
+              "order": 10
             }
           ]
         },
