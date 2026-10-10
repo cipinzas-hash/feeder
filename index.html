@@ -2419,12 +2419,10 @@ var __angst = (() => {
     const [historialFecha, setHistorialFecha] = React.useState(null);
     const [historialCarpetas, setHistorialCarpetas] = React.useState(() => /* @__PURE__ */ new Set());
     const [apiKeyInput, setApiKeyInput] = React.useState("");
-    const [diagResult, setDiagResult] = React.useState(null);
-    const [diagLoading, setDiagLoading] = React.useState(false);
-    const [diagImgs, setDiagImgs] = React.useState([]);
     const [revAbierta, setRevAbierta] = React.useState(false);
     const [revSaltadas, setRevSaltadas] = React.useState([]);
     const [revCartaId, setRevCartaId] = React.useState(null);
+    const [revFocoId, setRevFocoId] = React.useState(null);
     const [revDatos, setRevDatos] = React.useState({ cartaId: null, estado: "idle", cands: [], pos: 0, planIdx: 1, msg: null, total: null });
     const [revImgs, setRevImgs] = React.useState({});
     const [revCupo, setRevCupo] = React.useState(0);
@@ -3013,7 +3011,6 @@ var __angst = (() => {
       setDarkDetailId(nextId);
       setDarkDetailRange("todo");
       setSelectedPoint(null);
-      setDiagResult(null);
       if (zoomImage) {
         setZoomCardId(nextId);
         const img = imagenDeCard(nextId);
@@ -3037,8 +3034,6 @@ var __angst = (() => {
       if (idx < 0 || !fichaList.length) return;
       const nextId = fichaList[(idx + delta + fichaList.length) % fichaList.length];
       setFichaId(nextId);
-      setDiagResult(null);
-      setDiagImgs([]);
       if (zoomImage) {
         const c = inv.find((x) => x.id === nextId);
         const img = c?.imageHd || c?.image || null;
@@ -3205,60 +3200,6 @@ var __angst = (() => {
         }
       ), /* @__PURE__ */ React.createElement("button", { onClick: saveDarkModal, style: { width: "100%", background: "#2e7d52", border: "none", borderRadius: 10, padding: "13px", fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", cursor: "pointer" } }, "\u2713 marcar conseguida")));
     }
-    async function cargarImagenesCandidatos(candidatos) {
-      const imgs = [];
-      for (const c of candidatos || []) {
-        try {
-          const q = `name:"${c.name}" number:${c.number}`;
-          const data = await fetchPoke(`${POKE_BASE}/cards?q=${encodeURIComponent(q)}&pageSize=1&select=images`);
-          imgs.push(data.data?.[0]?.images?.small || null);
-        } catch (e) {
-          imgs.push(null);
-        }
-        setDiagImgs([...imgs]);
-        await new Promise((res) => setTimeout(res, 200));
-      }
-    }
-    function aplicarDiagSiMatchea(cartaId, d) {
-      if (!cartaId || !d?.match || d.market == null) return;
-      const carta = inv.find((x) => x.id === cartaId);
-      if (!carta) return;
-      updCarta(cartaId, {
-        tcgMarket: d.market,
-        tcgLow: d.low,
-        tcgHigh: d.high,
-        tcgUpdated: hoy,
-        priceHistory: addSnapshot(carta.priceHistory, d.market, d.low, d.high, hoy)
-      });
-    }
-    function usarCandidato(cartaId, c) {
-      if (!cartaId || c.market == null) return;
-      const carta = inv.find((x) => x.id === cartaId);
-      if (!carta) return;
-      updCarta(cartaId, {
-        tcgMarket: c.market,
-        tcgLow: c.low,
-        tcgHigh: c.high,
-        tcgUpdated: hoy,
-        priceHistory: addSnapshot(carta.priceHistory, c.market, c.low, c.high, hoy),
-        tcgOverride: { name: c.name, number: c.number, setId: c.setId, setCode: c.setCode }
-      });
-      setDiagResult(null);
-      setDiagImgs([]);
-    }
-    function renderDiagPanel(cartaId) {
-      return /* @__PURE__ */ React.createElement("div", { style: { background: "#fafafa", border: "1px dashed #ccc", borderRadius: 10, padding: "10px 12px", marginBottom: 12, fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#444", lineHeight: 1.6 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, "diagn\xF3stico tcgpricelookup.com"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
-        setDiagResult(null);
-        setDiagImgs([]);
-      }, style: { background: "transparent", border: "none", color: "#999", cursor: "pointer", fontSize: 14 } }, "\u2715")), diagResult.error ? /* @__PURE__ */ React.createElement("div", null, "error: ", diagResult.error, diagResult.query ? ` (query: "${diagResult.query}")` : "") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", null, 'query: "', diagResult.query, '"'), diagResult.matchEncontrado ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", null, '\u2713 match: "', diagResult.matchNombre, '" #', diagResult.matchNumero), /* @__PURE__ */ React.createElement("div", null, "precios disponibles en la carta: ", diagResult.preciosDisponibles?.length ? diagResult.preciosDisponibles.join(", ") : "ninguno"), /* @__PURE__ */ React.createElement("div", null, diagResult.tienePrecioTcgplayer ? "\u2713" : "\u2717", " tiene precio tcgplayer en raw/near_mint o lightly_played")) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", null, "\u2717 ning\xFAn candidato matche\xF3 por nombre+n\xFAmero"), diagResult.candidatos?.length ? /* @__PURE__ */ React.createElement("div", { style: { marginTop: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { color: "#888" } }, "candidatos que trajo la b\xFAsqueda:"), diagResult.candidatos.map((c, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 8, marginLeft: 4, marginTop: 6, paddingBottom: 6, borderBottom: i < diagResult.candidatos.length - 1 ? "1px dashed #eee" : "none" } }, diagImgs[i] ? /* @__PURE__ */ React.createElement("img", { src: diagImgs[i], alt: "", style: { width: 32, borderRadius: 3, flexShrink: 0 } }) : /* @__PURE__ */ React.createElement("div", { style: { width: 32, height: 44, borderRadius: 3, background: "#eee", flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", null, c.name, " #", c.number, " (", c.setId || c.setCode || "sin set", ")"), /* @__PURE__ */ React.createElement("div", { style: { color: c.market ? "#2e7d52" : "#999" } }, c.market ? fmtUSD(c.market) : "sin precio raw")), c.market != null && /* @__PURE__ */ React.createElement(
-        "button",
-        {
-          onClick: () => usarCandidato(cartaId, c),
-          style: { flexShrink: 0, fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, border: "1px solid #111", borderRadius: 8, padding: "4px 8px", background: "#111", color: "#fff", cursor: "pointer" }
-        },
-        "usar esta"
-      )))) : /* @__PURE__ */ React.createElement("div", { style: { color: "#888" } }, "la b\xFAsqueda no devolvi\xF3 ning\xFAn candidato"))));
-    }
     const REV_CUPO_KEY = "angst-pokecripto-tcgcalls-v1";
     const REV_CUPO_STOP = 95;
     function leerCupoHoy() {
@@ -3302,8 +3243,25 @@ var __angst = (() => {
     const idsAgotadasRecientes = React.useMemo(() => new Set(
       Object.entries(agotadas).filter(([, v]) => diasDesde(v.fecha) < REV_AGOTADA_DIAS).map(([id]) => id)
     ), [agotadas, hoy]);
-    const revCola = React.useMemo(() => colaSinPrecio(inv, /* @__PURE__ */ new Set([...revSaltadas, ...idsAgotadasRecientes])), [inv, revSaltadas, idsAgotadasRecientes]);
+    const revCola = React.useMemo(() => revFocoId ? inv.filter((c) => c.id === revFocoId) : colaSinPrecio(inv, /* @__PURE__ */ new Set([...revSaltadas, ...idsAgotadasRecientes])), [inv, revSaltadas, idsAgotadasRecientes, revFocoId]);
     const revActual = revCola[0] || null;
+    function abrirRevisionCarta(id) {
+      setRevFocoId(id);
+      setRevCartaId(null);
+      setRevCupo(leerCupoHoy());
+      setRevAbierta(true);
+    }
+    function abrirRevisionCola() {
+      setRevFocoId(null);
+      setRevCartaId(null);
+      setRevCupo(leerCupoHoy());
+      setRevAbierta(true);
+    }
+    function cerrarRevision() {
+      setRevAbierta(false);
+      setRevFocoId(null);
+      setRevCartaId(null);
+    }
     function revAplicar(cartaId, c, conOverride) {
       const ov = { name: c.name, number: c.number, setId: c.setId || null, setCode: c.setCode || null };
       saveInventario((prev) => (prev || []).map((x) => x.id === cartaId ? { ...x, tcgMarket: c.market, tcgLow: c.low, tcgHigh: c.high, tcgUpdated: hoy, priceHistory: addSnapshot(x.priceHistory, c.market, c.low, c.high, hoy), ...conOverride ? { tcgOverride: ov } : {} } : x));
@@ -3334,7 +3292,7 @@ var __angst = (() => {
       setRevAviso(null);
       const tok = ++revTok.current, cid = carta.id;
       if (!apiKey) {
-        setRevDatos({ cartaId: cid, estado: "error", cands: [], pos: 0, planIdx: 1, msg: "Falta la API key de TCG Price Lookup (la misma que usa el bot\xF3n de diagnosticar).", total: null });
+        setRevDatos({ cartaId: cid, estado: "error", cands: [], pos: 0, planIdx: 1, msg: "Falta la API key de TCG Price Lookup (la misma que usa el bot).", total: null });
         return;
       }
       if (leerCupoHoy() >= REV_CUPO_STOP) {
@@ -3354,7 +3312,7 @@ var __angst = (() => {
       }
       const cands = rankCandidatos(carta, r.candidatos);
       const auto = matchAutomatico(carta, cands);
-      if (auto) {
+      if (auto && !revFocoId) {
         revAplicar(carta.id, auto, false);
         setRevCont((k) => ({ ...k, solas: k.solas + 1 }));
         return;
@@ -3365,6 +3323,10 @@ var __angst = (() => {
       if (revDatos.cartaId !== carta.id) return;
       const tok = ++revTok.current, cid = carta.id;
       const plan = planBusquedas(carta), idx = revDatos.planIdx;
+      if (idx >= plan.length && revFocoId) {
+        setRevAviso(`Ya probaste las ${idx} variantes de esta carta.`);
+        return;
+      }
       if (idx >= plan.length) {
         marcarAgotada(cid, idx);
         setRevAviso(`Probadas las ${idx} variantes sin match \u2014 no la vuelve a mostrar por ${REV_AGOTADA_DIAS} d\xEDas (vas a seguir con otras cartas mientras tanto).`);
@@ -3391,6 +3353,7 @@ var __angst = (() => {
       const ov = revAplicar(carta.id, c, true);
       setRevCont((k) => ({ ...k, elegidas: k.elegidas + 1 }));
       guardarOverrideRemoto(carta.id, ov);
+      if (revFocoId) cerrarRevision();
     }
     React.useEffect(() => {
       if (!revAbierta) return;
@@ -3439,7 +3402,7 @@ var __angst = (() => {
       const totOk = totCand && d.total ? totCand === parseInt(d.total, 10) : null;
       const imgApi = c ? revImgs[claveCandidato(c)] : null;
       const urlsCand = c ? [...imgApi?.url ? [imgApi.url] : [], ...urlsFoto({ image: c.image, setId: c.setId, setCode: c.setCode, number: c.number })] : [];
-      return /* @__PURE__ */ React.createElement("div", { onClick: () => setRevAbierta(false), style: { position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,460px)", background: "#111", color: "#fff", borderRadius: "16px 16px 0 0", padding: "16px 16px 28px", maxHeight: "92vh", overflowY: "auto", boxSizing: "border-box", fontFamily: F } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, "\u{1F9ED} Cartas sin precio \xB7 quedan ", revCola.length), /* @__PURE__ */ React.createElement("button", { onClick: () => setRevAbierta(false), style: { background: "transparent", border: "none", color: "#999", fontSize: 18, cursor: "pointer" } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 12 } }, "consultas de hoy \u2248 ", revCupo, "/100 \xB7 ", revCont.elegidas, " elegidas \xB7 ", revCont.solas, " calzaron solas", idsAgotadasRecientes.size > 0 ? ` \xB7 ${idsAgotadasRecientes.size} en pausa (sin match, reintenta en unos d\xEDas)` : ""), !carta ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: "#8fe0a8", padding: "20px 0" } }, "No quedan cartas sin precio en la cola \u{1F389}") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center", background: "#1a1a1a", borderRadius: 12, padding: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement(FotoFB, { key: "t" + carta.id, urls: urlsFoto({ image: carta.image, cardId: carta.cardId }), style: { width: 56, borderRadius: 4, flexShrink: 0 }, vacio: /* @__PURE__ */ React.createElement("div", { style: { width: 56, height: 78, borderRadius: 4, background: "#333", flexShrink: 0 } }) }), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "TU CARTA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, carta.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13 } }, "#", carta.number, d.total ? `/${d.total}` : "", " \xB7 ", carta.set), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "c\xF3digo de set: ", carta.setCode || "\u2014"))), d.estado === "cargando" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#aaa", padding: "16px 0" } }, "buscando opciones\u2026"), d.estado === "sincupo" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ffcf70", padding: "12px 0" } }, "Llegaste al l\xEDmite seguro de consultas de hoy (\u2248", revCupo, "/100). Sigue ma\xF1ana: el bot comparte ese cupo."), d.estado === "error" && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ff9b9b", marginBottom: 8 } }, d.msg), /* @__PURE__ */ React.createElement("button", { onClick: () => revCargarCarta(carta), style: btn("#333", "#fff", { marginRight: 8 }) }, "reintentar")), c && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 12, padding: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 6 } }, "OPCI\xD3N ", d.pos + 1, " DE ", d.cands.length), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement(
+      return /* @__PURE__ */ React.createElement("div", { onClick: cerrarRevision, style: { position: "fixed", inset: 0, zIndex: 720, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,460px)", background: "#111", color: "#fff", borderRadius: "16px 16px 0 0", padding: "16px 16px 28px", maxHeight: "92vh", overflowY: "auto", boxSizing: "border-box", fontFamily: F } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, revFocoId ? "\u{1F50D} Revisar precio de esta carta" : `\u{1F9ED} Cartas sin precio \xB7 quedan ${revCola.length}`), /* @__PURE__ */ React.createElement("button", { onClick: cerrarRevision, style: { background: "transparent", border: "none", color: "#999", fontSize: 18, cursor: "pointer" } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 12 } }, "consultas de hoy \u2248 ", revCupo, "/100 \xB7 ", revCont.elegidas, " elegidas \xB7 ", revCont.solas, " calzaron solas", idsAgotadasRecientes.size > 0 ? ` \xB7 ${idsAgotadasRecientes.size} en pausa (sin match, reintenta en unos d\xEDas)` : ""), !carta ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: "#8fe0a8", padding: "20px 0" } }, "No quedan cartas sin precio en la cola \u{1F389}") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center", background: "#1a1a1a", borderRadius: 12, padding: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement(FotoFB, { key: "t" + carta.id, urls: urlsFoto({ image: carta.image, cardId: carta.cardId }), style: { width: 56, borderRadius: 4, flexShrink: 0 }, vacio: /* @__PURE__ */ React.createElement("div", { style: { width: 56, height: 78, borderRadius: 4, background: "#333", flexShrink: 0 } }) }), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "TU CARTA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, carta.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13 } }, "#", carta.number, d.total ? `/${d.total}` : "", " \xB7 ", carta.set), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "c\xF3digo de set: ", carta.setCode || "\u2014"), carta.tcgMarket != null && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#5c9cff", marginTop: 2 } }, "precio actual: ", fmtUSD(carta.tcgMarket)))), d.estado === "cargando" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#aaa", padding: "16px 0" } }, "buscando opciones\u2026"), d.estado === "sincupo" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ffcf70", padding: "12px 0" } }, "Llegaste al l\xEDmite seguro de consultas de hoy (\u2248", revCupo, "/100). Sigue ma\xF1ana: el bot comparte ese cupo."), d.estado === "error" && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ff9b9b", marginBottom: 8 } }, d.msg), /* @__PURE__ */ React.createElement("button", { onClick: () => revCargarCarta(carta), style: btn("#333", "#fff", { marginRight: 8 }) }, "reintentar")), c && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 12, padding: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 6 } }, "OPCI\xD3N ", d.pos + 1, " DE ", d.cands.length), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement(
         FotoFB,
         {
           key: "c" + urlsCand.join("|"),
@@ -3447,7 +3410,10 @@ var __angst = (() => {
           style: { width: 84, borderRadius: 4, flexShrink: 0 },
           vacio: /* @__PURE__ */ React.createElement("div", { style: { width: 84, height: 118, borderRadius: 4, background: "#333", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 10, color: "#999", textAlign: "center", padding: 4, boxSizing: "border-box" } }, imgApi?.buscando ? "buscando\u2026" : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", null, imgApi && imgApi.url === null ? imgApi.error ? "fall\xF3: " + imgApi.error : "sin foto" : "sin foto"), /* @__PURE__ */ React.createElement("button", { onClick: () => revBuscarFoto(c), style: { background: "#333", border: "1px solid #555", borderRadius: 6, color: "#ddd", fontSize: 10, padding: "4px 6px", cursor: "pointer" } }, "\u{1F50E} buscar foto")))
         }
-      ), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, c.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 22, fontWeight: 800, margin: "2px 0" } }, "#", c.number), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#bbb" } }, c.setName || "set sin nombre"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, c.setId || c.setCode || "sin c\xF3digo de set"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 700, marginTop: 4, color: c.market != null ? "#8fe0a8" : "#999" } }, c.market != null ? fmtUSD(c.market) : "sin precio NM/LP"), c.market == null && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#888", marginTop: 2 } }, c.preciosDisponibles && c.preciosDisponibles.length ? `la API trae: ${c.preciosDisponibles.join(", ")}` : "la API no trae ning\xFAn precio para esta opci\xF3n"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 } }, chip(numOk, "n\xFAmero"), setOk !== null && chip(setOk, setComo === "nombre" ? "set (mismo nombre)" : "set"), totOk !== null && chip(totOk, `total ${totCand} vs ${d.total}`))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginTop: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setRevDatos((x) => ({ ...x, pos: x.pos + 1 })), style: btn("#333", "#fff", { flex: 1 }) }, "No es"), /* @__PURE__ */ React.createElement("button", { disabled: c.market == null, onClick: () => revSiEs(carta, c), style: btn("#aac756", "#111", { flex: 1, opacity: c.market == null ? 0.35 : 1 }) }, c.market == null ? "Sin precio" : "S\xED es"))), sinMas && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ddd", marginBottom: 8 } }, d.msg || `Ya viste las ${d.cands.length} opciones.`), proxima && /* @__PURE__ */ React.createElement("button", { onClick: () => revOtraVariante(carta), style: btn("#aac756", "#111", { width: "100%", marginBottom: 8 }) }, "Probar otra variante: \xAB", proxima.q, "\xBB"), !proxima && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#888", marginBottom: 8 } }, "No quedan m\xE1s variantes del nombre por probar.")), d.estado !== "cargando" && /* @__PURE__ */ React.createElement("button", { onClick: () => setRevSaltadas((s) => [...s, carta.id]), style: btn("transparent", "#bbb", { width: "100%", marginTop: 8, border: "1px solid #333" }) }, "Saltar esta carta")), revAviso && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#ffcf70", marginTop: 10 } }, revAviso), revFallidas.length > 0 && /* @__PURE__ */ React.createElement("button", { onClick: () => revFallidas.forEach((x) => guardarOverrideRemoto(x.id, x.ov)), style: btn("#333", "#fff", { marginTop: 8, fontSize: 12, padding: "8px 12px" }) }, "\u21BB reintentar ", revFallidas.length, " elecci\xF3n(es) pendientes de enviar al bot")));
+      ), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, c.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 22, fontWeight: 800, margin: "2px 0" } }, "#", c.number), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#bbb" } }, c.setName || "set sin nombre"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, c.setId || c.setCode || "sin c\xF3digo de set"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 700, marginTop: 4, color: c.market != null ? "#8fe0a8" : "#999" } }, c.market != null ? fmtUSD(c.market) : "sin precio NM/LP"), c.market != null && carta.tcgMarket != null && Math.abs(c.market - carta.tcgMarket) < 5e-3 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#5c9cff", marginTop: 2 } }, "= el precio que tiene hoy tu carta"), c.market == null && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#888", marginTop: 2 } }, c.preciosDisponibles && c.preciosDisponibles.length ? `la API trae: ${c.preciosDisponibles.join(", ")}` : "la API no trae ning\xFAn precio para esta opci\xF3n"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 } }, chip(numOk, "n\xFAmero"), setOk !== null && chip(setOk, setComo === "nombre" ? "set (mismo nombre)" : "set"), totOk !== null && chip(totOk, `total ${totCand} vs ${d.total}`))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginTop: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setRevDatos((x) => ({ ...x, pos: x.pos + 1 })), style: btn("#333", "#fff", { flex: 1 }) }, "No es"), /* @__PURE__ */ React.createElement("button", { disabled: c.market == null, onClick: () => revSiEs(carta, c), style: btn("#aac756", "#111", { flex: 1, opacity: c.market == null ? 0.35 : 1 }) }, c.market == null ? "Sin precio" : "S\xED es"))), sinMas && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ddd", marginBottom: 8 } }, d.msg || `Ya viste las ${d.cands.length} opciones.`), proxima && /* @__PURE__ */ React.createElement("button", { onClick: () => revOtraVariante(carta), style: btn("#aac756", "#111", { width: "100%", marginBottom: 8 }) }, "Probar otra variante: \xAB", proxima.q, "\xBB"), !proxima && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#888", marginBottom: 8 } }, "No quedan m\xE1s variantes del nombre por probar.")), d.estado !== "cargando" && /* @__PURE__ */ React.createElement("button", { onClick: () => {
+        if (revFocoId) cerrarRevision();
+        else setRevSaltadas((s) => [...s, carta.id]);
+      }, style: btn("transparent", "#bbb", { width: "100%", marginTop: 8, border: "1px solid #333" }) }, revFocoId ? "Cerrar sin cambios" : "Saltar esta carta")), revAviso && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#ffcf70", marginTop: 10 } }, revAviso), revFallidas.length > 0 && /* @__PURE__ */ React.createElement("button", { onClick: () => revFallidas.forEach((x) => guardarOverrideRemoto(x.id, x.ov)), style: btn("#333", "#fff", { marginTop: 8, fontSize: 12, padding: "8px 12px" }) }, "\u21BB reintentar ", revFallidas.length, " elecci\xF3n(es) pendientes de enviar al bot")));
     }
     function renderDarkDetailModal() {
       if (!darkDetailId) return null;
@@ -3476,16 +3442,7 @@ var __angst = (() => {
       ), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff", lineHeight: 1.15 } }, detalle.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#777", marginTop: 3 } }, "#", detalle.number, " \xB7 ", detalle.setName)), /* @__PURE__ */ React.createElement("button", { onClick: () => {
         setDarkDetailId(null);
         setDarkDetailRange("todo");
-      }, style: { background: "transparent", border: "none", color: "#555", fontSize: 20, cursor: "pointer", padding: 0 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 10, padding: "12px 14px", marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 } }, "precio de mercado"), detalle.tcgMarket ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#5c9cff" } }, fmtUSD(detalle.tcgMarket)) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)" } }, "sin precio a\xFAn"), !detalle.tcgMarket && /* @__PURE__ */ React.createElement("button", { onClick: async () => {
-        setDiagLoading(true);
-        setDiagResult(null);
-        setDiagImgs([]);
-        const d = await fetchTCGPriceDiag(detalle.name, detalle.set, detalle.number, detalle.setCode, apiKey);
-        setDiagLoading(false);
-        setDiagResult(d);
-        aplicarDiagSiMatchea(detalle.id, d);
-        if (d.candidatos?.length) cargarImagenesCandidatos(d.candidatos);
-      }, style: { marginTop: 4, fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 10, padding: "3px 8px", background: "transparent", color: "rgba(255,255,255,0.6)", cursor: "pointer" } }, diagLoading ? "buscando\u2026" : "\u{1F50D} diagnosticar"), (detalle.tcgLow || detalle.tcgHigh) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, "rango ", detalle.tcgLow ? fmtUSD(detalle.tcgLow) : "\u2014", " \u2013 ", detalle.tcgHigh ? fmtUSD(detalle.tcgHigh) : "\u2014")), cons && detalle.precioUSD && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 } }, "pagu\xE9"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: "#fff" } }, fmtUSD(detalle.precioUSD)))), diagResult && renderDiagPanel(detalle.id), hist.length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 } }, [
+      }, style: { background: "transparent", border: "none", color: "#555", fontSize: 20, cursor: "pointer", padding: 0 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 10, padding: "12px 14px", marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 } }, "precio de mercado"), detalle.tcgMarket ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#5c9cff" } }, fmtUSD(detalle.tcgMarket)) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)" } }, "sin precio a\xFAn"), /* @__PURE__ */ React.createElement("button", { onClick: () => abrirRevisionCarta(detalle.id), style: { marginTop: 4, fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 10, padding: "3px 8px", background: "transparent", color: "rgba(255,255,255,0.6)", cursor: "pointer" } }, "\u{1F50D} revisar precio"), (detalle.tcgLow || detalle.tcgHigh) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, "rango ", detalle.tcgLow ? fmtUSD(detalle.tcgLow) : "\u2014", " \u2013 ", detalle.tcgHigh ? fmtUSD(detalle.tcgHigh) : "\u2014")), cons && detalle.precioUSD && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 3 } }, "pagu\xE9"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: "#fff" } }, fmtUSD(detalle.precioUSD)))), hist.length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 } }, [
         { label: "ATH", val: ath, date: athDate, color: "#4caf80" },
         { label: "ATL", val: atl, date: atlDate, color: "#e57373" },
         { label: `\u03C3 ${volLabel || ""}`, val: vol ? `${vol}%` : null, date: null, color: "#999" }
@@ -3590,16 +3547,7 @@ var __angst = (() => {
           style: { maxWidth: 200, borderRadius: 10, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", cursor: "pointer" },
           ...bindLongPress(carta.imageHd || carta.image)
         }
-      )), /* @__PURE__ */ React.createElement("div", { style: { background: "#111", borderRadius: 12, padding: "14px 16px", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 } }, "precio de venta"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 34, fontWeight: 700, color: colorVenta || "#fff", lineHeight: 1 } }, fmtUSD(carta.precioVentaUSD)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, fmtPokeCLP(carta.precioVentaUSD))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 } }, "TCGPlayer market"), carta.tcgMarket ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.7)" } }, fmtUSD(carta.tcgMarket)) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)" } }, "sin precio"), !carta.tcgMarket && /* @__PURE__ */ React.createElement("button", { onClick: async () => {
-        setDiagLoading(true);
-        setDiagResult(null);
-        setDiagImgs([]);
-        const d = await fetchTCGPriceDiag(carta.name, carta.set, carta.number, carta.setCode, apiKey);
-        setDiagLoading(false);
-        setDiagResult(d);
-        aplicarDiagSiMatchea(carta.id, d);
-        if (d.candidatos?.length) cargarImagenesCandidatos(d.candidatos);
-      }, style: { marginTop: 4, fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 10, padding: "3px 8px", background: "transparent", color: "rgba(255,255,255,0.6)", cursor: "pointer" } }, diagLoading ? "buscando\u2026" : "\u{1F50D} diagnosticar"), (carta.tcgLow || carta.tcgHigh) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 } }, "rango ", carta.tcgLow ? fmtUSD(carta.tcgLow) : "\u2014", " \u2013 ", carta.tcgHigh ? fmtUSD(carta.tcgHigh) : "\u2014")))), diagResult && renderDiagPanel(carta.id), hist.length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 } }, [
+      )), /* @__PURE__ */ React.createElement("div", { style: { background: "#111", borderRadius: 12, padding: "14px 16px", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 } }, "precio de venta"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 34, fontWeight: 700, color: colorVenta || "#fff", lineHeight: 1 } }, fmtUSD(carta.precioVentaUSD)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, fmtPokeCLP(carta.precioVentaUSD))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 } }, "TCGPlayer market"), carta.tcgMarket ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.7)" } }, fmtUSD(carta.tcgMarket)) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.3)" } }, "sin precio"), /* @__PURE__ */ React.createElement("button", { onClick: () => abrirRevisionCarta(carta.id), style: { marginTop: 4, fontFamily: "'DM Sans',sans-serif", fontSize: 9, fontWeight: 700, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 10, padding: "3px 8px", background: "transparent", color: "rgba(255,255,255,0.6)", cursor: "pointer" } }, "\u{1F50D} revisar precio"), (carta.tcgLow || carta.tcgHigh) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 } }, "rango ", carta.tcgLow ? fmtUSD(carta.tcgLow) : "\u2014", " \u2013 ", carta.tcgHigh ? fmtUSD(carta.tcgHigh) : "\u2014")))), hist.length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 } }, [
         { label: "ATH", val: ath, date: athDate, color: "#2e7d52" },
         { label: "ATL", val: atl, date: atlDate, color: "#e53935" },
         { label: `\u03C3 ${volLabel || ""}`, val: vol ? `${vol}%` : null, date: null, color: "#888" }
@@ -3792,7 +3740,7 @@ var __angst = (() => {
           style: { width: "100%", background: "#2e7d52", border: "none", borderRadius: 10, padding: "13px", fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", cursor: "pointer" }
         },
         "confirmar venta"
-      ))));
+      ))), renderRevisionModal());
     }
     if (view === "buscar") {
       return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 480, margin: "0 auto", overflowX: "hidden", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 16 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => {
@@ -4053,7 +4001,7 @@ var __angst = (() => {
           style: { position: "fixed", right: 6, top: "50%", transform: "translateY(-50%)", background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 16, width: 64, height: 110, color: "#fff", fontSize: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }
         },
         "\u203A"
-      ))), renderDarkPriceModal(), renderDarkDetailModal(), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setAutocolCarpeta(null), style: { background: "transparent", border: "none", fontSize: 20, color: "#444", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff" } }, esDark ? "\u26AB Dark Collection" : `${CARPETAS_ICONS[cat] || "\u{1F3A8}"} ${cat}`)), total > 0 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#aac756" } }, conseguidas, "/", total), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#444" } }, Math.round(conseguidas / total * 100), "%"))), total > 0 && /* @__PURE__ */ React.createElement("div", { style: { height: 3, background: "#1a1a1a", borderRadius: 99, overflow: "hidden", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${total > 0 ? conseguidas / total * 100 : 0}%`, background: "#2e7d52", borderRadius: 99 } })), valorTotal > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", background: "#151515", borderRadius: 10, padding: "10px 14px", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 } }, "valor conseguido / total"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, fontWeight: 700, color: "#fff" } }, fmtUSD(valorConseguido), " ", /* @__PURE__ */ React.createElement("span", { style: { color: "#555", fontSize: 14 } }, "/ ", fmtUSD(valorTotal)))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#aac756" } }, Math.round(valorConseguido / valorTotal * 100), "% del valor")), faltantes.length > 0 && /* @__PURE__ */ React.createElement(
+      ))), renderDarkPriceModal(), renderDarkDetailModal(), renderRevisionModal(), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setAutocolCarpeta(null), style: { background: "transparent", border: "none", fontSize: 20, color: "#444", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff" } }, esDark ? "\u26AB Dark Collection" : `${CARPETAS_ICONS[cat] || "\u{1F3A8}"} ${cat}`)), total > 0 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#aac756" } }, conseguidas, "/", total), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#444" } }, Math.round(conseguidas / total * 100), "%"))), total > 0 && /* @__PURE__ */ React.createElement("div", { style: { height: 3, background: "#1a1a1a", borderRadius: 99, overflow: "hidden", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${total > 0 ? conseguidas / total * 100 : 0}%`, background: "#2e7d52", borderRadius: 99 } })), valorTotal > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", background: "#151515", borderRadius: 10, padding: "10px 14px", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 } }, "valor conseguido / total"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, fontWeight: 700, color: "#fff" } }, fmtUSD(valorConseguido), " ", /* @__PURE__ */ React.createElement("span", { style: { color: "#555", fontSize: 14 } }, "/ ", fmtUSD(valorTotal)))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#aac756" } }, Math.round(valorConseguido / valorTotal * 100), "% del valor")), faltantes.length > 0 && /* @__PURE__ */ React.createElement(
         "button",
         {
           onClick: () => imprimirFaltantes(faltantes, cat),
@@ -4141,10 +4089,7 @@ var __angst = (() => {
     ))), colaSinPrecio(inv).length > 0 && /* @__PURE__ */ React.createElement(
       "button",
       {
-        onClick: () => {
-          setRevCupo(leerCupoHoy());
-          setRevAbierta(true);
-        },
+        onClick: abrirRevisionCola,
         style: { width: "100%", background: "#111", border: "1px solid #aac756", borderRadius: 12, padding: "12px 14px", marginBottom: 12, fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#aac756", cursor: "pointer", textAlign: "left" }
       },
       "\u{1F9ED} revisar cartas sin precio (",
