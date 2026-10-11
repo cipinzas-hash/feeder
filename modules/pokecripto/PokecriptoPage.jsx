@@ -1332,7 +1332,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   function abrirRevisionCola(){ setRevFocoId(null); setRevCartaId(null); setRevCupo(leerCupoHoy()); setRevAbierta(true); }
   function cerrarRevision(){ setRevAbierta(false); setRevFocoId(null); setRevCartaId(null); }
   function revAplicar(cartaId,c,conOverride){
-    const ov={name:c.name,number:c.number,setId:c.setId||null,setCode:c.setCode||null};
+    const ov={name:c.name,number:c.number,setId:c.setId||null,setCode:c.setCode||null,tcgId:c.tcgId||null};
     // saveInventario con función: siempre sobre el inventario más reciente (no el de este render)
     saveInventario(prev=>(prev||[]).map(x=>x.id===cartaId?{...x,tcgMarket:c.market,tcgLow:c.low,tcgHigh:c.high,tcgUpdated:hoy,priceHistory:addSnapshot(x.priceHistory,c.market,c.low,c.high,hoy),...(conOverride?{tcgOverride:ov}:{})}:x));
     return ov;
@@ -1374,9 +1374,12 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     if(tok!==revTok.current) return; // el usuario ya pasó a otra carta
     if(r.error){ setRevDatos({cartaId:cid,estado:"error",cands:[],pos:0,planIdx:1,msg:`No se pudo buscar (${r.error}).`,total}); return; }
     const cands=rankCandidatos(carta,r.candidatos);
-    const auto=matchAutomatico(carta,cands);
+    const auto=matchAutomatico(carta,cands,total);
     if(auto&&!revFocoId){ // en modo carta puntual no se aplica solo: se muestran las opciones para elegir
-      revAplicar(carta.id,auto,false); // calza solo (nombre+número+set): sin override, el bot la encuentra igual
+      // calza sola (número + set + total + nombre compatible). SÍ se guarda la designación: estas cartas
+      // están sin precio justamente porque el bot no las encontró, así que sin override seguirían así.
+      const ov=revAplicar(carta.id,auto,true);
+      guardarOverrideRemoto(carta.id,ov);
       setRevCont(k=>({...k,solas:k.solas+1}));
       return; // sale de la cola y el efecto carga la siguiente
     }

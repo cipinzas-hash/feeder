@@ -77,7 +77,13 @@ export function planBusquedas(carta) {
   const vars = variantesNombre(carta?.name);
   const plan = [];
   const add = q => { const s = q.replace(/\s+/g, " ").trim(); if (s && !plan.some(p => p.q.toLowerCase() === s.toLowerCase())) plan.push({ q: s }); };
-  vars.forEach(v => add(num ? `${v} ${num}` : v));
+  vars.forEach((v, i) => {
+    add(num ? `${v} ${num}` : v);
+    // 2ª consulta: nombre + NOMBRE DEL SET. La búsqueda de tcgpricelookup.com es de texto libre sobre
+    // nombre, set y número, así que el set sirve para desambiguar nombres comunes (Pikachu, Ultra Ball)
+    // cuyos resultados se llenan de otros sets (4-oct-2026).
+    if (i === 0 && carta?.set) add(`${v} ${carta.set}`);
+  });
   vars.forEach(v => add(v)); // sin número: por si la numeración "116/084" estropea la búsqueda
   return plan;
 }
@@ -130,16 +136,39 @@ export function mezclarCandidatos(carta, vistos, nuevos) {
   return { agregados, todos: [...(vistos || []), ...rankCandidatos(carta, agregados)] };
 }
 // Match automático seguro: mismo nombre normalizado + mismo número + precio.
-export function matchAutomatico(carta, candidatos) {
+// Nombres "compatibles" (4-oct-2026): igual, uno contenido en el otro ("Gengar ex" / "Mega Gengar ex"),
+// o que compartan la primera palabra. Cuando número Y set ya calzan, la carta está identificada; el
+// nombre solo evita un error grosero, así que no hace falta que sea idéntico (antes se exigía igualdad
+// exacta y un candidato con variante en el nombre dejaba de autoseleccionarse).
+export function nombresCompatibles(a, b) {
+  const x = normName(a), y = normName(b);
+  if (!x || !y) return false;
+  if (x === y) return true;
+  if (Math.min(x.length, y.length) >= 4 && (x.includes(y) || y.includes(x))) return true;
+  const p = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(/[^a-z0-9]+/).filter(w => w.length >= 3)[0];
+  return !!p(a) && p(a) === p(b);
+}
+// totalSet: el total impreso del set de TU carta (pokemontcg.io), si se conoce. Si el candidato trae
+// "116/084" y el total no coincide, es otro set aunque el número calce.
+function totalCompatible(c, totalSet) {
+  const t = parseInt(String(c?.number || "").split("/")[1], 10), tot = parseInt(totalSet, 10);
+  return !(Number.isFinite(t) && Number.isFinite(tot)) || t === tot;
+}
+// Auto-selección: número + set (código o nombre) + total + nombre compatible + precio, y UN solo
+// candidato así. Si hay varios, solo se elige solo el de nombre idéntico y único; si no, decide la persona.
+export function matchAutomatico(carta, candidatos, totalSet) {
   const num = normNum(carta?.number), nom = normName(carta?.name);
   if (!num || !nom) return null;
   const conocemosSet = !!(carta?.setCode || carta?.set);
-  return (candidatos || []).find(c =>
-    c.market != null && normNum(c.number) === num && normName(c.name) === nom &&
+  const ok = (candidatos || []).filter(c =>
+    c.market != null && normNum(c.number) === num && nombresCompatibles(carta.name, c.name) &&
     // el mismo nombre+número puede ser una reimpresión de otro set con otro precio (la "variante
     // equivocada" que el bot evita): si ambos lados traen datos de set, tienen que calzar (código o
     // nombre). Si el candidato no trae ningún dato de set, no hay con qué contrastar y se acepta.
-    (!conocemosSet || !tieneDatosDeSet(c) || mismoSet(carta, c))) || null;
+    (!conocemosSet || !tieneDatosDeSet(c) || mismoSet(carta, c)) && totalCompatible(c, totalSet));
+  if (ok.length === 1) return ok[0];
+  const exactos = ok.filter(c => normName(c.name) === nom);
+  return exactos.length === 1 ? exactos[0] : null;
 }
 
 // ── Overrides (designaciones manuales) compartidos con el bot ───────────
@@ -149,12 +178,14 @@ export function normalizarOverridesRemotos(x) {
   const out = {};
   for (const [id, ov] of Object.entries(x)) {
     if (id === "found") continue; // el Worker responde {"found":false} si el archivo no existe
-    if (ov && typeof ov === "object" && ov.name && ov.number != null) out[id] = ov;
+    if (ov && typeof ov === "object" && ov.name && ov.number != null) out[id] = ov; // conserva tcgId si viene
   }
   return out;
 }
 export function mergeOverrides(actual, cartaId, ov) {
-  return { ...normalizarOverridesRemotos(actual), [cartaId]: { name: ov.name, number: ov.number, setId: ov.setId || null, setCode: ov.setCode || null } };
+  // tcgId = UUID de la carta en tcgpricelookup.com: permite pedir precios por lote (ids=a,b,c… hasta 20 por
+  // consulta) en vez de buscar carta por carta. Se guarda desde ahora para poder usarlo después.
+  return { ...normalizarOverridesRemotos(actual), [cartaId]: { name: ov.name, number: ov.number, setId: ov.setId || null, setCode: ov.setCode || null, tcgId: ov.tcgId || null } };
 }
 // El bot aplica los overrides al inventario canónico antes de preciar.
 export function aplicarOverrides(inventario, overrides) {

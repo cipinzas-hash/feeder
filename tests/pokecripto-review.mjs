@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {
   mergePreciosBot, colaSinPrecio, variantesNombre, planBusquedas, rankCandidatos,
   mezclarCandidatos, matchAutomatico, normalizarOverridesRemotos, mergeOverrides, aplicarOverrides,
-  normSet, mismoSet, urlsFoto, numeroBase,
+  normSet, mismoSet, urlsFoto, numeroBase, nombresCompatibles,
 } from "../modules/pokecripto/lib/review.mjs";
 
 let n = 0;
@@ -52,6 +52,7 @@ t("planBusquedas: primero nombre+número, luego variantes, luego sin número; si
   const p = planBusquedas({ name: "Mega Darkrai ex", number: "116" });
   assert.equal(p[0].q, "Mega Darkrai ex 116");
   assert.ok(p.some(x => x.q === "Darkrai 116")); assert.ok(p.some(x => x.q === "Darkrai"));
+  assert.equal(planBusquedas({ name: "Pikachu", number: "27", set: "30th Celebration" })[1].q, "Pikachu 30th Celebration"); // 2ª consulta: nombre + set
   assert.equal(new Set(p.map(x => x.q.toLowerCase())).size, p.length);
 });
 t("rankCandidatos: mismo número y set primero; empata por orden original", () => {
@@ -128,5 +129,38 @@ t("urlsFoto: arma las URLs por set+número sin API, sin ceros a la izquierda y s
   const v = urlsFoto({ image: "https://x/y.png", cardId: "ecard2-H13" });
   assert.equal(v[0], "https://x/y.png"); assert.ok(v.includes("https://images.pokemontcg.io/ecard2/H13.png"));
   assert.deepEqual(urlsFoto({}), []);
+});
+t("nombresCompatibles: igual, contenido o misma primera palabra; distinto no", () => {
+  assert.ok(nombresCompatibles("Nidoran ♀", "Nidoran♀")); assert.ok(nombresCompatibles("Gengar ex", "Mega Gengar ex"));
+  assert.ok(nombresCompatibles("Pikachu", "Pikachu with Grey Felt Hat")); assert.ok(!nombresCompatibles("Pikachu", "Raichu"));
+  assert.ok(!nombresCompatibles("", "Pikachu"));
+});
+t("auto-selección: mismo set y número con nombre algo distinto SÍ se elige sola (caso reportado)", () => {
+  const carta = { name: "Pikachu", number: "27", set: "30th Celebration", setCode: "me55" };
+  const c = { name: "Pikachu - Reverse Holofoil", number: "027/094", setId: "me55", setName: "30th Celebration", market: 1.2 };
+  assert.equal(matchAutomatico(carta, [c], 94).market, 1.2);
+});
+t("auto-selección: el total del set distinto bloquea aunque número y nombre calcen", () => {
+  const carta = { name: "Pikachu", number: "27", set: "30th Celebration", setCode: "me55" };
+  const c = { name: "Pikachu", number: "027/091", setId: "me55", setName: "30th Celebration", market: 1.2 };
+  assert.equal(matchAutomatico(carta, [c], 94), null);
+  assert.equal(matchAutomatico(carta, [c], null).market, 1.2); // sin total conocido no se bloquea
+});
+t("auto-selección: con 2 candidatos válidos solo se elige el de nombre idéntico y único; si no, decide la persona", () => {
+  const carta = { name: "Pikachu", number: "27", set: "Base", setCode: "base1" };
+  const a = { name: "Pikachu", number: "27/102", setId: "base1", market: 3 };
+  const b = { name: "Pikachu (Holo)", number: "27/102", setId: "base1", market: 9 };
+  assert.equal(matchAutomatico(carta, [b, a], 102).market, 3);       // idéntico y único
+  assert.equal(matchAutomatico(carta, [b, { ...b, market: 5 }], 102), null); // ambiguo
+});
+t("auto-selección: sin precio no se elige; set distinto no se elige", () => {
+  const carta = { name: "Pikachu", number: "27", set: "Base", setCode: "base1" };
+  assert.equal(matchAutomatico(carta, [{ name: "Pikachu", number: "27", setId: "base1", market: null }], 102), null);
+  assert.equal(matchAutomatico(carta, [{ name: "Pikachu", number: "27", setId: "jungle", setName: "Jungle", market: 4 }], 102), null);
+});
+t("mergeOverrides conserva el tcgId de la carta elegida", () => {
+  const m = mergeOverrides({}, "a", { name: "X", number: "1", setId: "s", setCode: "S", tcgId: "uuid-1" });
+  assert.equal(m.a.tcgId, "uuid-1");
+  assert.equal(mergeOverrides(m, "b", { name: "Y", number: "2" }).b.tcgId, null);
 });
 console.log(`\n${n} pruebas en verde`);
