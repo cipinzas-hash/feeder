@@ -1821,7 +1821,7 @@ var __angst = (() => {
       let r, intento = 0;
       while (true) {
         r = await fetch(
-          `${TCG_BASE}/cards/search?q=${encodeURIComponent(q)}&game=pokemon&limit=20`,
+          `${TCG_BASE}/cards/search?q=${encodeURIComponent(q)}&game=pokemon&limit=100`,
           { headers: { "X-API-Key": apiKey }, signal: AbortSignal.timeout(8e3) }
         );
         if (r.status !== 429 || intento >= 2) break;
@@ -1850,6 +1850,8 @@ var __angst = (() => {
         matchEncontrado: true,
         matchNombre: match.name,
         matchNumero: match.number,
+        tcgId: match.id || null,
+        // UUID de la carta: permite precios por lote en las próximas corridas
         preciosDisponibles: Object.keys(match.prices || {}),
         tienePrecioTcgplayer: !!best,
         match: best?.market ? true : false,
@@ -1904,7 +1906,7 @@ var __angst = (() => {
   }
   async function fetchTCGPrice(name, setName, number, setCode, apiKey) {
     const price = await fetchTCGPriceDiag(name, setName, number, setCode, apiKey);
-    return price?.match ? { market: price.market, low: price.low, high: price.high } : null;
+    return price?.match ? { market: price.market, low: price.low, high: price.high, tcgId: price.tcgId || null } : null;
   }
   function addSnapshot(history, market, low, high, dateISO) {
     const today = dateISO || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
