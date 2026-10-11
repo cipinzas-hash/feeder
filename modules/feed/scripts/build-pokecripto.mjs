@@ -27,7 +27,7 @@
 // refrescar precio en el cliente.
 
 import { readFile, writeFile } from "node:fs/promises";
-import { refreshPrecio } from "../../pokecripto/lib/pricing.mjs";
+import { refreshPrecio, fetchTCGBatch, addSnapshot } from "../../pokecripto/lib/pricing.mjs";
 import { aplicarOverrides, normalizarOverridesRemotos } from "../../pokecripto/lib/review.mjs";
 
 const INVENTARIO_PATH = process.env.POKECRIPTO_INVENTARIO_PATH;
@@ -57,6 +57,14 @@ const OVERRIDES_PATH = process.env.POKECRIPTO_OVERRIDES_PATH || null;
 // cubriendo, más lento que antes pero sin arriesgar la corrida entera.
 const CARTAS_POR_CORRIDA = 100;
 const RESERVA_TCG_DIARIA = 80; // de 100 reales -- margen para uso manual
+// Precios por lote (4-oct-2026, a pedido de Cristopher: "sacar el máximo rendimiento a la cuota"):
+// las cartas con tcgId (designadas a mano o ya encontradas por el respaldo) se piden de a 20 por
+// consulta a tcgpricelookup.com (parámetro ids=), en vez de una consulta por carta. Esas consultas
+// salen del MISMO tope diario (RESERVA_TCG_DIARIA); a lo más BATCH_MAX_LLAMADAS, para que siempre
+// quede cupo para el respaldo carta por carta y para el uso manual.
+const BATCH_TAMANO = 20;
+const BATCH_MAX_LLAMADAS = 60;
+const BATCH_PAUSA_MS = 500;
 
 if (!INVENTARIO_PATH || !PENDING_PATH) {
   console.error("✗ Faltan POKECRIPTO_INVENTARIO_PATH / POKECRIPTO_PENDING_PATH (rutas al checkout de Angst-data)");
@@ -108,20 +116,48 @@ async function main() {
   if (Object.keys(overrides).length) console.log(`✓ ${Object.keys(overrides).length} designación(es) manual(es) aplicada(s)`);
   if (nuevas.length) console.log(`✓ ${nuevas.length} carta(s) nueva(s) fusionada(s) desde pending`);
 
-  // 2. Ordenar por antigüedad de snapshot (tcgUpdated null = más viejo
-  // posible, entra primero) y tomar las CARTAS_POR_CORRIDA más viejas. "vendida" no
-  // participa -- ya no es inventario activo.
-  const candidatas = inventarioFusionado
-    .filter(c => c.estado !== "vendida" && (c.cardId || c.name))
-    .sort((a, b) => (a.tcgUpdated || "2000-01-01").localeCompare(b.tcgUpdated || "2000-01-01"))
-    .slice(0, CARTAS_POR_CORRIDA);
-
-  console.log(`Procesando ${candidatas.length} carta(s) (de ${inventarioFusionado.length} activas)...`);
-
   let tcgUsadas = 0;
   let okCount = 0, failCount = 0;
   const hoy = new Date().toISOString().slice(0, 10);
   const actualizadas = new Map();
+  // Antigüedad = lo más reciente entre el último precio y el último INTENTO (tcgIntento). Así una carta que
+  // falla no se queda eternamente al frente de la cola gastando cupo y tiempo cada día: se intenta, se anota
+  // el intento y le vuelve a tocar recién cuando le llega el turno al resto (4-oct-2026).
+  const claveEdad = c => [c.tcgUpdated, c.tcgIntento].filter(Boolean).sort().pop() || "2000-01-01";
+  const porAntiguedad = (a, b) => claveEdad(a).localeCompare(claveEdad(b));
+
+  // 2a. FASE POR LOTE: las cartas con tcgId, de 20 en 20, las más viejas primero. Si la API rechaza el
+  // modo por lote (plan, credencial, error), se desactiva para esta corrida y TODO sigue por el camino
+  // de siempre -- nunca debe costar la corrida entera.
+  const conTcgId = inventarioFusionado.filter(c => c.estado !== "vendida" && c.tcgId).sort(porAntiguedad);
+  let batchLlamadas = 0, batchOk = 0, batchSinPrecio = 0, batchActivo = !!TCG_API_KEY && conTcgId.length > 0;
+  if (conTcgId.length) console.log(`Por lote: ${conTcgId.length} carta(s) con tcgId (${Math.ceil(conTcgId.length / BATCH_TAMANO)} consulta(s) para todas, tope ${BATCH_MAX_LLAMADAS})`);
+  for (let i = 0; batchActivo && i < conTcgId.length && batchLlamadas < BATCH_MAX_LLAMADAS && tcgUsadas < RESERVA_TCG_DIARIA; i += BATCH_TAMANO) {
+    const grupo = conTcgId.slice(i, i + BATCH_TAMANO);
+    const r = await fetchTCGBatch(grupo.map(c => c.tcgId), TCG_API_KEY);
+    batchLlamadas++; tcgUsadas++;
+    if (batchLlamadas === 1) console.log(`ℹ Primera consulta por lote: HTTP ${r.status}${r.ok ? "" : " " + r.error} | cabeceras de cupo: ${JSON.stringify(r.rate || {})}`);
+    if (!r.ok) { console.log(`✗ Por lote falló (${r.error}); se sigue carta por carta`); batchActivo = false; break; }
+    if (batchLlamadas === 1) { const k = [...r.porId.values()][0]?.setKeys; if (k) console.log(`ℹ Campos de "set" que trae la API: ${k.join(", ")}`); }
+    for (const carta of grupo) {
+      const p = r.porId.get(carta.tcgId);
+      if (!p || !p.market) { batchSinPrecio++; continue; } // sin carta o sin precio: sigue por la rotación normal
+      actualizadas.set(carta.id, { tcgMarket: p.market, tcgLow: p.low, tcgHigh: p.high, tcgUpdated: hoy, priceHistory: addSnapshot(carta.priceHistory, p.market, p.low, p.high, hoy) });
+      batchOk++; okCount++;
+    }
+    if (i + BATCH_TAMANO < conTcgId.length) await sleep(BATCH_PAUSA_MS);
+  }
+  if (batchLlamadas) console.log(`✓ Por lote: ${batchOk} snapshot(s) con ${batchLlamadas} consulta(s)${batchSinPrecio ? `, ${batchSinPrecio} sin precio (pasan a la rotación normal)` : ""}`);
+
+  // 2b. ROTACIÓN (como siempre): ordenar por antigüedad de snapshot (tcgUpdated null = más viejo
+  // posible, entra primero) y tomar las CARTAS_POR_CORRIDA más viejas, SIN las que ya se actualizaron por
+  // lote. "vendida" no participa -- ya no es inventario activo.
+  const candidatas = inventarioFusionado
+    .filter(c => c.estado !== "vendida" && (c.cardId || c.name) && !actualizadas.has(c.id))
+    .sort(porAntiguedad)
+    .slice(0, CARTAS_POR_CORRIDA);
+
+  console.log(`Procesando ${candidatas.length} carta(s) por búsqueda individual (de ${inventarioFusionado.length} activas)...`);
 
   for (let i = 0; i < candidatas.length; i++) {
     const carta = candidatas[i];
@@ -137,13 +173,14 @@ async function main() {
       // momento, no por una suposición de antemano -- pokemontcg.io sigue
       // intentándose siempre (gratis, sin restricción).
       const permitirFallback = tcgUsadas < RESERVA_TCG_DIARIA;
-      const { market, low, high, fuente } = await refreshPrecio(carta, TCG_API_KEY, permitirFallback);
-      if (fuente?.startsWith("tcgpricelookup")) tcgUsadas++; // cuenta también las designadas a mano (tcgpricelookup(override)), antes se colaban sin contar
+      const { market, low, high, fuente, tcgId, usoTcg } = await refreshPrecio(carta, TCG_API_KEY, permitirFallback);
+      if (usoTcg) tcgUsadas++; // cuenta TODA búsqueda real a tcgpricelookup.com, haya o no encontrado (antes solo las exitosas)
       if (market == null) {
         console.log(!permitirFallback
           ? `⏭ (${i + 1}/${candidatas.length}) ${carta.name}: cupo de tcgpricelookup.com agotado por hoy, se pospone`
           : `✗ (${i + 1}/${candidatas.length}) ${carta.name}: sin precio de ninguna fuente`);
         failCount++;
+        if (permitirFallback) actualizadas.set(carta.id, { tcgIntento: hoy }); // intentada de verdad: pasa al final de la cola
         continue;
       }
       console.log(`✓ (${i + 1}/${candidatas.length}) ${carta.name}: $${market} (${fuente})`);
@@ -151,7 +188,9 @@ async function main() {
       const idx = newHist.length && newHist[newHist.length - 1].date === hoy ? newHist.length - 1 : -1;
       const snap = { date: hoy, market, low: low || null, high: high || null };
       if (idx >= 0) newHist[idx] = snap; else newHist.push(snap);
-      actualizadas.set(carta.id, { tcgMarket: market, tcgLow: low, tcgHigh: high, tcgUpdated: hoy, priceHistory: newHist });
+      // Si el respaldo la encontró en tcgpricelookup.com, se guarda su tcgId: desde la próxima corrida
+      // va por lote (20 por consulta) en vez de una búsqueda por carta.
+      actualizadas.set(carta.id, { tcgMarket: market, tcgLow: low, tcgHigh: high, tcgUpdated: hoy, priceHistory: newHist, ...(tcgId && tcgId !== carta.tcgId ? { tcgId } : {}) });
       okCount++;
     } catch (e) {
       console.error(`✗ (${i + 1}/${candidatas.length}) ${carta.name}: ${e.message}`);
@@ -164,7 +203,8 @@ async function main() {
   await writeFile(INVENTARIO_PATH, JSON.stringify(inventarioFinal, null, 2));
   await writeFile(PENDING_PATH, JSON.stringify([], null, 2)); // vaciar, ya se fusionó todo
 
-  console.log(`✓ ${okCount} snapshot(s) nuevo(s), ${failCount} fallo(s), ${tcgUsadas} consulta(s) a tcgpricelookup.com`);
+  const conId = inventarioFinal.filter(c => c.estado !== "vendida" && c.tcgId).length;
+  console.log(`✓ ${okCount} snapshot(s) nuevo(s), ${failCount} fallo(s), ${tcgUsadas} consulta(s) a tcgpricelookup.com (${batchLlamadas} por lote); cartas con tcgId: ${conId} de ${inventarioFinal.filter(c => c.estado !== "vendida").length}`);
 }
 
 main();

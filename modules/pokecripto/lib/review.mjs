@@ -190,7 +190,11 @@ export function mergeOverrides(actual, cartaId, ov) {
 // El bot aplica los overrides al inventario canónico antes de preciar.
 export function aplicarOverrides(inventario, overrides) {
   const ovs = normalizarOverridesRemotos(overrides);
-  return (Array.isArray(inventario) ? inventario : []).map(c => (ovs[c.id] ? { ...c, tcgOverride: ovs[c.id] } : c));
+  // El tcgId de la designación pasa también a la carta (campo propio): es lo que usa el bot para pedir
+  // los precios por lote. Si la designación no lo trae, la carta conserva el suyo (si lo tenía).
+  return (Array.isArray(inventario) ? inventario : []).map(c => (ovs[c.id]
+    ? { ...c, tcgOverride: ovs[c.id], ...(ovs[c.id].tcgId ? { tcgId: ovs[c.id].tcgId } : {}) }
+    : c));
 }
 
 // ── Fotos sin gastar consultas (4-oct-2026) ─────────────────────────────

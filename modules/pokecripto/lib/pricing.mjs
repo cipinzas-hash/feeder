@@ -68,7 +68,9 @@ export async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey) 
     // respetando Retry-After si lo manda.
     let r, intento = 0;
     while (true) {
-      r = await fetch(`${TCG_BASE}/cards/search?q=${encodeURIComponent(q)}&game=pokemon&limit=20`,
+      // limit=100 (4-oct-2026): con 20, los nombres comunes (Pikachu, Ultra Ball) llenaban los
+      // resultados con otros sets y la carta buscada quedaba fuera. Es la misma 1 consulta del cupo.
+      r = await fetch(`${TCG_BASE}/cards/search?q=${encodeURIComponent(q)}&game=pokemon&limit=100`,
         { headers: { "X-API-Key": apiKey }, signal: AbortSignal.timeout(8000) });
       if (r.status !== 429 || intento >= 2) break;
       const retryAfter = parseInt(r.headers.get("retry-after") || "", 10);
@@ -99,12 +101,53 @@ export async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey) 
     return {
       query: q, candidatos, matchEncontrado: true,
       matchNombre: match.name, matchNumero: match.number,
+      tcgId: match.id || null, // UUID de la carta: permite precios por lote en las próximas corridas
       preciosDisponibles: Object.keys(match.prices || {}),
       tienePrecioTcgplayer: !!best,
       match: best?.market ? true : false,
       market: best?.market, low: best?.low || null, high: best?.high || null,
     };
   } catch (e) { return { error: e.message }; }
+}
+
+// ── Precios por lote (4-oct-2026) ───────────────────────────────────────
+// La API de tcgpricelookup.com acepta `ids=a,b,c…` (hasta 20 UUID por consulta): con el tcgId guardado de
+// cada carta, 20 cartas cuestan UNA consulta del cupo diario (100) en vez de veinte. Así los snapshots
+// diarios de cientos de cartas caben en el cupo gratis.
+// Si la API responde con error de plan/credencial (401/402/403) o de otro tipo, se devuelve {ok:false}
+// y quien llama debe volver al método carta por carta sin reventar la corrida.
+export function precioDeApi(c) {
+  const nm = c?.prices?.raw?.near_mint?.tcgplayer, lp = c?.prices?.raw?.lightly_played?.tcgplayer;
+  const best = nm || lp;
+  return best?.market ? { market: best.market, low: best.low || null, high: best.high || null } : null;
+}
+export async function fetchTCGBatch(ids, apiKey) {
+  const lista = [...new Set((ids || []).filter(Boolean))].slice(0, 20);
+  if (!apiKey) return { ok: false, status: 0, error: "sin API key" };
+  if (!lista.length) return { ok: true, porId: new Map(), pedidos: 0, status: 200, rate: {} };
+  try {
+    let r, intento = 0;
+    while (true) {
+      r = await fetch(`${TCG_BASE}/cards/search?ids=${encodeURIComponent(lista.join(","))}&game=pokemon&limit=20`,
+        { headers: { "X-API-Key": apiKey }, signal: AbortSignal.timeout(15000) });
+      if (r.status !== 429 || intento >= 2) break;
+      const retryAfter = parseInt(r.headers.get("retry-after") || "", 10);
+      await new Promise(res => setTimeout(res, Number.isFinite(retryAfter) ? retryAfter * 1000 : 2000 * Math.pow(2, intento)));
+      intento++;
+    }
+    // Cabeceras de cupo, para saber cuánto consume realmente una consulta por lote.
+    const rate = {};
+    try { r.headers.forEach((v, k) => { if (/rate|limit|quota|remaining|reset/i.test(k)) rate[k] = v; }); } catch (e) { /* sin cabeceras */ }
+    if (!r.ok) {
+      let detalle = "";
+      try { detalle = (await r.text()).slice(0, 160); } catch (e) { /* sin cuerpo */ }
+      return { ok: false, status: r.status, error: `HTTP ${r.status}${detalle ? " " + detalle : ""}`, rate };
+    }
+    const data = await r.json();
+    const porId = new Map();
+    for (const c of (data.data || [])) if (c?.id) porId.set(c.id, { ...(precioDeApi(c) || {}), tieneCarta: true, setKeys: c.set ? Object.keys(c.set) : [] });
+    return { ok: true, porId, pedidos: lista.length, status: r.status, rate };
+  } catch (e) { return { ok: false, status: 0, error: e.message }; }
 }
 
 // Búsqueda de candidatos para el flujo de revisión (3-oct-2026): devuelve
@@ -150,7 +193,7 @@ export async function fetchTCGCandidatos(q, apiKey) {
 
 export async function fetchTCGPrice(name, setName, number, setCode, apiKey) {
   const price = await fetchTCGPriceDiag(name, setName, number, setCode, apiKey);
-  return price?.match ? { market: price.market, low: price.low, high: price.high } : null;
+  return price?.match ? { market: price.market, low: price.low, high: price.high, tcgId: price.tcgId || null } : null;
 }
 
 export function addSnapshot(history, market, low, high, dateISO) {
@@ -182,7 +225,7 @@ export function addSnapshot(history, market, low, high, dateISO) {
 // el respaldo desde afuera, carta por carta, según el cupo que le quede
 // en ESE momento -- no según de antemano.
 export async function refreshPrecio(carta, apiKey, permitirFallback = true) {
-  let market = null, low = null, high = null, fuente = null;
+  let market = null, low = null, high = null, fuente = null, tcgId = null, usoTcg = false;
   if (carta.cardId) {
     try {
       const data = await fetchPoke(`${POKE_BASE}/cards/${carta.cardId}`);
@@ -191,11 +234,15 @@ export async function refreshPrecio(carta, apiKey, permitirFallback = true) {
     } catch (e) { /* cae a tcgpricelookup */ }
   }
   if (!market && permitirFallback) {
+    // usoTcg: se hizo una búsqueda REAL a tcgpricelookup.com (gasta cupo aunque no encuentre nada).
+    // Antes el bot solo contaba las que tenían éxito, y las cartas que siempre fallan gastaban cupo sin
+    // que nadie lo anotara (4-oct-2026).
+    usoTcg = !!apiKey;
     const ov = carta.tcgOverride;
     const p = ov
       ? await fetchTCGPrice(ov.name, carta.set, ov.number, ov.setId || ov.setCode, apiKey)
       : await fetchTCGPrice(carta.name, carta.set, carta.number, carta.setCode, apiKey);
-    if (p?.market) { market = p.market; low = p.low || null; high = p.high || null; fuente = ov ? "tcgpricelookup(override)" : "tcgpricelookup"; }
+    if (p?.market) { market = p.market; low = p.low || null; high = p.high || null; fuente = ov ? "tcgpricelookup(override)" : "tcgpricelookup"; tcgId = p.tcgId || null; }
   }
-  return { market, low, high, fuente };
+  return { market, low, high, fuente, tcgId, usoTcg };
 }
