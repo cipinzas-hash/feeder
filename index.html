@@ -1867,7 +1867,7 @@ var __angst = (() => {
       let r, intento = 0;
       while (true) {
         r = await fetch(
-          `${TCG_BASE}/cards/search?q=${encodeURIComponent(q)}&game=pokemon&limit=20`,
+          `${TCG_BASE}/cards/search?q=${encodeURIComponent(q)}&game=pokemon&limit=100`,
           { headers: { "X-API-Key": apiKey }, signal: AbortSignal.timeout(8e3) }
         );
         if (r.status !== 429 || intento >= 2) break;
@@ -1880,6 +1880,8 @@ var __angst = (() => {
       const candidatos = (data.data || []).map((c) => {
         const best = c.prices?.raw?.near_mint?.tcgplayer || c.prices?.raw?.lightly_played?.tcgplayer;
         return {
+          tcgId: c.id || null,
+          // UUID de la carta en tcgpricelookup.com
           name: c.name,
           number: c.number,
           setId: c.set?.id || null,
@@ -1963,7 +1965,10 @@ var __angst = (() => {
       const s = q.replace(/\s+/g, " ").trim();
       if (s && !plan.some((p) => p.q.toLowerCase() === s.toLowerCase())) plan.push({ q: s });
     };
-    vars.forEach((v) => add2(num ? `${v} ${num}` : v));
+    vars.forEach((v, i) => {
+      add2(num ? `${v} ${num}` : v);
+      if (i === 0 && carta?.set) add2(`${v} ${carta.set}`);
+    });
     vars.forEach((v) => add2(v));
     return plan;
   }
@@ -2006,14 +2011,29 @@ var __angst = (() => {
     });
     return { agregados, todos: [...vistos || [], ...rankCandidatos(carta, agregados)] };
   }
-  function matchAutomatico(carta, candidatos) {
+  function nombresCompatibles(a, b) {
+    const x = normName(a), y = normName(b);
+    if (!x || !y) return false;
+    if (x === y) return true;
+    if (Math.min(x.length, y.length) >= 4 && (x.includes(y) || y.includes(x))) return true;
+    const p = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(/[^a-z0-9]+/).filter((w) => w.length >= 3)[0];
+    return !!p(a) && p(a) === p(b);
+  }
+  function totalCompatible(c, totalSet) {
+    const t = parseInt(String(c?.number || "").split("/")[1], 10), tot = parseInt(totalSet, 10);
+    return !(Number.isFinite(t) && Number.isFinite(tot)) || t === tot;
+  }
+  function matchAutomatico(carta, candidatos, totalSet) {
     const num = normNum(carta?.number), nom = normName(carta?.name);
     if (!num || !nom) return null;
     const conocemosSet = !!(carta?.setCode || carta?.set);
-    return (candidatos || []).find((c) => c.market != null && normNum(c.number) === num && normName(c.name) === nom && // el mismo nombre+número puede ser una reimpresión de otro set con otro precio (la "variante
+    const ok = (candidatos || []).filter((c) => c.market != null && normNum(c.number) === num && nombresCompatibles(carta.name, c.name) && // el mismo nombre+número puede ser una reimpresión de otro set con otro precio (la "variante
     // equivocada" que el bot evita): si ambos lados traen datos de set, tienen que calzar (código o
     // nombre). Si el candidato no trae ningún dato de set, no hay con qué contrastar y se acepta.
-    (!conocemosSet || !tieneDatosDeSet(c) || mismoSet(carta, c))) || null;
+    (!conocemosSet || !tieneDatosDeSet(c) || mismoSet(carta, c)) && totalCompatible(c, totalSet));
+    if (ok.length === 1) return ok[0];
+    const exactos = ok.filter((c) => normName(c.name) === nom);
+    return exactos.length === 1 ? exactos[0] : null;
   }
   function normalizarOverridesRemotos(x) {
     if (!x || typeof x !== "object" || Array.isArray(x)) return {};
@@ -2025,7 +2045,7 @@ var __angst = (() => {
     return out;
   }
   function mergeOverrides(actual, cartaId, ov) {
-    return { ...normalizarOverridesRemotos(actual), [cartaId]: { name: ov.name, number: ov.number, setId: ov.setId || null, setCode: ov.setCode || null } };
+    return { ...normalizarOverridesRemotos(actual), [cartaId]: { name: ov.name, number: ov.number, setId: ov.setId || null, setCode: ov.setCode || null, tcgId: ov.tcgId || null } };
   }
   function numeroBase(n) {
     const b = String(n ?? "").split("/")[0].trim();
@@ -3263,7 +3283,7 @@ var __angst = (() => {
       setRevCartaId(null);
     }
     function revAplicar(cartaId, c, conOverride) {
-      const ov = { name: c.name, number: c.number, setId: c.setId || null, setCode: c.setCode || null };
+      const ov = { name: c.name, number: c.number, setId: c.setId || null, setCode: c.setCode || null, tcgId: c.tcgId || null };
       saveInventario((prev) => (prev || []).map((x) => x.id === cartaId ? { ...x, tcgMarket: c.market, tcgLow: c.low, tcgHigh: c.high, tcgUpdated: hoy, priceHistory: addSnapshot(x.priceHistory, c.market, c.low, c.high, hoy), ...conOverride ? { tcgOverride: ov } : {} } : x));
       return ov;
     }
@@ -3311,9 +3331,10 @@ var __angst = (() => {
         return;
       }
       const cands = rankCandidatos(carta, r.candidatos);
-      const auto = matchAutomatico(carta, cands);
+      const auto = matchAutomatico(carta, cands, total);
       if (auto && !revFocoId) {
-        revAplicar(carta.id, auto, false);
+        const ov = revAplicar(carta.id, auto, true);
+        guardarOverrideRemoto(carta.id, ov);
         setRevCont((k) => ({ ...k, solas: k.solas + 1 }));
         return;
       }
