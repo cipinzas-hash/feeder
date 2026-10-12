@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-11T21:36:24.484Z",
+  "generatedAt": "2026-10-12T01:03:51.071Z",
   "categories": [
     {
       "cat": "Películas",
@@ -407,7 +407,7 @@
               "order": 9
             }
           ],
-          "trending": false
+          "trending": true
         },
         {
           "guid": "tmdb-movie-1400837",
@@ -600,13 +600,13 @@
           },
           "cast": [
             {
-              "name": "Dakota Johnson",
-              "character": "Lowen Ashleigh",
+              "name": "Anne Hathaway",
+              "character": "Verity Crawford",
               "order": 0
             },
             {
-              "name": "Anne Hathaway",
-              "character": "Verity Crawford",
+              "name": "Dakota Johnson",
+              "character": "Lowen Ashleigh",
               "order": 1
             },
             {
@@ -861,87 +861,6 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1148365",
-          "title": "Matchbox: La película",
-          "link": "https://www.themoviedb.org/movie/1148365",
-          "summary": "Varios amigos de la infancia se reúnen y el reencuentro se sale de madre cuando acaban metidos en un peligroso complot internacional y se ven obligados a salvar el mundo.",
-          "image": "https://image.tmdb.org/t/p/w500/ev2GnYar3LUyui8sOu4gqeMXvLi.jpg",
-          "pubDate": "2026-10-05",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-09T08:34:33.787Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.8
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "7xfqITrMDcI",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "John Cena",
-              "character": "Sean",
-              "order": 0
-            },
-            {
-              "name": "Jessica Biel",
-              "character": "Aimee",
-              "order": 1
-            },
-            {
-              "name": "Arturo Castro",
-              "character": "Ted",
-              "order": 2
-            },
-            {
-              "name": "Sam Richardson",
-              "character": "Crosby",
-              "order": 3
-            },
-            {
-              "name": "Teyonah Parris",
-              "character": "Charmaine",
-              "order": 4
-            },
-            {
-              "name": "Danai Gurira",
-              "character": "Helen",
-              "order": 5
-            },
-            {
-              "name": "گلشیفته فراهانی",
-              "character": "Robbie",
-              "order": 6
-            },
-            {
-              "name": "Corey Stoll",
-              "character": "Mosier",
-              "order": 7
-            },
-            {
-              "name": "Daniel Bernhardt",
-              "character": "Falko",
-              "order": 8
-            },
-            {
-              "name": "Randeep Hooda",
-              "character": "Mustafa",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
           "guid": "tmdb-movie-1236045",
           "title": "Animales",
           "link": "https://www.themoviedb.org/movie/1236045",
@@ -1017,6 +936,87 @@
             {
               "name": "Taylor Cooper",
               "character": "Hannah",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1148365",
+          "title": "Matchbox: La película",
+          "link": "https://www.themoviedb.org/movie/1148365",
+          "summary": "Varios amigos de la infancia se reúnen y el reencuentro se sale de madre cuando acaban metidos en un peligroso complot internacional y se ven obligados a salvar el mundo.",
+          "image": "https://image.tmdb.org/t/p/w500/ev2GnYar3LUyui8sOu4gqeMXvLi.jpg",
+          "pubDate": "2026-10-05",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-09T08:34:33.787Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.8
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "7xfqITrMDcI",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "John Cena",
+              "character": "Sean",
+              "order": 0
+            },
+            {
+              "name": "Jessica Biel",
+              "character": "Aimee",
+              "order": 1
+            },
+            {
+              "name": "Arturo Castro",
+              "character": "Ted",
+              "order": 2
+            },
+            {
+              "name": "Sam Richardson",
+              "character": "Crosby",
+              "order": 3
+            },
+            {
+              "name": "Teyonah Parris",
+              "character": "Charmaine",
+              "order": 4
+            },
+            {
+              "name": "Danai Gurira",
+              "character": "Helen",
+              "order": 5
+            },
+            {
+              "name": "گلشیفته فراهانی",
+              "character": "Robbie",
+              "order": 6
+            },
+            {
+              "name": "Corey Stoll",
+              "character": "Mosier",
+              "order": 7
+            },
+            {
+              "name": "Daniel Bernhardt",
+              "character": "Falko",
+              "order": 8
+            },
+            {
+              "name": "Randeep Hooda",
+              "character": "Mustafa",
               "order": 9
             }
           ],
@@ -1199,7 +1199,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 7.3
+            "tmdb": 7.4
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1263,7 +1263,7 @@
               "order": 9
             }
           ],
-          "trending": false
+          "trending": true
         },
         {
           "guid": "tmdb-movie-1400940",
@@ -1344,7 +1344,7 @@
               "order": 9
             }
           ],
-          "trending": false
+          "trending": true
         },
         {
           "guid": "tmdb-movie-1368337",
