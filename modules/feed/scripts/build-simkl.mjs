@@ -17,7 +17,7 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import { enrichMovieOrTv, tmdb } from "./lib/enrich.mjs";
-import { encodeRangos, parseSxxExx, agruparPorTemporada, opsVacias } from "../../shared/episodios.js";
+import { encodeRangos, inferirEp, parseSxxExx, agruparPorTemporada, opsVacias } from "../../shared/episodios.js";
 
 const SIMKL_ACCESS_TOKEN = process.env.SIMKL_ACCESS_TOKEN;
 const SIMKL_CLIENT_ID = process.env.SIMKL_CLIENT_ID;
@@ -35,9 +35,10 @@ const EPISODES_PATH = process.env.SERIES_EPISODES_PATH;
 // detalle por episodio. Es el "initial sync" normal de la API, no un abuso:
 // se sigue chequeando /sync/activities antes y el resto de las corridas
 // vuelve a leer solo cambios.
-const EPISODIOS_V = 1;
+// v2: guardar last_watched de TODAS las series (antes solo watching/hold) para poder inferir el avance de completed/dropped.
+const EPISODIOS_V = 2;
 // Cuántas series (llamadas /tv/{id}) refrescar del catálogo por corrida.
-const EPISODES_BUDGET = 40;
+const EPISODES_BUDGET = 80;
 const EPISODES_REFRESH_MS = 12 * 3600 * 1000;
 if (!STATE_PATH) {
   console.error("✗ Falta SIMKL_STATE_PATH (ruta a simkl-state.json en el checkout de Angst-data)");
@@ -119,6 +120,7 @@ function mapEntry(item, tipo) {
     if (item.status === "watching" || item.status === "hold") {
       entry.progreso = { temporada: ultimo?.t ?? null, episodio: ultimo?.e ?? null };
     }
+    if (ultimo) entry.ultimo = { temporada: ultimo.t, episodio: ultimo.e };
     if (siguiente) entry.siguiente = { temporada: siguiente.t, episodio: siguiente.e };
     if (Number.isFinite(item.total_episodes_count)) {
       entry.total = item.total_episodes_count;
@@ -426,6 +428,9 @@ async function buildEpisodios(state) {
   for (const [id, e] of Object.entries(state.syncedList.shows || {})) {
     if (e.simklStatus === "watching" || e.simklStatus === "hold") agregar(id, 0);
     else if (e.simklStatus === "plantowatch") agregar(id, 1);
+    // dropped/completed con algo visto también se pueden abrir en la Vitrina;
+    // las completas cambian poco, van al final de la fila.
+    else if ((e.vistos || 0) > 0) agregar(id, e.simklStatus === "completed" ? 3 : 1);
   }
   for (const a of state.pendingActions || []) if (a.tipo === "show") agregar(a.tmdbId, 0);
   try {
@@ -443,7 +448,8 @@ async function buildEpisodios(state) {
   const shows = {};
   for (const id of orden) {
     let cat = soloCatalogo(previo.shows?.[id]);
-    const vencido = !cat || (Date.now() - new Date(cat.fetchedAt || 0).getTime()) > EPISODES_REFRESH_MS;
+    const refreshMs = prioridad.get(id) >= 3 ? 7 * 24 * 3600 * 1000 : EPISODES_REFRESH_MS;
+    const vencido = !cat || (Date.now() - new Date(cat.fetchedAt || 0).getTime()) > refreshMs;
     if (vencido && llamadas < EPISODES_BUDGET) {
       llamadas++;
       try {
@@ -456,15 +462,24 @@ async function buildEpisodios(state) {
     }
     if (!cat) continue; // todavía sin catálogo (entra en una corrida próxima)
     const s = state.syncedList.shows?.[id];
+    const ultimo = s?.ultimo ?? s?.progreso ?? null;
+    // Simkl no trae detalle por episodio de completed/dropped: se infiere.
+    let ep = s?.ep || {};
+    let epInferido = false;
+    if (!Object.keys(ep).length && (s?.vistos || 0) > 0) {
+      const inf = inferirEp(cat.temporadas, ultimo?.temporada != null ? ultimo : null, s.vistos, s.total);
+      if (inf) { ep = inf; epInferido = true; }
+    }
     shows[id] = {
       ...cat,
       simklStatus: s?.simklStatus ?? null,
       vistos: s?.vistos ?? null,
       total: s?.total ?? null,
       noEmitidos: s?.noEmitidos ?? null,
-      ultimo: s?.progreso ?? null,
+      ultimo,
       siguiente: s?.siguiente ?? null,
-      ep: s?.ep || {},
+      ep,
+      ...(epInferido ? { epInferido: true } : {}),
     };
   }
   console.log(`✓ Simkl · episodios: ${Object.keys(shows).length}/${orden.length} serie(s) con catálogo (${nuevos} nueva(s), ${refrescados} refrescada(s), ${llamadas} llamada(s) de detalle)`);

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { armarVista, encodeRangos, decodeRangos, epMapToSet, setToEpMap, parseSxxExx, mergeEpisodeOps, applyOps, agruparPorTemporada, keyEp } from "../modules/shared/episodios.js";
+import { inferirEp, armarVista, encodeRangos, decodeRangos, epMapToSet, setToEpMap, parseSxxExx, mergeEpisodeOps, applyOps, agruparPorTemporada, keyEp } from "../modules/shared/episodios.js";
 
 assert.equal(encodeRangos([1,2,3,5,7,8,10]), "1-3,5,7-8,10");
 assert.equal(encodeRangos([3,1,2,2,"4"]), "1-4");
@@ -48,4 +48,12 @@ v = armarVista(entry, { "1-3": { v: true }, "1-1": { v: false } }, "2026-10-12")
 assert.equal(v.vistos, 2); assert.equal(v.pendientes, 2);
 assert.deepEqual(v.siguiente && [v.siguiente.t, v.siguiente.e], [1, 1]);
 assert.equal(armarVista({ ep: {}, temporadas: [] }, null, "2026-10-12").total, 0);
+
+// inferirEp
+const temps = [{ n: 1, eps: [[1,"a",null],[2,"b",null],[3,"c",null]] }, { n: 2, eps: [[1,"d",null],[2,"e",null]] }];
+assert.deepEqual(inferirEp(temps, { temporada: 2, episodio: 1 }, 4, 5), { "1": "1-3", "2": "1" });   // dropped: secuencial
+assert.deepEqual(inferirEp(temps, { temporada: 2, episodio: 2 }, 5, 5), { "1": "1-3", "2": "1-2" }); // completa
+assert.deepEqual(inferirEp(temps, null, 5, 5), { "1": "1-3", "2": "1-2" });                          // completa sin last_watched
+assert.equal(inferirEp(temps, null, 2, 5), null);                                                   // sin datos para inferir
+assert.deepEqual(inferirEp(temps, { temporada: 1, episodio: 2 }, 2, 5), { "1": "1-2" });
 console.log("episodios.mjs OK");

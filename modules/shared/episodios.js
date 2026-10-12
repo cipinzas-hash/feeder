@@ -138,3 +138,20 @@ export function armarVista(entry, overlayShow, hoyISO) {
   });
   return { temporadas, total, emitidos, vistos: vistosCount, pendientes, siguiente, proximo };
 }
+
+// Simkl NO entrega el detalle por episodio de series "completed" ni "dropped"
+// (solo last_watched y contadores). Para esas se reconstruye el avance:
+// completa (vistos >= total) = todos los episodios del catálogo; si no,
+// secuencial hasta last_watched. Es una inferencia, por eso el archivo la
+// marca (epInferido) y la UI lo avisa. ultimo = { temporada, episodio } | null.
+export function inferirEp(temporadas, ultimo, vistos, total) {
+  const todas = total > 0 && vistos >= total;
+  if (!todas && !ultimo) return null;
+  const set = new Set();
+  for (const t of temporadas || []) {
+    for (const [e] of t.eps) {
+      if (todas || t.n < ultimo.temporada || (t.n === ultimo.temporada && e <= ultimo.episodio)) set.add(keyEp(t.n, e));
+    }
+  }
+  return setToEpMap(set);
+}

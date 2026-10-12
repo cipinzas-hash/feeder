@@ -258,12 +258,12 @@ function SeriesProgreso({ item, progresoActual, onMarcar }) {
 // cada episodio, avance real de Simkl). Mientras no lo tenga, cae al
 // selector simple de SeriesProgreso.
 function SeriesSeguimiento({ item, progresoActual, onMarcar }) {
-  const { vista } = useSerieEpisodios(item.guid);
-  if (vista && vista.total > 0) return <SeriesEpisodios item={item} vista={vista} />;
+  const { vista, entry } = useSerieEpisodios(item.guid);
+  if (vista && vista.total > 0) return <SeriesEpisodios item={item} vista={vista} inferido={!!entry?.epInferido} />;
   return <SeriesProgreso item={item} progresoActual={progresoActual} onMarcar={onMarcar} />;
 }
 
-function SeriesEpisodios({ item, vista }) {
+function SeriesEpisodios({ item, vista, inferido }) {
   const cineEstado = useCineEstadoMap();
   const estado = cineEstado[item.guid]?.estado || "sin_marca";
   const inicial = vista.siguiente?.t ?? vista.temporadas[vista.temporadas.length - 1]?.n;
@@ -294,6 +294,11 @@ function SeriesEpisodios({ item, vista }) {
           ? <span style={{ color: "#f5c518", fontWeight: 700 }}>{vista.pendientes} pendiente{vista.pendientes === 1 ? "" : "s"}</span>
           : <span style={{ color: "#2ecc71", fontWeight: 700 }}>al día ✓</span>}
       </div>
+      {inferido && (
+        <div style={{ ...fuente, fontSize: 10, color: "#888", fontStyle: "italic", marginBottom: 4 }}>
+          ⓘ Simkl no entrega el detalle por episodio de esta serie: el avance se reconstruyó desde el último episodio visto.
+        </div>
+      )}
       {vista.siguiente && (
         <div style={{ ...fuente, fontSize: 11, color: "#2ecc71", marginBottom: 4 }}>
           ▶ siguiente: T{vista.siguiente.t}·E{vista.siguiente.e}{vista.siguiente.nombre ? ` — ${vista.siguiente.nombre}` : ""}
