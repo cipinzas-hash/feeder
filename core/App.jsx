@@ -15,6 +15,7 @@ import NutricionPage from "../modules/nutricion/NutricionPage.jsx";
 import BudgetPage from "../modules/presupuesto/BudgetPage.jsx";
 import EspritPage from "../modules/espiritu/EspritPage.jsx";
 import FeedPage from "../modules/feed/FeedPage.jsx";
+import VitrinaPage from "../modules/vitrina/VitrinaPage.jsx";
 
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
@@ -71,6 +72,9 @@ const CYNICAL_SUBTITLES = [
 
 function AngstApp() {
   const [page, setPage] = useState(0);
+  // Feed y Vitrina son páginas separadas; el tab 📌 de Vitrina abre Feed directo en el Buzón.
+  const [feedInitialView, setFeedInitialView] = useState(null);
+  useEffect(() => { if (page !== 9 && feedInitialView) setFeedInitialView(null); }, [page]);
   // dayData: flat dict keyed by "YYYY-MM-DD" → individual day object
   // This ensures each calendar date is fully independent
   const [dayData, setDayData] = useState({});
@@ -1294,6 +1298,7 @@ function AngstApp() {
       feedConciertosVistos: readLocalJSON("angst-feed-conciertos-vistos-v1"),
       feedCineEstado: readLocalJSON("angst-cine-estado-v1"),
       feedPodcastDispatched: readLocalJSON("angst-podcast-dispatched-v1"),
+      feedMeleeVodVistos: readLocalJSON("angst-feed-melee-vod-vistos-v1"),
     };
   }
   function readLocalJSON(key){
@@ -1303,7 +1308,7 @@ function AngstApp() {
   // Si agregás un campo de estado nuevo: sumalo en buildExportPayload,
   // en saveToStorage, acá, y en restoreFromPayload — las 4 ubicaciones
   // de la regla vital.
-  const REQUIRED_EXPORT_FIELDS = ['dayData','weekOffset','budgets','nutria','calMarks','cookingOpts','aseoOpts','routines','recurring','lastRollover','kidsHealth','custody','fadimanData','nutriLog','ejercicioLog','ejercicioDecks','customFoods','foodOverrides','customEjercicios','nutriDecks','pokeInventario','pokeCarpetas','pokeDarkCatalogo','pokePriceCache','feedState','feedMicrodocsVistos','feedPodcastsEscuchados','feedConciertosVistos','feedCineEstado','feedPodcastDispatched'];
+  const REQUIRED_EXPORT_FIELDS = ['dayData','weekOffset','budgets','nutria','calMarks','cookingOpts','aseoOpts','routines','recurring','lastRollover','kidsHealth','custody','fadimanData','nutriLog','ejercicioLog','ejercicioDecks','customFoods','foodOverrides','customEjercicios','nutriDecks','pokeInventario','pokeCarpetas','pokeDarkCatalogo','pokePriceCache','feedState','feedMicrodocsVistos','feedPodcastsEscuchados','feedConciertosVistos','feedCineEstado','feedPodcastDispatched','feedMeleeVodVistos'];
 
   function handleExport(){
     const fullPayload = buildExportPayload();
@@ -1361,6 +1366,7 @@ function AngstApp() {
     if(d.feedConciertosVistos!=null){ try{ localStorage.setItem("angst-feed-conciertos-vistos-v1", JSON.stringify(d.feedConciertosVistos)); }catch(e){} }
     if(d.feedCineEstado!=null){ try{ localStorage.setItem("angst-cine-estado-v1", JSON.stringify(d.feedCineEstado)); }catch(e){} }
     if(d.feedPodcastDispatched!=null){ try{ localStorage.setItem("angst-podcast-dispatched-v1", JSON.stringify(d.feedPodcastDispatched)); }catch(e){} }
+    if(d.feedMeleeVodVistos!=null){ try{ localStorage.setItem("angst-feed-melee-vod-vistos-v1", JSON.stringify(d.feedMeleeVodVistos)); }catch(e){} }
     setLoadMsg(`✓ Restauración completa desde ${sourceLabel||"backup"}`);
     setTimeout(()=>setLoadMsg(null), 4000);
     return true;
@@ -1658,7 +1664,7 @@ function AngstApp() {
         </div>
 
         {(()=>{
-          const TABS=[{label:"📅 Semana",emoji:"📅"},{label:"💵 Presupuesto",emoji:"💵"},{label:"📒 Emprendimientos",emoji:"📒"},{label:"🧠 mindfulness",emoji:"🧠"},{label:"🩺 salud",emoji:"🩺"},{label:"🍄 fadiman",emoji:"🍄"},{label:"🥗 nutrición",emoji:"🥗"},{label:"🏋️ ejercicio",emoji:"🏋️"},{label:"🃏 pokécripto",emoji:"🃏"},{label:"📰 feed",emoji:"📰"}];
+          const TABS=[{label:"📅 Semana",emoji:"📅"},{label:"💵 Presupuesto",emoji:"💵"},{label:"📒 Emprendimientos",emoji:"📒"},{label:"🧠 mindfulness",emoji:"🧠"},{label:"🩺 salud",emoji:"🩺"},{label:"🍄 fadiman",emoji:"🍄"},{label:"🥗 nutrición",emoji:"🥗"},{label:"🏋️ ejercicio",emoji:"🏋️"},{label:"🃏 pokécripto",emoji:"🃏"},{label:"📰 feed",emoji:"📰"},{label:"🎬 vitrina",emoji:"🎬"}];
           return (
             <div className="tabs" style={{userSelect:"none"}}>
               {TABS.map((tab,ti)=>{
@@ -2085,7 +2091,8 @@ function AngstApp() {
           apiKey={pokeApiKey}
           saveApiKey={savePokeApiKey}
         />}
-        {page===9&&<FeedPage onExit={()=>setPage(0)}/>}
+        {page===9&&<FeedPage initialView={feedInitialView} onGoVitrina={()=>setPage(10)} onExit={()=>setPage(0)}/>}
+        {page===10&&<VitrinaPage onExit={()=>setPage(0)} onGoFeed={o=>{setFeedInitialView(o&&o.buzon?"buzon":null);setPage(9);}}/>}
 
         <div className="ftr">
           <div className="ftr-copy">{STOIC_PHRASES[footerIdx]}</div>
