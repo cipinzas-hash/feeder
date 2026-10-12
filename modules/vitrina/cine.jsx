@@ -1,5 +1,6 @@
 import { CINE_RATINGS, STATUS_BADGE, diasHasta, diasParaEstreno, diasRestantesCartelera, esEnProduccion, esEstreno, esNuevo, esTrending, seasonLabel, setCineItemEstado, useCineEstadoMap } from "./estado.js";
 import { FormatoTag, btnGhost, shareToWhatsApp } from "../shared/ui.jsx";
+import { marcarHastaAca, marcarTemporada, toggleEpisodio, usePendientesDe, useSerieEpisodios } from "./episodios.js";
 import { enqueueSimklAction, flushSimklQueue, pedirSimklAuth, useSimklDiscovery, useSimklSyncStatus } from "./simkl.js";
 import { CAT_COLORS } from "../shared/constants.js";
 
@@ -252,6 +253,97 @@ function SeriesProgreso({ item, progresoActual, onMarcar }) {
   );
 }
 
+// Seguimiento episodio por episodio (issue #13). Se muestra cuando
+// series-episodios.json ya tiene el catálogo de la serie (nombre y fecha de
+// cada episodio, avance real de Simkl). Mientras no lo tenga, cae al
+// selector simple de SeriesProgreso.
+function SeriesSeguimiento({ item, progresoActual, onMarcar }) {
+  const { vista } = useSerieEpisodios(item.guid);
+  if (vista && vista.total > 0) return <SeriesEpisodios item={item} vista={vista} />;
+  return <SeriesProgreso item={item} progresoActual={progresoActual} onMarcar={onMarcar} />;
+}
+
+function SeriesEpisodios({ item, vista }) {
+  const cineEstado = useCineEstadoMap();
+  const estado = cineEstado[item.guid]?.estado || "sin_marca";
+  const inicial = vista.siguiente?.t ?? vista.temporadas[vista.temporadas.length - 1]?.n;
+  const [abiertas, setAbiertas] = useState(() => new Set(inicial != null ? [inicial] : []));
+  const fuente = { fontFamily: "'DM Sans',sans-serif" };
+  const diasProximo = vista.proximo?.fecha ? diasHasta(vista.proximo.fecha) : null;
+
+  // Marcar episodios implica que la estás viendo: si no tenía marca local,
+  // pasa a "interesa" (copia completa, para sobrevivir a la poda de 30 días).
+  function actuar(fn) {
+    if (estado === "sin_marca") setCineItemEstado(item.guid, { estado: "interesa", item });
+    fn();
+  }
+  function alternar(n) {
+    setAbiertas(prev => { const s = new Set(prev); s.has(n) ? s.delete(n) : s.add(n); return s; });
+  }
+  const btnMini = (activo) => ({
+    background: "transparent", border: "1px solid " + (activo ? "#2ecc71" : "#333"), color: activo ? "#2ecc71" : "#888",
+    borderRadius: 6, padding: "3px 8px", fontSize: 10, cursor: "pointer", ...fuente,
+  });
+
+  return (
+    <div style={{ padding: "8px 10px", background: "#111", borderTop: "1px solid #1c1c1c" }}>
+      <div style={{ ...fuente, fontSize: 12, color: "#ddd", marginBottom: 4 }}>
+        📺 {vista.vistos}/{vista.emitidos} vistos
+        {" · "}
+        {vista.pendientes > 0
+          ? <span style={{ color: "#f5c518", fontWeight: 700 }}>{vista.pendientes} pendiente{vista.pendientes === 1 ? "" : "s"}</span>
+          : <span style={{ color: "#2ecc71", fontWeight: 700 }}>al día ✓</span>}
+      </div>
+      {vista.siguiente && (
+        <div style={{ ...fuente, fontSize: 11, color: "#2ecc71", marginBottom: 4 }}>
+          ▶ siguiente: T{vista.siguiente.t}·E{vista.siguiente.e}{vista.siguiente.nombre ? ` — ${vista.siguiente.nombre}` : ""}
+        </div>
+      )}
+      {vista.proximo && (
+        <div style={{ ...fuente, fontSize: 11, color: "#999", marginBottom: 4 }}>
+          📅 próximo: T{vista.proximo.t}·E{vista.proximo.e}{vista.proximo.nombre ? ` — ${vista.proximo.nombre}` : ""}
+          {diasProximo != null ? (diasProximo <= 0 ? " (hoy)" : ` (en ${diasProximo} día${diasProximo === 1 ? "" : "s"})`) : ""}
+        </div>
+      )}
+      <div style={{ maxHeight: 240, overflowY: "auto", marginTop: 6, border: "1px solid #1c1c1c", borderRadius: 8 }}>
+        {vista.temporadas.map(t => {
+          const abierta = abiertas.has(t.n);
+          const completa = t.vistos === t.total;
+          return (
+            <div key={t.n}>
+              <div onClick={() => alternar(t.n)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: "#161616", cursor: "pointer", borderBottom: "1px solid #1c1c1c" }}>
+                <span style={{ ...fuente, fontSize: 11, color: "#888", width: 10 }}>{abierta ? "▾" : "▸"}</span>
+                <span style={{ ...fuente, fontSize: 12, color: "#fff", fontWeight: 600, flex: 1 }}>
+                  Temporada {t.n}
+                  <span style={{ color: completa ? "#2ecc71" : "#888", fontWeight: 400, marginLeft: 8 }}>{t.vistos}/{t.total}</span>
+                  {t.pendientes > 0 && <span style={{ color: "#f5c518", fontWeight: 400, marginLeft: 6 }}>· {t.pendientes} pend.</span>}
+                </span>
+                <button onClick={e => { e.stopPropagation(); actuar(() => marcarTemporada(item, vista, t.n, true)); }} style={btnMini(false)} title="marcar toda la temporada (solo los emitidos)">✓ todo</button>
+                <button onClick={e => { e.stopPropagation(); actuar(() => marcarTemporada(item, vista, t.n, false)); }} style={btnMini(false)} title="desmarcar la temporada">↺ nada</button>
+              </div>
+              {abierta && t.eps.map(x => (
+                <div key={x.e} onClick={() => x.emitido && actuar(() => toggleEpisodio(item, t.n, x.e, x.visto))}
+                  style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderBottom: "1px solid #181818", cursor: x.emitido ? "pointer" : "default", opacity: x.emitido ? 1 : 0.4 }}>
+                  <span style={{
+                    width: 18, height: 18, borderRadius: 5, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                    border: "1px solid " + (x.visto ? "#2ecc71" : "#444"), background: x.visto ? "#2ecc71" : "transparent", color: "#111", fontSize: 12, fontWeight: 700,
+                  }}>{x.visto ? "✓" : ""}</span>
+                  <span style={{ ...fuente, fontSize: 11, color: "#888", width: 28, flexShrink: 0 }}>E{x.e}</span>
+                  <span style={{ ...fuente, fontSize: 12, color: x.visto ? "#777" : "#eee", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{x.nombre || `Episodio ${x.e}`}</span>
+                  {!x.emitido && <span style={{ ...fuente, fontSize: 10, color: "#888", flexShrink: 0 }}>{x.fecha ? `sale ${x.fecha}` : "sin fecha"}</span>}
+                  {x.emitido && !x.visto && (
+                    <button onClick={e => { e.stopPropagation(); actuar(() => marcarHastaAca(item, vista, t.n, x.e)); }} style={btnMini(false)} title="marcar como visto todo lo anterior y este">⤓ hasta acá</button>
+                  )}
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions, onExportImage }) {
   const cineEstado = useCineEstadoMap();
   const estadoItem = cineEstado[item.guid];
@@ -411,7 +503,7 @@ export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategor
               donde no aplica). Días para próximo episodio/temporada:
               dato que ya se traía (nextEpisodeDate), nunca se mostraba. */}
           {!reviewOpen && item.categoria === "Series" && (
-            <SeriesProgreso item={item} progresoActual={progresoActual} onMarcar={marcarProgreso} />
+            <SeriesSeguimiento item={item} progresoActual={progresoActual} onMarcar={marcarProgreso} />
           )}
           <div style={{ display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" }}>
             <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>anterior</button>
@@ -518,6 +610,7 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
   function step(dir) { animateTo(Math.round(posRef.current) + dir); }
 
   const cineEstado = useCineEstadoMap();
+  const pendientesDe = usePendientesDe();
   // Las marcadas "interesa" llevan copia completa del item justamente para
   // sobrevivir a la poda de 30 días de build-cine.mjs (que no sabe nada de
   // este estado) — si build-cine ya la sacó de `items`, la reinyectamos acá
@@ -860,6 +953,10 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
                 {temporada && (
                   <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#999", borderLeft: "1px solid #444", paddingLeft: 6 }}>{temporada}</span>
                 )}
+                {(() => {
+                  const pend = pendientesDe(item.guid);
+                  return pend ? <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#f5c518", borderLeft: "1px solid #444", paddingLeft: 6 }}>🎞 {pend} pend.</span> : null;
+                })()}
               </div>
               {/* minHeight fijo -- antes esta fila desaparecía del todo
                   cuando el ítem no tenía badge de estado, y eso corría

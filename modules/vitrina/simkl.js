@@ -1,3 +1,5 @@
+import { mergeEpisodeOps, opsVacias } from "../shared/episodios.js";
+
 const { useState, useEffect, useRef } = React;
 
 
@@ -43,7 +45,7 @@ export function useSimklDiscovery() {
 // se commitea, nunca sale en el export/import de Angst.
 const SIMKL_PENDING_KEY = "angst-simkl-pending-v1";
 const SIMKL_AUTH_KEY = "angst-simkl-auth-v1";
-const WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
+export const WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
 const SIMKL_ESTADO_TO_STATUS = { interesa: "plantowatch", vista: "completed", descartada: "dropped" };
 
 // Reactivo -- sin esto, conectar (o que el flush cambie de estado) no
@@ -66,7 +68,7 @@ export function useSimklSyncStatus() {
   return s;
 }
 
-function getSimklAuth() {
+export function getSimklAuth() {
   try { return localStorage.getItem(SIMKL_AUTH_KEY) || null; } catch (e) { return null; }
 }
 export function pedirSimklAuth() {
@@ -103,12 +105,31 @@ export function enqueueSimklAction(item, estadoLocal, progreso) {
   const pending = loadSimklPending();
   // Reemplaza cualquier acción pendiente anterior del mismo ítem -- no
   // tiene sentido mandar dos veces, gana la más reciente.
-  const filtered = pending.filter(a => !(a.tmdbId === parsed.tmdbId && a.tipo === parsed.tipo));
+  const filtered = pending.filter(a => !(a.kind !== "episodios" && a.tmdbId === parsed.tmdbId && a.tipo === parsed.tipo));
   const accion = { tmdbId: parsed.tmdbId, tipo: parsed.tipo, status, title: item.title, year, creadoEn: new Date().toISOString() };
   if (progreso) accion.progreso = progreso; // {temporada, episodio} -- build-simkl.mjs marca visto hasta ahí
   filtered.push(accion);
   saveSimklPending(filtered);
   flushSimklQueue(); // best effort, no bloquea la UI -- si falla, la cola queda para el próximo intento
+}
+// Marcado episodio por episodio (issue #13). ops = { marcar: [[t,e],...], desmarcar: [[t,e],...] }.
+// A diferencia de las acciones de estado (gana la última), las de episodios
+// se ACUMULAN por serie: marcar tres episodios seguidos antes de que corra la
+// sincronización tiene que terminar en tres marcas, no en una.
+export function enqueueEpisodiosAction(item, ops) {
+  const parsed = parseTmdbGuid(item?.guid);
+  if (!parsed || parsed.tipo !== "show" || opsVacias(ops)) return false;
+  const year = item.pubDate ? new Date(item.pubDate).getFullYear() : undefined;
+  const pending = loadSimklPending();
+  const previa = pending.find(a => a.kind === "episodios" && a.tmdbId === parsed.tmdbId);
+  const fusion = mergeEpisodeOps(previa, ops);
+  const resto = pending.filter(a => !(a.kind === "episodios" && a.tmdbId === parsed.tmdbId));
+  if (!opsVacias(fusion)) {
+    resto.push({ kind: "episodios", tipo: "show", tmdbId: parsed.tmdbId, title: item.title, year, marcar: fusion.marcar, desmarcar: fusion.desmarcar, creadoEn: new Date().toISOString() });
+  }
+  saveSimklPending(resto);
+  flushSimklQueue();
+  return true;
 }
 let simklFlushInFlight = false;
 export async function flushSimklQueue() {
@@ -127,8 +148,18 @@ export async function flushSimklQueue() {
     const remote = await getResp.json();
     if (remote.found === false) { setSimklSyncStatus({ estado: "error", ultimoError: "simkl-state.json no existe todavía" }); return; }
     const remotePending = remote.pendingActions || [];
-    const remoteKeys = new Set(remotePending.map(a => `${a.tipo}-${a.tmdbId}`));
-    const merged = [...remotePending, ...pending.filter(a => !remoteKeys.has(`${a.tipo}-${a.tmdbId}`))];
+    const keyOf = a => a.kind === "episodios" ? `ep-${a.tmdbId}` : `${a.tipo}-${a.tmdbId}`;
+    const merged = [...remotePending];
+    for (const a of pending) {
+      const i = merged.findIndex(r => keyOf(r) === keyOf(a));
+      if (i === -1) merged.push(a);
+      else if (a.kind === "episodios") {
+        // La remota todavía no la consumió build-simkl: se fusionan, gana lo más nuevo.
+        const ops = mergeEpisodeOps(merged[i], a);
+        merged[i] = { ...merged[i], ...a, marcar: ops.marcar, desmarcar: ops.desmarcar };
+      }
+      // Acciones de estado: se mantiene el comportamiento anterior (gana la remota).
+    }
     remote.pendingActions = merged;
     const postResp = await fetch(WORKER_URL, {
       method: "POST",

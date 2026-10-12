@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { encodeRangos, decodeRangos, epMapToSet, setToEpMap, parseSxxExx, mergeEpisodeOps, applyOps, agruparPorTemporada, keyEp } from "../modules/shared/episodios.js";
+import { armarVista, encodeRangos, decodeRangos, epMapToSet, setToEpMap, parseSxxExx, mergeEpisodeOps, applyOps, agruparPorTemporada, keyEp } from "../modules/shared/episodios.js";
 
 assert.equal(encodeRangos([1,2,3,5,7,8,10]), "1-3,5,7-8,10");
 assert.equal(encodeRangos([3,1,2,2,"4"]), "1-4");
@@ -30,4 +30,22 @@ assert.deepEqual([...aplicado].sort(), ["1-2","1-5"]);
 assert.deepEqual(agruparPorTemporada([[2,3],[1,1],[1,2],[2,1],[1,1]]),
   [{ number: 1, episodes: [{number:1},{number:2}] }, { number: 2, episodes: [{number:1},{number:3}] }]);
 assert.equal(keyEp(3, 4), "3-4");
+
+// armarVista
+const entry = { ep: { "1": "1-2" }, temporadas: [
+  { n: 2, eps: [[1, "c", "2020-03-01"], [2, "d", "2099-01-01"]] },
+  { n: 1, eps: [[1, "a", "2020-01-01"], [2, "b", "2020-01-08"], [3, "x", "2020-01-15"]] },
+] };
+let v = armarVista(entry, {}, "2026-10-12");
+assert.deepEqual(v.temporadas.map(t => t.n), [1, 2]);            // ordena por temporada
+assert.equal(v.total, 5); assert.equal(v.emitidos, 4); assert.equal(v.vistos, 2);
+assert.equal(v.pendientes, 2);                                    // T1E3 y T2E1 (T2E2 no salió)
+assert.deepEqual(v.siguiente, { t: 1, e: 3, nombre: "x", fecha: "2020-01-15" });
+assert.equal(v.proximo.t, 2); assert.equal(v.proximo.e, 2);
+assert.equal(v.temporadas[0].pendientes, 1); assert.equal(v.temporadas[0].vistos, 2);
+// overlay: marcar T1E3 y desmarcar T1E1
+v = armarVista(entry, { "1-3": { v: true }, "1-1": { v: false } }, "2026-10-12");
+assert.equal(v.vistos, 2); assert.equal(v.pendientes, 2);
+assert.deepEqual(v.siguiente && [v.siguiente.t, v.siguiente.e], [1, 1]);
+assert.equal(armarVista({ ep: {}, temporadas: [] }, null, "2026-10-12").total, 0);
 console.log("episodios.mjs OK");

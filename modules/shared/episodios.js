@@ -100,3 +100,41 @@ export function agruparPorTemporada(pares) {
     episodes: [...new Set(es)].sort((x, y) => x - y).map(n => ({ number: n })),
   }));
 }
+
+// Vista lista para pintar de UNA serie a partir de su entrada en
+// series-episodios.json.
+//   entry:       { temporadas: [{ n, eps: [[numero, nombre, fecha], ...] }], ep: { "1": "1-13" }, ... }
+//   overlayShow: marcas locales todavía no reflejadas por Simkl: { "t-e": { v: bool, ts } }
+//   hoyISO:      "YYYY-MM-DD" -- un episodio cuenta como emitido si su fecha es <= hoy
+// "pendientes" = emitidos y no vistos (los que todavía no salieron no cuentan).
+export function armarVista(entry, overlayShow, hoyISO) {
+  const vistos = epMapToSet(entry.ep);
+  for (const [k, o] of Object.entries(overlayShow || {})) {
+    if (o && o.v) vistos.add(k); else vistos.delete(k);
+  }
+  let total = 0, emitidos = 0, vistosCount = 0, pendientes = 0;
+  let siguiente = null, proximo = null;
+  const temporadas = [...(entry.temporadas || [])].sort((a, b) => a.n - b.n).map(t => {
+    const eps = t.eps.map(([e, nombre, fecha]) => {
+      const visto = vistos.has(keyEp(t.n, e));
+      const emitido = !!fecha && fecha <= hoyISO;
+      total++;
+      if (emitido) emitidos++;
+      if (visto) vistosCount++;
+      if (emitido && !visto) {
+        pendientes++;
+        if (!siguiente) siguiente = { t: t.n, e, nombre, fecha };
+      }
+      if (!emitido && !proximo) proximo = { t: t.n, e, nombre, fecha };
+      return { e, nombre, fecha, visto, emitido };
+    });
+    return {
+      n: t.n,
+      eps,
+      total: eps.length,
+      vistos: eps.filter(x => x.visto).length,
+      pendientes: eps.filter(x => x.emitido && !x.visto).length,
+    };
+  });
+  return { temporadas, total, emitidos, vistos: vistosCount, pendientes, siguiente, proximo };
+}
