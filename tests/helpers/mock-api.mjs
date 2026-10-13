@@ -9,7 +9,10 @@ const BD = [];
 BD.push(carta("t-alp-1", "Foo", "001/003", "alp", "Alpha", "ALP", 1.5), carta("t-alp-2", "Bar", "002/003", "alp", "Alpha", "ALP", 2.5), carta("t-alp-3", "Baz", "003/003", "alp", "Alpha", "ALP", null));
 for (let i = 1; i <= 130; i++) BD.push(carta("t-bet-" + i, "Card" + i, `${String(i).padStart(3, "0")}/130`, "bet", "Beta", "BET", i / 10));
 BD.push(carta("t-ov-9", "Weird Name ex", "009/050", "gam", "Gamma", "GAM", 7));
-const resp = body => ({ ok: true, status: 200, headers: { get: () => null, forEach: () => {} }, json: async () => body, text: async () => JSON.stringify(body) });
+BD.push(carta("t-sol-5", "Solo", "005/100", "del", "Delta Species", "DEL", 3.3), carta("t-sol2-5", "Solo", "005/100", "del2", "Otro Set", "DE2", 9));
+BD.push(carta("t-par-6", "Par", "006/100", "del", "Delta Species", "DEL", 4.4)); // se cosecha en la búsqueda de "Solo 5"? no: solo aparece si el nombre coincide
+const headersMock = { "x-ratelimit-remaining": process.env.MOCK_REMAINING || "90" };
+const resp = body => ({ ok: true, status: 200, headers: { get: k => headersMock[k.toLowerCase()] ?? null, forEach: f => Object.entries(headersMock).forEach(([k, v]) => f(v, k)) }, json: async () => body, text: async () => JSON.stringify(body) });
 const err = status => ({ ok: false, status, headers: { get: () => null, forEach: () => {} }, json: async () => ({}), text: async () => "err" });
 globalThis.fetch = async (url) => {
   const u = new URL(url);
@@ -18,8 +21,13 @@ globalThis.fetch = async (url) => {
     if (ids) { log("BATCH " + ids.split(",").length); return resp({ data: BD.filter(c => ids.split(",").includes(c.id)) }); }
     log(`SEARCH q=${q} page=${page}`);
     const qn = q.toLowerCase();
-    let hits = BD.filter(c => c.set.name.toLowerCase() === qn);
-    if (!hits.length) hits = BD.filter(c => (c.name + " " + c.number).toLowerCase().includes(qn.split(" ")[0]));
+    const m = qn.match(/^(.*) (\d+)$/);
+    if (m) { // "Nombre Número": como la búsqueda real, trae TODAS las cartas con ese nombre (varios sets) y rellena con parecidas
+      const hits = BD.filter(c => c.name.toLowerCase() === m[1]);
+      return resp({ data: hits.slice(0, 100) });
+    }
+    if (process.env.MOCK_NO_SETSEARCH) return resp({ data: [] });
+    const hits = BD.filter(c => c.set.name.toLowerCase() === qn);
     return resp({ data: hits.slice((page - 1) * 100, page * 100) });
   }
   if (u.hostname === "api.pokemontcg.io") {

@@ -1,6 +1,6 @@
 // Pruebas de la lógica pura de descubrimiento y de la cola pending. Correr: node tests/pokecripto-descubrimiento.mjs
 import assert from "node:assert/strict";
-import { emparejarTcgId, asignarTcgIds, agruparPorSet, paginasNecesarias, debeSaltarse, actualizarEstadoSet, presupuestoDescubrimiento, sumarDias } from "../modules/pokecripto/lib/discovery.mjs";
+import { cupoRestante, diagnosticarSet, emparejarTcgId, asignarTcgIds, agruparPorSet, paginasNecesarias, debeSaltarse, actualizarEstadoSet, presupuestoDescubrimiento, sumarDias } from "../modules/pokecripto/lib/discovery.mjs";
 import { fusionarPending, pendingRestante, unirHistorial, mergePreciosBot, prioridadCarta } from "../modules/pokecripto/lib/review.mjs";
 import { addSnapshot, fuenteCompatible } from "../modules/pokecripto/lib/pricing.mjs";
 
@@ -13,16 +13,18 @@ t("emparejarTcgId: número + set + nombre; el número llega como 116/084", () =>
   const m = emparejarTcgId(carta("1", "Mega Darkrai ex", "116", "Phantasmal Flames", "me2"), [r("x", "Mega Darkrai ex - 116/084", "116/084", "me2", "Phantasmal Flames", "PFL")]);
   assert.equal(m?.tcgId, "x");
 });
-t("emparejarTcgId: otro set con mismo nombre y número NO empareja", () => {
-  assert.equal(emparejarTcgId(carta("1", "Pikachu", "25", "Celebrations", "cel25"), [r("x", "Pikachu", "25", "base1", "Base Set", "BS")]), null);
+t("emparejarTcgId: tcgpricelookup nombra el set distinto (nombre y código): igual empareja por nombre + número si es único", () => {
+  const m = emparejarTcgId(carta("1", "Iono", "185", "Paldea Evolved", "sv2"), [r("x", "Iono", "185/193", "paldea-evolved", "SV02: Paldea Evolved", "PAL")]);
+  assert.equal(m?.tcgId, "x");
 });
-t("emparejarTcgId: un resultado sin ningún dato de set no se acepta (en búsqueda por set no hay con qué contrastar)", () => {
-  assert.equal(emparejarTcgId(carta("1", "Foo", "1", "Alpha", "alp"), [r("x", "Foo", "1", null, null, null)]), null);
+t("emparejarTcgId: reimpresión en dos sets -> gana el set que coincide; si ninguno coincide, no se arriesga", () => {
+  const dos = [r("a", "Pikachu", "25", "cel25", "Celebrations", "CEL"), r("b", "Pikachu", "25", "otro", "Otro Set", "OT")];
+  assert.equal(emparejarTcgId(carta("1", "Pikachu", "25", "Celebrations", "cel25"), dos)?.tcgId, "a");
+  assert.equal(emparejarTcgId(carta("1", "Pikachu", "25", "Set Raro", "raro"), dos), null);
 });
-t("emparejarTcgId: dos candidatos válidos -> solo el de nombre idéntico y único; si no, ninguno", () => {
-  const cs = [r("a", "Foo ex", "1", "alp", "Alpha", "ALP"), r("b", "Foo", "1", "alp", "Alpha", "ALP")];
-  assert.equal(emparejarTcgId(carta("1", "Foo", "1", "Alpha", "alp"), cs)?.tcgId, "b");
-  assert.equal(emparejarTcgId(carta("1", "Fo", "1", "Alpha", "alp"), [r("a", "Fo ex", "1", "alp", "Alpha", "ALP"), r("b", "Fo V", "1", "alp", "Alpha", "ALP")]), null);
+t("emparejarTcgId: nombre distinto o número distinto no empareja (ni 'Foo ex' por 'Foo')", () => {
+  assert.equal(emparejarTcgId(carta("1", "Foo", "1", "Alpha", "alp"), [r("a", "Foo ex", "1", "alp", "Alpha", "ALP")]), null);
+  assert.equal(emparejarTcgId(carta("1", "Foo", "1", "Alpha", "alp"), [r("a", "Foo", "2", "alp", "Alpha", "ALP")]), null);
 });
 t("emparejarTcgId: la designación manual manda sobre el nombre de la carta", () => {
   const c = carta("1", "Distinto", "9", "Gamma", "gam", { tcgOverride: { name: "Weird Name ex", number: "009/050", setId: "gam", setCode: "GAM" } });
@@ -82,6 +84,13 @@ t("addSnapshot con fuente y fuenteCompatible", () => {
   assert.equal(addSnapshot([], 1, 0, 2, "2026-10-12", "tpl")[0].src, "tpl");
   assert.equal(addSnapshot([], 1, 0, 2, "2026-10-12")[0].src, undefined);
   assert.ok(fuenteCompatible({}, { src: "tpl" })); assert.ok(fuenteCompatible({ src: "tpl" }, { src: "tpl" })); assert.ok(!fuenteCompatible({ src: "tpl" }, { src: "ptcg" }));
+});
+t("cupoRestante: lee x-ratelimit-remaining y devuelve null si no hay cabeceras", () => {
+  assert.equal(cupoRestante({ "x-ratelimit-remaining": "42" }), 42); assert.equal(cupoRestante({}), null); assert.equal(cupoRestante({ "x-ratelimit-reset": "9" }), null);
+});
+t("diagnosticarSet: resume la respuesta y explica el emparejamiento de las primeras cartas", () => {
+  const d = diagnosticarSet({ set: "Alpha", cartas: [carta("1", "Foo", "1", "Alpha", "alp")] }, { ok: true, status: 200, cards: [r("a", "Foo", "1", "alp", "Alpha", "ALP")] });
+  assert.equal(d.resultados, 1); assert.equal(d.cartas[0].emparejada, true); assert.equal(d.setsEnRespuesta.length, 1);
 });
 t("prioridadCarta: Price Watch primero", () => { assert.ok(prioridadCarta({ carpeta: "Price Watch" }) < prioridadCarta({ carpeta: "MLP" })); });
 console.log(`\n${n} pruebas en verde`);

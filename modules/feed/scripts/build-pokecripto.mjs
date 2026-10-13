@@ -26,7 +26,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { refreshPrecio, fetchTCGBatch, addSnapshot } from "../../pokecripto/lib/pricing.mjs";
 import { aplicarOverrides, normalizarOverridesRemotos, fusionarPending, prioridadCarta } from "../../pokecripto/lib/review.mjs";
-import { fetchTCGPagina, asignarTcgIds, agruparPorSet, paginasNecesarias, debeSaltarse, actualizarEstadoSet, presupuestoDescubrimiento, POR_PAGINA } from "../../pokecripto/lib/discovery.mjs";
+import { fetchTCGPagina, asignarTcgIds, agruparPorSet, paginasNecesarias, debeSaltarse, actualizarEstadoSet, presupuestoDescubrimiento, sumarDias, cupoRestante, diagnosticarSet, POR_PAGINA } from "../../pokecripto/lib/discovery.mjs";
 
 const INVENTARIO_PATH = process.env.POKECRIPTO_INVENTARIO_PATH;
 const PENDING_PATH = process.env.POKECRIPTO_PENDING_PATH;
@@ -50,6 +50,7 @@ const DESCUBRIMIENTO_PAGINAS = 4; // páginas máximas por set (4 x 100 = 400 ca
 const RESERVA_INDIVIDUAL = 8;     // consultas que se guardan para búsquedas carta por carta
 const POKE_THROTTLE_MS = Number(process.env.POKECRIPTO_THROTTLE_MS ?? 3200);
 const GUARDAR_CADA = 25;
+const CUPO_MANUAL = 10;           // si la API dice que quedan <=10 consultas reales, el bot se detiene (son para el uso manual)
 const SIN_MATCH_PARA_APAGAR = 3;  // sets consecutivos sin ni un match => se apaga el descubrimiento esta corrida
 
 if (!INVENTARIO_PATH || !PENDING_PATH) {
@@ -95,7 +96,13 @@ async function main() {
   const porId = new Map(base.map(c => [c.id, c]));
   const tcgIdDe = c => parches.get(c.id)?.tcgId || c.tcgId || null;
   const activas = base.filter(c => c.estado !== "vendida");
-  let tcgUsadas = 0, okCount = 0, failCount = 0;
+  // Cupo: el contador es POR DÍA (UTC), no por corrida, así dos corridas el mismo día (la programada + una manual) no
+  // se pasan del cupo real; además se lee el cupo que reporta la API en las cabeceras cuando las manda.
+  let tcgUsadas = estado.cupoDia && estado.cupoDia.fecha === hoy ? (estado.cupoDia.usadas || 0) : 0;
+  let restanteReal = null, okCount = 0, failCount = 0;
+  const registrarCupo = rate => { const v = cupoRestante(rate); if (v != null) restanteReal = v; };
+  const hayCupo = () => tcgUsadas < RESERVA_TCG_DIARIA && (restanteReal == null || restanteReal > CUPO_MANUAL);
+  console.log(`Cupo: ${tcgUsadas} consulta(s) ya usadas hoy (tope propio ${RESERVA_TCG_DIARIA})`);
 
   // Antigüedad = lo más reciente entre el último precio y el último INTENTO (tcgIntento): una carta que falla no se
   // queda al frente de la cola gastando cupo todos los días. Price Watch siempre primero.
@@ -110,8 +117,9 @@ async function main() {
     if (ESTADO_PATH) {
       const act = inv.filter(c => c.estado !== "vendida");
       const ayer = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      estado.cupoDia = { fecha: hoy, usadas: tcgUsadas };
       estado.ultimaCorrida = {
-        ...resumen, fecha: hoy, guardadoPor: motivo,
+        ...resumen, fecha: hoy, guardadoPor: motivo, cupoRestanteApi: restanteReal,
         activas: act.length,
         conTcgId: act.filter(c => c.tcgId).length,
         sinPrecio: act.filter(c => !c.tcgMarket).length,
@@ -131,20 +139,25 @@ async function main() {
   // ── 1. DESCUBRIMIENTO de tcgId por set ────────────────────────────────
   const sinTcgId = activas.filter(c => !tcgIdDe(c));
   const presupuestoDesc = TCG_API_KEY ? presupuestoDescubrimiento({
-    reserva: RESERVA_TCG_DIARIA, cartasConTcgId: activas.length - sinTcgId.length, batchTam: BATCH_TAMANO,
+    reserva: Math.max(0, RESERVA_TCG_DIARIA - tcgUsadas), cartasConTcgId: activas.length - sinTcgId.length, batchTam: BATCH_TAMANO,
     batchMax: BATCH_MAX_LLAMADAS, reservaIndividual: RESERVA_INDIVIDUAL, tope: DESCUBRIMIENTO_TOPE, sinTcgId: sinTcgId.length,
   }) : 0;
   let descLlamadas = 0, descEncontradas = 0, descConPrecio = 0, setsProbados = 0, setsSinMatchSeguidos = 0, descActivo = presupuestoDesc > 0;
+  if (estado.descubrimientoSetApagadoHasta && hoy < estado.descubrimientoSetApagadoHasta) {
+    console.log(`ℹ Descubrimiento por set apagado hasta ${estado.descubrimientoSetApagadoHasta} (no emparejó nada la última vez); la búsqueda carta por carta cosecha ids igual`);
+    descActivo = false;
+  }
   const grupos = agruparPorSet(sinTcgId).filter(g => !debeSaltarse(estado.sets[g.clave], hoy));
   console.log(`Descubrimiento: ${sinTcgId.length} carta(s) sin tcgId en ${grupos.length} set(s) elegibles; presupuesto ${presupuestoDesc} consulta(s)`);
   for (const g of grupos) {
-    if (!descActivo || descLlamadas >= presupuestoDesc) break;
+    if (!descActivo || descLlamadas >= presupuestoDesc || !hayCupo()) break;
     const vistos = new Set();
     let encontradasSet = 0;
     const maxPag = paginasNecesarias(g, DESCUBRIMIENTO_PAGINAS);
     for (let page = 1; page <= maxPag && descLlamadas < presupuestoDesc; page++) {
       const r = await fetchTCGPagina(g.set, TCG_API_KEY, page);
-      descLlamadas++; tcgUsadas++;
+      descLlamadas++; tcgUsadas++; registrarCupo(r.rate);
+      if (descLlamadas === 1) estado.diagnosticoDescubrimiento = { fecha: hoy, ...diagnosticarSet(g, r) };
       if (!r.ok) {
         console.log(`✗ Descubrimiento "${g.set}" p${page}: ${r.error}`);
         if ([401, 402, 403].includes(r.status)) descActivo = false; // credencial o plan: no seguir gastando
@@ -170,10 +183,12 @@ async function main() {
     setsProbados++;
     setsSinMatchSeguidos = encontradasSet === 0 ? setsSinMatchSeguidos + 1 : 0;
     if (descEncontradas === 0 && setsSinMatchSeguidos >= SIN_MATCH_PARA_APAGAR) {
-      console.log(`⚠ ${SIN_MATCH_PARA_APAGAR} sets seguidos sin ningún match: se apaga el descubrimiento en esta corrida (revisar si la búsqueda por set funciona como se supone)`);
+      console.log(`⚠ ${SIN_MATCH_PARA_APAGAR} sets seguidos sin ningún match: se apaga el descubrimiento por set 7 días (ver diagnosticoDescubrimiento en pokecripto-estado.json)`);
+      estado.descubrimientoSetApagadoHasta = sumarDias(hoy, 7);
       descActivo = false;
     }
   }
+  if (descEncontradas > 0) delete estado.descubrimientoSetApagadoHasta;
   console.log(`✓ Descubrimiento: ${descEncontradas} tcgId nuevo(s) (${descConPrecio} con precio) en ${descLlamadas} consulta(s), ${setsProbados} set(s)`);
   resumen.descubrimiento = { llamadas: descLlamadas, tcgIdNuevos: descEncontradas, conPrecio: descConPrecio, sets: setsProbados };
   guardar("descubrimiento");
@@ -182,10 +197,10 @@ async function main() {
   const conTcgId = activas.filter(c => tcgIdDe(c) && !actualizadas.has(c.id)).sort(porPrioridadYEdad);
   let batchLlamadas = 0, batchOk = 0, batchSinPrecio = 0, batchActivo = !!TCG_API_KEY && conTcgId.length > 0;
   console.log(`Por lote: ${conTcgId.length} carta(s) con tcgId (${Math.ceil(conTcgId.length / BATCH_TAMANO)} consulta(s) para todas, tope ${BATCH_MAX_LLAMADAS})`);
-  for (let i = 0; batchActivo && i < conTcgId.length && batchLlamadas < BATCH_MAX_LLAMADAS && tcgUsadas < RESERVA_TCG_DIARIA; i += BATCH_TAMANO) {
+  for (let i = 0; batchActivo && i < conTcgId.length && batchLlamadas < BATCH_MAX_LLAMADAS && hayCupo(); i += BATCH_TAMANO) {
     const grupo = conTcgId.slice(i, i + BATCH_TAMANO);
     const r = await fetchTCGBatch(grupo.map(tcgIdDe), TCG_API_KEY);
-    batchLlamadas++; tcgUsadas++;
+    batchLlamadas++; tcgUsadas++; registrarCupo(r.rate);
     if (batchLlamadas === 1) console.log(`ℹ Primera consulta por lote: HTTP ${r.status}${r.ok ? "" : " " + r.error} | cabeceras de cupo: ${JSON.stringify(r.rate || {})}`);
     if (!r.ok) { console.log(`✗ Por lote falló (${r.error}); se sigue carta por carta`); batchActivo = false; break; }
     for (const carta of grupo) {
@@ -202,30 +217,48 @@ async function main() {
   guardar("lotes");
 
   // ── 3. ROTACIÓN individual: lo que sigue sin precio de hoy ──────────────
+  // Para una carta SIN tcgId el orden es: (1) búsqueda en tcgpricelookup "nombre número" mientras quede cupo --da el
+  // tcgId (la carta pasa a lotes de 20 desde mañana) y el precio, y de paso se cosechan los ids de OTRAS cartas del
+  // inventario que aparezcan en los mismos 100 resultados; (2) pokemontcg.io (gratis) si eso no resolvió la carta.
+  // Antes el orden era al revés: lo que pokemontcg.io lograba preciar nunca recibía tcgId y se quedaba para siempre en
+  // la rotación individual (un ciclo de ~13 días).
   const candidatas = activas
     .filter(c => (c.cardId || c.name) && !actualizadas.has(c.id))
     .sort(porPrioridadYEdad)
     .slice(0, CARTAS_POR_CORRIDA);
   console.log(`Procesando ${candidatas.length} carta(s) por búsqueda individual (de ${activas.length} activas)...`);
+  let ultimoPtcg = 0, cosechadas = 0, busquedasTcg = 0;
+  const esperarPtcg = async () => { const falta = ultimoPtcg + POKE_THROTTLE_MS - Date.now(); if (falta > 0) await sleep(falta); ultimoPtcg = Date.now(); };
   for (let i = 0; i < candidatas.length; i++) {
     const carta = candidatas[i];
-    if (i > 0) await sleep(POKE_THROTTLE_MS);
+    if (actualizadas.has(carta.id)) continue; // ya resuelta como cosecha de una búsqueda anterior
     try {
-      // El respaldo de tcgpricelookup solo para cartas SIN tcgId (una con tcgId ya se pidió por lote) y mientras
-      // quede cupo real en este momento.
       const sinId = !tcgIdDe(carta);
-      const permitirFallback = sinId && tcgUsadas < RESERVA_TCG_DIARIA;
-      const r = await refreshPrecio(carta, TCG_API_KEY, permitirFallback);
-      if (r.usoTcg) tcgUsadas++;
+      let busquedaTcgHecha = false;
+      if (sinId && TCG_API_KEY && hayCupo()) {
+        const ov = carta.tcgOverride;
+        const q = ov ? `${ov.name} ${ov.number}` : (carta.number ? `${carta.name} ${carta.number}` : carta.name);
+        const r = await fetchTCGPagina(q, TCG_API_KEY, 1);
+        tcgUsadas++; busquedasTcg++; busquedaTcgHecha = r.ok; registrarCupo(r.rate);
+        if (r.ok) {
+          for (const [id, m] of asignarTcgIds(activas.filter(c => !tcgIdDe(c)), r.cards)) {
+            parches.set(id, { tcgId: m.tcgId });
+            if (id !== carta.id) cosechadas++;
+            if (m.market && !actualizadas.has(id)) { actualizadas.set(id, snapshotDe(porId.get(id), m, "tpl")); okCount++; }
+          }
+          if (actualizadas.has(carta.id)) { console.log(`✓ (${i + 1}/${candidatas.length}) ${carta.name}: $${actualizadas.get(carta.id).tcgMarket} (tcgpricelookup, tcgId guardado)`); continue; }
+        } else console.log(`✗ (${i + 1}/${candidatas.length}) ${carta.name}: búsqueda tcgpricelookup ${r.error}`);
+      }
+      await esperarPtcg();
+      const r = await refreshPrecio(carta, TCG_API_KEY, false); // el respaldo de tcgpricelookup ya se intentó arriba
       if (r.market == null) {
-        console.log(sinId && !permitirFallback
-          ? `⏭ (${i + 1}/${candidatas.length}) ${carta.name}: cupo de tcgpricelookup.com agotado por hoy, se pospone`
-          : `✗ (${i + 1}/${candidatas.length}) ${carta.name}: sin precio de ninguna fuente`);
+        console.log(`✗ (${i + 1}/${candidatas.length}) ${carta.name}: sin precio de ninguna fuente`);
         failCount++;
-        if (permitirFallback || !sinId || !TCG_API_KEY) actualizadas.set(carta.id, { tcgIntento: hoy }); // intentada de verdad: pasa al final de la cola
+        // intentada de verdad (búsqueda hecha, o tiene tcgId, o no hay key): pasa al final de la cola. Si solo falta cupo, se pospone.
+        if (busquedaTcgHecha || !sinId || !TCG_API_KEY) actualizadas.set(carta.id, { tcgIntento: hoy });
       } else {
         console.log(`✓ (${i + 1}/${candidatas.length}) ${carta.name}: $${r.market} (${r.fuente})`);
-        actualizadas.set(carta.id, { ...snapshotDe(carta, r, r.src), ...(r.tcgId && r.tcgId !== tcgIdDe(carta) ? { tcgId: r.tcgId } : {}) });
+        actualizadas.set(carta.id, snapshotDe(carta, r, r.src));
         okCount++;
       }
     } catch (e) {
@@ -235,7 +268,7 @@ async function main() {
     if ((i + 1) % GUARDAR_CADA === 0) guardar("rotacion");
   }
 
-  resumen.rotacion = { candidatas: candidatas.length };
+  resumen.rotacion = { candidatas: candidatas.length, busquedasTcg, idsCosechadosDeOtras: cosechadas };
   resumen.snapshots = okCount; resumen.fallos = failCount; resumen.consultasTcg = tcgUsadas;
   guardar("final");
   const fin = aplicado().filter(c => c.estado !== "vendida");

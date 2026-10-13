@@ -11,7 +11,7 @@
 // nuevos se corta sola, y si las primeras consultas no emparejan nada el bot desactiva el descubrimiento
 // en esa corrida (ver build-pokecripto.mjs). Todo queda en el log.
 import { normNum, normName, TCG_BASE } from "./pricing.mjs";
-import { mismoSet, normSet, nombresCompatibles } from "./review.mjs";
+import { mismoSet, normSet } from "./review.mjs";
 
 export const POR_PAGINA = 100;
 
@@ -39,33 +39,37 @@ export async function fetchTCGPagina(q, apiKey, page = 1) {
       await new Promise(res => setTimeout(res, Number.isFinite(ra) ? ra * 1000 : 2000 * Math.pow(2, intento)));
       intento++;
     }
-    if (!r.ok) return { ok: false, status: r.status, error: `HTTP ${r.status}`, cards: [] };
+    const rate = {};
+    try { r.headers.forEach((v, k) => { if (/rate|limit|quota|remaining|reset/i.test(k)) rate[k] = v; }); } catch (e) { /* sin cabeceras */ }
+    if (!r.ok) return { ok: false, status: r.status, error: `HTTP ${r.status}`, cards: [], rate };
     const data = await r.json();
-    return { ok: true, status: r.status, cards: (data.data || []).map(normalizarResultado).filter(c => c.tcgId) };
+    return { ok: true, status: r.status, rate, cards: (data.data || []).map(normalizarResultado).filter(c => c.tcgId) };
   } catch (e) { return { ok: false, status: 0, error: e.message, cards: [] }; }
 }
 
 // ── Emparejar una carta del inventario con un resultado de la API ───────────────
-// Estricto: número igual + set coincidente (código o nombre normalizado) + nombre compatible. Sin datos de
-// set en el resultado NO se empareja (en una búsqueda por set no hay con qué contrastar). Si la carta tiene una
-// designación manual (tcgOverride, que ya es el candidato exacto elegido a mano en esa API), se empareja por
-// ESA designación: nombre y número tal cual los devuelve la API, y el id/código de set guardado.
+// MISMA exigencia que la búsqueda carta por carta que ya funcionaba (fetchTCGPriceDiag): nombre normalizado IGUAL +
+// número normalizado igual. Si hay varios así (reimpresiones), se prefiere el del mismo set (por código o por
+// nombre); si ni así queda uno solo, no se empareja. La primera versión de esto (12-oct-2026) exigía además que el
+// set coincidiera por nombre/código, pero tcgpricelookup.com nombra los sets distinto que pokemontcg.io y no
+// emparejó NINGUNA carta en producción. Con designación manual (tcgOverride) se usa el nombre/número de la
+// designación, que ya es tal como los devuelve esa API, y su id de set si lo tiene.
 export function emparejarTcgId(carta, resultados) {
-  const ov = carta?.tcgOverride;
   const lista = resultados || [];
+  const ov = carta?.tcgOverride;
+  const nn = normName(ov ? ov.name : carta?.name), num = normNum(ov ? ov.number : carta?.number);
+  if (!nn || !num) return null;
+  const base = lista.filter(c => c.tcgId && normNum(c.number) === num && normName(c.name) === nn);
+  if (!base.length) return null;
   if (ov) {
-    const on = normNum(ov.number), nn = normName(ov.name);
-    const ok = lista.filter(c => normNum(c.number) === on && normName(c.name) === nn &&
-      (!(ov.setId || ov.setCode) || [c.setId, c.setCode].filter(Boolean).some(x => [ov.setId, ov.setCode].filter(Boolean).some(y => String(x).toLowerCase() === String(y).toLowerCase()))));
+    const ids = [ov.setId, ov.setCode].filter(Boolean).map(x => String(x).toLowerCase());
+    if (!ids.length) return base.length === 1 ? base[0] : null;
+    const ok = base.filter(c => [c.setId, c.setCode].filter(Boolean).some(x => ids.includes(String(x).toLowerCase())));
     return ok.length === 1 ? ok[0] : null;
   }
-  const num = normNum(carta?.number);
-  if (!num || !normName(carta?.name)) return null;
-  const ok = lista.filter(c => normNum(c.number) === num && (c.setId || c.setCode || c.setName) &&
-    mismoSet(carta, c) && nombresCompatibles(carta.name, c.name));
-  if (ok.length === 1) return ok[0];
-  const exactos = ok.filter(c => normName(c.name) === normName(carta.name));
-  return exactos.length === 1 ? exactos[0] : null;
+  if (base.length === 1) return base[0];
+  const porSet = base.filter(c => mismoSet(carta, c));
+  return porSet.length === 1 ? porSet[0] : null;
 }
 
 // Asigna a cada carta sin tcgId su resultado, si lo hay. Devuelve Map(idCarta -> resultado).
@@ -123,4 +127,31 @@ export function presupuestoDescubrimiento({ reserva, cartasConTcgId, batchTam = 
   if (!sinTcgId) return 0;
   const lotes = Math.min(batchMax, Math.ceil(cartasConTcgId / batchTam));
   return Math.max(0, Math.min(tope, reserva - lotes - reservaIndividual));
+}
+
+// Cupo real que le queda a la key, leído de las cabeceras de la respuesta (x-ratelimit-remaining u otra parecida).
+// null si la API no las manda.
+export function cupoRestante(rate) {
+  for (const [k, v] of Object.entries(rate || {})) {
+    if (/remaining/i.test(k) && /day|daily|^x-ratelimit-remaining$|^ratelimit-remaining$/i.test(k.replace(/_/g, "-")) ) { const n = parseInt(v, 10); if (Number.isFinite(n)) return n; }
+  }
+  for (const [k, v] of Object.entries(rate || {})) if (/remaining/i.test(k)) { const n = parseInt(v, 10); if (Number.isFinite(n)) return n; }
+  return null;
+}
+
+// Diagnóstico legible de una consulta de descubrimiento (los logs de Actions no se pueden leer desde fuera, el
+// archivo de estado sí): qué trajo la API y, para las primeras cartas del grupo, por qué calzaron o no.
+export function diagnosticarSet(grupo, respuesta) {
+  const cards = respuesta?.cards || [];
+  const sets = [...new Set(cards.map(c => `${c.setName || "?"} [${c.setId || "?"}/${c.setCode || "?"}]`))];
+  return {
+    consulta: grupo?.set, ok: !!respuesta?.ok, status: respuesta?.status ?? null, error: respuesta?.error || null, resultados: cards.length,
+    setsEnRespuesta: sets.slice(0, 6), totalSetsDistintos: sets.length,
+    muestra: cards.slice(0, 3).map(c => ({ name: c.name, number: c.number, setName: c.setName, setId: c.setId, setCode: c.setCode })),
+    cartas: (grupo?.cartas || []).slice(0, 3).map(c => ({
+      name: c.name, number: c.number, set: c.set, setCode: c.setCode,
+      emparejada: !!emparejarTcgId(c, cards),
+      mismoNumero: cards.filter(x => normNum(x.number) === normNum(c.number)).slice(0, 3).map(x => ({ name: x.name, number: x.number, setName: x.setName })),
+    })),
+  };
 }
