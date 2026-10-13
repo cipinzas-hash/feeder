@@ -3047,7 +3047,7 @@ var __angst = (() => {
     }
     function agregarCarta(card) {
       const p = getPrimaryPrice(card);
-      const esWatch = newForm.carpeta === "Price Watch";
+      const esWatch = newForm.destino === "watch";
       const esHunting = newForm.destino === "hunting" || esWatch;
       const nueva = {
         id: Date.now().toString(),
@@ -3068,7 +3068,7 @@ var __angst = (() => {
         precioVentaUSD: parseFloat(newForm.precioVentaUSD) || (p?.market || 0),
         condicion: newForm.condicion || "NM",
         estado: esHunting ? "hunting" : "sin_publicar",
-        carpeta: newForm.carpeta || cats[0],
+        carpeta: esWatch ? "Price Watch" : newForm.carpeta && newForm.carpeta !== "Price Watch" ? newForm.carpeta : cats.find((c) => c !== "Price Watch") || cats[0],
         fechaCompra: esHunting ? null : newForm.fechaCompra || hoy,
         cantidad: parseInt(newForm.cantidad) || 1,
         fechaVenta: null,
@@ -3106,7 +3106,7 @@ var __angst = (() => {
       setConfirmDelSnap(null);
     }
     function mergeDarkWithInv(catalogEntry) {
-      const invMatch = inv.find((c) => c.cardId === catalogEntry.cardId);
+      const invMatch = inv.find((c) => c.cardId === catalogEntry.cardId && c.carpeta !== "Price Watch");
       if (!invMatch) return { ...catalogEntry, id: null, estado: "hunting", tcgMarket: null, tcgLow: null, tcgHigh: null, priceHistory: [], notas: "", precioUSD: null };
       return {
         ...catalogEntry,
@@ -3167,7 +3167,7 @@ var __angst = (() => {
         const m = mergeDarkWithInv(entry);
         return m.imageHd || m.image || null;
       }
-      const c = inv.find((c2) => c2.cardId === cardId);
+      const c = inv.find((c2) => c2.cardId === cardId && c2.carpeta !== "Price Watch");
       return c?.imageHd || c?.image || null;
     }
     function irADetalle(delta) {
@@ -3216,7 +3216,7 @@ var __angst = (() => {
       }
     }
     function toggleDark(cardId) {
-      const invMatch = inv.find((c) => c.cardId === cardId);
+      const invMatch = inv.find((c) => c.cardId === cardId && c.carpeta !== "Price Watch");
       if (!invMatch) return;
       if (invMatch.estado === "hunting") {
         setDarkPrecioInput("");
@@ -3228,7 +3228,7 @@ var __angst = (() => {
     }
     function saveDarkModal() {
       if (!darkPriceModal) return;
-      const invMatch = inv.find((c) => c.cardId === darkPriceModal);
+      const invMatch = inv.find((c) => c.cardId === darkPriceModal && c.carpeta !== "Price Watch");
       if (invMatch) {
         updCarta(invMatch.id, {
           estado: "sin_publicar",
@@ -3568,7 +3568,7 @@ var __angst = (() => {
     function renderDarkDetailModal() {
       if (!darkDetailId) return null;
       const catalogEntry = darkCat.find((d) => d.cardId === darkDetailId);
-      const invPlano = !catalogEntry ? inv.find((c) => c.cardId === darkDetailId) : null;
+      const invPlano = !catalogEntry ? inv.find((c) => c.cardId === darkDetailId && c.carpeta !== "Price Watch") : null;
       if (!catalogEntry && !invPlano) return null;
       const detalle = catalogEntry ? mergeDarkWithInv(catalogEntry) : { ...invPlano, setName: invPlano.set, precioUSD: invPlano.costoUSD };
       const hist = detalle.priceHistory || [];
@@ -3912,35 +3912,36 @@ var __angst = (() => {
         const p = getPrimaryPrice(card);
         const cacheEntry = cache[card.id];
         const tcgPrice = cacheEntry?.lastMarket || p?.market || null;
-        const yaInv = inv.some((c) => c.cardId === card.id);
+        const yaInv = inv.some((c) => c.cardId === card.id && c.carpeta !== "Price Watch");
+        const yaWatch = inv.some((c) => c.cardId === card.id && c.carpeta === "Price Watch");
         const dark = isDarkCard(card);
-        return /* @__PURE__ */ React.createElement("div", { key: card.id, style: { padding: "12px 0", borderBottom: "1px solid #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("div", { style: { position: "relative", flexShrink: 0, cursor: "pointer" }, onClick: () => setZoomImage(card.images?.large || card.images?.small || null) }, card.images?.small && /* @__PURE__ */ React.createElement("img", { src: card.images.small, alt: card.name, style: { width: 52, borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.12)" } }), dark && /* @__PURE__ */ React.createElement("span", { style: { position: "absolute", top: -4, right: -4, fontSize: 11 } }, "\u26AB"), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", bottom: 2, right: 2, background: "rgba(0,0,0,0.5)", borderRadius: 3, padding: "1px 3px", fontSize: 8, color: "#fff" } }, "\u{1F50D}")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, lineHeight: 1.2, color: "#111" } }, card.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#888", marginTop: 1 } }, card.set?.name, " \xB7 #", card.number, card.rarity ? ` \xB7 ${card.rarity}` : ""), tcgPrice && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, color: "#2e7d52", marginTop: 4 } }, fmtUSD(tcgPrice), " ", /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 400, color: "#bbb", fontSize: 10 } }, "TCGPlayer"))), yaInv ? /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", padding: "6px", alignSelf: "center" } }, "ya en tu pool") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
+        return /* @__PURE__ */ React.createElement("div", { key: card.id, style: { padding: "12px 0", borderBottom: "1px solid #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("div", { style: { position: "relative", flexShrink: 0, cursor: "pointer" }, onClick: () => setZoomImage(card.images?.large || card.images?.small || null) }, card.images?.small && /* @__PURE__ */ React.createElement("img", { src: card.images.small, alt: card.name, style: { width: 52, borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.12)" } }), dark && /* @__PURE__ */ React.createElement("span", { style: { position: "absolute", top: -4, right: -4, fontSize: 11 } }, "\u26AB"), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", bottom: 2, right: 2, background: "rgba(0,0,0,0.5)", borderRadius: 3, padding: "1px 3px", fontSize: 8, color: "#fff" } }, "\u{1F50D}")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, lineHeight: 1.2, color: "#111" } }, card.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#888", marginTop: 1 } }, card.set?.name, " \xB7 #", card.number, card.rarity ? ` \xB7 ${card.rarity}` : ""), tcgPrice && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, color: "#2e7d52", marginTop: 4 } }, fmtUSD(tcgPrice), " ", /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 400, color: "#bbb", fontSize: 10 } }, "TCGPlayer"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, flexShrink: 0, alignSelf: "center" } }, yaWatch ? /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#2e7d52", padding: "6px" } }, "\u{1F3AF} sigui\xE9ndola") : /* @__PURE__ */ React.createElement(
           "button",
           {
             onClick: () => {
               setAddingCard(card);
-              setNewForm((f2) => ({ ...f2, precioVentaUSD: tcgPrice ? tcgPrice.toFixed(2) : "", carpeta: "Price Watch", destino: "hunting", precioObjetivo: "" }));
+              setNewForm((f2) => ({ ...f2, precioVentaUSD: tcgPrice ? tcgPrice.toFixed(2) : "", carpeta: "Price Watch", destino: "watch", precioObjetivo: "" }));
             },
             title: "seguir su precio en Price Watch",
-            style: { background: "transparent", border: "1px dashed #bbb", borderRadius: 8, padding: "7px 9px", cursor: "pointer", fontSize: 13, flexShrink: 0, alignSelf: "center", marginRight: 6 }
+            style: { background: "transparent", border: "1px dashed #bbb", borderRadius: 8, padding: "7px 9px", cursor: "pointer", fontSize: 13 }
           },
           "\u{1F3AF}"
-        ), /* @__PURE__ */ React.createElement(
+        ), yaInv ? /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", padding: "6px" } }, "ya en tu pool") : /* @__PURE__ */ React.createElement(
           "button",
           {
             onClick: () => {
               setAddingCard(card);
-              setNewForm((f2) => ({ ...f2, precioVentaUSD: tcgPrice ? tcgPrice.toFixed(2) : "", carpeta: isDarkCard(card) ? "Dark Collection" : cats[0] || "MLP" }));
+              setNewForm((f2) => ({ ...f2, precioVentaUSD: tcgPrice ? tcgPrice.toFixed(2) : "", destino: "inventario", carpeta: isDarkCard(card) ? "Dark Collection" : cats.find((c) => c !== "Price Watch") || "MLP" }));
             },
-            style: { background: "#111", border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontFamily: "'Caveat',cursive", fontSize: 14, color: "#fff", flexShrink: 0, alignSelf: "center" }
+            style: { background: "#111", border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontFamily: "'Caveat',cursive", fontSize: 14, color: "#fff" }
           },
           "+ agregar"
         ))));
-      }), addingCard && /* @__PURE__ */ React.createElement("div", { onClick: () => setAddingCard(null), style: { position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,420px)", background: "#fff", borderRadius: "16px 16px 0 0", padding: "22px 20px 40px", maxHeight: "90vh", overflowY: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 16 } }, addingCard.images?.small && /* @__PURE__ */ React.createElement("img", { src: addingCard.images.small, style: { width: 52, borderRadius: 6, flexShrink: 0, cursor: "pointer" }, onClick: () => setZoomImage(addingCard.images?.large || addingCard.images?.small) }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#111", lineHeight: 1.1 } }, addingCard.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#888", marginTop: 2 } }, addingCard.set?.name, " \xB7 #", addingCard.number))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 0, marginBottom: 16, border: "1.5px solid #111", borderRadius: 10, overflow: "hidden" } }, [["inventario", "\u{1F4E6} en posesi\xF3n"], ["hunting", "\u{1F5E1}\uFE0F hunting"]].map(([k, l]) => /* @__PURE__ */ React.createElement(
+      }), addingCard && /* @__PURE__ */ React.createElement("div", { onClick: () => setAddingCard(null), style: { position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,420px)", background: "#fff", borderRadius: "16px 16px 0 0", padding: "22px 20px 40px", maxHeight: "90vh", overflowY: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 16 } }, addingCard.images?.small && /* @__PURE__ */ React.createElement("img", { src: addingCard.images.small, style: { width: 52, borderRadius: 6, flexShrink: 0, cursor: "pointer" }, onClick: () => setZoomImage(addingCard.images?.large || addingCard.images?.small) }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#111", lineHeight: 1.1 } }, addingCard.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#888", marginTop: 2 } }, addingCard.set?.name, " \xB7 #", addingCard.number))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 0, marginBottom: 16, border: "1.5px solid #111", borderRadius: 10, overflow: "hidden" } }, [["inventario", "\u{1F4E6} en posesi\xF3n"], ["hunting", "\u{1F5E1}\uFE0F hunting"], ["watch", "\u{1F3AF} price watch"]].map(([k, l]) => /* @__PURE__ */ React.createElement(
         "button",
         {
           key: k,
-          onClick: () => setNewForm((f2) => ({ ...f2, destino: k })),
+          onClick: () => setNewForm((f2) => ({ ...f2, destino: k, carpeta: k === "watch" ? "Price Watch" : f2.carpeta === "Price Watch" ? cats.find((c) => c !== "Price Watch") || "MLP" : f2.carpeta })),
           style: {
             flex: 1,
             padding: "8px 0",
@@ -3954,7 +3955,7 @@ var __angst = (() => {
           }
         },
         l
-      ))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 6 } }, "Carpeta"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, cats.map((c) => /* @__PURE__ */ React.createElement(
+      ))), newForm.destino !== "watch" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 6 } }, "Carpeta"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, cats.filter((c) => c !== "Price Watch").map((c) => /* @__PURE__ */ React.createElement(
         "button",
         {
           key: c,
@@ -3962,7 +3963,7 @@ var __angst = (() => {
           style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, padding: "5px 12px", borderRadius: 8, border: "1px dashed #ddd", background: newForm.carpeta === c ? "#111" : "transparent", color: newForm.carpeta === c ? "#fff" : "#555", cursor: "pointer" }
         },
         c
-      )))), newForm.carpeta === "Price Watch" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "\u{1F3AF} Me avisa cuando baje a (USD, opcional) \u2014 la sigo sin comprarla"), /* @__PURE__ */ React.createElement(
+      )))), newForm.destino === "watch" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "\u{1F3AF} Me avisa cuando baje a (USD, opcional) \u2014 la sigo sin comprarla"), /* @__PURE__ */ React.createElement(
         "input",
         {
           type: "number",
@@ -3972,7 +3973,7 @@ var __angst = (() => {
           placeholder: "ej: 2.50",
           style: { width: "100%", border: "1px dashed #ccc", borderRadius: 6, padding: "6px 8px", fontSize: 14, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box", color: "#111" }
         }
-      )), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: newForm.destino === "hunting" || newForm.carpeta === "Price Watch" ? "1fr" : "1fr 1fr", gap: 10, marginBottom: 12 } }, newForm.destino !== "hunting" && newForm.carpeta !== "Price Watch" && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "Lo que pagu\xE9 USD (0 si fue regalo)"), /* @__PURE__ */ React.createElement(
+      )), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: newForm.destino !== "inventario" ? "1fr" : "1fr 1fr", gap: 10, marginBottom: 12 } }, newForm.destino === "inventario" && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "Lo que pagu\xE9 USD (0 si fue regalo)"), /* @__PURE__ */ React.createElement(
         "input",
         {
           type: "number",
@@ -3982,7 +3983,7 @@ var __angst = (() => {
           placeholder: "ej: 8.50",
           style: { width: "100%", border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontSize: 16, fontFamily: "'Caveat',cursive", outline: "none", boxSizing: "border-box", color: "#111" }
         }
-      )), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, newForm.destino === "hunting" ? "Precio de referencia USD (opcional)" : "Precio venta USD"), /* @__PURE__ */ React.createElement(
+      )), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, newForm.destino !== "inventario" ? "Precio de referencia USD (opcional)" : "Precio venta USD"), /* @__PURE__ */ React.createElement(
         "input",
         {
           type: "number",
@@ -3992,7 +3993,7 @@ var __angst = (() => {
           placeholder: "ej: 15.00",
           style: { width: "100%", border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontSize: 16, fontFamily: "'Caveat',cursive", outline: "none", boxSizing: "border-box", color: "#111" }
         }
-      ))), newForm.destino !== "hunting" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 6 } }, "Cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setNewForm((f2) => ({ ...f2, cantidad: Math.max(1, (f2.cantidad || 1) - 1) })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#111", minWidth: 32, textAlign: "center" } }, newForm.cantidad || 1), /* @__PURE__ */ React.createElement("button", { onClick: () => setNewForm((f2) => ({ ...f2, cantidad: (f2.cantidad || 1) + 1 })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "+"))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 6 } }, "Condici\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, CONDICIONES.map((c) => /* @__PURE__ */ React.createElement(
+      ))), newForm.destino === "inventario" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 6 } }, "Cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setNewForm((f2) => ({ ...f2, cantidad: Math.max(1, (f2.cantidad || 1) - 1) })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#111", minWidth: 32, textAlign: "center" } }, newForm.cantidad || 1), /* @__PURE__ */ React.createElement("button", { onClick: () => setNewForm((f2) => ({ ...f2, cantidad: (f2.cantidad || 1) + 1 })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "+"))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 6 } }, "Condici\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, CONDICIONES.map((c) => /* @__PURE__ */ React.createElement(
         "button",
         {
           key: c,
@@ -4000,7 +4001,7 @@ var __angst = (() => {
           style: { flex: 1, fontFamily: "'DM Sans',sans-serif", fontSize: 11, padding: "6px 4px", borderRadius: 8, border: "1px dashed #ddd", background: newForm.condicion === c ? "#111" : "transparent", color: newForm.condicion === c ? "#fff" : "#555", cursor: "pointer" }
         },
         c
-      )))), newForm.destino !== "hunting" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "Fecha de compra"), /* @__PURE__ */ React.createElement(
+      )))), newForm.destino === "inventario" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "Fecha de compra"), /* @__PURE__ */ React.createElement(
         "input",
         {
           type: "date",
@@ -4104,7 +4105,7 @@ var __angst = (() => {
         const entradas = darkCat.filter((d) => (d.carpeta || "Dark Collection") === nombre);
         const total = entradas.length;
         const conseguidas = entradas.filter((d) => {
-          const invMatch = inv.find((c) => c.cardId === d.cardId);
+          const invMatch = inv.find((c) => c.cardId === d.cardId && c.carpeta !== "Price Watch");
           return invMatch && invMatch.estado !== "hunting";
         }).length;
         return { nombre, esDark, total, conseguidas };

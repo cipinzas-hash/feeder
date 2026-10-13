@@ -975,7 +975,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // ── CRUD inventario ──
   function agregarCarta(card){
     const p=getPrimaryPrice(card);
-    const esWatch=newForm.carpeta==="Price Watch"; // Price Watch = carta que SIGO, no que tengo: siempre hunting, sin costo
+    const esWatch=newForm.destino==="watch"; // Price Watch = solo sigo su precio (con objetivo); hunting = la busco para completar una colección
     const esHunting=newForm.destino==="hunting"||esWatch;
     const nueva={
       id:Date.now().toString(),cardId:card.id,name:card.name,
@@ -988,7 +988,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       costoUSD:esHunting?0:(parseFloat(newForm.costoUSD)||0),
       precioVentaUSD:parseFloat(newForm.precioVentaUSD)||(p?.market||0),
       condicion:newForm.condicion||"NM",estado:esHunting?"hunting":"sin_publicar",
-      carpeta:newForm.carpeta||cats[0],
+      carpeta:esWatch?"Price Watch":(newForm.carpeta&&newForm.carpeta!=="Price Watch"?newForm.carpeta:(cats.find(c=>c!=="Price Watch")||cats[0])),
       fechaCompra:esHunting?null:(newForm.fechaCompra||hoy),
       cantidad:parseInt(newForm.cantidad)||1,
       fechaVenta:null,precioVendidoUSD:null,
@@ -1018,7 +1018,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // esta sesión el catálogo NO guarda precio propio, todo vive en inv para
   // que use el mismo mecanismo confiable de snapshots que cualquier carta. ──
   function mergeDarkWithInv(catalogEntry){
-    const invMatch=inv.find(c=>c.cardId===catalogEntry.cardId);
+    const invMatch=inv.find(c=>c.cardId===catalogEntry.cardId&&c.carpeta!=="Price Watch");
     if(!invMatch) return {...catalogEntry, id:null, estado:"hunting", tcgMarket:null, tcgLow:null, tcgHigh:null, priceHistory:[], notas:"", precioUSD:null};
     return {
       ...catalogEntry,
@@ -1092,7 +1092,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   function imagenDeCard(cardId){
     const entry=darkCat.find(d=>d.cardId===cardId);
     if(entry){ const m=mergeDarkWithInv(entry); return m.imageHd||m.image||null; }
-    const c=inv.find(c=>c.cardId===cardId);
+    const c=inv.find(c=>c.cardId===cardId&&c.carpeta!=="Price Watch");
     return c?.imageHd||c?.image||null;
   }
   function irADetalle(delta){
@@ -1150,7 +1150,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     }
   }
   function toggleDark(cardId){
-    const invMatch=inv.find(c=>c.cardId===cardId);
+    const invMatch=inv.find(c=>c.cardId===cardId&&c.carpeta!=="Price Watch");
     if(!invMatch) return;
     if(invMatch.estado==="hunting"){
       setDarkPrecioInput(""); setDarkNotaInput(invMatch.notas||""); setDarkPriceModal(cardId);
@@ -1160,7 +1160,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   }
   function saveDarkModal(){
     if(!darkPriceModal) return;
-    const invMatch=inv.find(c=>c.cardId===darkPriceModal);
+    const invMatch=inv.find(c=>c.cardId===darkPriceModal&&c.carpeta!=="Price Watch");
     if(invMatch){
       updCarta(invMatch.id,{
         estado:"sin_publicar",
@@ -1554,7 +1554,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     // este modal, ya que huntingEntryFromCard/agregarCarta guardan `set`,
     // no `setName` (ese campo vive en el catálogo para las de Dark/ilustrador).
     const catalogEntry=darkCat.find(d=>d.cardId===darkDetailId);
-    const invPlano=!catalogEntry?inv.find(c=>c.cardId===darkDetailId):null;
+    const invPlano=!catalogEntry?inv.find(c=>c.cardId===darkDetailId&&c.carpeta!=="Price Watch"):null;
     if(!catalogEntry&&!invPlano) return null;
     const detalle=catalogEntry?mergeDarkWithInv(catalogEntry):{...invPlano,setName:invPlano.set,precioUSD:invPlano.costoUSD};
     const hist=detalle.priceHistory||[];
@@ -1974,7 +1974,8 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           const p=getPrimaryPrice(card);
           const cacheEntry=cache[card.id];
           const tcgPrice=cacheEntry?.lastMarket||p?.market||null;
-          const yaInv=inv.some(c=>c.cardId===card.id);
+          const yaInv=inv.some(c=>c.cardId===card.id&&c.carpeta!=="Price Watch");   // ya la tengo / está en mi pool
+          const yaWatch=inv.some(c=>c.cardId===card.id&&c.carpeta==="Price Watch"); // ya la estoy siguiendo
           const dark=isDarkCard(card);
           return(
             <div key={card.id} style={{padding:"12px 0",borderBottom:"1px solid #f0f0f0"}}>
@@ -1989,13 +1990,16 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                   <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888",marginTop:1}}>{card.set?.name} · #{card.number}{card.rarity?` · ${card.rarity}`:""}</div>
                   {tcgPrice&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:700,color:"#2e7d52",marginTop:4}}>{fmtUSD(tcgPrice)} <span style={{fontWeight:400,color:"#bbb",fontSize:10}}>TCGPlayer</span></div>}
                 </div>
-                {yaInv
-                  ?<span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",padding:"6px",alignSelf:"center"}}>ya en tu pool</span>
-                  :<><button onClick={()=>{setAddingCard(card);setNewForm(f=>({...f,precioVentaUSD:tcgPrice?tcgPrice.toFixed(2):"",carpeta:"Price Watch",destino:"hunting",precioObjetivo:""}));}}
-                    title="seguir su precio en Price Watch" style={{background:"transparent",border:"1px dashed #bbb",borderRadius:8,padding:"7px 9px",cursor:"pointer",fontSize:13,flexShrink:0,alignSelf:"center",marginRight:6}}>🎯</button>
-                  <button onClick={()=>{setAddingCard(card);setNewForm(f=>({...f,precioVentaUSD:tcgPrice?tcgPrice.toFixed(2):"",carpeta:isDarkCard(card)?"Dark Collection":(cats[0]||"MLP")}));}}
-                    style={{background:"#111",border:"none",borderRadius:8,padding:"7px 12px",cursor:"pointer",fontFamily:"'Caveat',cursive",fontSize:14,color:"#fff",flexShrink:0,alignSelf:"center"}}>+ agregar</button></>
-                }
+                <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0,alignSelf:"center"}}>
+                  {yaWatch
+                    ?<span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#2e7d52",padding:"6px"}}>🎯 siguiéndola</span>
+                    :<button onClick={()=>{setAddingCard(card);setNewForm(f=>({...f,precioVentaUSD:tcgPrice?tcgPrice.toFixed(2):"",carpeta:"Price Watch",destino:"watch",precioObjetivo:""}));}}
+                      title="seguir su precio en Price Watch" style={{background:"transparent",border:"1px dashed #bbb",borderRadius:8,padding:"7px 9px",cursor:"pointer",fontSize:13}}>🎯</button>}
+                  {yaInv
+                    ?<span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",padding:"6px"}}>ya en tu pool</span>
+                    :<button onClick={()=>{setAddingCard(card);setNewForm(f=>({...f,precioVentaUSD:tcgPrice?tcgPrice.toFixed(2):"",destino:"inventario",carpeta:isDarkCard(card)?"Dark Collection":(cats.find(c=>c!=="Price Watch")||"MLP")}));}}
+                      style={{background:"#111",border:"none",borderRadius:8,padding:"7px 12px",cursor:"pointer",fontFamily:"'Caveat',cursive",fontSize:14,color:"#fff"}}>+ agregar</button>}
+                </div>
               </div>
             </div>
           );
@@ -2011,34 +2015,34 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                   <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888",marginTop:2}}>{addingCard.set?.name} · #{addingCard.number}</div>
                 </div>
               </div>
-              {/* Destino: en posesión (inventario normal) o hunting (quiero
-                  trackear precio, todavía no la tengo) — cualquier carta,
-                  sea o no Darkness. */}
+              {/* Destino (12-oct-2026): en posesión (inventario normal) · hunting (la busco para completar una colección, va a la
+                  carpeta que elija) · price watch (solo sigo su precio y me avisa al llegar a mi objetivo; va siempre a Price Watch).
+                  Antes hunting y Price Watch se pisaban: las dos eran "no la tengo, trackeo el precio". */}
               <div style={{display:"flex",gap:0,marginBottom:16,border:"1.5px solid #111",borderRadius:10,overflow:"hidden"}}>
-                {[["inventario","📦 en posesión"],["hunting","🗡️ hunting"]].map(([k,l])=>(
-                  <button key={k} onClick={()=>setNewForm(f=>({...f,destino:k}))}
+                {[["inventario","📦 en posesión"],["hunting","🗡️ hunting"],["watch","🎯 price watch"]].map(([k,l])=>(
+                  <button key={k} onClick={()=>setNewForm(f=>({...f,destino:k,carpeta:k==="watch"?"Price Watch":(f.carpeta==="Price Watch"?(cats.find(c=>c!=="Price Watch")||"MLP"):f.carpeta)}))}
                     style={{flex:1,padding:"8px 0",background:newForm.destino===k?"#111":"transparent",color:newForm.destino===k?"#fff":"#999",
                       border:"none",cursor:"pointer",fontFamily:"'Caveat',cursive",fontSize:14,fontWeight:700}}>
                     {l}
                   </button>
                 ))}
               </div>
-              <div style={{marginBottom:12}}>
+              {newForm.destino!=="watch"&&<div style={{marginBottom:12}}>
                 <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:6}}>Carpeta</div>
                 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                  {cats.map(c=><button key={c} onClick={()=>setNewForm(f=>({...f,carpeta:c}))}
+                  {cats.filter(c=>c!=="Price Watch").map(c=><button key={c} onClick={()=>setNewForm(f=>({...f,carpeta:c}))}
                     style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,padding:"5px 12px",borderRadius:8,border:"1px dashed #ddd",background:newForm.carpeta===c?"#111":"transparent",color:newForm.carpeta===c?"#fff":"#555",cursor:"pointer"}}>{c}</button>)}
                 </div>
-              </div>
-              {newForm.carpeta==="Price Watch"&&(
+              </div>}
+              {newForm.destino==="watch"&&(
                 <div style={{marginBottom:12}}>
                   <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:4}}>🎯 Me avisa cuando baje a (USD, opcional) — la sigo sin comprarla</div>
                   <input type="number" step="0.01" value={newForm.precioObjetivo||""} onChange={e=>setNewForm(f=>({...f,precioObjetivo:e.target.value}))} placeholder="ej: 2.50"
                     style={{width:"100%",border:"1px dashed #ccc",borderRadius:6,padding:"6px 8px",fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",boxSizing:"border-box",color:"#111"}}/>
                 </div>
               )}
-              <div style={{display:"grid",gridTemplateColumns:(newForm.destino==="hunting"||newForm.carpeta==="Price Watch")?"1fr":"1fr 1fr",gap:10,marginBottom:12}}>
-                {newForm.destino!=="hunting"&&newForm.carpeta!=="Price Watch"&&(
+              <div style={{display:"grid",gridTemplateColumns:newForm.destino!=="inventario"?"1fr":"1fr 1fr",gap:10,marginBottom:12}}>
+                {newForm.destino==="inventario"&&(
                   <div>
                     <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:4}}>Lo que pagué USD (0 si fue regalo)</div>
                     <input type="number" step="0.01" value={newForm.costoUSD} onChange={e=>setNewForm(f=>({...f,costoUSD:e.target.value}))} placeholder="ej: 8.50"
@@ -2046,12 +2050,12 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                   </div>
                 )}
                 <div>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:4}}>{newForm.destino==="hunting"?"Precio de referencia USD (opcional)":"Precio venta USD"}</div>
+                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:4}}>{newForm.destino!=="inventario"?"Precio de referencia USD (opcional)":"Precio venta USD"}</div>
                   <input type="number" step="0.01" value={newForm.precioVentaUSD} onChange={e=>setNewForm(f=>({...f,precioVentaUSD:e.target.value}))} placeholder="ej: 15.00"
                     style={{width:"100%",border:"1px dashed #ccc",borderRadius:8,padding:"8px 10px",fontSize:16,fontFamily:"'Caveat',cursive",outline:"none",boxSizing:"border-box",color:"#111"}}/>
                 </div>
               </div>
-              {newForm.destino!=="hunting"&&(
+              {newForm.destino==="inventario"&&(
                 <div style={{marginBottom:12}}>
                   <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:6}}>Cantidad</div>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -2068,7 +2072,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                     style={{flex:1,fontFamily:"'DM Sans',sans-serif",fontSize:11,padding:"6px 4px",borderRadius:8,border:"1px dashed #ddd",background:newForm.condicion===c?"#111":"transparent",color:newForm.condicion===c?"#fff":"#555",cursor:"pointer"}}>{c}</button>)}
                 </div>
               </div>
-              {newForm.destino!=="hunting"&&(
+              {newForm.destino==="inventario"&&(
                 <div style={{marginBottom:14}}>
                   <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:4}}>Fecha de compra</div>
                   <input type="date" value={newForm.fechaCompra} onChange={e=>setNewForm(f=>({...f,fechaCompra:e.target.value}))}
@@ -2188,7 +2192,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       const entradas=darkCat.filter(d=>(d.carpeta||"Dark Collection")===nombre);
       const total=entradas.length;
       const conseguidas=entradas.filter(d=>{
-        const invMatch=inv.find(c=>c.cardId===d.cardId);
+        const invMatch=inv.find(c=>c.cardId===d.cardId&&c.carpeta!=="Price Watch");
         return invMatch&&invMatch.estado!=="hunting";
       }).length;
       return {nombre,esDark,total,conseguidas};
