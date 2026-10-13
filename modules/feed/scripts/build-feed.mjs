@@ -17,6 +17,7 @@ import { JSDOM } from "jsdom";
 import { Readability } from "@mozilla/readability";
 import createDOMPurify from "dompurify";
 import Parser from "rss-parser";
+import { heredarVideoteca } from "./lib/videoteca.mjs";
 
 const FEEDS_PATH = new URL("../feeds.json", import.meta.url);
 const OUTPUT_PATH = new URL("../data/feed.json", import.meta.url);
@@ -283,7 +284,12 @@ async function main() {
   // una videoteca persistente ("no introducir caducidad automática del
   // contenido"), mismo criterio que ya regía para Podcasts.
   const CATEGORIAS_SIN_RETENCION = new Set(["Podcasts", "Microdocumentales", "Conciertos"]);
-  const recentItems = allItems.filter(a => CATEGORIAS_SIN_RETENCION.has(a.categoria) || !a.pubDate || new Date(a.pubDate).getTime() >= cutoff);
+  // Videoteca: lo que YouTube no devolvió esta corrida se conserva de la anterior.
+  const heredados = heredarVideoteca(previous.categories, allItems);
+  if (heredados.length > 0) {
+    console.log(`✓ Videoteca: ${heredados.length} ítem(s) de Microdocumentales/Conciertos conservados de la corrida anterior (no vinieron en los feeds de ahora)`);
+  }
+  const recentItems = [...allItems, ...heredados].filter(a => CATEGORIAS_SIN_RETENCION.has(a.categoria) || !a.pubDate || new Date(a.pubDate).getTime() >= cutoff);
 
   // Conciertos: los 6 canales (WackenTV, Hellfest, M'era Luna, Bangers Open
   // Air, ARTE Concert, MagentaTV) suben de todo -- trailers, aftermovies,
