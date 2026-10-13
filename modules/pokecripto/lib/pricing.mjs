@@ -196,12 +196,21 @@ export async function fetchTCGPrice(name, setName, number, setCode, apiKey) {
   return price?.match ? { market: price.market, low: price.low, high: price.high, tcgId: price.tcgId || null } : null;
 }
 
-export function addSnapshot(history, market, low, high, dateISO) {
+// src (12-oct-2026): fuente del precio. "tpl" = tcgpricelookup.com (Near Mint raw de TCGplayer),
+// "ptcg" = pokemontcg.io (primer precio disponible: holofoil > reverse > normal...). Son criterios distintos:
+// mezclados en un mismo historial producían alternancias falsas (0,06 -> 0,26 -> 0,06 en cartas comunes).
+// Sin src = snapshot viejo, de fuente desconocida.
+export function addSnapshot(history, market, low, high, dateISO, src) {
   const today = dateISO || new Date().toISOString().slice(0, 10);
   const h = history || [];
+  const extra = src ? { src } : {};
   if (h.length && h[h.length - 1].date === today)
-    return h.map((x, i) => i === h.length - 1 ? { ...x, market, low, high } : x);
-  return [...h, { date: today, market, low: low || null, high: high || null }];
+    return h.map((x, i) => i === h.length - 1 ? { ...x, market, low, high, ...extra } : x);
+  return [...h, { date: today, market, low: low || null, high: high || null, ...extra }];
+}
+// Dos snapshots son comparables si alguno es viejo (sin src, no se puede saber) o si vienen de la misma fuente.
+export function fuenteCompatible(a, b) {
+  return !a?.src || !b?.src || a.src === b.src;
 }
 
 // Un solo refresh de precio para una carta -- pokemontcg.io (gratis, sin
@@ -224,25 +233,32 @@ export function addSnapshot(history, market, low, high, dateISO) {
 // frenara si el cupo real ya se había gastado. Ahora el bot puede cortar
 // el respaldo desde afuera, carta por carta, según el cupo que le quede
 // en ESE momento -- no según de antemano.
-export async function refreshPrecio(carta, apiKey, permitirFallback = true) {
-  let market = null, low = null, high = null, fuente = null, tcgId = null, usoTcg = false;
+export async function refreshPrecio(carta, apiKey, permitirFallback = true, opts = {}) {
+  let market = null, low = null, high = null, fuente = null, tcgId = null, usoTcg = false, src = null;
+  // usarTcgId (12-oct-2026): el cliente, al refrescar UNA carta que ya tiene tcgId, la pide directo por id
+  // (sin ambigüedad de matching). El bot NO lo usa: sus cartas con tcgId ya pasaron por la fase por lote.
+  if (opts.usarTcgId && carta.tcgId && apiKey) {
+    usoTcg = true;
+    const r = await fetchTCGBatch([carta.tcgId], apiKey);
+    const p = r.ok ? r.porId.get(carta.tcgId) : null;
+    if (p?.market) { market = p.market; low = p.low || null; high = p.high || null; fuente = "tcgpricelookup(id)"; tcgId = carta.tcgId; src = "tpl"; }
+    if (market) return { market, low, high, fuente, tcgId, usoTcg, src };
+  }
   if (carta.cardId) {
     try {
       const data = await fetchPoke(`${POKE_BASE}/cards/${carta.cardId}`);
       const pp = getPrimaryPrice(data.data);
-      if (pp?.market) { market = pp.market; low = pp.low || null; high = pp.high || null; fuente = "pokemontcg"; }
+      if (pp?.market) { market = pp.market; low = pp.low || null; high = pp.high || null; fuente = "pokemontcg"; src = "ptcg"; }
     } catch (e) { /* cae a tcgpricelookup */ }
   }
   if (!market && permitirFallback) {
     // usoTcg: se hizo una búsqueda REAL a tcgpricelookup.com (gasta cupo aunque no encuentre nada).
-    // Antes el bot solo contaba las que tenían éxito, y las cartas que siempre fallan gastaban cupo sin
-    // que nadie lo anotara (4-oct-2026).
-    usoTcg = !!apiKey;
+    usoTcg = usoTcg || !!apiKey;
     const ov = carta.tcgOverride;
     const p = ov
       ? await fetchTCGPrice(ov.name, carta.set, ov.number, ov.setId || ov.setCode, apiKey)
       : await fetchTCGPrice(carta.name, carta.set, carta.number, carta.setCode, apiKey);
-    if (p?.market) { market = p.market; low = p.low || null; high = p.high || null; fuente = ov ? "tcgpricelookup(override)" : "tcgpricelookup"; tcgId = p.tcgId || null; }
+    if (p?.market) { market = p.market; low = p.low || null; high = p.high || null; fuente = ov ? "tcgpricelookup(override)" : "tcgpricelookup"; tcgId = p.tcgId || null; src = "tpl"; }
   }
-  return { market, low, high, fuente, tcgId, usoTcg };
+  return { market, low, high, fuente, tcgId, usoTcg, src };
 }

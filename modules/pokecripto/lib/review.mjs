@@ -15,6 +15,15 @@ import { normNum, normName } from "./pricing.mjs";
 // cualquier precio que Cristopher hubiera elegido a mano. AHORA: solo se
 // superpone cuando el bot SÍ tiene precio para esa carta; si no, el local
 // queda intacto.
+// 12-oct-2026: el historial ya NO se reemplaza entero por el del bot (se perdían snapshots locales más
+// recientes o más largos). Se unen por fecha; si la misma fecha está en los dos, gana el del bot (es el dueño).
+// Los 4 campos de precio vigente salen del snapshot más reciente entre local y bot (empate: bot).
+export function unirHistorial(local, remoto) {
+  const porFecha = new Map();
+  for (const h of Array.isArray(local) ? local : []) if (h && h.date) porFecha.set(h.date, h);
+  for (const h of Array.isArray(remoto) ? remoto : []) if (h && h.date) porFecha.set(h.date, h);
+  return [...porFecha.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
 export function mergePreciosBot(local, remote) {
   const porId = new Map();
   for (const c of (Array.isArray(remote) ? remote : [])) {
@@ -25,10 +34,56 @@ export function mergePreciosBot(local, remote) {
       tcgHigh: c.tcgHigh ?? null,
       tcgUpdated: c.tcgUpdated ?? null,
       priceHistory: Array.isArray(c.priceHistory) ? c.priceHistory : [],
+      ...(c.tcgId ? { tcgId: c.tcgId } : {}),
     });
   }
-  return (Array.isArray(local) ? local : []).map(c => (porId.has(c.id) ? { ...c, ...porId.get(c.id) } : c));
+  return (Array.isArray(local) ? local : []).map(c => {
+    const r = porId.get(c.id);
+    if (!r) return c;
+    const historial = unirHistorial(c.priceHistory, r.priceHistory);
+    const localMasNuevo = c.tcgMarket != null && c.tcgUpdated && String(c.tcgUpdated).slice(0, 10) > String(r.tcgUpdated || "").slice(0, 10);
+    const precio = localMasNuevo
+      ? { tcgMarket: c.tcgMarket, tcgLow: c.tcgLow ?? null, tcgHigh: c.tcgHigh ?? null, tcgUpdated: c.tcgUpdated }
+      : { tcgMarket: r.tcgMarket, tcgLow: r.tcgLow, tcgHigh: r.tcgHigh, tcgUpdated: r.tcgUpdated };
+    return { ...c, ...precio, priceHistory: historial, ...(r.tcgId ? { tcgId: r.tcgId } : {}) };
+  });
 }
+
+// ── Cola pending: altas nuevas Y parches de carpeta (12-oct-2026) ───────────────
+// El inventario canónico del bot solo se enteraba de cartas NUEVAS; si Cristopher movía una carta existente a
+// Price Watch, el bot no lo sabía y no podía darle prioridad. Ahora el cliente encola `{id, _patch:{carpeta,...}}`
+// y el bot aplica solo estos campos a la carta que ya existe.
+export const CAMPOS_PARCHEABLES = ["carpeta", "precioObjetivo"];
+export function fusionarPending(inventario, pending) {
+  const inv = Array.isArray(inventario) ? [...inventario] : [];
+  const porId = new Map(inv.map((c, i) => [c.id, i]));
+  const fusionados = {}; // id -> JSON de la entrada procesada (para no borrar después una versión más nueva)
+  let nuevas = 0, parcheadas = 0;
+  for (const e of Array.isArray(pending) ? pending : []) {
+    if (!e || e.id == null) continue;
+    fusionados[e.id] = JSON.stringify(e);
+    if (e._patch) {
+      const idx = porId.get(e.id);
+      if (idx == null) continue; // parche de una carta que no existe: se descarta
+      const parche = {};
+      for (const k of CAMPOS_PARCHEABLES) if (k in e._patch) parche[k] = e._patch[k];
+      inv[idx] = { ...inv[idx], ...parche }; parcheadas++;
+      continue;
+    }
+    if (porId.has(e.id)) continue; // alta repetida
+    const { _patch, ...carta } = e;
+    porId.set(carta.id, inv.length); inv.push(carta); nuevas++;
+  }
+  return { inventario: inv, fusionados, nuevas, parcheadas };
+}
+// Lo que debe quedar en pending después de la corrida: lo que el cliente encoló MIENTRAS el bot corría
+// (entradas nuevas o distintas de las que el bot ya fusionó). Antes el bot vaciaba el archivo entero y pisaba esas altas.
+export function pendingRestante(pendingOrigen, fusionados) {
+  const f = fusionados || {};
+  return (Array.isArray(pendingOrigen) ? pendingOrigen : []).filter(e => e && JSON.stringify(e) !== f[e.id]);
+}
+// Prioridad de refresco: Price Watch (staples seguidas) primero, todo diario.
+export function prioridadCarta(c) { return c && c.carpeta === "Price Watch" ? 0 : 1; }
 
 // ── Cola de cartas sin precio, ordenada por set y número ────────────────
 function numOrden(n) {

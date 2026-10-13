@@ -14,7 +14,7 @@ export default {
   // para que un backup .json viejo siga restaurando sin cambios.
   state: {
     pokeInventario:   { default: [] },
-    pokeCarpetas:     { default: ["MLP", "Staples & Meta", "Dark Collection"] },
+    pokeCarpetas:     { default: ["MLP", "Staples & Meta", "Dark Collection", "Price Watch"] },
     pokeDarkCatalogo: { default: [] },
     pokePriceCache:   { default: {} },
   },

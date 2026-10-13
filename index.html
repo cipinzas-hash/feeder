@@ -1863,6 +1863,50 @@ var __angst = (() => {
       return { error: e.message };
     }
   }
+  function precioDeApi(c) {
+    const nm = c?.prices?.raw?.near_mint?.tcgplayer, lp = c?.prices?.raw?.lightly_played?.tcgplayer;
+    const best = nm || lp;
+    return best?.market ? { market: best.market, low: best.low || null, high: best.high || null } : null;
+  }
+  async function fetchTCGBatch(ids, apiKey) {
+    const lista = [...new Set((ids || []).filter(Boolean))].slice(0, 20);
+    if (!apiKey) return { ok: false, status: 0, error: "sin API key" };
+    if (!lista.length) return { ok: true, porId: /* @__PURE__ */ new Map(), pedidos: 0, status: 200, rate: {} };
+    try {
+      let r, intento = 0;
+      while (true) {
+        r = await fetch(
+          `${TCG_BASE}/cards/search?ids=${encodeURIComponent(lista.join(","))}&game=pokemon&limit=20`,
+          { headers: { "X-API-Key": apiKey }, signal: AbortSignal.timeout(15e3) }
+        );
+        if (r.status !== 429 || intento >= 2) break;
+        const retryAfter = parseInt(r.headers.get("retry-after") || "", 10);
+        await new Promise((res) => setTimeout(res, Number.isFinite(retryAfter) ? retryAfter * 1e3 : 2e3 * Math.pow(2, intento)));
+        intento++;
+      }
+      const rate = {};
+      try {
+        r.headers.forEach((v, k) => {
+          if (/rate|limit|quota|remaining|reset/i.test(k)) rate[k] = v;
+        });
+      } catch (e) {
+      }
+      if (!r.ok) {
+        let detalle = "";
+        try {
+          detalle = (await r.text()).slice(0, 160);
+        } catch (e) {
+        }
+        return { ok: false, status: r.status, error: `HTTP ${r.status}${detalle ? " " + detalle : ""}`, rate };
+      }
+      const data = await r.json();
+      const porId = /* @__PURE__ */ new Map();
+      for (const c of data.data || []) if (c?.id) porId.set(c.id, { ...precioDeApi(c) || {}, tieneCarta: true, setKeys: c.set ? Object.keys(c.set) : [] });
+      return { ok: true, porId, pedidos: lista.length, status: r.status, rate };
+    } catch (e) {
+      return { ok: false, status: 0, error: e.message };
+    }
+  }
   async function fetchTCGCandidatos(q, apiKey) {
     if (!apiKey) return { error: "sin API key", candidatos: [] };
     try {
@@ -1908,15 +1952,70 @@ var __angst = (() => {
     const price = await fetchTCGPriceDiag(name, setName, number, setCode, apiKey);
     return price?.match ? { market: price.market, low: price.low, high: price.high, tcgId: price.tcgId || null } : null;
   }
-  function addSnapshot(history, market, low, high, dateISO) {
+  function addSnapshot(history, market, low, high, dateISO, src) {
     const today = dateISO || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
     const h = history || [];
+    const extra = src ? { src } : {};
     if (h.length && h[h.length - 1].date === today)
-      return h.map((x, i) => i === h.length - 1 ? { ...x, market, low, high } : x);
-    return [...h, { date: today, market, low: low || null, high: high || null }];
+      return h.map((x, i) => i === h.length - 1 ? { ...x, market, low, high, ...extra } : x);
+    return [...h, { date: today, market, low: low || null, high: high || null, ...extra }];
+  }
+  function fuenteCompatible(a, b) {
+    return !a?.src || !b?.src || a.src === b.src;
+  }
+  async function refreshPrecio(carta, apiKey, permitirFallback = true, opts = {}) {
+    let market = null, low = null, high = null, fuente = null, tcgId = null, usoTcg = false, src = null;
+    if (opts.usarTcgId && carta.tcgId && apiKey) {
+      usoTcg = true;
+      const r = await fetchTCGBatch([carta.tcgId], apiKey);
+      const p = r.ok ? r.porId.get(carta.tcgId) : null;
+      if (p?.market) {
+        market = p.market;
+        low = p.low || null;
+        high = p.high || null;
+        fuente = "tcgpricelookup(id)";
+        tcgId = carta.tcgId;
+        src = "tpl";
+      }
+      if (market) return { market, low, high, fuente, tcgId, usoTcg, src };
+    }
+    if (carta.cardId) {
+      try {
+        const data = await fetchPoke(`${POKE_BASE}/cards/${carta.cardId}`);
+        const pp = getPrimaryPrice(data.data);
+        if (pp?.market) {
+          market = pp.market;
+          low = pp.low || null;
+          high = pp.high || null;
+          fuente = "pokemontcg";
+          src = "ptcg";
+        }
+      } catch (e) {
+      }
+    }
+    if (!market && permitirFallback) {
+      usoTcg = usoTcg || !!apiKey;
+      const ov = carta.tcgOverride;
+      const p = ov ? await fetchTCGPrice(ov.name, carta.set, ov.number, ov.setId || ov.setCode, apiKey) : await fetchTCGPrice(carta.name, carta.set, carta.number, carta.setCode, apiKey);
+      if (p?.market) {
+        market = p.market;
+        low = p.low || null;
+        high = p.high || null;
+        fuente = ov ? "tcgpricelookup(override)" : "tcgpricelookup";
+        tcgId = p.tcgId || null;
+        src = "tpl";
+      }
+    }
+    return { market, low, high, fuente, tcgId, usoTcg, src };
   }
 
   // modules/pokecripto/lib/review.mjs
+  function unirHistorial(local, remoto) {
+    const porFecha = /* @__PURE__ */ new Map();
+    for (const h of Array.isArray(local) ? local : []) if (h && h.date) porFecha.set(h.date, h);
+    for (const h of Array.isArray(remoto) ? remoto : []) if (h && h.date) porFecha.set(h.date, h);
+    return [...porFecha.values()].sort((a, b) => a.date.localeCompare(b.date));
+  }
   function mergePreciosBot(local, remote2) {
     const porId = /* @__PURE__ */ new Map();
     for (const c of Array.isArray(remote2) ? remote2 : []) {
@@ -1926,10 +2025,18 @@ var __angst = (() => {
         tcgLow: c.tcgLow ?? null,
         tcgHigh: c.tcgHigh ?? null,
         tcgUpdated: c.tcgUpdated ?? null,
-        priceHistory: Array.isArray(c.priceHistory) ? c.priceHistory : []
+        priceHistory: Array.isArray(c.priceHistory) ? c.priceHistory : [],
+        ...c.tcgId ? { tcgId: c.tcgId } : {}
       });
     }
-    return (Array.isArray(local) ? local : []).map((c) => porId.has(c.id) ? { ...c, ...porId.get(c.id) } : c);
+    return (Array.isArray(local) ? local : []).map((c) => {
+      const r = porId.get(c.id);
+      if (!r) return c;
+      const historial = unirHistorial(c.priceHistory, r.priceHistory);
+      const localMasNuevo = c.tcgMarket != null && c.tcgUpdated && String(c.tcgUpdated).slice(0, 10) > String(r.tcgUpdated || "").slice(0, 10);
+      const precio = localMasNuevo ? { tcgMarket: c.tcgMarket, tcgLow: c.tcgLow ?? null, tcgHigh: c.tcgHigh ?? null, tcgUpdated: c.tcgUpdated } : { tcgMarket: r.tcgMarket, tcgLow: r.tcgLow, tcgHigh: r.tcgHigh, tcgUpdated: r.tcgUpdated };
+      return { ...c, ...precio, priceHistory: historial, ...r.tcgId ? { tcgId: r.tcgId } : {} };
+    });
   }
   function numOrden(n) {
     const m = String(n || "").match(/\d+/);
@@ -2114,7 +2221,40 @@ var __angst = (() => {
     const base = { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: imgFit || "cover", display: "block" };
     return /* @__PURE__ */ React.createElement("div", { style: { position: "relative", overflow: "hidden", ...wrapStyle } }, /* @__PURE__ */ React.createElement("img", { src, alt, style: { ...base, position: "static", filter: "grayscale(1) brightness(0.6)" } }), /* @__PURE__ */ React.createElement("img", { src, alt: "", "aria-hidden": "true", style: { ...base, clipPath: ART_CLIP, pointerEvents: "none" } }));
   }
-  var USD_CLP = 1e3;
+  var USD_CLP_KEY = "angst-usdclp-v1";
+  var USD_CLP = (() => {
+    try {
+      const c = JSON.parse(localStorage.getItem(USD_CLP_KEY) || "null");
+      return c && c.valor > 0 ? c.valor : 1e3;
+    } catch (e) {
+      return 1e3;
+    }
+  })();
+  async function cargarUsdClp() {
+    const hoyISO2 = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+    try {
+      const c = JSON.parse(localStorage.getItem(USD_CLP_KEY) || "null");
+      if (c && c.valor > 0 && c.fecha === hoyISO2) {
+        USD_CLP = c.valor;
+        return USD_CLP;
+      }
+    } catch (e) {
+    }
+    try {
+      const r = await fetch("https://mindicador.cl/api/dolar", { signal: AbortSignal.timeout(8e3) });
+      const d = await r.json();
+      const v = d && d.serie && d.serie[0] && d.serie[0].valor;
+      if (v > 0) {
+        USD_CLP = v;
+        try {
+          localStorage.setItem(USD_CLP_KEY, JSON.stringify({ valor: v, fecha: hoyISO2 }));
+        } catch (e) {
+        }
+      }
+    } catch (e) {
+    }
+    return USD_CLP;
+  }
   var CONDICIONES = ["NM", "LP", "MP", "HP", "DMG"];
   var CARPETAS_DEFAULT = ["MLP", "Staples & Meta", "Dark Collection", "Price Watch"];
   var CARPETAS_ICONS = { "MLP": "\u{1F434}", "Staples & Meta": "\u26A1", "Dark Collection": "\u26AB", "Price Watch": "\u{1F3AF}" };
@@ -2122,7 +2262,8 @@ var __angst = (() => {
     hunting: { label: "hunting", color: "#7c4dff", bg: "#ede7f6" },
     sin_publicar: { label: "sin publicar", color: "#888", bg: "#f0f0f0" },
     a_la_venta: { label: "a la venta", color: "#2e7d52", bg: "#e8f5e9" },
-    vendida: { label: "vendida", color: "#555", bg: "#f5f5f5" }
+    vendida: { label: "vendida", color: "#555", bg: "#f5f5f5" },
+    en_mano: { label: "en mano", color: "#b26a00", bg: "#fff3e0" }
   };
   var MEGA_PROMO_SETS = [
     { id: "mep", name: "Mega Evolution Promos", releaseDate: "2025-09-26" }
@@ -2248,9 +2389,10 @@ var __angst = (() => {
   }
   var TIMEFRAME_WINDOWS = [7, 30, 90, 180, 360];
   function computeTimeframeDeltas(history) {
-    const pts = (history || []).filter((h) => h.market).sort((a, b) => a.date.localeCompare(b.date));
-    if (!pts.length) return [];
-    const latest = pts[pts.length - 1];
+    const todos = (history || []).filter((h) => h.market).sort((a, b) => a.date.localeCompare(b.date));
+    if (!todos.length) return [];
+    const latest = todos[todos.length - 1];
+    const pts = todos.filter((p) => fuenteCompatible(p, latest));
     const latestDate = /* @__PURE__ */ new Date(latest.date + "T12:00:00");
     return TIMEFRAME_WINDOWS.map((days) => {
       const cutoff = new Date(latestDate);
@@ -2380,10 +2522,14 @@ var __angst = (() => {
   }
   function PokecriptoPage({ inventario, saveInventario, carpetas, saveCarpetas, darkCatalogo, saveDarkCatalogo, priceCache, savePriceCache, apiKey, saveApiKey }) {
     const inv = inventario || [];
-    const cats = carpetas || [...CARPETAS_DEFAULT];
+    const cats = React.useMemo(() => {
+      const b = carpetas || [...CARPETAS_DEFAULT];
+      return b.includes("Price Watch") ? b : [...b, "Price Watch"];
+    }, [carpetas]);
     const darkCat = darkCatalogo || [];
     const cache = priceCache || {};
     const hoy = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+    const alertasWatch = inv.filter((c) => c.carpeta === "Price Watch" && c.estado !== "vendida" && c.precioObjetivo > 0 && c.tcgMarket != null && c.tcgMarket <= c.precioObjetivo);
     const [view, setView] = React.useState("coleccion");
     const [fichaId, setFichaId] = React.useState(null);
     const [carpetaView, setCarpetaView] = React.useState(null);
@@ -2787,6 +2933,13 @@ var __angst = (() => {
     }, [allSets]);
     const POKECRIPTO_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
     const POKECRIPTO_AUTH_KEY = "angst-simkl-auth-v1";
+    const [usdClp, setUsdClp] = React.useState(USD_CLP);
+    React.useEffect(() => {
+      cargarUsdClp().then((v) => setUsdClp(v));
+    }, []);
+    React.useEffect(() => {
+      if (carpetas && !carpetas.includes("Price Watch")) saveCarpetas([...carpetas, "Price Watch"]);
+    }, [carpetas]);
     const [pokecriptoSyncMsg, setPokecriptoSyncMsg] = React.useState(null);
     function getPokecriptoAuth() {
       try {
@@ -2812,13 +2965,21 @@ var __angst = (() => {
         const getResp = await fetch(`${POKECRIPTO_WORKER_URL}?path=pokecripto-pending.json`, { headers: { "X-Angst-Auth": auth } });
         const remote2 = getResp.ok ? await getResp.json() : [];
         const actual = Array.isArray(remote2) ? remote2 : [];
-        const ids = new Set(actual.map((c) => c.id));
-        const nuevasParaCola = cartas.filter((c) => !ids.has(c.id));
-        if (!nuevasParaCola.length) return;
+        const porId = new Map(actual.map((c) => [c.id, c]));
+        let cambio = false;
+        for (const c of cartas) {
+          const prev = porId.get(c.id);
+          const sig = c._patch && prev && !prev._patch ? { ...prev, ...c._patch } : c;
+          if (!prev || JSON.stringify(prev) !== JSON.stringify(sig)) {
+            porId.set(c.id, sig);
+            cambio = true;
+          }
+        }
+        if (!cambio) return;
         await fetch(POKECRIPTO_WORKER_URL, {
           method: "POST",
           headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
-          body: JSON.stringify({ path: "pokecripto-pending.json", payload: [...actual, ...nuevasParaCola] })
+          body: JSON.stringify({ path: "pokecripto-pending.json", payload: [...porId.values()] })
         });
       } catch (e) {
       }
@@ -2852,34 +3013,15 @@ var __angst = (() => {
       });
     }, []);
     async function refreshPrecioSilent(carta) {
-      let market = null, low = null, high = null;
-      if (carta.cardId) {
-        try {
-          const data = await fetchPoke(`${POKE_BASE}/cards/${carta.cardId}`);
-          const pp = getPrimaryPrice(data.data);
-          if (pp?.market) {
-            market = pp.market;
-            low = pp.low || null;
-            high = pp.high || null;
-          }
-        } catch (e) {
-        }
-      }
-      if (!market) {
-        const p = await fetchTCGPrice(carta.name, carta.set, carta.number, carta.setCode, apiKey);
-        if (p?.market) {
-          market = p.market;
-          low = p.low || null;
-          high = p.high || null;
-        }
-      }
-      if (!market) return null;
-      const newHist = addSnapshot(carta.priceHistory, market, low, high);
-      saveInventario((prev) => (Array.isArray(prev) ? prev : []).map((c) => c.id === carta.id ? { ...c, tcgMarket: market, tcgLow: low, tcgHigh: high, tcgUpdated: hoy, priceHistory: newHist } : c));
-      return market;
+      const r = await refreshPrecio(carta, apiKey, true, { usarTcgId: true });
+      if (!r.market) return null;
+      const newHist = addSnapshot(carta.priceHistory, r.market, r.low, r.high, hoy, r.src);
+      saveInventario((prev) => (Array.isArray(prev) ? prev : []).map((c) => c.id === carta.id ? { ...c, tcgMarket: r.market, tcgLow: r.low, tcgHigh: r.high, tcgUpdated: hoy, priceHistory: newHist, ...r.tcgId && r.tcgId !== c.tcgId ? { tcgId: r.tcgId } : {} } : c));
+      return r;
     }
     async function refreshPrecio2(carta) {
-      await refreshPrecioSilent(carta);
+      const r = await refreshPrecioSilent(carta);
+      return r || { market: null, low: null, high: null };
     }
     async function loadAllSets() {
       setAllSetsLoading(true);
@@ -2905,7 +3047,8 @@ var __angst = (() => {
     }
     function agregarCarta(card) {
       const p = getPrimaryPrice(card);
-      const esHunting = newForm.destino === "hunting";
+      const esWatch = newForm.carpeta === "Price Watch";
+      const esHunting = newForm.destino === "hunting" || esWatch;
       const nueva = {
         id: Date.now().toString(),
         cardId: card.id,
@@ -2920,7 +3063,7 @@ var __angst = (() => {
         tcgLow: p?.low || null,
         tcgHigh: p?.high || null,
         tcgUpdated: hoy,
-        priceHistory: p?.market ? [{ date: hoy, market: p.market, low: p.low || null, high: p.high || null }] : [],
+        priceHistory: p?.market ? [{ date: hoy, market: p.market, low: p.low || null, high: p.high || null, src: "ptcg" }] : [],
         costoUSD: esHunting ? 0 : parseFloat(newForm.costoUSD) || 0,
         precioVentaUSD: parseFloat(newForm.precioVentaUSD) || (p?.market || 0),
         condicion: newForm.condicion || "NM",
@@ -2931,12 +3074,13 @@ var __angst = (() => {
         fechaVenta: null,
         precioVendidoUSD: null,
         notas: newForm.notas || "",
-        isDark: isDarkCard(card)
+        isDark: isDarkCard(card),
+        ...esWatch && newForm.precioObjetivo ? { precioObjetivo: parseFloat(newForm.precioObjetivo) || null } : {}
       };
       saveInventario([nueva, ...inv]);
       encolarPokecriptoPending([nueva]);
       setAddingCard(null);
-      setNewForm({ costoUSD: "", precioVentaUSD: "", condicion: "NM", notas: "", fechaCompra: hoy, carpeta: cats[0], cantidad: 1, destino: "inventario" });
+      setNewForm({ costoUSD: "", precioVentaUSD: "", condicion: "NM", notas: "", fechaCompra: hoy, carpeta: cats[0], cantidad: 1, destino: "inventario", precioObjetivo: "" });
       setView("coleccion");
     }
     function updCarta(id, fields) {
@@ -3065,17 +3209,7 @@ var __angst = (() => {
     async function snapshotInicial(nuevas) {
       for (const c of nuevas) {
         try {
-          const { market, low, high } = await refreshPrecio2(c, apiKey);
-          if (market != null) {
-            saveInventario((prev) => (prev || []).map((x) => x.id === c.id ? {
-              ...x,
-              tcgMarket: market,
-              tcgLow: low,
-              tcgHigh: high,
-              tcgUpdated: (/* @__PURE__ */ new Date()).toISOString(),
-              priceHistory: addSnapshot(x.priceHistory, market, low, high)
-            } : x));
-          }
+          await refreshPrecio2(c);
         } catch (e) {
         }
         await new Promise((r) => setTimeout(r, 350));
@@ -3122,13 +3256,6 @@ var __angst = (() => {
         const cards = data.data || [];
         setResults(cards);
         if (!cards.length) setSearchErr(`Sin resultados para "${q}"`);
-        cards.forEach((c) => {
-          fetchTCGPrice(c.name, c.set?.name, c.number, c.set?.ptcgoCode || c.set?.id, apiKey).then((p) => {
-            if (!p?.market) return;
-            const prev = cache[c.id] || { name: c.name, image: c.images?.small || "", history: [] };
-            savePriceCache((prev2) => ({ ...prev2, [c.id]: { ...prev, lastMarket: p.market, lastDate: hoy, history: addSnapshot(prev.history, p.market, p.low, p.high) } }));
-          });
-        });
       } catch (e) {
         setSearchErr("Error de conexi\xF3n");
       }
@@ -3286,7 +3413,7 @@ var __angst = (() => {
     }
     function revAplicar(cartaId, c, conOverride) {
       const ov = { name: c.name, number: c.number, setId: c.setId || null, setCode: c.setCode || null, tcgId: c.tcgId || null };
-      saveInventario((prev) => (prev || []).map((x) => x.id === cartaId ? { ...x, tcgMarket: c.market, tcgLow: c.low, tcgHigh: c.high, tcgUpdated: hoy, priceHistory: addSnapshot(x.priceHistory, c.market, c.low, c.high, hoy), ...conOverride ? { tcgOverride: ov } : {} } : x));
+      saveInventario((prev) => (prev || []).map((x) => x.id === cartaId ? { ...x, tcgMarket: c.market, tcgLow: c.low, tcgHigh: c.high, tcgUpdated: hoy, priceHistory: addSnapshot(x.priceHistory, c.market, c.low, c.high, hoy, "tpl"), ...c.tcgId ? { tcgId: c.tcgId } : {}, ...conOverride ? { tcgOverride: ov } : {} } : x));
       return ov;
     }
     function guardarOverrideRemoto(cartaId, ov) {
@@ -3697,6 +3824,7 @@ var __angst = (() => {
         {
           onClick: () => {
             updCarta(carta.id, { costoUSD: parseFloat(editFields.costoUSD) || 0, precioVentaUSD: parseFloat(editFields.precioVentaUSD) || 0, condicion: editFields.condicion, notas: editFields.notas || "", carpeta: editFields.carpeta, cantidad: editFields.cantidad || 1, precioObjetivo: editFields.precioObjetivo ? parseFloat(editFields.precioObjetivo) : null });
+            if (editFields.carpeta === "Price Watch" !== (carta.carpeta === "Price Watch")) encolarPokecriptoPending([{ id: carta.id, _patch: { carpeta: editFields.carpeta } }]);
             setEditMode(false);
           },
           style: { flex: 1, background: "#111", border: "none", borderRadius: 8, padding: "9px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", cursor: "pointer", fontWeight: 600 }
@@ -3786,7 +3914,18 @@ var __angst = (() => {
         const tcgPrice = cacheEntry?.lastMarket || p?.market || null;
         const yaInv = inv.some((c) => c.cardId === card.id);
         const dark = isDarkCard(card);
-        return /* @__PURE__ */ React.createElement("div", { key: card.id, style: { padding: "12px 0", borderBottom: "1px solid #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("div", { style: { position: "relative", flexShrink: 0, cursor: "pointer" }, onClick: () => setZoomImage(card.images?.large || card.images?.small || null) }, card.images?.small && /* @__PURE__ */ React.createElement("img", { src: card.images.small, alt: card.name, style: { width: 52, borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.12)" } }), dark && /* @__PURE__ */ React.createElement("span", { style: { position: "absolute", top: -4, right: -4, fontSize: 11 } }, "\u26AB"), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", bottom: 2, right: 2, background: "rgba(0,0,0,0.5)", borderRadius: 3, padding: "1px 3px", fontSize: 8, color: "#fff" } }, "\u{1F50D}")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, lineHeight: 1.2, color: "#111" } }, card.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#888", marginTop: 1 } }, card.set?.name, " \xB7 #", card.number, card.rarity ? ` \xB7 ${card.rarity}` : ""), tcgPrice && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, color: "#2e7d52", marginTop: 4 } }, fmtUSD(tcgPrice), " ", /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 400, color: "#bbb", fontSize: 10 } }, "TCGPlayer"))), yaInv ? /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", padding: "6px", alignSelf: "center" } }, "ya en tu pool") : /* @__PURE__ */ React.createElement(
+        return /* @__PURE__ */ React.createElement("div", { key: card.id, style: { padding: "12px 0", borderBottom: "1px solid #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("div", { style: { position: "relative", flexShrink: 0, cursor: "pointer" }, onClick: () => setZoomImage(card.images?.large || card.images?.small || null) }, card.images?.small && /* @__PURE__ */ React.createElement("img", { src: card.images.small, alt: card.name, style: { width: 52, borderRadius: 6, boxShadow: "0 2px 8px rgba(0,0,0,0.12)" } }), dark && /* @__PURE__ */ React.createElement("span", { style: { position: "absolute", top: -4, right: -4, fontSize: 11 } }, "\u26AB"), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", bottom: 2, right: 2, background: "rgba(0,0,0,0.5)", borderRadius: 3, padding: "1px 3px", fontSize: 8, color: "#fff" } }, "\u{1F50D}")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, lineHeight: 1.2, color: "#111" } }, card.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#888", marginTop: 1 } }, card.set?.name, " \xB7 #", card.number, card.rarity ? ` \xB7 ${card.rarity}` : ""), tcgPrice && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, color: "#2e7d52", marginTop: 4 } }, fmtUSD(tcgPrice), " ", /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 400, color: "#bbb", fontSize: 10 } }, "TCGPlayer"))), yaInv ? /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", padding: "6px", alignSelf: "center" } }, "ya en tu pool") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            onClick: () => {
+              setAddingCard(card);
+              setNewForm((f2) => ({ ...f2, precioVentaUSD: tcgPrice ? tcgPrice.toFixed(2) : "", carpeta: "Price Watch", destino: "hunting", precioObjetivo: "" }));
+            },
+            title: "seguir su precio en Price Watch",
+            style: { background: "transparent", border: "1px dashed #bbb", borderRadius: 8, padding: "7px 9px", cursor: "pointer", fontSize: 13, flexShrink: 0, alignSelf: "center", marginRight: 6 }
+          },
+          "\u{1F3AF}"
+        ), /* @__PURE__ */ React.createElement(
           "button",
           {
             onClick: () => {
@@ -3796,7 +3935,7 @@ var __angst = (() => {
             style: { background: "#111", border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer", fontFamily: "'Caveat',cursive", fontSize: 14, color: "#fff", flexShrink: 0, alignSelf: "center" }
           },
           "+ agregar"
-        )));
+        ))));
       }), addingCard && /* @__PURE__ */ React.createElement("div", { onClick: () => setAddingCard(null), style: { position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,420px)", background: "#fff", borderRadius: "16px 16px 0 0", padding: "22px 20px 40px", maxHeight: "90vh", overflowY: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 16 } }, addingCard.images?.small && /* @__PURE__ */ React.createElement("img", { src: addingCard.images.small, style: { width: 52, borderRadius: 6, flexShrink: 0, cursor: "pointer" }, onClick: () => setZoomImage(addingCard.images?.large || addingCard.images?.small) }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#111", lineHeight: 1.1 } }, addingCard.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#888", marginTop: 2 } }, addingCard.set?.name, " \xB7 #", addingCard.number))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 0, marginBottom: 16, border: "1.5px solid #111", borderRadius: 10, overflow: "hidden" } }, [["inventario", "\u{1F4E6} en posesi\xF3n"], ["hunting", "\u{1F5E1}\uFE0F hunting"]].map(([k, l]) => /* @__PURE__ */ React.createElement(
         "button",
         {
@@ -3823,7 +3962,17 @@ var __angst = (() => {
           style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, padding: "5px 12px", borderRadius: 8, border: "1px dashed #ddd", background: newForm.carpeta === c ? "#111" : "transparent", color: newForm.carpeta === c ? "#fff" : "#555", cursor: "pointer" }
         },
         c
-      )))), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: newForm.destino === "hunting" ? "1fr" : "1fr 1fr", gap: 10, marginBottom: 12 } }, newForm.destino !== "hunting" && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "Lo que pagu\xE9 USD (0 si fue regalo)"), /* @__PURE__ */ React.createElement(
+      )))), newForm.carpeta === "Price Watch" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "\u{1F3AF} Me avisa cuando baje a (USD, opcional) \u2014 la sigo sin comprarla"), /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "number",
+          step: "0.01",
+          value: newForm.precioObjetivo || "",
+          onChange: (e) => setNewForm((f2) => ({ ...f2, precioObjetivo: e.target.value })),
+          placeholder: "ej: 2.50",
+          style: { width: "100%", border: "1px dashed #ccc", borderRadius: 6, padding: "6px 8px", fontSize: 14, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box", color: "#111" }
+        }
+      )), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: newForm.destino === "hunting" || newForm.carpeta === "Price Watch" ? "1fr" : "1fr 1fr", gap: 10, marginBottom: 12 } }, newForm.destino !== "hunting" && newForm.carpeta !== "Price Watch" && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", marginBottom: 4 } }, "Lo que pagu\xE9 USD (0 si fue regalo)"), /* @__PURE__ */ React.createElement(
         "input",
         {
           type: "number",
@@ -3902,7 +4051,7 @@ var __angst = (() => {
           }
         },
         l
-      )))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" } }, [["sin_publicar", "sin publicar"], ["a_la_venta", "a la venta"], ["vendida", "vendida"]].map(([k, l]) => {
+      )))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" } }, [["sin_publicar", "sin publicar"], ["en_mano", "en mano"], ["a_la_venta", "a la venta"], ["vendida", "vendida"]].map(([k, l]) => {
         const n = cartasCarpeta.filter((c) => c.estado === k).length;
         if (!n) return null;
         return /* @__PURE__ */ React.createElement("span", { key: k, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: ESTADOS[k].color, background: ESTADOS[k].bg, borderRadius: 20, padding: "3px 10px" } }, l, " ", n);
@@ -3923,7 +4072,7 @@ var __angst = (() => {
           },
           c.image && /* @__PURE__ */ React.createElement("img", { src: c.image, style: { width: 40, borderRadius: 5, flexShrink: 0 }, ...bindLongPress(c.imageHd || c.image, c.cardId, zoomListCarpeta) }),
           /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, c.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)" } }, c.condicion, (c.cantidad || 1) > 1 ? ` \xB7 \xD7${c.cantidad}` : "")),
-          /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color } }, fmtUSD(c.precioVentaUSD)), c.tcgMarket && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)" } }, fmtUSD(c.tcgMarket)))
+          /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right", flexShrink: 0 } }, carpetaView === "Price Watch" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: c.precioObjetivo > 0 && c.tcgMarket != null && c.tcgMarket <= c.precioObjetivo ? "#4caf80" : "#fff" } }, c.tcgMarket != null ? fmtUSD(c.tcgMarket) : "sin precio"), c.precioObjetivo > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)" } }, "\u{1F3AF} ", fmtUSD(c.precioObjetivo))) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color } }, fmtUSD(c.precioVentaUSD)), c.tcgMarket && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)" } }, fmtUSD(c.tcgMarket))))
         );
       })) : /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: gridCols, gap: cvView === "grid_small" ? 3 : 5 } }, cartasCarpeta.map((c) => {
         const up = c.tcgMarket && c.precioVentaUSD;
@@ -3944,7 +4093,7 @@ var __angst = (() => {
           },
           c.image ? /* @__PURE__ */ React.createElement("img", { src: c.image, alt: c.name, style: { width: "100%", display: "block" } }) : /* @__PURE__ */ React.createElement("div", { style: { aspectRatio: "2/3", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 } }, "\u{1F0CF}"),
           (c.cantidad || 1) > 1 && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 2, left: 2, background: "rgba(0,0,0,0.75)", borderRadius: 4, padding: "1px 5px", fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#fff" } }, "\xD7", c.cantidad),
-          /* @__PURE__ */ React.createElement("div", { style: { background: "rgba(0,0,0,0.75)", padding: isSmall ? "2px 3px" : "4px 5px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: isSmall ? 13 : 15, fontWeight: 700, color, textAlign: "center" } }, fmtUSD(c.precioVentaUSD)), !isSmall && c.tcgMarket && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.4)", textAlign: "center" } }, fmtUSD(c.tcgMarket)))
+          /* @__PURE__ */ React.createElement("div", { style: { background: "rgba(0,0,0,0.75)", padding: isSmall ? "2px 3px" : "4px 5px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: isSmall ? 13 : 15, fontWeight: 700, color, textAlign: "center" } }, carpetaView === "Price Watch" && c.tcgMarket != null ? fmtUSD(c.tcgMarket) : fmtUSD(c.precioVentaUSD)), !isSmall && (carpetaView === "Price Watch" ? c.precioObjetivo > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: c.tcgMarket != null && c.tcgMarket <= c.precioObjetivo ? "#4caf80" : "rgba(255,255,255,0.4)", textAlign: "center" } }, "\u{1F3AF} ", fmtUSD(c.precioObjetivo)) : c.tcgMarket && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.4)", textAlign: "center" } }, fmtUSD(c.tcgMarket))))
         );
       })), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
     }
@@ -4163,7 +4312,7 @@ var __angst = (() => {
             carta: c,
             prevMarket: prev?.market ?? null,
             newMarket: cur.market,
-            delta: prev?.market ? ((cur.market - prev.market) / prev.market * 100).toFixed(1) : null
+            delta: prev?.market && fuenteCompatible(prev, cur) ? ((cur.market - prev.market) / prev.market * 100).toFixed(1) : null
           };
           if (!porFecha.has(cur.date)) porFecha.set(cur.date, []);
           porFecha.get(cur.date).push(entry);
@@ -4241,7 +4390,7 @@ var __angst = (() => {
           /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: item.delta == null ? "#aaa" : up ? "#2e7d52" : "#e53935", flexShrink: 0, width: 48, textAlign: "right" } }, item.delta == null ? "nuevo" : `${up ? "+" : ""}${item.delta}%`)
         );
       })))));
-    })(), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14 } }, ["MLP", "Staples & Meta", "Colecciones", "Price Watch"].map((cat) => {
+    })(), alertasWatch.length > 0 && /* @__PURE__ */ React.createElement("div", { onClick: () => setCarpetaView("Price Watch"), style: { background: "#12301f", border: "1px solid #2e7d52", borderRadius: 10, padding: "9px 12px", marginBottom: 10, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#8fe0a8" } }, "\u{1F3AF} ", alertasWatch.length, " en tu precio objetivo: ", alertasWatch.slice(0, 3).map((c) => `${c.name} ${fmtUSD(c.tcgMarket)}`).join(" \xB7 "), alertasWatch.length > 3 ? " \u2026" : ""), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14 } }, ["MLP", "Staples & Meta", "Colecciones", "Price Watch"].map((cat) => {
       const n = cat === "Colecciones" ? 0 : inv.filter((c) => c.carpeta === cat).length;
       return /* @__PURE__ */ React.createElement(
         "button",
@@ -4252,7 +4401,7 @@ var __angst = (() => {
         },
         /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, marginBottom: 4 } }, cat === "Colecciones" ? "\u{1F5C2}\uFE0F" : CARPETAS_ICONS[cat]),
         /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 13, color: "#fff", lineHeight: 1.2 } }, cat),
-        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 3 } }, cat === "Colecciones" ? "9 en curso" : `${n} cartas`)
+        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 3 } }, cat === "Colecciones" ? "9 en curso" : `${n} cartas${cat === "Price Watch" && alertasWatch.length ? ` \xB7 \u{1F3AF} ${alertasWatch.length}` : ""}`)
       );
     })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", alignItems: "center" } }, /* @__PURE__ */ React.createElement(
       "button",

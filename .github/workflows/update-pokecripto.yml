@@ -40,22 +40,39 @@ jobs:
         with:
           node-version: '20'
 
+      # timeout propio (menor que el del job) para que, si el bot se pasa de tiempo, el paso de commit de abajo
+      # SIEMPRE corra y persista lo que alcanzó a guardar (el bot escribe a disco cada 25 cartas y ante SIGTERM).
       - name: Correr build-pokecripto.mjs
+        id: bot
+        timeout-minutes: 14
+        continue-on-error: true
         working-directory: feeder/modules/feed/scripts
         env:
           TCG_API_KEY: ${{ secrets.TCG_API_KEY }}
           POKECRIPTO_INVENTARIO_PATH: ${{ github.workspace }}/angst-data/pokecripto-inventario.json
           POKECRIPTO_PENDING_PATH: ${{ github.workspace }}/angst-data/pokecripto-pending.json
           POKECRIPTO_OVERRIDES_PATH: ${{ github.workspace }}/angst-data/pokecripto-overrides.json
+          POKECRIPTO_ESTADO_PATH: ${{ github.workspace }}/angst-data/pokecripto-estado.json
+          POKECRIPTO_MERGED_PATH: ${{ runner.temp }}/pokecripto-merged.json
         run: node build-pokecripto.mjs
 
       - name: Commitear y pushear a Angst-data, con reintento si hay conflicto
+        if: always()
         working-directory: angst-data
+        env:
+          POKECRIPTO_PENDING_PATH: ${{ github.workspace }}/angst-data/pokecripto-pending.json
+          POKECRIPTO_MERGED_PATH: ${{ runner.temp }}/pokecripto-merged.json
+          ANGST_DATA_DIR: ${{ github.workspace }}/angst-data
         run: |
           git config user.name "angst-feed-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add pokecripto-inventario.json pokecripto-pending.json
-          git diff --staged --quiet -- pokecripto-inventario.json pokecripto-pending.json && { echo "sin cambios, nada que pushear"; exit 0; }
+          # pending: conservar lo que el cliente encoló MIENTRAS el bot corría (ver pokecripto-reconcile-pending.mjs)
+          git fetch origin main
+          node ${{ github.workspace }}/feeder/modules/feed/scripts/pokecripto-reconcile-pending.mjs
+          ARCHIVOS="pokecripto-inventario.json pokecripto-pending.json"
+          [ -f pokecripto-estado.json ] && ARCHIVOS="$ARCHIVOS pokecripto-estado.json"
+          git add $ARCHIVOS
+          git diff --staged --quiet -- $ARCHIVOS && { echo "sin cambios, nada que pushear"; exit 0; }
           git commit -m "Actualizar precios Pokécripto $(date -u +%Y-%m-%dT%H:%MZ)"
           pushed=0
           for i in 1 2 3; do
@@ -67,6 +84,9 @@ jobs:
             # commit de origin) NO se toca ni se pisa con la versión vieja.
             git fetch origin main
             git reset --soft origin/main
+            # el cliente pudo encolar algo entre intentos: se reconcilia de nuevo contra la punta nueva
+            node ${{ github.workspace }}/feeder/modules/feed/scripts/pokecripto-reconcile-pending.mjs
+            git add $ARCHIVOS
             git commit -m "Actualizar precios Pokécripto $(date -u +%Y-%m-%dT%H:%MZ)"
             sleep 5
           done
@@ -74,3 +94,11 @@ jobs:
             echo "::error::push falló los 3 intentos, output del bot sin persistir"
             exit 1
           fi
+
+      # El paso del bot corre con continue-on-error para que el commit de arriba persista el avance parcial;
+      # si el bot falló o se pasó de tiempo, la corrida igual debe verse roja.
+      - name: Marcar la corrida como fallida si el bot falló
+        if: steps.bot.outcome == 'failure'
+        run: |
+          echo "::error::build-pokecripto.mjs falló o excedió su tiempo; el avance parcial ya se guardó en Angst-data"
+          exit 1
