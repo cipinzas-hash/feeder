@@ -30,3 +30,20 @@ rehidratación en `restoreFromPayload`.
 - `core/persistence.js` conserva el motor por manifests, que no es el que corre.
 - `pesoUnit` (kg/lb) y `diaManual` de Ejercicio son de sesión.
 - No se auditó el export XLSX ni lo que escriben las Actions del lado servidor.
+
+## Confirmación (14-oct-2026)
+
+**Estado: cerrada.** Correcciones publicadas en `main` (commit `39746df`, build de Pages OK).
+
+Prueba final contra Angst-data (rama `state-sync`, `angst-full-state.json`):
+
+- Backup `.json` (💾, 11:20 UTC) vs. estado subido (📤, 11:15 UTC): **36 campos en ambos, idénticos**; la única diferencia es `exportedAt`.
+- El payload pasa `validarPayloadExport` y los 36 campos coinciden con `CORE_EXPORT_FIELDS` + `LOCAL_KEY_FIELDS`.
+- `feedPodcastPositions` ya viaja con datos reales (avance de podcasts).
+- Un backup anterior (33 campos, sin los tres campos nuevos) salió de la versión previa a esta auditoría que seguía en memoria en el navegador; el 📤 posterior, ya con el código nuevo, trajo los 36. Los 32 campos en común eran idénticos: no hubo cambios de datos.
+
+**Aún sin ver con datos reales:** `feedSeriesOverlay` y `pokeAgotadas` vinieron `null` porque no había marcas de episodios recientes ni cartas agotadas. Están cubiertos por `npm run audit:export`, pero falta verlos poblados en un export. Al marcar un episodio o agotarse una carta: 📤 y revisar esos campos.
+
+**Prueba de referencia para repetir:** exportar 💾, subir 📤 sin editar nada, y comparar ambos archivos campo por campo (deben coincidir salvo `exportedAt`).
+
+**Siguientes mejoras posibles (sin implementar):** panel "¿estoy al día?" con sello de versión, chequeo liviano de `exportedAt` antes de bajar el estado completo, restauración desde `state-backups/`, y mostrar `pokecripto-estado.json` en Pokécripto.
