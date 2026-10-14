@@ -2060,6 +2060,30 @@ var __angst = (() => {
     });
     return { temporadas, total, emitidos, vistos: vistosCount, pendientes, siguiente, proximo };
   }
+  function restarOps(actual, enviado) {
+    const yaEnviado = /* @__PURE__ */ new Map();
+    for (const [t, e] of enviado?.marcar || []) yaEnviado.set(keyEp(t, e), true);
+    for (const [t, e] of enviado?.desmarcar || []) yaEnviado.set(keyEp(t, e), false);
+    const marcar = (actual?.marcar || []).filter(([t, e]) => yaEnviado.get(keyEp(t, e)) !== true);
+    const desmarcar = (actual?.desmarcar || []).filter(([t, e]) => yaEnviado.get(keyEp(t, e)) !== false);
+    return { marcar, desmarcar };
+  }
+  function avanceEfectivo(entry, overlayShow) {
+    const remotos = epMapToSet(entry.ep);
+    let vistos = entry.vistos ?? 0;
+    let pendientes = entry.pendientes ?? 0;
+    for (const [k, o] of Object.entries(overlayShow || {})) {
+      const estabaVisto = remotos.has(k);
+      if (o && o.v && !estabaVisto) {
+        vistos++;
+        pendientes = Math.max(pendientes - 1, 0);
+      } else if (o && !o.v && estabaVisto) {
+        vistos = Math.max(vistos - 1, 0);
+        pendientes++;
+      }
+    }
+    return { vistos, pendientes };
+  }
 
   // modules/vitrina/simkl.js
   var { useState: useState3, useEffect: useEffect3, useRef: useRef3 } = React;
@@ -2146,6 +2170,17 @@ var __angst = (() => {
     if (!m) return null;
     return { tipo: m[1] === "movie" ? "movie" : "show", tmdbId: Number(m[2]) };
   }
+  function nuevoId() {
+    try {
+      if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+    } catch (e) {
+    }
+    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+  var procesadasConocidas = /* @__PURE__ */ new Set();
+  function setProcesadasConocidas(ids) {
+    procesadasConocidas = new Set(ids || []);
+  }
   function enqueueSimklAction(item, estadoLocal, progreso) {
     const parsed = parseTmdbGuid(item?.guid);
     if (!parsed) return;
@@ -2154,7 +2189,7 @@ var __angst = (() => {
     const year = item.pubDate ? new Date(item.pubDate).getFullYear() : void 0;
     const pending = loadSimklPending();
     const filtered = pending.filter((a) => !(a.kind !== "episodios" && a.tmdbId === parsed.tmdbId && a.tipo === parsed.tipo));
-    const accion = { tmdbId: parsed.tmdbId, tipo: parsed.tipo, status, title: item.title, year, creadoEn: (/* @__PURE__ */ new Date()).toISOString() };
+    const accion = { id: nuevoId(), tmdbId: parsed.tmdbId, tipo: parsed.tipo, status, title: item.title, year, creadoEn: (/* @__PURE__ */ new Date()).toISOString() };
     if (progreso) accion.progreso = progreso;
     filtered.push(accion);
     saveSimklPending(filtered);
@@ -2169,50 +2204,64 @@ var __angst = (() => {
     const fusion = mergeEpisodeOps(previa, ops);
     const resto = pending.filter((a) => !(a.kind === "episodios" && a.tmdbId === parsed.tmdbId));
     if (!opsVacias(fusion)) {
-      resto.push({ kind: "episodios", tipo: "show", tmdbId: parsed.tmdbId, title: item.title, year, marcar: fusion.marcar, desmarcar: fusion.desmarcar, creadoEn: (/* @__PURE__ */ new Date()).toISOString() });
+      resto.push({ id: previa?.id || nuevoId(), kind: "episodios", tipo: "show", tmdbId: parsed.tmdbId, title: item.title, year, marcar: fusion.marcar, desmarcar: fusion.desmarcar, creadoEn: (/* @__PURE__ */ new Date()).toISOString() });
     }
     saveSimklPending(resto);
     flushSimklQueue();
     return true;
   }
+  var SIMKL_QUEUE_FILE = "simkl-queue.json";
+  var COLA_MAX_EDAD_MS = 14 * 24 * 3600 * 1e3;
+  function reconciliarTrasEnvio(enviadas) {
+    const porId = new Map(enviadas.map((a) => [a.id, a]));
+    const resto = [];
+    for (const a of loadSimklPending()) {
+      const enviada = porId.get(a.id);
+      if (!enviada) {
+        resto.push(a);
+        continue;
+      }
+      if (a.kind === "episodios") {
+        const ops = restarOps(a, enviada);
+        if (!opsVacias(ops)) resto.push({ ...a, id: nuevoId(), marcar: ops.marcar, desmarcar: ops.desmarcar });
+      }
+    }
+    saveSimklPending(resto);
+    return resto.length;
+  }
   var simklFlushInFlight = false;
+  var simklFlushRepetir = false;
   async function flushSimklQueue() {
-    if (simklFlushInFlight) return;
+    if (simklFlushInFlight) {
+      simklFlushRepetir = true;
+      return;
+    }
     const auth = getSimklAuth();
     const pending = loadSimklPending();
     if (!auth || !pending.length) return;
     simklFlushInFlight = true;
     setSimklSyncStatus({ estado: "syncing" });
+    const enviadas = JSON.parse(JSON.stringify(pending));
+    let quedaron = 0;
     try {
-      const getResp = await fetch(`${WORKER_URL}?path=simkl-state.json`, { headers: { "X-Angst-Auth": auth } });
+      const getResp = await fetch(`${WORKER_URL}?path=${SIMKL_QUEUE_FILE}`, { headers: { "X-Angst-Auth": auth } });
       if (!getResp.ok) {
         setSimklSyncStatus({ estado: "error", ultimoError: `GET ${getResp.status}` });
         return;
       }
       const remote2 = await getResp.json();
-      if (remote2.found === false) {
-        setSimklSyncStatus({ estado: "error", ultimoError: "simkl-state.json no existe todav\xEDa" });
-        return;
-      }
-      const remotePending = remote2.pendingActions || [];
-      const keyOf = (a) => a.kind === "episodios" ? `ep-${a.tmdbId}` : `${a.tipo}-${a.tmdbId}`;
-      const merged = [...remotePending];
-      for (const a of pending) {
-        const i = merged.findIndex((r) => keyOf(r) === keyOf(a));
-        if (i === -1) merged.push(a);
-        else if (a.kind === "episodios") {
-          const ops = mergeEpisodeOps(merged[i], a);
-          merged[i] = { ...merged[i], ...a, marcar: ops.marcar, desmarcar: ops.desmarcar };
-        }
-      }
-      remote2.pendingActions = merged;
+      const colaRemota = remote2.found === false ? [] : Array.isArray(remote2.actions) ? remote2.actions : [];
+      const ahora = Date.now();
+      const vigentes = colaRemota.filter((a) => a.id && !procesadasConocidas.has(a.id) && ahora - new Date(a.creadoEn || ahora).getTime() < COLA_MAX_EDAD_MS);
+      const ids = new Set(vigentes.map((a) => a.id));
+      const nuevas = enviadas.filter((a) => !ids.has(a.id));
       const postResp = await fetch(WORKER_URL, {
         method: "POST",
         headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
-        body: JSON.stringify({ path: "simkl-state.json", payload: remote2 })
+        body: JSON.stringify({ path: SIMKL_QUEUE_FILE, payload: { actions: [...vigentes, ...nuevas] } })
       });
       if (postResp.ok) {
-        saveSimklPending([]);
+        quedaron = reconciliarTrasEnvio(enviadas);
         setSimklSyncStatus({ estado: "ok", ultimoOk: (/* @__PURE__ */ new Date()).toISOString(), ultimoError: null });
       } else {
         setSimklSyncStatus({ estado: "error", ultimoError: `POST ${postResp.status}` });
@@ -2221,20 +2270,26 @@ var __angst = (() => {
       setSimklSyncStatus({ estado: "error", ultimoError: e.message });
     } finally {
       simklFlushInFlight = false;
+      const repetir = simklFlushRepetir || quedaron > 0;
+      simklFlushRepetir = false;
+      if (repetir && loadSimklPending().length && simklSyncStatus.estado !== "error") setTimeout(flushSimklQueue, 0);
     }
   }
 
-  // modules/vitrina/episodios.js
+  // modules/vitrina/avance.js
   var { useState: useState4, useEffect: useEffect4 } = React;
   var OVERLAY_KEY = "angst-series-overlay-v1";
   var OVERLAY_TTL_MS = 48 * 3600 * 1e3;
   var REFRESH_MS = 10 * 60 * 1e3;
   var listeners = /* @__PURE__ */ new Set();
+  var version = 0;
   var remote = null;
   var remoteAt = 0;
   var cargando = false;
   var errorCarga = null;
   var overlay = loadOverlay();
+  var catalogos = /* @__PURE__ */ new Map();
+  var setsCache = /* @__PURE__ */ new WeakMap();
   function loadOverlay() {
     try {
       return JSON.parse(localStorage.getItem(OVERLAY_KEY) || "{}") || {};
@@ -2249,20 +2304,30 @@ var __angst = (() => {
     }
   }
   function notify() {
-    listeners.forEach((fn) => fn((n) => n + 1));
+    version++;
+    listeners.forEach((fn) => fn(version));
   }
   function rehidratarOverlay() {
     overlay = loadOverlay();
     notify();
   }
+  function vistosRemotos(entry) {
+    let s = setsCache.get(entry);
+    if (!s) {
+      s = epMapToSet(entry.ep);
+      setsCache.set(entry, s);
+    }
+    return s;
+  }
   function podarOverlay() {
     const ahora = Date.now();
     let cambio = false;
     for (const [id, marcas] of Object.entries(overlay)) {
-      const vistosRemotos = remote?.shows?.[id] ? epMapToSet(remote.shows[id].ep) : null;
+      const entry = remote?.series?.[id];
+      const reales = entry ? vistosRemotos(entry) : null;
       for (const [k, o] of Object.entries(marcas)) {
         const vencida = ahora - (o.ts || 0) > OVERLAY_TTL_MS;
-        const reflejada = vistosRemotos && vistosRemotos.has(k) === !!o.v;
+        const reflejada = reales && reales.has(k) === !!o.v;
         if (vencida || reflejada) {
           delete marcas[k];
           cambio = true;
@@ -2275,19 +2340,23 @@ var __angst = (() => {
     }
     if (cambio) saveOverlay();
   }
-  function cargarEpisodios({ forzar = false } = {}) {
+  function cargarAvance({ forzar = false } = {}) {
     const auth = getSimklAuth();
     if (!auth) {
-      errorCarga = "sin-auth";
+      if (errorCarga !== "sin-auth") {
+        errorCarga = "sin-auth";
+        notify();
+      }
       return;
     }
     if (cargando || !forzar && remote && Date.now() - remoteAt < REFRESH_MS) return;
     cargando = true;
-    fetch(`${WORKER_URL}?path=series-episodios.json`, { headers: { "X-Angst-Auth": auth } }).then((r) => r.ok ? r.json() : null).then((d) => {
-      if (d && d.found !== false && d.shows) {
+    fetch(`${WORKER_URL}?path=simkl-vitrina.json`, { headers: { "X-Angst-Auth": auth } }).then((r) => r.ok ? r.json() : null).then((d) => {
+      if (d && d.found !== false && d.series) {
         remote = d;
         remoteAt = Date.now();
         errorCarga = null;
+        setProcesadasConocidas(d.procesadas);
         podarOverlay();
       } else if (!remote) {
         errorCarga = "sin-datos";
@@ -2299,6 +2368,15 @@ var __angst = (() => {
       notify();
     });
   }
+  function cargarCatalogo(id) {
+    const auth = getSimklAuth();
+    const previo = catalogos.get(id);
+    if (!auth || previo && previo.estado !== "error") return;
+    catalogos.set(id, { estado: "cargando" });
+    fetch(`${WORKER_URL}?path=series-episodios/${id}.json`, { headers: { "X-Angst-Auth": auth } }).then((r) => r.ok ? r.json() : null).then((d) => {
+      catalogos.set(id, d && d.found !== false && Array.isArray(d.temporadas) ? { estado: "ok", data: d } : { estado: "error" });
+    }).catch(() => catalogos.set(id, { estado: "error" })).finally(notify);
+  }
   function tmdbIdDe(guid) {
     const m = /^tmdb-tv-(\d+)$/.exec(guid || "");
     return m ? m[1] : null;
@@ -2307,30 +2385,46 @@ var __angst = (() => {
     const d = /* @__PURE__ */ new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
-  function useTick() {
-    const [, setN] = useState4(0);
+  function useAvanceVersion() {
+    const [v, setV] = useState4(version);
     useEffect4(() => {
-      listeners.add(setN);
-      cargarEpisodios();
-      return () => listeners.delete(setN);
+      listeners.add(setV);
+      cargarAvance();
+      return () => listeners.delete(setV);
     }, []);
+    return v;
+  }
+  function estadoAvance() {
+    return { cargando, error: errorCarga, hayDatos: !!remote, generatedAt: remote?.generatedAt || null };
+  }
+  function avanceDe(guid) {
+    const id = tmdbIdDe(guid);
+    const entry = id && remote?.series?.[id];
+    if (!entry) return null;
+    const ef = avanceEfectivo(entry, overlay[id]);
+    return { vistos: ef.vistos, pendientes: ef.pendientes, simklStatus: entry.simklStatus, catalogo: !!entry.catalogo, epInferido: !!entry.epInferido };
+  }
+  function estadoRemotoDe(guid) {
+    const m = /^tmdb-(movie|tv)-(\d+)$/.exec(guid || "");
+    if (!m) return null;
+    return remote?.estados?.[m[1]]?.[m[2]] ?? null;
+  }
+  function estadoEfectivo(cineEstado, guid) {
+    return cineEstado[guid]?.estado ?? estadoRemotoDe(guid) ?? "sin_marca";
   }
   function useSerieEpisodios(guid) {
-    useTick();
+    useAvanceVersion();
     const id = tmdbIdDe(guid);
-    const entry = id && remote?.shows?.[id];
-    if (!entry) return { vista: null, estadoCarga: cargando ? "cargando" : errorCarga || (remote ? "sin-catalogo" : "idle") };
-    return { vista: armarVista(entry, overlay[id], hoyISO()), estadoCarga: "ok", entry };
-  }
-  function usePendientesDe() {
-    useTick();
-    return (guid) => {
-      const id = tmdbIdDe(guid);
-      const entry = id && remote?.shows?.[id];
-      if (!entry) return null;
-      const v = armarVista(entry, overlay[id], hoyISO());
-      return v.vistos > 0 && v.pendientes > 0 ? v.pendientes : null;
-    };
+    useEffect4(() => {
+      if (id && remote?.series?.[id]?.catalogo) cargarCatalogo(id);
+    });
+    const entry = id && remote?.series?.[id];
+    if (!entry) return { vista: null, estadoCarga: cargando ? "cargando" : errorCarga || "sin-datos" };
+    if (!entry.catalogo) return { vista: null, estadoCarga: "sin-catalogo", entry };
+    const cat = catalogos.get(id);
+    if (!cat || cat.estado === "cargando") return { vista: null, estadoCarga: "cargando", entry };
+    if (cat.estado === "error") return { vista: null, estadoCarga: "error", entry };
+    return { vista: armarVista({ temporadas: cat.data.temporadas, ep: entry.ep }, overlay[id], hoyISO()), estadoCarga: "ok", entry };
   }
   function aplicarMarcas(item, ops) {
     const id = tmdbIdDe(item.guid);
@@ -9409,11 +9503,129 @@ ${item.link}`);
     return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", left: 0, right: 0, bottom: "var(--angst-podcast-h, 0px)", display: "flex", background: "#111", zIndex: 40, paddingBottom: "env(safe-area-inset-bottom)" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onChange("noticias"), style: tabBtn(area === "noticias") }, "\u{1F4F0} Noticias"), /* @__PURE__ */ React.createElement("button", { onClick: () => onChange("vitrina"), style: tabBtn(area === "vitrina") }, "\u{1F3AC} Vitrina"), /* @__PURE__ */ React.createElement("button", { onClick: onOpenBuzon, style: tabBtn(false) }, "\u{1F4CC} ", buzonCount));
   }
 
-  // modules/shared/constants.js
+  // modules/vitrina/series.jsx
   var { useState: useState11, useEffect: useEffect11, useRef: useRef10 } = React;
+  function SeriesProgreso({ item, progresoActual, onMarcar }) {
+    const seasons = item.seasons;
+    const [temporada, setTemporada] = useState11(progresoActual?.temporada || seasons?.[0]?.numero || 1);
+    const [episodio, setEpisodio] = useState11(progresoActual?.episodio || 1);
+    const seasonInfo = seasons?.find((s) => s.numero === temporada);
+    const maxEp = seasonInfo?.episodios || 99;
+    const diasProximoEp = diasHasta(item.nextEpisodeDate);
+    return /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 10px", background: "#111", borderTop: "1px solid #1c1c1c" } }, progresoActual && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#2ecc71", marginBottom: 6 } }, "\u{1F4FA} vas por T", progresoActual.temporada, "\xB7E", progresoActual.episodio), diasProximoEp != null && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: diasProximoEp <= 0 ? "#2ecc71" : "#999", marginBottom: 6 } }, diasProximoEp <= 0 ? "\u{1F195} nuevo episodio ya disponible" : `\u{1F4C5} pr\xF3ximo episodio en ${diasProximoEp} d\xEDa${diasProximoEp === 1 ? "" : "s"}`), seasons && seasons.length > 0 ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(
+      "select",
+      {
+        value: temporada,
+        onChange: (e) => {
+          setTemporada(Number(e.target.value));
+          setEpisodio(1);
+        },
+        style: { background: "#1c1c1c", color: "#fff", border: "1px solid #333", borderRadius: 6, padding: "6px 8px", fontFamily: "'DM Sans',sans-serif", fontSize: 12 }
+      },
+      seasons.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.numero, value: s.numero }, "Temporada ", s.numero))
+    ), /* @__PURE__ */ React.createElement(
+      "select",
+      {
+        value: episodio,
+        onChange: (e) => setEpisodio(Number(e.target.value)),
+        style: { background: "#1c1c1c", color: "#fff", border: "1px solid #333", borderRadius: 6, padding: "6px 8px", fontFamily: "'DM Sans',sans-serif", fontSize: 12 }
+      },
+      Array.from({ length: maxEp }, (_, i) => i + 1).map((n) => /* @__PURE__ */ React.createElement("option", { key: n, value: n }, "Ep. ", n))
+    ), /* @__PURE__ */ React.createElement("button", { onClick: () => onMarcar(temporada, episodio), style: {
+      background: "#2ecc71",
+      color: "#111",
+      border: "none",
+      borderRadius: 6,
+      padding: "6px 12px",
+      fontFamily: "'DM Sans',sans-serif",
+      fontSize: 12,
+      fontWeight: 700,
+      cursor: "pointer"
+    } }, "marcar hasta ac\xE1")) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#666", fontStyle: "italic" } }, "sin desglose de temporadas todav\xEDa -- se completa en la pr\xF3xima actualizaci\xF3n del cat\xE1logo"));
+  }
+  function SeriesSeguimiento({ item, progresoActual, onMarcar }) {
+    const { vista, entry, estadoCarga } = useSerieEpisodios(item.guid);
+    if (estadoCarga === "cargando" && entry?.catalogo) {
+      return /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", background: "#111", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#888" } }, "cargando episodios\u2026");
+    }
+    if (vista && vista.total > 0) return /* @__PURE__ */ React.createElement(SeriesEpisodios, { item, vista, inferido: !!entry?.epInferido });
+    return /* @__PURE__ */ React.createElement(SeriesProgreso, { item, progresoActual, onMarcar });
+  }
+  function SeriesEpisodios({ item, vista, inferido }) {
+    const cineEstado = useCineEstadoMap();
+    const estado = estadoEfectivo(cineEstado, item.guid);
+    const inicial = vista.siguiente?.t ?? vista.temporadas[vista.temporadas.length - 1]?.n;
+    const [abiertas, setAbiertas] = useState11(() => new Set(inicial != null ? [inicial] : []));
+    const fuente = { fontFamily: "'DM Sans',sans-serif" };
+    const diasProximo = vista.proximo?.fecha ? diasHasta(vista.proximo.fecha) : null;
+    function actuar(fn) {
+      if (estado === "sin_marca") setCineItemEstado(item.guid, { estado: "interesa", item });
+      fn();
+    }
+    function alternar(n) {
+      setAbiertas((prev) => {
+        const s = new Set(prev);
+        s.has(n) ? s.delete(n) : s.add(n);
+        return s;
+      });
+    }
+    const btnMini = (activo) => ({
+      background: "transparent",
+      border: "1px solid " + (activo ? "#2ecc71" : "#333"),
+      color: activo ? "#2ecc71" : "#888",
+      borderRadius: 6,
+      padding: "3px 8px",
+      fontSize: 10,
+      cursor: "pointer",
+      ...fuente
+    });
+    return /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 10px", background: "#111", borderTop: "1px solid #1c1c1c" } }, /* @__PURE__ */ React.createElement("div", { style: { ...fuente, fontSize: 12, color: "#ddd", marginBottom: 4 } }, "\u{1F4FA} ", vista.vistos, "/", vista.emitidos, " vistos", " \xB7 ", vista.pendientes > 0 ? /* @__PURE__ */ React.createElement("span", { style: { color: "#f5c518", fontWeight: 700 } }, vista.pendientes, " pendiente", vista.pendientes === 1 ? "" : "s") : /* @__PURE__ */ React.createElement("span", { style: { color: "#2ecc71", fontWeight: 700 } }, "al d\xEDa \u2713")), inferido && /* @__PURE__ */ React.createElement("div", { style: { ...fuente, fontSize: 10, color: "#888", fontStyle: "italic", marginBottom: 4 } }, "\u24D8 Simkl no entrega el detalle por episodio de esta serie: el avance se reconstruy\xF3 desde el \xFAltimo episodio visto."), vista.siguiente && /* @__PURE__ */ React.createElement("div", { style: { ...fuente, fontSize: 11, color: "#2ecc71", marginBottom: 4 } }, "\u25B6 siguiente: T", vista.siguiente.t, "\xB7E", vista.siguiente.e, vista.siguiente.nombre ? ` \u2014 ${vista.siguiente.nombre}` : ""), vista.proximo && /* @__PURE__ */ React.createElement("div", { style: { ...fuente, fontSize: 11, color: "#999", marginBottom: 4 } }, "\u{1F4C5} pr\xF3ximo: T", vista.proximo.t, "\xB7E", vista.proximo.e, vista.proximo.nombre ? ` \u2014 ${vista.proximo.nombre}` : "", diasProximo != null ? diasProximo <= 0 ? " (hoy)" : ` (en ${diasProximo} d\xEDa${diasProximo === 1 ? "" : "s"})` : ""), /* @__PURE__ */ React.createElement("div", { style: { maxHeight: 240, overflowY: "auto", marginTop: 6, border: "1px solid #1c1c1c", borderRadius: 8 } }, vista.temporadas.map((t) => {
+      const abierta = abiertas.has(t.n);
+      const completa = t.vistos === t.total;
+      return /* @__PURE__ */ React.createElement("div", { key: t.n }, /* @__PURE__ */ React.createElement("div", { onClick: () => alternar(t.n), style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: "#161616", cursor: "pointer", borderBottom: "1px solid #1c1c1c" } }, /* @__PURE__ */ React.createElement("span", { style: { ...fuente, fontSize: 11, color: "#888", width: 10 } }, abierta ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { ...fuente, fontSize: 12, color: "#fff", fontWeight: 600, flex: 1 } }, "Temporada ", t.n, /* @__PURE__ */ React.createElement("span", { style: { color: completa ? "#2ecc71" : "#888", fontWeight: 400, marginLeft: 8 } }, t.vistos, "/", t.total), t.pendientes > 0 && /* @__PURE__ */ React.createElement("span", { style: { color: "#f5c518", fontWeight: 400, marginLeft: 6 } }, "\xB7 ", t.pendientes, " pend.")), /* @__PURE__ */ React.createElement("button", { onClick: (e) => {
+        e.stopPropagation();
+        actuar(() => marcarTemporada(item, vista, t.n, true));
+      }, style: btnMini(false), title: "marcar toda la temporada (solo los emitidos)" }, "\u2713 todo"), /* @__PURE__ */ React.createElement("button", { onClick: (e) => {
+        e.stopPropagation();
+        actuar(() => marcarTemporada(item, vista, t.n, false));
+      }, style: btnMini(false), title: "desmarcar la temporada" }, "\u21BA nada")), abierta && t.eps.map((x) => /* @__PURE__ */ React.createElement(
+        "div",
+        {
+          key: x.e,
+          onClick: () => x.emitido && actuar(() => toggleEpisodio(item, t.n, x.e, x.visto)),
+          style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderBottom: "1px solid #181818", cursor: x.emitido ? "pointer" : "default", opacity: x.emitido ? 1 : 0.4 }
+        },
+        /* @__PURE__ */ React.createElement("span", { style: {
+          width: 18,
+          height: 18,
+          borderRadius: 5,
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          border: "1px solid " + (x.visto ? "#2ecc71" : "#444"),
+          background: x.visto ? "#2ecc71" : "transparent",
+          color: "#111",
+          fontSize: 12,
+          fontWeight: 700
+        } }, x.visto ? "\u2713" : ""),
+        /* @__PURE__ */ React.createElement("span", { style: { ...fuente, fontSize: 11, color: "#888", width: 28, flexShrink: 0 } }, "E", x.e),
+        /* @__PURE__ */ React.createElement("span", { style: { ...fuente, fontSize: 12, color: x.visto ? "#777" : "#eee", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, x.nombre || `Episodio ${x.e}`),
+        !x.emitido && /* @__PURE__ */ React.createElement("span", { style: { ...fuente, fontSize: 10, color: "#888", flexShrink: 0 } }, x.fecha ? `sale ${x.fecha}` : "sin fecha"),
+        x.emitido && !x.visto && /* @__PURE__ */ React.createElement("button", { onClick: (e) => {
+          e.stopPropagation();
+          actuar(() => marcarHastaAca(item, vista, t.n, x.e));
+        }, style: btnMini(false), title: "marcar como visto todo lo anterior y este" }, "\u2913 hasta ac\xE1")
+      )));
+    })));
+  }
+
+  // modules/shared/constants.js
+  var { useState: useState12, useEffect: useEffect12, useRef: useRef11 } = React;
   var FEED_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/feed.json";
   var CINE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/cine.json";
   var MELEE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/melee.json";
+  var VIDEOTECA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/videoteca.json";
   var CINE_CATEGORIAS = ["Pel\xEDculas", "Series", "Animaci\xF3n"];
   var VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales", "Melee", "Conciertos"];
   var MUSIC_CATEGORIA = "Dark scene / M\xFAsica";
@@ -9450,7 +9662,7 @@ ${item.link}`);
   var STORAGE_KEY = "angst-feed-proto-v1";
 
   // modules/vitrina/cine.jsx
-  var { useState: useState12, useEffect: useEffect12, useRef: useRef11 } = React;
+  var { useState: useState13, useEffect: useEffect13, useRef: useRef12 } = React;
   function loadImageForCanvas(url) {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -9571,8 +9783,8 @@ ${item.link}`);
     return /* @__PURE__ */ React.createElement("div", { style: { background: "#151515", borderRadius: 10, padding: "10px 12px", marginBottom: 8, borderLeft: `2px solid ${color}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" } }, label), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color, fontWeight: 700 } }, review.rating, "/10")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 } }, review.text), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 6 } }, "\u2014 ", review.author));
   }
   function MiniReviewForm({ onSave, onCancel, inicial }) {
-    const [ratingId, setRatingId] = useState12(inicial?.rating || null);
-    const [nota, setNota] = useState12(inicial?.nota || "");
+    const [ratingId, setRatingId] = useState13(inicial?.rating || null);
+    const [nota, setNota] = useState13(inicial?.nota || "");
     return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" } }, CINE_RATINGS.map((r) => /* @__PURE__ */ React.createElement("button", { key: r.id, onClick: () => setRatingId(r.id), style: {
       fontFamily: "'DM Sans',sans-serif",
       fontSize: 11,
@@ -9618,127 +9830,17 @@ ${item.link}`);
       "guardar rese\xF1a"
     )));
   }
-  function SeriesProgreso({ item, progresoActual, onMarcar }) {
-    const seasons = item.seasons;
-    const [temporada, setTemporada] = useState12(progresoActual?.temporada || seasons?.[0]?.numero || 1);
-    const [episodio, setEpisodio] = useState12(progresoActual?.episodio || 1);
-    const seasonInfo = seasons?.find((s) => s.numero === temporada);
-    const maxEp = seasonInfo?.episodios || 99;
-    const diasProximoEp = diasHasta(item.nextEpisodeDate);
-    return /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 10px", background: "#111", borderTop: "1px solid #1c1c1c" } }, progresoActual && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#2ecc71", marginBottom: 6 } }, "\u{1F4FA} vas por T", progresoActual.temporada, "\xB7E", progresoActual.episodio), diasProximoEp != null && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: diasProximoEp <= 0 ? "#2ecc71" : "#999", marginBottom: 6 } }, diasProximoEp <= 0 ? "\u{1F195} nuevo episodio ya disponible" : `\u{1F4C5} pr\xF3ximo episodio en ${diasProximoEp} d\xEDa${diasProximoEp === 1 ? "" : "s"}`), seasons && seasons.length > 0 ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(
-      "select",
-      {
-        value: temporada,
-        onChange: (e) => {
-          setTemporada(Number(e.target.value));
-          setEpisodio(1);
-        },
-        style: { background: "#1c1c1c", color: "#fff", border: "1px solid #333", borderRadius: 6, padding: "6px 8px", fontFamily: "'DM Sans',sans-serif", fontSize: 12 }
-      },
-      seasons.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.numero, value: s.numero }, "Temporada ", s.numero))
-    ), /* @__PURE__ */ React.createElement(
-      "select",
-      {
-        value: episodio,
-        onChange: (e) => setEpisodio(Number(e.target.value)),
-        style: { background: "#1c1c1c", color: "#fff", border: "1px solid #333", borderRadius: 6, padding: "6px 8px", fontFamily: "'DM Sans',sans-serif", fontSize: 12 }
-      },
-      Array.from({ length: maxEp }, (_, i) => i + 1).map((n) => /* @__PURE__ */ React.createElement("option", { key: n, value: n }, "Ep. ", n))
-    ), /* @__PURE__ */ React.createElement("button", { onClick: () => onMarcar(temporada, episodio), style: {
-      background: "#2ecc71",
-      color: "#111",
-      border: "none",
-      borderRadius: 6,
-      padding: "6px 12px",
-      fontFamily: "'DM Sans',sans-serif",
-      fontSize: 12,
-      fontWeight: 700,
-      cursor: "pointer"
-    } }, "marcar hasta ac\xE1")) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#666", fontStyle: "italic" } }, "sin desglose de temporadas todav\xEDa -- se completa en la pr\xF3xima actualizaci\xF3n del cat\xE1logo"));
-  }
-  function SeriesSeguimiento({ item, progresoActual, onMarcar }) {
-    const { vista, entry } = useSerieEpisodios(item.guid);
-    if (vista && vista.total > 0) return /* @__PURE__ */ React.createElement(SeriesEpisodios, { item, vista, inferido: !!entry?.epInferido });
-    return /* @__PURE__ */ React.createElement(SeriesProgreso, { item, progresoActual, onMarcar });
-  }
-  function SeriesEpisodios({ item, vista, inferido }) {
-    const cineEstado = useCineEstadoMap();
-    const estado = cineEstado[item.guid]?.estado || "sin_marca";
-    const inicial = vista.siguiente?.t ?? vista.temporadas[vista.temporadas.length - 1]?.n;
-    const [abiertas, setAbiertas] = useState12(() => new Set(inicial != null ? [inicial] : []));
-    const fuente = { fontFamily: "'DM Sans',sans-serif" };
-    const diasProximo = vista.proximo?.fecha ? diasHasta(vista.proximo.fecha) : null;
-    function actuar(fn) {
-      if (estado === "sin_marca") setCineItemEstado(item.guid, { estado: "interesa", item });
-      fn();
-    }
-    function alternar(n) {
-      setAbiertas((prev) => {
-        const s = new Set(prev);
-        s.has(n) ? s.delete(n) : s.add(n);
-        return s;
-      });
-    }
-    const btnMini = (activo) => ({
-      background: "transparent",
-      border: "1px solid " + (activo ? "#2ecc71" : "#333"),
-      color: activo ? "#2ecc71" : "#888",
-      borderRadius: 6,
-      padding: "3px 8px",
-      fontSize: 10,
-      cursor: "pointer",
-      ...fuente
-    });
-    return /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 10px", background: "#111", borderTop: "1px solid #1c1c1c" } }, /* @__PURE__ */ React.createElement("div", { style: { ...fuente, fontSize: 12, color: "#ddd", marginBottom: 4 } }, "\u{1F4FA} ", vista.vistos, "/", vista.emitidos, " vistos", " \xB7 ", vista.pendientes > 0 ? /* @__PURE__ */ React.createElement("span", { style: { color: "#f5c518", fontWeight: 700 } }, vista.pendientes, " pendiente", vista.pendientes === 1 ? "" : "s") : /* @__PURE__ */ React.createElement("span", { style: { color: "#2ecc71", fontWeight: 700 } }, "al d\xEDa \u2713")), inferido && /* @__PURE__ */ React.createElement("div", { style: { ...fuente, fontSize: 10, color: "#888", fontStyle: "italic", marginBottom: 4 } }, "\u24D8 Simkl no entrega el detalle por episodio de esta serie: el avance se reconstruy\xF3 desde el \xFAltimo episodio visto."), vista.siguiente && /* @__PURE__ */ React.createElement("div", { style: { ...fuente, fontSize: 11, color: "#2ecc71", marginBottom: 4 } }, "\u25B6 siguiente: T", vista.siguiente.t, "\xB7E", vista.siguiente.e, vista.siguiente.nombre ? ` \u2014 ${vista.siguiente.nombre}` : ""), vista.proximo && /* @__PURE__ */ React.createElement("div", { style: { ...fuente, fontSize: 11, color: "#999", marginBottom: 4 } }, "\u{1F4C5} pr\xF3ximo: T", vista.proximo.t, "\xB7E", vista.proximo.e, vista.proximo.nombre ? ` \u2014 ${vista.proximo.nombre}` : "", diasProximo != null ? diasProximo <= 0 ? " (hoy)" : ` (en ${diasProximo} d\xEDa${diasProximo === 1 ? "" : "s"})` : ""), /* @__PURE__ */ React.createElement("div", { style: { maxHeight: 240, overflowY: "auto", marginTop: 6, border: "1px solid #1c1c1c", borderRadius: 8 } }, vista.temporadas.map((t) => {
-      const abierta = abiertas.has(t.n);
-      const completa = t.vistos === t.total;
-      return /* @__PURE__ */ React.createElement("div", { key: t.n }, /* @__PURE__ */ React.createElement("div", { onClick: () => alternar(t.n), style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: "#161616", cursor: "pointer", borderBottom: "1px solid #1c1c1c" } }, /* @__PURE__ */ React.createElement("span", { style: { ...fuente, fontSize: 11, color: "#888", width: 10 } }, abierta ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { ...fuente, fontSize: 12, color: "#fff", fontWeight: 600, flex: 1 } }, "Temporada ", t.n, /* @__PURE__ */ React.createElement("span", { style: { color: completa ? "#2ecc71" : "#888", fontWeight: 400, marginLeft: 8 } }, t.vistos, "/", t.total), t.pendientes > 0 && /* @__PURE__ */ React.createElement("span", { style: { color: "#f5c518", fontWeight: 400, marginLeft: 6 } }, "\xB7 ", t.pendientes, " pend.")), /* @__PURE__ */ React.createElement("button", { onClick: (e) => {
-        e.stopPropagation();
-        actuar(() => marcarTemporada(item, vista, t.n, true));
-      }, style: btnMini(false), title: "marcar toda la temporada (solo los emitidos)" }, "\u2713 todo"), /* @__PURE__ */ React.createElement("button", { onClick: (e) => {
-        e.stopPropagation();
-        actuar(() => marcarTemporada(item, vista, t.n, false));
-      }, style: btnMini(false), title: "desmarcar la temporada" }, "\u21BA nada")), abierta && t.eps.map((x) => /* @__PURE__ */ React.createElement(
-        "div",
-        {
-          key: x.e,
-          onClick: () => x.emitido && actuar(() => toggleEpisodio(item, t.n, x.e, x.visto)),
-          style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderBottom: "1px solid #181818", cursor: x.emitido ? "pointer" : "default", opacity: x.emitido ? 1 : 0.4 }
-        },
-        /* @__PURE__ */ React.createElement("span", { style: {
-          width: 18,
-          height: 18,
-          borderRadius: 5,
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          border: "1px solid " + (x.visto ? "#2ecc71" : "#444"),
-          background: x.visto ? "#2ecc71" : "transparent",
-          color: "#111",
-          fontSize: 12,
-          fontWeight: 700
-        } }, x.visto ? "\u2713" : ""),
-        /* @__PURE__ */ React.createElement("span", { style: { ...fuente, fontSize: 11, color: "#888", width: 28, flexShrink: 0 } }, "E", x.e),
-        /* @__PURE__ */ React.createElement("span", { style: { ...fuente, fontSize: 12, color: x.visto ? "#777" : "#eee", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, x.nombre || `Episodio ${x.e}`),
-        !x.emitido && /* @__PURE__ */ React.createElement("span", { style: { ...fuente, fontSize: 10, color: "#888", flexShrink: 0 } }, x.fecha ? `sale ${x.fecha}` : "sin fecha"),
-        x.emitido && !x.visto && /* @__PURE__ */ React.createElement("button", { onClick: (e) => {
-          e.stopPropagation();
-          actuar(() => marcarHastaAca(item, vista, t.n, x.e));
-        }, style: btnMini(false), title: "marcar como visto todo lo anterior y este" }, "\u2913 hasta ac\xE1")
-      )));
-    })));
-  }
   function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions, onExportImage }) {
     const cineEstado = useCineEstadoMap();
+    useAvanceVersion();
     const estadoItem = cineEstado[item.guid];
-    const estado = estadoItem?.estado || "sin_marca";
-    const [reviewOpen, setReviewOpen] = useState12(false);
+    const estado = estadoEfectivo(cineEstado, item.guid);
+    const [reviewOpen, setReviewOpen] = useState13(false);
     function marcar(nuevoEstado) {
       if (nuevoEstado === "interesa") {
         setCineItemEstado(item.guid, { estado: "interesa", item });
       } else if (nuevoEstado === "sin_marca") {
-        setCineItemEstado(item.guid, null);
+        setCineItemEstado(item.guid, estadoRemotoDe(item.guid) ? { estado: "sin_marca" } : null);
       } else {
         setCineItemEstado(item.guid, { estado: nuevoEstado });
       }
@@ -9754,12 +9856,15 @@ ${item.link}`);
       setCineItemEstado(item.guid, { estado: "interesa", item, progreso: { temporada, episodio } });
       enqueueSimklAction(item, "interesa", { temporada, episodio });
     }
+    const avance = avanceDe(item.guid);
+    const puedeEpisodios = item.categoria === "Series" || item.categoria === "Animaci\xF3n" && !!avance?.catalogo;
+    const mostrarEpisodios = estado === "interesa" || (avance?.vistos ?? 0) > 0 || !!progresoActual;
     const color = CAT_COLORS[item.categoria] || "#e91e8c";
     const leads = (item.cast || []).filter((c) => c.order < 4);
     const supporting = (item.cast || []).filter((c) => c.order >= 4);
     return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#0d0d0d", display: "flex", flexDirection: "column", zIndex: 50 } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #1a1a1a" } }, /* @__PURE__ */ React.createElement("button", { onClick: onBack, style: { background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 } }, item.source), /* @__PURE__ */ React.createElement("a", { href: item.link, target: "_blank", rel: "noopener", style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", textDecoration: "none" } }, "fuente \u2197")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", overscrollBehaviorY: "contain", padding: "18px 20px 30px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, marginBottom: 12 } }, item.image && /* @__PURE__ */ React.createElement("img", { src: item.image, alt: "", style: { width: 110, minWidth: 110, borderRadius: 10, alignSelf: "flex-start" }, onError: (e) => {
       e.target.style.display = "none";
-    } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement(FormatoTag, { item }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff", margin: "4px 0 8px", lineHeight: 1.15, wordBreak: "break-word" } }, item.title), /* @__PURE__ */ React.createElement(RatingBadges, { rating: item.rating, size: "lg" }))), item.trailer && /* @__PURE__ */ React.createElement("div", { style: { margin: "16px 0", borderRadius: 10, overflow: "hidden", aspectRatio: "16/9" } }, /* @__PURE__ */ React.createElement(
+    } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement(FormatoTag, { item }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff", margin: "4px 0 8px", lineHeight: 1.15, wordBreak: "break-word" } }, item.title), /* @__PURE__ */ React.createElement(RatingBadges, { rating: item.rating, size: "lg" }))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, marginBottom: 18 } }, item.summary), item.trailer && /* @__PURE__ */ React.createElement("div", { style: { margin: "16px 0", borderRadius: 10, overflow: "hidden", aspectRatio: "16/9" } }, /* @__PURE__ */ React.createElement(
       "iframe",
       {
         src: `https://www.youtube-nocookie.com/embed/${item.trailer.key}`,
@@ -9768,10 +9873,7 @@ ${item.link}`);
         referrerPolicy: "strict-origin-when-cross-origin",
         allowFullScreen: true
       }
-    )), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, marginBottom: 18 } }, item.summary), !esEnProduccion(item) && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #1a1a1a" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 } }, "mi rese\xF1a"), estado === "vista" && !reviewOpen ? /* @__PURE__ */ React.createElement("div", { onClick: () => setReviewOpen(true), style: { cursor: "pointer" } }, (() => {
-      const r = CINE_RATINGS.find((r2) => r2.id === estadoItem.rating);
-      return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", marginBottom: 4 } }, r ? `${r.emoji} ${r.label}` : "sin calificar");
-    })(), estadoItem.nota && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", fontStyle: "italic" } }, '"', estadoItem.nota, '"'), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 4 } }, "tocar para editar")) : reviewOpen || estado !== "vista" ? reviewOpen && /* @__PURE__ */ React.createElement(MiniReviewForm, { onSave: guardarReview, onCancel: () => setReviewOpen(false), inicial: estadoItem }) : null, estado !== "vista" && !reviewOpen && /* @__PURE__ */ React.createElement("button", { onClick: () => setReviewOpen(true), style: { ...btnGhost, width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4DD}"), "marcar como vista")), leads.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 6 } }, "reparto principal"), leads.map((c, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.7)", marginBottom: 2 } }, /* @__PURE__ */ React.createElement("b", { style: { color: "#fff" } }, c.name), c.character ? ` \u2014 ${c.character}` : "")), supporting.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6 } }, supporting.map((c) => c.name).join(" \xB7 "))), item.reviews ? /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 } }, "rese\xF1as de usuario"), /* @__PURE__ */ React.createElement(ReviewBlock, { label: "mejor valorada", review: item.reviews.top, color }), item.reviews.bottom && /* @__PURE__ */ React.createElement(ReviewBlock, { label: "peor valorada", review: item.reviews.bottom, color })) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#666", fontStyle: "italic" } }, "sin rese\xF1as de usuario disponibles para este t\xEDtulo")), !hideActions && /* @__PURE__ */ React.createElement(React.Fragment, null, !reviewOpen && estado !== "vista" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px 4px", background: "#111" } }, /* @__PURE__ */ React.createElement(
+    )), !hideActions && !reviewOpen && estado !== "vista" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, margin: "2px 0 18px" } }, /* @__PURE__ */ React.createElement(
       "button",
       {
         onClick: () => marcar(estado === "interesa" ? "sin_marca" : "interesa"),
@@ -9787,19 +9889,22 @@ ${item.link}`);
       },
       /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F44E}"),
       "no me interesa"
-    )), !reviewOpen && item.categoria === "Series" && /* @__PURE__ */ React.createElement(SeriesSeguimiento, { item, progresoActual, onMarcar: marcarProgreso }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "anterior"), /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareToWhatsApp(item), style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4E4}"), "compartir"), /* @__PURE__ */ React.createElement("button", { onClick: onNext, style: { ...btnGhost, background: color, color: "#111", borderColor: color } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente"))), hideActions && onExportImage && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onExportImage(item), style: { ...btnGhost, background: color, color: "#111", borderColor: color, flex: "none", width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4F8}"), "exportar imagen para compartir")));
+    )), !hideActions && !reviewOpen && puedeEpisodios && mostrarEpisodios && /* @__PURE__ */ React.createElement("div", { style: { margin: "0 0 18px", borderRadius: 10, overflow: "hidden" } }, /* @__PURE__ */ React.createElement(SeriesSeguimiento, { item, progresoActual, onMarcar: marcarProgreso })), !esEnProduccion(item) && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #1a1a1a" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 } }, "mi rese\xF1a"), estado === "vista" && !reviewOpen ? /* @__PURE__ */ React.createElement("div", { onClick: () => setReviewOpen(true), style: { cursor: "pointer" } }, (() => {
+      const r = CINE_RATINGS.find((r2) => r2.id === estadoItem.rating);
+      return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", marginBottom: 4 } }, r ? `${r.emoji} ${r.label}` : "sin calificar");
+    })(), estadoItem.nota && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", fontStyle: "italic" } }, '"', estadoItem.nota, '"'), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 4 } }, "tocar para editar")) : reviewOpen || estado !== "vista" ? reviewOpen && /* @__PURE__ */ React.createElement(MiniReviewForm, { onSave: guardarReview, onCancel: () => setReviewOpen(false), inicial: estadoItem }) : null, estado !== "vista" && !reviewOpen && /* @__PURE__ */ React.createElement("button", { onClick: () => setReviewOpen(true), style: { ...btnGhost, width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4DD}"), "marcar como vista")), leads.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 6 } }, "reparto principal"), leads.map((c, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.7)", marginBottom: 2 } }, /* @__PURE__ */ React.createElement("b", { style: { color: "#fff" } }, c.name), c.character ? ` \u2014 ${c.character}` : "")), supporting.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6 } }, supporting.map((c) => c.name).join(" \xB7 "))), item.reviews ? /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 } }, "rese\xF1as de usuario"), /* @__PURE__ */ React.createElement(ReviewBlock, { label: "mejor valorada", review: item.reviews.top, color }), item.reviews.bottom && /* @__PURE__ */ React.createElement(ReviewBlock, { label: "peor valorada", review: item.reviews.bottom, color })) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#666", fontStyle: "italic" } }, "sin rese\xF1as de usuario disponibles para este t\xEDtulo")), !hideActions && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "anterior"), /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareToWhatsApp(item), style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4E4}"), "compartir"), /* @__PURE__ */ React.createElement("button", { onClick: onNext, style: { ...btnGhost, background: color, color: "#111", borderColor: color } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente"))), hideActions && onExportImage && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onExportImage(item), style: { ...btnGhost, background: color, color: "#111", borderColor: color, flex: "none", width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4F8}"), "exportar imagen para compartir")));
   }
   function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
-    useEffect12(() => {
+    useEffect13(() => {
       flushSimklQueue();
     }, []);
     const CARD_W = 160;
     const GAP = 20;
     const ITEM_W = CARD_W + GAP;
-    const [pos, setPos] = useState12(0);
-    const posRef = useRef11(0);
-    const dragRef = useRef11(null);
-    const animRef = useRef11(null);
+    const [pos, setPos] = useState13(0);
+    const posRef = useRef12(0);
+    const dragRef = useRef12(null);
+    const animRef = useRef12(null);
     function setPosBoth(v) {
       posRef.current = v;
       setPos(v);
@@ -9817,7 +9922,7 @@ ${item.link}`);
       }
       animRef.current = requestAnimationFrame(tick);
     }
-    useEffect12(() => () => {
+    useEffect13(() => () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
     }, []);
     function onPointerDown(e) {
@@ -9862,7 +9967,7 @@ ${item.link}`);
       animateTo(Math.round(posRef.current) + dir);
     }
     const cineEstado = useCineEstadoMap();
-    const pendientesDe = usePendientesDe();
+    const avVersion = useAvanceVersion();
     const itemGuidsEnCartelera = React.useMemo(() => new Set(items.map((it) => it.guid)), [items]);
     const exemptExtra = React.useMemo(() => Object.values(cineEstado).filter((e) => e.estado === "interesa" && e.item && (!categoria || e.item.categoria === categoria) && !itemGuidsEnCartelera.has(e.item.guid)).map((e) => ({ ...e.item, _fueraDeCartelera: true })), [cineEstado, itemGuidsEnCartelera, categoria]);
     const simklDiscoveryAll = useSimklDiscovery();
@@ -9872,20 +9977,34 @@ ${item.link}`);
       [simklDiscoveryAll, itemGuidsEnCartelera, exemptGuids, categoria]
     );
     const fullItems = exemptExtra.length || simklExtra.length ? [...items, ...exemptExtra, ...simklExtra] : items;
-    const [sortBy, setSortBy] = useState12("default");
-    const [ocultarDescartadas, setOcultarDescartadas] = useState12(true);
-    const [ocultarVistas, setOcultarVistas] = useState12(true);
-    const [soloInteresa, setSoloInteresa] = useState12(false);
-    const [soloEstrenos, setSoloEstrenos] = useState12(false);
-    const [ocultarTrending, setOcultarTrending] = useState12(false);
+    const [sortBy, setSortBy] = useState13("default");
+    const [ocultarDescartadas, setOcultarDescartadas] = useState13(true);
+    const [ocultarVistas, setOcultarVistas] = useState13(true);
+    const [soloInteresa, setSoloInteresa] = useState13(false);
+    const [soloNovedades, setSoloNovedades] = useState13(false);
+    const [soloPendientes, setSoloPendientes] = useState13(false);
+    const puedePendientes = categoria === "Series" || categoria === "Animaci\xF3n";
+    useEffect13(() => {
+      setSoloPendientes(false);
+    }, [categoria]);
+    const [soloEstrenos, setSoloEstrenos] = useState13(false);
+    const [ocultarTrending, setOcultarTrending] = useState13(false);
     const esPelicula = categoria === "Pel\xEDculas";
     const sortedItems = React.useMemo(() => {
       let arr = fullItems;
       if (soloInteresa) {
-        arr = arr.filter((it) => cineEstado[it.guid]?.estado === "interesa");
+        arr = arr.filter((it) => estadoEfectivo(cineEstado, it.guid) === "interesa");
+      } else if (soloNovedades) {
+        arr = arr.filter((it) => estadoEfectivo(cineEstado, it.guid) === "sin_marca");
       } else {
-        if (ocultarDescartadas) arr = arr.filter((it) => cineEstado[it.guid]?.estado !== "descartada");
-        if (ocultarVistas) arr = arr.filter((it) => cineEstado[it.guid]?.estado !== "vista");
+        if (ocultarDescartadas) arr = arr.filter((it) => estadoEfectivo(cineEstado, it.guid) !== "descartada");
+        if (ocultarVistas) arr = arr.filter((it) => estadoEfectivo(cineEstado, it.guid) !== "vista");
+      }
+      if (puedePendientes && soloPendientes) {
+        arr = arr.filter((it) => {
+          const a = avanceDe(it.guid);
+          return !!a && a.vistos > 0 && a.pendientes > 0;
+        });
       }
       if (esPelicula && soloEstrenos) arr = arr.filter((it) => esEstreno(it));
       if (esPelicula && ocultarTrending) arr = arr.filter((it) => !esTrending(it));
@@ -9902,11 +10021,11 @@ ${item.link}`);
       const enCartelera = arr.filter((it) => !it._fueraDeCartelera);
       const fueraDeCartelera = arr.filter((it) => it._fueraDeCartelera);
       return fueraDeCartelera.length ? [...enCartelera, ...fueraDeCartelera] : arr;
-    }, [fullItems, sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloEstrenos, ocultarTrending, esPelicula, cineEstado]);
+    }, [fullItems, sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloNovedades, soloPendientes, puedePendientes, soloEstrenos, ocultarTrending, esPelicula, cineEstado, avVersion]);
     const total = sortedItems.length;
-    useEffect12(() => {
+    useEffect13(() => {
       setPosBoth(0);
-    }, [sortedItems.length, sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloEstrenos, ocultarTrending, categoria]);
+    }, [sortedItems.length, sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloNovedades, soloPendientes, soloEstrenos, ocultarTrending, categoria]);
     function irARandom() {
       if (sortedItems.length < 2) return;
       let idx = Math.floor(Math.random() * sortedItems.length);
@@ -9926,7 +10045,13 @@ ${item.link}`);
       borderColor: active ? "#fff" : "#333"
     });
     const simklStatus = useSimklSyncStatus();
-    const toolbar = /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "0 12px 8px", justifyContent: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setSortBy(sortBy === "proxima" ? "default" : "proxima"), style: toolbarBtn(sortBy === "proxima") }, "\u{1F4C5} pr\xF3xima a salir"), /* @__PURE__ */ React.createElement("button", { onClick: () => setSoloInteresa((v) => !v), style: toolbarBtn(soloInteresa) }, "\u{1F516} solo me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarVistas((v) => !v), style: toolbarBtn(ocultarVistas) }, "\u{1F441}\uFE0F ocultar vistas"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarDescartadas((v) => !v), style: toolbarBtn(ocultarDescartadas) }, "\u{1F6AB} ocultar no me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: irARandom, style: toolbarBtn(false) }, "\u{1F3B2} sorpr\xE9ndeme"), esPelicula && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { onClick: () => setSoloEstrenos((v) => !v), style: toolbarBtn(soloEstrenos) }, "\u{1F3AC} solo estrenos"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarTrending((v) => !v), style: toolbarBtn(ocultarTrending) }, "\u{1F525} ocultar trending")), !simklStatus.conectado && /* @__PURE__ */ React.createElement("button", { onClick: pedirSimklAuth, style: toolbarBtn(false), title: "Conectar este dispositivo con la sincronizaci\xF3n de Simkl" }, "\u{1F517} conectar Simkl"), simklStatus.conectado && simklStatus.estado === "syncing" && /* @__PURE__ */ React.createElement("span", { style: { ...toolbarBtn(false), cursor: "default", opacity: 0.7 } }, "\u23F3 sincronizando..."), simklStatus.conectado && simklStatus.estado === "ok" && /* @__PURE__ */ React.createElement("span", { style: { ...toolbarBtn(true), cursor: "default" }, title: `\xDAltima sincronizaci\xF3n: ${simklStatus.ultimoOk}` }, "\u2713 Simkl"), simklStatus.conectado && simklStatus.estado === "error" && /* @__PURE__ */ React.createElement(
+    const toolbar = /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "0 12px 8px", justifyContent: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setSortBy(sortBy === "proxima" ? "default" : "proxima"), style: toolbarBtn(sortBy === "proxima") }, "\u{1F4C5} pr\xF3xima a salir"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+      setSoloInteresa((v) => !v);
+      setSoloNovedades(false);
+    }, style: toolbarBtn(soloInteresa) }, "\u{1F516} solo me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+      setSoloNovedades((v) => !v);
+      setSoloInteresa(false);
+    }, style: toolbarBtn(soloNovedades), title: "Sin \u{1F44D}, \u{1F44E} ni vista" }, "\u{1F195} solo novedades"), puedePendientes && /* @__PURE__ */ React.createElement("button", { onClick: () => setSoloPendientes((v) => !v), style: toolbarBtn(soloPendientes), title: "Con episodios vistos y episodios emitidos por ver" }, "\u{1F4FA} solo pendientes"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarVistas((v) => !v), style: toolbarBtn(ocultarVistas) }, "\u{1F441}\uFE0F ocultar vistas"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarDescartadas((v) => !v), style: toolbarBtn(ocultarDescartadas) }, "\u{1F6AB} ocultar no me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: irARandom, style: toolbarBtn(false) }, "\u{1F3B2} sorpr\xE9ndeme"), esPelicula && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { onClick: () => setSoloEstrenos((v) => !v), style: toolbarBtn(soloEstrenos) }, "\u{1F3AC} solo estrenos"), /* @__PURE__ */ React.createElement("button", { onClick: () => setOcultarTrending((v) => !v), style: toolbarBtn(ocultarTrending) }, "\u{1F525} ocultar trending")), !simklStatus.conectado && /* @__PURE__ */ React.createElement("button", { onClick: pedirSimklAuth, style: toolbarBtn(false), title: "Conectar este dispositivo con la sincronizaci\xF3n de Simkl" }, "\u{1F517} conectar Simkl"), simklStatus.conectado && simklStatus.estado === "syncing" && /* @__PURE__ */ React.createElement("span", { style: { ...toolbarBtn(false), cursor: "default", opacity: 0.7 } }, "\u23F3 sincronizando..."), simklStatus.conectado && simklStatus.estado === "ok" && /* @__PURE__ */ React.createElement("span", { style: { ...toolbarBtn(true), cursor: "default" }, title: `\xDAltima sincronizaci\xF3n: ${simklStatus.ultimoOk}` }, "\u2713 Simkl"), simklStatus.conectado && simklStatus.estado === "error" && /* @__PURE__ */ React.createElement(
       "button",
       {
         onClick: () => {
@@ -9944,7 +10069,16 @@ Toco reintentar ahora.`);
       " (tocar)"
     ), simklStatus.conectado && simklStatus.estado === "idle" && /* @__PURE__ */ React.createElement("span", { style: { ...toolbarBtn(false), cursor: "default", opacity: 0.5 } }, "\u{1F517} Simkl conectado"));
     if (!sortedItems.length) {
-      return /* @__PURE__ */ React.createElement("div", null, toolbar, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" } }, "nada por ac\xE1 todav\xEDa"));
+      return /* @__PURE__ */ React.createElement("div", null, toolbar, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" } }, (() => {
+        const av = estadoAvance();
+        if (puedePendientes && soloPendientes) {
+          if (av.error === "sin-auth") return "para ver pendientes hay que conectar Simkl";
+          if (!av.hayDatos) return av.cargando ? "cargando tu avance\u2026" : "no se pudo leer el avance de Simkl";
+          return "ninguna serie con pendientes";
+        }
+        if (soloNovedades) return "no quedan novedades sin marcar";
+        return "nada por ac\xE1 todav\xEDa";
+      })()));
     }
     const arrowStyle = {
       position: "absolute",
@@ -9997,7 +10131,7 @@ Toco reintentar ahora.`);
         const textOpacity = Math.max(0.15, 1 - Math.abs(dist) * 0.5);
         const temporada = seasonLabel(item);
         const estadoItem = cineEstado[item.guid];
-        const itemEstado = estadoItem?.estado || "sin_marca";
+        const itemEstado = estadoEfectivo(cineEstado, item.guid);
         const descartada = itemEstado === "descartada";
         const vista = itemEstado === "vista";
         const interesa = itemEstado === "interesa";
@@ -10005,7 +10139,7 @@ Toco reintentar ahora.`);
         const restantes = diasRestantesCartelera(item);
         const enProduccion = esEnProduccion(item);
         const diasEstreno = enProduccion ? diasParaEstreno(item) : null;
-        const ratingVista = vista ? CINE_RATINGS.find((r) => r.id === estadoItem.rating) : null;
+        const ratingVista = vista ? CINE_RATINGS.find((r) => r.id === estadoItem?.rating) : null;
         const trending = esTrending(item);
         const fueraDeCartelera = !!item._fueraDeCartelera;
         const deSimkl = !!item._deSimkl;
@@ -10163,7 +10297,8 @@ Toco reintentar ahora.`);
           const score = item.rating?.imdb ?? item.rating?.tmdb ?? null;
           return /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: score != null ? "#f5c518" : "#666" } }, score != null ? `\u2605 ${score.toFixed(1)}` : "TBD");
         })(), temporada && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#999", borderLeft: "1px solid #444", paddingLeft: 6 } }, temporada), (() => {
-          const pend = pendientesDe(item.guid);
+          const av = avanceDe(item.guid);
+          const pend = av && av.vistos > 0 && av.pendientes > 0 ? av.pendientes : null;
           return pend ? /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#f5c518", borderLeft: "1px solid #444", paddingLeft: 6 } }, "\u{1F39E} ", pend, " pend.") : null;
         })()), /* @__PURE__ */ React.createElement("div", { style: { minHeight: 13, marginTop: 2 } }, (() => {
           const badge = STATUS_BADGE[item.status];
@@ -10185,7 +10320,7 @@ Toco reintentar ahora.`);
   }
 
   // modules/shared/catalog.js
-  var { useState: useState13, useEffect: useEffect13, useRef: useRef12 } = React;
+  var { useState: useState14, useEffect: useEffect14, useRef: useRef13 } = React;
   function roundRobinMerge(byCategoryArrays) {
     const queues = byCategoryArrays.map((c) => ({ cat: c.cat, items: [...c.items] }));
     const out = [];
@@ -10202,41 +10337,55 @@ Toco reintentar ahora.`);
     return out;
   }
   async function fetchFeedData() {
-    const [feedData, cineData, meleeData] = await Promise.all([
-      fetchJsonSafe(FEED_JSON_URL),
-      fetchJsonSafe(CINE_JSON_URL),
-      fetchJsonSafe(MELEE_JSON_URL)
-    ]);
-    if (!feedData && !cineData && !meleeData) throw new Error("no se pudo leer ni feed.json, cine.json ni melee.json");
-    const merged = {};
-    function ingest(data, formatoDefault) {
-      if (!data) return;
-      for (const c of data.categories || []) {
-        const formato = FORMATO_BY_CATEGORIA[c.cat] || formatoDefault;
-        const items = (c.items || []).map((it) => ({ ...it, formato }));
-        merged[c.cat] = [...merged[c.cat] || [], ...items];
-      }
-    }
-    ingest(feedData, "lectura");
-    ingest(cineData, "cine");
-    ingest(meleeData, "lectura");
-    const vitrina = {};
-    const feedCats = [];
-    for (const [cat, items] of Object.entries(merged)) {
-      if (VITRINA_CATEGORIAS.includes(cat)) vitrina[cat] = items;
-      else feedCats.push({ cat, items });
-    }
+    const feedData = await fetchJsonSafe(FEED_JSON_URL);
+    if (!feedData) throw new Error("no se pudo leer feed.json");
+    const feedCats = (feedData.categories || []).filter((c) => !VITRINA_CATEGORIAS.includes(c.cat)).map((c) => {
+      const formato = FORMATO_BY_CATEGORIA[c.cat] || "lectura";
+      return { cat: c.cat, items: (c.items || []).map((it) => ({ ...it, formato })) };
+    });
     const diag = feedCats.map((c) => ({
       cat: c.cat,
       count: c.items.length,
       withText: c.items.filter((i) => i.tipo === "video" && i.videoId || i.fullText).length
     }));
-    const generatedAt = feedData?.generatedAt || cineData?.generatedAt || meleeData?.generatedAt || null;
-    return { queue: roundRobinMerge(feedCats), vitrina, diag, generatedAt };
+    return { queue: roundRobinMerge(feedCats), diag, generatedAt: feedData.generatedAt || null };
+  }
+  async function fetchVitrinaData() {
+    const [cineData, meleeData, videotecaData] = await Promise.all([
+      fetchJsonSafe(CINE_JSON_URL),
+      fetchJsonSafe(MELEE_JSON_URL),
+      fetchJsonSafe(VIDEOTECA_JSON_URL)
+    ]);
+    let videoteca = videotecaData;
+    let videotecaRespaldo = false;
+    if (!videoteca) {
+      videoteca = await fetchJsonSafe(FEED_JSON_URL);
+      videotecaRespaldo = !!videoteca;
+    }
+    const fuentes = {
+      cine: { ok: !!cineData, generatedAt: cineData?.generatedAt || null },
+      melee: { ok: !!meleeData, generatedAt: meleeData?.generatedAt || null },
+      videoteca: { ok: !!videoteca, generatedAt: videoteca?.generatedAt || null, respaldo: videotecaRespaldo }
+    };
+    if (!cineData && !meleeData && !videoteca) throw Object.assign(new Error("no se pudo leer cine.json, melee.json ni videoteca.json"), { fuentes });
+    const vitrina = {};
+    function ingest(data, formatoDefault) {
+      if (!data) return;
+      for (const c of data.categories || []) {
+        if (!VITRINA_CATEGORIAS.includes(c.cat)) continue;
+        const formato = FORMATO_BY_CATEGORIA[c.cat] || formatoDefault;
+        vitrina[c.cat] = [...vitrina[c.cat] || [], ...(c.items || []).map((it) => ({ ...it, formato }))];
+      }
+    }
+    ingest(videoteca, "lectura");
+    ingest(cineData, "cine");
+    ingest(meleeData, "lectura");
+    const generatedAt = [cineData, meleeData, videoteca].map((d) => d?.generatedAt).filter(Boolean).sort().pop() || null;
+    return { vitrina, fuentes, generatedAt };
   }
 
   // modules/feed/FeedPage.jsx
-  var { useState: useState14, useEffect: useEffect14, useRef: useRef13 } = React;
+  var { useState: useState15, useEffect: useEffect15, useRef: useRef14 } = React;
   function cardsFor(formato) {
     if (formato === "cine") return { Story: null, Extended: CineExtendedView };
     if (formato === "musica") return { Story: MusicStoryCard, Extended: MusicExtendedView };
@@ -10273,8 +10422,8 @@ Toco reintentar ahora.`);
   }
   function StoryCard({ item, onSkip, onExpand, onSave, onChangeCategory, onShuffle, onOpenBuzon, onOpenDiag, hasDiag, onRefresh, canRefresh, refreshing, buzonCount }) {
     const color = CAT_COLORS[item.categoria] || "#888";
-    const [imgFailed, setImgFailed] = useState14(false);
-    useEffect14(() => {
+    const [imgFailed, setImgFailed] = useState15(false);
+    useEffect15(() => {
       setImgFailed(false);
     }, [item.guid]);
     return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, position: "relative", overflow: "hidden" } }, item.image && !imgFailed ? /* @__PURE__ */ React.createElement("img", { src: item.image, alt: "", style: { width: "100%", height: "100%", objectFit: "cover", opacity: 0.5 }, onError: () => setImgFailed(true) }) : /* @__PURE__ */ React.createElement("div", { style: { width: "100%", height: "100%", background: `linear-gradient(160deg, ${color}33, #0a0a0a)` } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.55))" } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 16, left: 16, right: 58, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#111", background: color, borderRadius: 20, padding: "4px 12px", fontWeight: 700 } }, item.categoria), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } }, /* @__PURE__ */ React.createElement("button", { onClick: onOpenBuzon, style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" } }, "\u{1F4CC} ", buzonCount), /* @__PURE__ */ React.createElement("button", { onClick: onShuffle, style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer" } }, "\u{1F500}"), /* @__PURE__ */ React.createElement("button", { onClick: onOpenDiag, disabled: !hasDiag, style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: hasDiag ? "pointer" : "default", opacity: hasDiag ? 1 : 0.3 } }, "\u{1FA7A}"), /* @__PURE__ */ React.createElement("button", { onClick: onRefresh, disabled: !canRefresh || refreshing, style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: !canRefresh || refreshing ? "default" : "pointer", opacity: !canRefresh || refreshing ? 0.35 : 1 } }, refreshing ? "\u2026" : "\u21BB"))), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 20px 16px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.45)", marginBottom: 6 } }, item.source), /* @__PURE__ */ React.createElement(FormatoTag, { item }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 28, fontWeight: 700, color: "#fff", lineHeight: 1.15, marginBottom: 10 } }, item.title), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.5 } }, item.summary))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px calc(10px + 50px + env(safe-area-inset-bottom))", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "categor\xEDa"), /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: onExpand, style: { ...btnGhost, background: color, color: "#111", borderColor: color } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, primaryAction(item.tipo).icon), primaryAction(item.tipo).label), /* @__PURE__ */ React.createElement("button", { onClick: onSkip, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente")));
@@ -10286,8 +10435,8 @@ Toco reintentar ahora.`);
     const hasSoundcloud = !!item.soundcloudEmbedUrl;
     const hasListen = hasVideo || hasBandcamp || hasSoundcloud;
     const thumb = hasVideo ? `https://img.youtube.com/vi/${item.videoId}/hqdefault.jpg` : null;
-    const [imgFailed, setImgFailed] = useState14(false);
-    useEffect14(() => {
+    const [imgFailed, setImgFailed] = useState15(false);
+    useEffect15(() => {
       setImgFailed(false);
     }, [item.guid]);
     return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 16, left: 16, right: 58, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, zIndex: 5 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#111", background: color, borderRadius: 20, padding: "4px 12px", fontWeight: 700 } }, item.categoria), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } }, /* @__PURE__ */ React.createElement("button", { onClick: onOpenBuzon, style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" } }, "\u{1F4CC} ", buzonCount), /* @__PURE__ */ React.createElement("button", { onClick: onShuffle, style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer" } }, "\u{1F500}"), /* @__PURE__ */ React.createElement("button", { onClick: onOpenDiag, disabled: !hasDiag, style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: hasDiag ? "pointer" : "default", opacity: hasDiag ? 1 : 0.3 } }, "\u{1FA7A}"), /* @__PURE__ */ React.createElement("button", { onClick: onRefresh, disabled: !canRefresh || refreshing, style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: !canRefresh || refreshing ? "default" : "pointer", opacity: !canRefresh || refreshing ? 0.35 : 1 } }, refreshing ? "\u2026" : "\u21BB"))), hasListen ? /* @__PURE__ */ React.createElement("div", { onClick: onExpand, style: { width: "84%", maxWidth: 340, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { position: "relative", borderRadius: 12, overflow: "hidden", boxShadow: `0 20px 50px -10px ${color}55` } }, thumb && !imgFailed ? /* @__PURE__ */ React.createElement("img", { src: thumb, alt: "", style: { width: "100%", display: "block", aspectRatio: "16/9", objectFit: "cover" }, onError: () => setImgFailed(true) }) : /* @__PURE__ */ React.createElement("div", { style: { width: "100%", aspectRatio: "16/9", background: `linear-gradient(160deg, ${color}44, #0a0a0a)` } }), /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 56, height: 56, borderRadius: "50%", background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 } }, "\u25B6\uFE0F")))) : /* @__PURE__ */ React.createElement("div", { style: { padding: "0 30px", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 } }, item.summary)), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 18, textAlign: "center", padding: "0 24px" } }, /* @__PURE__ */ React.createElement(FormatoTag, { item }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", lineHeight: 1.15, marginBottom: 6 } }, item.title), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.45)" } }, item.source))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px calc(10px + 50px + env(safe-area-inset-bottom))", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "categor\xEDa"), /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: onExpand, style: { ...btnGhost, background: color, color: "#111", borderColor: color } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, hasListen ? "\u25B6\uFE0F" : "\u2B06\uFE0F"), hasListen ? "escuchar" : "detalle"), /* @__PURE__ */ React.createElement("button", { onClick: onSkip, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente")));
@@ -10333,7 +10482,7 @@ Toco reintentar ahora.`);
     ) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 } }, item.summary)), !hideActions && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "categor\xEDa"), /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareToWhatsApp(item), style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4E4}"), "compartir"), /* @__PURE__ */ React.createElement("button", { onClick: onNext, style: { ...btnGhost, background: color, color: "#111", borderColor: color } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente")));
   }
   function ExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions }) {
-    const [scrollPct, setScrollPct] = useState14(0);
+    const [scrollPct, setScrollPct] = useState15(0);
     function onScroll(e) {
       const el = e.target;
       const max = el.scrollHeight - el.clientHeight;
@@ -10375,8 +10524,8 @@ Toco reintentar ahora.`);
     ) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#888", lineHeight: 1.6 } }, "el Action no pudo extraer el texto completo de esta en particular.", " ", /* @__PURE__ */ React.createElement("a", { href: item.link, target: "_blank", rel: "noopener", style: { color } }, "ver original \u2197"))), !hideActions && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "categor\xEDa"), /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareToWhatsApp(item), style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4E4}"), "compartir"), /* @__PURE__ */ React.createElement("button", { onClick: onNext, style: { ...btnGhost, background: color, color: "#111", borderColor: color } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente")));
   }
   function EndScreen({ onGoBuzon, onRefresh, canRefresh, refreshing, nextRefreshAt, refreshMsg, onReset, onOpenDiag, hasDiag }) {
-    const [now, setNow] = useState14(Date.now());
-    useEffect14(() => {
+    const [now, setNow] = useState15(Date.now());
+    useEffect15(() => {
       const iv = setInterval(() => setNow(Date.now()), 3e4);
       return () => clearInterval(iv);
     }, []);
@@ -10385,7 +10534,7 @@ Toco reintentar ahora.`);
     return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 24 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 44, fontWeight: 700, color: "#fff" } }, "est\xE1s al d\xEDa \u2713"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.4)", textAlign: "center" } }, refreshMsg || (msLeft > 0 ? `pr\xF3xima actualizaci\xF3n en ${hLeft > 0 ? hLeft + "h " : ""}${mLeft}m` : "ya pod\xE9s buscar novedades")), canRefresh && /* @__PURE__ */ React.createElement("button", { onClick: onRefresh, disabled: refreshing, style: { background: "#fff", border: "none", color: "#111", borderRadius: 20, padding: "10px 22px", fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, cursor: "pointer", opacity: refreshing ? 0.5 : 1 } }, refreshing ? "buscando\u2026" : "\u21BB buscar novedades"), /* @__PURE__ */ React.createElement("button", { onClick: onGoBuzon, style: { background: "transparent", border: "1px dashed #333", color: "#aaa", borderRadius: 20, padding: "9px 20px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, cursor: "pointer" } }, "\u{1F4CC} ver buz\xF3n"), /* @__PURE__ */ React.createElement("button", { onClick: onOpenDiag, disabled: !hasDiag, style: { background: "transparent", border: "1px dashed #333", color: hasDiag ? "#aaa" : "#333", borderRadius: 20, padding: "9px 20px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, cursor: hasDiag ? "pointer" : "default" } }, "\u{1FA7A} ver diagn\xF3stico"), /* @__PURE__ */ React.createElement("button", { onClick: onReset, style: { background: "transparent", border: "none", color: "#333", fontSize: 10, textDecoration: "underline", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", marginTop: 8 } }, "\u{1F9EA} resetear estado (solo para probar)"));
   }
   function BuzonView({ buzon, onClose, onOpen, onRemove }) {
-    const [filterCat, setFilterCat] = useState14("todas");
+    const [filterCat, setFilterCat] = useState15("todas");
     const cats = ["todas", ...Object.keys(CAT_COLORS)];
     const filtered = filterCat === "todas" ? buzon : buzon.filter((b) => b.categoria === filterCat);
     return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, background: "#0a0a0a", zIndex: 60, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 18px 10px", display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff" } }, "\u{1F4CC} buz\xF3n")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "0 18px 12px", overflowX: "auto" } }, cats.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setFilterCat(c), style: {
@@ -10411,34 +10560,34 @@ Toco reintentar ahora.`);
   }
   function FeedPage({ onExit, onGoVitrina, initialView }) {
     const ExitBtn = () => /* @__PURE__ */ React.createElement("button", { onClick: onExit, title: "Volver a Angst", style: { position: "fixed", top: "calc(10px + env(safe-area-inset-top))", right: 12, zIndex: 999, background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", borderRadius: 20, width: 34, height: 34, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, "\u2715");
-    const [loaded, setLoaded] = useState14(false);
-    const [queue, setQueue] = useState14([]);
-    const [seen, setSeen] = useState14([]);
-    const [buzon, setBuzon] = useState14([]);
-    const [lastRefresh, setLastRefresh] = useState14(null);
-    const [view, setView] = useState14("story");
-    const [refreshing, setRefreshing] = useState14(false);
-    const [refreshMsg, setRefreshMsg] = useState14(null);
-    const [refreshDiag, setRefreshDiag] = useState14([]);
-    const [feedGeneratedAt, setFeedGeneratedAt] = useState14(null);
-    const [toast, setToast] = useState14(null);
-    const [buzonOpenItem, setBuzonOpenItem] = useState14(null);
-    const [showDiagPanel, setShowDiagPanel] = useState14(false);
-    const [exportError, setExportError] = useState14(null);
-    const queueRef = useRef13([]);
-    const seenRef = useRef13([]);
-    const buzonRef = useRef13([]);
-    const lastRefreshRef = useRef13(null);
-    useEffect14(() => {
+    const [loaded, setLoaded] = useState15(false);
+    const [queue, setQueue] = useState15([]);
+    const [seen, setSeen] = useState15([]);
+    const [buzon, setBuzon] = useState15([]);
+    const [lastRefresh, setLastRefresh] = useState15(null);
+    const [view, setView] = useState15("story");
+    const [refreshing, setRefreshing] = useState15(false);
+    const [refreshMsg, setRefreshMsg] = useState15(null);
+    const [refreshDiag, setRefreshDiag] = useState15([]);
+    const [feedGeneratedAt, setFeedGeneratedAt] = useState15(null);
+    const [toast, setToast] = useState15(null);
+    const [buzonOpenItem, setBuzonOpenItem] = useState15(null);
+    const [showDiagPanel, setShowDiagPanel] = useState15(false);
+    const [exportError, setExportError] = useState15(null);
+    const queueRef = useRef14([]);
+    const seenRef = useRef14([]);
+    const buzonRef = useRef14([]);
+    const lastRefreshRef = useRef14(null);
+    useEffect15(() => {
       queueRef.current = queue;
     }, [queue]);
-    useEffect14(() => {
+    useEffect15(() => {
       seenRef.current = seen;
     }, [seen]);
-    useEffect14(() => {
+    useEffect15(() => {
       buzonRef.current = buzon;
     }, [buzon]);
-    useEffect14(() => {
+    useEffect15(() => {
       lastRefreshRef.current = lastRefresh;
     }, [lastRefresh]);
     function persist(overrides = {}, opts = {}) {
@@ -10449,7 +10598,7 @@ Toco reintentar ahora.`);
         feedLastRefresh: overrides.lastRefresh ?? lastRefreshRef.current
       }, opts);
     }
-    useEffect14(() => {
+    useEffect15(() => {
       (async () => {
         const s = await loadState();
         if (s) {
@@ -10466,7 +10615,7 @@ Toco reintentar ahora.`);
         setLoaded(true);
       })();
     }, []);
-    useEffect14(() => {
+    useEffect15(() => {
       const next = queue[1];
       if (next && next.image) {
         const img = new Image();
@@ -10622,7 +10771,7 @@ Toco reintentar ahora.`);
   var FeedPage_default = FeedPage;
 
   // modules/vitrina/videoteca.jsx
-  var { useState: useState15, useEffect: useEffect15, useRef: useRef14 } = React;
+  var { useState: useState16, useEffect: useEffect16, useRef: useRef15 } = React;
   function loadArchivedVistos(storageKey) {
     try {
       const raw = localStorage.getItem(storageKey);
@@ -10641,9 +10790,9 @@ Toco reintentar ahora.`);
   var ARCHIVEDFEED_NUEVOS_DIAS = 20;
   var ARCHIVEDFEED_MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
   function LazyEmbed({ videoId, title }) {
-    const ref = useRef14(null);
-    const [visible, setVisible] = useState15(false);
-    useEffect15(() => {
+    const ref = useRef15(null);
+    const [visible, setVisible] = useState16(false);
+    useEffect16(() => {
       if (visible || !ref.current) return;
       const obs = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
@@ -10711,11 +10860,11 @@ Toco reintentar ahora.`);
     } }, c)));
   }
   function ArchivedFeed({ items, storageKey }) {
-    const [vistos, setVistos] = useState15(() => loadArchivedVistos(storageKey));
+    const [vistos, setVistos] = useState16(() => loadArchivedVistos(storageKey));
     const noInteresaKey = storageKey + "-no-interesa";
-    const [noInteresa, setNoInteresa] = useState15(() => loadArchivedVistos(noInteresaKey));
-    const [canal, setCanal] = useState15("Todos");
-    const [openPeriods, setOpenPeriods] = useState15(() => /* @__PURE__ */ new Set());
+    const [noInteresa, setNoInteresa] = useState16(() => loadArchivedVistos(noInteresaKey));
+    const [canal, setCanal] = useState16("Todos");
+    const [openPeriods, setOpenPeriods] = useState16(() => /* @__PURE__ */ new Set());
     function toggleVisto(guid) {
       setVistos((prev) => {
         const next = new Set(prev);
@@ -10776,84 +10925,9 @@ Toco reintentar ahora.`);
       } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#ccc" } }, isOpen ? "\u25BE" : "\u25B8", " ", label), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#555" } }, periodoItems.length)), isOpen && periodoItems.map((item) => /* @__PURE__ */ React.createElement(ArchivedFeedCard, { key: item.guid, item, visto: vistos.has(item.guid), onToggleVisto: () => toggleVisto(item.guid), onNoInteresa: () => marcarNoInteresa(item.guid), showSource: showCanalTabs })));
     })));
   }
-  var PODCASTS_ESCUCHADOS_KEY = "angst-feed-podcasts-escuchados-v1";
-  function loadPodcastsEscuchados() {
-    try {
-      const raw = localStorage.getItem(PODCASTS_ESCUCHADOS_KEY);
-      return raw ? new Set(JSON.parse(raw)) : /* @__PURE__ */ new Set();
-    } catch (e) {
-      return /* @__PURE__ */ new Set();
-    }
-  }
-  function savePodcastsEscuchados(set) {
-    try {
-      localStorage.setItem(PODCASTS_ESCUCHADOS_KEY, JSON.stringify([...set]));
-    } catch (e) {
-    }
-    marcarEdicionLocal();
-  }
-  function PodcastFeed({ items }) {
-    const [escuchados, setEscuchados] = useState15(() => loadPodcastsEscuchados());
-    const temas = [...new Set(items.map((i) => i.tema || "Otros"))];
-    const [activeTema, setActiveTema] = useState15(null);
-    const [activePodcast, setActivePodcast] = useState15(null);
-    useEffect15(() => {
-      if (!activeTema && temas.length) setActiveTema(temas[0]);
-    }, [temas.join("|")]);
-    const itemsDelTema = items.filter((i) => (i.tema || "Otros") === activeTema);
-    const podcastNames = [...new Set(itemsDelTema.map((i) => i.source))];
-    useEffect15(() => {
-      if (podcastNames.length && !podcastNames.includes(activePodcast)) setActivePodcast(podcastNames[0]);
-    }, [activeTema, podcastNames.join("|")]);
-    function toggleEscuchado(guid) {
-      setEscuchados((prev) => {
-        const next = new Set(prev);
-        if (next.has(guid)) next.delete(guid);
-        else next.add(guid);
-        savePodcastsEscuchados(next);
-        return next;
-      });
-    }
-    if (!items.length) {
-      return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" } }, "nada por ac\xE1 todav\xEDa");
-    }
-    const shown = itemsDelTema.filter((i) => i.source === activePodcast);
-    const chipStyle = (active, color = "#ffcc00") => ({
-      padding: "6px 14px",
-      fontFamily: "'DM Sans',sans-serif",
-      fontSize: 11,
-      fontWeight: 700,
-      border: "1px solid",
-      borderRadius: 20,
-      cursor: "pointer",
-      whiteSpace: "nowrap",
-      background: active ? color : "transparent",
-      color: active ? "#111" : "#999",
-      borderColor: active ? color : "#333"
-    });
-    return /* @__PURE__ */ React.createElement("div", { style: { paddingBottom: 30 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 18px 6px", overflowX: "auto" } }, temas.map((tema) => /* @__PURE__ */ React.createElement("button", { key: tema, onClick: () => setActiveTema(tema), style: chipStyle(tema === activeTema, "#fff") }, tema))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "6px 18px 14px", overflowX: "auto" } }, podcastNames.map((name) => /* @__PURE__ */ React.createElement("button", { key: name, onClick: () => setActivePodcast(name), style: chipStyle(name === activePodcast) }, name))), /* @__PURE__ */ React.createElement("div", { style: { padding: "0 18px 30px" } }, shown.map((item, i) => {
-      const escuchado = escuchados.has(item.guid);
-      return /* @__PURE__ */ React.createElement("div", { key: item.guid, style: {
-        padding: "22px 0",
-        borderBottom: i < shown.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
-        opacity: escuchado ? 0.55 : 1
-      } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff", lineHeight: 1.2 } }, item.title), /* @__PURE__ */ React.createElement("button", { onClick: () => toggleEscuchado(item.guid), style: {
-        flexShrink: 0,
-        fontFamily: "'DM Sans',sans-serif",
-        fontSize: 10,
-        fontWeight: 700,
-        border: "1px solid " + (escuchado ? "#333" : "#ffcc00"),
-        borderRadius: 14,
-        padding: "4px 10px",
-        background: "transparent",
-        color: escuchado ? "#666" : "#ffcc00",
-        cursor: "pointer"
-      } }, escuchado ? "\u2713 escuchado" : "marcar escuchado")), item.summary && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: 12 } }, item.summary), item.audioUrl ? /* @__PURE__ */ React.createElement("audio", { controls: true, src: item.audioUrl, style: { width: "100%", colorScheme: "dark" } }) : /* @__PURE__ */ React.createElement("a", { href: item.link, target: "_blank", rel: "noopener", style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#ffcc00" } }, "ver original \u2197"));
-    })));
-  }
 
   // modules/vitrina/melee.jsx
-  var { useState: useState16, useEffect: useEffect16, useRef: useRef15 } = React;
+  var { useState: useState17, useEffect: useEffect17, useRef: useRef16 } = React;
   var CHARACTER_ICONS = {
     "Fox": { ab: "FOX", bg: "#8a8a8a" },
     "Falco": { ab: "FAL", bg: "#3f6fd1" },
@@ -10962,9 +11036,9 @@ Toco reintentar ahora.`);
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement(CharIcon, { pj: g.pj, juegosGanados: g.juegosGanados }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#4caf7d" } }, stripSponsorTag(g.nombre), " ", /* @__PURE__ */ React.createElement("span", { style: { color: "#999", fontWeight: 400 } }, etiquetaJugador(g), g.pj ? ` \xB7 ${g.pj}` : "")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, marginTop: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#777" } }, "venci\xF3 a "), /* @__PURE__ */ React.createElement("span", { style: { color: "#e05a5a", fontWeight: 700 } }, stripSponsorTag(p.nombre)), /* @__PURE__ */ React.createElement("span", { style: { color: "#777" } }, " ", etiquetaJugador(p), p.pj ? ` \xB7 ${p.pj}` : ""), item.viaSSBMRank && /* @__PURE__ */ React.createElement("span", { style: { color: "#ff6600" } }, " \xB7 v\xEDa SSBMRank"))), /* @__PURE__ */ React.createElement(CharIcon, { pj: p.pj, size: 30, juegosGanados: p.juegosGanados }));
   }
   function MeleeFeed({ items }) {
-    const [openTournament, setOpenTournament] = useState16(null);
-    const [vodVistos, setVodVistos] = useState16(() => loadMeleeVodVistos());
-    const [openSections, setOpenSections] = useState16(() => /* @__PURE__ */ new Set());
+    const [openTournament, setOpenTournament] = useState17(null);
+    const [vodVistos, setVodVistos] = useState17(() => loadMeleeVodVistos());
+    const [openSections, setOpenSections] = useState17(() => /* @__PURE__ */ new Set());
     function toggleSection(key) {
       setOpenSections((prev) => {
         const next = new Set(prev);
@@ -11171,9 +11245,9 @@ Toco reintentar ahora.`);
   }
 
   // modules/vitrina/VitrinaPage.jsx
-  var { useState: useState17, useEffect: useEffect17, useRef: useRef16 } = React;
+  var { useState: useState18, useEffect: useEffect18, useRef: useRef17 } = React;
   var VITRINA_ICONS = { "Pel\xEDculas": "\u{1F3AC}", "Series": "\u{1F4FA}", "Animaci\xF3n": "\u26E9\uFE0F", "Microdocumentales": "\u{1F3A5}", "Melee": "\u{1F579}\uFE0F", "Conciertos": "\u{1F3AA}" };
-  function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, generatedAt }) {
+  function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, generatedAt, aviso, cargando: cargando2 }) {
     const items = vitrinaData[vitrinaCat] || [];
     const segBtn = (active) => ({
       flex: 1,
@@ -11186,25 +11260,51 @@ Toco reintentar ahora.`);
       color: active ? "#111" : "#999",
       borderColor: active ? CAT_COLORS[vitrinaCat] || "#e91e8c" : "#333"
     });
-    return /* @__PURE__ */ React.createElement("div", { style: { paddingBottom: 70, background: "#111", minHeight: "100vh" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 18px 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff" } }, "\u{1F3AC} vitrina audiovisual")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "12px 18px" } }, VITRINA_CATEGORIAS.map((cat) => /* @__PURE__ */ React.createElement("button", { key: cat, onClick: () => onChangeCat(cat), title: cat, style: segBtn(cat === vitrinaCat) }, VITRINA_ICONS[cat] || cat))), vitrinaCat === "Microdocumentales" ? /* @__PURE__ */ React.createElement(ArchivedFeed, { items, storageKey: "angst-feed-microdocs-vistos-v1" }) : vitrinaCat === "Podcasts" ? /* @__PURE__ */ React.createElement(PodcastFeed, { items }) : vitrinaCat === "Melee" ? /* @__PURE__ */ React.createElement(MeleeFeed, { items }) : vitrinaCat === "Conciertos" ? /* @__PURE__ */ React.createElement(ArchivedFeed, { items, storageKey: "angst-feed-conciertos-vistos-v1" }) : /* @__PURE__ */ React.createElement(CineCoverFlow, { items, onOpen, generatedAt, categoria: vitrinaCat }));
+    return /* @__PURE__ */ React.createElement("div", { style: { paddingBottom: 70, background: "#111", minHeight: "100vh" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 18px 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff" } }, "\u{1F3AC} vitrina audiovisual")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "12px 18px" } }, VITRINA_CATEGORIAS.map((cat) => /* @__PURE__ */ React.createElement("button", { key: cat, onClick: () => onChangeCat(cat), title: cat, style: segBtn(cat === vitrinaCat) }, VITRINA_ICONS[cat] || cat))), aviso && /* @__PURE__ */ React.createElement("div", { style: {
+      margin: "0 18px 8px",
+      padding: "8px 12px",
+      borderRadius: 10,
+      fontFamily: "'DM Sans',sans-serif",
+      fontSize: 12,
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      background: aviso.tono === "error" ? "rgba(231,76,60,0.15)" : aviso.tono === "aviso" ? "rgba(245,197,24,0.13)" : "rgba(255,255,255,0.06)",
+      color: aviso.tono === "error" ? "#ff8a7a" : aviso.tono === "aviso" ? "#f5c518" : "#aaa"
+    } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, aviso.texto), aviso.accion && /* @__PURE__ */ React.createElement("button", { onClick: aviso.accion.fn, style: { background: "transparent", border: "1px solid currentColor", color: "inherit", borderRadius: 14, padding: "3px 10px", fontSize: 11, cursor: "pointer" } }, aviso.accion.label)), !cargando2 && items.length === 0 && ["Microdocumentales", "Conciertos", "Melee"].includes(vitrinaCat) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#666", textAlign: "center", padding: "50px 20px" } }, "no hay \xEDtems en esta categor\xEDa por ahora"), vitrinaCat === "Microdocumentales" ? /* @__PURE__ */ React.createElement(ArchivedFeed, { items, storageKey: "angst-feed-microdocs-vistos-v1" }) : vitrinaCat === "Melee" ? /* @__PURE__ */ React.createElement(MeleeFeed, { items }) : vitrinaCat === "Conciertos" ? /* @__PURE__ */ React.createElement(ArchivedFeed, { items, storageKey: "angst-feed-conciertos-vistos-v1" }) : /* @__PURE__ */ React.createElement(CineCoverFlow, { items, onOpen, generatedAt, categoria: vitrinaCat }));
   }
   function VitrinaPage({ onExit, onGoFeed }) {
     const ExitBtn = () => /* @__PURE__ */ React.createElement("button", { onClick: onExit, title: "Volver a Angst", style: { position: "fixed", top: "calc(10px + env(safe-area-inset-top))", right: 12, zIndex: 999, background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", borderRadius: 20, width: 34, height: 34, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" } }, "\u2715");
-    const [vitrinaCat, setVitrinaCat] = useState17("Pel\xEDculas");
-    const [vitrinaData, setVitrinaData] = useState17({ "Pel\xEDculas": [], "Series": [], "Animaci\xF3n": [], "Microdocumentales": [], "Podcasts": [], "Melee": [], "Conciertos": [] });
-    const [vitrinaOpenItem, setVitrinaOpenItem] = useState17(null);
-    const [generatedAt, setGeneratedAt] = useState17(null);
-    const [toast, setToast] = useState17(null);
-    useEffect17(() => {
-      (async () => {
-        try {
-          const { vitrina, generatedAt: g } = await fetchFeedData();
-          if (vitrina) setVitrinaData((v) => ({ ...v, ...vitrina }));
-          if (g) setGeneratedAt(g);
-        } catch (e) {
-        }
-      })();
+    const [vitrinaCat, setVitrinaCat] = useState18("Pel\xEDculas");
+    const [vitrinaData, setVitrinaData] = useState18({ "Pel\xEDculas": [], "Series": [], "Animaci\xF3n": [], "Microdocumentales": [], "Melee": [], "Conciertos": [] });
+    const [vitrinaOpenItem, setVitrinaOpenItem] = useState18(null);
+    const [generatedAt, setGeneratedAt] = useState18(null);
+    const [toast, setToast] = useState18(null);
+    const [carga, setCarga] = useState18({ cargando: true, error: null, fuentes: null });
+    function cargar() {
+      setCarga((c) => ({ ...c, cargando: true, error: null }));
+      fetchVitrinaData().then(({ vitrina, fuentes, generatedAt: g }) => {
+        setVitrinaData((v) => ({ ...v, ...vitrina }));
+        setGeneratedAt(g);
+        setCarga({ cargando: false, error: null, fuentes });
+      }).catch((e) => setCarga({ cargando: false, error: e.message || "error", fuentes: e.fuentes || null }));
+    }
+    useEffect18(() => {
+      cargar();
     }, []);
+    const NOMBRE_FUENTE = { cine: "cine.json", melee: "melee.json", videoteca: "videoteca.json" };
+    const fuenteDe = (c) => c === "Melee" ? "melee" : c === "Microdocumentales" || c === "Conciertos" ? "videoteca" : "cine";
+    const hayDatos = Object.values(vitrinaData).some((a) => a.length > 0);
+    const reintentar = { label: "reintentar", fn: cargar };
+    let aviso = null;
+    const f2 = carga.fuentes?.[fuenteDe(vitrinaCat)];
+    if (carga.cargando && !hayDatos) aviso = { tono: "info", texto: "cargando cat\xE1logo\u2026" };
+    else if (carga.error) aviso = { tono: "error", texto: "No se pudo cargar el cat\xE1logo (\xBFsin conexi\xF3n?).", accion: reintentar };
+    else if (f2 && !f2.ok) aviso = { tono: "error", texto: `No se pudo leer ${NOMBRE_FUENTE[fuenteDe(vitrinaCat)]}: se muestra lo que haya.`, accion: reintentar };
+    else if (f2?.generatedAt) {
+      const horas = (Date.now() - new Date(f2.generatedAt).getTime()) / 36e5;
+      if (horas > 72) aviso = { tono: "aviso", texto: `Datos de hace ${Math.round(horas / 24)} d\xEDas: la actualizaci\xF3n autom\xE1tica no est\xE1 corriendo.` };
+    }
     function showToast(msg) {
       setToast(msg);
       setTimeout(() => setToast(null), 1800);
@@ -11235,14 +11335,14 @@ Toco reintentar ahora.`);
         }
       ), toastEl, /* @__PURE__ */ React.createElement(ExitBtn, null));
     }
-    return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif" } }, toastEl, /* @__PURE__ */ React.createElement(VitrinaView, { vitrinaData, vitrinaCat, onChangeCat: setVitrinaCat, onOpen: (item) => setVitrinaOpenItem(item), generatedAt }), /* @__PURE__ */ React.createElement(TabBar, { area: "vitrina", onChange: (a) => {
+    return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif" } }, toastEl, /* @__PURE__ */ React.createElement(VitrinaView, { vitrinaData, vitrinaCat, onChangeCat: setVitrinaCat, onOpen: (item) => setVitrinaOpenItem(item), generatedAt, aviso, cargando: carga.cargando }), /* @__PURE__ */ React.createElement(TabBar, { area: "vitrina", onChange: (a) => {
       if (a === "noticias" && onGoFeed) onGoFeed();
     }, buzonCount: countFeedBuzon(), onOpenBuzon: () => onGoFeed && onGoFeed({ buzon: true }) }), /* @__PURE__ */ React.createElement(ExitBtn, null));
   }
   var VitrinaPage_default = VitrinaPage;
 
   // core/App.jsx
-  var { useState: useState18, useEffect: useEffect18, useRef: useRef17, useMemo: useMemo7, useCallback: useCallback7 } = React;
+  var { useState: useState19, useEffect: useEffect19, useRef: useRef18, useMemo: useMemo7, useCallback: useCallback7 } = React;
   async function localGet(key) {
     const val = localStorage.getItem(key);
     if (val === null) return null;
@@ -11303,33 +11403,33 @@ Toco reintentar ahora.`);
     "el orden es temporal. el caos, permanente. organ\xEDzate igual."
   ];
   function AngstApp() {
-    const [page, setPage] = useState18(0);
-    const [feedInitialView, setFeedInitialView] = useState18(null);
-    useEffect18(() => {
+    const [page, setPage] = useState19(0);
+    const [feedInitialView, setFeedInitialView] = useState19(null);
+    useEffect19(() => {
       if (page !== 9 && feedInitialView) setFeedInitialView(null);
     }, [page]);
-    const [dayData, setDayData] = useState18({});
-    const [weekOffset, setWeekOffset] = useState18(0);
-    const [budgets, setBudgets] = useState18({});
-    const [nutria, setNutria] = useState18(makeDefaultNutria());
-    const [fadimanData, setFadimanData] = useState18({});
-    const fadimanDataRef = useRef17({});
-    const [nutriLog, setNutriLog] = useState18({});
-    const [ejercicioLog, setEjercicioLog] = useState18({});
-    const nutriLogRef = useRef17({});
-    const [customFoods, setCustomFoods] = useState18({});
-    const customFoodsRef = useRef17({});
-    const [foodOverrides, setFoodOverrides] = useState18({});
-    const foodOverridesRef = useRef17({});
-    const [customEjercicios, setCustomEjercicios] = useState18({});
-    const customEjerciciosRef = useRef17({});
-    const ejercicioLogRef = useRef17({});
-    const [ejercicioDecks, setEjercicioDecks] = useState18([]);
-    const ejercicioDecksRef = useRef17([]);
-    const [calMarks, setCalMarks] = useState18({});
-    const [semanaTab, setSemanaTab] = useState18("semana");
-    const [meleeMajors, setMeleeMajors] = useState18([]);
-    const [custody, setCustody] = useState18({ baseDate: "2026-04-28", withKids: true, overrides: {} });
+    const [dayData, setDayData] = useState19({});
+    const [weekOffset, setWeekOffset] = useState19(0);
+    const [budgets, setBudgets] = useState19({});
+    const [nutria, setNutria] = useState19(makeDefaultNutria());
+    const [fadimanData, setFadimanData] = useState19({});
+    const fadimanDataRef = useRef18({});
+    const [nutriLog, setNutriLog] = useState19({});
+    const [ejercicioLog, setEjercicioLog] = useState19({});
+    const nutriLogRef = useRef18({});
+    const [customFoods, setCustomFoods] = useState19({});
+    const customFoodsRef = useRef18({});
+    const [foodOverrides, setFoodOverrides] = useState19({});
+    const foodOverridesRef = useRef18({});
+    const [customEjercicios, setCustomEjercicios] = useState19({});
+    const customEjerciciosRef = useRef18({});
+    const ejercicioLogRef = useRef18({});
+    const [ejercicioDecks, setEjercicioDecks] = useState19([]);
+    const ejercicioDecksRef = useRef18([]);
+    const [calMarks, setCalMarks] = useState19({});
+    const [semanaTab, setSemanaTab] = useState19("semana");
+    const [meleeMajors, setMeleeMajors] = useState19([]);
+    const [custody, setCustody] = useState19({ baseDate: "2026-04-28", withKids: true, overrides: {} });
     const POKEMON_EVENTS = [
       { name: "Lima Special Championships \u{1F1F5}\u{1F1EA}", start: "2026-05-23", end: "2026-05-24", url: "https://www.pokemon.com/us/play-pokemon/pokemon-events/find-a-pokemon-event/" },
       { name: "NAIC \u2014 North America Internationals \u{1F1FA}\u{1F1F8}", start: "2026-06-12", end: "2026-06-14", url: "https://www.pokemon.com/us/play-pokemon/pokemon-events/find-a-pokemon-event/" },
@@ -11340,23 +11440,23 @@ Toco reintentar ahora.`);
     const SC2_EVENTS = [
       { name: "BlizzCon \u2014 Blizzard Classic Cup (SC2) \u{1F3AE}", start: "2026-09-12", end: "2026-09-13", url: "https://blizzcon.com" }
     ];
-    const [editingTask, setEditingTask] = useState18(null);
-    const [editText, setEditText] = useState18("");
-    const [clockOpen, setClockOpen] = useState18(null);
-    const [notifClockOpen, setNotifClockOpen] = useState18(null);
-    const [calOpen, setCalOpen] = useState18(false);
-    const [minimized, setMinimized] = useState18({});
-    const [loaded, setLoaded] = useState18(false);
-    const [notifGranted, setNotifGranted] = useState18(false);
-    const [saved, setSaved] = useState18(false);
-    const [subIdx, setSubIdx] = useState18(() => Math.floor(Math.random() * CYNICAL_SUBTITLES.length));
-    const [footerIdx, setFooterIdx] = useState18(() => Math.floor(Math.random() * STOIC_PHRASES.length));
-    const [exportOk, setExportOk] = useState18(null);
-    const [loadMsg, setLoadMsg] = useState18(null);
+    const [editingTask, setEditingTask] = useState19(null);
+    const [editText, setEditText] = useState19("");
+    const [clockOpen, setClockOpen] = useState19(null);
+    const [notifClockOpen, setNotifClockOpen] = useState19(null);
+    const [calOpen, setCalOpen] = useState19(false);
+    const [minimized, setMinimized] = useState19({});
+    const [loaded, setLoaded] = useState19(false);
+    const [notifGranted, setNotifGranted] = useState19(false);
+    const [saved, setSaved] = useState19(false);
+    const [subIdx, setSubIdx] = useState19(() => Math.floor(Math.random() * CYNICAL_SUBTITLES.length));
+    const [footerIdx, setFooterIdx] = useState19(() => Math.floor(Math.random() * STOIC_PHRASES.length));
+    const [exportOk, setExportOk] = useState19(null);
+    const [loadMsg, setLoadMsg] = useState19(null);
     const PODCAST_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
     const PODCAST_AUTH_KEY = "angst-simkl-auth-v1";
-    const [podcastLatest, setPodcastLatest] = useState18(null);
-    const [podcastDispatched, setPodcastDispatched] = useState18(() => {
+    const [podcastLatest, setPodcastLatest] = useState19(null);
+    const [podcastDispatched, setPodcastDispatched] = useState19(() => {
       try {
         const v = localStorage.getItem("angst-podcast-dispatched-v1");
         return v ? JSON.parse(v) : [];
@@ -11364,16 +11464,16 @@ Toco reintentar ahora.`);
         return [];
       }
     });
-    const [nowPlaying, setNowPlaying] = useState18(null);
-    const [podcastMenuOpen, setPodcastMenuOpen] = useState18(false);
-    const [activeShowIdx, setActiveShowIdx] = useState18(0);
-    const [podcastPlaying, setPodcastPlaying] = useState18(false);
-    const [podcastProgress, setPodcastProgress] = useState18({ current: 0, duration: 0 });
-    const [newPodcastNombre, setNewPodcastNombre] = useState18("");
-    const [newPodcastUrl, setNewPodcastUrl] = useState18("");
-    const [addPodcastBusy, setAddPodcastBusy] = useState18(false);
-    const [addPodcastMsg, setAddPodcastMsg] = useState18(null);
-    const [playerPos, setPlayerPos] = useState18(() => {
+    const [nowPlaying, setNowPlaying] = useState19(null);
+    const [podcastMenuOpen, setPodcastMenuOpen] = useState19(false);
+    const [activeShowIdx, setActiveShowIdx] = useState19(0);
+    const [podcastPlaying, setPodcastPlaying] = useState19(false);
+    const [podcastProgress, setPodcastProgress] = useState19({ current: 0, duration: 0 });
+    const [newPodcastNombre, setNewPodcastNombre] = useState19("");
+    const [newPodcastUrl, setNewPodcastUrl] = useState19("");
+    const [addPodcastBusy, setAddPodcastBusy] = useState19(false);
+    const [addPodcastMsg, setAddPodcastMsg] = useState19(null);
+    const [playerPos, setPlayerPos] = useState19(() => {
       try {
         const v = localStorage.getItem("angst-podcast-player-pos-v1");
         if (v) return JSON.parse(v);
@@ -11381,9 +11481,9 @@ Toco reintentar ahora.`);
       }
       return null;
     });
-    const dragState = useRef17(null);
-    const podcastAudioRef = useRef17(null);
-    useEffect18(() => {
+    const dragState = useRef18(null);
+    const podcastAudioRef = useRef18(null);
+    useEffect19(() => {
       fetch("https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/podcast-latest.json", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((d) => {
         if (!d) return;
         setPodcastLatest(d);
@@ -11454,7 +11554,7 @@ Toco reintentar ahora.`);
       const m = Math.floor(s / 60), sec = Math.floor(s % 60);
       return `${m}:${sec < 10 ? "0" : ""}${sec}`;
     }
-    const lastPosSaveRef = useRef17(0);
+    const lastPosSaveRef = useRef18(0);
     function closePodcastPlayer() {
       if (nowPlaying?.guid && podcastAudioRef.current) {
         savePodcastPosition(nowPlaying.guid, podcastAudioRef.current.currentTime);
@@ -11463,7 +11563,7 @@ Toco reintentar ahora.`);
       setPodcastPlaying(false);
       setPodcastProgress({ current: 0, duration: 0 });
     }
-    useEffect18(() => {
+    useEffect19(() => {
       function onVisibility() {
         if (document.visibilityState === "hidden" && nowPlaying?.guid && podcastAudioRef.current) {
           savePodcastPosition(nowPlaying.guid, podcastAudioRef.current.currentTime);
@@ -11598,41 +11698,41 @@ Toco reintentar ahora.`);
         }
       }
     }
-    const dayDataRef = useRef17({});
-    const weekOffsetRef = useRef17(0);
-    const budgetRef = useRef17({});
-    const nutriaRef = useRef17(makeDefaultNutria());
-    const calMarksRef = useRef17({});
-    const routinesRef = useRef17([]);
-    const recurringRef = useRef17([]);
-    const lastRolloverRef = useRef17(null);
-    const [routines, setRoutines] = useState18([]);
-    const [recurring, setRecurring] = useState18([]);
-    const [lastRollover, setLastRollover] = useState18(null);
-    const [cookingOpts, setCookingOpts] = useState18([...DEFAULT_COOKING_OPTS]);
-    const [aseoOpts, setAseoOpts] = useState18([...DEFAULT_ASEO_OPTS]);
-    const [comprasOpen, setComprasOpen] = useState18(null);
-    const [searchOpen, setSearchOpen] = useState18(false);
-    const [scheduleOpen, setScheduleOpen] = useState18(null);
-    const [liftedTask, setLiftedTask] = useState18(null);
-    const [taskDragTarget, setTaskDragTarget] = useState18(null);
-    const holdTimerRef = useRef17(null);
-    const taskTouchX = useRef17(0);
-    const taskTouchY = useRef17(0);
-    const [openFMenu, setOpenFMenu] = useState18(null);
-    const [kidsHealth, setKidsHealth] = useState18(emptyKidsHealth);
-    const kidsHealthRef = useRef17(null);
+    const dayDataRef = useRef18({});
+    const weekOffsetRef = useRef18(0);
+    const budgetRef = useRef18({});
+    const nutriaRef = useRef18(makeDefaultNutria());
+    const calMarksRef = useRef18({});
+    const routinesRef = useRef18([]);
+    const recurringRef = useRef18([]);
+    const lastRolloverRef = useRef18(null);
+    const [routines, setRoutines] = useState19([]);
+    const [recurring, setRecurring] = useState19([]);
+    const [lastRollover, setLastRollover] = useState19(null);
+    const [cookingOpts, setCookingOpts] = useState19([...DEFAULT_COOKING_OPTS]);
+    const [aseoOpts, setAseoOpts] = useState19([...DEFAULT_ASEO_OPTS]);
+    const [comprasOpen, setComprasOpen] = useState19(null);
+    const [searchOpen, setSearchOpen] = useState19(false);
+    const [scheduleOpen, setScheduleOpen] = useState19(null);
+    const [liftedTask, setLiftedTask] = useState19(null);
+    const [taskDragTarget, setTaskDragTarget] = useState19(null);
+    const holdTimerRef = useRef18(null);
+    const taskTouchX = useRef18(0);
+    const taskTouchY = useRef18(0);
+    const [openFMenu, setOpenFMenu] = useState19(null);
+    const [kidsHealth, setKidsHealth] = useState19(emptyKidsHealth);
+    const kidsHealthRef = useRef18(null);
     if (kidsHealthRef.current === null) kidsHealthRef.current = emptyKidsHealth();
-    const [pokeInventario, setPokeInventario] = useState18([]);
-    const pokeInventarioRef = useRef17([]);
-    const [pokeCarpetas, setPokeCarpetas] = useState18([...CARPETAS_DEFAULT]);
-    const pokeCarpetasRef = useRef17([...CARPETAS_DEFAULT]);
-    const [pokeDarkCatalogo, setPokeDarkCatalogo] = useState18([]);
-    const pokeDarkCatalogoRef = useRef17([]);
-    const [pokePriceCache, setPokePriceCache] = useState18({});
-    const pokePriceCacheRef = useRef17({});
+    const [pokeInventario, setPokeInventario] = useState19([]);
+    const pokeInventarioRef = useRef18([]);
+    const [pokeCarpetas, setPokeCarpetas] = useState19([...CARPETAS_DEFAULT]);
+    const pokeCarpetasRef = useRef18([...CARPETAS_DEFAULT]);
+    const [pokeDarkCatalogo, setPokeDarkCatalogo] = useState19([]);
+    const pokeDarkCatalogoRef = useRef18([]);
+    const [pokePriceCache, setPokePriceCache] = useState19({});
+    const pokePriceCacheRef = useRef18({});
     const TCG_KEY_STORAGE = "angst-tcg-price-key";
-    const [pokeApiKey, setPokeApiKey] = useState18(() => {
+    const [pokeApiKey, setPokeApiKey] = useState19(() => {
       try {
         return localStorage.getItem(TCG_KEY_STORAGE) || "";
       } catch (e) {
@@ -11646,13 +11746,13 @@ Toco reintentar ahora.`);
       }
       setPokeApiKey(k);
     }
-    const [nutriDecks, setNutriDecks] = useState18([]);
-    const nutriDecksRef = useRef17([]);
+    const [nutriDecks, setNutriDecks] = useState19([]);
+    const nutriDecksRef = useRef18([]);
     const ANGST_STATE_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
     const ANGST_STATE_AUTH_KEY = "angst-simkl-auth-v1";
     const ANGST_STATE_PATH = "angst-full-state.json";
     const ANGST_STATE_BRANCH = "state-sync";
-    const [stateSyncMsg, setStateSyncMsg] = useState18(null);
+    const [stateSyncMsg, setStateSyncMsg] = useState19(null);
     function markLocalEdit() {
       marcarEdicionLocal();
     }
@@ -11669,7 +11769,7 @@ Toco reintentar ahora.`);
       if (!payload || !payload.exportedAt) return false;
       return new Date(payload.exportedAt).getTime() > new Date(localTs).getTime();
     }
-    const forceRepoReadRef = useRef17(false);
+    const forceRepoReadRef = useRef18(false);
     function getAngstStateAuth() {
       try {
         return localStorage.getItem(ANGST_STATE_AUTH_KEY) || null;
@@ -11790,8 +11890,8 @@ Toco reintentar ahora.`);
       }
       setTimeout(() => setStateSyncMsg(null), 4e3);
     }
-    const autoLeidoRef = useRef17(false);
-    useEffect18(() => {
+    const autoLeidoRef = useRef18(false);
+    useEffect19(() => {
       if (autoLeidoRef.current) return;
       autoLeidoRef.current = true;
       const auth = getAngstStateAuth();
@@ -11815,53 +11915,53 @@ Toco reintentar ahora.`);
         }
       })();
     }, []);
-    useEffect18(() => {
+    useEffect19(() => {
       dayDataRef.current = dayData;
     }, [dayData]);
-    useEffect18(() => {
+    useEffect19(() => {
       weekOffsetRef.current = weekOffset;
     }, [weekOffset]);
-    useEffect18(() => {
+    useEffect19(() => {
       budgetRef.current = budgets;
     }, [budgets]);
-    useEffect18(() => {
+    useEffect19(() => {
       nutriaRef.current = nutria;
     }, [nutria]);
-    useEffect18(() => {
+    useEffect19(() => {
       calMarksRef.current = calMarks;
     }, [calMarks]);
-    useEffect18(() => {
+    useEffect19(() => {
       routinesRef.current = routines;
     }, [routines]);
-    useEffect18(() => {
+    useEffect19(() => {
       recurringRef.current = recurring;
     }, [recurring]);
-    useEffect18(() => {
+    useEffect19(() => {
       lastRolloverRef.current = lastRollover;
     }, [lastRollover]);
-    useEffect18(() => {
+    useEffect19(() => {
       pokeInventarioRef.current = pokeInventario;
     }, [pokeInventario]);
-    useEffect18(() => {
+    useEffect19(() => {
       pokeCarpetasRef.current = pokeCarpetas;
     }, [pokeCarpetas]);
-    useEffect18(() => {
+    useEffect19(() => {
       pokeDarkCatalogoRef.current = pokeDarkCatalogo;
     }, [pokeDarkCatalogo]);
-    useEffect18(() => {
+    useEffect19(() => {
       pokePriceCacheRef.current = pokePriceCache;
     }, [pokePriceCache]);
-    useEffect18(() => {
+    useEffect19(() => {
       nutriDecksRef.current = nutriDecks;
     }, [nutriDecks]);
-    useEffect18(() => {
+    useEffect19(() => {
       ejercicioDecksRef.current = ejercicioDecks;
     }, [ejercicioDecks]);
-    useEffect18(() => {
+    useEffect19(() => {
       const iv = setInterval(() => setSubIdx((i) => (i + 1) % CYNICAL_SUBTITLES.length), 8e3);
       return () => clearInterval(iv);
     }, []);
-    useEffect18(() => {
+    useEffect19(() => {
       const iv = setInterval(() => setFooterIdx((i) => (i + 1) % STOIC_PHRASES.length), 1e4);
       return () => clearInterval(iv);
     }, []);
@@ -11956,7 +12056,7 @@ Toco reintentar ahora.`);
         saveToStorage({ lastRollover: todayKey }, { skipEditMark: true });
       }
     }
-    useEffect18(() => {
+    useEffect19(() => {
       if (!loaded) return;
       function onVisible() {
         if (document.visibilityState === "visible") {
@@ -11968,7 +12068,7 @@ Toco reintentar ahora.`);
       document.addEventListener("visibilitychange", onVisible);
       return () => document.removeEventListener("visibilitychange", onVisible);
     }, [loaded]);
-    useEffect18(() => {
+    useEffect19(() => {
       async function fetchMelee() {
         try {
           const res = await fetch("https://meleemajors.gg/calendar.ics");
@@ -12004,7 +12104,7 @@ Toco reintentar ahora.`);
       }
       fetchMelee();
     }, []);
-    useEffect18(() => {
+    useEffect19(() => {
       async function load() {
         try {
           const r = await localGet("angst-v12");

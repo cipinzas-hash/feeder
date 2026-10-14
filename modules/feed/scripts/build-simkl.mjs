@@ -421,11 +421,11 @@ async function buildDiscovery(state) {
 }
 
 // ─── Catálogo de episodios + avance por episodio (issue #13) ─────────────────
-// series-episodios.json en Angst-data (privado), una entrada por serie:
-//   { nombre, fetchedAt, temporadas: [{ n, eps: [[numero, nombre, fecha], ...] }],
-//     simklStatus, vistos, total, noEmitidos, ultimo, siguiente, ep }
-// El catálogo (nombres/fechas) sale de TMDb y se cachea; el avance sale de
-// state.syncedList (Simkl). El cliente lo lee vía el Worker, autenticado.
+// Catálogo por serie (SERIES_CATALOG_DIR/<tmdbId>.json): { nombre, fetchedAt,
+// temporadas: [{ n, eps: [[numero, nombre, fecha], ...] }] }, de TMDb y cacheado.
+// El avance liviano (vistos/emitidos/pendientes/ep por serie) sale de
+// state.syncedList (Simkl) y va a simkl-vitrina.json. El cliente lee ambos
+// vía el Worker, autenticado.
 const nombreGenerico = (n) => !n || /^episod(io|e)\s*\d+$/i.test(String(n).trim());
 
 async function catalogoSerie(id, previo) {

@@ -1,6 +1,7 @@
 import { CINE_RATINGS, STATUS_BADGE, diasHasta, diasParaEstreno, diasRestantesCartelera, esEnProduccion, esEstreno, esNuevo, esTrending, seasonLabel, setCineItemEstado, useCineEstadoMap } from "./estado.js";
 import { FormatoTag, btnGhost, shareToWhatsApp } from "../shared/ui.jsx";
-import { marcarHastaAca, marcarTemporada, toggleEpisodio, usePendientesDe, useSerieEpisodios } from "./episodios.js";
+import { SeriesSeguimiento } from "./series.jsx";
+import { avanceDe, estadoAvance, estadoEfectivo, estadoRemotoDe, useAvanceVersion } from "./avance.js";
 import { enqueueSimklAction, flushSimklQueue, pedirSimklAuth, useSimklDiscovery, useSimklSyncStatus } from "./simkl.js";
 import { CAT_COLORS } from "../shared/constants.js";
 
@@ -205,154 +206,11 @@ function MiniReviewForm({ onSave, onCancel, inicial }) {
   );
 }
 
-// Selector de temporada/episodio + contador de días para lo próximo.
-// "Marcar hasta acá" = vas viendo la serie hasta ese punto -- manda
-// status "watching" a Simkl (ver enqueueSimklAction), que internamente
-// marca visto todo lo anterior, no solo el episodio puntual.
-function SeriesProgreso({ item, progresoActual, onMarcar }) {
-  const seasons = item.seasons;
-  const [temporada, setTemporada] = useState(progresoActual?.temporada || seasons?.[0]?.numero || 1);
-  const [episodio, setEpisodio] = useState(progresoActual?.episodio || 1);
-  const seasonInfo = seasons?.find(s => s.numero === temporada);
-  const maxEp = seasonInfo?.episodios || 99;
-  const diasProximoEp = diasHasta(item.nextEpisodeDate);
-
-  return (
-    <div style={{ padding: "8px 10px", background: "#111", borderTop: "1px solid #1c1c1c" }}>
-      {progresoActual && (
-        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#2ecc71", marginBottom: 6 }}>
-          📺 vas por T{progresoActual.temporada}·E{progresoActual.episodio}
-        </div>
-      )}
-      {diasProximoEp != null && (
-        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: diasProximoEp <= 0 ? "#2ecc71" : "#999", marginBottom: 6 }}>
-          {diasProximoEp <= 0 ? "🆕 nuevo episodio ya disponible" : `📅 próximo episodio en ${diasProximoEp} día${diasProximoEp === 1 ? "" : "s"}`}
-        </div>
-      )}
-      {seasons && seasons.length > 0 ? (
-        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-          <select value={temporada} onChange={e => { setTemporada(Number(e.target.value)); setEpisodio(1); }}
-            style={{ background: "#1c1c1c", color: "#fff", border: "1px solid #333", borderRadius: 6, padding: "6px 8px", fontFamily: "'DM Sans',sans-serif", fontSize: 12 }}>
-            {seasons.map(s => <option key={s.numero} value={s.numero}>Temporada {s.numero}</option>)}
-          </select>
-          <select value={episodio} onChange={e => setEpisodio(Number(e.target.value))}
-            style={{ background: "#1c1c1c", color: "#fff", border: "1px solid #333", borderRadius: 6, padding: "6px 8px", fontFamily: "'DM Sans',sans-serif", fontSize: 12 }}>
-            {Array.from({ length: maxEp }, (_, i) => i + 1).map(n => <option key={n} value={n}>Ep. {n}</option>)}
-          </select>
-          <button onClick={() => onMarcar(temporada, episodio)} style={{
-            background: "#2ecc71", color: "#111", border: "none", borderRadius: 6, padding: "6px 12px",
-            fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, cursor: "pointer",
-          }}>marcar hasta acá</button>
-        </div>
-      ) : (
-        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#666", fontStyle: "italic" }}>
-          sin desglose de temporadas todavía -- se completa en la próxima actualización del catálogo
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Seguimiento episodio por episodio (issue #13). Se muestra cuando
-// series-episodios.json ya tiene el catálogo de la serie (nombre y fecha de
-// cada episodio, avance real de Simkl). Mientras no lo tenga, cae al
-// selector simple de SeriesProgreso.
-function SeriesSeguimiento({ item, progresoActual, onMarcar }) {
-  const { vista, entry } = useSerieEpisodios(item.guid);
-  if (vista && vista.total > 0) return <SeriesEpisodios item={item} vista={vista} inferido={!!entry?.epInferido} />;
-  return <SeriesProgreso item={item} progresoActual={progresoActual} onMarcar={onMarcar} />;
-}
-
-function SeriesEpisodios({ item, vista, inferido }) {
-  const cineEstado = useCineEstadoMap();
-  const estado = cineEstado[item.guid]?.estado || "sin_marca";
-  const inicial = vista.siguiente?.t ?? vista.temporadas[vista.temporadas.length - 1]?.n;
-  const [abiertas, setAbiertas] = useState(() => new Set(inicial != null ? [inicial] : []));
-  const fuente = { fontFamily: "'DM Sans',sans-serif" };
-  const diasProximo = vista.proximo?.fecha ? diasHasta(vista.proximo.fecha) : null;
-
-  // Marcar episodios implica que la estás viendo: si no tenía marca local,
-  // pasa a "interesa" (copia completa, para sobrevivir a la poda de 30 días).
-  function actuar(fn) {
-    if (estado === "sin_marca") setCineItemEstado(item.guid, { estado: "interesa", item });
-    fn();
-  }
-  function alternar(n) {
-    setAbiertas(prev => { const s = new Set(prev); s.has(n) ? s.delete(n) : s.add(n); return s; });
-  }
-  const btnMini = (activo) => ({
-    background: "transparent", border: "1px solid " + (activo ? "#2ecc71" : "#333"), color: activo ? "#2ecc71" : "#888",
-    borderRadius: 6, padding: "3px 8px", fontSize: 10, cursor: "pointer", ...fuente,
-  });
-
-  return (
-    <div style={{ padding: "8px 10px", background: "#111", borderTop: "1px solid #1c1c1c" }}>
-      <div style={{ ...fuente, fontSize: 12, color: "#ddd", marginBottom: 4 }}>
-        📺 {vista.vistos}/{vista.emitidos} vistos
-        {" · "}
-        {vista.pendientes > 0
-          ? <span style={{ color: "#f5c518", fontWeight: 700 }}>{vista.pendientes} pendiente{vista.pendientes === 1 ? "" : "s"}</span>
-          : <span style={{ color: "#2ecc71", fontWeight: 700 }}>al día ✓</span>}
-      </div>
-      {inferido && (
-        <div style={{ ...fuente, fontSize: 10, color: "#888", fontStyle: "italic", marginBottom: 4 }}>
-          ⓘ Simkl no entrega el detalle por episodio de esta serie: el avance se reconstruyó desde el último episodio visto.
-        </div>
-      )}
-      {vista.siguiente && (
-        <div style={{ ...fuente, fontSize: 11, color: "#2ecc71", marginBottom: 4 }}>
-          ▶ siguiente: T{vista.siguiente.t}·E{vista.siguiente.e}{vista.siguiente.nombre ? ` — ${vista.siguiente.nombre}` : ""}
-        </div>
-      )}
-      {vista.proximo && (
-        <div style={{ ...fuente, fontSize: 11, color: "#999", marginBottom: 4 }}>
-          📅 próximo: T{vista.proximo.t}·E{vista.proximo.e}{vista.proximo.nombre ? ` — ${vista.proximo.nombre}` : ""}
-          {diasProximo != null ? (diasProximo <= 0 ? " (hoy)" : ` (en ${diasProximo} día${diasProximo === 1 ? "" : "s"})`) : ""}
-        </div>
-      )}
-      <div style={{ maxHeight: 240, overflowY: "auto", marginTop: 6, border: "1px solid #1c1c1c", borderRadius: 8 }}>
-        {vista.temporadas.map(t => {
-          const abierta = abiertas.has(t.n);
-          const completa = t.vistos === t.total;
-          return (
-            <div key={t.n}>
-              <div onClick={() => alternar(t.n)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: "#161616", cursor: "pointer", borderBottom: "1px solid #1c1c1c" }}>
-                <span style={{ ...fuente, fontSize: 11, color: "#888", width: 10 }}>{abierta ? "▾" : "▸"}</span>
-                <span style={{ ...fuente, fontSize: 12, color: "#fff", fontWeight: 600, flex: 1 }}>
-                  Temporada {t.n}
-                  <span style={{ color: completa ? "#2ecc71" : "#888", fontWeight: 400, marginLeft: 8 }}>{t.vistos}/{t.total}</span>
-                  {t.pendientes > 0 && <span style={{ color: "#f5c518", fontWeight: 400, marginLeft: 6 }}>· {t.pendientes} pend.</span>}
-                </span>
-                <button onClick={e => { e.stopPropagation(); actuar(() => marcarTemporada(item, vista, t.n, true)); }} style={btnMini(false)} title="marcar toda la temporada (solo los emitidos)">✓ todo</button>
-                <button onClick={e => { e.stopPropagation(); actuar(() => marcarTemporada(item, vista, t.n, false)); }} style={btnMini(false)} title="desmarcar la temporada">↺ nada</button>
-              </div>
-              {abierta && t.eps.map(x => (
-                <div key={x.e} onClick={() => x.emitido && actuar(() => toggleEpisodio(item, t.n, x.e, x.visto))}
-                  style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderBottom: "1px solid #181818", cursor: x.emitido ? "pointer" : "default", opacity: x.emitido ? 1 : 0.4 }}>
-                  <span style={{
-                    width: 18, height: 18, borderRadius: 5, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                    border: "1px solid " + (x.visto ? "#2ecc71" : "#444"), background: x.visto ? "#2ecc71" : "transparent", color: "#111", fontSize: 12, fontWeight: 700,
-                  }}>{x.visto ? "✓" : ""}</span>
-                  <span style={{ ...fuente, fontSize: 11, color: "#888", width: 28, flexShrink: 0 }}>E{x.e}</span>
-                  <span style={{ ...fuente, fontSize: 12, color: x.visto ? "#777" : "#eee", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{x.nombre || `Episodio ${x.e}`}</span>
-                  {!x.emitido && <span style={{ ...fuente, fontSize: 10, color: "#888", flexShrink: 0 }}>{x.fecha ? `sale ${x.fecha}` : "sin fecha"}</span>}
-                  {x.emitido && !x.visto && (
-                    <button onClick={e => { e.stopPropagation(); actuar(() => marcarHastaAca(item, vista, t.n, x.e)); }} style={btnMini(false)} title="marcar como visto todo lo anterior y este">⤓ hasta acá</button>
-                  )}
-                </div>
-              ))}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions, onExportImage }) {
   const cineEstado = useCineEstadoMap();
+  useAvanceVersion(); // re-render cuando llega el avance de Simkl o cambian las marcas
   const estadoItem = cineEstado[item.guid];
-  const estado = estadoItem?.estado || "sin_marca";
+  const estado = estadoEfectivo(cineEstado, item.guid);
   const [reviewOpen, setReviewOpen] = useState(false);
   function marcar(nuevoEstado) {
     if (nuevoEstado === "interesa") {
@@ -360,7 +218,9 @@ export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategor
       // build-cine.mjs, que no sabe que esto está marcado "interesa".
       setCineItemEstado(item.guid, { estado: "interesa", item });
     } else if (nuevoEstado === "sin_marca") {
-      setCineItemEstado(item.guid, null);
+      // Si Simkl tiene un estado para este ítem, borrar la entrada local lo
+      // "revive" (el estado efectivo cae al remoto): se guarda un override.
+      setCineItemEstado(item.guid, estadoRemotoDe(item.guid) ? { estado: "sin_marca" } : null);
     } else {
       setCineItemEstado(item.guid, { estado: nuevoEstado });
     }
@@ -381,6 +241,11 @@ export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategor
     setCineItemEstado(item.guid, { estado: "interesa", item, progreso: { temporada, episodio } });
     enqueueSimklAction(item, "interesa", { temporada, episodio });
   }
+  // Episodios: solo si ya hay progreso o le diste 👍 (antes salían siempre,
+  // incluso para una serie que ni siquiera decidiste ver).
+  const avance = avanceDe(item.guid);
+  const puedeEpisodios = item.categoria === "Series" || (item.categoria === "Animación" && !!avance?.catalogo);
+  const mostrarEpisodios = estado === "interesa" || (avance?.vistos ?? 0) > 0 || !!progresoActual;
   const color = CAT_COLORS[item.categoria] || "#e91e8c";
   const leads = (item.cast || []).filter(c => c.order < 4);
   const supporting = (item.cast || []).filter(c => c.order >= 4);
@@ -403,6 +268,13 @@ export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategor
           </div>
         </div>
 
+        {/* Orden de la ficha (pedido de uso en tablet): nombre y carátula, sinopsis,
+            video, y recién ahí decidir. Antes el video iba antes que la sinopsis y
+            los botones de decisión quedaban en una barra fija aparte. */}
+        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, marginBottom: 18 }}>
+          {item.summary}
+        </div>
+
         {item.trailer && (
           <div style={{ margin: "16px 0", borderRadius: 10, overflow: "hidden", aspectRatio: "16/9" }}>
             <iframe
@@ -415,10 +287,31 @@ export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategor
           </div>
         )}
 
-        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, marginBottom: 18 }}>
-          {item.summary}
-        </div>
-
+        {/* Oculta si ya está vista -- interesa/no-interesa no tiene
+              sentido una vez vista, la reseña ya la reemplaza. También
+              oculta mientras se escribe la reseña: estaba justo encima
+              del formulario y un toque accidental acá perdía el
+              borrador. */}
+          {!hideActions && !reviewOpen && estado !== "vista" && (
+            <div style={{ display: "flex", gap: 6, margin: "2px 0 18px" }}>
+              <button
+                onClick={() => marcar(estado === "interesa" ? "sin_marca" : "interesa")}
+                style={{ ...btnGhost, background: estado === "interesa" ? "#2ecc71" : "transparent", color: estado === "interesa" ? "#111" : undefined, borderColor: estado === "interesa" ? "#2ecc71" : undefined }}>
+                <span style={{ fontSize: 17 }}>👍</span>me interesa
+              </button>
+              <button
+                onClick={() => marcar(estado === "descartada" ? "sin_marca" : "descartada")}
+                style={{ ...btnGhost, background: estado === "descartada" ? "#e74c3c" : "transparent", color: estado === "descartada" ? "#111" : undefined, borderColor: estado === "descartada" ? "#e74c3c" : undefined }}>
+                <span style={{ fontSize: 17 }}>👎</span>no me interesa
+              </button>
+            </div>
+          )}
+        {/* Episodios -- solo con progreso o 👍 (ver puedeEpisodios/mostrarEpisodios). */}
+        {!hideActions && !reviewOpen && puedeEpisodios && mostrarEpisodios && (
+          <div style={{ margin: "0 0 18px", borderRadius: 10, overflow: "hidden" }}>
+            <SeriesSeguimiento item={item} progresoActual={progresoActual} onMarcar={marcarProgreso} />
+          </div>
+        )}
         {/* Mi reseña — después de tráiler/sinopsis a propósito: la
             decisión de marcar como vista viene después de repasar esa
             info, no antes. Bloqueada mientras está en producción -- no
@@ -483,33 +376,6 @@ export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategor
       </div>
       {!hideActions && (
         <React.Fragment>
-          {/* Oculta si ya está vista -- interesa/no-interesa no tiene
-              sentido una vez vista, la reseña ya la reemplaza. También
-              oculta mientras se escribe la reseña: estaba justo encima
-              del formulario y un toque accidental acá perdía el
-              borrador. */}
-          {!reviewOpen && estado !== "vista" && (
-            <div style={{ display: "flex", gap: 6, padding: "10px 10px 4px", background: "#111" }}>
-              <button
-                onClick={() => marcar(estado === "interesa" ? "sin_marca" : "interesa")}
-                style={{ ...btnGhost, background: estado === "interesa" ? "#2ecc71" : "transparent", color: estado === "interesa" ? "#111" : undefined, borderColor: estado === "interesa" ? "#2ecc71" : undefined }}>
-                <span style={{ fontSize: 17 }}>👍</span>me interesa
-              </button>
-              <button
-                onClick={() => marcar(estado === "descartada" ? "sin_marca" : "descartada")}
-                style={{ ...btnGhost, background: estado === "descartada" ? "#e74c3c" : "transparent", color: estado === "descartada" ? "#111" : undefined, borderColor: estado === "descartada" ? "#e74c3c" : undefined }}>
-                <span style={{ fontSize: 17 }}>👎</span>no me interesa
-              </button>
-            </div>
-          )}
-          {/* Progreso por episodio -- solo Series, solo si TMDb trajo el
-              desglose de temporadas (seasons: null en ítems viejos que
-              todavía no se re-enriquecieron, o en Películas/Animación
-              donde no aplica). Días para próximo episodio/temporada:
-              dato que ya se traía (nextEpisodeDate), nunca se mostraba. */}
-          {!reviewOpen && item.categoria === "Series" && (
-            <SeriesSeguimiento item={item} progresoActual={progresoActual} onMarcar={marcarProgreso} />
-          )}
           <div style={{ display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" }}>
             <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>anterior</button>
             <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
@@ -615,7 +481,7 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
   function step(dir) { animateTo(Math.round(posRef.current) + dir); }
 
   const cineEstado = useCineEstadoMap();
-  const pendientesDe = usePendientesDe();
+  const avVersion = useAvanceVersion(); // avance/estados de Simkl: re-render + dependencia estable de useMemo
   // Las marcadas "interesa" llevan copia completa del item justamente para
   // sobrevivir a la poda de 30 días de build-cine.mjs (que no sabe nada de
   // este estado) — si build-cine ya la sacó de `items`, la reinyectamos acá
@@ -659,6 +525,13 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
   const [ocultarDescartadas, setOcultarDescartadas] = useState(true);
   const [ocultarVistas, setOcultarVistas] = useState(true);
   const [soloInteresa, setSoloInteresa] = useState(false);
+  // Novedades = ítems sin NINGUNA marca (ni 👍, ni 👎, ni vista). Opuesto a "solo me
+  // interesa", así que activar uno apaga el otro. "Solo pendientes" (series con algo
+  // visto y episodios emitidos por ver) se combina con cualquiera.
+  const [soloNovedades, setSoloNovedades] = useState(false);
+  const [soloPendientes, setSoloPendientes] = useState(false);
+  const puedePendientes = categoria === "Series" || categoria === "Animación";
+  useEffect(() => { setSoloPendientes(false); }, [categoria]);
   // Estreno pasó de "ocultar" a "solo" -- como filtro negativo casi no
   // se notaba (13/32 en un carrusel no es un cambio visible claro);
   // como filtro positivo sí sirve para "qué puedo ver todavía en el
@@ -674,10 +547,15 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
       // Mutuamente excluyente con descartada/vista por construcción
       // (un ítem tiene un solo estado a la vez) -- no hace falta
       // aplicar esos dos filtros encima.
-      arr = arr.filter(it => cineEstado[it.guid]?.estado === "interesa");
+      arr = arr.filter(it => estadoEfectivo(cineEstado, it.guid) === "interesa");
+    } else if (soloNovedades) {
+      arr = arr.filter(it => estadoEfectivo(cineEstado, it.guid) === "sin_marca");
     } else {
-      if (ocultarDescartadas) arr = arr.filter(it => cineEstado[it.guid]?.estado !== "descartada");
-      if (ocultarVistas) arr = arr.filter(it => cineEstado[it.guid]?.estado !== "vista");
+      if (ocultarDescartadas) arr = arr.filter(it => estadoEfectivo(cineEstado, it.guid) !== "descartada");
+      if (ocultarVistas) arr = arr.filter(it => estadoEfectivo(cineEstado, it.guid) !== "vista");
+    }
+    if (puedePendientes && soloPendientes) {
+      arr = arr.filter(it => { const a = avanceDe(it.guid); return !!a && a.vistos > 0 && a.pendientes > 0; });
     }
     if (esPelicula && soloEstrenos) arr = arr.filter(it => esEstreno(it));
     if (esPelicula && ocultarTrending) arr = arr.filter(it => !esTrending(it));
@@ -701,13 +579,13 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
     const enCartelera = arr.filter(it => !it._fueraDeCartelera);
     const fueraDeCartelera = arr.filter(it => it._fueraDeCartelera);
     return fueraDeCartelera.length ? [...enCartelera, ...fueraDeCartelera] : arr;
-  }, [fullItems, sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloEstrenos, ocultarTrending, esPelicula, cineEstado]);
+  }, [fullItems, sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloNovedades, soloPendientes, puedePendientes, soloEstrenos, ocultarTrending, esPelicula, cineEstado, avVersion]);
 
   const total = sortedItems.length;
   // Al cambiar el catálogo filtrado/ordenado (o de categoría), volver al
   // principio -- el `pos` anterior podía corresponder a un índice sin
   // sentido en la lista nueva.
-  useEffect(() => { setPosBoth(0); }, [sortedItems.length, sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloEstrenos, ocultarTrending, categoria]);
+  useEffect(() => { setPosBoth(0); }, [sortedItems.length, sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloNovedades, soloPendientes, soloEstrenos, ocultarTrending, categoria]);
 
   function irARandom() {
     if (sortedItems.length < 2) return;
@@ -726,7 +604,11 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
   const toolbar = (
     <div style={{ display: "flex", gap: 6, padding: "0 12px 8px", justifyContent: "center", flexWrap: "wrap" }}>
       <button onClick={() => setSortBy(sortBy === "proxima" ? "default" : "proxima")} style={toolbarBtn(sortBy === "proxima")}>📅 próxima a salir</button>
-      <button onClick={() => setSoloInteresa(v => !v)} style={toolbarBtn(soloInteresa)}>🔖 solo me interesa</button>
+      <button onClick={() => { setSoloInteresa(v => !v); setSoloNovedades(false); }} style={toolbarBtn(soloInteresa)}>🔖 solo me interesa</button>
+      <button onClick={() => { setSoloNovedades(v => !v); setSoloInteresa(false); }} style={toolbarBtn(soloNovedades)} title="Sin 👍, 👎 ni vista">🆕 solo novedades</button>
+      {puedePendientes && (
+        <button onClick={() => setSoloPendientes(v => !v)} style={toolbarBtn(soloPendientes)} title="Con episodios vistos y episodios emitidos por ver">📺 solo pendientes</button>
+      )}
       <button onClick={() => setOcultarVistas(v => !v)} style={toolbarBtn(ocultarVistas)}>👁️ ocultar vistas</button>
       <button onClick={() => setOcultarDescartadas(v => !v)} style={toolbarBtn(ocultarDescartadas)}>🚫 ocultar no me interesa</button>
       <button onClick={irARandom} style={toolbarBtn(false)}>🎲 sorpréndeme</button>
@@ -762,7 +644,16 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
       <div>
         {toolbar}
         <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" }}>
-          nada por acá todavía
+          {(() => {
+            const av = estadoAvance();
+            if (puedePendientes && soloPendientes) {
+              if (av.error === "sin-auth") return "para ver pendientes hay que conectar Simkl";
+              if (!av.hayDatos) return av.cargando ? "cargando tu avance…" : "no se pudo leer el avance de Simkl";
+              return "ninguna serie con pendientes";
+            }
+            if (soloNovedades) return "no quedan novedades sin marcar";
+            return "nada por acá todavía";
+          })()}
         </div>
       </div>
     );
@@ -811,7 +702,7 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
           const textOpacity = Math.max(0.15, 1 - Math.abs(dist) * 0.5);
           const temporada = seasonLabel(item);
           const estadoItem = cineEstado[item.guid];
-          const itemEstado = estadoItem?.estado || "sin_marca";
+          const itemEstado = estadoEfectivo(cineEstado, item.guid);
           const descartada = itemEstado === "descartada";
           const vista = itemEstado === "vista";
           const interesa = itemEstado === "interesa";
@@ -819,7 +710,7 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
           const restantes = diasRestantesCartelera(item);
           const enProduccion = esEnProduccion(item);
           const diasEstreno = enProduccion ? diasParaEstreno(item) : null;
-          const ratingVista = vista ? CINE_RATINGS.find(r => r.id === estadoItem.rating) : null;
+          const ratingVista = vista ? CINE_RATINGS.find(r => r.id === estadoItem?.rating) : null;
           const trending = esTrending(item);
           const fueraDeCartelera = !!item._fueraDeCartelera;
           const deSimkl = !!item._deSimkl;
@@ -959,7 +850,8 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
                   <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#999", borderLeft: "1px solid #444", paddingLeft: 6 }}>{temporada}</span>
                 )}
                 {(() => {
-                  const pend = pendientesDe(item.guid);
+                  const av = avanceDe(item.guid);
+                  const pend = av && av.vistos > 0 && av.pendientes > 0 ? av.pendientes : null;
                   return pend ? <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#f5c518", borderLeft: "1px solid #444", paddingLeft: 6 }}>🎞 {pend} pend.</span> : null;
                 })()}
               </div>

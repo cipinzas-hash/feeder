@@ -66,7 +66,7 @@ if (!/escribirCamposLocales\(d\)/.test(restaurador)) falla("restoreFromPayload n
 // ── 3. Rehidratación de cachés vivas tras restaurar ─────────────────────────
 for (const [fn, motivo] of [
   ["rehidratarCineEstado()", "caché de módulo de Vitrina (estado.js)"],
-  ["rehidratarOverlay()", "overlay de episodios (episodios.js)"],
+  ["rehidratarOverlay()", "overlay de episodios (avance.js)"],
   ["setPodcastDispatched(d.feedPodcastDispatched)", "state de podcasts despachados en App"],
 ]) if (!restaurador.includes(fn)) falla(`restoreFromPayload no rehidrata ${motivo}`);
 if (!/validarPayloadExport\(payload\)/.test(tramo("async function pushStateToRepo", "async function leerDeRepo"))) falla("pushStateToRepo no valida el payload antes de subir");

@@ -17,7 +17,7 @@ const { LOCAL_EDIT_KEY } = await import("../modules/shared/localedit.js");
 // Estado previo del dispositivo: 1 película marcada
 store.set(LOCAL_KEY_FIELDS.feedCineEstado, JSON.stringify({ "tmdb-movie-1": { estado: "vista", rating: "remarkable" } }));
 const est = await import("../modules/vitrina/estado.js");   // la caché se arma AQUÍ
-const epi = await import("../modules/vitrina/episodios.js");
+const epi = await import("../modules/vitrina/avance.js");
 
 // Lo que trae Angst-data
 const payload = {

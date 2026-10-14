@@ -1,13 +1,17 @@
-import { armarVista, keyEp, epMapToSet } from "../shared/episodios.js";
-import { WORKER_URL, getSimklAuth, enqueueEpisodiosAction } from "./simkl.js";
+import { armarVista, avanceEfectivo, epMapToSet, keyEp } from "../shared/episodios.js";
+import { WORKER_URL, enqueueEpisodiosAction, getSimklAuth, setProcesadasConocidas } from "./simkl.js";
 import { marcarEdicionLocal } from "../shared/localedit.js";
 
 const { useState, useEffect } = React;
 
-// ─── Episodios por serie (issue #13) ────────────────────────────────────────
-// Fuente: series-episodios.json en Angst-data (privado), que arma
-// build-simkl.mjs con el catálogo de TMDb (nombre/fecha de cada episodio) y
-// el avance real de Simkl. Se lee vía el Worker, igual que simkl-discovery.
+// ─── Avance de series y estados de Simkl (issue #13) ────────────────────────
+// Dos fuentes, ambas en Angst-data (privado) y leídas vía el Worker:
+//  - simkl-vitrina.json (liviano, ~decenas de KB): por serie vistos/pendientes y
+//    episodios vistos; más el estado de Simkl de cada película/serie. Se baja
+//    al abrir la Vitrina: alimenta "solo pendientes", los badges y los estados.
+//  - series-episodios/<id>.json: nombre y fecha de cada episodio de UNA serie.
+//    Se baja recién al abrir la ficha de esa serie (antes era un único archivo
+//    de 3 MB con todas las series que se bajaba al montar el carrusel).
 //
 // Escritura optimista: al marcar/desmarcar, la marca queda en un "overlay"
 // local (localStorage) y se encola la acción para Simkl. El overlay se
@@ -20,11 +24,14 @@ const OVERLAY_TTL_MS = 48 * 3600 * 1000;
 const REFRESH_MS = 10 * 60 * 1000;
 
 const listeners = new Set();
-let remote = null;          // { generatedAt, shows: { [tmdbId]: entry } }
+let version = 0;
+let remote = null;          // { generatedAt, procesadas, series: { [tmdbId]: entry }, estados: { tv, movie } }
 let remoteAt = 0;
 let cargando = false;
-let errorCarga = null;
+let errorCarga = null;      // "sin-auth" | "sin-datos" | "red" | null
 let overlay = loadOverlay();
+const catalogos = new Map(); // tmdbId -> { estado: "cargando" | "ok" | "error", data }
+const setsCache = new WeakMap(); // entry -> Set de "t-e" ya decodificado
 
 function loadOverlay() {
   try { return JSON.parse(localStorage.getItem(OVERLAY_KEY) || "{}") || {}; } catch (e) { return {}; }
@@ -32,20 +39,27 @@ function loadOverlay() {
 function saveOverlay() {
   try { localStorage.setItem(OVERLAY_KEY, JSON.stringify(overlay)); } catch (e) {}
 }
-function notify() { listeners.forEach(fn => fn(n => n + 1)); }
+function notify() { version++; listeners.forEach(fn => fn(version)); }
 // Tras restaurar desde Angst-data / .json: el overlay en memoria se armó al
 // cargar la página; hay que releerlo de localStorage (ver estado.js).
 export function rehidratarOverlay() { overlay = loadOverlay(); notify(); }
+
+function vistosRemotos(entry) {
+  let s = setsCache.get(entry);
+  if (!s) { s = epMapToSet(entry.ep); setsCache.set(entry, s); }
+  return s;
+}
 
 // Quita del overlay lo que Simkl ya refleja y lo que venció.
 function podarOverlay() {
   const ahora = Date.now();
   let cambio = false;
   for (const [id, marcas] of Object.entries(overlay)) {
-    const vistosRemotos = remote?.shows?.[id] ? epMapToSet(remote.shows[id].ep) : null;
+    const entry = remote?.series?.[id];
+    const reales = entry ? vistosRemotos(entry) : null;
     for (const [k, o] of Object.entries(marcas)) {
       const vencida = ahora - (o.ts || 0) > OVERLAY_TTL_MS;
-      const reflejada = vistosRemotos && vistosRemotos.has(k) === !!o.v;
+      const reflejada = reales && reales.has(k) === !!o.v;
       if (vencida || reflejada) { delete marcas[k]; cambio = true; }
     }
     if (!Object.keys(marcas).length) { delete overlay[id]; cambio = true; }
@@ -53,16 +67,17 @@ function podarOverlay() {
   if (cambio) saveOverlay();
 }
 
-export function cargarEpisodios({ forzar = false } = {}) {
+export function cargarAvance({ forzar = false } = {}) {
   const auth = getSimklAuth();
-  if (!auth) { errorCarga = "sin-auth"; return; }
+  if (!auth) { if (errorCarga !== "sin-auth") { errorCarga = "sin-auth"; notify(); } return; }
   if (cargando || (!forzar && remote && Date.now() - remoteAt < REFRESH_MS)) return;
   cargando = true;
-  fetch(`${WORKER_URL}?path=series-episodios.json`, { headers: { "X-Angst-Auth": auth } })
+  fetch(`${WORKER_URL}?path=simkl-vitrina.json`, { headers: { "X-Angst-Auth": auth } })
     .then(r => r.ok ? r.json() : null)
     .then(d => {
-      if (d && d.found !== false && d.shows) {
+      if (d && d.found !== false && d.series) {
         remote = d; remoteAt = Date.now(); errorCarga = null;
+        setProcesadasConocidas(d.procesadas);
         podarOverlay();
       } else if (!remote) {
         errorCarga = "sin-datos";
@@ -70,6 +85,20 @@ export function cargarEpisodios({ forzar = false } = {}) {
     })
     .catch(() => { if (!remote) errorCarga = "red"; })
     .finally(() => { cargando = false; notify(); });
+}
+
+function cargarCatalogo(id) {
+  const auth = getSimklAuth();
+  const previo = catalogos.get(id);
+  if (!auth || (previo && previo.estado !== "error")) return;
+  catalogos.set(id, { estado: "cargando" });
+  fetch(`${WORKER_URL}?path=series-episodios/${id}.json`, { headers: { "X-Angst-Auth": auth } })
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      catalogos.set(id, d && d.found !== false && Array.isArray(d.temporadas) ? { estado: "ok", data: d } : { estado: "error" });
+    })
+    .catch(() => catalogos.set(id, { estado: "error" }))
+    .finally(notify);
 }
 
 function tmdbIdDe(guid) {
@@ -81,36 +110,58 @@ function hoyISO() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-// Hook interno: re-render cuando cambian los datos o el overlay.
-function useTick() {
-  const [, setN] = useState(0);
+// Re-render cuando cambian los datos o el overlay. Devuelve un número de
+// versión que sirve como dependencia estable de useMemo.
+export function useAvanceVersion() {
+  const [v, setV] = useState(version);
   useEffect(() => {
-    listeners.add(setN);
-    cargarEpisodios();
-    return () => listeners.delete(setN);
+    listeners.add(setV);
+    cargarAvance();
+    return () => listeners.delete(setV);
   }, []);
+  return v;
 }
 
-// Vista de una serie (o null si todavía no hay catálogo para ella).
-export function useSerieEpisodios(guid) {
-  useTick();
+// Estado de la carga, para avisar en pantalla en vez de mostrar nada.
+export function estadoAvance() {
+  return { cargando, error: errorCarga, hayDatos: !!remote, generatedAt: remote?.generatedAt || null };
+}
+
+// Avance de una serie con las marcas locales aplicadas (o null si no hay datos).
+// Funciones de módulo (identidad estable): se usan dentro de useMemo con la
+// versión de useAvanceVersion() como dependencia.
+export function avanceDe(guid) {
   const id = tmdbIdDe(guid);
-  const entry = id && remote?.shows?.[id];
-  if (!entry) return { vista: null, estadoCarga: cargando ? "cargando" : (errorCarga || (remote ? "sin-catalogo" : "idle")) };
-  return { vista: armarVista(entry, overlay[id], hoyISO()), estadoCarga: "ok", entry };
+  const entry = id && remote?.series?.[id];
+  if (!entry) return null;
+  const ef = avanceEfectivo(entry, overlay[id]);
+  return { vistos: ef.vistos, pendientes: ef.pendientes, simklStatus: entry.simklStatus, catalogo: !!entry.catalogo, epInferido: !!entry.epInferido };
 }
 
-// Pendientes de una serie para pintar en las tarjetas. Solo series "en curso"
-// (con algo visto): una serie sin empezar no necesita un "40 pendientes".
-export function usePendientesDe() {
-  useTick();
-  return (guid) => {
-    const id = tmdbIdDe(guid);
-    const entry = id && remote?.shows?.[id];
-    if (!entry) return null;
-    const v = armarVista(entry, overlay[id], hoyISO());
-    return v.vistos > 0 && v.pendientes > 0 ? v.pendientes : null;
-  };
+// Estado que Simkl tiene para este ítem ("interesa" | "vista" | "descartada"),
+// para reflejar lo marcado fuera de la Vitrina. Las marcas locales ganan.
+export function estadoRemotoDe(guid) {
+  const m = /^tmdb-(movie|tv)-(\d+)$/.exec(guid || "");
+  if (!m) return null;
+  return remote?.estados?.[m[1]]?.[m[2]] ?? null;
+}
+export function estadoEfectivo(cineEstado, guid) {
+  return cineEstado[guid]?.estado ?? estadoRemotoDe(guid) ?? "sin_marca";
+}
+
+// Vista completa de una serie (temporadas, episodios con nombre) -- baja el
+// catálogo de ESA serie la primera vez que se usa.
+export function useSerieEpisodios(guid) {
+  useAvanceVersion();
+  const id = tmdbIdDe(guid);
+  useEffect(() => { if (id && remote?.series?.[id]?.catalogo) cargarCatalogo(id); });
+  const entry = id && remote?.series?.[id];
+  if (!entry) return { vista: null, estadoCarga: cargando ? "cargando" : (errorCarga || "sin-datos") };
+  if (!entry.catalogo) return { vista: null, estadoCarga: "sin-catalogo", entry };
+  const cat = catalogos.get(id);
+  if (!cat || cat.estado === "cargando") return { vista: null, estadoCarga: "cargando", entry };
+  if (cat.estado === "error") return { vista: null, estadoCarga: "error", entry };
+  return { vista: armarVista({ temporadas: cat.data.temporadas, ep: entry.ep }, overlay[id], hoyISO()), estadoCarga: "ok", entry };
 }
 
 function aplicarMarcas(item, ops) {

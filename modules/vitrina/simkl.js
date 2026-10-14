@@ -1,4 +1,4 @@
-import { mergeEpisodeOps, opsVacias } from "../shared/episodios.js";
+import { mergeEpisodeOps, opsVacias, restarOps } from "../shared/episodios.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -92,6 +92,17 @@ function parseTmdbGuid(guid) {
   if (!m) return null;
   return { tipo: m[1] === "movie" ? "movie" : "show", tmdbId: Number(m[2]) };
 }
+// Cada acción lleva un id: la cola del repo es "solo agregar" y build-simkl
+// anota los ids ya procesados, así nadie tiene que reescribir lo del otro.
+function nuevoId() {
+  try { if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID(); } catch (e) {}
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+// ids que build-simkl ya procesó (los trae simkl-vitrina.json, ver avance.js):
+// permiten podar la cola del repo.
+let procesadasConocidas = new Set();
+export function setProcesadasConocidas(ids) { procesadasConocidas = new Set(ids || []); }
+
 export function enqueueSimklAction(item, estadoLocal, progreso) {
   const parsed = parseTmdbGuid(item?.guid);
   if (!parsed) return; // Animación (a veces ID de MAL) u otra fuente sin tmdb -- no aplica todavía
@@ -106,7 +117,7 @@ export function enqueueSimklAction(item, estadoLocal, progreso) {
   // Reemplaza cualquier acción pendiente anterior del mismo ítem -- no
   // tiene sentido mandar dos veces, gana la más reciente.
   const filtered = pending.filter(a => !(a.kind !== "episodios" && a.tmdbId === parsed.tmdbId && a.tipo === parsed.tipo));
-  const accion = { tmdbId: parsed.tmdbId, tipo: parsed.tipo, status, title: item.title, year, creadoEn: new Date().toISOString() };
+  const accion = { id: nuevoId(), tmdbId: parsed.tmdbId, tipo: parsed.tipo, status, title: item.title, year, creadoEn: new Date().toISOString() };
   if (progreso) accion.progreso = progreso; // {temporada, episodio} -- build-simkl.mjs marca visto hasta ahí
   filtered.push(accion);
   saveSimklPending(filtered);
@@ -125,49 +136,67 @@ export function enqueueEpisodiosAction(item, ops) {
   const fusion = mergeEpisodeOps(previa, ops);
   const resto = pending.filter(a => !(a.kind === "episodios" && a.tmdbId === parsed.tmdbId));
   if (!opsVacias(fusion)) {
-    resto.push({ kind: "episodios", tipo: "show", tmdbId: parsed.tmdbId, title: item.title, year, marcar: fusion.marcar, desmarcar: fusion.desmarcar, creadoEn: new Date().toISOString() });
+    resto.push({ id: previa?.id || nuevoId(), kind: "episodios", tipo: "show", tmdbId: parsed.tmdbId, title: item.title, year, marcar: fusion.marcar, desmarcar: fusion.desmarcar, creadoEn: new Date().toISOString() });
   }
   saveSimklPending(resto);
   flushSimklQueue();
   return true;
 }
+// Cola en el repo: simkl-queue.json lo escribe SOLO el navegador y lo lee
+// build-simkl (que anota lo procesado en su propio estado). Antes el
+// navegador reescribía simkl-state.json, que también escribe el cron: si el
+// cron terminaba mientras tanto, el reintento de su push pisaba las acciones.
+const SIMKL_QUEUE_FILE = "simkl-queue.json";
+const COLA_MAX_EDAD_MS = 14 * 24 * 3600 * 1000;
+
+// Tras confirmar un envío: se descarta de la cola local SOLO lo que viajó.
+// Lo que se marcó mientras el envío estaba en vuelo se conserva (antes se
+// vaciaba la cola entera y esas marcas se perdían sin avisar).
+function reconciliarTrasEnvio(enviadas) {
+  const porId = new Map(enviadas.map(a => [a.id, a]));
+  const resto = [];
+  for (const a of loadSimklPending()) {
+    const enviada = porId.get(a.id);
+    if (!enviada) { resto.push(a); continue; } // llegó durante el envío
+    if (a.kind === "episodios") {
+      const ops = restarOps(a, enviada); // lo agregado a esta acción después del snapshot
+      if (!opsVacias(ops)) resto.push({ ...a, id: nuevoId(), marcar: ops.marcar, desmarcar: ops.desmarcar });
+    }
+    // acción de estado con el mismo id: viajó completa
+  }
+  saveSimklPending(resto);
+  return resto.length;
+}
+
 let simklFlushInFlight = false;
+let simklFlushRepetir = false;
 export async function flushSimklQueue() {
-  if (simklFlushInFlight) return;
+  if (simklFlushInFlight) { simklFlushRepetir = true; return; } // se re-evalúa al terminar
   const auth = getSimklAuth();
   const pending = loadSimklPending();
   if (!auth || !pending.length) return;
   simklFlushInFlight = true;
   setSimklSyncStatus({ estado: "syncing" });
+  const enviadas = JSON.parse(JSON.stringify(pending)); // snapshot de lo que se manda
+  let quedaron = 0;
   try {
-    // El POST del Worker REEMPLAZA el archivo entero, no hace merge --
-    // hay que leer primero o se perdería syncedList/lastSimklActivity
-    // (los escribe build-simkl.mjs del lado servidor) sin querer.
-    const getResp = await fetch(`${WORKER_URL}?path=simkl-state.json`, { headers: { "X-Angst-Auth": auth } });
+    const getResp = await fetch(`${WORKER_URL}?path=${SIMKL_QUEUE_FILE}`, { headers: { "X-Angst-Auth": auth } });
     if (!getResp.ok) { setSimklSyncStatus({ estado: "error", ultimoError: `GET ${getResp.status}` }); return; }
     const remote = await getResp.json();
-    if (remote.found === false) { setSimklSyncStatus({ estado: "error", ultimoError: "simkl-state.json no existe todavía" }); return; }
-    const remotePending = remote.pendingActions || [];
-    const keyOf = a => a.kind === "episodios" ? `ep-${a.tmdbId}` : `${a.tipo}-${a.tmdbId}`;
-    const merged = [...remotePending];
-    for (const a of pending) {
-      const i = merged.findIndex(r => keyOf(r) === keyOf(a));
-      if (i === -1) merged.push(a);
-      else if (a.kind === "episodios") {
-        // La remota todavía no la consumió build-simkl: se fusionan, gana lo más nuevo.
-        const ops = mergeEpisodeOps(merged[i], a);
-        merged[i] = { ...merged[i], ...a, marcar: ops.marcar, desmarcar: ops.desmarcar };
-      }
-      // Acciones de estado: se mantiene el comportamiento anterior (gana la remota).
-    }
-    remote.pendingActions = merged;
+    const colaRemota = remote.found === false ? [] : (Array.isArray(remote.actions) ? remote.actions : []);
+    const ahora = Date.now();
+    // Se poda lo ya procesado por el cron y lo muy viejo; el resto se conserva.
+    const vigentes = colaRemota.filter(a => a.id && !procesadasConocidas.has(a.id)
+      && ahora - new Date(a.creadoEn || ahora).getTime() < COLA_MAX_EDAD_MS);
+    const ids = new Set(vigentes.map(a => a.id));
+    const nuevas = enviadas.filter(a => !ids.has(a.id)); // idempotente si un reintento llega tras un POST cuya respuesta se perdió
     const postResp = await fetch(WORKER_URL, {
       method: "POST",
       headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
-      body: JSON.stringify({ path: "simkl-state.json", payload: remote }),
+      body: JSON.stringify({ path: SIMKL_QUEUE_FILE, payload: { actions: [...vigentes, ...nuevas] } }),
     });
     if (postResp.ok) {
-      saveSimklPending([]); // confirmado en Angst-data -- build-simkl.mjs lo toma de ahí en su próxima corrida
+      quedaron = reconciliarTrasEnvio(enviadas); // confirmado en Angst-data -- build-simkl lo toma en su próxima corrida
       setSimklSyncStatus({ estado: "ok", ultimoOk: new Date().toISOString(), ultimoError: null });
     } else {
       setSimklSyncStatus({ estado: "error", ultimoError: `POST ${postResp.status}` });
@@ -177,5 +206,8 @@ export async function flushSimklQueue() {
     setSimklSyncStatus({ estado: "error", ultimoError: e.message });
   } finally {
     simklFlushInFlight = false;
+    const repetir = simklFlushRepetir || quedaron > 0;
+    simklFlushRepetir = false;
+    if (repetir && loadSimklPending().length && simklSyncStatus.estado !== "error") setTimeout(flushSimklQueue, 0);
   }
 }

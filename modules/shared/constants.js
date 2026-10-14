@@ -6,6 +6,9 @@ const { useState, useEffect, useRef } = React;
 export const FEED_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/feed.json";
 export const CINE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/cine.json";
 export const MELEE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/melee.json";
+// Microdocumentales + Conciertos aparte (lo genera build-feed): la Vitrina no necesita bajar
+// los ~5 MB de feed.json para leer ~60 KB.
+export const VIDEOTECA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/videoteca.json";
 
 // Destacados (vitrina audiovisual) — 3 categorías separadas, cada una su
 // propio carrusel. Ya no participan del swipe round-robin de "Noticias".

@@ -4,7 +4,7 @@ import { requestNotifPermission, scheduleTaskNotifs } from "./notifications.js";
 import { downloadBackupJSON, validarPayloadExport, leerCamposLocales, escribirCamposLocales } from "./persistence.js";
 import { marcarEdicionLocal, LOCAL_EDIT_KEY } from "../modules/shared/localedit.js";
 import { rehidratarCineEstado } from "../modules/vitrina/estado.js";
-import { rehidratarOverlay } from "../modules/vitrina/episodios.js";
+import { rehidratarOverlay } from "../modules/vitrina/avance.js";
 import { fmt, fmtFull, getHoliday, addDays } from "./dates.js";
 import PokecriptoPage, { CARPETAS_DEFAULT } from "../modules/pokecripto/PokecriptoPage.jsx";
 import SaludPage from "../modules/salud/SaludPage.jsx";
