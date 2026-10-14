@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-14T07:13:27.921Z",
+  "generatedAt": "2026-10-14T14:55:12.957Z",
   "categories": [
     {
       "cat": "Películas",
@@ -410,20 +410,20 @@
           "trending": false
         },
         {
-          "guid": "tmdb-movie-1248832",
-          "title": "Digger",
-          "link": "https://www.themoviedb.org/movie/1248832",
-          "summary": "El hombre más poderoso del mundo se embarca en una misión frenética para demostrar que es el salvador de la humanidad antes de que el desastre que ha desencadenado lo destruya todo.",
-          "image": "https://image.tmdb.org/t/p/w500/koqE0V2IgIPVy5o2vVkoGJvnB8b.jpg",
-          "pubDate": "2026-09-28",
+          "guid": "tmdb-movie-1058424",
+          "title": "Hope",
+          "link": "https://www.themoviedb.org/movie/1058424",
+          "summary": "Tras un extraño hallazgo cerca de una aislada ciudad portuaria, los habitantes se ven envueltos en una desesperada lucha por la supervivencia.",
+          "image": "https://image.tmdb.org/t/p/w500/hHPIefotew38oJm3YCJPAzpi26c.jpg",
+          "pubDate": "2026-07-15",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-09-16T20:58:58.204Z",
+          "firstSeenAt": "2026-09-16T14:40:49.429Z",
           "fullText": null,
           "rating": {
-            "imdb": null,
-            "rt": 52,
-            "metascore": null,
+            "imdb": 6.9,
+            "rt": 72,
+            "metascore": 66,
             "tmdb": 7.5
           },
           "status": "Released",
@@ -433,58 +433,58 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "job8V254NAE",
+            "key": "ztqZZO-lLsE",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Tom Cruise",
-              "character": "Digger Rockwell",
+              "name": "황정민",
+              "character": "Go Bum-seok",
               "order": 0
             },
             {
-              "name": "Riz Ahmed",
-              "character": "Ganesh",
+              "name": "조인성",
+              "character": "Go Sung-ki",
               "order": 1
             },
             {
-              "name": "John Goodman",
-              "character": "President Compson",
+              "name": "정호연",
+              "character": "Lim Sung-ae",
               "order": 2
             },
             {
-              "name": "Sandra Hüller",
-              "character": "Emma",
+              "name": "Alicia Vikander",
+              "character": "J'aur",
               "order": 3
             },
             {
-              "name": "Michael Stuhlbarg",
-              "character": "Vice President",
+              "name": "Michael Fassbender",
+              "character": "Ma'veyyo",
               "order": 4
             },
             {
-              "name": "Jesse Plemons",
-              "character": "Kenny",
+              "name": "Taylor Russell",
+              "character": "Ai'dovor",
               "order": 5
             },
             {
-              "name": "Robert John Burke",
-              "character": "General Fitzgerald",
+              "name": "Cameron Britton",
+              "character": "Va'migere",
               "order": 6
             },
             {
-              "name": "Emma D'Arcy",
-              "character": "Lina",
+              "name": "이상희",
+              "character": "Nak-yeon",
               "order": 7
             },
             {
-              "name": "Burn Gorman",
-              "character": "Defense Secretary Amos",
+              "name": "음문석",
+              "character": "Yang-bae",
               "order": 8
             },
             {
-              "name": "Sophie Wilde",
-              "character": "Hannah",
+              "name": "임현식",
+              "character": "Hae-sul",
               "order": 9
             }
           ],
@@ -572,6 +572,133 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1248832",
+          "title": "Digger",
+          "link": "https://www.themoviedb.org/movie/1248832",
+          "summary": "El hombre más poderoso del mundo se embarca en una misión frenética para demostrar que es el salvador de la humanidad antes de que el desastre que ha desencadenado lo destruya todo.",
+          "image": "https://image.tmdb.org/t/p/w500/koqE0V2IgIPVy5o2vVkoGJvnB8b.jpg",
+          "pubDate": "2026-09-28",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-16T20:58:58.204Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": 52,
+            "metascore": null,
+            "tmdb": 7.5
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "job8V254NAE",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Cruise",
+              "character": "Digger Rockwell",
+              "order": 0
+            },
+            {
+              "name": "Riz Ahmed",
+              "character": "Ganesh",
+              "order": 1
+            },
+            {
+              "name": "John Goodman",
+              "character": "President Compson",
+              "order": 2
+            },
+            {
+              "name": "Sandra Hüller",
+              "character": "Emma",
+              "order": 3
+            },
+            {
+              "name": "Michael Stuhlbarg",
+              "character": "Vice President",
+              "order": 4
+            },
+            {
+              "name": "Jesse Plemons",
+              "character": "Kenny",
+              "order": 5
+            },
+            {
+              "name": "Robert John Burke",
+              "character": "General Fitzgerald",
+              "order": 6
+            },
+            {
+              "name": "Emma D'Arcy",
+              "character": "Lina",
+              "order": 7
+            },
+            {
+              "name": "Burn Gorman",
+              "character": "Defense Secretary Amos",
+              "order": 8
+            },
+            {
+              "name": "Sophie Wilde",
+              "character": "Hannah",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1263337",
+          "title": "En el corazón de la bestia",
+          "link": "https://www.themoviedb.org/movie/1263337",
+          "summary": "Tras sobrevivir a un brutal accidente aéreo, el oficial de las Fuerzas Especiales James Belmont y su perro de combate Odín intentan intentarán regresar a la civilización desde un remoto lugar en medio de los parajes salvajes de Alaska.",
+          "image": "https://image.tmdb.org/t/p/w500/h9Ql2vsltCOuf44c28nInxjzL2m.jpg",
+          "pubDate": "2026-09-19",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-19T13:43:53.697Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.5,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.8
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "UkMuGKqAux4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Brad Pitt",
+              "character": "James Belmont",
+              "order": 0
+            },
+            {
+              "name": "J.K. Simmons",
+              "character": "Walter Boone",
+              "order": 1
+            },
+            {
+              "name": "Anna Lambe",
+              "character": "",
+              "order": 2
+            }
+          ],
+          "trending": false
+        },
+        {
           "guid": "tmdb-movie-1283515",
           "title": "Verity. La sombra de un engaño",
           "link": "https://www.themoviedb.org/movie/1283515",
@@ -647,295 +774,6 @@
             {
               "name": "Lou Martini Jr.",
               "character": "Limo Driver",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1263337",
-          "title": "En el corazón de la bestia",
-          "link": "https://www.themoviedb.org/movie/1263337",
-          "summary": "Tras sobrevivir a un brutal accidente aéreo, el oficial de las Fuerzas Especiales James Belmont y su perro de combate Odín intentan intentarán regresar a la civilización desde un remoto lugar en medio de los parajes salvajes de Alaska.",
-          "image": "https://image.tmdb.org/t/p/w500/h9Ql2vsltCOuf44c28nInxjzL2m.jpg",
-          "pubDate": "2026-09-19",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-19T13:43:53.697Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.5,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.8
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "UkMuGKqAux4",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Brad Pitt",
-              "character": "James Belmont",
-              "order": 0
-            },
-            {
-              "name": "J.K. Simmons",
-              "character": "Walter Boone",
-              "order": 1
-            },
-            {
-              "name": "Anna Lambe",
-              "character": "",
-              "order": 2
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1477712",
-          "title": "Dulce sabor a muerte",
-          "link": "https://www.themoviedb.org/movie/1477712",
-          "summary": "Lo que comienza siendo un verano idílico, en un pequeño y tranquilo pueblo vacacional, se convierte en una auténtica pesadilla cuando los más pequeños comienzan a mostrar instintos asesinos y deseos insaciables por acabar con todos los adultos. Son víctimas de una curiosa maldición provocada por los helados que comen que afecta a todos, menos a tres niños que tendrán que intentar escapar y salvar a todo el pueblo.",
-          "image": "https://image.tmdb.org/t/p/w500/uVuP2ZTYLn5hdL1aUOe4BiFD6d3.jpg",
-          "pubDate": "2026-08-03",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-22T07:25:27.492Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 3.8,
-            "rt": 25,
-            "metascore": 33,
-            "tmdb": 4.5
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "Cgw3zNmFtRo",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Ari Millen",
-              "character": "The Ice Cream Man / Jonathan Smiley",
-              "order": 0
-            },
-            {
-              "name": "Charlie Zeltzer",
-              "character": "Jared",
-              "order": 1
-            },
-            {
-              "name": "Shiloh O’Reilly",
-              "character": "Tommy",
-              "order": 2
-            },
-            {
-              "name": "Kiori Mirza Waldman",
-              "character": "Mia",
-              "order": 3
-            },
-            {
-              "name": "Sarah Abbott",
-              "character": "Lizzie",
-              "order": 4
-            },
-            {
-              "name": "Benjamin Byron Davis",
-              "character": "The Priest",
-              "order": 5
-            },
-            {
-              "name": "Karen Cliche",
-              "character": "Alison",
-              "order": 6
-            },
-            {
-              "name": "Dylan Hawco",
-              "character": "Chris",
-              "order": 7
-            },
-            {
-              "name": "Luke Dietz",
-              "character": "Elliot",
-              "order": 10
-            },
-            {
-              "name": "Eli Massillon",
-              "character": "Myles",
-              "order": 11
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-969681",
-          "title": "Spider-Man: Brand New Day",
-          "link": "https://www.themoviedb.org/movie/969681",
-          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
-          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
-          "pubDate": "2026-07-29",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-29T21:59:04.958Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.1,
-            "rt": 89,
-            "metascore": 66,
-            "tmdb": 7.9
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "P3uI5sLosKU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Tom Holland",
-              "character": "Peter Parker / Spider-Man",
-              "order": 0
-            },
-            {
-              "name": "Zendaya",
-              "character": "MJ",
-              "order": 1
-            },
-            {
-              "name": "Mark Ruffalo",
-              "character": "Bruce Banner / Hulk",
-              "order": 2
-            },
-            {
-              "name": "Jon Bernthal",
-              "character": "Frank Castle / Punisher",
-              "order": 3
-            },
-            {
-              "name": "Jacob Batalon",
-              "character": "Ned Leeds",
-              "order": 4
-            },
-            {
-              "name": "Sadie Sink",
-              "character": "Jean Grey",
-              "order": 5
-            },
-            {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova / Black Widow",
-              "order": 6
-            },
-            {
-              "name": "Liza Colón-Zayas",
-              "character": "Detective Jean DeWolff",
-              "order": 7
-            },
-            {
-              "name": "Tramell Tillman",
-              "character": "William 'Bill' Metzger",
-              "order": 8
-            },
-            {
-              "name": "Marisa Tomei",
-              "character": "May Parker",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1236045",
-          "title": "Animales",
-          "link": "https://www.themoviedb.org/movie/1236045",
-          "summary": "El secuestro de su hijo obliga a un candidato a la alcaldía de Los Ángeles y a su mujer a reunir el dinero del rescate y a tomar decisiones que podrían destruir sus vidas.",
-          "image": "https://image.tmdb.org/t/p/w500/hhycOr6ji35RMGHnstHN4UKAvR4.jpg",
-          "pubDate": "2026-10-09",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-09T08:34:33.968Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.4
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "ZkN2M4ODdys",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Ben Affleck",
-              "character": "Mark Kimball",
-              "order": 0
-            },
-            {
-              "name": "Kerry Washington",
-              "character": "Abigail Kimball",
-              "order": 1
-            },
-            {
-              "name": "Gillian Anderson",
-              "character": "Dayle Burton",
-              "order": 2
-            },
-            {
-              "name": "Steven Yeun",
-              "character": "Sam Allison",
-              "order": 3
-            },
-            {
-              "name": "Adriana Paz",
-              "character": "Cecilia Trujillo",
-              "order": 4
-            },
-            {
-              "name": "Luis Gerardo Méndez",
-              "character": "Ramon",
-              "order": 5
-            },
-            {
-              "name": "Christopher Woodley",
-              "character": "Denny Kimball",
-              "order": 6
-            },
-            {
-              "name": "Jacob Estrada",
-              "character": "Hector",
-              "order": 7
-            },
-            {
-              "name": "Ray Fisher",
-              "character": "Ron Sperling",
-              "order": 8
-            },
-            {
-              "name": "Taylor Cooper",
-              "character": "Hannah",
               "order": 9
             }
           ],
@@ -1023,6 +861,320 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1236045",
+          "title": "Animales",
+          "link": "https://www.themoviedb.org/movie/1236045",
+          "summary": "El secuestro de su hijo obliga a un candidato a la alcaldía de Los Ángeles y a su mujer a reunir el dinero del rescate y a tomar decisiones que podrían destruir sus vidas.",
+          "image": "https://image.tmdb.org/t/p/w500/hhycOr6ji35RMGHnstHN4UKAvR4.jpg",
+          "pubDate": "2026-10-09",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-09T08:34:33.968Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "ZkN2M4ODdys",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Ben Affleck",
+              "character": "Mark Kimball",
+              "order": 0
+            },
+            {
+              "name": "Kerry Washington",
+              "character": "Abigail Kimball",
+              "order": 1
+            },
+            {
+              "name": "Gillian Anderson",
+              "character": "Dayle Burton",
+              "order": 2
+            },
+            {
+              "name": "Steven Yeun",
+              "character": "Sam Allison",
+              "order": 3
+            },
+            {
+              "name": "Adriana Paz",
+              "character": "Cecilia Trujillo",
+              "order": 4
+            },
+            {
+              "name": "Luis Gerardo Méndez",
+              "character": "Ramon",
+              "order": 5
+            },
+            {
+              "name": "Christopher Woodley",
+              "character": "Denny Kimball",
+              "order": 6
+            },
+            {
+              "name": "Jacob Estrada",
+              "character": "Hector",
+              "order": 7
+            },
+            {
+              "name": "Ray Fisher",
+              "character": "Ron Sperling",
+              "order": 8
+            },
+            {
+              "name": "Taylor Cooper",
+              "character": "Hannah",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-969681",
+          "title": "Spider-Man: Brand New Day",
+          "link": "https://www.themoviedb.org/movie/969681",
+          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
+          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
+          "pubDate": "2026-07-29",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-29T21:59:04.958Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.1,
+            "rt": 89,
+            "metascore": 66,
+            "tmdb": 7.9
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "P3uI5sLosKU",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Holland",
+              "character": "Peter Parker / Spider-Man",
+              "order": 0
+            },
+            {
+              "name": "Zendaya",
+              "character": "MJ",
+              "order": 1
+            },
+            {
+              "name": "Mark Ruffalo",
+              "character": "Bruce Banner / Hulk",
+              "order": 2
+            },
+            {
+              "name": "Jon Bernthal",
+              "character": "Frank Castle / Punisher",
+              "order": 3
+            },
+            {
+              "name": "Jacob Batalon",
+              "character": "Ned Leeds",
+              "order": 4
+            },
+            {
+              "name": "Sadie Sink",
+              "character": "Jean Grey",
+              "order": 5
+            },
+            {
+              "name": "Florence Pugh",
+              "character": "Yelena Belova / Black Widow",
+              "order": 6
+            },
+            {
+              "name": "Liza Colón-Zayas",
+              "character": "Detective Jean DeWolff",
+              "order": 7
+            },
+            {
+              "name": "Tramell Tillman",
+              "character": "William 'Bill' Metzger",
+              "order": 8
+            },
+            {
+              "name": "Marisa Tomei",
+              "character": "May Parker",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1153576",
+          "title": "Street Fighter",
+          "link": "https://www.themoviedb.org/movie/1153576",
+          "summary": "En 1993, los distanciados luchadores callejeros Ryu y Ken Masters se ven arrastrados de nuevo al combate cuando la misteriosa Chun-Li los recluta para el próximo Torneo World Warrior: un enfrentamiento brutal de puños, destino y furia. Sin embargo, tras esta gran batalla se esconde una conspiración mortal que los obliga a enfrentarse tanto entre sí como a los demonios de su pasado. Y si no lo logran... ¡será el fin de la partida!",
+          "image": "https://image.tmdb.org/t/p/w500/2kdEEUkbkJe08kTDMCUbBrZ71Aw.jpg",
+          "pubDate": "2026-10-13",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-14T00:55:45.863Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.7
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "U6sbm1OaJb8",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Andrew Koji",
+              "character": "Ryu",
+              "order": 0
+            },
+            {
+              "name": "Noah Centineo",
+              "character": "Ken Masters",
+              "order": 1
+            },
+            {
+              "name": "Callina Liang",
+              "character": "Chun-Li",
+              "order": 2
+            },
+            {
+              "name": "Joe Anoa'i",
+              "character": "Akuma",
+              "order": 3
+            },
+            {
+              "name": "David Dastmalchian",
+              "character": "M. Bison",
+              "order": 4
+            },
+            {
+              "name": "Cody Rhodes",
+              "character": "Guile",
+              "order": 5
+            },
+            {
+              "name": "Andrew Schulz",
+              "character": "Dan Hibiki",
+              "order": 6
+            },
+            {
+              "name": "Eric Andre",
+              "character": "Don Sauvage",
+              "order": 7
+            },
+            {
+              "name": "विद्युत जामवाल",
+              "character": "Dhalsim",
+              "order": 8
+            },
+            {
+              "name": "Mel Jarnson",
+              "character": "Cammy",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1381078",
+          "title": "El amor de tu vida",
+          "link": "https://www.themoviedb.org/movie/1381078",
+          "summary": "Una joven pierde a su marido y emprende un viaje para encontrar el camino a seguir en su vida.",
+          "image": "https://image.tmdb.org/t/p/w500/gOaRyRpilYPEsVLEPHOH9eHNw5E.jpg",
+          "pubDate": "2026-10-07",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-14T14:55:12.306Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": 74,
+            "metascore": null,
+            "tmdb": 7
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "HzGx48E64Xg",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Margaret Qualley",
+              "character": "Maya",
+              "order": 0
+            },
+            {
+              "name": "Aaron Pierre",
+              "character": "Felix",
+              "order": 1
+            },
+            {
+              "name": "Gabriel Basso",
+              "character": "Charlie",
+              "order": 2
+            },
+            {
+              "name": "Patrick Schwarzenegger",
+              "character": "Jason",
+              "order": 3
+            },
+            {
+              "name": "Catherine Keener",
+              "character": "",
+              "order": 4
+            },
+            {
+              "name": "Tamara Lawrance",
+              "character": "",
+              "order": 5
+            },
+            {
+              "name": "Corey Johnson",
+              "character": "",
+              "order": 6
+            },
+            {
+              "name": "Filipa Saavedra",
+              "character": "",
+              "order": 7
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1291595",
           "title": "Insidious: Fuera del más allá",
           "link": "https://www.themoviedb.org/movie/1291595",
@@ -1104,6 +1256,87 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1377237",
+          "title": "Entrega al límite",
+          "link": "https://www.themoviedb.org/movie/1377237",
+          "summary": "Un exsoldado se ve envuelto en una brutal carrera contrarreloj cuando una entrega médica crucial los convierte, a él y a su inesperada compañera, en el objetivo de un cártel despiadado. A medida que la misión se transforma en una cacería mortal, cada desvío, retraso y bala los acerca más al fracaso. Acosados ​​por la traición desde todos los frentes, deberán sobrevivir a la persecución y entregar su carga para salvar la vida de una niña.",
+          "image": "https://image.tmdb.org/t/p/w500/pmjSjZtFOYDWhAs4B2AbBE8hTQf.jpg",
+          "pubDate": "2026-09-07",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-14T14:55:12.557Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.6,
+            "rt": null,
+            "metascore": 55,
+            "tmdb": 8.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "B6Z9MM1LhEA",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Alan Ritchson",
+              "character": "Hank Malone",
+              "order": 0
+            },
+            {
+              "name": "Owen Wilson",
+              "character": "Ben Bishop",
+              "order": 1
+            },
+            {
+              "name": "Rodrigo Santoro",
+              "character": "Damian Zaldivar",
+              "order": 2
+            },
+            {
+              "name": "Leila George",
+              "character": "Kate Baker",
+              "order": 3
+            },
+            {
+              "name": "Kate Box",
+              "character": "Dr. Ainsley",
+              "order": 4
+            },
+            {
+              "name": "Peta Sergeant",
+              "character": "Nurse Julie",
+              "order": 5
+            },
+            {
+              "name": "Cecilia Toussaint",
+              "character": "Donna Zaldivar",
+              "order": 6
+            },
+            {
+              "name": "Geraldine Hakewill",
+              "character": "Monica",
+              "order": 7
+            },
+            {
+              "name": "Goran D. Kleut",
+              "character": "Luke",
+              "order": 8
+            },
+            {
+              "name": "Scarlett Crabtree",
+              "character": "Ellie Baker",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1400940",
           "title": "Clayface",
           "link": "https://www.themoviedb.org/movie/1400940",
@@ -1118,7 +1351,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": null
+            "tmdb": 10
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1183,6 +1416,87 @@
             }
           ],
           "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1477712",
+          "title": "Dulce sabor a muerte",
+          "link": "https://www.themoviedb.org/movie/1477712",
+          "summary": "Lo que comienza siendo un verano idílico, en un pequeño y tranquilo pueblo vacacional, se convierte en una auténtica pesadilla cuando los más pequeños comienzan a mostrar instintos asesinos y deseos insaciables por acabar con todos los adultos. Son víctimas de una curiosa maldición provocada por los helados que comen que afecta a todos, menos a tres niños que tendrán que intentar escapar y salvar a todo el pueblo.",
+          "image": "https://image.tmdb.org/t/p/w500/uVuP2ZTYLn5hdL1aUOe4BiFD6d3.jpg",
+          "pubDate": "2026-08-03",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-22T07:25:27.492Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 3.8,
+            "rt": 25,
+            "metascore": 33,
+            "tmdb": 4.5
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "Cgw3zNmFtRo",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Ari Millen",
+              "character": "The Ice Cream Man / Jonathan Smiley",
+              "order": 0
+            },
+            {
+              "name": "Charlie Zeltzer",
+              "character": "Jared",
+              "order": 1
+            },
+            {
+              "name": "Shiloh O’Reilly",
+              "character": "Tommy",
+              "order": 2
+            },
+            {
+              "name": "Kiori Mirza Waldman",
+              "character": "Mia",
+              "order": 3
+            },
+            {
+              "name": "Sarah Abbott",
+              "character": "Lizzie",
+              "order": 4
+            },
+            {
+              "name": "Benjamin Byron Davis",
+              "character": "The Priest",
+              "order": 5
+            },
+            {
+              "name": "Karen Cliche",
+              "character": "Alison",
+              "order": 6
+            },
+            {
+              "name": "Dylan Hawco",
+              "character": "Chris",
+              "order": 7
+            },
+            {
+              "name": "Luke Dietz",
+              "character": "Elliot",
+              "order": 10
+            },
+            {
+              "name": "Eli Massillon",
+              "character": "Myles",
+              "order": 11
+            }
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1281331",
@@ -1263,7 +1577,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1375646",
@@ -1341,168 +1655,6 @@
             {
               "name": "이담희",
               "character": "Lee So-eun",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1153576",
-          "title": "Street Fighter",
-          "link": "https://www.themoviedb.org/movie/1153576",
-          "summary": "En 1993, los distanciados luchadores callejeros Ryu y Ken Masters se ven arrastrados de nuevo al combate cuando la misteriosa Chun-Li los recluta para el próximo Torneo World Warrior: un enfrentamiento brutal de puños, destino y furia. Sin embargo, tras esta gran batalla se esconde una conspiración mortal que los obliga a enfrentarse tanto entre sí como a los demonios de su pasado. Y si no lo logran... ¡será el fin de la partida!",
-          "image": "https://image.tmdb.org/t/p/w500/2kdEEUkbkJe08kTDMCUbBrZ71Aw.jpg",
-          "pubDate": "2026-10-13",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-14T00:55:45.863Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "U6sbm1OaJb8",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Andrew Koji",
-              "character": "Ryu",
-              "order": 0
-            },
-            {
-              "name": "Noah Centineo",
-              "character": "Ken Masters",
-              "order": 1
-            },
-            {
-              "name": "Callina Liang",
-              "character": "Chun-Li",
-              "order": 2
-            },
-            {
-              "name": "Joe Anoa'i",
-              "character": "Akuma",
-              "order": 3
-            },
-            {
-              "name": "David Dastmalchian",
-              "character": "M. Bison",
-              "order": 4
-            },
-            {
-              "name": "Cody Rhodes",
-              "character": "Guile",
-              "order": 5
-            },
-            {
-              "name": "Andrew Schulz",
-              "character": "Dan Hibiki",
-              "order": 6
-            },
-            {
-              "name": "Eric Andre",
-              "character": "Don Sauvage",
-              "order": 7
-            },
-            {
-              "name": "विद्युत जामवाल",
-              "character": "Dhalsim",
-              "order": 8
-            },
-            {
-              "name": "Mel Jarnson",
-              "character": "Cammy",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1058424",
-          "title": "Hope",
-          "link": "https://www.themoviedb.org/movie/1058424",
-          "summary": "Tras un extraño hallazgo cerca de una aislada ciudad portuaria, los habitantes se ven envueltos en una desesperada lucha por la supervivencia.",
-          "image": "https://image.tmdb.org/t/p/w500/hHPIefotew38oJm3YCJPAzpi26c.jpg",
-          "pubDate": "2026-07-15",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-16T14:40:49.429Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.9,
-            "rt": 72,
-            "metascore": 66,
-            "tmdb": 7.5
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "ztqZZO-lLsE",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "황정민",
-              "character": "Go Bum-seok",
-              "order": 0
-            },
-            {
-              "name": "조인성",
-              "character": "Go Sung-ki",
-              "order": 1
-            },
-            {
-              "name": "정호연",
-              "character": "Lim Sung-ae",
-              "order": 2
-            },
-            {
-              "name": "Alicia Vikander",
-              "character": "J'aur",
-              "order": 3
-            },
-            {
-              "name": "Michael Fassbender",
-              "character": "Ma'veyyo",
-              "order": 4
-            },
-            {
-              "name": "Taylor Russell",
-              "character": "Ai'dovor",
-              "order": 5
-            },
-            {
-              "name": "Cameron Britton",
-              "character": "Va'migere",
-              "order": 6
-            },
-            {
-              "name": "이상희",
-              "character": "Nak-yeon",
-              "order": 7
-            },
-            {
-              "name": "음문석",
-              "character": "Yang-bae",
-              "order": 8
-            },
-            {
-              "name": "임현식",
-              "character": "Hae-sul",
               "order": 9
             }
           ],
@@ -4429,105 +4581,6 @@
           ]
         },
         {
-          "guid": "tmdb-tv-247718",
-          "title": "Tierra de mafiosos",
-          "link": "https://www.themoviedb.org/tv/247718",
-          "summary": "El poder está en juego cuando los Harrigan y los Stevenson, dos familias criminales londinenses en guerra, se enfrentan en una batalla de matar o morir que amenaza con derribar imperios y arruinar vidas. Atrapado en el fuego cruzado está Harry Da Souza, el astuto \"solucionador\" tan peligroso como atractivo, que sabe muy bien dónde están las lealtades cuando las fuerzas opuestas chocan. A medida que los reinos se enfrentan, se cruzarán las líneas, y la única gracia salvadora es una garantía de vida o muerte: la familia por encima de todo.",
-          "image": "https://image.tmdb.org/t/p/w500/xOBnonAeHiZuiTPOLBFMFSPI6jy.jpg",
-          "pubDate": "2025-03-30",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-19T07:06:56.670Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.3,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.4
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-25",
-          "numberOfSeasons": 2,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 10,
-              "fechaEstreno": "2025-03-30"
-            },
-            {
-              "numero": 2,
-              "episodios": 10,
-              "fechaEstreno": "2026-09-18"
-            }
-          ],
-          "currentSeason": 2,
-          "reviews": {
-            "top": {
-              "rating": 8,
-              "text": "(CASTELLANO) Hay series que entran por pura presencia, y esta es de esas. Desde los primeros minutos, Tierra de mafiosos deja claro que su mayor arma no es la trama –que ya la hemos visto mil veces– sino ese desfile de actores que parece estar disfrutando más que nadie. Tom Hardy está brutal, pero quien me ha dejado loco es Harry (Paddy Considine): cada gesto, cada silencio, cada mirada… es de esos personajes que te incomodan sin levantar la voz. Y luego está Helen Mirren, que aquí directamente da miedo. Una frialdad que corta, una maldad sin freno. Impone muchísimo.\r\n\r\nLa historia no sorprende demasiado, pero funciona. Tiene ese punto reconocible de las ficciones de mafias familiares, con traiciones, tensiones y conversaciones que parecen una calma tensa a punto de estallar. Podría tener ",
-              "author": "Marco-Hugo Landeta Vacas"
-            },
-            "bottom": null
-          },
-          "trailer": {
-            "key": "qKGgw7Ob5f4",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Tom Hardy",
-              "character": "Harry Da Souza",
-              "order": 0
-            },
-            {
-              "name": "Pierce Brosnan",
-              "character": "Conrad Harrigan",
-              "order": 1
-            },
-            {
-              "name": "Paddy Considine",
-              "character": "Kevin Harrigan",
-              "order": 2
-            },
-            {
-              "name": "Joanne Froggatt",
-              "character": "Jan Da Souza",
-              "order": 3
-            },
-            {
-              "name": "Lara Pulver",
-              "character": "Bella Harrigan",
-              "order": 4
-            },
-            {
-              "name": "Anson Boon",
-              "character": "Eddie Harrigan",
-              "order": 5
-            },
-            {
-              "name": "Mandeep Dhillon",
-              "character": "Seraphina Harrigan",
-              "order": 6
-            },
-            {
-              "name": "Jasmine Jobson",
-              "character": "Zosia",
-              "order": 8
-            },
-            {
-              "name": "Teddie Allen",
-              "character": "Gina Da Souza",
-              "order": 9
-            },
-            {
-              "name": "Emmett J. Scanlan",
-              "character": "Paul",
-              "order": 10
-            }
-          ],
-          "trending": false
-        },
-        {
           "guid": "tmdb-tv-2224",
           "title": "The Daily Show",
           "link": "https://www.themoviedb.org/tv/2224",
@@ -5124,6 +5177,105 @@
               "order": 21
             }
           ]
+        },
+        {
+          "guid": "tmdb-tv-247718",
+          "title": "Tierra de mafiosos",
+          "link": "https://www.themoviedb.org/tv/247718",
+          "summary": "El poder está en juego cuando los Harrigan y los Stevenson, dos familias criminales londinenses en guerra, se enfrentan en una batalla de matar o morir que amenaza con derribar imperios y arruinar vidas. Atrapado en el fuego cruzado está Harry Da Souza, el astuto \"solucionador\" tan peligroso como atractivo, que sabe muy bien dónde están las lealtades cuando las fuerzas opuestas chocan. A medida que los reinos se enfrentan, se cruzarán las líneas, y la única gracia salvadora es una garantía de vida o muerte: la familia por encima de todo.",
+          "image": "https://image.tmdb.org/t/p/w500/xOBnonAeHiZuiTPOLBFMFSPI6jy.jpg",
+          "pubDate": "2025-03-30",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-09-19T07:06:56.670Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.3,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.4
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-09-25",
+          "numberOfSeasons": 2,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 10,
+              "fechaEstreno": "2025-03-30"
+            },
+            {
+              "numero": 2,
+              "episodios": 10,
+              "fechaEstreno": "2026-09-18"
+            }
+          ],
+          "currentSeason": 2,
+          "reviews": {
+            "top": {
+              "rating": 8,
+              "text": "(CASTELLANO) Hay series que entran por pura presencia, y esta es de esas. Desde los primeros minutos, Tierra de mafiosos deja claro que su mayor arma no es la trama –que ya la hemos visto mil veces– sino ese desfile de actores que parece estar disfrutando más que nadie. Tom Hardy está brutal, pero quien me ha dejado loco es Harry (Paddy Considine): cada gesto, cada silencio, cada mirada… es de esos personajes que te incomodan sin levantar la voz. Y luego está Helen Mirren, que aquí directamente da miedo. Una frialdad que corta, una maldad sin freno. Impone muchísimo.\r\n\r\nLa historia no sorprende demasiado, pero funciona. Tiene ese punto reconocible de las ficciones de mafias familiares, con traiciones, tensiones y conversaciones que parecen una calma tensa a punto de estallar. Podría tener ",
+              "author": "Marco-Hugo Landeta Vacas"
+            },
+            "bottom": null
+          },
+          "trailer": {
+            "key": "qKGgw7Ob5f4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Hardy",
+              "character": "Harry Da Souza",
+              "order": 0
+            },
+            {
+              "name": "Pierce Brosnan",
+              "character": "Conrad Harrigan",
+              "order": 1
+            },
+            {
+              "name": "Paddy Considine",
+              "character": "Kevin Harrigan",
+              "order": 2
+            },
+            {
+              "name": "Joanne Froggatt",
+              "character": "Jan Da Souza",
+              "order": 3
+            },
+            {
+              "name": "Lara Pulver",
+              "character": "Bella Harrigan",
+              "order": 4
+            },
+            {
+              "name": "Anson Boon",
+              "character": "Eddie Harrigan",
+              "order": 5
+            },
+            {
+              "name": "Mandeep Dhillon",
+              "character": "Seraphina Harrigan",
+              "order": 6
+            },
+            {
+              "name": "Jasmine Jobson",
+              "character": "Zosia",
+              "order": 8
+            },
+            {
+              "name": "Teddie Allen",
+              "character": "Gina Da Souza",
+              "order": 9
+            },
+            {
+              "name": "Emmett J. Scanlan",
+              "character": "Paul",
+              "order": 10
+            }
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-tv-65282",
