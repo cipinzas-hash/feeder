@@ -2,6 +2,7 @@ import { CineCoverFlow, CineExtendedView, exportCineShareImage } from "../vitrin
 import { CAT_COLORS, CINE_CATEGORIAS, STORAGE_KEY } from "../shared/constants.js";
 import { FormatoTag, TabBar, btnGhost, shareToWhatsApp } from "../shared/ui.jsx";
 import { fetchFeedData } from "../shared/catalog.js";
+import { marcarEdicionLocal } from "../shared/localedit.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -27,8 +28,12 @@ async function loadState() {
     return JSON.parse(raw);
   } catch (e) { return null; }
 }
-function saveState(state) {
+// opts.skipEditMark: el refresh automático del catálogo también persiste, pero
+// no es una edición del usuario (mismo criterio que el rollover diario en
+// App.jsx: marcarlo como "edición local" bloquearía lecturas legítimas del repo).
+function saveState(state, opts = {}) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  if (!opts.skipEditMark) marcarEdicionLocal();
 }
 // Solo para esta etapa de pruebas — borra el estado y recarga, para no
 // depender de la consola del navegador cada vez que el throttle de 4h molesta.
@@ -441,13 +446,13 @@ function FeedPage({ onExit, onGoVitrina, initialView }) {
   useEffect(() => { buzonRef.current = buzon; }, [buzon]);
   useEffect(() => { lastRefreshRef.current = lastRefresh; }, [lastRefresh]);
 
-  function persist(overrides = {}) {
+  function persist(overrides = {}, opts = {}) {
     saveState({
       feedQueue: overrides.queue ?? queueRef.current,
       feedSeen: overrides.seen ?? seenRef.current,
       feedBuzon: overrides.buzon ?? buzonRef.current,
       feedLastRefresh: overrides.lastRefresh ?? lastRefreshRef.current,
-    });
+    }, opts);
   }
 
   useEffect(() => {
@@ -493,7 +498,7 @@ function FeedPage({ onExit, onGoVitrina, initialView }) {
       setQueue(nextQueue);
       const ts = new Date().toISOString();
       setLastRefresh(ts);
-      persist({ queue: nextQueue, lastRefresh: ts });
+      persist({ queue: nextQueue, lastRefresh: ts }, { skipEditMark: true });
       if (nextQueue.length) setView("story");
       const totalItems = diag.reduce((s, d) => s + d.count, 0);
       setRefreshMsg(newOnes.length > 0 ? `✓ ${newOnes.length} nuevas` : `sin novedades — ${totalItems} items en el JSON`);

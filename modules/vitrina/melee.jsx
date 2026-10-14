@@ -1,3 +1,4 @@
+import { marcarEdicionLocal } from "../shared/localedit.js";
 const { useState, useEffect, useRef } = React;
 
 
@@ -84,6 +85,7 @@ function loadMeleeVodVistos() {
 }
 function saveMeleeVodVistos(set) {
   try { localStorage.setItem(MELEE_VOD_VISTOS_KEY, JSON.stringify([...set])); } catch (e) {}
+  marcarEdicionLocal();
 }
 
 function MeleeMatchup({ item }) {

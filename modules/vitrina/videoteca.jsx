@@ -1,3 +1,4 @@
+import { marcarEdicionLocal } from "../shared/localedit.js";
 const { useState, useEffect, useRef } = React;
 
 
@@ -20,6 +21,7 @@ function loadArchivedVistos(storageKey) {
 }
 function saveArchivedVistos(storageKey, set) {
   try { localStorage.setItem(storageKey, JSON.stringify([...set])); } catch (e) {}
+  marcarEdicionLocal();
 }
 
 const ARCHIVEDFEED_NUEVOS_DIAS = 20;
@@ -234,6 +236,7 @@ function loadPodcastsEscuchados() {
 }
 function savePodcastsEscuchados(set) {
   try { localStorage.setItem(PODCASTS_ESCUCHADOS_KEY, JSON.stringify([...set])); } catch (e) {}
+  marcarEdicionLocal();
 }
 
 export function PodcastFeed({ items }) {

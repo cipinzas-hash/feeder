@@ -1,3 +1,5 @@
+import { marcarEdicionLocal } from "../shared/localedit.js";
+
 const { useState, useEffect, useRef } = React;
 
 
@@ -60,7 +62,16 @@ const cineEstadoListeners = new Set();
 function saveCineEstado(map) {
   cineEstadoCache = map;
   try { localStorage.setItem(CINE_ESTADO_KEY, JSON.stringify(map)); } catch (e) {}
+  marcarEdicionLocal();
   cineEstadoListeners.forEach(fn => fn(map));
+}
+// Después de restaurar desde Angst-data / .json (App.jsx → restoreFromPayload)
+// el payload se escribe directo a localStorage, pero esta caché de módulo se
+// armó al cargar la página: sin esto la Vitrina mostraba el estado viejo y la
+// PRÓXIMA marca pisaba lo restaurado (bug probado en la auditoría 13-oct-2026).
+export function rehidratarCineEstado() {
+  cineEstadoCache = loadCineEstado();
+  cineEstadoListeners.forEach(fn => fn(cineEstadoCache));
 }
 // patch=null borra la entrada (vuelve a sin_marca)
 export function setCineItemEstado(guid, patch) {

@@ -1,4 +1,5 @@
 import { STORAGE_KEY } from "./constants.js";
+import { marcarEdicionLocal } from "./localedit.js";
 
 // Guardar desde Vitrina en el Buzón de Feed. Feed y Vitrina son páginas
 // excluyentes (nunca están montadas a la vez), así que escribir directo a
@@ -11,6 +12,7 @@ export function addToFeedBuzon(item) {
     const buzon = Array.isArray(s.feedBuzon) ? s.feedBuzon : [];
     if (buzon.some(b => b.guid === item.guid)) return false;
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...s, feedBuzon: [...buzon, item] }));
+    marcarEdicionLocal();
     return true;
   } catch (e) { return false; }
 }

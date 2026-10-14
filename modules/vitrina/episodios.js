@@ -1,5 +1,6 @@
 import { armarVista, keyEp, epMapToSet } from "../shared/episodios.js";
 import { WORKER_URL, getSimklAuth, enqueueEpisodiosAction } from "./simkl.js";
+import { marcarEdicionLocal } from "../shared/localedit.js";
 
 const { useState, useEffect } = React;
 
@@ -32,6 +33,9 @@ function saveOverlay() {
   try { localStorage.setItem(OVERLAY_KEY, JSON.stringify(overlay)); } catch (e) {}
 }
 function notify() { listeners.forEach(fn => fn(n => n + 1)); }
+// Tras restaurar desde Angst-data / .json: el overlay en memoria se armó al
+// cargar la página; hay que releerlo de localStorage (ver estado.js).
+export function rehidratarOverlay() { overlay = loadOverlay(); notify(); }
 
 // Quita del overlay lo que Simkl ya refleja y lo que venció.
 function podarOverlay() {
@@ -117,6 +121,7 @@ function aplicarMarcas(item, ops) {
   for (const [t, e] of ops.marcar || []) marcas[keyEp(t, e)] = { v: true, ts };
   for (const [t, e] of ops.desmarcar || []) marcas[keyEp(t, e)] = { v: false, ts };
   saveOverlay();
+  marcarEdicionLocal();
   enqueueEpisodiosAction(item, ops);
   notify();
 }

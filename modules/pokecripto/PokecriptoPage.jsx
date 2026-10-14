@@ -3,6 +3,7 @@
 // diverjan en matching/normalización (issue #9).
 import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPrice, fetchTCGCandidatos, addSnapshot, refreshPrecio as refreshPrecioCompartido, fuenteCompatible } from "./lib/pricing.mjs";
 import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarCandidatos, matchAutomatico, mergeOverrides, claveCandidato, urlsFoto, mismoSet } from "./lib/review.mjs";
+import { marcarEdicionLocal } from "../shared/localedit.js";
 
 // ─── PokeLoader ───────────────────────────────────────────────────────────────
 function PokeLoader({ active }) {
@@ -1332,9 +1333,19 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const REV_AGOTADA_DIAS=7;
   function leerAgotadas(){ try{ return JSON.parse(localStorage.getItem(REV_AGOTADA_KEY)||"{}"); }catch(e){ return {}; } }
   const [agotadas,setAgotadas]=React.useState(leerAgotadas);
+  // Auditoría 13-oct-2026: "agotadas" ahora viaja en el export (pokeAgotadas).
+  // Tras restaurar desde Angst-data/.json (App.jsx dispara "angst:restaurado") se
+  // relee de localStorage, y marcarAgotada parte de lo guardado -- no del state
+  // en memoria -- para no pisar lo restaurado con una versión vieja.
+  React.useEffect(()=>{
+    const releer=()=>setAgotadas(leerAgotadas());
+    window.addEventListener("angst:restaurado",releer);
+    return ()=>window.removeEventListener("angst:restaurado",releer);
+  },[]);
   function marcarAgotada(cardId,intentos){
-    const m={...agotadas,[cardId]:{fecha:hoy,intentos}};
+    const m={...leerAgotadas(),[cardId]:{fecha:hoy,intentos}};
     try{ localStorage.setItem(REV_AGOTADA_KEY,JSON.stringify(m)); }catch(e){}
+    marcarEdicionLocal();
     setAgotadas(m);
   }
   function diasDesde(fecha){ return Math.floor((new Date(hoy)-new Date(fecha))/86400000); }

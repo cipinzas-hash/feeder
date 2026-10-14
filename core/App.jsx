@@ -1,7 +1,10 @@
 import { EF, AnalogClock, CalendarModal, ModeMenu, ComprasModal, HumorSelector, FixedFreqBtn, SearchModal, ScheduleModal } from "./ui.jsx";
 import { computeStressScore, esTareaMedica, DOCTOR_KEYWORDS, DEFAULT_HUMORS } from "./stress.js";
 import { requestNotifPermission, scheduleTaskNotifs } from "./notifications.js";
-import { downloadBackupJSON } from "./persistence.js";
+import { downloadBackupJSON, validarPayloadExport, leerCamposLocales, escribirCamposLocales } from "./persistence.js";
+import { marcarEdicionLocal, LOCAL_EDIT_KEY } from "../modules/shared/localedit.js";
+import { rehidratarCineEstado } from "../modules/vitrina/estado.js";
+import { rehidratarOverlay } from "../modules/vitrina/episodios.js";
 import { fmt, fmtFull, getHoliday, addDays } from "./dates.js";
 import PokecriptoPage, { CARPETAS_DEFAULT } from "../modules/pokecripto/PokecriptoPage.jsx";
 import SaludPage from "../modules/salud/SaludPage.jsx";
@@ -435,10 +438,9 @@ function AngstApp() {
   // 📤). Si no hay edición local guardada todavía, no hay nada que
   // perder -- se procede. Si el repo no trae exportedAt (formato viejo),
   // se trata como "no seguro" antes que arriesgar.
-  const LOCAL_EDIT_KEY = "angst-last-local-edit-v1";
-  function markLocalEdit(){
-    try{ localStorage.setItem(LOCAL_EDIT_KEY, new Date().toISOString()); }catch(e){}
-  }
+  // La marca vive en modules/shared/localedit.js: Vitrina/Feed/Pokécripto la
+  // actualizan también (antes solo saveToStorage -- auditoría 13-oct-2026).
+  function markLocalEdit(){ marcarEdicionLocal(); }
   function getLastLocalEdit(){
     try{ return localStorage.getItem(LOCAL_EDIT_KEY); }catch(e){ return null; }
   }
@@ -477,8 +479,16 @@ function AngstApp() {
     let auth = getAngstStateAuth();
     if(!auth) auth = pedirAngstStateAuth();
     if(!auth) return;
-    setStateSyncMsg("guardando en el repo...");
     const payload = buildExportPayload();
+    // Auditoría 13-oct-2026: 📤 no validaba nada y podía subir un snapshot con
+    // campos del planner vacíos encima del "live". Ahora aborta igual que 💾.
+    const problemas = validarPayloadExport(payload);
+    if(problemas.length){
+      setStateSyncMsg(`✗ no se subió: ${problemas.slice(0,3).join(", ")}${problemas.length>3?"…":""}`);
+      setTimeout(()=>setStateSyncMsg(null), 6000);
+      return;
+    }
+    setStateSyncMsg("guardando en el repo...");
     const post = (a, extra) => fetch(ANGST_STATE_WORKER_URL, {
       method: "POST",
       headers: { "X-Angst-Auth": a, "Content-Type": "application/json" },
@@ -1288,38 +1298,29 @@ function AngstApp() {
       pokeCarpetas: clone(pokeCarpetasRef.current),
       pokeDarkCatalogo: clone(pokeDarkCatalogoRef.current),
       pokePriceCache: clone(pokePriceCacheRef.current),
-      // Feed mantiene sus propias claves de localStorage, aisladas del motor
-      // de refs de arriba (angst-feed-proto-v1 = cola/vistos/buzon/último
-      // refresh; las otras dos = sets de "visto/escuchado"). Se leen directo
-      // de localStorage acá porque no pasan por React state en este nivel.
-      feedState: readLocalJSON("angst-feed-proto-v1"),
-      feedMicrodocsVistos: readLocalJSON("angst-feed-microdocs-vistos-v1"),
-      feedPodcastsEscuchados: readLocalJSON("angst-feed-podcasts-escuchados-v1"),
-      feedConciertosVistos: readLocalJSON("angst-feed-conciertos-vistos-v1"),
-      feedCineEstado: readLocalJSON("angst-cine-estado-v1"),
-      feedPodcastDispatched: readLocalJSON("angst-podcast-dispatched-v1"),
-      feedMeleeVodVistos: readLocalJSON("angst-feed-melee-vod-vistos-v1"),
+      // Feed, Vitrina y Pokécripto (agotadas) guardan en sus propias claves de
+      // localStorage, fuera de los refs de acá. El mapa campo -> clave vive en
+      // core/persistence.js (LOCAL_KEY_FIELDS): un solo lugar para export y restore.
+      ...leerCamposLocales(),
     };
   }
-  function readLocalJSON(key){
-    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch(e){ return null; }
-  }
-  // Lista de campos persistidos que SIEMPRE deben viajar en el export.
-  // Si agregás un campo de estado nuevo: sumalo en buildExportPayload,
-  // en saveToStorage, acá, y en restoreFromPayload — las 4 ubicaciones
-  // de la regla vital.
-  const REQUIRED_EXPORT_FIELDS = ['dayData','weekOffset','budgets','nutria','calMarks','cookingOpts','aseoOpts','routines','recurring','lastRollover','kidsHealth','custody','fadimanData','nutriLog','ejercicioLog','ejercicioDecks','customFoods','foodOverrides','customEjercicios','nutriDecks','pokeInventario','pokeCarpetas','pokeDarkCatalogo','pokePriceCache','feedState','feedMicrodocsVistos','feedPodcastsEscuchados','feedConciertosVistos','feedCineEstado','feedPodcastDispatched','feedMeleeVodVistos'];
+  // Qué campos deben viajar SIEMPRE lo define core/persistence.js
+  // (CORE_EXPORT_FIELDS + LOCAL_KEY_FIELDS); tests/export-coverage.mjs falla si
+  // este archivo y esas listas se desalinean. Si agregás un campo de estado
+  // nuevo del planner: sumalo en CORE_EXPORT_FIELDS, en saveToStorage, en
+  // buildExportPayload y en restoreFromPayload. Si es una clave propia de
+  // localStorage: solo en LOCAL_KEY_FIELDS (o en EXPORT_EXEMPT_KEYS con motivo).
 
   function handleExport(){
     const fullPayload = buildExportPayload();
-    const missing=REQUIRED_EXPORT_FIELDS.filter(k=>fullPayload[k]===undefined);
-    if(missing.length){setExportOk(`Faltan: ${missing.join(', ')}`);return;}
+    const problemas = validarPayloadExport(fullPayload);
+    if(problemas.length){setExportOk(`No se exportó: ${problemas.slice(0,3).join(", ")}${problemas.length>3?"…":""}`);return;}
     const ok=downloadBackupJSON(fullPayload);
     setExportOk(ok);setTimeout(()=>setExportOk(null),3000);
   }
 
   // ── Restauración completa compartida — usada tanto por el AngstData de un
-  // .xlsx como por la carga directa de un .json. Cubre los 23 campos persistidos.
+  // .xlsx como por la carga directa de un .json. Cubre todos los campos de CORE_EXPORT_FIELDS y LOCAL_KEY_FIELDS (core/persistence.js).
   function restoreFromPayload(d, sourceLabel){
     if(!d || typeof d !== "object") return false;
     if(d.dayData){ setDayData(d.dayData); dayDataRef.current=d.dayData; }
@@ -1358,15 +1359,16 @@ function AngstApp() {
       custody: d.custody!==undefined ? d.custody : custody,
     };
     try { localStorage.setItem("angst-v12", JSON.stringify(merged)); } catch(e){}
-    // Las 3 claves propias de Feed no viven en angst-v12 (no son refs de acá),
-    // así que se escriben directo si el JSON importado las trae.
-    if(d.feedState!=null){ try{ localStorage.setItem("angst-feed-proto-v1", JSON.stringify(d.feedState)); }catch(e){} }
-    if(d.feedMicrodocsVistos!=null){ try{ localStorage.setItem("angst-feed-microdocs-vistos-v1", JSON.stringify(d.feedMicrodocsVistos)); }catch(e){} }
-    if(d.feedPodcastsEscuchados!=null){ try{ localStorage.setItem("angst-feed-podcasts-escuchados-v1", JSON.stringify(d.feedPodcastsEscuchados)); }catch(e){} }
-    if(d.feedConciertosVistos!=null){ try{ localStorage.setItem("angst-feed-conciertos-vistos-v1", JSON.stringify(d.feedConciertosVistos)); }catch(e){} }
-    if(d.feedCineEstado!=null){ try{ localStorage.setItem("angst-cine-estado-v1", JSON.stringify(d.feedCineEstado)); }catch(e){} }
-    if(d.feedPodcastDispatched!=null){ try{ localStorage.setItem("angst-podcast-dispatched-v1", JSON.stringify(d.feedPodcastDispatched)); }catch(e){} }
-    if(d.feedMeleeVodVistos!=null){ try{ localStorage.setItem("angst-feed-melee-vod-vistos-v1", JSON.stringify(d.feedMeleeVodVistos)); }catch(e){} }
+    // Feed/Vitrina/Pokécripto no viven en angst-v12 (son claves propias): se
+    // escriben directo desde LOCAL_KEY_FIELDS si el JSON importado las trae.
+    escribirCamposLocales(d);
+    // Auditoría 13-oct-2026: escribir a localStorage NO alcanza. Lo que ya se
+    // había leído a memoria al cargar la página quedaba viejo y la próxima
+    // marca lo pisaba (probado con estado.js). Se rehidrata cada caché viva:
+    rehidratarCineEstado();   // Vitrina: estado de cine (caché de módulo)
+    rehidratarOverlay();      // Vitrina: marcas de episodios (overlay de módulo)
+    if(Array.isArray(d.feedPodcastDispatched)) setPodcastDispatched(d.feedPodcastDispatched); // state de App
+    try{ window.dispatchEvent(new Event("angst:restaurado")); }catch(e){} // Pokécripto relee "agotadas"
     setLoadMsg(`✓ Restauración completa desde ${sourceLabel||"backup"}`);
     setTimeout(()=>setLoadMsg(null), 4000);
     return true;

@@ -1779,14 +1779,588 @@ var __angst = (() => {
 
   // core/persistence.js
   function downloadBackupJSON(payload) {
-    const date = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `angst-backup-${date}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const date = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `angst-backup-${date}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  var CORE_EXPORT_FIELDS = {
+    dayData: "object",
+    weekOffset: "number",
+    budgets: "object",
+    nutria: "object",
+    calMarks: "object",
+    cookingOpts: "array",
+    aseoOpts: "array",
+    routines: "array",
+    recurring: "array",
+    lastRollover: "nullable",
+    kidsHealth: "object",
+    custody: "object",
+    fadimanData: "object",
+    nutriLog: "object",
+    ejercicioLog: "object",
+    ejercicioDecks: "array",
+    customFoods: "object",
+    foodOverrides: "object",
+    customEjercicios: "object",
+    nutriDecks: "array",
+    pokeInventario: "array",
+    pokeCarpetas: "array",
+    pokeDarkCatalogo: "array",
+    pokePriceCache: "object"
+  };
+  var LOCAL_KEY_FIELDS = {
+    feedState: "angst-feed-proto-v1",
+    // cola/vistos/buzón/último refresh de Feed
+    feedMicrodocsVistos: "angst-feed-microdocs-vistos-v1",
+    feedPodcastsEscuchados: "angst-feed-podcasts-escuchados-v1",
+    feedConciertosVistos: "angst-feed-conciertos-vistos-v1",
+    feedCineEstado: "angst-cine-estado-v1",
+    // interesa/descartada/vista + rating + nota + progreso T/E
+    feedPodcastDispatched: "angst-podcast-dispatched-v1",
+    feedMeleeVodVistos: "angst-feed-melee-vod-vistos-v1",
+    feedPodcastPositions: "angst-podcast-positions-v1",
+    // {guid: segundos} — retomar un podcast (auditoría 13-oct)
+    feedSeriesOverlay: "angst-series-overlay-v1",
+    // marcas de episodios aún no reflejadas por Simkl (TTL 48 h)
+    pokeAgotadas: "angst-pokecripto-agotadas-v1"
+    // cartas agotadas en la revisión (cooldown 7 días)
+  };
+  var TIPOS_OK = {
+    object: (v) => typeof v === "object" && v !== null && !Array.isArray(v),
+    array: (v) => Array.isArray(v),
+    number: (v) => typeof v === "number" && Number.isFinite(v)
+  };
+  function validarPayloadExport(payload) {
+    const problemas = [];
+    if (!payload || typeof payload !== "object") return ["payload vac\xEDo"];
+    for (const [campo, tipo] of Object.entries(CORE_EXPORT_FIELDS)) {
+      const v = payload[campo];
+      if (tipo === "nullable") {
+        if (v === void 0) problemas.push(`${campo}: falta`);
+        continue;
+      }
+      if (v === void 0 || v === null) {
+        problemas.push(`${campo}: falta`);
+        continue;
+      }
+      if (!TIPOS_OK[tipo](v)) problemas.push(`${campo}: se esperaba ${tipo}`);
+    }
+    for (const campo of Object.keys(LOCAL_KEY_FIELDS)) {
+      if (!(campo in payload)) problemas.push(`${campo}: falta`);
+    }
+    return problemas;
+  }
+  function leerCamposLocales(storage = globalThis.localStorage) {
+    const out = {};
+    for (const [campo, clave] of Object.entries(LOCAL_KEY_FIELDS)) {
+      try {
+        const v = storage.getItem(clave);
+        out[campo] = v ? JSON.parse(v) : null;
+      } catch (e) {
+        out[campo] = null;
+      }
+    }
+    return out;
+  }
+  function escribirCamposLocales(payload, storage = globalThis.localStorage) {
+    const escritos = [];
+    for (const [campo, clave] of Object.entries(LOCAL_KEY_FIELDS)) {
+      if (payload?.[campo] == null) continue;
+      try {
+        storage.setItem(clave, JSON.stringify(payload[campo]));
+        escritos.push(campo);
+      } catch (e) {
+      }
+    }
+    return escritos;
+  }
+
+  // modules/shared/localedit.js
+  var LOCAL_EDIT_KEY = "angst-last-local-edit-v1";
+  function marcarEdicionLocal() {
+    try {
+      localStorage.setItem(LOCAL_EDIT_KEY, (/* @__PURE__ */ new Date()).toISOString());
+    } catch (e) {
+    }
+  }
+
+  // modules/vitrina/estado.js
+  var { useState: useState2, useEffect: useEffect2, useRef: useRef2 } = React;
+  var STATUS_BADGE = {
+    "Returning Series": { label: "EN EMISI\xD3N", color: "#4caf7d" },
+    "In Production": { label: "EN PRODUCCI\xD3N", color: "#5c9cff" },
+    "Planned": { label: "PR\xD3XIMAMENTE", color: "#5c9cff" },
+    "Pilot": { label: "PILOTO", color: "#5c9cff" },
+    "Post Production": { label: "POST-PRODUCCI\xD3N", color: "#5c9cff" },
+    "Ended": { label: "FINALIZADA", color: "#888" },
+    "Canceled": { label: "CANCELADA", color: "#888" },
+    "Currently Airing": { label: "EN EMISI\xD3N", color: "#4caf7d" },
+    "Finished Airing": { label: "FINALIZADA", color: "#888" },
+    "Not yet aired": { label: "PR\xD3XIMAMENTE", color: "#5c9cff" }
+  };
+  function seasonLabel(item) {
+    if (item.categoria !== "Series" || !item.numberOfSeasons) return null;
+    if (item.status === "Returning Series" && item.currentSeason) return `T${item.currentSeason} en curso`;
+    return item.numberOfSeasons === 1 ? "1 temporada" : `${item.numberOfSeasons} temporadas`;
+  }
+  var CINE_ESTADO_KEY = "angst-cine-estado-v1";
+  var CINE_NUEVO_MS = 7 * 864e5;
+  var CINE_RATINGS = [
+    { id: "unwatchable", emoji: "\u{1F480}", label: "unwatchable" },
+    { id: "forgettable", emoji: "\u{1F610}", label: "forgettable" },
+    { id: "remarkable", emoji: "\u2728", label: "remarkable" },
+    { id: "outstanding", emoji: "\u{1F3C6}", label: "outstanding" }
+  ];
+  function loadCineEstado() {
+    try {
+      const raw = localStorage.getItem(CINE_ESTADO_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  var cineEstadoCache = loadCineEstado();
+  var cineEstadoListeners = /* @__PURE__ */ new Set();
+  function saveCineEstado(map) {
+    cineEstadoCache = map;
+    try {
+      localStorage.setItem(CINE_ESTADO_KEY, JSON.stringify(map));
+    } catch (e) {
+    }
+    marcarEdicionLocal();
+    cineEstadoListeners.forEach((fn) => fn(map));
+  }
+  function rehidratarCineEstado() {
+    cineEstadoCache = loadCineEstado();
+    cineEstadoListeners.forEach((fn) => fn(cineEstadoCache));
+  }
+  function setCineItemEstado(guid, patch) {
+    const next = { ...cineEstadoCache };
+    if (patch === null) delete next[guid];
+    else next[guid] = { ...next[guid] || {}, ...patch };
+    saveCineEstado(next);
+  }
+  function useCineEstadoMap() {
+    const [map, setMap] = useState2(cineEstadoCache);
+    useEffect2(() => {
+      cineEstadoListeners.add(setMap);
+      return () => cineEstadoListeners.delete(setMap);
+    }, []);
+    return map;
+  }
+  function diasRestantesCartelera(item) {
+    if (!item.firstSeenAt) return null;
+    const RETENTION_MS = 30 * 864e5;
+    const elapsed = Date.now() - new Date(item.firstSeenAt).getTime();
+    return Math.max(0, Math.ceil((RETENTION_MS - elapsed) / 864e5));
+  }
+  function esNuevo(item) {
+    if (!item.firstSeenAt) return false;
+    return Date.now() - new Date(item.firstSeenAt).getTime() <= CINE_NUEVO_MS;
+  }
+  function esEstreno(item) {
+    if (!item.pubDate) return false;
+    const t = new Date(item.pubDate).getTime();
+    if (Date.now() < t) return false;
+    return Date.now() - t <= 15 * 864e5;
+  }
+  function esEnProduccion(item) {
+    if (!item.pubDate) return false;
+    return new Date(item.pubDate).getTime() > Date.now();
+  }
+  function diasParaEstreno(item) {
+    if (!item.pubDate) return null;
+    const dias = Math.ceil((new Date(item.pubDate).getTime() - Date.now()) / 864e5);
+    return dias >= 0 ? dias : null;
+  }
+  function esTrending(item) {
+    return !!item.trending;
+  }
+  function diasHasta(fechaISO) {
+    if (!fechaISO) return null;
+    const dias = Math.ceil((new Date(fechaISO).getTime() - Date.now()) / 864e5);
+    return dias;
+  }
+
+  // modules/shared/episodios.js
+  var keyEp = (t, e) => `${t}-${e}`;
+  function decodeRangos(str) {
+    const out = [];
+    for (const part of String(str || "").split(",")) {
+      const m = /^(\d+)(?:-(\d+))?$/.exec(part.trim());
+      if (!m) continue;
+      const a = Number(m[1]), b = m[2] ? Number(m[2]) : a;
+      for (let n = a; n <= b; n++) out.push(n);
+    }
+    return out;
+  }
+  function epMapToSet(epMap) {
+    const set = /* @__PURE__ */ new Set();
+    for (const [t, rangos] of Object.entries(epMap || {})) {
+      for (const e of decodeRangos(rangos)) set.add(keyEp(t, e));
+    }
+    return set;
+  }
+  function mergeEpisodeOps(a, b) {
+    const estado = /* @__PURE__ */ new Map();
+    for (const ops of [a, b]) {
+      for (const [t, e] of ops?.marcar || []) estado.set(keyEp(t, e), true);
+      for (const [t, e] of ops?.desmarcar || []) estado.set(keyEp(t, e), false);
+    }
+    const marcar = [], desmarcar = [];
+    for (const [k, v] of estado) {
+      const [t, e] = k.split("-").map(Number);
+      (v ? marcar : desmarcar).push([t, e]);
+    }
+    return { marcar, desmarcar };
+  }
+  function opsVacias(ops) {
+    return !(ops?.marcar?.length || ops?.desmarcar?.length);
+  }
+  function armarVista(entry, overlayShow, hoyISO2) {
+    const vistos = epMapToSet(entry.ep);
+    for (const [k, o] of Object.entries(overlayShow || {})) {
+      if (o && o.v) vistos.add(k);
+      else vistos.delete(k);
+    }
+    let total = 0, emitidos = 0, vistosCount = 0, pendientes = 0;
+    let siguiente = null, proximo = null;
+    const temporadas = [...entry.temporadas || []].sort((a, b) => a.n - b.n).map((t) => {
+      const eps = t.eps.map(([e, nombre, fecha]) => {
+        const visto = vistos.has(keyEp(t.n, e));
+        const emitido = !!fecha && fecha <= hoyISO2;
+        total++;
+        if (emitido) emitidos++;
+        if (visto) vistosCount++;
+        if (emitido && !visto) {
+          pendientes++;
+          if (!siguiente) siguiente = { t: t.n, e, nombre, fecha };
+        }
+        if (!emitido && !proximo) proximo = { t: t.n, e, nombre, fecha };
+        return { e, nombre, fecha, visto, emitido };
+      });
+      return {
+        n: t.n,
+        eps,
+        total: eps.length,
+        vistos: eps.filter((x) => x.visto).length,
+        pendientes: eps.filter((x) => x.emitido && !x.visto).length
+      };
+    });
+    return { temporadas, total, emitidos, vistos: vistosCount, pendientes, siguiente, proximo };
+  }
+
+  // modules/vitrina/simkl.js
+  var { useState: useState3, useEffect: useEffect3, useRef: useRef3 } = React;
+  var simklDiscoveryListeners = /* @__PURE__ */ new Set();
+  var simklDiscoveryItems = [];
+  var simklDiscoveryFetched = false;
+  function useSimklDiscovery() {
+    const [items, setItems] = useState3(simklDiscoveryItems);
+    useEffect3(() => {
+      simklDiscoveryListeners.add(setItems);
+      if (!simklDiscoveryFetched) {
+        simklDiscoveryFetched = true;
+        const auth = getSimklAuth();
+        if (auth) {
+          fetch(`${WORKER_URL}?path=simkl-discovery.json`, { headers: { "X-Angst-Auth": auth } }).then((r) => r.ok ? r.json() : null).then((d) => {
+            if (d && d.found !== false && Array.isArray(d.items)) {
+              simklDiscoveryItems = d.items.map((it) => ({ ...it, _deSimkl: true }));
+              simklDiscoveryListeners.forEach((fn) => fn(simklDiscoveryItems));
+            }
+          }).catch(() => {
+          });
+        }
+      }
+      return () => simklDiscoveryListeners.delete(setItems);
+    }, []);
+    return items;
+  }
+  var SIMKL_PENDING_KEY = "angst-simkl-pending-v1";
+  var SIMKL_AUTH_KEY = "angst-simkl-auth-v1";
+  var WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
+  var SIMKL_ESTADO_TO_STATUS = { interesa: "plantowatch", vista: "completed", descartada: "dropped" };
+  var simklSyncListeners = /* @__PURE__ */ new Set();
+  var simklSyncStatus = { conectado: false, estado: "idle", ultimoOk: null, ultimoError: null };
+  try {
+    simklSyncStatus.conectado = !!localStorage.getItem(SIMKL_AUTH_KEY);
+  } catch (e) {
+  }
+  function setSimklSyncStatus(patch) {
+    simklSyncStatus = { ...simklSyncStatus, ...patch };
+    simklSyncListeners.forEach((fn) => fn(simklSyncStatus));
+  }
+  function useSimklSyncStatus() {
+    const [s, setS] = useState3(simklSyncStatus);
+    useEffect3(() => {
+      simklSyncListeners.add(setS);
+      return () => simklSyncListeners.delete(setS);
+    }, []);
+    return s;
+  }
+  function getSimklAuth() {
+    try {
+      return localStorage.getItem(SIMKL_AUTH_KEY) || null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function pedirSimklAuth() {
+    const v = prompt("Peg\xE1 el AUTH_SECRET del Worker de Simkl (una sola vez, queda solo en este dispositivo):");
+    if (v && v.trim()) {
+      try {
+        localStorage.setItem(SIMKL_AUTH_KEY, v.trim());
+      } catch (e) {
+      }
+      setSimklSyncStatus({ conectado: true });
+      flushSimklQueue();
+    }
+  }
+  function loadSimklPending() {
+    try {
+      const raw = localStorage.getItem(SIMKL_PENDING_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  function saveSimklPending(arr) {
+    try {
+      localStorage.setItem(SIMKL_PENDING_KEY, JSON.stringify(arr));
+    } catch (e) {
+    }
+  }
+  function parseTmdbGuid(guid) {
+    const m = /^tmdb-(movie|tv)-(\d+)$/.exec(guid || "");
+    if (!m) return null;
+    return { tipo: m[1] === "movie" ? "movie" : "show", tmdbId: Number(m[2]) };
+  }
+  function enqueueSimklAction(item, estadoLocal, progreso) {
+    const parsed = parseTmdbGuid(item?.guid);
+    if (!parsed) return;
+    const status = progreso && parsed.tipo === "show" ? "watching" : SIMKL_ESTADO_TO_STATUS[estadoLocal];
+    if (!status) return;
+    const year = item.pubDate ? new Date(item.pubDate).getFullYear() : void 0;
+    const pending = loadSimklPending();
+    const filtered = pending.filter((a) => !(a.kind !== "episodios" && a.tmdbId === parsed.tmdbId && a.tipo === parsed.tipo));
+    const accion = { tmdbId: parsed.tmdbId, tipo: parsed.tipo, status, title: item.title, year, creadoEn: (/* @__PURE__ */ new Date()).toISOString() };
+    if (progreso) accion.progreso = progreso;
+    filtered.push(accion);
+    saveSimklPending(filtered);
+    flushSimklQueue();
+  }
+  function enqueueEpisodiosAction(item, ops) {
+    const parsed = parseTmdbGuid(item?.guid);
+    if (!parsed || parsed.tipo !== "show" || opsVacias(ops)) return false;
+    const year = item.pubDate ? new Date(item.pubDate).getFullYear() : void 0;
+    const pending = loadSimklPending();
+    const previa = pending.find((a) => a.kind === "episodios" && a.tmdbId === parsed.tmdbId);
+    const fusion = mergeEpisodeOps(previa, ops);
+    const resto = pending.filter((a) => !(a.kind === "episodios" && a.tmdbId === parsed.tmdbId));
+    if (!opsVacias(fusion)) {
+      resto.push({ kind: "episodios", tipo: "show", tmdbId: parsed.tmdbId, title: item.title, year, marcar: fusion.marcar, desmarcar: fusion.desmarcar, creadoEn: (/* @__PURE__ */ new Date()).toISOString() });
+    }
+    saveSimklPending(resto);
+    flushSimklQueue();
+    return true;
+  }
+  var simklFlushInFlight = false;
+  async function flushSimklQueue() {
+    if (simklFlushInFlight) return;
+    const auth = getSimklAuth();
+    const pending = loadSimklPending();
+    if (!auth || !pending.length) return;
+    simklFlushInFlight = true;
+    setSimklSyncStatus({ estado: "syncing" });
+    try {
+      const getResp = await fetch(`${WORKER_URL}?path=simkl-state.json`, { headers: { "X-Angst-Auth": auth } });
+      if (!getResp.ok) {
+        setSimklSyncStatus({ estado: "error", ultimoError: `GET ${getResp.status}` });
+        return;
+      }
+      const remote2 = await getResp.json();
+      if (remote2.found === false) {
+        setSimklSyncStatus({ estado: "error", ultimoError: "simkl-state.json no existe todav\xEDa" });
+        return;
+      }
+      const remotePending = remote2.pendingActions || [];
+      const keyOf = (a) => a.kind === "episodios" ? `ep-${a.tmdbId}` : `${a.tipo}-${a.tmdbId}`;
+      const merged = [...remotePending];
+      for (const a of pending) {
+        const i = merged.findIndex((r) => keyOf(r) === keyOf(a));
+        if (i === -1) merged.push(a);
+        else if (a.kind === "episodios") {
+          const ops = mergeEpisodeOps(merged[i], a);
+          merged[i] = { ...merged[i], ...a, marcar: ops.marcar, desmarcar: ops.desmarcar };
+        }
+      }
+      remote2.pendingActions = merged;
+      const postResp = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
+        body: JSON.stringify({ path: "simkl-state.json", payload: remote2 })
+      });
+      if (postResp.ok) {
+        saveSimklPending([]);
+        setSimklSyncStatus({ estado: "ok", ultimoOk: (/* @__PURE__ */ new Date()).toISOString(), ultimoError: null });
+      } else {
+        setSimklSyncStatus({ estado: "error", ultimoError: `POST ${postResp.status}` });
+      }
+    } catch (e) {
+      setSimklSyncStatus({ estado: "error", ultimoError: e.message });
+    } finally {
+      simklFlushInFlight = false;
+    }
+  }
+
+  // modules/vitrina/episodios.js
+  var { useState: useState4, useEffect: useEffect4 } = React;
+  var OVERLAY_KEY = "angst-series-overlay-v1";
+  var OVERLAY_TTL_MS = 48 * 3600 * 1e3;
+  var REFRESH_MS = 10 * 60 * 1e3;
+  var listeners = /* @__PURE__ */ new Set();
+  var remote = null;
+  var remoteAt = 0;
+  var cargando = false;
+  var errorCarga = null;
+  var overlay = loadOverlay();
+  function loadOverlay() {
+    try {
+      return JSON.parse(localStorage.getItem(OVERLAY_KEY) || "{}") || {};
+    } catch (e) {
+      return {};
+    }
+  }
+  function saveOverlay() {
+    try {
+      localStorage.setItem(OVERLAY_KEY, JSON.stringify(overlay));
+    } catch (e) {
+    }
+  }
+  function notify() {
+    listeners.forEach((fn) => fn((n) => n + 1));
+  }
+  function rehidratarOverlay() {
+    overlay = loadOverlay();
+    notify();
+  }
+  function podarOverlay() {
+    const ahora = Date.now();
+    let cambio = false;
+    for (const [id, marcas] of Object.entries(overlay)) {
+      const vistosRemotos = remote?.shows?.[id] ? epMapToSet(remote.shows[id].ep) : null;
+      for (const [k, o] of Object.entries(marcas)) {
+        const vencida = ahora - (o.ts || 0) > OVERLAY_TTL_MS;
+        const reflejada = vistosRemotos && vistosRemotos.has(k) === !!o.v;
+        if (vencida || reflejada) {
+          delete marcas[k];
+          cambio = true;
+        }
+      }
+      if (!Object.keys(marcas).length) {
+        delete overlay[id];
+        cambio = true;
+      }
+    }
+    if (cambio) saveOverlay();
+  }
+  function cargarEpisodios({ forzar = false } = {}) {
+    const auth = getSimklAuth();
+    if (!auth) {
+      errorCarga = "sin-auth";
+      return;
+    }
+    if (cargando || !forzar && remote && Date.now() - remoteAt < REFRESH_MS) return;
+    cargando = true;
+    fetch(`${WORKER_URL}?path=series-episodios.json`, { headers: { "X-Angst-Auth": auth } }).then((r) => r.ok ? r.json() : null).then((d) => {
+      if (d && d.found !== false && d.shows) {
+        remote = d;
+        remoteAt = Date.now();
+        errorCarga = null;
+        podarOverlay();
+      } else if (!remote) {
+        errorCarga = "sin-datos";
+      }
+    }).catch(() => {
+      if (!remote) errorCarga = "red";
+    }).finally(() => {
+      cargando = false;
+      notify();
+    });
+  }
+  function tmdbIdDe(guid) {
+    const m = /^tmdb-tv-(\d+)$/.exec(guid || "");
+    return m ? m[1] : null;
+  }
+  function hoyISO() {
+    const d = /* @__PURE__ */ new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+  function useTick() {
+    const [, setN] = useState4(0);
+    useEffect4(() => {
+      listeners.add(setN);
+      cargarEpisodios();
+      return () => listeners.delete(setN);
+    }, []);
+  }
+  function useSerieEpisodios(guid) {
+    useTick();
+    const id = tmdbIdDe(guid);
+    const entry = id && remote?.shows?.[id];
+    if (!entry) return { vista: null, estadoCarga: cargando ? "cargando" : errorCarga || (remote ? "sin-catalogo" : "idle") };
+    return { vista: armarVista(entry, overlay[id], hoyISO()), estadoCarga: "ok", entry };
+  }
+  function usePendientesDe() {
+    useTick();
+    return (guid) => {
+      const id = tmdbIdDe(guid);
+      const entry = id && remote?.shows?.[id];
+      if (!entry) return null;
+      const v = armarVista(entry, overlay[id], hoyISO());
+      return v.vistos > 0 && v.pendientes > 0 ? v.pendientes : null;
+    };
+  }
+  function aplicarMarcas(item, ops) {
+    const id = tmdbIdDe(item.guid);
+    if (!id) return;
+    const marcas = overlay[id] || (overlay[id] = {});
+    const ts = Date.now();
+    for (const [t, e] of ops.marcar || []) marcas[keyEp(t, e)] = { v: true, ts };
+    for (const [t, e] of ops.desmarcar || []) marcas[keyEp(t, e)] = { v: false, ts };
+    saveOverlay();
+    marcarEdicionLocal();
+    enqueueEpisodiosAction(item, ops);
+    notify();
+  }
+  function toggleEpisodio(item, t, e, visto) {
+    aplicarMarcas(item, visto ? { desmarcar: [[t, e]] } : { marcar: [[t, e]] });
+  }
+  function marcarTemporada(item, vista, n, marcar) {
+    const t = vista.temporadas.find((x) => x.n === n);
+    if (!t) return;
+    const pares = t.eps.filter((x) => x.emitido && x.visto !== marcar).map((x) => [n, x.e]);
+    if (pares.length) aplicarMarcas(item, marcar ? { marcar: pares } : { desmarcar: pares });
+  }
+  function marcarHastaAca(item, vista, t, e) {
+    const pares = [];
+    for (const s of vista.temporadas) {
+      for (const x of s.eps) {
+        if ((s.n < t || s.n === t && x.e <= e) && x.emitido && !x.visto) pares.push([s.n, x.e]);
+      }
+    }
+    if (pares.length) aplicarMarcas(item, { marcar: pares });
   }
 
   // modules/pokecripto/lib/pricing.mjs
@@ -3378,12 +3952,18 @@ var __angst = (() => {
       }
     }
     const [agotadas, setAgotadas] = React.useState(leerAgotadas);
+    React.useEffect(() => {
+      const releer = () => setAgotadas(leerAgotadas());
+      window.addEventListener("angst:restaurado", releer);
+      return () => window.removeEventListener("angst:restaurado", releer);
+    }, []);
     function marcarAgotada(cardId, intentos) {
-      const m = { ...agotadas, [cardId]: { fecha: hoy, intentos } };
+      const m = { ...leerAgotadas(), [cardId]: { fecha: hoy, intentos } };
       try {
         localStorage.setItem(REV_AGOTADA_KEY, JSON.stringify(m));
       } catch (e) {
       }
+      marcarEdicionLocal();
       setAgotadas(m);
     }
     function diasDesde(fecha) {
@@ -5203,25 +5783,25 @@ var __angst = (() => {
   var FadimanPage_default = FadimanPage;
 
   // modules/rutinas/RoutinesPage.jsx
-  var { useState: useState2, useEffect: useEffect2, useRef: useRef2, useMemo: useMemo2, useCallback: useCallback2 } = React;
+  var { useState: useState5, useEffect: useEffect5, useRef: useRef4, useMemo: useMemo2, useCallback: useCallback2 } = React;
   function fmtTimer(secs) {
     const m = Math.floor(secs / 60), s = secs % 60;
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   }
   function RoutinesPage({ routines, onSave, onAddToDay }) {
-    const [view, setView] = useState2("list");
-    const [activeId, setActiveId] = useState2(null);
-    const [editName, setEditName] = useState2("");
-    const [editSteps, setEditSteps] = useState2([]);
-    const [editEmoji, setEditEmoji] = useState2("\u26A1");
-    const [dragIdx, setDragIdx] = useState2(null);
-    const [overIdx, setOverIdx] = useState2(null);
-    const [runStep, setRunStep] = useState2(0);
-    const [runSecs, setRunSecs] = useState2(0);
-    const [running, setRunning] = useState2(false);
-    const timerRef = useRef2(null);
-    const wakeLockRef = useRef2(null);
-    const swipeRef = useRef2({ x: 0, swiping: false });
+    const [view, setView] = useState5("list");
+    const [activeId, setActiveId] = useState5(null);
+    const [editName, setEditName] = useState5("");
+    const [editSteps, setEditSteps] = useState5([]);
+    const [editEmoji, setEditEmoji] = useState5("\u26A1");
+    const [dragIdx, setDragIdx] = useState5(null);
+    const [overIdx, setOverIdx] = useState5(null);
+    const [runStep, setRunStep] = useState5(0);
+    const [runSecs, setRunSecs] = useState5(0);
+    const [running, setRunning] = useState5(false);
+    const timerRef = useRef4(null);
+    const wakeLockRef = useRef4(null);
+    const swipeRef = useRef4({ x: 0, swiping: false });
     async function acquireWakeLock() {
       try {
         if ("wakeLock" in navigator && wakeLockRef.current === null) {
@@ -5240,7 +5820,7 @@ var __angst = (() => {
         wakeLockRef.current = null;
       }
     }
-    useEffect2(() => {
+    useEffect5(() => {
       function onVisible() {
         if (view === "run" && running) acquireWakeLock();
       }
@@ -5304,7 +5884,7 @@ var __angst = (() => {
       releaseWakeLock();
       setView("list");
     }
-    useEffect2(() => {
+    useEffect5(() => {
       if (running && view === "run") {
         timerRef.current = setInterval(() => {
           setRunSecs((s) => {
@@ -5559,20 +6139,20 @@ var __angst = (() => {
   }
 
   // modules/nutria/NutriaPage.jsx
-  var { useState: useState3, useEffect: useEffect3, useRef: useRef3, useMemo: useMemo3, useCallback: useCallback3 } = React;
+  var { useState: useState6, useEffect: useEffect6, useRef: useRef5, useMemo: useMemo3, useCallback: useCallback3 } = React;
   function NutriaPage({ data, saveData, budgets, onSaveBudget }) {
     const now = /* @__PURE__ */ new Date();
-    const [selEmp, setSelEmp] = useState3(data.emprendimientos[0] || "Nutria Papeler\xEDa");
-    const [selYear, setSelYear] = useState3(now.getFullYear());
-    const [selMonth, setSelMonth] = useState3(now.getMonth());
-    const [subPage, setSubPage] = useState3("ventas");
-    const [adding, setAdding] = useState3(false);
+    const [selEmp, setSelEmp] = useState6(data.emprendimientos[0] || "Nutria Papeler\xEDa");
+    const [selYear, setSelYear] = useState6(now.getFullYear());
+    const [selMonth, setSelMonth] = useState6(now.getMonth());
+    const [subPage, setSubPage] = useState6("ventas");
+    const [adding, setAdding] = useState6(false);
     const EMPTY_NS = { producto: "", tamano: "", precio: "", nombre_tapa: "", tipo_agenda: "", diseno: "", tipo_despacho: "entrega", envio: { nombre: "", rut: "", direccion: "", correo: "", telefono: "" }, entrega: { nombre: "", direccion: "", telefono: "" } };
-    const [ns, setNs] = useState3(EMPTY_NS);
-    const [editingEmp, setEditingEmp] = useState3(false);
-    const [newEmpName, setNewEmpName] = useState3("");
-    const [editId, setEditId] = useState3(null);
-    const [editV, setEditV] = useState3({});
+    const [ns, setNs] = useState6(EMPTY_NS);
+    const [editingEmp, setEditingEmp] = useState6(false);
+    const [newEmpName, setNewEmpName] = useState6("");
+    const [editId, setEditId] = useState6(null);
+    const [editV, setEditV] = useState6({});
     const monthV = data.ventas.filter((v) => {
       const d = new Date(v.fecha);
       return v.emprendimiento === selEmp && d.getFullYear() === selYear && d.getMonth() === selMonth;
@@ -5645,12 +6225,12 @@ var __angst = (() => {
     const insumos = costosData.insumos || {};
     const preciosVenta = costosData.precios_venta || {};
     const preciosPop = costosData.precios_pop || {};
-    const [editInsumoId, setEditInsumoId] = useState3(null);
-    const [editInsumoV, setEditInsumoV] = useState3({});
-    const [costosView, setCostosView] = useState3("productos");
-    const [openProducto, setOpenProducto] = useState3(null);
-    const [editPrecioId, setEditPrecioId] = useState3(null);
-    const [editPrecioV, setEditPrecioV] = useState3("");
+    const [editInsumoId, setEditInsumoId] = useState6(null);
+    const [editInsumoV, setEditInsumoV] = useState6({});
+    const [costosView, setCostosView] = useState6("productos");
+    const [openProducto, setOpenProducto] = useState6(null);
+    const [editPrecioId, setEditPrecioId] = useState6(null);
+    const [editPrecioV, setEditPrecioV] = useState6("");
     function getUnitCost(id) {
       const ins = insumos[id] || DEFAULT_INSUMOS[id];
       if (!ins) return 0;
@@ -6372,7 +6952,7 @@ var __angst = (() => {
   };
 
   // modules/ejercicio/EjercicioPage.jsx
-  var { useState: useState4, useEffect: useEffect4, useRef: useRef4, useMemo: useMemo4, useCallback: useCallback4 } = React;
+  var { useState: useState7, useEffect: useEffect7, useRef: useRef6, useMemo: useMemo4, useCallback: useCallback4 } = React;
   var MUSCLE_GROUPS = [
     { k: "pecho", label: "Pecho", emoji: "\u{1F4AA}", side: "front" },
     { k: "espalda", label: "Espalda", emoji: "\u{1F517}", side: "back" },
@@ -6640,27 +7220,27 @@ var __angst = (() => {
       const d = /* @__PURE__ */ new Date();
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     })();
-    const [view, setView] = useState4("session");
-    const [openEx, setOpenEx] = useState4(null);
-    const [varianteElegida, setVarianteElegida] = useState4({});
-    const [timerSecs, setTimerSecs] = useState4(0);
-    const [timerMax, setTimerMax] = useState4(90);
-    const [timerActive, setTimerActive] = useState4(false);
-    const [editEx, setEditEx] = useState4(null);
-    const [histExId, setHistExId] = useState4(null);
-    const [histWeek, setHistWeek] = useState4(null);
-    const [repsInput, setRepsInput] = useState4({});
-    const [pesoUnit, setPesoUnit] = useState4("kg");
-    const [diaManual, setDiaSel] = useState4(null);
-    const [guiaAbierta, setGuiaAbierta] = useState4({});
-    const timerRef = useRef4(null);
+    const [view, setView] = useState7("session");
+    const [openEx, setOpenEx] = useState7(null);
+    const [varianteElegida, setVarianteElegida] = useState7({});
+    const [timerSecs, setTimerSecs] = useState7(0);
+    const [timerMax, setTimerMax] = useState7(90);
+    const [timerActive, setTimerActive] = useState7(false);
+    const [editEx, setEditEx] = useState7(null);
+    const [histExId, setHistExId] = useState7(null);
+    const [histWeek, setHistWeek] = useState7(null);
+    const [repsInput, setRepsInput] = useState7({});
+    const [pesoUnit, setPesoUnit] = useState7("kg");
+    const [diaManual, setDiaSel] = useState7(null);
+    const [guiaAbierta, setGuiaAbierta] = useState7({});
+    const timerRef = useRef6(null);
     const customOverrides = customEjercicios || {};
     const allExercicios = [
       ...EJERCICIOS_DEFAULT.map((e) => customOverrides[e.id] || e),
       ...Object.values(customOverrides).filter((e) => !EJERCICIOS_DEFAULT.some((d) => d.id === e.id))
     ];
     const todaySeries = ejercicioLog[todayKey] || {};
-    useEffect4(() => () => clearInterval(timerRef.current), []);
+    useEffect7(() => () => clearInterval(timerRef.current), []);
     function markSerie(exId, si, reps, pesoKg, restSecs, variante) {
       const key = `${exId}_${si}`;
       if (isSerieDone(todaySeries[key])) return;
@@ -7186,7 +7766,7 @@ var __angst = (() => {
   var EjercicioPage_default = EjercicioPage;
 
   // modules/nutricion/NutricionPage.jsx
-  var { useState: useState5, useEffect: useEffect5, useRef: useRef5, useMemo: useMemo5, useCallback: useCallback5 } = React;
+  var { useState: useState8, useEffect: useEffect8, useRef: useRef7, useMemo: useMemo5, useCallback: useCallback5 } = React;
   var NUTRI_FOODS = {
     proteinas: [
       { id: "carne", emoji: "\u{1F969}", name: "Bolognesa casera", prep: "carne 7% \xB7 2 cebollas \xB7 aceite oliva \xB7 salsa Merkat 200g", unit: "preparaci\xF3n completa", kcal: 582, prot: 58, portionType: "fraction" },
@@ -7370,25 +7950,25 @@ var __angst = (() => {
       const d = /* @__PURE__ */ new Date();
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     })();
-    const [dateKey, setDateKey] = useState5(todayKey);
-    const [view, setView] = useState5("hoy");
-    const [fichaFoodId, setFichaFoodId] = useState5(null);
-    const [modal, setModal] = useState5(null);
-    const [estimateModal, setEstimateModal] = useState5(null);
-    const [qty, setQty] = useState5(1);
-    const [fraction, setFraction] = useState5(1);
-    const [sizeKey, setSizeKey] = useState5("M");
-    const [mealSel, setMealSel] = useState5(getDefaultMeal());
-    const [openCat, setOpenCat] = useState5(null);
-    const [exploreOpen, setExploreOpen] = useState5(false);
-    const [searchQuery, setSearchQuery] = useState5("");
-    const [editModal, setEditModal] = useState5(null);
-    const [foodView, setFoodView] = useState5("grid-lg");
+    const [dateKey, setDateKey] = useState8(todayKey);
+    const [view, setView] = useState8("hoy");
+    const [fichaFoodId, setFichaFoodId] = useState8(null);
+    const [modal, setModal] = useState8(null);
+    const [estimateModal, setEstimateModal] = useState8(null);
+    const [qty, setQty] = useState8(1);
+    const [fraction, setFraction] = useState8(1);
+    const [sizeKey, setSizeKey] = useState8("M");
+    const [mealSel, setMealSel] = useState8(getDefaultMeal());
+    const [openCat, setOpenCat] = useState8(null);
+    const [exploreOpen, setExploreOpen] = useState8(false);
+    const [searchQuery, setSearchQuery] = useState8("");
+    const [editModal, setEditModal] = useState8(null);
+    const [foodView, setFoodView] = useState8("grid-lg");
     const savedDecks = nutriDecks || [];
-    const [deckMenuOpen, setDeckMenuOpen] = useState5(false);
-    const [deckEditor, setDeckEditor] = useState5(null);
-    const [collapsedMeals, setCollapsedMeals] = useState5({});
-    const [moveMenuOpen, setMoveMenuOpen] = useState5(null);
+    const [deckMenuOpen, setDeckMenuOpen] = useState8(false);
+    const [deckEditor, setDeckEditor] = useState8(null);
+    const [collapsedMeals, setCollapsedMeals] = useState8({});
+    const [moveMenuOpen, setMoveMenuOpen] = useState8(null);
     const log = nutriLog[dateKey] || [];
     const totalKcal = Math.round(log.reduce((a, e) => a + e.kcal * e.qty, 0));
     const totalProt = parseFloat(log.reduce((a, e) => a + e.prot * e.qty, 0).toFixed(1));
@@ -7970,7 +8550,7 @@ var __angst = (() => {
   var NutricionPage_default = NutricionPage;
 
   // modules/presupuesto/BudgetPage.jsx
-  var { useState: useState6, useEffect: useEffect6, useRef: useRef6, useMemo: useMemo6, useCallback: useCallback6 } = React;
+  var { useState: useState9, useEffect: useEffect9, useRef: useRef8, useMemo: useMemo6, useCallback: useCallback6 } = React;
   function cloneBudgetForNextPeriod(source) {
     if (!source || typeof source !== "object") return null;
     return {
@@ -8014,7 +8594,7 @@ var __angst = (() => {
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("svg", { width: "200", height: "200", viewBox: "0 0 200 200" }, slices.map((s, i) => /* @__PURE__ */ React.createElement("path", { key: i, d: s.path, fill: s.color, stroke: "#fff", strokeWidth: "1.5" })), slices.map((s, i) => s.big && /* @__PURE__ */ React.createElement("text", { key: `em${i}`, x: s.ex.toFixed(1), y: s.ey.toFixed(1), textAnchor: "middle", dominantBaseline: "middle", fontSize: "12" }, s.emoji)), /* @__PURE__ */ React.createElement("circle", { cx: CX, cy: CY, r: 34, fill: "#fff" }), /* @__PURE__ */ React.createElement("text", { x: CX, y: CY - 5, textAnchor: "middle", dominantBaseline: "middle", fontFamily: "'Caveat',cursive", fontSize: "12", fill: "#111", fontWeight: "700" }, annual ? "anual" : "mensual"), /* @__PURE__ */ React.createElement("text", { x: CX, y: CY + 10, textAnchor: "middle", dominantBaseline: "middle", fontFamily: "'DM Sans',sans-serif", fontSize: "9", fill: "#555" }, fmtCLP(annual ? total * 12 : total))), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", display: "flex", flexDirection: "column", gap: 4, padding: "0 4px" } }, slices.map((s, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 6 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 9, height: 9, borderRadius: 2, background: s.color, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#444" } }, s.emoji, " ", s.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#111", fontWeight: 600 } }, fmtCLP(s.monto)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", width: 32, textAlign: "right" } }, s.pct, "%")))));
   }
   function IngresoChartModal({ budgets, selYear, selMonth, onClose }) {
-    const [view, setView] = useState6(0);
+    const [view, setView] = useState9(0);
     const GRAYS = ["#111", "#333", "#555", "#777", "#aaa", "#ccc"];
     const sources = [{ k: "trabajo", l: "Trabajo", e: "\u{1F3E2}" }, { k: "emprendimiento", l: "Emprend.", e: "\u{1F6E0}\uFE0F" }, { k: "reventa", l: "Reventa", e: "\u{1F504}" }, { k: "otros", l: "Otros", e: "\u2728" }];
     const monthKey = `${selYear}-${String(selMonth + 1).padStart(2, "0")}`;
@@ -8038,11 +8618,11 @@ var __angst = (() => {
     }))))));
   }
   function ChartModal({ title, emoji, rows, total, onClose }) {
-    const [view, setView] = useState6(0);
+    const [view, setView] = useState9(0);
     return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }, onClick: onClose }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: 320, maxHeight: "90vh", overflowY: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700 } }, emoji, " ", title), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#555", fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", borderBottom: "1px solid #eee" } }, ["Mensual", "Anual"].map((lbl, idx) => /* @__PURE__ */ React.createElement("button", { key: idx, onClick: () => setView(idx), style: { flex: 1, padding: "10px", fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, cursor: "pointer", background: view === idx ? "#111" : "#fff", color: view === idx ? "#fff" : "#999", border: "none", transition: "all 0.15s" } }, lbl))), /* @__PURE__ */ React.createElement("div", { style: { padding: "16px" } }, /* @__PURE__ */ React.createElement(PieChart, { data: rows, total, annual: view === 1 }))));
   }
   function MonthSelectorModal({ currentYear, currentMonth, onSelect, onClose }) {
-    const [year, setYear] = useState6(currentYear);
+    const [year, setYear] = useState9(currentYear);
     return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }, onClick: onClose }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: 300 } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setYear((y) => y - 1), style: { background: "transparent", border: "none", color: "#fff", fontSize: 22, cursor: "pointer", fontWeight: 700 } }, "\u2039"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, year), /* @__PURE__ */ React.createElement("button", { onClick: () => setYear((y) => y + 1), style: { background: "transparent", border: "none", color: "#fff", fontSize: 22, cursor: "pointer", fontWeight: 700 } }, "\u203A")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 2, padding: 12 } }, MONTH_NAMES.map((m, i) => {
       const cur = i === currentMonth && year === currentYear;
       const nowDate = /* @__PURE__ */ new Date(), isNow = i === nowDate.getMonth() && year === nowDate.getFullYear() && !cur;
@@ -8053,8 +8633,8 @@ var __angst = (() => {
     })), /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 12px 14px", textAlign: "center", fontFamily: "'Caveat',cursive", fontSize: 13, color: "#bbb" } }, "presupuestos corren del 25 al 24")));
   }
   function AmountRow({ value, total, onSave }) {
-    const [ed, setEd] = useState6(false);
-    const [txt, setTxt] = useState6(String(value));
+    const [ed, setEd] = useState9(false);
+    const [txt, setTxt] = useState9(String(value));
     function commit() {
       const n = parseInt(txt.replace(/\D/g, "")) || 0;
       onSave(n);
@@ -8079,12 +8659,12 @@ var __angst = (() => {
   function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit, checkable, onRowSave, onRowAdd, onRowDelete, onRowCheck, onChartOpen }) {
     const T = totalIngreso;
     const pct = T > 0 ? (subtotal / T * 100).toFixed(1) : "-";
-    const [hover, setHover] = useState6(false);
-    const [adding, setAdding] = useState6(false);
-    const [newLabel, setNewLabel] = useState6("");
-    const [newEmoji, setNewEmoji] = useState6("\u{1F4CC}");
-    const [editId, setEditId] = useState6(null);
-    const [editLabel, setEditLabel] = useState6("");
+    const [hover, setHover] = useState9(false);
+    const [adding, setAdding] = useState9(false);
+    const [newLabel, setNewLabel] = useState9("");
+    const [newEmoji, setNewEmoji] = useState9("\u{1F4CC}");
+    const [editId, setEditId] = useState9(null);
+    const [editLabel, setEditLabel] = useState9("");
     function confirmAdd() {
       if (!newLabel.trim()) return;
       onRowAdd(secKey, { id: Date.now().toString(), emoji: newEmoji, label: newLabel.trim(), monto: 0 });
@@ -8120,12 +8700,12 @@ var __angst = (() => {
     }, placeholder: "nombre del fondo...", style: { flex: 1, border: "1px dashed #ccc", borderRadius: 4, padding: "4px 8px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none", background: "#fff" } }), /* @__PURE__ */ React.createElement("button", { onClick: confirmAdd, style: { background: "#111", color: "#fff", border: "none", borderRadius: 4, padding: "4px 10px", fontSize: 12, cursor: "pointer" } }, "\u2713"), /* @__PURE__ */ React.createElement("button", { onClick: () => setAdding(false), style: { background: "transparent", border: "none", color: "#bbb", fontSize: 18, cursor: "pointer" } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: COL, gap: 4, padding: "9px 12px", background: "#f3f3f3", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#111", fontWeight: 700 } }, "Subtotal"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#111", fontWeight: 700, textAlign: "right", paddingRight: 24 } }, fmtCLP(subtotal)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#666", textAlign: "center", fontWeight: 600 } }, pct, "%"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#666", textAlign: "right", fontWeight: 600 } }, fmtCLP(subtotal * 12)), /* @__PURE__ */ React.createElement("div", null))));
   }
   function BudgetPage({ budgets, onSaveBudget }) {
-    const [chartData, setChartData] = useState6(null);
-    const [ingChart, setIngChart] = useState6(false);
-    const [monthModal, setMonthModal] = useState6(false);
+    const [chartData, setChartData] = useState9(null);
+    const [ingChart, setIngChart] = useState9(false);
+    const [monthModal, setMonthModal] = useState9(false);
     const now = /* @__PURE__ */ new Date();
-    const [selYear, setSelYear] = useState6(now.getFullYear());
-    const [selMonth, setSelMonth] = useState6(now.getDate() >= 25 ? now.getMonth() : (now.getMonth() - 1 + 12) % 12);
+    const [selYear, setSelYear] = useState9(now.getFullYear());
+    const [selMonth, setSelMonth] = useState9(now.getDate() >= 25 ? now.getMonth() : (now.getMonth() - 1 + 12) % 12);
     const monthKey = `${selYear}-${String(selMonth + 1).padStart(2, "0")}`;
     const budget = getBudgetForPeriod(budgets, monthKey);
     const periodLabel = `25 ${MONTH_NAMES[selMonth].slice(0, 3)} \u2014 24 ${MONTH_NAMES[(selMonth + 1) % 12].slice(0, 3)} ${selYear}`;
@@ -8771,101 +9351,8 @@ var __angst = (() => {
   }
   var EspritPage_default = EspritPage;
 
-  // modules/vitrina/estado.js
-  var { useState: useState7, useEffect: useEffect7, useRef: useRef7 } = React;
-  var STATUS_BADGE = {
-    "Returning Series": { label: "EN EMISI\xD3N", color: "#4caf7d" },
-    "In Production": { label: "EN PRODUCCI\xD3N", color: "#5c9cff" },
-    "Planned": { label: "PR\xD3XIMAMENTE", color: "#5c9cff" },
-    "Pilot": { label: "PILOTO", color: "#5c9cff" },
-    "Post Production": { label: "POST-PRODUCCI\xD3N", color: "#5c9cff" },
-    "Ended": { label: "FINALIZADA", color: "#888" },
-    "Canceled": { label: "CANCELADA", color: "#888" },
-    "Currently Airing": { label: "EN EMISI\xD3N", color: "#4caf7d" },
-    "Finished Airing": { label: "FINALIZADA", color: "#888" },
-    "Not yet aired": { label: "PR\xD3XIMAMENTE", color: "#5c9cff" }
-  };
-  function seasonLabel(item) {
-    if (item.categoria !== "Series" || !item.numberOfSeasons) return null;
-    if (item.status === "Returning Series" && item.currentSeason) return `T${item.currentSeason} en curso`;
-    return item.numberOfSeasons === 1 ? "1 temporada" : `${item.numberOfSeasons} temporadas`;
-  }
-  var CINE_ESTADO_KEY = "angst-cine-estado-v1";
-  var CINE_NUEVO_MS = 7 * 864e5;
-  var CINE_RATINGS = [
-    { id: "unwatchable", emoji: "\u{1F480}", label: "unwatchable" },
-    { id: "forgettable", emoji: "\u{1F610}", label: "forgettable" },
-    { id: "remarkable", emoji: "\u2728", label: "remarkable" },
-    { id: "outstanding", emoji: "\u{1F3C6}", label: "outstanding" }
-  ];
-  function loadCineEstado() {
-    try {
-      const raw = localStorage.getItem(CINE_ESTADO_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      return {};
-    }
-  }
-  var cineEstadoCache = loadCineEstado();
-  var cineEstadoListeners = /* @__PURE__ */ new Set();
-  function saveCineEstado(map) {
-    cineEstadoCache = map;
-    try {
-      localStorage.setItem(CINE_ESTADO_KEY, JSON.stringify(map));
-    } catch (e) {
-    }
-    cineEstadoListeners.forEach((fn) => fn(map));
-  }
-  function setCineItemEstado(guid, patch) {
-    const next = { ...cineEstadoCache };
-    if (patch === null) delete next[guid];
-    else next[guid] = { ...next[guid] || {}, ...patch };
-    saveCineEstado(next);
-  }
-  function useCineEstadoMap() {
-    const [map, setMap] = useState7(cineEstadoCache);
-    useEffect7(() => {
-      cineEstadoListeners.add(setMap);
-      return () => cineEstadoListeners.delete(setMap);
-    }, []);
-    return map;
-  }
-  function diasRestantesCartelera(item) {
-    if (!item.firstSeenAt) return null;
-    const RETENTION_MS = 30 * 864e5;
-    const elapsed = Date.now() - new Date(item.firstSeenAt).getTime();
-    return Math.max(0, Math.ceil((RETENTION_MS - elapsed) / 864e5));
-  }
-  function esNuevo(item) {
-    if (!item.firstSeenAt) return false;
-    return Date.now() - new Date(item.firstSeenAt).getTime() <= CINE_NUEVO_MS;
-  }
-  function esEstreno(item) {
-    if (!item.pubDate) return false;
-    const t = new Date(item.pubDate).getTime();
-    if (Date.now() < t) return false;
-    return Date.now() - t <= 15 * 864e5;
-  }
-  function esEnProduccion(item) {
-    if (!item.pubDate) return false;
-    return new Date(item.pubDate).getTime() > Date.now();
-  }
-  function diasParaEstreno(item) {
-    if (!item.pubDate) return null;
-    const dias = Math.ceil((new Date(item.pubDate).getTime() - Date.now()) / 864e5);
-    return dias >= 0 ? dias : null;
-  }
-  function esTrending(item) {
-    return !!item.trending;
-  }
-  function diasHasta(fechaISO) {
-    if (!fechaISO) return null;
-    const dias = Math.ceil((new Date(fechaISO).getTime() - Date.now()) / 864e5);
-    return dias;
-  }
-
   // modules/shared/ui.jsx
-  var { useState: useState8, useEffect: useEffect8, useRef: useRef8 } = React;
+  var { useState: useState10, useEffect: useEffect10, useRef: useRef9 } = React;
   var btnGhost = { flex: 1, background: "transparent", border: "1px dashed #444", color: "#aaa", borderRadius: 10, padding: "10px 6px", fontFamily: "'DM Sans',sans-serif", fontSize: 10, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 };
   function shareToWhatsApp(item) {
     const text = encodeURIComponent(`${item.title}
@@ -8920,371 +9407,6 @@ ${item.link}`);
       borderTop: active ? "2px solid #e91e8c" : "2px solid transparent"
     });
     return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", left: 0, right: 0, bottom: "var(--angst-podcast-h, 0px)", display: "flex", background: "#111", zIndex: 40, paddingBottom: "env(safe-area-inset-bottom)" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onChange("noticias"), style: tabBtn(area === "noticias") }, "\u{1F4F0} Noticias"), /* @__PURE__ */ React.createElement("button", { onClick: () => onChange("vitrina"), style: tabBtn(area === "vitrina") }, "\u{1F3AC} Vitrina"), /* @__PURE__ */ React.createElement("button", { onClick: onOpenBuzon, style: tabBtn(false) }, "\u{1F4CC} ", buzonCount));
-  }
-
-  // modules/shared/episodios.js
-  var keyEp = (t, e) => `${t}-${e}`;
-  function decodeRangos(str) {
-    const out = [];
-    for (const part of String(str || "").split(",")) {
-      const m = /^(\d+)(?:-(\d+))?$/.exec(part.trim());
-      if (!m) continue;
-      const a = Number(m[1]), b = m[2] ? Number(m[2]) : a;
-      for (let n = a; n <= b; n++) out.push(n);
-    }
-    return out;
-  }
-  function epMapToSet(epMap) {
-    const set = /* @__PURE__ */ new Set();
-    for (const [t, rangos] of Object.entries(epMap || {})) {
-      for (const e of decodeRangos(rangos)) set.add(keyEp(t, e));
-    }
-    return set;
-  }
-  function mergeEpisodeOps(a, b) {
-    const estado = /* @__PURE__ */ new Map();
-    for (const ops of [a, b]) {
-      for (const [t, e] of ops?.marcar || []) estado.set(keyEp(t, e), true);
-      for (const [t, e] of ops?.desmarcar || []) estado.set(keyEp(t, e), false);
-    }
-    const marcar = [], desmarcar = [];
-    for (const [k, v] of estado) {
-      const [t, e] = k.split("-").map(Number);
-      (v ? marcar : desmarcar).push([t, e]);
-    }
-    return { marcar, desmarcar };
-  }
-  function opsVacias(ops) {
-    return !(ops?.marcar?.length || ops?.desmarcar?.length);
-  }
-  function armarVista(entry, overlayShow, hoyISO2) {
-    const vistos = epMapToSet(entry.ep);
-    for (const [k, o] of Object.entries(overlayShow || {})) {
-      if (o && o.v) vistos.add(k);
-      else vistos.delete(k);
-    }
-    let total = 0, emitidos = 0, vistosCount = 0, pendientes = 0;
-    let siguiente = null, proximo = null;
-    const temporadas = [...entry.temporadas || []].sort((a, b) => a.n - b.n).map((t) => {
-      const eps = t.eps.map(([e, nombre, fecha]) => {
-        const visto = vistos.has(keyEp(t.n, e));
-        const emitido = !!fecha && fecha <= hoyISO2;
-        total++;
-        if (emitido) emitidos++;
-        if (visto) vistosCount++;
-        if (emitido && !visto) {
-          pendientes++;
-          if (!siguiente) siguiente = { t: t.n, e, nombre, fecha };
-        }
-        if (!emitido && !proximo) proximo = { t: t.n, e, nombre, fecha };
-        return { e, nombre, fecha, visto, emitido };
-      });
-      return {
-        n: t.n,
-        eps,
-        total: eps.length,
-        vistos: eps.filter((x) => x.visto).length,
-        pendientes: eps.filter((x) => x.emitido && !x.visto).length
-      };
-    });
-    return { temporadas, total, emitidos, vistos: vistosCount, pendientes, siguiente, proximo };
-  }
-
-  // modules/vitrina/simkl.js
-  var { useState: useState9, useEffect: useEffect9, useRef: useRef9 } = React;
-  var simklDiscoveryListeners = /* @__PURE__ */ new Set();
-  var simklDiscoveryItems = [];
-  var simklDiscoveryFetched = false;
-  function useSimklDiscovery() {
-    const [items, setItems] = useState9(simklDiscoveryItems);
-    useEffect9(() => {
-      simklDiscoveryListeners.add(setItems);
-      if (!simklDiscoveryFetched) {
-        simklDiscoveryFetched = true;
-        const auth = getSimklAuth();
-        if (auth) {
-          fetch(`${WORKER_URL}?path=simkl-discovery.json`, { headers: { "X-Angst-Auth": auth } }).then((r) => r.ok ? r.json() : null).then((d) => {
-            if (d && d.found !== false && Array.isArray(d.items)) {
-              simklDiscoveryItems = d.items.map((it) => ({ ...it, _deSimkl: true }));
-              simklDiscoveryListeners.forEach((fn) => fn(simklDiscoveryItems));
-            }
-          }).catch(() => {
-          });
-        }
-      }
-      return () => simklDiscoveryListeners.delete(setItems);
-    }, []);
-    return items;
-  }
-  var SIMKL_PENDING_KEY = "angst-simkl-pending-v1";
-  var SIMKL_AUTH_KEY = "angst-simkl-auth-v1";
-  var WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
-  var SIMKL_ESTADO_TO_STATUS = { interesa: "plantowatch", vista: "completed", descartada: "dropped" };
-  var simklSyncListeners = /* @__PURE__ */ new Set();
-  var simklSyncStatus = { conectado: false, estado: "idle", ultimoOk: null, ultimoError: null };
-  try {
-    simklSyncStatus.conectado = !!localStorage.getItem(SIMKL_AUTH_KEY);
-  } catch (e) {
-  }
-  function setSimklSyncStatus(patch) {
-    simklSyncStatus = { ...simklSyncStatus, ...patch };
-    simklSyncListeners.forEach((fn) => fn(simklSyncStatus));
-  }
-  function useSimklSyncStatus() {
-    const [s, setS] = useState9(simklSyncStatus);
-    useEffect9(() => {
-      simklSyncListeners.add(setS);
-      return () => simklSyncListeners.delete(setS);
-    }, []);
-    return s;
-  }
-  function getSimklAuth() {
-    try {
-      return localStorage.getItem(SIMKL_AUTH_KEY) || null;
-    } catch (e) {
-      return null;
-    }
-  }
-  function pedirSimklAuth() {
-    const v = prompt("Peg\xE1 el AUTH_SECRET del Worker de Simkl (una sola vez, queda solo en este dispositivo):");
-    if (v && v.trim()) {
-      try {
-        localStorage.setItem(SIMKL_AUTH_KEY, v.trim());
-      } catch (e) {
-      }
-      setSimklSyncStatus({ conectado: true });
-      flushSimklQueue();
-    }
-  }
-  function loadSimklPending() {
-    try {
-      const raw = localStorage.getItem(SIMKL_PENDING_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch (e) {
-      return [];
-    }
-  }
-  function saveSimklPending(arr) {
-    try {
-      localStorage.setItem(SIMKL_PENDING_KEY, JSON.stringify(arr));
-    } catch (e) {
-    }
-  }
-  function parseTmdbGuid(guid) {
-    const m = /^tmdb-(movie|tv)-(\d+)$/.exec(guid || "");
-    if (!m) return null;
-    return { tipo: m[1] === "movie" ? "movie" : "show", tmdbId: Number(m[2]) };
-  }
-  function enqueueSimklAction(item, estadoLocal, progreso) {
-    const parsed = parseTmdbGuid(item?.guid);
-    if (!parsed) return;
-    const status = progreso && parsed.tipo === "show" ? "watching" : SIMKL_ESTADO_TO_STATUS[estadoLocal];
-    if (!status) return;
-    const year = item.pubDate ? new Date(item.pubDate).getFullYear() : void 0;
-    const pending = loadSimklPending();
-    const filtered = pending.filter((a) => !(a.kind !== "episodios" && a.tmdbId === parsed.tmdbId && a.tipo === parsed.tipo));
-    const accion = { tmdbId: parsed.tmdbId, tipo: parsed.tipo, status, title: item.title, year, creadoEn: (/* @__PURE__ */ new Date()).toISOString() };
-    if (progreso) accion.progreso = progreso;
-    filtered.push(accion);
-    saveSimklPending(filtered);
-    flushSimklQueue();
-  }
-  function enqueueEpisodiosAction(item, ops) {
-    const parsed = parseTmdbGuid(item?.guid);
-    if (!parsed || parsed.tipo !== "show" || opsVacias(ops)) return false;
-    const year = item.pubDate ? new Date(item.pubDate).getFullYear() : void 0;
-    const pending = loadSimklPending();
-    const previa = pending.find((a) => a.kind === "episodios" && a.tmdbId === parsed.tmdbId);
-    const fusion = mergeEpisodeOps(previa, ops);
-    const resto = pending.filter((a) => !(a.kind === "episodios" && a.tmdbId === parsed.tmdbId));
-    if (!opsVacias(fusion)) {
-      resto.push({ kind: "episodios", tipo: "show", tmdbId: parsed.tmdbId, title: item.title, year, marcar: fusion.marcar, desmarcar: fusion.desmarcar, creadoEn: (/* @__PURE__ */ new Date()).toISOString() });
-    }
-    saveSimklPending(resto);
-    flushSimklQueue();
-    return true;
-  }
-  var simklFlushInFlight = false;
-  async function flushSimklQueue() {
-    if (simklFlushInFlight) return;
-    const auth = getSimklAuth();
-    const pending = loadSimklPending();
-    if (!auth || !pending.length) return;
-    simklFlushInFlight = true;
-    setSimklSyncStatus({ estado: "syncing" });
-    try {
-      const getResp = await fetch(`${WORKER_URL}?path=simkl-state.json`, { headers: { "X-Angst-Auth": auth } });
-      if (!getResp.ok) {
-        setSimklSyncStatus({ estado: "error", ultimoError: `GET ${getResp.status}` });
-        return;
-      }
-      const remote2 = await getResp.json();
-      if (remote2.found === false) {
-        setSimklSyncStatus({ estado: "error", ultimoError: "simkl-state.json no existe todav\xEDa" });
-        return;
-      }
-      const remotePending = remote2.pendingActions || [];
-      const keyOf = (a) => a.kind === "episodios" ? `ep-${a.tmdbId}` : `${a.tipo}-${a.tmdbId}`;
-      const merged = [...remotePending];
-      for (const a of pending) {
-        const i = merged.findIndex((r) => keyOf(r) === keyOf(a));
-        if (i === -1) merged.push(a);
-        else if (a.kind === "episodios") {
-          const ops = mergeEpisodeOps(merged[i], a);
-          merged[i] = { ...merged[i], ...a, marcar: ops.marcar, desmarcar: ops.desmarcar };
-        }
-      }
-      remote2.pendingActions = merged;
-      const postResp = await fetch(WORKER_URL, {
-        method: "POST",
-        headers: { "X-Angst-Auth": auth, "Content-Type": "application/json" },
-        body: JSON.stringify({ path: "simkl-state.json", payload: remote2 })
-      });
-      if (postResp.ok) {
-        saveSimklPending([]);
-        setSimklSyncStatus({ estado: "ok", ultimoOk: (/* @__PURE__ */ new Date()).toISOString(), ultimoError: null });
-      } else {
-        setSimklSyncStatus({ estado: "error", ultimoError: `POST ${postResp.status}` });
-      }
-    } catch (e) {
-      setSimklSyncStatus({ estado: "error", ultimoError: e.message });
-    } finally {
-      simklFlushInFlight = false;
-    }
-  }
-
-  // modules/vitrina/episodios.js
-  var { useState: useState10, useEffect: useEffect10 } = React;
-  var OVERLAY_KEY = "angst-series-overlay-v1";
-  var OVERLAY_TTL_MS = 48 * 3600 * 1e3;
-  var REFRESH_MS = 10 * 60 * 1e3;
-  var listeners = /* @__PURE__ */ new Set();
-  var remote = null;
-  var remoteAt = 0;
-  var cargando = false;
-  var errorCarga = null;
-  var overlay = loadOverlay();
-  function loadOverlay() {
-    try {
-      return JSON.parse(localStorage.getItem(OVERLAY_KEY) || "{}") || {};
-    } catch (e) {
-      return {};
-    }
-  }
-  function saveOverlay() {
-    try {
-      localStorage.setItem(OVERLAY_KEY, JSON.stringify(overlay));
-    } catch (e) {
-    }
-  }
-  function notify() {
-    listeners.forEach((fn) => fn((n) => n + 1));
-  }
-  function podarOverlay() {
-    const ahora = Date.now();
-    let cambio = false;
-    for (const [id, marcas] of Object.entries(overlay)) {
-      const vistosRemotos = remote?.shows?.[id] ? epMapToSet(remote.shows[id].ep) : null;
-      for (const [k, o] of Object.entries(marcas)) {
-        const vencida = ahora - (o.ts || 0) > OVERLAY_TTL_MS;
-        const reflejada = vistosRemotos && vistosRemotos.has(k) === !!o.v;
-        if (vencida || reflejada) {
-          delete marcas[k];
-          cambio = true;
-        }
-      }
-      if (!Object.keys(marcas).length) {
-        delete overlay[id];
-        cambio = true;
-      }
-    }
-    if (cambio) saveOverlay();
-  }
-  function cargarEpisodios({ forzar = false } = {}) {
-    const auth = getSimklAuth();
-    if (!auth) {
-      errorCarga = "sin-auth";
-      return;
-    }
-    if (cargando || !forzar && remote && Date.now() - remoteAt < REFRESH_MS) return;
-    cargando = true;
-    fetch(`${WORKER_URL}?path=series-episodios.json`, { headers: { "X-Angst-Auth": auth } }).then((r) => r.ok ? r.json() : null).then((d) => {
-      if (d && d.found !== false && d.shows) {
-        remote = d;
-        remoteAt = Date.now();
-        errorCarga = null;
-        podarOverlay();
-      } else if (!remote) {
-        errorCarga = "sin-datos";
-      }
-    }).catch(() => {
-      if (!remote) errorCarga = "red";
-    }).finally(() => {
-      cargando = false;
-      notify();
-    });
-  }
-  function tmdbIdDe(guid) {
-    const m = /^tmdb-tv-(\d+)$/.exec(guid || "");
-    return m ? m[1] : null;
-  }
-  function hoyISO() {
-    const d = /* @__PURE__ */ new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  }
-  function useTick() {
-    const [, setN] = useState10(0);
-    useEffect10(() => {
-      listeners.add(setN);
-      cargarEpisodios();
-      return () => listeners.delete(setN);
-    }, []);
-  }
-  function useSerieEpisodios(guid) {
-    useTick();
-    const id = tmdbIdDe(guid);
-    const entry = id && remote?.shows?.[id];
-    if (!entry) return { vista: null, estadoCarga: cargando ? "cargando" : errorCarga || (remote ? "sin-catalogo" : "idle") };
-    return { vista: armarVista(entry, overlay[id], hoyISO()), estadoCarga: "ok", entry };
-  }
-  function usePendientesDe() {
-    useTick();
-    return (guid) => {
-      const id = tmdbIdDe(guid);
-      const entry = id && remote?.shows?.[id];
-      if (!entry) return null;
-      const v = armarVista(entry, overlay[id], hoyISO());
-      return v.vistos > 0 && v.pendientes > 0 ? v.pendientes : null;
-    };
-  }
-  function aplicarMarcas(item, ops) {
-    const id = tmdbIdDe(item.guid);
-    if (!id) return;
-    const marcas = overlay[id] || (overlay[id] = {});
-    const ts = Date.now();
-    for (const [t, e] of ops.marcar || []) marcas[keyEp(t, e)] = { v: true, ts };
-    for (const [t, e] of ops.desmarcar || []) marcas[keyEp(t, e)] = { v: false, ts };
-    saveOverlay();
-    enqueueEpisodiosAction(item, ops);
-    notify();
-  }
-  function toggleEpisodio(item, t, e, visto) {
-    aplicarMarcas(item, visto ? { desmarcar: [[t, e]] } : { marcar: [[t, e]] });
-  }
-  function marcarTemporada(item, vista, n, marcar) {
-    const t = vista.temporadas.find((x) => x.n === n);
-    if (!t) return;
-    const pares = t.eps.filter((x) => x.emitido && x.visto !== marcar).map((x) => [n, x.e]);
-    if (pares.length) aplicarMarcas(item, marcar ? { marcar: pares } : { desmarcar: pares });
-  }
-  function marcarHastaAca(item, vista, t, e) {
-    const pares = [];
-    for (const s of vista.temporadas) {
-      for (const x of s.eps) {
-        if ((s.n < t || s.n === t && x.e <= e) && x.emitido && !x.visto) pares.push([s.n, x.e]);
-      }
-    }
-    if (pares.length) aplicarMarcas(item, { marcar: pares });
   }
 
   // modules/shared/constants.js
@@ -10130,11 +10252,12 @@ Toco reintentar ahora.`);
       return null;
     }
   }
-  function saveState(state) {
+  function saveState(state, opts = {}) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
     }
+    if (!opts.skipEditMark) marcarEdicionLocal();
   }
   function resetTestState() {
     try {
@@ -10318,13 +10441,13 @@ Toco reintentar ahora.`);
     useEffect14(() => {
       lastRefreshRef.current = lastRefresh;
     }, [lastRefresh]);
-    function persist(overrides = {}) {
+    function persist(overrides = {}, opts = {}) {
       saveState({
         feedQueue: overrides.queue ?? queueRef.current,
         feedSeen: overrides.seen ?? seenRef.current,
         feedBuzon: overrides.buzon ?? buzonRef.current,
         feedLastRefresh: overrides.lastRefresh ?? lastRefreshRef.current
-      });
+      }, opts);
     }
     useEffect14(() => {
       (async () => {
@@ -10366,7 +10489,7 @@ Toco reintentar ahora.`);
         setQueue(nextQueue);
         const ts = (/* @__PURE__ */ new Date()).toISOString();
         setLastRefresh(ts);
-        persist({ queue: nextQueue, lastRefresh: ts });
+        persist({ queue: nextQueue, lastRefresh: ts }, { skipEditMark: true });
         if (nextQueue.length) setView("story");
         const totalItems = diag.reduce((s, d) => s + d.count, 0);
         setRefreshMsg(newOnes.length > 0 ? `\u2713 ${newOnes.length} nuevas` : `sin novedades \u2014 ${totalItems} items en el JSON`);
@@ -10513,6 +10636,7 @@ Toco reintentar ahora.`);
       localStorage.setItem(storageKey, JSON.stringify([...set]));
     } catch (e) {
     }
+    marcarEdicionLocal();
   }
   var ARCHIVEDFEED_NUEVOS_DIAS = 20;
   var ARCHIVEDFEED_MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
@@ -10666,6 +10790,7 @@ Toco reintentar ahora.`);
       localStorage.setItem(PODCASTS_ESCUCHADOS_KEY, JSON.stringify([...set]));
     } catch (e) {
     }
+    marcarEdicionLocal();
   }
   function PodcastFeed({ items }) {
     const [escuchados, setEscuchados] = useState15(() => loadPodcastsEscuchados());
@@ -10826,6 +10951,7 @@ Toco reintentar ahora.`);
       localStorage.setItem(MELEE_VOD_VISTOS_KEY, JSON.stringify([...set]));
     } catch (e) {
     }
+    marcarEdicionLocal();
   }
   function MeleeMatchup({ item }) {
     const g = item.ganador, p = item.perdedor;
@@ -11029,6 +11155,7 @@ Toco reintentar ahora.`);
       const buzon = Array.isArray(s.feedBuzon) ? s.feedBuzon : [];
       if (buzon.some((b) => b.guid === item.guid)) return false;
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...s, feedBuzon: [...buzon, item] }));
+      marcarEdicionLocal();
       return true;
     } catch (e) {
       return false;
@@ -11526,12 +11653,8 @@ Toco reintentar ahora.`);
     const ANGST_STATE_PATH = "angst-full-state.json";
     const ANGST_STATE_BRANCH = "state-sync";
     const [stateSyncMsg, setStateSyncMsg] = useState18(null);
-    const LOCAL_EDIT_KEY = "angst-last-local-edit-v1";
     function markLocalEdit() {
-      try {
-        localStorage.setItem(LOCAL_EDIT_KEY, (/* @__PURE__ */ new Date()).toISOString());
-      } catch (e) {
-      }
+      marcarEdicionLocal();
     }
     function getLastLocalEdit() {
       try {
@@ -11568,8 +11691,14 @@ Toco reintentar ahora.`);
       let auth = getAngstStateAuth();
       if (!auth) auth = pedirAngstStateAuth();
       if (!auth) return;
-      setStateSyncMsg("guardando en el repo...");
       const payload = buildExportPayload();
+      const problemas = validarPayloadExport(payload);
+      if (problemas.length) {
+        setStateSyncMsg(`\u2717 no se subi\xF3: ${problemas.slice(0, 3).join(", ")}${problemas.length > 3 ? "\u2026" : ""}`);
+        setTimeout(() => setStateSyncMsg(null), 6e3);
+        return;
+      }
+      setStateSyncMsg("guardando en el repo...");
       const post = (a, extra) => fetch(ANGST_STATE_WORKER_URL, {
         method: "POST",
         headers: { "X-Angst-Auth": a, "Content-Type": "application/json" },
@@ -12452,33 +12581,17 @@ Toco reintentar ahora.`);
         pokeCarpetas: clone(pokeCarpetasRef.current),
         pokeDarkCatalogo: clone(pokeDarkCatalogoRef.current),
         pokePriceCache: clone(pokePriceCacheRef.current),
-        // Feed mantiene sus propias claves de localStorage, aisladas del motor
-        // de refs de arriba (angst-feed-proto-v1 = cola/vistos/buzon/último
-        // refresh; las otras dos = sets de "visto/escuchado"). Se leen directo
-        // de localStorage acá porque no pasan por React state en este nivel.
-        feedState: readLocalJSON("angst-feed-proto-v1"),
-        feedMicrodocsVistos: readLocalJSON("angst-feed-microdocs-vistos-v1"),
-        feedPodcastsEscuchados: readLocalJSON("angst-feed-podcasts-escuchados-v1"),
-        feedConciertosVistos: readLocalJSON("angst-feed-conciertos-vistos-v1"),
-        feedCineEstado: readLocalJSON("angst-cine-estado-v1"),
-        feedPodcastDispatched: readLocalJSON("angst-podcast-dispatched-v1"),
-        feedMeleeVodVistos: readLocalJSON("angst-feed-melee-vod-vistos-v1")
+        // Feed, Vitrina y Pokécripto (agotadas) guardan en sus propias claves de
+        // localStorage, fuera de los refs de acá. El mapa campo -> clave vive en
+        // core/persistence.js (LOCAL_KEY_FIELDS): un solo lugar para export y restore.
+        ...leerCamposLocales()
       };
     }
-    function readLocalJSON(key) {
-      try {
-        const v = localStorage.getItem(key);
-        return v ? JSON.parse(v) : null;
-      } catch (e) {
-        return null;
-      }
-    }
-    const REQUIRED_EXPORT_FIELDS = ["dayData", "weekOffset", "budgets", "nutria", "calMarks", "cookingOpts", "aseoOpts", "routines", "recurring", "lastRollover", "kidsHealth", "custody", "fadimanData", "nutriLog", "ejercicioLog", "ejercicioDecks", "customFoods", "foodOverrides", "customEjercicios", "nutriDecks", "pokeInventario", "pokeCarpetas", "pokeDarkCatalogo", "pokePriceCache", "feedState", "feedMicrodocsVistos", "feedPodcastsEscuchados", "feedConciertosVistos", "feedCineEstado", "feedPodcastDispatched", "feedMeleeVodVistos"];
     function handleExport() {
       const fullPayload = buildExportPayload();
-      const missing = REQUIRED_EXPORT_FIELDS.filter((k) => fullPayload[k] === void 0);
-      if (missing.length) {
-        setExportOk(`Faltan: ${missing.join(", ")}`);
+      const problemas = validarPayloadExport(fullPayload);
+      if (problemas.length) {
+        setExportOk(`No se export\xF3: ${problemas.slice(0, 3).join(", ")}${problemas.length > 3 ? "\u2026" : ""}`);
         return;
       }
       const ok = downloadBackupJSON(fullPayload);
@@ -12590,47 +12703,13 @@ Toco reintentar ahora.`);
         localStorage.setItem("angst-v12", JSON.stringify(merged));
       } catch (e) {
       }
-      if (d.feedState != null) {
-        try {
-          localStorage.setItem("angst-feed-proto-v1", JSON.stringify(d.feedState));
-        } catch (e) {
-        }
-      }
-      if (d.feedMicrodocsVistos != null) {
-        try {
-          localStorage.setItem("angst-feed-microdocs-vistos-v1", JSON.stringify(d.feedMicrodocsVistos));
-        } catch (e) {
-        }
-      }
-      if (d.feedPodcastsEscuchados != null) {
-        try {
-          localStorage.setItem("angst-feed-podcasts-escuchados-v1", JSON.stringify(d.feedPodcastsEscuchados));
-        } catch (e) {
-        }
-      }
-      if (d.feedConciertosVistos != null) {
-        try {
-          localStorage.setItem("angst-feed-conciertos-vistos-v1", JSON.stringify(d.feedConciertosVistos));
-        } catch (e) {
-        }
-      }
-      if (d.feedCineEstado != null) {
-        try {
-          localStorage.setItem("angst-cine-estado-v1", JSON.stringify(d.feedCineEstado));
-        } catch (e) {
-        }
-      }
-      if (d.feedPodcastDispatched != null) {
-        try {
-          localStorage.setItem("angst-podcast-dispatched-v1", JSON.stringify(d.feedPodcastDispatched));
-        } catch (e) {
-        }
-      }
-      if (d.feedMeleeVodVistos != null) {
-        try {
-          localStorage.setItem("angst-feed-melee-vod-vistos-v1", JSON.stringify(d.feedMeleeVodVistos));
-        } catch (e) {
-        }
+      escribirCamposLocales(d);
+      rehidratarCineEstado();
+      rehidratarOverlay();
+      if (Array.isArray(d.feedPodcastDispatched)) setPodcastDispatched(d.feedPodcastDispatched);
+      try {
+        window.dispatchEvent(new Event("angst:restaurado"));
+      } catch (e) {
       }
       setLoadMsg(`\u2713 Restauraci\xF3n completa desde ${sourceLabel || "backup"}`);
       setTimeout(() => setLoadMsg(null), 4e3);
