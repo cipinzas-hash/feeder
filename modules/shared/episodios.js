@@ -155,3 +155,32 @@ export function inferirEp(temporadas, ultimo, vistos, total) {
   }
   return setToEpMap(set);
 }
+
+// Lo que tiene `actual` y NO está ya en `enviado` (mismo episodio con el mismo
+// valor). Sirve para no perder marcas hechas mientras un envío estaba en vuelo:
+// al confirmarse el envío se descarta solo lo que viajó, no toda la cola.
+export function restarOps(actual, enviado) {
+  const yaEnviado = new Map();
+  for (const [t, e] of enviado?.marcar || []) yaEnviado.set(keyEp(t, e), true);
+  for (const [t, e] of enviado?.desmarcar || []) yaEnviado.set(keyEp(t, e), false);
+  const marcar = (actual?.marcar || []).filter(([t, e]) => yaEnviado.get(keyEp(t, e)) !== true);
+  const desmarcar = (actual?.desmarcar || []).filter(([t, e]) => yaEnviado.get(keyEp(t, e)) !== false);
+  return { marcar, desmarcar };
+}
+
+// Avance de una serie (entrada de simkl-vitrina.json) con las marcas locales
+// que Simkl todavía no refleja aplicadas -- sin necesitar el catálogo de
+// episodios. Las marcas de la UI solo se hacen sobre episodios emitidos, así
+// que marcar uno nuevo resta un pendiente y desmarcar uno visto lo suma.
+//   entry: { vistos, pendientes, ep }   overlayShow: { "t-e": { v: bool } }
+export function avanceEfectivo(entry, overlayShow) {
+  const remotos = epMapToSet(entry.ep);
+  let vistos = entry.vistos ?? 0;
+  let pendientes = entry.pendientes ?? 0;
+  for (const [k, o] of Object.entries(overlayShow || {})) {
+    const estabaVisto = remotos.has(k);
+    if (o && o.v && !estabaVisto) { vistos++; pendientes = Math.max(pendientes - 1, 0); }
+    else if (o && !o.v && estabaVisto) { vistos = Math.max(vistos - 1, 0); pendientes++; }
+  }
+  return { vistos, pendientes };
+}

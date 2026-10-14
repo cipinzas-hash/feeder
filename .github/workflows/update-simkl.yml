@@ -51,18 +51,25 @@ jobs:
           SIMKL_CLIENT_ID: ${{ secrets.SIMKL_CLIENT_ID }}
           SIMKL_STATE_PATH: ${{ github.workspace }}/angst-data/simkl-state.json
           SIMKL_DISCOVERY_PATH: ${{ github.workspace }}/angst-data/simkl-discovery.json
-          SERIES_EPISODES_PATH: ${{ github.workspace }}/angst-data/series-episodios.json
+          SIMKL_QUEUE_PATH: ${{ github.workspace }}/angst-data/simkl-queue.json
+          SIMKL_VITRINA_PATH: ${{ github.workspace }}/angst-data/simkl-vitrina.json
+          SERIES_CATALOG_DIR: ${{ github.workspace }}/angst-data/series-episodios
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
         run: node modules/feed/scripts/build-simkl.mjs
 
-      - name: Commitear simkl-state.json + simkl-discovery.json + series-episodios.json en Angst-data si cambiaron
+      - name: Commitear estado, discovery, avance y catálogo de series en Angst-data si cambiaron
         working-directory: angst-data
         run: |
           git config user.name "angst-feed-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add simkl-state.json simkl-discovery.json series-episodios.json
+          # simkl-queue.json NO se agrega: lo escribe solo el navegador (vía Worker).
+          # Dos escritores sobre el mismo archivo hacían que el reintento de push
+          # (reset --soft) pisara las marcas hechas mientras corría este job.
+          git add simkl-state.json simkl-discovery.json simkl-vitrina.json
+          [ -d series-episodios ] && git add series-episodios
+          git rm -q -f --ignore-unmatch series-episodios.json   # formato anterior, un solo archivo de 3 MB
           git diff --staged --quiet || { git commit -m "Sincronizar Simkl $(date -u +%Y-%m-%dT%H:%MZ)"; committed=1; }
           pushed=0
           for i in 1 2 3; do

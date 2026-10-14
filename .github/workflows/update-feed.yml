@@ -54,7 +54,28 @@ jobs:
         working-directory: modules/feed
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
-        run: npm run build
+        # timeout propio del step (21 min) para que, si se cuelga, el job tenga
+        # tiempo de guardar el log (paso siguiente) antes del tope de 25 del job:
+        # hasta ahora las cancelaciones no dejaban nada legible. SIGTERM hace que
+        # build-feed.mjs vuelque las operaciones de red que seguían abiertas.
+        run: |
+          set -o pipefail
+          timeout -s TERM -k 15 21m node scripts/build-feed.mjs 2>&1 | tee /tmp/feed-build.log
+
+      - name: Guardar log del build en Angst-data (diagnóstico de cuelgues)
+        if: always()
+        continue-on-error: true
+        env:
+          ANGST_DATA_TOKEN: ${{ secrets.WORKER_GITHUB_PAT }}
+        run: |
+          git clone -q "https://x-access-token:${ANGST_DATA_TOKEN}@github.com/cipinzas-hash/Angst-data.git" /tmp/angst-data
+          mkdir -p /tmp/angst-data/logs
+          { echo "run ${{ github.run_id }} · $(date -u +%Y-%m-%dT%H:%M:%SZ) · estado del job hasta acá: ${{ job.status }}"; tail -n 400 /tmp/feed-build.log 2>/dev/null; } > /tmp/angst-data/logs/feed-build-last.log
+          cd /tmp/angst-data
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add logs/feed-build-last.log
+          git diff --staged --quiet || { git commit -qm "log update-feed ${{ github.run_id }}" && git pull -q --rebase origin main && git push -q; }
 
       - name: Commitear data/feed.json si cambió
         run: |
@@ -66,7 +87,7 @@ jobs:
           # deja de aparecer en el historial, el problema volvió a ser que
           # el job ni siquiera llega a este paso, no el push en sí.
           echo "{\"generatedAt\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"feedJsonBytes\":$(wc -c < modules/feed/data/feed.json),\"feedJsonSha256\":\"$(sha256sum modules/feed/data/feed.json | cut -d' ' -f1)\"}" > modules/feed/data/.diag-last-run.json
-          git add modules/feed/data/.diag-last-run.json modules/feed/data/feed.json
+          git add modules/feed/data/.diag-last-run.json modules/feed/data/feed.json modules/feed/data/videoteca.json
           git diff --staged --quiet || { git commit -m "Actualizar feed $(date -u +%Y-%m-%dT%H:%MZ)"; committed=1; }
           # Sin pull --rebase: no hay nada que integrar -- feed.json se
           # regenera entero cada corrida, no hay cambios locales que

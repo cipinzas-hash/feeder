@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { inferirEp, armarVista, encodeRangos, decodeRangos, epMapToSet, setToEpMap, parseSxxExx, mergeEpisodeOps, applyOps, agruparPorTemporada, keyEp } from "../modules/shared/episodios.js";
+import { avanceEfectivo, restarOps, inferirEp, armarVista, encodeRangos, decodeRangos, epMapToSet, setToEpMap, parseSxxExx, mergeEpisodeOps, applyOps, agruparPorTemporada, keyEp } from "../modules/shared/episodios.js";
 
 assert.equal(encodeRangos([1,2,3,5,7,8,10]), "1-3,5,7-8,10");
 assert.equal(encodeRangos([3,1,2,2,"4"]), "1-4");
@@ -56,4 +56,21 @@ assert.deepEqual(inferirEp(temps, { temporada: 2, episodio: 2 }, 5, 5), { "1": "
 assert.deepEqual(inferirEp(temps, null, 5, 5), { "1": "1-3", "2": "1-2" });                          // completa sin last_watched
 assert.equal(inferirEp(temps, null, 2, 5), null);                                                   // sin datos para inferir
 assert.deepEqual(inferirEp(temps, { temporada: 1, episodio: 2 }, 2, 5), { "1": "1-2" });
+
+// restarOps: lo agregado después del snapshot enviado
+const sent = { marcar: [[1,3]], desmarcar: [] };
+const actual2 = { marcar: [[1,3],[2,1]], desmarcar: [[1,1]] };
+assert.deepEqual(restarOps(actual2, sent), { marcar: [[2,1]], desmarcar: [[1,1]] });
+assert.deepEqual(restarOps(sent, sent), { marcar: [], desmarcar: [] });
+// mismo episodio con el valor contrario sí se conserva (marcado y luego desmarcado)
+assert.deepEqual(restarOps({ marcar: [], desmarcar: [[1,3]] }, sent), { marcar: [], desmarcar: [[1,3]] });
+assert.deepEqual(restarOps(actual2, undefined), actual2);
+
+// avanceEfectivo
+const av = { vistos: 2, pendientes: 3, ep: { "1": "1-2" } };
+assert.deepEqual(avanceEfectivo(av, {}), { vistos: 2, pendientes: 3 });
+assert.deepEqual(avanceEfectivo(av, { "1-3": { v: true } }), { vistos: 3, pendientes: 2 });          // marcar uno nuevo
+assert.deepEqual(avanceEfectivo(av, { "1-1": { v: false } }), { vistos: 1, pendientes: 4 });         // desmarcar uno visto
+assert.deepEqual(avanceEfectivo(av, { "1-1": { v: true } }), { vistos: 2, pendientes: 3 });          // ya estaba visto: sin cambio
+assert.deepEqual(avanceEfectivo({ vistos: 0, pendientes: 0, ep: {} }, { "1-1": { v: true } }), { vistos: 1, pendientes: 0 }); // nunca negativo
 console.log("episodios.mjs OK");

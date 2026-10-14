@@ -15,9 +15,10 @@
 // el client_id sin aviso): nunca pegarle a /sync/all-items sin antes
 // chequear /sync/activities. Ver https://api.simkl.org/api-rules
 
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { enrichMovieOrTv, tmdb } from "./lib/enrich.mjs";
-import { encodeRangos, inferirEp, parseSxxExx, agruparPorTemporada, opsVacias } from "../../shared/episodios.js";
+import { armarVista, encodeRangos, inferirEp, parseSxxExx, agruparPorTemporada, opsVacias } from "../../shared/episodios.js";
 
 const SIMKL_ACCESS_TOKEN = process.env.SIMKL_ACCESS_TOKEN;
 const SIMKL_CLIENT_ID = process.env.SIMKL_CLIENT_ID;
@@ -26,10 +27,20 @@ const SIMKL_CLIENT_ID = process.env.SIMKL_CLIENT_ID;
 // posición relativa al script como con feed.json/cine.json (mismo repo).
 const STATE_PATH = process.env.SIMKL_STATE_PATH;
 const DISCOVERY_PATH = process.env.SIMKL_DISCOVERY_PATH; // ídem, otro archivo en Angst-data
-// Catálogo de episodios (nombre/fecha por episodio, TMDb) + avance por
-// episodio leído de Simkl, en un solo archivo PRIVADO de Angst-data: saber
-// QUÉ series seguís es dato personal, no va al feeder público.
-const EPISODES_PATH = process.env.SERIES_EPISODES_PATH;
+// Todo lo de abajo es PRIVADO (Angst-data): saber QUÉ series seguís es dato
+// personal, no va al feeder público.
+// - QUEUE: cola de acciones que escribe SOLO el navegador (vía Worker). Este
+//   script la lee pero nunca la escribe: con dos escritores sobre el mismo
+//   archivo, el reintento de push (reset --soft) pisaba las marcas hechas
+//   mientras corría el job. Lo ya procesado se anota en state.procesadas.
+// - VITRINA: archivo liviano que lee la Vitrina al abrir (avance por serie,
+//   estados, procesadas). Antes era un único archivo de 3 MB con los nombres
+//   de todos los episodios: se bajaba entero aunque no abrieras una serie.
+// - CATALOG_DIR: un archivo por serie con nombre/fecha de cada episodio (TMDb),
+//   que la Vitrina baja solo al abrir esa serie.
+const QUEUE_PATH = process.env.SIMKL_QUEUE_PATH;
+const VITRINA_PATH = process.env.SIMKL_VITRINA_PATH;
+const CATALOG_DIR = process.env.SERIES_CATALOG_DIR;
 // Subir este número fuerza UNA relectura completa de /sync/all-items/shows
 // (sin date_from) la próxima corrida, para que el estado guardado traiga el
 // detalle por episodio. Es el "initial sync" normal de la API, no un abuso:
@@ -158,7 +169,16 @@ async function main() {
     console.log("No había simkl-state.json todavía, arranca desde cero.");
   }
   state.syncedList = state.syncedList || { movies: {}, shows: {} };
-  state.pendingActions = state.pendingActions || [];
+  state.pendingActions = state.pendingActions || []; // formato anterior (el navegador escribía acá); se sigue procesando por compatibilidad
+  state.procesadas = state.procesadas || [];
+  state.intentos = state.intentos || {};
+  let cola = [];
+  if (QUEUE_PATH) {
+    try {
+      const q = JSON.parse(await readFile(QUEUE_PATH, "utf-8"));
+      cola = Array.isArray(q.actions) ? q.actions : [];
+    } catch (e) { /* sin cola todavía */ }
+  }
 
   if (!SIMKL_ACCESS_TOKEN || !SIMKL_CLIENT_ID) {
     console.error("✗ Simkl · faltan SIMKL_ACCESS_TOKEN/SIMKL_CLIENT_ID, se omite esta corrida");
@@ -175,14 +195,25 @@ async function main() {
   // en vez de pisarse con un estado leído de antes.
   const stillPending = [];
   let pushed = false;
-  for (const action of state.pendingActions) {
+  // Orden = orden de la cola: las marcas de episodios dependen de la secuencia
+  // (marcar y desmarcar el mismo episodio: gana la última).
+  const hechas = new Set(state.procesadas);
+  const porProcesar = [
+    ...state.pendingActions.map(a => ({ action: a, legacy: true })),
+    ...cola.filter(a => a.id && !hechas.has(a.id)).map(a => ({ action: a, legacy: false })),
+  ];
+  for (const { action, legacy } of porProcesar) {
     try {
       if (action.kind === "episodios" && action.tipo === "show") {
         // Marcado episodio por episodio (issue #13): altas por /sync/history,
         // bajas por /sync/history/remove. Agrupado por temporada.
         const base = { ids: { tmdb: action.tmdbId }, title: action.title, year: action.year };
         const ops = { marcar: action.marcar || [], desmarcar: action.desmarcar || [] };
-        if (opsVacias(ops)) { console.log(`· Simkl · acción de episodios vacía: ${action.title || action.tmdbId}`); continue; }
+        if (opsVacias(ops)) {
+          console.log(`· Simkl · acción de episodios vacía: ${action.title || action.tmdbId}`);
+          if (!legacy) state.procesadas.push(action.id);
+          continue;
+        }
         if (ops.marcar.length) {
           const resp = await simklPost("/sync/history", { shows: [{ ...base, seasons: agruparPorTemporada(ops.marcar) }] });
           console.log(`✓ Simkl · ${ops.marcar.length} episodio(s) marcado(s): ${action.title || action.tmdbId}`, JSON.stringify(resp).slice(0, 150));
@@ -236,13 +267,29 @@ async function main() {
         });
         console.log(`✓ Simkl · status '${action.status}': ${action.title || action.tmdbId}`, JSON.stringify(resp).slice(0, 150));
       }
+      if (!legacy) { state.procesadas.push(action.id); delete state.intentos[action.id]; }
       pushed = true;
     } catch (e) {
       console.error(`✗ Simkl · no se pudo sincronizar '${action.title || action.tmdbId}': ${e.message}`);
-      stillPending.push(action); // se reintenta la próxima corrida
+      if (legacy) {
+        stillPending.push(action); // se reintenta la próxima corrida
+      } else {
+        // Acción de la cola: se reintenta en la próxima corrida; tras 5 fallos
+        // se abandona para que una acción rota no trabe a las que vienen detrás.
+        const n = (state.intentos[action.id] || 0) + 1;
+        state.intentos[action.id] = n;
+        if (n >= 5) {
+          console.error(`✗ Simkl · acción ${action.id} abandonada tras ${n} intentos`);
+          state.procesadas.push(action.id);
+          delete state.intentos[action.id];
+        }
+      }
     }
   }
   state.pendingActions = stillPending;
+  state.procesadas = state.procesadas.slice(-500);
+  const procesadasSet = new Set(state.procesadas);
+  const colaRestante = [...stillPending, ...cola.filter(a => a.id && !procesadasSet.has(a.id))];
   // Si empujamos algo, la actividad de Simkl cambió por nuestra propia
   // escritura: se vuelve a pedir para que la lectura de abajo ya traiga lo
   // recién enviado (si no, se vería recién en la corrida siguiente).
@@ -289,7 +336,7 @@ async function main() {
   console.log("✓ simkl-state.json actualizado");
 
   await buildDiscovery(state);
-  await buildEpisodios(state);
+  await buildEpisodios(state, colaRestante);
 }
 
 // ─── "Bajo el radar" (issue #14, fase B): lo que ya está en tu lista de
@@ -412,27 +459,31 @@ async function catalogoSerie(id, previo) {
   return { nombre: det.name || null, fetchedAt: new Date().toISOString(), temporadas };
 }
 
-async function buildEpisodios(state) {
-  if (!EPISODES_PATH) {
-    console.log("⚠ Simkl · SERIES_EPISODES_PATH no seteado, se omite el catálogo de episodios esta corrida");
+async function buildEpisodios(state, colaRestante = []) {
+  if (!CATALOG_DIR || !VITRINA_PATH) {
+    console.log("⚠ Simkl · SERIES_CATALOG_DIR/SIMKL_VITRINA_PATH no seteados, se omite el avance de series esta corrida");
     return;
   }
-  let previo = { shows: {} };
-  try { previo = JSON.parse(await readFile(EPISODES_PATH, "utf-8")); } catch (e) { /* primera corrida */ }
-  const soloCatalogo = (e) => e ? { nombre: e.nombre, fetchedAt: e.fetchedAt, temporadas: e.temporadas } : null;
+  await mkdir(CATALOG_DIR, { recursive: true });
+  const leerCatalogo = async (id) => {
+    try {
+      const e = JSON.parse(await readFile(join(CATALOG_DIR, `${id}.json`), "utf-8"));
+      return { nombre: e.nombre, fetchedAt: e.fetchedAt, temporadas: e.temporadas };
+    } catch (e) { return null; }
+  };
+  const shows = state.syncedList.shows || {};
 
-  // Alcance, en orden de prioridad (si el presupuesto no alcanza, lo que
-  // queda entra en la corrida siguiente): en curso > por ver > catálogo de Vitrina.
+  // Catálogo de episodios (TMDb), por serie. Orden de prioridad (si el
+  // presupuesto no alcanza, lo que queda entra en la corrida siguiente):
+  // en curso > por ver / dropped con algo visto > catálogo de Vitrina > completas.
   const prioridad = new Map();
   const agregar = (id, p) => { id = String(id); if (!prioridad.has(id) || prioridad.get(id) > p) prioridad.set(id, p); };
-  for (const [id, e] of Object.entries(state.syncedList.shows || {})) {
+  for (const [id, e] of Object.entries(shows)) {
     if (e.simklStatus === "watching" || e.simklStatus === "hold") agregar(id, 0);
     else if (e.simklStatus === "plantowatch") agregar(id, 1);
-    // dropped/completed con algo visto también se pueden abrir en la Vitrina;
-    // las completas cambian poco, van al final de la fila.
     else if ((e.vistos || 0) > 0) agregar(id, e.simklStatus === "completed" ? 3 : 1);
   }
-  for (const a of state.pendingActions || []) if (a.tipo === "show") agregar(a.tmdbId, 0);
+  for (const a of colaRestante) if (a.tipo === "show") agregar(a.tmdbId, 0);
   try {
     const cine = JSON.parse(await readFile(CINE_JSON_PATH, "utf-8"));
     for (const cat of cine.categories || []) {
@@ -445,9 +496,9 @@ async function buildEpisodios(state) {
 
   const orden = [...prioridad.entries()].sort((a, b) => a[1] - b[1]).map(([id]) => id);
   let llamadas = 0, nuevos = 0, refrescados = 0;
-  const shows = {};
+  const catalogos = new Map();
   for (const id of orden) {
-    let cat = soloCatalogo(previo.shows?.[id]);
+    let cat = await leerCatalogo(id);
     const refreshMs = prioridad.get(id) >= 3 ? 7 * 24 * 3600 * 1000 : EPISODES_REFRESH_MS;
     const vencido = !cat || (Date.now() - new Date(cat.fetchedAt || 0).getTime()) > refreshMs;
     if (vencido && llamadas < EPISODES_BUDGET) {
@@ -456,34 +507,59 @@ async function buildEpisodios(state) {
         const fresco = await catalogoSerie(id, cat);
         if (cat) refrescados++; else nuevos++;
         cat = fresco;
+        await writeFile(join(CATALOG_DIR, `${id}.json`), JSON.stringify(cat));
       } catch (e) {
         console.error(`✗ Simkl · catálogo de episodios tmdb-tv-${id}: ${e.message}`);
       }
     }
-    if (!cat) continue; // todavía sin catálogo (entra en una corrida próxima)
-    const s = state.syncedList.shows?.[id];
-    const ultimo = s?.ultimo ?? s?.progreso ?? null;
-    // Simkl no trae detalle por episodio de completed/dropped: se infiere.
-    let ep = s?.ep || {};
+    if (cat) catalogos.set(id, cat);
+  }
+
+  // Avance por serie (liviano). Alcance: todo lo que está en curso o por ver
+  // y todo lo que tiene algo visto -- aunque todavía no tenga catálogo, con
+  // los contadores de Simkl alcanza para "pendientes".
+  const hoy = new Date().toISOString().slice(0, 10);
+  const series = {};
+  for (const [id, s] of Object.entries(shows)) {
+    const enAlcance = s.simklStatus === "watching" || s.simklStatus === "hold" || s.simklStatus === "plantowatch" || (s.vistos || 0) > 0;
+    if (!enAlcance) continue;
+    const ultimo = s.ultimo ?? s.progreso ?? null;
+    const cat = catalogos.get(id);
+    let ep = s.ep || {};
     let epInferido = false;
-    if (!Object.keys(ep).length && (s?.vistos || 0) > 0) {
+    if (!Object.keys(ep).length && (s.vistos || 0) > 0 && cat) {
+      // Simkl no trae detalle por episodio de completed/dropped: se infiere.
       const inf = inferirEp(cat.temporadas, ultimo?.temporada != null ? ultimo : null, s.vistos, s.total);
       if (inf) { ep = inf; epInferido = true; }
     }
-    shows[id] = {
-      ...cat,
-      simklStatus: s?.simklStatus ?? null,
-      vistos: s?.vistos ?? null,
-      total: s?.total ?? null,
-      noEmitidos: s?.noEmitidos ?? null,
+    let vistos, emitidos, pendientes;
+    if (cat) {
+      const v = armarVista({ temporadas: cat.temporadas, ep }, null, hoy);
+      ({ vistos, emitidos, pendientes } = v);
+    } else {
+      vistos = s.vistos ?? 0;
+      emitidos = Math.max((s.total ?? 0) - (s.noEmitidos ?? 0), 0);
+      pendientes = Math.max(emitidos - vistos, 0);
+    }
+    series[id] = {
+      nombre: cat?.nombre ?? null,
+      simklStatus: s.simklStatus ?? null,
+      vistos, emitidos, pendientes,
       ultimo,
-      siguiente: s?.siguiente ?? null,
       ep,
       ...(epInferido ? { epInferido: true } : {}),
+      catalogo: !!cat,
     };
   }
-  console.log(`✓ Simkl · episodios: ${Object.keys(shows).length}/${orden.length} serie(s) con catálogo (${nuevos} nueva(s), ${refrescados} refrescada(s), ${llamadas} llamada(s) de detalle)`);
-  await writeFile(EPISODES_PATH, JSON.stringify({ generatedAt: new Date().toISOString(), shows }));
+
+  // Estados de Simkl por ítem (interesa/vista/descartada) para reflejar en la
+  // Vitrina lo marcado fuera de ella.
+  const estados = { tv: {}, movie: {} };
+  for (const [id, s] of Object.entries(shows)) if (s.estado) estados.tv[id] = s.estado;
+  for (const [id, m] of Object.entries(state.syncedList.movies || {})) if (m.estado) estados.movie[id] = m.estado;
+
+  await writeFile(VITRINA_PATH, JSON.stringify({ generatedAt: new Date().toISOString(), procesadas: state.procesadas, series, estados }));
+  console.log(`✓ Simkl · avance de ${Object.keys(series).length} serie(s), catálogo de ${catalogos.size}/${orden.length} (${nuevos} nueva(s), ${refrescados} refrescada(s), ${llamadas} llamada(s) de detalle)`);
 }
 
 main().catch(e => {

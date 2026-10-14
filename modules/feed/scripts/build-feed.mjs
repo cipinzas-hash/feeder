@@ -14,10 +14,11 @@
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { JSDOM } from "jsdom";
-import { Readability } from "@mozilla/readability";
 import createDOMPurify from "dompurify";
 import Parser from "rss-parser";
-import { heredarVideoteca } from "./lib/videoteca.mjs";
+import { CATEGORIAS_VIDEOTECA, heredarVideoteca } from "./lib/videoteca.mjs";
+import { extractBandcampEmbedUrl, extractSoundcloudTrackUrl, extractYoutubeId, hasListenEmbed } from "./lib/embeds.mjs";
+import { parsearArticulo } from "./lib/extract-runner.mjs";
 
 const FEEDS_PATH = new URL("../feeds.json", import.meta.url);
 const OUTPUT_PATH = new URL("../data/feed.json", import.meta.url);
@@ -46,37 +47,9 @@ const UA = "Mozilla/5.0 (compatible; AngstFeedBot/1.0; +personal use, no scrapin
 // mantenidos, no es exacta. Solo aplica si categoria === MUSIC_CATEGORIA.
 const MUSIC_CATEGORIA = "Dark scene / Música";
 const RELEASE_TITLE_RE = /\b(new (single|album|ep|track|song|video)|out now|video premiere|song premiere|premieres?\b|shares? (new )?(song|track|video)|announces? new (album|ep|single)|drops? new|unveils? new (song|track|video))\b/i;
-const LISTEN_EMBED_RE = /(youtube\.com\/(embed|watch)|youtu\.be\/|bandcamp\.com\/(track|album|embeddedplayer)|soundcloud\.com|open\.spotify\.com)/i;
 
 function looksLikeReleaseNews(title) {
   return RELEASE_TITLE_RE.test(title || "");
-}
-function hasListenEmbed(rawHtml) {
-  return LISTEN_EMBED_RE.test(rawHtml || "");
-}
-// Si el embed ya detectado es de YouTube, se puede sacar el videoId directo del
-// HTML sin gastar cuota de búsqueda — y es más preciso: es el video real que
-// puso la banda/sello, no un resultado de búsqueda aproximado.
-function extractYoutubeId(rawHtml) {
-  if (!rawHtml) return null;
-  const m = rawHtml.match(/(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  return m ? m[1] : null;
-}
-// Bandcamp NO tiene oEmbed (confirmado — lo rechaza, 404). Solo se puede reusar
-// un embed si el blog YA trae el iframe de EmbeddedPlayer en el HTML crudo; si
-// solo hay un link plano a la canción, no hay forma legítima de reconstruirlo
-// (la API real de Bandcamp es para sellos/artistas, no para esto).
-function extractBandcampEmbedUrl(rawHtml) {
-  if (!rawHtml) return null;
-  const m = rawHtml.match(/https?:\/\/bandcamp\.com\/EmbeddedPlayer\/[^"'\s<>]+/i);
-  return m ? m[0] : null;
-}
-// SoundCloud sí tiene oEmbed público real, sin auth — solo hace falta el link
-// plano a la canción, la resolución del embed pasa en musicResolved (main()).
-function extractSoundcloudTrackUrl(rawHtml) {
-  if (!rawHtml) return null;
-  const m = rawHtml.match(/https?:\/\/soundcloud\.com\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+/i);
-  return m ? m[0] : null;
 }
 async function resolveSoundcloudEmbed(trackUrl) {
   const controller = new AbortController();
@@ -119,6 +92,34 @@ async function findMusicVideo(title) {
     clearTimeout(timer);
   }
 }
+
+
+// ─── Diagnóstico de cuelgues (issue #13) ─────────────────────────────────────
+// Varias corridas de este workflow se cancelaron por timeout (25 min) sin dejar
+// pistas legibles. Se lleva la cuenta de las operaciones de red en vuelo y, si
+// el step recibe SIGTERM (timeout del workflow), se vuelcan al log con cuánto
+// llevaban abiertas -- así el siguiente cuelgue señala la fuente concreta.
+const enVuelo = new Map();
+let enVueloSeq = 0;
+async function rastreado(etiqueta, fn) {
+  const id = ++enVueloSeq;
+  enVuelo.set(id, { etiqueta, desde: Date.now() });
+  try { return await fn(); } finally { enVuelo.delete(id); }
+}
+function volcarEnVuelo(motivo) {
+  console.error(`⚠ ${motivo}: ${enVuelo.size} operación(es) en vuelo`);
+  for (const o of enVuelo.values()) console.error(`   · ${((Date.now() - o.desde) / 1000).toFixed(0)} s abierta: ${o.etiqueta}`);
+}
+// Tope duro por encima del timeout de socket de rss-parser (que es de inactividad,
+// no total): un servidor que gotea bytes nunca lo dispara.
+function conTope(promesa, ms, etiqueta) {
+  let t;
+  const tope = new Promise((_, rej) => { t = setTimeout(() => rej(new Error(`tope duro de ${ms / 1000}s: ${etiqueta}`)), ms); });
+  return Promise.race([promesa, tope]).finally(() => clearTimeout(t));
+}
+const INICIO = Date.now();
+process.on("SIGTERM", () => { volcarEnVuelo(`SIGTERM tras ${((Date.now() - INICIO) / 60000).toFixed(1)} min`); process.exit(143); });
+setInterval(() => { if (enVuelo.size && Date.now() - INICIO > 12 * 60000) volcarEnVuelo("sigue corriendo pasados 12 min"); }, 60000).unref();
 
 const parser = new Parser({
   timeout: TIMEOUT_MS,
@@ -170,7 +171,7 @@ async function mapWithConcurrency(items, limit, fn) {
 
 async function fetchFeed(source, cat) {
   try {
-    const feed = await parser.parseURL(source.url);
+    const feed = await rastreado(`feed ${source.url}`, () => conTope(parser.parseURL(source.url), 45000, source.url));
     return (feed.items || [])
       .map(item => {
         const rawForEmbedCheck = item.contentEncoded || item.content || item.summary || "";
@@ -233,20 +234,11 @@ async function extractFullText(url) {
       console.error(`✗ Extracción (${url}): HTML de ${html.length} bytes, supera el tope de ${MAX_HTML_BYTES}, se salta el parseo`);
       return { sanitized: null, hasEmbed: false, videoId: null, bandcampEmbedUrl: null, soundcloudTrackUrl: null };
     }
-    const dom = new JSDOM(html, { url });
-    const article = new Readability(dom.window.document).parse();
-    if (!article?.content) return { sanitized: null, hasEmbed: false, videoId: null, bandcampEmbedUrl: null, soundcloudTrackUrl: null };
-    // chequeo de embed ANTES de sanitize(): DOMPurify pela <iframe> por defecto,
-    // así que si se chequea después del sanitize nunca se va a detectar nada.
-    const videoId = extractYoutubeId(article.content);
-    const bandcampEmbedUrl = extractBandcampEmbedUrl(article.content);
-    return {
-      sanitized: sanitize(article.content),
-      hasEmbed: hasListenEmbed(article.content),
-      videoId,
-      bandcampEmbedUrl,
-      soundcloudTrackUrl: !videoId && !bandcampEmbedUrl ? extractSoundcloudTrackUrl(article.content) : null,
-    };
+    // JSDOM + Readability corren en un worker_thread aislado con tope duro
+    // (lib/extract-runner.mjs): si una página los cuelga, se mata el worker y
+    // se degrada a "sin texto completo" -- antes bloqueaban el event loop del
+    // job entero hasta el timeout-minutes (corridas canceladas, issue #13).
+    return await parsearArticulo(html, url, { sanitize, label: url });
   } catch (e) {
     return { sanitized: null, hasEmbed: false, videoId: null, bandcampEmbedUrl: null, soundcloudTrackUrl: null };
   } finally {
@@ -448,6 +440,12 @@ async function main() {
   };
   await mkdir(new URL("../data/", import.meta.url), { recursive: true });
   await writeFile(OUTPUT_PATH, JSON.stringify(output, null, 2));
+  // La Vitrina solo necesita Microdocumentales y Conciertos: archivo aparte, ~1% del
+  // peso de feed.json (que ronda los 5 MB y lo baja todo el que abre la Vitrina).
+  await writeFile(
+    new URL("../data/videoteca.json", import.meta.url),
+    JSON.stringify({ generatedAt: output.generatedAt, categories: categories.filter(c => CATEGORIAS_VIDEOTECA.has(c.cat)) }, null, 2),
+  );
 
   const total = finalItems.length;
   const withText = finalItems.filter(i => i.fullText).length;
