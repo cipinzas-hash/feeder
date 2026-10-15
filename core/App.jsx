@@ -57,21 +57,6 @@ const STOIC_PHRASES = [
   "el tiempo es el único activo que no se recupera.",
 ];
 
-// Exclusivo de Semana — antes vivía cerca del principio del archivo, sin
-// relación real con ningún módulo.
-const CYNICAL_SUBTITLES = [
-  "otra semana de fingir que todo está bien",
-  "sobrevive. eso es suficiente.",
-  "el caos también puede tener horario",
-  "planificar no cura la existencia, pero ayuda",
-  "otra oportunidad de decepcionarte a ti mismo (o no)",
-  "la semana no se va a organizar sola, lamentablemente",
-  "no tienes que querer hacerlo para hacerlo",
-  "lo hiciste la semana pasada. puedes volver a hacerlo.",
-  "un día a la vez, aunque el día sea un desastre",
-  "el orden es temporal. el caos, permanente. organízate igual.",
-];
-
 
 function AngstApp() {
   const [page, setPage] = useState(0);
@@ -119,7 +104,6 @@ function AngstApp() {
   const [loaded, setLoaded] = useState(false);
   const [notifGranted, setNotifGranted] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [subIdx, setSubIdx] = useState(()=>Math.floor(Math.random()*CYNICAL_SUBTITLES.length));
   const [footerIdx, setFooterIdx] = useState(()=>Math.floor(Math.random()*STOIC_PHRASES.length));
   const [exportOk, setExportOk] = useState(null);
   const [loadMsg, setLoadMsg] = useState(null);
@@ -605,7 +589,6 @@ function AngstApp() {
   useEffect(()=>{ nutriDecksRef.current = nutriDecks; }, [nutriDecks]);
   useEffect(()=>{ ejercicioDecksRef.current = ejercicioDecks; }, [ejercicioDecks]);
 
-  useEffect(()=>{const iv=setInterval(()=>setSubIdx(i=>(i+1)%CYNICAL_SUBTITLES.length),8000);return()=>clearInterval(iv);},[]);
   useEffect(()=>{const iv=setInterval(()=>setFooterIdx(i=>(i+1)%STOIC_PHRASES.length),10000);return()=>clearInterval(iv);},[]);
 
   const weekStart = addDays(BASE_DATE, weekOffset*7);
@@ -1499,8 +1482,6 @@ function AngstApp() {
         .tab{font-family:'Caveat',cursive;font-size:17px;color:#777;padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;font-weight:700;white-space:nowrap;}
         .tab.active{color:#fff;border-bottom:2px solid #fff;}
         .tab:hover{color:#bbb;}
-        .sub-bar{padding:11px 20px;background:#fff;border-bottom:1px solid #eee;}
-        .sub-text{font-family:'Caveat',cursive;font-size:20px;color:#aaa;}
         .wnav{background:#fff;border-bottom:1px solid #eee;padding:11px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
         .wnav-dates{font-family:'Caveat',cursive;font-size:20px;color:#555;flex:1;text-align:center;}
         .nbtn{background:transparent;border:1px dashed #ddd;border-radius:8px;padding:8px 14px;cursor:pointer;color:#999;font-size:22px;line-height:1;font-weight:700;transition:all 0.15s;}
@@ -1680,8 +1661,6 @@ function AngstApp() {
             </div>
           );
         })()}
-
-        <div className="sub-bar"><div className="sub-text">{CYNICAL_SUBTITLES[subIdx]}</div></div>
 
         {/* ── PLANNER ── */}
         {page===0&&(

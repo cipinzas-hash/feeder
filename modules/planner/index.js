@@ -8,7 +8,6 @@ export {
   DAY_NAMES,
   DEFAULT_COOKING_OPTS,
   DEFAULT_ASEO_OPTS,
-  CYNICAL_SUBTITLES,
   STOIC_PHRASES,
   makeEmptyDay,
   isWithKids,

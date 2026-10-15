@@ -11254,18 +11254,6 @@ Toco reintentar ahora.`);
     "considera el obst\xE1culo como el camino.",
     "el tiempo es el \xFAnico activo que no se recupera."
   ];
-  var CYNICAL_SUBTITLES = [
-    "otra semana de fingir que todo est\xE1 bien",
-    "sobrevive. eso es suficiente.",
-    "el caos tambi\xE9n puede tener horario",
-    "planificar no cura la existencia, pero ayuda",
-    "otra oportunidad de decepcionarte a ti mismo (o no)",
-    "la semana no se va a organizar sola, lamentablemente",
-    "no tienes que querer hacerlo para hacerlo",
-    "lo hiciste la semana pasada. puedes volver a hacerlo.",
-    "un d\xEDa a la vez, aunque el d\xEDa sea un desastre",
-    "el orden es temporal. el caos, permanente. organ\xEDzate igual."
-  ];
   function AngstApp() {
     const [page, setPage] = useState19(0);
     const [dayData, setDayData] = useState19({});
@@ -11309,7 +11297,6 @@ Toco reintentar ahora.`);
     const [loaded, setLoaded] = useState19(false);
     const [notifGranted, setNotifGranted] = useState19(false);
     const [saved, setSaved] = useState19(false);
-    const [subIdx, setSubIdx] = useState19(() => Math.floor(Math.random() * CYNICAL_SUBTITLES.length));
     const [footerIdx, setFooterIdx] = useState19(() => Math.floor(Math.random() * STOIC_PHRASES.length));
     const [exportOk, setExportOk] = useState19(null);
     const [loadMsg, setLoadMsg] = useState19(null);
@@ -11817,10 +11804,6 @@ Toco reintentar ahora.`);
     useEffect19(() => {
       ejercicioDecksRef.current = ejercicioDecks;
     }, [ejercicioDecks]);
-    useEffect19(() => {
-      const iv = setInterval(() => setSubIdx((i) => (i + 1) % CYNICAL_SUBTITLES.length), 8e3);
-      return () => clearInterval(iv);
-    }, []);
     useEffect19(() => {
       const iv = setInterval(() => setFooterIdx((i) => (i + 1) % STOIC_PHRASES.length), 1e4);
       return () => clearInterval(iv);
@@ -12804,8 +12787,6 @@ Toco reintentar ahora.`);
         .tab{font-family:'Caveat',cursive;font-size:17px;color:#777;padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;font-weight:700;white-space:nowrap;}
         .tab.active{color:#fff;border-bottom:2px solid #fff;}
         .tab:hover{color:#bbb;}
-        .sub-bar{padding:11px 20px;background:#fff;border-bottom:1px solid #eee;}
-        .sub-text{font-family:'Caveat',cursive;font-size:20px;color:#aaa;}
         .wnav{background:#fff;border-bottom:1px solid #eee;padding:11px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
         .wnav-dates{font-family:'Caveat',cursive;font-size:20px;color:#555;flex:1;text-align:center;}
         .nbtn{background:transparent;border:1px dashed #ddd;border-radius:8px;padding:8px 14px;cursor:pointer;color:#999;font-size:22px;line-height:1;font-weight:700;transition:all 0.15s;}
@@ -12974,7 +12955,7 @@ Toco reintentar ahora.`);
           isActive ? tab.label : tab.emoji
         );
       }));
-    })(), /* @__PURE__ */ React.createElement("div", { className: "sub-bar" }, /* @__PURE__ */ React.createElement("div", { className: "sub-text" }, CYNICAL_SUBTITLES[subIdx])), page === 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 0, padding: "8px 16px 0", background: "#fff", borderBottom: "1px solid #eee" } }, [{ k: "semana", label: "\u{1F4C5} semana" }, { k: "rutinas", label: "\u{1F331} pr\xE1cticas" }].map(({ k, label }) => /* @__PURE__ */ React.createElement("button", { key: k, onClick: () => setSemanaTab(k), style: { fontFamily: "'Caveat',cursive", fontSize: 15, padding: "6px 16px", background: "transparent", border: "none", borderBottom: semanaTab === k ? "2px solid #111" : "2px solid transparent", color: semanaTab === k ? "#111" : "#aaa", cursor: "pointer", transition: "all 0.15s" } }, label))), semanaTab === "rutinas" && /* @__PURE__ */ React.createElement(RoutinesPage_default, { routines, onSave: saveRoutines, onAddToDay: (name, emoji) => {
+    })(), page === 0 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 0, padding: "8px 16px 0", background: "#fff", borderBottom: "1px solid #eee" } }, [{ k: "semana", label: "\u{1F4C5} semana" }, { k: "rutinas", label: "\u{1F331} pr\xE1cticas" }].map(({ k, label }) => /* @__PURE__ */ React.createElement("button", { key: k, onClick: () => setSemanaTab(k), style: { fontFamily: "'Caveat',cursive", fontSize: 15, padding: "6px 16px", background: "transparent", border: "none", borderBottom: semanaTab === k ? "2px solid #111" : "2px solid transparent", color: semanaTab === k ? "#111" : "#aaa", cursor: "pointer", transition: "all 0.15s" } }, label))), semanaTab === "rutinas" && /* @__PURE__ */ React.createElement(RoutinesPage_default, { routines, onSave: saveRoutines, onAddToDay: (name, emoji) => {
       const tk = fmtFull(/* @__PURE__ */ new Date());
       const nid2 = Date.now();
       const dd = dayDataRef.current || {};
