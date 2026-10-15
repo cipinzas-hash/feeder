@@ -2946,6 +2946,19 @@ var __angst = (() => {
   function fmtUSD(n) {
     return "$" + parseFloat(n || 0).toFixed(2);
   }
+  function diasDesde(f2) {
+    if (!f2) return null;
+    const d = Math.round((Date.now() - /* @__PURE__ */ new Date(String(f2).slice(0, 10) + "T12:00:00Z")) / 864e5);
+    return Number.isFinite(d) ? Math.max(0, d) : null;
+  }
+  function precioViejo(c) {
+    if (!c || c.tcgMarket == null || c.estado === "vendida") return false;
+    const d = diasDesde(c.tcgUpdated);
+    return d == null || d > 7;
+  }
+  function marcaViejo(c, fs) {
+    return precioViejo(c) ? /* @__PURE__ */ React.createElement("div", { title: "Precio sin actualizar: la fuente del bot no tiene esta carta", style: { fontFamily: "'DM Sans',sans-serif", fontSize: fs || 9, color: "#d9a441" } }, "\u23F3 ", diasDesde(c.tcgUpdated) == null ? "sin fecha" : diasDesde(c.tcgUpdated) + "d") : null;
+  }
   function fmtPokeCLP(n) {
     return "$" + Math.round((n || 0) * USD_CLP).toLocaleString("es-CL");
   }
@@ -4061,11 +4074,11 @@ var __angst = (() => {
       marcarEdicionLocal();
       setAgotadas(m);
     }
-    function diasDesde(fecha) {
+    function diasDesde2(fecha) {
       return Math.floor((new Date(hoy) - new Date(fecha)) / 864e5);
     }
     const idsAgotadasRecientes = React.useMemo(() => new Set(
-      Object.entries(agotadas).filter(([, v]) => diasDesde(v.fecha) < REV_AGOTADA_DIAS).map(([id]) => id)
+      Object.entries(agotadas).filter(([, v]) => diasDesde2(v.fecha) < REV_AGOTADA_DIAS).map(([id]) => id)
     ), [agotadas, hoy]);
     const revCola = React.useMemo(() => revFocoId ? inv.filter((c) => c.id === revFocoId) : colaSinPrecio(inv, /* @__PURE__ */ new Set([...revSaltadas, ...idsAgotadasRecientes])), [inv, revSaltadas, idsAgotadasRecientes, revFocoId]);
     const revActual = revCola[0] || null;
@@ -4748,7 +4761,7 @@ var __angst = (() => {
           },
           c.image && /* @__PURE__ */ React.createElement("img", { src: c.image, style: { width: 40, borderRadius: 5, flexShrink: 0 }, ...bindLongPress(c.imageHd || c.image, c.cardId, zoomListCarpeta) }),
           /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, c.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)" } }, c.condicion, (c.cantidad || 1) > 1 ? ` \xB7 \xD7${c.cantidad}` : "")),
-          /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right", flexShrink: 0 } }, carpetaView === "Price Watch" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: c.precioObjetivo > 0 && c.tcgMarket != null && c.tcgMarket <= c.precioObjetivo ? "#4caf80" : "#fff" } }, c.tcgMarket != null ? fmtUSD(c.tcgMarket) : "sin precio"), c.precioObjetivo > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)" } }, "\u{1F3AF} ", fmtUSD(c.precioObjetivo))) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color } }, fmtUSD(c.precioVentaUSD)), c.tcgMarket && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)" } }, fmtUSD(c.tcgMarket))))
+          /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right", flexShrink: 0 } }, carpetaView === "Price Watch" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color: c.precioObjetivo > 0 && c.tcgMarket != null && c.tcgMarket <= c.precioObjetivo ? "#4caf80" : "#fff" } }, c.tcgMarket != null ? fmtUSD(c.tcgMarket) : "sin precio"), c.precioObjetivo > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)" } }, "\u{1F3AF} ", fmtUSD(c.precioObjetivo)), marcaViejo(c, 10)) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, color } }, fmtUSD(c.precioVentaUSD)), c.tcgMarket && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)" } }, fmtUSD(c.tcgMarket)), marcaViejo(c, 10)))
         );
       })) : /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: gridCols, gap: cvView === "grid_small" ? 3 : 5 } }, cartasCarpeta.map((c) => {
         const up = c.tcgMarket && c.precioVentaUSD;
@@ -4769,7 +4782,7 @@ var __angst = (() => {
           },
           c.image ? /* @__PURE__ */ React.createElement("img", { src: c.image, alt: c.name, style: { width: "100%", display: "block" } }) : /* @__PURE__ */ React.createElement("div", { style: { aspectRatio: "2/3", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 } }, "\u{1F0CF}"),
           (c.cantidad || 1) > 1 && /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: 2, left: 2, background: "rgba(0,0,0,0.75)", borderRadius: 4, padding: "1px 5px", fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#fff" } }, "\xD7", c.cantidad),
-          /* @__PURE__ */ React.createElement("div", { style: { background: "rgba(0,0,0,0.75)", padding: isSmall ? "2px 3px" : "4px 5px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: isSmall ? 13 : 15, fontWeight: 700, color, textAlign: "center" } }, carpetaView === "Price Watch" && c.tcgMarket != null ? fmtUSD(c.tcgMarket) : fmtUSD(c.precioVentaUSD)), !isSmall && (carpetaView === "Price Watch" ? c.precioObjetivo > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: c.tcgMarket != null && c.tcgMarket <= c.precioObjetivo ? "#4caf80" : "rgba(255,255,255,0.4)", textAlign: "center" } }, "\u{1F3AF} ", fmtUSD(c.precioObjetivo)) : c.tcgMarket && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.4)", textAlign: "center" } }, fmtUSD(c.tcgMarket))))
+          /* @__PURE__ */ React.createElement("div", { style: { background: "rgba(0,0,0,0.75)", padding: isSmall ? "2px 3px" : "4px 5px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: isSmall ? 13 : 15, fontWeight: 700, color, textAlign: "center" } }, carpetaView === "Price Watch" && c.tcgMarket != null ? fmtUSD(c.tcgMarket) : fmtUSD(c.precioVentaUSD)), !isSmall && (carpetaView === "Price Watch" ? c.precioObjetivo > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: c.tcgMarket != null && c.tcgMarket <= c.precioObjetivo ? "#4caf80" : "rgba(255,255,255,0.4)", textAlign: "center" } }, "\u{1F3AF} ", fmtUSD(c.precioObjetivo)) : c.tcgMarket && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.4)", textAlign: "center" } }, fmtUSD(c.tcgMarket))), !isSmall && precioViejo(c) && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center" } }, marcaViejo(c, 9)))
         );
       })), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
     }

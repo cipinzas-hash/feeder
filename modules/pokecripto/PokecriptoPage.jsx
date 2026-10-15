@@ -128,6 +128,11 @@ function getEstadoDark(entry){
 }
 
 function fmtUSD(n){ return "$"+parseFloat(n||0).toFixed(2); }
+// Precio sin actualizar (15-oct-2026): el bot solo usa tcgpricelookup; las cartas que esa fuente no tiene conservan el
+// precio de cuando se agregaron. Pasados 7 días sin actualizarse se marcan con ⏳ y los días que lleva ese precio.
+function diasDesde(f){ if(!f) return null; const d=Math.round((Date.now()-new Date(String(f).slice(0,10)+"T12:00:00Z"))/86400000); return Number.isFinite(d)?Math.max(0,d):null; }
+function precioViejo(c){ if(!c||c.tcgMarket==null||c.estado==="vendida") return false; const d=diasDesde(c.tcgUpdated); return d==null||d>7; }
+function marcaViejo(c,fs){ return precioViejo(c)?<div title="Precio sin actualizar: la fuente del bot no tiene esta carta" style={{fontFamily:"'DM Sans',sans-serif",fontSize:fs||9,color:"#d9a441"}}>⏳ {diasDesde(c.tcgUpdated)==null?"sin fecha":diasDesde(c.tcgUpdated)+"d"}</div>:null; }
 function fmtPokeCLP(n){ return "$"+Math.round((n||0)*USD_CLP).toLocaleString("es-CL"); }
 function fmtDateShort(dk){ if(!dk) return ""; const [,m,d]=dk.split("-"); return `${d}/${m}`; }
 
@@ -2156,10 +2161,12 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                     ?<>
                       <div style={{fontFamily:"'Caveat',cursive",fontSize:18,fontWeight:700,color:(c.precioObjetivo>0&&c.tcgMarket!=null&&c.tcgMarket<=c.precioObjetivo)?"#4caf80":"#fff"}}>{c.tcgMarket!=null?fmtUSD(c.tcgMarket):"sin precio"}</div>
                       {c.precioObjetivo>0&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.4)"}}>🎯 {fmtUSD(c.precioObjetivo)}</div>}
+                      {marcaViejo(c,10)}
                     </>
                     :<>
                       <div style={{fontFamily:"'Caveat',cursive",fontSize:18,fontWeight:700,color}}>{fmtUSD(c.precioVentaUSD)}</div>
                       {c.tcgMarket&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.3)"}}>{fmtUSD(c.tcgMarket)}</div>}
+                      {marcaViejo(c,10)}
                     </>}
                 </div>
               </div>
@@ -2184,6 +2191,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                     {!isSmall&&(carpetaView==="Price Watch"
                       ?(c.precioObjetivo>0&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:(c.tcgMarket!=null&&c.tcgMarket<=c.precioObjetivo)?"#4caf80":"rgba(255,255,255,0.4)",textAlign:"center"}}>🎯 {fmtUSD(c.precioObjetivo)}</div>)
                       :(c.tcgMarket&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.4)",textAlign:"center"}}>{fmtUSD(c.tcgMarket)}</div>))}
+                    {!isSmall&&precioViejo(c)&&<div style={{textAlign:"center"}}>{marcaViejo(c,9)}</div>}
                   </div>
                 </div>
               );
