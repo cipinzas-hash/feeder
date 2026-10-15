@@ -924,7 +924,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // (tcgOverride), pide por tcgId si la carta ya lo tiene y marca la fuente del snapshot. Antes tenía su propia copia
   // que ignoraba overrides y tcgId, y podía dar un precio distinto al del bot para la misma carta.
   async function refreshPrecioSilent(carta){
-    const r=await refreshPrecioCompartido(carta,apiKey,true,{usarTcgId:true});
+    // pokemontcg.io solo para la PRIMERA vez (carta recién agregada); si ya tiene precios de tcgpricelookup se refresca solo ahí
+    const soloTcg=!!carta.tcgId||(carta.priceHistory||[]).some(h=>h.src==="tpl");
+    const r=await refreshPrecioCompartido(carta,apiKey,true,{usarTcgId:true,soloTcg});
     if(!r.market) return null;
     const newHist=addSnapshot(carta.priceHistory,r.market,r.low,r.high,hoy,r.src);
     saveInventario(prev=>(Array.isArray(prev)?prev:[]).map(c=>c.id===carta.id

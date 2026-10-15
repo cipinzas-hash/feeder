@@ -57,8 +57,10 @@ t("lotes: la carta que ya tenía tcgId se actualiza por lote (20 por consulta) y
   assert.ok(log().some(l => /^BATCH \d+$/.test(l))); assert.equal(por.old.tcgUpdated, new Date().toISOString().slice(0, 10));
   assert.equal(por.old.priceHistory.length, 2); assert.equal(por.old.priceHistory[0].market, 1);
 });
-t("rotación: lo que ningún set trae se precia por pokemontcg.io y queda marcado con src ptcg", () => {
-  assert.equal(por.g1.tcgMarket, 0.4); assert.equal(por.g1.priceHistory.at(-1).src, "ptcg");
+t("una sola fuente: el bot nunca consulta pokemontcg.io; lo que tcgpricelookup no tiene queda sin tocar y pasa al final de la cola", () => {
+  assert.ok(!log().some(l => l.startsWith("PTCG")));
+  assert.equal(por.g1.tcgMarket, null); assert.equal(por.g1.tcgIntento, new Date().toISOString().slice(0, 10));
+  for (const x of res) for (const h of x.priceHistory) if (h.date === new Date().toISOString().slice(0, 10)) assert.equal(h.src, "tpl");
 });
 t("la vendida no se toca y no gasta consultas", () => { assert.equal(por.v1.tcgMarket, null); });
 t("resumen de corrida en pokecripto-estado.json", () => {

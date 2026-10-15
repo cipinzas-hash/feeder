@@ -36,7 +36,7 @@ t("cosecha: UNA búsqueda 'Solo 5' deja tcgId y precio a las dos cartas (mismo n
   assert.equal(a1.inv.s1.tcgId, "t-sol-5"); assert.equal(a1.inv.s2.tcgId, "t-sol2-5");
   assert.equal(a1.inv.s1.priceHistory.at(-1).src, "tpl"); assert.equal(a1.inv.s2.tcgMarket, 9);
   assert.equal(a1.log.filter(l => l === "SEARCH q=Solo 5 page=1").length, 1);
-  assert.equal(a1.estado.ultimaCorrida.rotacion.idsCosechadosDeOtras >= 1, true);
+  assert.equal(a1.estado.ultimaCorrida.busqueda.idsCosechadosDeOtras >= 1, true);
 });
 t("sin match en 3 sets seguidos: el descubrimiento por set se apaga 7 días y queda el diagnóstico legible en el estado", () => {
   assert.ok(a1.estado.descubrimientoSetApagadoHasta > hoy);
@@ -50,9 +50,9 @@ t("2ª corrida: no repite búsquedas por set mientras está apagado", () => {
 // B) cupo diario ya gastado por otra corrida: cero consultas a tcgpricelookup, sigue por pokemontcg.io
 const runB = escenario([c("g1", "Zzz", "1", "Gamma", "gam", { cardId: "gam-1" })], { estado: { cupoDia: { fecha: hoy, usadas: 85 } } });
 const b = runB();
-t("cupo diario compartido: si ya se usaron 85 hoy no hace ninguna consulta a tcgpricelookup y el resto sigue por pokemontcg.io", () => {
-  assert.equal(b.log.filter(l => /^(SEARCH|BATCH)/.test(l)).length, 0);
-  assert.equal(b.inv.g1.tcgMarket, 0.4); assert.equal(b.inv.g1.priceHistory.at(-1).src, "ptcg");
+t("cupo diario compartido: si ya se usaron 85 hoy no hace ninguna consulta (ni a pokemontcg.io) y no marca como fallidas a las que no pudo intentar", () => {
+  assert.equal(b.log.length, 0);
+  assert.equal(b.inv.g1.tcgMarket, null); assert.equal(b.inv.g1.tcgIntento, undefined);
 });
 
 // C) la API dice que quedan 5 consultas reales: tras la primera, el bot se detiene
@@ -62,11 +62,18 @@ t("cupo real bajo (cabecera = 5): se detiene después de la primera consulta y l
   assert.equal(cc.log.filter(l => /^(SEARCH|BATCH)/.test(l)).length, 1);
   assert.equal(cc.estado.ultimaCorrida.cupoRestanteApi, 5);
 });
-// D) sin cupo de tcgpricelookup: la carta que pokemontcg.io tampoco puede preciar se aparta de la cola (ptcgIntento), no se atasca
-const runD = escenario([c("n1", "NadaEnNingunLado", "1", "Nop", "nop"), c("g1", "Zzz", "1", "Gamma", "gam", { cardId: "gam-1" })], { estado: { cupoDia: { fecha: hoy, usadas: 85 } } });
+// D) con cupo para UNA sola búsqueda: va primero la carta recién agregada (sin ningún snapshot de tcgpricelookup), no la más vieja
+const tplViejo = [{ date: "2025-01-01", market: 1, src: "tpl" }];
+const runD = escenario([
+  c("viejo", "Bar", "2", "Alpha", "alp", { priceHistory: tplViejo, tcgUpdated: "2025-01-01", tcgMarket: 1 }),
+  c("nuevo", "Foo", "1", "Alpha", "alp", { priceHistory: [{ date: hoy, market: 0.2, src: "ptcg" }], tcgUpdated: hoy, tcgMarket: 0.2 }),
+], { estado: { cupoDia: { fecha: hoy, usadas: 84 } } });
 const d = runD();
-t("sin cupo: la carta sin precio queda con ptcgIntento (no con tcgIntento) y la que sí tiene precio sigue su camino", () => {
-  assert.equal(d.inv.n1.ptcgIntento, hoy); assert.equal(d.inv.n1.tcgIntento, undefined); assert.equal(d.inv.g1.tcgMarket, 0.4);
+t("cola: la alta reciente (precio de pokemontcg.io) se corrige antes que la carta más vieja; su historial queda con la fuente del bot", () => {
+  assert.equal(d.inv.nuevo.tcgId, "t-alp-1"); assert.equal(d.inv.nuevo.tcgMarket, 1.5);
+  assert.equal(d.inv.nuevo.priceHistory.at(-1).src, "tpl"); assert.equal(d.inv.nuevo.priceHistory.at(-1).market, 1.5); // el de hoy (ptcg) se reemplaza por el del bot
+  assert.equal(d.inv.viejo.tcgId, undefined);
+  assert.ok(!d.log.some(l => l.startsWith("PTCG")));
 });
 const runE = escenario([c("a1", "Foo", "1", "Alpha", "alp"), c("a2", "Bar", "2", "Alpha", "alp")], { env: { POKECRIPTO_DESCUBRIMIENTO_TOPE: "0" } });
 const e = runE();

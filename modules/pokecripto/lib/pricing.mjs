@@ -244,7 +244,9 @@ export async function refreshPrecio(carta, apiKey, permitirFallback = true, opts
     if (p?.market) { market = p.market; low = p.low || null; high = p.high || null; fuente = "tcgpricelookup(id)"; tcgId = carta.tcgId; src = "tpl"; }
     if (market) return { market, low, high, fuente, tcgId, usoTcg, src };
   }
-  if (carta.cardId) {
+  // soloTcg (15-oct-2026): pokemontcg.io solo da el PRIMER precio de una carta recién agregada. Una carta que ya tiene
+  // snapshots de tcgpricelookup se refresca solo en esa fuente, para no volver a mezclar criterios en su historial.
+  if (carta.cardId && !opts.soloTcg) {
     try {
       const data = await fetchPoke(`${POKE_BASE}/cards/${carta.cardId}`);
       const pp = getPrimaryPrice(data.data);

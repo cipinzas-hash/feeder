@@ -2647,7 +2647,7 @@ var __angst = (() => {
       }
       if (market) return { market, low, high, fuente, tcgId, usoTcg, src };
     }
-    if (carta.cardId) {
+    if (carta.cardId && !opts.soloTcg) {
       try {
         const data = await fetchPoke(`${POKE_BASE}/cards/${carta.cardId}`);
         const pp = getPrimaryPrice(data.data);
@@ -3681,7 +3681,8 @@ var __angst = (() => {
       });
     }, []);
     async function refreshPrecioSilent(carta) {
-      const r = await refreshPrecio(carta, apiKey, true, { usarTcgId: true });
+      const soloTcg = !!carta.tcgId || (carta.priceHistory || []).some((h) => h.src === "tpl");
+      const r = await refreshPrecio(carta, apiKey, true, { usarTcgId: true, soloTcg });
       if (!r.market) return null;
       const newHist = addSnapshot(carta.priceHistory, r.market, r.low, r.high, hoy, r.src);
       saveInventario((prev) => (Array.isArray(prev) ? prev : []).map((c) => c.id === carta.id ? { ...c, tcgMarket: r.market, tcgLow: r.low, tcgHigh: r.high, tcgUpdated: hoy, priceHistory: newHist, ...r.tcgId && r.tcgId !== c.tcgId ? { tcgId: r.tcgId } : {} } : c));

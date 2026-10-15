@@ -15,16 +15,19 @@
 //      precio). Cada carta emparejada recibe su tcgId y, si la API trae precio, su snapshot de una vez.
 //      Presupuesto = lo que sobra del cupo diario después de los lotes (ver presupuestoDescubrimiento).
 //   2. LOTES: todas las cartas con tcgId, de 20 en 20, Price Watch primero y luego las más viejas.
-//   3. ROTACIÓN: las cartas que siguen sin precio (sin tcgId, o sin precio en la API) se buscan una por una:
-//      pokemontcg.io (gratis, 20 req/min) primero y tcgpricelookup como respaldo mientras quede cupo.
-// Cada snapshot guarda `src`: "tpl" (tcgpricelookup, Near Mint raw) o "ptcg" (pokemontcg.io). El cliente solo
-// compara snapshots de la misma fuente, así una carta que cambia de fuente no muestra saltos falsos.
-//
+//   3. BÚSQUEDA INDIVIDUAL: las cartas que aún no tienen tcgId se buscan una por una en la misma API (nombre + número),
+//      mientras quede cupo. Cada búsqueda da el tcgId y el precio, y cosecha los ids de otras cartas del inventario que
+//      aparezcan en los mismos resultados. Las que se registraron hace poco y aún no tienen ningún precio de esta
+//      fuente van primero, para que su precio se corrija en el snapshot siguiente al de su alta.
+// UNA SOLA FUENTE (decisión del 15-oct-2026): el bot guarda SOLO precios de tcgpricelookup.com (src "tpl", la fuente
+// de las 100 consultas diarias). pokemontcg.io ya no interviene acá: lo usa el cliente una vez, al agregar una carta,
+// para darle su primer precio; el primer snapshot del bot lo corrige y desde entonces el historial es de la misma fuente.
+// Antes el bot alternaba entre las dos y las cartas mostraban saltos falsos (0,06 -> 0,26 -> 0,06).
 // Robustez: se guarda a disco cada GUARDAR_CADA cartas y ante SIGTERM (timeout del workflow), y el resumen de la
 // corrida queda en pokecripto-estado.json (los logs completos de Actions no son legibles desde fuera).
 
 import { readFileSync, writeFileSync } from "node:fs";
-import { refreshPrecio, fetchTCGBatch, addSnapshot } from "../../pokecripto/lib/pricing.mjs";
+import { fetchTCGBatch, addSnapshot } from "../../pokecripto/lib/pricing.mjs";
 import { aplicarOverrides, normalizarOverridesRemotos, fusionarPending, prioridadCarta } from "../../pokecripto/lib/review.mjs";
 import { fetchTCGPagina, asignarTcgIds, agruparPorSet, paginasNecesarias, debeSaltarse, actualizarEstadoSet, presupuestoDescubrimiento, sumarDias, cupoRestante, diagnosticarSet, POR_PAGINA } from "../../pokecripto/lib/discovery.mjs";
 
@@ -36,9 +39,6 @@ const MERGED_PATH = process.env.POKECRIPTO_MERGED_PATH || null;   // ids fusiona
 const TCG_API_KEY = process.env.TCG_API_KEY || null;
 
 // ── Presupuestos ────────────────────────────────────────────────────────
-// Rotación individual: ~3,2 s por carta (throttle de pokemontcg.io sin key: 20 req/min) => 100 cartas ≈ 6 min.
-// A medida que las cartas pasan a lotes esta fase se vacía sola.
-const CARTAS_POR_CORRIDA = 100;
 // Tope propio de consultas diarias a tcgpricelookup.com (cupo real del plan Free: 100). 85 deja 15 para el uso
 // manual del cliente, que ahora es barato (el buscador ya no consulta 24 cartas por búsqueda).
 const RESERVA_TCG_DIARIA = 85;
@@ -52,7 +52,6 @@ const BATCH_PAUSA_MS = Number(process.env.POKECRIPTO_PAUSA_MS ?? 500);   // las 
 const DESCUBRIMIENTO_TOPE = Number(process.env.POKECRIPTO_DESCUBRIMIENTO_TOPE ?? 0);
 const DESCUBRIMIENTO_PAGINAS = 4; // páginas máximas por set (4 x 100 = 400 cartas)
 const RESERVA_INDIVIDUAL = 8;     // consultas que se guardan para búsquedas carta por carta
-const POKE_THROTTLE_MS = Number(process.env.POKECRIPTO_THROTTLE_MS ?? 3200);
 const GUARDAR_CADA = 25;
 const CUPO_MANUAL = 10;           // si la API dice que quedan <=10 consultas reales, el bot se detiene (son para el uso manual)
 const SIN_MATCH_PARA_APAGAR = 3;  // sets consecutivos sin ni un match => se apaga el descubrimiento esta corrida
@@ -111,11 +110,7 @@ async function main() {
 
   // Antigüedad = lo más reciente entre el último precio y el último INTENTO (tcgIntento): una carta que falla no se
   // queda al frente de la cola gastando cupo todos los días. Price Watch siempre primero.
-  // ptcgIntento (14-oct-2026): una carta que pokemontcg.io no puede preciar y para la que no había cupo de tcgpricelookup
-  // quedaba SIEMPRE al frente de la cola (nunca se marcaba), y 68 de las 100 plazas diarias se iban en reintentar lo
-  // mismo. Se marca aparte y solo cuenta para la antigüedad mientras NO haya cupo: con cupo, esa carta sí merece su
-  // búsqueda en tcgpricelookup y se ordena como siempre.
-  const claveEdad = c => [c.tcgUpdated, c.tcgIntento, hayCupo() ? null : c.ptcgIntento].filter(Boolean).map(x => String(x).slice(0, 10)).sort().pop() || "2000-01-01";
+  const claveEdad = c => [c.tcgUpdated, c.tcgIntento].filter(Boolean).map(x => String(x).slice(0, 10)).sort().pop() || "2000-01-01";
   const porPrioridadYEdad = (a, b) => prioridadCarta(a) - prioridadCarta(b) || claveEdad(a).localeCompare(claveEdad(b));
 
   const aplicado = () => base.map(c => (parches.has(c.id) || actualizadas.has(c.id)) ? { ...c, ...(parches.get(c.id) || {}), ...(actualizadas.get(c.id) || {}) } : c);
@@ -225,64 +220,48 @@ async function main() {
   resumen.lotes = { llamadas: batchLlamadas, snapshots: batchOk, sinPrecio: batchSinPrecio, pendientesPorTope: Math.max(0, conTcgId.length - batchOk - batchSinPrecio) };
   guardar("lotes");
 
-  // ── 3. ROTACIÓN individual: lo que sigue sin precio de hoy ──────────────
-  // Para una carta SIN tcgId el orden es: (1) búsqueda en tcgpricelookup "nombre número" mientras quede cupo --da el
-  // tcgId (la carta pasa a lotes de 20 desde mañana) y el precio, y de paso se cosechan los ids de OTRAS cartas del
-  // inventario que aparezcan en los mismos 100 resultados; (2) pokemontcg.io (gratis) si eso no resolvió la carta.
-  // Antes el orden era al revés: lo que pokemontcg.io lograba preciar nunca recibía tcgId y se quedaba para siempre en
-  // la rotación individual (un ciclo de ~13 días).
-  const candidatas = activas
-    .filter(c => (c.cardId || c.name) && !actualizadas.has(c.id))
-    .sort(porPrioridadYEdad)
-    .slice(0, CARTAS_POR_CORRIDA);
-  console.log(`Procesando ${candidatas.length} carta(s) por búsqueda individual (de ${activas.length} activas)...`);
-  let ultimoPtcg = 0, cosechadas = 0, busquedasTcg = 0;
-  const esperarPtcg = async () => { const falta = ultimoPtcg + POKE_THROTTLE_MS - Date.now(); if (falta > 0) await sleep(falta); ultimoPtcg = Date.now(); };
+  // ── 3. BÚSQUEDA individual (solo tcgpricelookup): cartas sin tcgId ───────
+  // Primero Price Watch; luego las que NO tienen ningún snapshot de esta fuente (altas recientes: su precio vino de
+  // pokemontcg.io y debe corregirse cuanto antes); luego las menos recientes.
+  const sinTpl = c => !(c.priceHistory || []).some(h => h.src === "tpl");
+  const porPrioridadSinTplEdad = (a, b) => prioridadCarta(a) - prioridadCarta(b) || (sinTpl(b) - sinTpl(a)) || claveEdad(a).localeCompare(claveEdad(b));
+  const candidatas = activas.filter(c => c.name && !tcgIdDe(c) && !actualizadas.has(c.id)).sort(porPrioridadSinTplEdad);
+  console.log(`Búsqueda individual: ${candidatas.length} carta(s) sin tcgId; cupo para ${TCG_API_KEY ? Math.max(0, RESERVA_TCG_DIARIA - tcgUsadas) : 0} consulta(s) más`);
+  let cosechadas = 0, busquedasTcg = 0, resueltas = 0, sinResolver = 0;
   for (let i = 0; i < candidatas.length; i++) {
+    if (!TCG_API_KEY || !hayCupo()) break;
     const carta = candidatas[i];
-    if (actualizadas.has(carta.id)) continue; // ya resuelta como cosecha de una búsqueda anterior
+    if (actualizadas.has(carta.id) || tcgIdDe(carta)) continue; // ya resuelta como cosecha de una búsqueda anterior
+    const ov = carta.tcgOverride;
+    const q = ov ? `${ov.name} ${ov.number}` : (carta.number ? `${carta.name} ${carta.number}` : carta.name);
     try {
-      const sinId = !tcgIdDe(carta);
-      let busquedaTcgHecha = false;
-      if (sinId && TCG_API_KEY && hayCupo()) {
-        const ov = carta.tcgOverride;
-        const q = ov ? `${ov.name} ${ov.number}` : (carta.number ? `${carta.name} ${carta.number}` : carta.name);
-        const r = await fetchTCGPagina(q, TCG_API_KEY, 1);
-        tcgUsadas++; busquedasTcg++; busquedaTcgHecha = r.ok; registrarCupo(r.rate);
-        if (r.ok) {
-          for (const [id, m] of asignarTcgIds(activas.filter(c => !tcgIdDe(c)), r.cards)) {
-            parches.set(id, { tcgId: m.tcgId });
-            if (id !== carta.id) cosechadas++;
-            if (m.market && !actualizadas.has(id)) { actualizadas.set(id, snapshotDe(porId.get(id), m, "tpl")); okCount++; }
-          }
-          if (actualizadas.has(carta.id)) { console.log(`✓ (${i + 1}/${candidatas.length}) ${carta.name}: $${actualizadas.get(carta.id).tcgMarket} (tcgpricelookup, tcgId guardado)`); continue; }
-        } else console.log(`✗ (${i + 1}/${candidatas.length}) ${carta.name}: búsqueda tcgpricelookup ${r.error}`);
+      const r = await fetchTCGPagina(q, TCG_API_KEY, 1);
+      tcgUsadas++; busquedasTcg++; registrarCupo(r.rate);
+      if (!r.ok) {
+        console.log(`✗ (${i + 1}/${candidatas.length}) ${carta.name}: búsqueda ${r.error}`);
+        if (r.status === 429) { restanteReal = 0; break; } // cupo agotado de verdad: nada más por hoy
+        failCount++; continue;
       }
-      await esperarPtcg();
-      const r = await refreshPrecio(carta, TCG_API_KEY, false); // el respaldo de tcgpricelookup ya se intentó arriba
-      if (r.market == null) {
-        console.log(`✗ (${i + 1}/${candidatas.length}) ${carta.name}: sin precio de ninguna fuente`);
-        failCount++;
-        // intentada de verdad (búsqueda hecha, o tiene tcgId, o no hay key): pasa al final de la cola. Si solo falta cupo, se pospone.
-        if (busquedaTcgHecha || !sinId || !TCG_API_KEY) actualizadas.set(carta.id, { tcgIntento: hoy });
-        else actualizadas.set(carta.id, { ptcgIntento: hoy }); // sin cupo de tcgpricelookup: solo se aparta de la cola mientras siga sin cupo
-      } else {
-        console.log(`✓ (${i + 1}/${candidatas.length}) ${carta.name}: $${r.market} (${r.fuente})`);
-        actualizadas.set(carta.id, snapshotDe(carta, r, r.src));
-        okCount++;
+      for (const [id, m] of asignarTcgIds(activas.filter(c => !tcgIdDe(c)), r.cards)) {
+        parches.set(id, { tcgId: m.tcgId });
+        if (id !== carta.id) cosechadas++;
+        if (m.market && !actualizadas.has(id)) { actualizadas.set(id, snapshotDe(porId.get(id), m, "tpl")); okCount++; }
       }
+      if (actualizadas.has(carta.id)) { resueltas++; console.log(`✓ (${i + 1}/${candidatas.length}) ${carta.name}: $${actualizadas.get(carta.id).tcgMarket}`); }
+      else if (tcgIdDe(carta)) { resueltas++; console.log(`✓ (${i + 1}/${candidatas.length}) ${carta.name}: tcgId guardado, sin precio en la API (entra a los lotes desde mañana)`); }
+      else { sinResolver++; failCount++; actualizadas.set(carta.id, { tcgIntento: hoy }); console.log(`✗ (${i + 1}/${candidatas.length}) ${carta.name}: no apareció en la API; pasa al final de la cola`); }
     } catch (e) {
       console.error(`✗ (${i + 1}/${candidatas.length}) ${carta.name}: ${e.message}`);
       failCount++;
     }
-    if ((i + 1) % GUARDAR_CADA === 0) guardar("rotacion");
+    if (busquedasTcg % GUARDAR_CADA === 0) guardar("busqueda");
+    await sleep(BATCH_PAUSA_MS);
   }
-
-  resumen.rotacion = { candidatas: candidatas.length, busquedasTcg, idsCosechadosDeOtras: cosechadas };
+  resumen.busqueda = { candidatas: candidatas.length, consultas: busquedasTcg, resueltas, sinResolver, idsCosechadosDeOtras: cosechadas };
   resumen.snapshots = okCount; resumen.fallos = failCount; resumen.consultasTcg = tcgUsadas;
   guardar("final");
   const fin = aplicado().filter(c => c.estado !== "vendida");
-  console.log(`✓ ${okCount} snapshot(s) nuevo(s), ${failCount} fallo(s), ${tcgUsadas} consulta(s) a tcgpricelookup.com (${descLlamadas} descubrimiento, ${batchLlamadas} por lote); cartas con tcgId: ${fin.filter(c => c.tcgId).length} de ${fin.length}; sin precio: ${fin.filter(c => !c.tcgMarket).length}`);
+  console.log(`✓ ${okCount} snapshot(s) nuevo(s), ${failCount} fallo(s), ${tcgUsadas} consulta(s) a tcgpricelookup.com (${descLlamadas} descubrimiento, ${batchLlamadas} por lote, ${busquedasTcg} individuales); cartas con tcgId: ${fin.filter(c => c.tcgId).length} de ${fin.length}; sin precio: ${fin.filter(c => !c.tcgMarket).length}`);
 }
 
 main().catch(e => { console.error("✗ Error fatal:", e); process.exit(1); });

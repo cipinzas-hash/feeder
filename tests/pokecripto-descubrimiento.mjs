@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { cupoRestante, diagnosticarSet, emparejarTcgId, asignarTcgIds, agruparPorSet, paginasNecesarias, debeSaltarse, actualizarEstadoSet, presupuestoDescubrimiento, sumarDias } from "../modules/pokecripto/lib/discovery.mjs";
 import { fusionarPending, pendingRestante, unirHistorial, mergePreciosBot, prioridadCarta } from "../modules/pokecripto/lib/review.mjs";
-import { addSnapshot, fuenteCompatible } from "../modules/pokecripto/lib/pricing.mjs";
+import { addSnapshot, fuenteCompatible, refreshPrecio } from "../modules/pokecripto/lib/pricing.mjs";
 
 let n = 0;
 const t = (nombre, fn) => { fn(); n++; console.log("✓", nombre); };
@@ -93,4 +93,16 @@ t("diagnosticarSet: resume la respuesta y explica el emparejamiento de las prime
   assert.equal(d.resultados, 1); assert.equal(d.cartas[0].emparejada, true); assert.equal(d.setsEnRespuesta.length, 1);
 });
 t("prioridadCarta: Price Watch primero", () => { assert.ok(prioridadCarta({ carpeta: "Price Watch" }) < prioridadCarta({ carpeta: "MLP" })); });
+// refreshPrecio con soloTcg no toca pokemontcg.io (se prueba con un fetch falso que registra los hosts)
+{
+  const hosts = [], orig = globalThis.fetch;
+  globalThis.fetch = async url => { hosts.push(new URL(url).hostname); return { ok: false, status: 404, headers: { get: () => null, forEach() {} }, json: async () => ({}), text: async () => "" }; };
+  await refreshPrecio({ id: "x", cardId: "alp-1", name: "Foo", number: "1", set: "Alpha", setCode: "alp" }, "K", true, { soloTcg: true });
+  const soloTcg = [...hosts]; hosts.length = 0;
+  await refreshPrecio({ id: "x", cardId: "alp-1", name: "Foo", number: "1", set: "Alpha", setCode: "alp" }, "K", true, {});
+  globalThis.fetch = orig;
+  t("refreshPrecio soloTcg: no consulta pokemontcg.io; sin la opción sí (primer precio de una carta nueva)", () => {
+    assert.ok(!soloTcg.includes("api.pokemontcg.io")); assert.ok(hosts.includes("api.pokemontcg.io"));
+  });
+}
 console.log(`\n${n} pruebas en verde`);
