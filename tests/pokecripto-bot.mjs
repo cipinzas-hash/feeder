@@ -27,7 +27,7 @@ function correr() {
     cwd: process.cwd(), encoding: "utf-8",
     env: { ...process.env, TCG_API_KEY: "K", POKECRIPTO_INVENTARIO_PATH: P("inv.json"), POKECRIPTO_PENDING_PATH: P("pending.json"),
       POKECRIPTO_OVERRIDES_PATH: P("ov.json"), POKECRIPTO_ESTADO_PATH: P("estado.json"), POKECRIPTO_MERGED_PATH: P("merged.json"),
-      POKECRIPTO_THROTTLE_MS: "0", POKECRIPTO_PAUSA_MS: "0", MOCK_LOG: P("log.txt") },
+      POKECRIPTO_DESCUBRIMIENTO_TOPE: "40", POKECRIPTO_THROTTLE_MS: "0", POKECRIPTO_PAUSA_MS: "0", MOCK_LOG: P("log.txt") },
   });
   assert.equal(r.status, 0, r.stdout + r.stderr);
   return r.stdout;

@@ -20,7 +20,7 @@ function escenario(inv, { env = {}, estado = null } = {}) {
     const r = spawnSync("node", ["--import", "./tests/helpers/mock-api.mjs", "modules/feed/scripts/build-pokecripto.mjs"], {
       cwd: process.cwd(), encoding: "utf-8",
       env: { ...process.env, TCG_API_KEY: "K", POKECRIPTO_INVENTARIO_PATH: P("inv.json"), POKECRIPTO_PENDING_PATH: P("pending.json"), POKECRIPTO_OVERRIDES_PATH: P("ov.json"),
-        POKECRIPTO_ESTADO_PATH: P("estado.json"), POKECRIPTO_MERGED_PATH: P("merged.json"), POKECRIPTO_THROTTLE_MS: "0", POKECRIPTO_PAUSA_MS: "0", MOCK_LOG: P("log.txt"), ...env },
+        POKECRIPTO_ESTADO_PATH: P("estado.json"), POKECRIPTO_MERGED_PATH: P("merged.json"), POKECRIPTO_DESCUBRIMIENTO_TOPE: "40", POKECRIPTO_THROTTLE_MS: "0", POKECRIPTO_PAUSA_MS: "0", MOCK_LOG: P("log.txt"), ...env },
     });
     assert.equal(r.status, 0, r.stdout + r.stderr);
     return { out: r.stdout, log: readFileSync(P("log.txt"), "utf-8").trim().split("\n").filter(Boolean), inv: Object.fromEntries(JSON.parse(readFileSync(P("inv.json"), "utf-8")).map(x => [x.id, x])), estado: JSON.parse(readFileSync(P("estado.json"), "utf-8")) };
@@ -61,5 +61,18 @@ const cc = runC();
 t("cupo real bajo (cabecera = 5): se detiene después de la primera consulta y lo anota", () => {
   assert.equal(cc.log.filter(l => /^(SEARCH|BATCH)/.test(l)).length, 1);
   assert.equal(cc.estado.ultimaCorrida.cupoRestanteApi, 5);
+});
+// D) sin cupo de tcgpricelookup: la carta que pokemontcg.io tampoco puede preciar se aparta de la cola (ptcgIntento), no se atasca
+const runD = escenario([c("n1", "NadaEnNingunLado", "1", "Nop", "nop"), c("g1", "Zzz", "1", "Gamma", "gam", { cardId: "gam-1" })], { estado: { cupoDia: { fecha: hoy, usadas: 85 } } });
+const d = runD();
+t("sin cupo: la carta sin precio queda con ptcgIntento (no con tcgIntento) y la que sí tiene precio sigue su camino", () => {
+  assert.equal(d.inv.n1.ptcgIntento, hoy); assert.equal(d.inv.n1.tcgIntento, undefined); assert.equal(d.inv.g1.tcgMarket, 0.4);
+});
+const runE = escenario([c("a1", "Foo", "1", "Alpha", "alp"), c("a2", "Bar", "2", "Alpha", "alp")], { env: { POKECRIPTO_DESCUBRIMIENTO_TOPE: "0" } });
+const e = runE();
+t("descubrimiento por set con tope 0 (el valor por defecto): no hace ninguna búsqueda por nombre de set", () => {
+  assert.ok(!e.log.some(l => l.startsWith("SEARCH q=Alpha")));
+  assert.equal(e.estado.ultimaCorrida.descubrimiento.llamadas, 0);
+  assert.equal(e.inv.a1.tcgId, "t-alp-1"); // igual consigue su tcgId por la búsqueda carta por carta
 });
 console.log(`\n${n} pruebas en verde`);

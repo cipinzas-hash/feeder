@@ -45,7 +45,11 @@ const RESERVA_TCG_DIARIA = 85;
 const BATCH_TAMANO = 20;          // máximo de ids por consulta de la API
 const BATCH_MAX_LLAMADAS = 65;    // 65 x 20 = 1300 cartas: todo el inventario actual (1291) en una corrida
 const BATCH_PAUSA_MS = Number(process.env.POKECRIPTO_PAUSA_MS ?? 500);   // las pruebas la bajan a 0
-const DESCUBRIMIENTO_TOPE = 40;   // consultas máximas de descubrimiento por corrida
+// Descubrimiento por set DESACTIVADO (0) tras verlo en producción (14-oct-2026): una consulta con el nombre del set
+// ("Unbroken Bonds") devuelve ~37 resultados de 5 sets distintos, ninguno con el número de las cartas buscadas; la
+// búsqueda es difusa por texto, no un listado del set. El código se conserva y se prueba (POKECRIPTO_DESCUBRIMIENTO_TOPE=40);
+// los tcgId llegan por la búsqueda carta por carta con cosecha, que sí rinde (90 -> 249 cartas con tcgId en 2 corridas).
+const DESCUBRIMIENTO_TOPE = Number(process.env.POKECRIPTO_DESCUBRIMIENTO_TOPE ?? 0);
 const DESCUBRIMIENTO_PAGINAS = 4; // páginas máximas por set (4 x 100 = 400 cartas)
 const RESERVA_INDIVIDUAL = 8;     // consultas que se guardan para búsquedas carta por carta
 const POKE_THROTTLE_MS = Number(process.env.POKECRIPTO_THROTTLE_MS ?? 3200);
@@ -100,13 +104,18 @@ async function main() {
   // se pasan del cupo real; además se lee el cupo que reporta la API en las cabeceras cuando las manda.
   let tcgUsadas = estado.cupoDia && estado.cupoDia.fecha === hoy ? (estado.cupoDia.usadas || 0) : 0;
   let restanteReal = null, okCount = 0, failCount = 0;
-  const registrarCupo = rate => { const v = cupoRestante(rate); if (v != null) restanteReal = v; };
+  let cabecerasCupo = null;
+  const registrarCupo = rate => { const v = cupoRestante(rate); if (v != null) restanteReal = v; if (rate && Object.keys(rate).length) cabecerasCupo = rate; };
   const hayCupo = () => tcgUsadas < RESERVA_TCG_DIARIA && (restanteReal == null || restanteReal > CUPO_MANUAL);
   console.log(`Cupo: ${tcgUsadas} consulta(s) ya usadas hoy (tope propio ${RESERVA_TCG_DIARIA})`);
 
   // Antigüedad = lo más reciente entre el último precio y el último INTENTO (tcgIntento): una carta que falla no se
   // queda al frente de la cola gastando cupo todos los días. Price Watch siempre primero.
-  const claveEdad = c => [c.tcgUpdated, c.tcgIntento].filter(Boolean).map(x => String(x).slice(0, 10)).sort().pop() || "2000-01-01";
+  // ptcgIntento (14-oct-2026): una carta que pokemontcg.io no puede preciar y para la que no había cupo de tcgpricelookup
+  // quedaba SIEMPRE al frente de la cola (nunca se marcaba), y 68 de las 100 plazas diarias se iban en reintentar lo
+  // mismo. Se marca aparte y solo cuenta para la antigüedad mientras NO haya cupo: con cupo, esa carta sí merece su
+  // búsqueda en tcgpricelookup y se ordena como siempre.
+  const claveEdad = c => [c.tcgUpdated, c.tcgIntento, hayCupo() ? null : c.ptcgIntento].filter(Boolean).map(x => String(x).slice(0, 10)).sort().pop() || "2000-01-01";
   const porPrioridadYEdad = (a, b) => prioridadCarta(a) - prioridadCarta(b) || claveEdad(a).localeCompare(claveEdad(b));
 
   const aplicado = () => base.map(c => (parches.has(c.id) || actualizadas.has(c.id)) ? { ...c, ...(parches.get(c.id) || {}), ...(actualizadas.get(c.id) || {}) } : c);
@@ -119,7 +128,7 @@ async function main() {
       const ayer = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
       estado.cupoDia = { fecha: hoy, usadas: tcgUsadas };
       estado.ultimaCorrida = {
-        ...resumen, fecha: hoy, guardadoPor: motivo, cupoRestanteApi: restanteReal,
+        ...resumen, fecha: hoy, guardadoPor: motivo, cupoRestanteApi: restanteReal, cabecerasCupo,
         activas: act.length,
         conTcgId: act.filter(c => c.tcgId).length,
         sinPrecio: act.filter(c => !c.tcgMarket).length,
@@ -256,6 +265,7 @@ async function main() {
         failCount++;
         // intentada de verdad (búsqueda hecha, o tiene tcgId, o no hay key): pasa al final de la cola. Si solo falta cupo, se pospone.
         if (busquedaTcgHecha || !sinId || !TCG_API_KEY) actualizadas.set(carta.id, { tcgIntento: hoy });
+        else actualizadas.set(carta.id, { ptcgIntento: hoy }); // sin cupo de tcgpricelookup: solo se aparta de la cola mientras siga sin cupo
       } else {
         console.log(`✓ (${i + 1}/${candidatas.length}) ${carta.name}: $${r.market} (${r.fuente})`);
         actualizadas.set(carta.id, snapshotDe(carta, r, r.src));
