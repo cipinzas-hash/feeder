@@ -75,9 +75,6 @@ const CYNICAL_SUBTITLES = [
 
 function AngstApp() {
   const [page, setPage] = useState(0);
-  // Feed y Vitrina son páginas separadas; el tab 📌 de Vitrina abre Feed directo en el Buzón.
-  const [feedInitialView, setFeedInitialView] = useState(null);
-  useEffect(() => { if (page !== 9 && feedInitialView) setFeedInitialView(null); }, [page]);
   // dayData: flat dict keyed by "YYYY-MM-DD" → individual day object
   // This ensures each calendar date is fully independent
   const [dayData, setDayData] = useState({});
@@ -2093,8 +2090,8 @@ function AngstApp() {
           apiKey={pokeApiKey}
           saveApiKey={savePokeApiKey}
         />}
-        {page===9&&<FeedPage initialView={feedInitialView} onGoVitrina={()=>setPage(10)} onExit={()=>setPage(0)}/>}
-        {page===10&&<VitrinaPage onExit={()=>setPage(0)} onGoFeed={o=>{setFeedInitialView(o&&o.buzon?"buzon":null);setPage(9);}}/>}
+        {page===9&&<FeedPage/>}
+        {page===10&&<VitrinaPage/>}
 
         <div className="ftr">
           <div className="ftr-copy">{STOIC_PHRASES[footerIdx]}</div>

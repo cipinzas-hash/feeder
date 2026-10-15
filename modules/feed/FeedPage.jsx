@@ -1,6 +1,5 @@
-import { CineCoverFlow, CineExtendedView, exportCineShareImage } from "../vitrina/cine.jsx";
-import { CAT_COLORS, CINE_CATEGORIAS, STORAGE_KEY } from "../shared/constants.js";
-import { FormatoTag, TabBar, btnGhost, shareToWhatsApp } from "../shared/ui.jsx";
+import { CAT_COLORS, STORAGE_KEY, VITRINA_CATEGORIAS } from "../shared/constants.js";
+import { FormatoTag, MarcoAngst, btnGhost, shareToWhatsApp } from "../shared/ui.jsx";
 import { fetchFeedData } from "../shared/catalog.js";
 import { marcarEdicionLocal } from "../shared/localedit.js";
 
@@ -9,10 +8,8 @@ const { useState, useEffect, useRef } = React;
 
 // Tabla de componentes por formato — referencia funciones declaradas más abajo
 // en el archivo (function declarations, hoisted, así que el orden no importa).
-// "cine" ya no tiene Story: Vitrina reemplazó el swipe de una tarjeta a la vez
-// por el carrusel (CineCoverFlow) + detalle (CineExtendedView).
+// Feed es solo noticias: el formato "cine" vive únicamente en Vitrina.
 function cardsFor(formato) {
-  if (formato === "cine") return { Story: null, Extended: CineExtendedView };
   if (formato === "musica") return { Story: MusicStoryCard, Extended: MusicExtendedView };
   return { Story: StoryCard, Extended: ExtendedView };
 }
@@ -61,14 +58,14 @@ function StoryCard({ item, onSkip, onExpand, onSave, onChangeCategory, onShuffle
   const [imgFailed, setImgFailed] = useState(false);
   useEffect(() => { setImgFailed(false); }, [item.guid]);
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none" }}>
+    <MarcoAngst style={{ background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none"  }}>
       <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
         {item.image && !imgFailed
           ? <img src={item.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.5 }} onError={() => setImgFailed(true)} />
           : <div style={{ width: "100%", height: "100%", background: `linear-gradient(160deg, ${color}33, #0a0a0a)` }} />
         }
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.55))" }} />
-        <div style={{ position: "absolute", top: 16, left: 16, right: 58, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+        <div style={{ position: "absolute", top: 16, left: 16, right: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
           <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#111", background: color, borderRadius: 20, padding: "4px 12px", fontWeight: 700 }}>{item.categoria}</span>
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <button onClick={onOpenBuzon} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>📌 {buzonCount}</button>
@@ -84,13 +81,13 @@ function StoryCard({ item, onSkip, onExpand, onSave, onChangeCategory, onShuffle
           <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.5 }}>{item.summary}</div>
         </div>
       </div>
-      <div style={{ display: "flex", gap: 6, padding: "10px 10px calc(10px + 50px + env(safe-area-inset-bottom))", background: "#111" }}>
+      <div style={{ display: "flex", gap: 6, padding: "10px", background: "#111" }}>
         <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
         <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
         <button onClick={onExpand} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>{primaryAction(item.tipo).icon}</span>{primaryAction(item.tipo).label}</button>
         <button onClick={onSkip} style={btnGhost}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
       </div>
-    </div>
+    </MarcoAngst>
   );
 }
 
@@ -113,9 +110,9 @@ function MusicStoryCard({ item, onSkip, onExpand, onSave, onChangeCategory, onSh
   const [imgFailed, setImgFailed] = useState(false);
   useEffect(() => { setImgFailed(false); }, [item.guid]);
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none" }}>
+    <MarcoAngst style={{ background: "#0a0a0a", display: "flex", flexDirection: "column", userSelect: "none"  }}>
       <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ position: "absolute", top: 16, left: 16, right: 58, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, zIndex: 5 }}>
+        <div style={{ position: "absolute", top: 16, left: 16, right: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, zIndex: 5 }}>
           <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#111", background: color, borderRadius: 20, padding: "4px 12px", fontWeight: 700 }}>{item.categoria}</span>
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <button onClick={onOpenBuzon} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 16, padding: "5px 10px", color: "#fff", fontSize: 11, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>📌 {buzonCount}</button>
@@ -149,7 +146,7 @@ function MusicStoryCard({ item, onSkip, onExpand, onSave, onChangeCategory, onSh
           <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.45)" }}>{item.source}</div>
         </div>
       </div>
-      <div style={{ display: "flex", gap: 6, padding: "10px 10px calc(10px + 50px + env(safe-area-inset-bottom))", background: "#111" }}>
+      <div style={{ display: "flex", gap: 6, padding: "10px", background: "#111" }}>
         <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>categoría</button>
         <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
         <button onClick={onExpand} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}>
@@ -157,7 +154,7 @@ function MusicStoryCard({ item, onSkip, onExpand, onSave, onChangeCategory, onSh
         </button>
         <button onClick={onSkip} style={btnGhost}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
       </div>
-    </div>
+    </MarcoAngst>
   );
 }
 
@@ -169,7 +166,7 @@ function MusicExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hid
   const hasBandcamp = !hasVideo && !!item.bandcampEmbedUrl;
   const hasSoundcloud = !hasVideo && !hasBandcamp && !!item.soundcloudEmbedUrl;
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#0d0d0d", display: "flex", flexDirection: "column", zIndex: 50 }}>
+    <MarcoAngst style={{ background: "#0d0d0d", display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "14px 18px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #1a1a1a" }}>
         <button onClick={onBack} style={{ background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" }}>←</button>
         <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 }}>{item.source}</span>
@@ -229,7 +226,7 @@ function MusicExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hid
           <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
         </div>
       )}
-    </div>
+    </MarcoAngst>
   );
 }
 
@@ -248,7 +245,7 @@ function ExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActi
   const color = CAT_COLORS[item.categoria] || "#fff";
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#0d0d0d", display: "flex", flexDirection: "column", zIndex: 50 }}>
+    <MarcoAngst style={{ background: "#0d0d0d", display: "flex", flexDirection: "column" }}>
       <div style={{ height: 3, background: "#1a1a1a" }}>
         <div style={{ height: "100%", width: `${scrollPct}%`, background: color, transition: "width 0.15s" }} />
       </div>
@@ -307,7 +304,7 @@ function ExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActi
           <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
         </div>
       )}
-    </div>
+    </MarcoAngst>
   );
 }
 
@@ -318,7 +315,7 @@ function EndScreen({ onGoBuzon, onRefresh, canRefresh, refreshing, nextRefreshAt
   const msLeft = nextRefreshAt ? Math.max(0, nextRefreshAt - now) : 0;
   const hLeft = Math.floor(msLeft / 3600000), mLeft = Math.floor((msLeft % 3600000) / 60000);
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 24 }}>
+    <MarcoAngst style={{ background: "#0a0a0a", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 24  }}>
       <div style={{ fontFamily: "'Caveat',cursive", fontSize: 44, fontWeight: 700, color: "#fff" }}>estás al día ✓</div>
       <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.4)", textAlign: "center" }}>
         {refreshMsg || (msLeft > 0 ? `próxima actualización en ${hLeft > 0 ? hLeft + "h " : ""}${mLeft}m` : "ya podés buscar novedades")}
@@ -337,17 +334,17 @@ function EndScreen({ onGoBuzon, onRefresh, canRefresh, refreshing, nextRefreshAt
       <button onClick={onReset} style={{ background: "transparent", border: "none", color: "#333", fontSize: 10, textDecoration: "underline", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", marginTop: 8 }}>
         🧪 resetear estado (solo para probar)
       </button>
-    </div>
+    </MarcoAngst>
   );
 }
 
 // ─── BuzonView ───────────────────────────────────────────────────────────────
 function BuzonView({ buzon, onClose, onOpen, onRemove }) {
   const [filterCat, setFilterCat] = useState("todas");
-  const cats = ["todas", ...Object.keys(CAT_COLORS)];
+  const cats = ["todas", ...Object.keys(CAT_COLORS).filter(c => !VITRINA_CATEGORIAS.includes(c))];
   const filtered = filterCat === "todas" ? buzon : buzon.filter(b => b.categoria === filterCat);
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", zIndex: 60, display: "flex", flexDirection: "column" }}>
+    <MarcoAngst style={{ background: "#0a0a0a", display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "16px 18px 10px", display: "flex", alignItems: "center", gap: 10 }}>
         <button onClick={onClose} style={{ background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" }}>←</button>
         <span style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff" }}>📌 buzón</span>
@@ -363,24 +360,20 @@ function BuzonView({ buzon, onClose, onOpen, onRemove }) {
           }}>{c}</button>
         ))}
       </div>
-      {CINE_CATEGORIAS.includes(filterCat) && filtered.length > 0 ? (
-        <CineCoverFlow items={filtered} onOpen={onOpen} categoria={filterCat} />
-      ) : (
-        <div style={{ flex: 1, overflowY: "auto", padding: "0 18px 30px" }}>
-          {filtered.length === 0 && <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "40px 0" }}>vacío por ahora</div>}
-          {filtered.map(item => (
-            <div key={item.guid} style={{ display: "flex", gap: 10, padding: "10px 0", borderBottom: "1px solid #1a1a1a", alignItems: "center" }}>
-              {item.image && <img src={item.image} style={{ width: 48, height: 48, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} onError={e => { e.target.style.display = "none"; }} />}
-              <div onClick={() => onOpen(item)} style={{ flex: 1, minWidth: 0, cursor: "pointer" }}>
-                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
-                <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{item.source} · {item.categoria}</div>
-              </div>
-              <button onClick={() => onRemove(item.guid)} style={{ background: "transparent", border: "none", color: "#444", fontSize: 16, cursor: "pointer" }}>×</button>
+      <div style={{ flex: 1, overflowY: "auto", padding: "0 18px 30px" }}>
+        {filtered.length === 0 && <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "40px 0" }}>vacío por ahora</div>}
+        {filtered.map(item => (
+          <div key={item.guid} style={{ display: "flex", gap: 10, padding: "10px 0", borderBottom: "1px solid #1a1a1a", alignItems: "center" }}>
+            {item.image && <img src={item.image} style={{ width: 48, height: 48, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} onError={e => { e.target.style.display = "none"; }} />}
+            <div onClick={() => onOpen(item)} style={{ flex: 1, minWidth: 0, cursor: "pointer" }}>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
+              <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{item.source} · {item.categoria}</div>
             </div>
-          ))}
-        </div>
-      )}
-    </div>
+            <button onClick={() => onRemove(item.guid)} style={{ background: "transparent", border: "none", color: "#444", fontSize: 16, cursor: "pointer" }}>×</button>
+          </div>
+        ))}
+      </div>
+    </MarcoAngst>
   );
 }
 
@@ -394,7 +387,7 @@ function DiagPanel({ diag, generatedAt, onClose }) {
   const total = diag.reduce((s, d) => s + d.count, 0);
   const totalText = diag.reduce((s, d) => s + d.withText, 0);
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", zIndex: 90, display: "flex", flexDirection: "column" }}>
+    <MarcoAngst style={{ background: "#0a0a0a", display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "16px 18px 8px", display: "flex", alignItems: "center", gap: 10 }}>
         <button onClick={onClose} style={{ background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" }}>←</button>
         <span style={{ fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff" }}>🩺 diagnóstico del JSON</span>
@@ -416,15 +409,12 @@ function DiagPanel({ diag, generatedAt, onClose }) {
           </div>
         ))}
       </div>
-    </div>
+    </MarcoAngst>
   );
 }
 
 // ─── App ─────────────────────────────────────────────────────────────────────
-function FeedPage({ onExit, onGoVitrina, initialView }) {
-  const ExitBtn = () => (
-    <button onClick={onExit} title="Volver a Angst" style={{ position: "fixed", top: "calc(10px + env(safe-area-inset-top))", right: 12, zIndex: 999, background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", borderRadius: 20, width: 34, height: 34, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-  );
+function FeedPage() {
   const [loaded, setLoaded] = useState(false);
   const [queue, setQueue] = useState([]);
   const [seen, setSeen] = useState([]);
@@ -438,7 +428,6 @@ function FeedPage({ onExit, onGoVitrina, initialView }) {
   const [toast, setToast] = useState(null);
   const [buzonOpenItem, setBuzonOpenItem] = useState(null);
   const [showDiagPanel, setShowDiagPanel] = useState(false);
-  const [exportError, setExportError] = useState(null);
 
   const queueRef = useRef([]); const seenRef = useRef([]); const buzonRef = useRef([]); const lastRefreshRef = useRef(null);
   useEffect(() => { queueRef.current = queue; }, [queue]);
@@ -465,13 +454,21 @@ function FeedPage({ onExit, onGoVitrina, initialView }) {
         const cleanQueue = (s.feedQueue || []).filter(it => it.formato !== "cine");
         setQueue(cleanQueue);
         setSeen(s.feedSeen || []);
-        setBuzon(s.feedBuzon || []);
+        // Feed es solo noticias. Los ítems de categorías de Vitrina que quedaron
+        // guardados en el Buzón se descartan (decisión explícita: lo de Vitrina
+        // ahora se guarda en simkl). El estado depurado se persiste una vez, y
+        // viaja en el próximo export/📤.
+        const buzonAll = Array.isArray(s.feedBuzon) ? s.feedBuzon : [];
+        const buzonNoticias = buzonAll.filter(b => !VITRINA_CATEGORIAS.includes(b.categoria) && b.formato !== "cine");
+        setBuzon(buzonNoticias);
+        if (buzonNoticias.length !== buzonAll.length) {
+          saveState({ ...s, feedQueue: cleanQueue, feedBuzon: buzonNoticias });
+        }
         setLastRefresh(s.feedLastRefresh || null);
         if (!cleanQueue.length) setView("end");
       } else {
         setView("end");
       }
-      if (initialView === "buzon") setView("buzon");
       setLoaded(true);
     })();
   }, []);
@@ -579,35 +576,20 @@ function FeedPage({ onExit, onGoVitrina, initialView }) {
     persist({ buzon: next });
   }
 
-  async function handleExportImage(item) {
-    showToast("generando imagen…");
-    const ok = await exportCineShareImage(item, msg => setExportError(msg));
-    if (ok) showToast("✓ imagen descargada");
-  }
-
-  if (!loaded) return <><div style={{ position: "fixed", inset: 0, background: "#0a0a0a" }} /><ExitBtn/></>;
+  if (!loaded) return <MarcoAngst style={{ background: "#0a0a0a" }} />;
 
   if (buzonOpenItem) {
     const { Extended } = cardsFor(buzonOpenItem.formato);
-    const isCine = buzonOpenItem.formato === "cine";
     return (
       <>
-        <Extended item={buzonOpenItem} onBack={() => setBuzonOpenItem(null)} onNext={() => setBuzonOpenItem(null)} onSave={() => {}} hideActions
-        {...(isCine ? { onExportImage: handleExportImage } : {})} />
+        <Extended item={buzonOpenItem} onBack={() => setBuzonOpenItem(null)} onNext={() => setBuzonOpenItem(null)} onSave={() => {}} hideActions />
         {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#fff", color: "#111", padding: "8px 18px", borderRadius: 20, fontFamily: "'Caveat',cursive", fontSize: 15, fontWeight: 700, zIndex: 200 }}>{toast}</div>}
-        {exportError && (
-        <div style={{ position: "fixed", bottom: 90, left: 18, right: 18, background: "#3a1010", border: "1px solid #6b2020", color: "#f5b5b5", borderRadius: 10, padding: "10px 14px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, zIndex: 200 }}>
-          {exportError}
-          <button onClick={() => setExportError(null)} style={{ float: "right", background: "transparent", border: "none", color: "#f5b5b5", cursor: "pointer" }}>×</button>
-        </div>
-        )}
-        <ExitBtn/>
       </>
     );
   }
 
   if (showDiagPanel) {
-    return <><DiagPanel diag={refreshDiag} generatedAt={feedGeneratedAt} onClose={() => setShowDiagPanel(false)} /><ExitBtn/></>;
+    return <DiagPanel diag={refreshDiag} generatedAt={feedGeneratedAt} onClose={() => setShowDiagPanel(false)} />;
   }
 
   const current = queue[0];
@@ -637,8 +619,6 @@ function FeedPage({ onExit, onGoVitrina, initialView }) {
           )}
       </>
 
-      <TabBar area="noticias" onChange={a => { if (a === "vitrina" && onGoVitrina) onGoVitrina(); }} buzonCount={buzon.length} onOpenBuzon={() => setView("buzon")} />
-      <ExitBtn/>
     </div>
   );
 }

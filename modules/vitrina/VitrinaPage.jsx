@@ -2,9 +2,7 @@ import { CAT_COLORS, VITRINA_CATEGORIAS } from "../shared/constants.js";
 import { ArchivedFeed } from "./videoteca.jsx";
 import { MeleeFeed } from "./melee.jsx";
 import { CineCoverFlow, CineExtendedView } from "./cine.jsx";
-import { TabBar } from "../shared/ui.jsx";
 import { fetchVitrinaData } from "../shared/catalog.js";
-import { addToFeedBuzon, countFeedBuzon } from "../shared/buzon.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -24,7 +22,7 @@ export function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, gene
     borderColor: active ? (CAT_COLORS[vitrinaCat] || "#e91e8c") : "#333",
   });
   return (
-    <div style={{ paddingBottom: 70, background: "#111", minHeight: "100vh" }}>
+    <div style={{ paddingBottom: 16, background: "#111", minHeight: "100vh" }}>
       <div style={{ padding: "16px 18px 4px" }}>
         <span style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff" }}>🎬 vitrina audiovisual</span>
       </div>
@@ -63,20 +61,16 @@ export function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, gene
 }
 
 // ─── VitrinaPage — shell del módulo (antes vivía dentro de FeedPage) ────────
-// Navegación propia: guardar/siguiente/anterior operan sobre
-// vitrinaData[vitrinaCat]. Los datos salen de fetchVitrinaData (cine, melee y
-// videoteca: ~0,4 MB), sin el throttle de 4h: es un catálogo de consulta, no
-// una cola que se consume.
-// onGoFeed({ buzon: true }) abre Feed directo en el Buzón (tab 📌).
-function VitrinaPage({ onExit, onGoFeed }) {
-  const ExitBtn = () => (
-    <button onClick={onExit} title="Volver a Angst" style={{ position: "fixed", top: "calc(10px + env(safe-area-inset-top))", right: 12, zIndex: 999, background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", borderRadius: 20, width: 34, height: 34, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-  );
+// Navegación propia: siguiente/anterior operan sobre vitrinaData[vitrinaCat].
+// Los datos salen de fetchVitrinaData (cine, melee y videoteca: ~0,4 MB), sin
+// el throttle de 4h: es un catálogo de consulta, no una cola que se consume.
+// Vitrina es independiente de Feed: no escribe en su Buzón ni navega hacia él
+// (lo que se guarda de Vitrina vive en simkl).
+function VitrinaPage() {
   const [vitrinaCat, setVitrinaCat] = useState("Películas");
   const [vitrinaData, setVitrinaData] = useState({ "Películas": [], "Series": [], "Animación": [], "Microdocumentales": [], "Melee": [], "Conciertos": [] });
   const [vitrinaOpenItem, setVitrinaOpenItem] = useState(null);
   const [generatedAt, setGeneratedAt] = useState(null);
-  const [toast, setToast] = useState(null);
   // Estado de la carga: antes un fallo de red (o un JSON vacío) dejaba la pantalla
   // en blanco sin distinguirse de "no hay nada".
   const [carga, setCarga] = useState({ cargando: true, error: null, fuentes: null });
@@ -107,12 +101,6 @@ function VitrinaPage({ onExit, onGoFeed }) {
     if (horas > 72) aviso = { tono: "aviso", texto: `Datos de hace ${Math.round(horas / 24)} días: la actualización automática no está corriendo.` };
   }
 
-  function showToast(msg) { setToast(msg); setTimeout(() => setToast(null), 1800); }
-
-  function handleVitrinaSave(item) {
-    const added = addToFeedBuzon(item);
-    showToast(added ? `guardado en ${item.categoria}` : "ya estaba en el buzón");
-  }
   function stepItem(item, delta) {
     const list = vitrinaData[vitrinaCat] || [];
     const idx = list.findIndex(i => i.guid === item.guid);
@@ -120,27 +108,17 @@ function VitrinaPage({ onExit, onGoFeed }) {
     setVitrinaOpenItem(list[(idx + delta + list.length) % list.length]);
   }
 
-  const toastEl = toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#fff", color: "#111", padding: "8px 18px", borderRadius: 20, fontFamily: "'Caveat',cursive", fontSize: 15, fontWeight: 700, zIndex: 200 }}>{toast}</div>;
-
   if (vitrinaOpenItem) {
     return (
-      <>
-        <CineExtendedView item={vitrinaOpenItem} onBack={() => setVitrinaOpenItem(null)}
-          onNext={() => stepItem(vitrinaOpenItem, 1)}
-          onSave={() => handleVitrinaSave(vitrinaOpenItem)}
-          onChangeCategory={() => stepItem(vitrinaOpenItem, -1)} />
-        {toastEl}
-        <ExitBtn/>
-      </>
+      <CineExtendedView item={vitrinaOpenItem} onBack={() => setVitrinaOpenItem(null)}
+        onNext={() => stepItem(vitrinaOpenItem, 1)}
+        onChangeCategory={() => stepItem(vitrinaOpenItem, -1)} />
     );
   }
 
   return (
     <div style={{ fontFamily: "'DM Sans',sans-serif" }}>
-      {toastEl}
       <VitrinaView vitrinaData={vitrinaData} vitrinaCat={vitrinaCat} onChangeCat={setVitrinaCat} onOpen={item => setVitrinaOpenItem(item)} generatedAt={generatedAt} aviso={aviso} cargando={carga.cargando} />
-      <TabBar area="vitrina" onChange={a => { if (a === "noticias" && onGoFeed) onGoFeed(); }} buzonCount={countFeedBuzon()} onOpenBuzon={() => onGoFeed && onGoFeed({ buzon: true })} />
-      <ExitBtn/>
     </div>
   );
 }

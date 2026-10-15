@@ -1,4 +1,4 @@
-const { useState, useEffect, useRef } = React;
+const { useState, useEffect, useLayoutEffect, useRef } = React;
 
 
 // Gestos removidos — la navegación es 100% por botones (ver StoryCard/ExtendedView).
@@ -54,18 +54,36 @@ export function FormatoTag({ item }) {
   );
 }
 
-// ─── TabBar — Noticias / Vitrina, fijo abajo, siempre visible ──────────────
-export function TabBar({ area, onChange, buzonCount, onOpenBuzon }) {
-  const tabBtn = (active) => ({
-    flex: 1, background: "transparent", border: "none", cursor: "pointer",
-    padding: "10px 6px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700,
-    color: active ? "#fff" : "#666", borderTop: active ? "2px solid #e91e8c" : "2px solid transparent",
-  });
+// ─── MarcoAngst — contenedor de las vistas de Feed y del detalle de Vitrina ──
+// Antes cada vista era position:fixed + inset:0 y tapaba todo el marco de
+// Angst (encabezado, pestañas, pie). Ahora vive dentro del marco, como los
+// demás módulos: mismo ancho máximo (480) y la altura que queda bajo las
+// pestañas, medida en vivo (el encabezado puede cambiar de alto). Las vistas
+// largas siguen scrolleando por dentro, con el mismo contenedor flex de antes.
+export function MarcoAngst({ children, style }) {
+  const ref = useRef(null);
+  const [alto, setAlto] = useState(null);
+  useLayoutEffect(() => {
+    function medir() {
+      const el = ref.current;
+      if (!el) return;
+      const arriba = el.getBoundingClientRect().top + window.scrollY;
+      const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      setAlto(Math.max(460, Math.round(vh - arriba - 12)));
+    }
+    medir();
+    const t = setTimeout(medir, 350);
+    window.addEventListener("resize", medir);
+    window.addEventListener("orientationchange", medir);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("resize", medir);
+      window.removeEventListener("orientationchange", medir);
+    };
+  }, []);
   return (
-    <div style={{ position: "fixed", left: 0, right: 0, bottom: "var(--angst-podcast-h, 0px)", display: "flex", background: "#111", zIndex: 40, paddingBottom: "env(safe-area-inset-bottom)" }}>
-      <button onClick={() => onChange("noticias")} style={tabBtn(area === "noticias")}>📰 Noticias</button>
-      <button onClick={() => onChange("vitrina")} style={tabBtn(area === "vitrina")}>🎬 Vitrina</button>
-      <button onClick={onOpenBuzon} style={tabBtn(false)}>📌 {buzonCount}</button>
+    <div ref={ref} style={{ position: "relative", width: "100%", maxWidth: 480, margin: "0 auto", height: alto || "70vh", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box", ...style }}>
+      {children}
     </div>
   );
 }

@@ -64,6 +64,5 @@ export async function fetchJsonSafe(url) {
   } catch (e) { return null; }
 }
 
-// Estado propio de Feed (cola/vistos/buzón/último refresh). Vitrina escribe
-// al Buzón por shared/buzon.js, por eso la clave vive acá y no en FeedPage.
+// Estado propio de Feed (cola/vistos/buzón/último refresh).
 export const STORAGE_KEY = "angst-feed-proto-v1";

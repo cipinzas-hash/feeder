@@ -8,6 +8,7 @@ export default {
   // podcast-positions, series-overlay, dispatched). Excepciones deliberadas, con
   // su motivo: EXPORT_EXEMPT_KEYS (angst-simkl-pending-v1, secretos, cachés).
   // tests/export-coverage.mjs falla si se agrega una clave sin declararla.
-  // Guardar un ítem desde Vitrina escribe al Buzón de Feed (shared/buzon.js).
+  // Vitrina es independiente de Feed: ya no guarda en su Buzón (lo que se guarda
+  // de Vitrina vive en simkl).
   state: {},
 };

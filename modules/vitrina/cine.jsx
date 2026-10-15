@@ -1,5 +1,5 @@
 import { CINE_RATINGS, STATUS_BADGE, diasHasta, diasParaEstreno, diasRestantesCartelera, esEnProduccion, esEstreno, esNuevo, esTrending, seasonLabel, setCineItemEstado, useCineEstadoMap } from "./estado.js";
-import { FormatoTag, btnGhost, shareToWhatsApp } from "../shared/ui.jsx";
+import { FormatoTag, MarcoAngst, btnGhost, shareToWhatsApp } from "../shared/ui.jsx";
 import { SeriesSeguimiento } from "./series.jsx";
 import { avanceDe, estadoAvance, estadoEfectivo, estadoRemotoDe, useAvanceVersion } from "./avance.js";
 import { enqueueSimklAction, flushSimklQueue, pedirSimklAuth, useSimklDiscovery, useSimklSyncStatus } from "./simkl.js";
@@ -250,7 +250,7 @@ export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategor
   const leads = (item.cast || []).filter(c => c.order < 4);
   const supporting = (item.cast || []).filter(c => c.order >= 4);
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#0d0d0d", display: "flex", flexDirection: "column", zIndex: 50 }}>
+    <MarcoAngst style={{ background: "#0d0d0d" }}>
       <div style={{ padding: "14px 18px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #1a1a1a" }}>
         <button onClick={onBack} style={{ background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" }}>←</button>
         <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 }}>{item.source}</span>
@@ -378,7 +378,7 @@ export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategor
         <React.Fragment>
           <div style={{ display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" }}>
             <button onClick={onChangeCategory} style={btnGhost}><span style={{ fontSize: 17 }}>⬅️</span>anterior</button>
-            <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>
+            {onSave && <button onClick={onSave} style={btnGhost}><span style={{ fontSize: 17 }}>⬇️</span>guardar</button>}
             <button onClick={() => shareToWhatsApp(item)} style={btnGhost}><span style={{ fontSize: 17 }}>📤</span>compartir</button>
             <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
           </div>
@@ -391,12 +391,12 @@ export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategor
           </button>
         </div>
       )}
-    </div>
+    </MarcoAngst>
   );
 }
 
-// ─── CineCoverFlow — carrusel de posters con perspectiva 3D. Se usa en el
-// Buzón (filtrado a lo guardado) y en Vitrina (catálogo completo del mes).
+// ─── CineCoverFlow — carrusel de posters con perspectiva 3D. Se usa en
+// Vitrina (catálogo completo del mes).
 // Flechas ◀️▶️ a los costados + loop infinito (después del último vuelve
 // al primero, y viceversa) además del scroll táctil de siempre.
 export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
