@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-15T21:01:30.084Z",
+  "generatedAt": "2026-10-16T00:07:05.146Z",
   "categories": [
     {
       "cat": "Películas",
@@ -164,7 +164,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1058424",
@@ -262,7 +262,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6
+            "tmdb": 5.9
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -780,6 +780,87 @@
           "trending": false
         },
         {
+          "guid": "tmdb-movie-969681",
+          "title": "Spider-Man: Brand New Day",
+          "link": "https://www.themoviedb.org/movie/969681",
+          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
+          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
+          "pubDate": "2026-07-29",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-29T21:59:04.958Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.1,
+            "rt": 89,
+            "metascore": 66,
+            "tmdb": 7.9
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "P3uI5sLosKU",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Holland",
+              "character": "Peter Parker / Spider-Man",
+              "order": 0
+            },
+            {
+              "name": "Zendaya",
+              "character": "MJ",
+              "order": 1
+            },
+            {
+              "name": "Mark Ruffalo",
+              "character": "Bruce Banner / Hulk",
+              "order": 2
+            },
+            {
+              "name": "Jon Bernthal",
+              "character": "Frank Castle / Punisher",
+              "order": 3
+            },
+            {
+              "name": "Jacob Batalon",
+              "character": "Ned Leeds",
+              "order": 4
+            },
+            {
+              "name": "Sadie Sink",
+              "character": "Jean Grey",
+              "order": 5
+            },
+            {
+              "name": "Florence Pugh",
+              "character": "Yelena Belova / Black Widow",
+              "order": 6
+            },
+            {
+              "name": "Liza Colón-Zayas",
+              "character": "Detective Jean DeWolff",
+              "order": 7
+            },
+            {
+              "name": "Tramell Tillman",
+              "character": "William 'Bill' Metzger",
+              "order": 8
+            },
+            {
+              "name": "Marisa Tomei",
+              "character": "May Parker",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1236045",
           "title": "Animales",
           "link": "https://www.themoviedb.org/movie/1236045",
@@ -942,87 +1023,6 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-969681",
-          "title": "Spider-Man: Brand New Day",
-          "link": "https://www.themoviedb.org/movie/969681",
-          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
-          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
-          "pubDate": "2026-07-29",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-29T21:59:04.958Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.1,
-            "rt": 89,
-            "metascore": 66,
-            "tmdb": 7.9
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "P3uI5sLosKU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Tom Holland",
-              "character": "Peter Parker / Spider-Man",
-              "order": 0
-            },
-            {
-              "name": "Zendaya",
-              "character": "MJ",
-              "order": 1
-            },
-            {
-              "name": "Mark Ruffalo",
-              "character": "Bruce Banner / Hulk",
-              "order": 2
-            },
-            {
-              "name": "Jon Bernthal",
-              "character": "Frank Castle / Punisher",
-              "order": 3
-            },
-            {
-              "name": "Jacob Batalon",
-              "character": "Ned Leeds",
-              "order": 4
-            },
-            {
-              "name": "Sadie Sink",
-              "character": "Jean Grey",
-              "order": 5
-            },
-            {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova / Black Widow",
-              "order": 6
-            },
-            {
-              "name": "Liza Colón-Zayas",
-              "character": "Detective Jean DeWolff",
-              "order": 7
-            },
-            {
-              "name": "Tramell Tillman",
-              "character": "William 'Bill' Metzger",
-              "order": 8
-            },
-            {
-              "name": "Marisa Tomei",
-              "character": "May Parker",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
           "guid": "tmdb-movie-1255833",
           "title": "Whalefall",
           "link": "https://www.themoviedb.org/movie/1255833",
@@ -1098,7 +1098,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 8.2
+            "tmdb": 8.7
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1107,7 +1107,7 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "KCR-rz0YfD4",
+            "key": "f7jlCqdtwdM",
             "site": "YouTube"
           },
           "cast": [
@@ -1165,81 +1165,81 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1514026",
-          "title": "Buddy",
-          "link": "https://www.themoviedb.org/movie/1514026",
-          "summary": "Un mágico unicornio naranja que canta retiene a su elenco como rehén en una dimensión surrealista de programa de televisión, mientras se vuelve cada vez más demente.",
-          "image": "https://image.tmdb.org/t/p/w500/1BdZbNvl1SfrrX8J9X5tQzN6Ivu.jpg",
-          "pubDate": "2026-08-27",
+          "guid": "tmdb-movie-1003596",
+          "title": "Vengadores: Doomsday",
+          "link": "https://www.themoviedb.org/movie/1003596",
+          "summary": "Quinta entrega de la saga 'Vengadores' incluida en el Universo Cinematográfico Marvel (UCM). Sinopsis desconocido.",
+          "image": "https://image.tmdb.org/t/p/w500/7bQczUMnjz8iwxNP9YrmLkfI8od.jpg",
+          "pubDate": "2026-12-16",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-10-15T21:01:29.777Z",
+          "firstSeenAt": "2026-09-22T00:37:45.956Z",
           "fullText": null,
           "rating": {
-            "imdb": 7.1,
-            "rt": 88,
-            "metascore": 67,
-            "tmdb": 7.3
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
           },
-          "status": "Released",
+          "status": "Post Production",
           "nextEpisodeDate": null,
           "numberOfSeasons": null,
           "seasons": null,
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "Pc9MbCNYn3k",
+            "key": "X1aFkAkFASk",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Keegan-Michael Key",
-              "character": "Buddy / Dark Buddy (voice)",
+              "name": "Robert Downey Jr.",
+              "character": "Victor von Doom  / Doctor Doom",
               "order": 0
             },
             {
-              "name": "Cristin Milioti",
-              "character": "Grace",
+              "name": "Chris Evans",
+              "character": "Steve Rogers",
               "order": 1
             },
             {
-              "name": "Delaney Quinn",
-              "character": "Freddy",
+              "name": "Chris Hemsworth",
+              "character": "Thor",
               "order": 2
             },
             {
-              "name": "Caleb Williams",
-              "character": "Wade",
+              "name": "Pedro Pascal",
+              "character": "Reed Richards / Mister Fantastic",
               "order": 3
             },
             {
-              "name": "Madison Skyy Polan",
-              "character": "Hannah",
+              "name": "Paul Rudd",
+              "character": "Scott Lang / Ant-Man",
               "order": 4
             },
             {
-              "name": "Tristan Borders",
-              "character": "Oliver",
+              "name": "Anthony Mackie",
+              "character": "Sam Wilson / Captain America",
               "order": 5
             },
             {
-              "name": "Patton Oswalt",
-              "character": "Strappy (voice)",
+              "name": "Florence Pugh",
+              "character": "Yelena Belova",
               "order": 6
             },
             {
-              "name": "Jimmica Collins",
-              "character": "Betty Bunny / Scared Flower (voice)",
+              "name": "Vanessa Kirby",
+              "character": "Sue Storm / Invisible Woman",
               "order": 7
             },
             {
-              "name": "Eric Bauza",
-              "character": "Mr. Mailbox / Worry Well / Couchy / Trashy / Pee Flower (voice)",
+              "name": "Ebon Moss-Bachrach",
+              "character": "Ben Grimm / The Thing",
               "order": 8
             },
             {
-              "name": "Topher Grace",
-              "character": "Ben",
+              "name": "Wyatt Russell",
+              "character": "John Walker",
               "order": 9
             }
           ],
@@ -1325,6 +1325,87 @@
             }
           ],
           "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1514026",
+          "title": "Buddy",
+          "link": "https://www.themoviedb.org/movie/1514026",
+          "summary": "Un mágico unicornio naranja que canta retiene a su elenco como rehén en una dimensión surrealista de programa de televisión, mientras se vuelve cada vez más demente.",
+          "image": "https://image.tmdb.org/t/p/w500/1BdZbNvl1SfrrX8J9X5tQzN6Ivu.jpg",
+          "pubDate": "2026-08-27",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-15T21:01:29.777Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.1,
+            "rt": 88,
+            "metascore": 67,
+            "tmdb": 7.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "Pc9MbCNYn3k",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Keegan-Michael Key",
+              "character": "Buddy / Dark Buddy (voice)",
+              "order": 0
+            },
+            {
+              "name": "Cristin Milioti",
+              "character": "Grace",
+              "order": 1
+            },
+            {
+              "name": "Delaney Quinn",
+              "character": "Freddy",
+              "order": 2
+            },
+            {
+              "name": "Caleb Williams",
+              "character": "Wade",
+              "order": 3
+            },
+            {
+              "name": "Madison Skyy Polan",
+              "character": "Hannah",
+              "order": 4
+            },
+            {
+              "name": "Tristan Borders",
+              "character": "Oliver",
+              "order": 5
+            },
+            {
+              "name": "Patton Oswalt",
+              "character": "Strappy (voice)",
+              "order": 6
+            },
+            {
+              "name": "Jimmica Collins",
+              "character": "Betty Bunny / Scared Flower (voice)",
+              "order": 7
+            },
+            {
+              "name": "Eric Bauza",
+              "character": "Mr. Mailbox / Worry Well / Couchy / Trashy / Pee Flower (voice)",
+              "order": 8
+            },
+            {
+              "name": "Topher Grace",
+              "character": "Ben",
+              "order": 9
+            }
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1283515",
@@ -1474,87 +1555,6 @@
               "name": "Filipa Saavedra",
               "character": "",
               "order": 7
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1003596",
-          "title": "Vengadores: Doomsday",
-          "link": "https://www.themoviedb.org/movie/1003596",
-          "summary": "Quinta entrega de la saga 'Vengadores' incluida en el Universo Cinematográfico Marvel (UCM). Sinopsis desconocido.",
-          "image": "https://image.tmdb.org/t/p/w500/7bQczUMnjz8iwxNP9YrmLkfI8od.jpg",
-          "pubDate": "2026-12-16",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-22T00:37:45.956Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Post Production",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "X1aFkAkFASk",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Robert Downey Jr.",
-              "character": "Victor von Doom  / Doctor Doom",
-              "order": 0
-            },
-            {
-              "name": "Chris Evans",
-              "character": "Steve Rogers",
-              "order": 1
-            },
-            {
-              "name": "Chris Hemsworth",
-              "character": "Thor",
-              "order": 2
-            },
-            {
-              "name": "Pedro Pascal",
-              "character": "Reed Richards / Mister Fantastic",
-              "order": 3
-            },
-            {
-              "name": "Paul Rudd",
-              "character": "Scott Lang / Ant-Man",
-              "order": 4
-            },
-            {
-              "name": "Anthony Mackie",
-              "character": "Sam Wilson / Captain America",
-              "order": 5
-            },
-            {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova",
-              "order": 6
-            },
-            {
-              "name": "Vanessa Kirby",
-              "character": "Sue Storm / Invisible Woman",
-              "order": 7
-            },
-            {
-              "name": "Ebon Moss-Bachrach",
-              "character": "Ben Grimm / The Thing",
-              "order": 8
-            },
-            {
-              "name": "Wyatt Russell",
-              "character": "John Walker",
-              "order": 9
             }
           ],
           "trending": false
@@ -2047,87 +2047,6 @@
             {
               "name": "Stanley Townsend",
               "character": "Chief Justice Bealknap",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1465063",
-          "title": "La isla olvidada",
-          "link": "https://www.themoviedb.org/movie/1465063",
-          "summary": "Dos amigas se quedan varadas en el místico mundo de Nakali, donde su único escape podría costarles su vida compartida de recuerdos.",
-          "image": "https://image.tmdb.org/t/p/w500/vpTdXFoZGzwnCWzkVYU7JH8teAZ.jpg",
-          "pubDate": "2026-09-10",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-16T00:01:02.440Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.7,
-            "rt": null,
-            "metascore": 73,
-            "tmdb": 7.6
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "PhgY8cOJiQA",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "H.E.R.",
-              "character": "Jo (voice)",
-              "order": 0
-            },
-            {
-              "name": "Liza Soberano",
-              "character": "Raissa (voice)",
-              "order": 1
-            },
-            {
-              "name": "Dave Franco",
-              "character": "Raww (voice)",
-              "order": 2
-            },
-            {
-              "name": "Lea Salonga",
-              "character": "Manang (voice)",
-              "order": 3
-            },
-            {
-              "name": "Jenny Slate",
-              "character": "Batiba (voice)",
-              "order": 4
-            },
-            {
-              "name": "Manny Jacinto",
-              "character": "Bungi (voice)",
-              "order": 5
-            },
-            {
-              "name": "Dolly de Leon",
-              "character": "Lola Fatima (voice)",
-              "order": 6
-            },
-            {
-              "name": "Jo Koy",
-              "character": "Datu (voice)",
-              "order": 7
-            },
-            {
-              "name": "Ronny Chieng",
-              "character": "King Truffle Wuffle (voice)",
-              "order": 8
-            },
-            {
-              "name": "Kevin McCann",
-              "character": "Prince Mermahn (voice)",
               "order": 9
             }
           ],
@@ -7913,263 +7832,6 @@
               "name": "Sunny Hostin",
               "character": "Self - Co Host",
               "order": 29
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-2912",
-          "title": "Jeopardy!",
-          "link": "https://www.themoviedb.org/tv/2912",
-          "summary": "Jeopardy! es un concurso de televisión estadounidense creado por Merv Griffin. Es un concurso de conocimientos con preguntas sobre numerosos temas como historia, idiomas, literatura, cultura popular, bellas artes, ciencia, geografía, y deportes. Consiste en que uno de los tres concursantes elige uno de los paneles del tablero de juego, el cual, al ser descubierto, revela una pista en forma de respuesta; los concursantes entonces tienen que dar sus respuestas en forma de una pregunta.",
-          "image": "https://image.tmdb.org/t/p/w500/hfz0IgebqGENG6ZnuqKQKMFk2vy.jpg",
-          "pubDate": "1984-09-10",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-16T00:01:02.758Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.3,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.9
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": 43,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 162,
-              "fechaEstreno": "1984-09-10"
-            },
-            {
-              "numero": 2,
-              "episodios": 194,
-              "fechaEstreno": "1985-09-09"
-            },
-            {
-              "numero": 3,
-              "episodios": 231,
-              "fechaEstreno": "1986-09-08"
-            },
-            {
-              "numero": 4,
-              "episodios": 220,
-              "fechaEstreno": "1987-09-07"
-            },
-            {
-              "numero": 5,
-              "episodios": 215,
-              "fechaEstreno": "1988-09-05"
-            },
-            {
-              "numero": 6,
-              "episodios": 201,
-              "fechaEstreno": "1989-09-04"
-            },
-            {
-              "numero": 7,
-              "episodios": 212,
-              "fechaEstreno": "1990-09-03"
-            },
-            {
-              "numero": 8,
-              "episodios": 194,
-              "fechaEstreno": "1991-09-02"
-            },
-            {
-              "numero": 9,
-              "episodios": 229,
-              "fechaEstreno": "1992-09-07"
-            },
-            {
-              "numero": 10,
-              "episodios": 230,
-              "fechaEstreno": "1993-09-06"
-            },
-            {
-              "numero": 11,
-              "episodios": 213,
-              "fechaEstreno": "1994-09-05"
-            },
-            {
-              "numero": 12,
-              "episodios": 229,
-              "fechaEstreno": "1995-09-04"
-            },
-            {
-              "numero": 13,
-              "episodios": 218,
-              "fechaEstreno": "1996-09-02"
-            },
-            {
-              "numero": 14,
-              "episodios": 230,
-              "fechaEstreno": "1997-09-01"
-            },
-            {
-              "numero": 15,
-              "episodios": 230,
-              "fechaEstreno": "1998-09-07"
-            },
-            {
-              "numero": 16,
-              "episodios": 230,
-              "fechaEstreno": "1999-09-06"
-            },
-            {
-              "numero": 17,
-              "episodios": 230,
-              "fechaEstreno": "2000-09-04"
-            },
-            {
-              "numero": 18,
-              "episodios": 229,
-              "fechaEstreno": "2001-09-03"
-            },
-            {
-              "numero": 19,
-              "episodios": 230,
-              "fechaEstreno": "2002-09-02"
-            },
-            {
-              "numero": 20,
-              "episodios": 230,
-              "fechaEstreno": "2003-09-08"
-            },
-            {
-              "numero": 21,
-              "episodios": 230,
-              "fechaEstreno": "2004-09-06"
-            },
-            {
-              "numero": 22,
-              "episodios": 230,
-              "fechaEstreno": "2005-09-12"
-            },
-            {
-              "numero": 23,
-              "episodios": 230,
-              "fechaEstreno": "2006-09-11"
-            },
-            {
-              "numero": 24,
-              "episodios": 230,
-              "fechaEstreno": "2007-09-10"
-            },
-            {
-              "numero": 25,
-              "episodios": 230,
-              "fechaEstreno": "2008-09-08"
-            },
-            {
-              "numero": 26,
-              "episodios": 230,
-              "fechaEstreno": "2009-09-14"
-            },
-            {
-              "numero": 27,
-              "episodios": 230,
-              "fechaEstreno": "2010-09-13"
-            },
-            {
-              "numero": 28,
-              "episodios": 230,
-              "fechaEstreno": "2011-09-19"
-            },
-            {
-              "numero": 29,
-              "episodios": 230,
-              "fechaEstreno": "2012-09-17"
-            },
-            {
-              "numero": 30,
-              "episodios": 230,
-              "fechaEstreno": "2013-09-16"
-            },
-            {
-              "numero": 31,
-              "episodios": 230,
-              "fechaEstreno": "2014-09-15"
-            },
-            {
-              "numero": 32,
-              "episodios": 230,
-              "fechaEstreno": "2015-09-14"
-            },
-            {
-              "numero": 33,
-              "episodios": 230,
-              "fechaEstreno": "2016-09-12"
-            },
-            {
-              "numero": 34,
-              "episodios": 230,
-              "fechaEstreno": "2017-09-11"
-            },
-            {
-              "numero": 35,
-              "episodios": 230,
-              "fechaEstreno": "2018-09-10"
-            },
-            {
-              "numero": 36,
-              "episodios": 190,
-              "fechaEstreno": "2019-09-09"
-            },
-            {
-              "numero": 37,
-              "episodios": 230,
-              "fechaEstreno": "2020-09-14"
-            },
-            {
-              "numero": 38,
-              "episodios": 240,
-              "fechaEstreno": "2021-09-13"
-            },
-            {
-              "numero": 39,
-              "episodios": 230,
-              "fechaEstreno": "2022-09-12"
-            },
-            {
-              "numero": 40,
-              "episodios": 236,
-              "fechaEstreno": "2023-09-11"
-            },
-            {
-              "numero": 41,
-              "episodios": 230,
-              "fechaEstreno": "2024-09-09"
-            },
-            {
-              "numero": 42,
-              "episodios": 230,
-              "fechaEstreno": "2025-09-08"
-            },
-            {
-              "numero": 43,
-              "episodios": 1,
-              "fechaEstreno": "2026-09-14"
-            }
-          ],
-          "currentSeason": 43,
-          "reviews": null,
-          "trailer": {
-            "key": "UNiCrolP7hA",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Ken Jennings",
-              "character": "Self - Host",
-              "order": 0
-            },
-            {
-              "name": "Johnny Gilbert",
-              "character": "Self - Announcer (voice)",
-              "order": 3
             }
           ],
           "trending": false
