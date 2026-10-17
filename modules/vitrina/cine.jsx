@@ -1,11 +1,11 @@
 import { CINE_RATINGS, STATUS_BADGE, diasHasta, diasParaEstreno, diasRestantesCartelera, esEnProduccion, esEstreno, esNuevo, esTrending, seasonLabel, setCineItemEstado, useCineEstadoMap } from "./estado.js";
-import { FormatoTag, MarcoAngst, btnGhost, shareToWhatsApp } from "../shared/ui.jsx";
+import { FormatoTag, MarcoAngst, btnGhost, shareToWhatsApp, useAltoLibre } from "../shared/ui.jsx";
 import { SeriesSeguimiento } from "./series.jsx";
 import { avanceDe, estadoAvance, estadoEfectivo, estadoRemotoDe, useAvanceVersion } from "./avance.js";
 import { enqueueSimklAction, flushSimklQueue, pedirSimklAuth, useSimklDiscovery, useSimklSyncStatus } from "./simkl.js";
 import { CAT_COLORS } from "../shared/constants.js";
 
-const { useState, useEffect, useRef } = React;
+const { useState, useEffect, useLayoutEffect, useRef } = React;
 
 
 // ─── Exportar imagen para RRSS (desde la ficha de Vitrina) ─────────────────
@@ -485,6 +485,14 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
   // para que el navegador pelee contra un scroll nativo: no hay scroll
   // nativo, el carrusel entero lo maneja este componente.
   const [pos, setPos] = useState(0);
+  // Escala del carrusel: las tarjetas (póster + textos + insignias) crecen para
+  // ocupar el espacio libre entre los filtros y el pie, y se centran ahí. k=1 es
+  // el tamaño base de siempre; nunca baja de eso.
+  const [k, setK] = useState(1);
+  const ESPACIADO = ITEM_W * (1 + (k - 1) * 0.5); // las vecinas siguen asomando aunque la central crezca
+  const [h0, setH0] = useState(0); // alto natural de una tarjeta (sin escalar), el máximo visto
+  const contRef = useRef(null);
+  const cardRef = useRef(null);
   const posRef = useRef(0);
   const dragRef = useRef(null); // {startX, startPos, moved, pointerId} mientras se arrastra
   const animRef = useRef(null); // id de la animación de snap/paso en curso
@@ -520,7 +528,7 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
     if (!d) return;
     const deltaPx = e.clientX - d.startX;
     d.moved = Math.max(d.moved, Math.abs(deltaPx));
-    setPosBoth(d.startPos - deltaPx / ITEM_W);
+    setPosBoth(d.startPos - deltaPx / ESPACIADO);
   }
   function endDrag() {
     const d = dragRef.current;
@@ -707,6 +715,17 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
     </div>
   );
 
+  const alto = useAltoLibre(contRef, 380, 16, [categoria, simklStatus.estado, puedePendientes, esPelicula, sortedItems.length]);
+  useLayoutEffect(() => {
+    const h = cardRef.current && cardRef.current.offsetHeight;
+    if (h && h > h0) setH0(h);
+  });
+  const anchoVista = Math.min((contRef.current && contRef.current.offsetWidth) || window.innerWidth, 480);
+  const kCalc = Math.max(1, Math.min(h0 && alto ? (alto - 20) / h0 : 1, (anchoVista * 0.56) / CARD_W, 1.6));
+  useEffect(() => { if (Math.abs(kCalc - k) > 0.005) setK(kCalc); }, [kCalc]);
+  const altoCont = alto || 380;
+  const topTarjeta = h0 ? Math.max(0, Math.round((altoCont - h0) / 2)) : 16;
+
   if (!sortedItems.length) {
     return (
       <div>
@@ -753,11 +772,12 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
       <button onClick={() => step(-1)} style={{ ...arrowStyle, left: 6 }}>◀️</button>
       <button onClick={() => step(1)} style={{ ...arrowStyle, right: 6 }}>▶️</button>
       <div
+        ref={contRef}
         onPointerDown={onPointerDown} onPointerMove={onPointerMove}
         onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
         style={{
-          position: "relative", height: 380, touchAction: "none", perspective: 2600, overflow: "hidden",
-          padding: "16px 0 12px", userSelect: "none", cursor: "grab",
+          position: "relative", height: altoCont, boxSizing: "border-box", touchAction: "none", perspective: 2600, overflow: "hidden",
+          userSelect: "none", cursor: "grab",
         }}>
         {slots.map(({ offset, item, dist }) => {
           const rotate = Math.max(-40, Math.min(40, dist * 40));
@@ -783,10 +803,10 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
           const fueraDeCartelera = !!item._fueraDeCartelera;
           const deSimkl = !!item._deSimkl;
           return (
-            <div key={offset} data-cine-tap={offset} style={{
-              position: "absolute", top: 16, left: "50%", width: CARD_W,
+            <div key={offset} ref={offset === 0 ? cardRef : undefined} data-cine-tap={offset} style={{
+              position: "absolute", top: topTarjeta, left: "50%", width: CARD_W,
               marginLeft: -CARD_W / 2, cursor: "pointer",
-              transform: `translateX(${dist * ITEM_W}px) rotateY(${-rotate}deg) scale(${scale})`,
+              transform: `translateX(${dist * ESPACIADO}px) rotateY(${-rotate}deg) scale(${scale * k})`,
               transformOrigin: "center center",
               zIndex: Math.round(100 - Math.abs(dist) * 10),
             }}>

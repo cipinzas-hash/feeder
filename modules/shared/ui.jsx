@@ -58,7 +58,9 @@ export function FormatoTag({ item }) {
 // Descuenta el pie de Angst (.ftr, frase + logo) para que el pie se vea sin
 // scrollear: el contenido de una vista llena la pantalla y el pie queda justo
 // debajo. Se mide en vivo (el encabezado y el pie pueden cambiar de alto).
-export function useAltoLibre(ref, minimo = 460) {
+// `reserva`: px extra que la vista deja bajo el elemento (p. ej. un padding).
+// `deps`: si algo que está encima del elemento cambia de alto, re-medir.
+export function useAltoLibre(ref, minimo = 460, reserva = 0, deps = []) {
   const [alto, setAlto] = useState(null);
   useLayoutEffect(() => {
     function medir() {
@@ -68,7 +70,7 @@ export function useAltoLibre(ref, minimo = 460) {
       const pie = document.querySelector(".ftr");
       const altoPie = pie ? pie.offsetHeight + 8 : 0; // + margin-top del pie
       const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-      setAlto(Math.max(minimo, Math.round(vh - arriba - altoPie)));
+      setAlto(Math.max(minimo, Math.round(vh - arriba - altoPie - reserva)));
     }
     medir();
     const t = setTimeout(medir, 350);
@@ -79,7 +81,7 @@ export function useAltoLibre(ref, minimo = 460) {
       window.removeEventListener("resize", medir);
       window.removeEventListener("orientationchange", medir);
     };
-  }, []);
+  }, deps);
   return alto;
 }
 

@@ -16,11 +16,10 @@ const VITRINA_ICONS = { "Películas": "🎬", "Series": "📺", "Animación": "�
 export function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, generatedAt, aviso, cargando }) {
   const items = vitrinaData[vitrinaCat] || [];
   // La vista llena la pantalla hasta el pie de Angst (que queda visible, no
-  // empujado fuera por un min-height de 100vh) y el carrusel se centra en el
-  // espacio libre en vez de dejar un hueco debajo.
+  // empujado fuera por un min-height de 100vh). El carrusel de cine se reparte
+  // solo el espacio libre (ver CineCoverFlow): tarjetas más grandes y centradas.
   const raiz = useRef(null);
   const alto = useAltoLibre(raiz, 0);
-  const esCarrusel = !["Microdocumentales", "Melee", "Conciertos"].includes(vitrinaCat);
   const segBtn = (active) => ({
     flex: 1, padding: "9px 4px", fontSize: 20,
     border: "1px solid", borderRadius: 20, cursor: "pointer",
@@ -30,10 +29,7 @@ export function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, gene
   });
   return (
     <div ref={raiz} style={{ paddingBottom: 16, background: "#111", minHeight: alto || "100vh", boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
-      <div style={{ padding: "16px 18px 4px" }}>
-        <span style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff" }}>🎬 vitrina audiovisual</span>
-      </div>
-      <div style={{ display: "flex", gap: 6, padding: "12px 18px" }}>
+      <div style={{ display: "flex", gap: 6, padding: "16px 18px 12px" }}>
         {VITRINA_CATEGORIAS.map(cat => (
           <button key={cat} onClick={() => onChangeCat(cat)} title={cat} style={segBtn(cat === vitrinaCat)}>{VITRINA_ICONS[cat] || cat}</button>
         ))}
@@ -49,7 +45,7 @@ export function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, gene
           {aviso.accion && <button onClick={aviso.accion.fn} style={{ background: "transparent", border: "1px solid currentColor", color: "inherit", borderRadius: 14, padding: "3px 10px", fontSize: 11, cursor: "pointer" }}>{aviso.accion.label}</button>}
         </div>
       )}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: esCarrusel ? "center" : "flex-start" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         {/* Categorías de lista (no carrusel) vacías: decirlo, en vez de dejar la pantalla en blanco. */}
         {!cargando && items.length === 0 && ["Microdocumentales", "Conciertos", "Melee"].includes(vitrinaCat) && (
           <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#666", textAlign: "center", padding: "50px 20px" }}>

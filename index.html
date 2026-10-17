@@ -9542,7 +9542,7 @@ ${item.link}`);
       boxShadow: "2px 2px 0 rgba(0,0,0,0.45)"
     } }, b)));
   }
-  function useAltoLibre(ref, minimo = 460) {
+  function useAltoLibre(ref, minimo = 460, reserva = 0, deps = []) {
     const [alto, setAlto] = useState11(null);
     useLayoutEffect(() => {
       function medir() {
@@ -9552,7 +9552,7 @@ ${item.link}`);
         const pie2 = document.querySelector(".ftr");
         const altoPie = pie2 ? pie2.offsetHeight + 8 : 0;
         const vh = window.visualViewport && window.visualViewport.height || window.innerHeight;
-        setAlto(Math.max(minimo, Math.round(vh - arriba - altoPie)));
+        setAlto(Math.max(minimo, Math.round(vh - arriba - altoPie - reserva)));
       }
       medir();
       const t = setTimeout(medir, 350);
@@ -9563,7 +9563,7 @@ ${item.link}`);
         window.removeEventListener("resize", medir);
         window.removeEventListener("orientationchange", medir);
       };
-    }, []);
+    }, deps);
     return alto;
   }
   function MarcoAngst({ children, style }) {
@@ -10575,7 +10575,7 @@ ${item.link}`);
   }
 
   // modules/vitrina/cine.jsx
-  var { useState: useState17, useEffect: useEffect17, useRef: useRef16 } = React;
+  var { useState: useState17, useEffect: useEffect17, useLayoutEffect: useLayoutEffect2, useRef: useRef16 } = React;
   function loadImageForCanvas(url) {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -10875,6 +10875,11 @@ ${item.link}`);
     const GAP = 20;
     const ITEM_W = CARD_W + GAP;
     const [pos, setPos] = useState17(0);
+    const [k, setK] = useState17(1);
+    const ESPACIADO = ITEM_W * (1 + (k - 1) * 0.5);
+    const [h0, setH0] = useState17(0);
+    const contRef = useRef16(null);
+    const cardRef = useRef16(null);
     const posRef = useRef16(0);
     const dragRef = useRef16(null);
     const animRef = useRef16(null);
@@ -10917,7 +10922,7 @@ ${item.link}`);
       if (!d) return;
       const deltaPx = e.clientX - d.startX;
       d.moved = Math.max(d.moved, Math.abs(deltaPx));
-      setPosBoth(d.startPos - deltaPx / ITEM_W);
+      setPosBoth(d.startPos - deltaPx / ESPACIADO);
     }
     function endDrag() {
       const d = dragRef.current;
@@ -11041,6 +11046,18 @@ Toco reintentar ahora.`);
       simklStatus.ultimoError || "error",
       " (tocar)"
     ), simklStatus.conectado && simklStatus.estado === "idle" && /* @__PURE__ */ React.createElement("span", { style: { ...toolbarBtn(false), cursor: "default", opacity: 0.5 } }, "\u{1F517} Simkl conectado"));
+    const alto = useAltoLibre(contRef, 380, 16, [categoria, simklStatus.estado, puedePendientes, esPelicula, sortedItems.length]);
+    useLayoutEffect2(() => {
+      const h = cardRef.current && cardRef.current.offsetHeight;
+      if (h && h > h0) setH0(h);
+    });
+    const anchoVista = Math.min(contRef.current && contRef.current.offsetWidth || window.innerWidth, 480);
+    const kCalc = Math.max(1, Math.min(h0 && alto ? (alto - 20) / h0 : 1, anchoVista * 0.56 / CARD_W, 1.6));
+    useEffect17(() => {
+      if (Math.abs(kCalc - k) > 5e-3) setK(kCalc);
+    }, [kCalc]);
+    const altoCont = alto || 380;
+    const topTarjeta = h0 ? Math.max(0, Math.round((altoCont - h0) / 2)) : 16;
     if (!sortedItems.length) {
       return /* @__PURE__ */ React.createElement("div", null, toolbar, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#444", textAlign: "center", padding: "60px 20px" } }, (() => {
         const av = estadoAvance();
@@ -11082,17 +11099,18 @@ Toco reintentar ahora.`);
     return /* @__PURE__ */ React.createElement("div", null, toolbar, /* @__PURE__ */ React.createElement("div", { style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => step(-1), style: { ...arrowStyle, left: 6 } }, "\u25C0\uFE0F"), /* @__PURE__ */ React.createElement("button", { onClick: () => step(1), style: { ...arrowStyle, right: 6 } }, "\u25B6\uFE0F"), /* @__PURE__ */ React.createElement(
       "div",
       {
+        ref: contRef,
         onPointerDown,
         onPointerMove,
         onPointerUp,
         onPointerCancel: onPointerUp,
         style: {
           position: "relative",
-          height: 380,
+          height: altoCont,
+          boxSizing: "border-box",
           touchAction: "none",
           perspective: 2600,
           overflow: "hidden",
-          padding: "16px 0 12px",
           userSelect: "none",
           cursor: "grab"
         }
@@ -11116,14 +11134,14 @@ Toco reintentar ahora.`);
         const trending = esTrending(item);
         const fueraDeCartelera = !!item._fueraDeCartelera;
         const deSimkl = !!item._deSimkl;
-        return /* @__PURE__ */ React.createElement("div", { key: offset, "data-cine-tap": offset, style: {
+        return /* @__PURE__ */ React.createElement("div", { key: offset, ref: offset === 0 ? cardRef : void 0, "data-cine-tap": offset, style: {
           position: "absolute",
-          top: 16,
+          top: topTarjeta,
           left: "50%",
           width: CARD_W,
           marginLeft: -CARD_W / 2,
           cursor: "pointer",
-          transform: `translateX(${dist * ITEM_W}px) rotateY(${-rotate}deg) scale(${scale})`,
+          transform: `translateX(${dist * ESPACIADO}px) rotateY(${-rotate}deg) scale(${scale * k})`,
           transformOrigin: "center center",
           zIndex: Math.round(100 - Math.abs(dist) * 10)
         } }, /* @__PURE__ */ React.createElement("div", { style: {
@@ -11299,7 +11317,6 @@ Toco reintentar ahora.`);
     const items = vitrinaData[vitrinaCat] || [];
     const raiz = useRef17(null);
     const alto = useAltoLibre(raiz, 0);
-    const esCarrusel = !["Microdocumentales", "Melee", "Conciertos"].includes(vitrinaCat);
     const segBtn = (active) => ({
       flex: 1,
       padding: "9px 4px",
@@ -11311,7 +11328,7 @@ Toco reintentar ahora.`);
       color: active ? "#111" : "#999",
       borderColor: active ? CAT_COLORS[vitrinaCat] || "#e91e8c" : "#333"
     });
-    return /* @__PURE__ */ React.createElement("div", { ref: raiz, style: { paddingBottom: 16, background: "#111", minHeight: alto || "100vh", boxSizing: "border-box", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 18px 4px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff" } }, "\u{1F3AC} vitrina audiovisual")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "12px 18px" } }, VITRINA_CATEGORIAS.map((cat) => /* @__PURE__ */ React.createElement("button", { key: cat, onClick: () => onChangeCat(cat), title: cat, style: segBtn(cat === vitrinaCat) }, VITRINA_ICONS[cat] || cat))), aviso && /* @__PURE__ */ React.createElement("div", { style: {
+    return /* @__PURE__ */ React.createElement("div", { ref: raiz, style: { paddingBottom: 16, background: "#111", minHeight: alto || "100vh", boxSizing: "border-box", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "16px 18px 12px" } }, VITRINA_CATEGORIAS.map((cat) => /* @__PURE__ */ React.createElement("button", { key: cat, onClick: () => onChangeCat(cat), title: cat, style: segBtn(cat === vitrinaCat) }, VITRINA_ICONS[cat] || cat))), aviso && /* @__PURE__ */ React.createElement("div", { style: {
       margin: "0 18px 8px",
       padding: "8px 12px",
       borderRadius: 10,
@@ -11322,7 +11339,7 @@ Toco reintentar ahora.`);
       gap: 10,
       background: aviso.tono === "error" ? "rgba(231,76,60,0.15)" : aviso.tono === "aviso" ? "rgba(245,197,24,0.13)" : "rgba(255,255,255,0.06)",
       color: aviso.tono === "error" ? "#ff8a7a" : aviso.tono === "aviso" ? "#f5c518" : "#aaa"
-    } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, aviso.texto), aviso.accion && /* @__PURE__ */ React.createElement("button", { onClick: aviso.accion.fn, style: { background: "transparent", border: "1px solid currentColor", color: "inherit", borderRadius: 14, padding: "3px 10px", fontSize: 11, cursor: "pointer" } }, aviso.accion.label)), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: esCarrusel ? "center" : "flex-start" } }, !cargando2 && items.length === 0 && ["Microdocumentales", "Conciertos", "Melee"].includes(vitrinaCat) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#666", textAlign: "center", padding: "50px 20px" } }, "no hay \xEDtems en esta categor\xEDa por ahora"), vitrinaCat === "Microdocumentales" ? /* @__PURE__ */ React.createElement(ArchivedFeed, { items, storageKey: "angst-feed-microdocs-vistos-v1" }) : vitrinaCat === "Melee" ? /* @__PURE__ */ React.createElement(MeleeFeed, { items }) : vitrinaCat === "Conciertos" ? /* @__PURE__ */ React.createElement(ArchivedFeed, { items, storageKey: "angst-feed-conciertos-vistos-v1" }) : /* @__PURE__ */ React.createElement(CineCoverFlow, { items, onOpen, generatedAt, categoria: vitrinaCat })));
+    } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, aviso.texto), aviso.accion && /* @__PURE__ */ React.createElement("button", { onClick: aviso.accion.fn, style: { background: "transparent", border: "1px solid currentColor", color: "inherit", borderRadius: 14, padding: "3px 10px", fontSize: 11, cursor: "pointer" } }, aviso.accion.label)), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column" } }, !cargando2 && items.length === 0 && ["Microdocumentales", "Conciertos", "Melee"].includes(vitrinaCat) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#666", textAlign: "center", padding: "50px 20px" } }, "no hay \xEDtems en esta categor\xEDa por ahora"), vitrinaCat === "Microdocumentales" ? /* @__PURE__ */ React.createElement(ArchivedFeed, { items, storageKey: "angst-feed-microdocs-vistos-v1" }) : vitrinaCat === "Melee" ? /* @__PURE__ */ React.createElement(MeleeFeed, { items }) : vitrinaCat === "Conciertos" ? /* @__PURE__ */ React.createElement(ArchivedFeed, { items, storageKey: "angst-feed-conciertos-vistos-v1" }) : /* @__PURE__ */ React.createElement(CineCoverFlow, { items, onOpen, generatedAt, categoria: vitrinaCat })));
   }
   function VitrinaPage() {
     const [vitrinaCat, setVitrinaCat] = useState18("Pel\xEDculas");
