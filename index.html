@@ -10570,6 +10570,157 @@ ${item.link}`);
 
   // modules/vitrina/cine.jsx
   var { useState: useState17, useEffect: useEffect17, useRef: useRef16 } = React;
+  function loadImageForCanvas(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("no se pudo cargar la imagen"));
+      img.src = url;
+    });
+  }
+  function wrapCanvasText(ctx, text, maxWidth) {
+    const words = (text || "").split(/\s+/);
+    const lines = [];
+    let line2 = "";
+    for (const w of words) {
+      const test = line2 ? `${line2} ${w}` : w;
+      if (ctx.measureText(test).width > maxWidth && line2) {
+        lines.push(line2);
+        line2 = w;
+      } else {
+        line2 = test;
+      }
+    }
+    if (line2) lines.push(line2);
+    return lines;
+  }
+  function rectRedondeado(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  function disponerResena(ctx, nota, maxW, maxH) {
+    const texto = `\u201C${nota.trim()}\u201D`;
+    const fuente = (size2) => `italic 400 ${size2}px 'DM Sans', sans-serif`;
+    for (let size2 = 44; size2 >= 26; size2 -= 2) {
+      ctx.font = fuente(size2);
+      const lh2 = Math.round(size2 * 1.42);
+      const lines2 = wrapCanvasText(ctx, texto, maxW);
+      if (lines2.length * lh2 <= maxH) return { size: size2, lh: lh2, lines: lines2 };
+    }
+    const size = 26, lh = Math.round(size * 1.42);
+    ctx.font = fuente(size);
+    const max = Math.max(1, Math.floor(maxH / lh));
+    const lines = wrapCanvasText(ctx, texto, maxW).slice(0, max);
+    let ultima = lines[lines.length - 1];
+    while (ultima && ctx.measureText(ultima + "\u2026").width > maxW) ultima = ultima.replace(/\s*\S+$/, "");
+    lines[lines.length - 1] = (ultima || "") + "\u2026";
+    return { size, lh, lines };
+  }
+  async function exportCineShareImage(item, review, onError) {
+    const W = 1080, H2 = 1920;
+    const canvas = document.createElement("canvas");
+    canvas.width = W;
+    canvas.height = H2;
+    const ctx = canvas.getContext("2d");
+    try {
+      if (document.fonts && document.fonts.load) {
+        await Promise.all([
+          document.fonts.load("700 76px 'Caveat'"),
+          document.fonts.load("600 44px 'Caveat'"),
+          document.fonts.load("italic 400 44px 'DM Sans'")
+        ]);
+      }
+    } catch (e) {
+    }
+    let img = null;
+    if (item.image) {
+      try {
+        img = await loadImageForCanvas(item.image);
+      } catch (e) {
+        onError && onError("no se pudo exportar el cartel de esta ficha (bloqueo de origen de la imagen) \u2014 prob\xE1 con otro t\xEDtulo");
+        return false;
+      }
+    }
+    const rating = CINE_RATINGS.find((r) => r.id === review?.rating);
+    const nota = (review?.nota || "").trim();
+    const margenSup = 130, margenInf = 170, anchoTexto = 800;
+    const medidasCartel = (pw2) => {
+      if (!img) return { dw: pw2, dh: Math.round(pw2 * 1.5) };
+      const sc = Math.min(pw2 / img.width, pw2 * 1.5 / img.height);
+      return { dw: Math.round(img.width * sc), dh: Math.round(img.height * sc) };
+    };
+    let pw = nota ? 760 : 880, cartel, resena = null;
+    const anchos = nota ? [760, 680, 600, 540] : [880];
+    for (const candidato of anchos) {
+      pw = candidato;
+      cartel = medidasCartel(pw);
+      if (!nota) break;
+      const libre = H2 - margenInf - (margenSup + cartel.dh + 110 + 70);
+      resena = disponerResena(ctx, nota, anchoTexto, libre);
+      if (resena.size >= 36) break;
+    }
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, W, H2);
+    const bloque = cartel.dh + 110 + 20;
+    const top = nota ? margenSup : Math.max(100, Math.round((H2 - margenInf + 60 - bloque) / 2));
+    const x = Math.round((W - cartel.dw) / 2);
+    if (img) {
+      ctx.save();
+      rectRedondeado(ctx, x, top, cartel.dw, cartel.dh, 22);
+      ctx.clip();
+      ctx.drawImage(img, x, top, cartel.dw, cartel.dh);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = "#141414";
+      rectRedondeado(ctx, x, top, cartel.dw, cartel.dh, 22);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.textAlign = "center";
+      ctx.font = "700 56px 'Caveat', cursive";
+      ctx.fillText(item.title || "", W / 2, top + cartel.dh / 2);
+    }
+    ctx.textAlign = "center";
+    let y = top + cartel.dh + 110;
+    if (rating) {
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "700 76px 'Caveat', cursive";
+      ctx.fillText(`${rating.emoji} ${rating.label}`, W / 2, y);
+    }
+    if (nota && resena) {
+      ctx.font = `italic 400 ${resena.size}px 'DM Sans', sans-serif`;
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
+      let ty = y + 70 + resena.size;
+      for (const line2 of resena.lines) {
+        ctx.fillText(line2, W / 2, ty);
+        ty += resena.lh;
+      }
+    }
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    ctx.font = "600 44px 'Caveat', cursive";
+    ctx.fillText("angstapp", W / 2, H2 - 90);
+    try {
+      const blob = await new Promise((res) => canvas.toBlob(res, "image/png"));
+      if (!blob) throw new Error("toBlob devolvi\xF3 null");
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${(item.title || "angst").replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4e3);
+      return true;
+    } catch (e) {
+      onError && onError("no se pudo exportar esta imagen (bloqueo del origen del cartel) \u2014 prob\xE1 con otro t\xEDtulo");
+      return false;
+    }
+  }
   function RatingBadges({ rating, size = "sm" }) {
     if (!rating) return null;
     const chips = [];
@@ -10633,12 +10784,25 @@ ${item.link}`);
       "guardar rese\xF1a"
     )));
   }
-  function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions, onExportImage }) {
+  function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions }) {
     const cineEstado = useCineEstadoMap();
     useAvanceVersion();
     const estadoItem = cineEstado[item.guid];
     const estado = estadoEfectivo(cineEstado, item.guid);
     const [reviewOpen, setReviewOpen] = useState17(false);
+    const [exportando, setExportando] = useState17(false);
+    const [exportMsg, setExportMsg] = useState17(null);
+    async function exportarImagen() {
+      if (exportando) return;
+      setExportando(true);
+      setExportMsg(null);
+      const ok = await exportCineShareImage(item, estadoItem, (msg) => setExportMsg(msg));
+      setExportando(false);
+      if (ok) {
+        setExportMsg("\u2713 imagen descargada");
+        setTimeout(() => setExportMsg(null), 2500);
+      }
+    }
     function marcar(nuevoEstado) {
       if (nuevoEstado === "interesa") {
         setCineItemEstado(item.guid, { estado: "interesa", item });
@@ -10695,7 +10859,7 @@ ${item.link}`);
     )), !hideActions && !reviewOpen && puedeEpisodios && mostrarEpisodios && /* @__PURE__ */ React.createElement("div", { style: { margin: "0 0 18px", borderRadius: 10, overflow: "hidden" } }, /* @__PURE__ */ React.createElement(SeriesSeguimiento, { item, progresoActual, onMarcar: marcarProgreso })), !esEnProduccion(item) && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #1a1a1a" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 } }, "mi rese\xF1a"), estado === "vista" && !reviewOpen ? /* @__PURE__ */ React.createElement("div", { onClick: () => setReviewOpen(true), style: { cursor: "pointer" } }, (() => {
       const r = CINE_RATINGS.find((r2) => r2.id === estadoItem.rating);
       return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", marginBottom: 4 } }, r ? `${r.emoji} ${r.label}` : "sin calificar");
-    })(), estadoItem.nota && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", fontStyle: "italic" } }, '"', estadoItem.nota, '"'), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 4 } }, "tocar para editar")) : reviewOpen || estado !== "vista" ? reviewOpen && /* @__PURE__ */ React.createElement(MiniReviewForm, { onSave: guardarReview, onCancel: () => setReviewOpen(false), inicial: estadoItem }) : null, estado !== "vista" && !reviewOpen && /* @__PURE__ */ React.createElement("button", { onClick: () => setReviewOpen(true), style: { ...btnGhost, width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4DD}"), "marcar como vista")), leads.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 6 } }, "reparto principal"), leads.map((c, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.7)", marginBottom: 2 } }, /* @__PURE__ */ React.createElement("b", { style: { color: "#fff" } }, c.name), c.character ? ` \u2014 ${c.character}` : "")), supporting.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6 } }, supporting.map((c) => c.name).join(" \xB7 "))), item.reviews ? /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 } }, "rese\xF1as de usuario"), /* @__PURE__ */ React.createElement(ReviewBlock, { label: "mejor valorada", review: item.reviews.top, color }), item.reviews.bottom && /* @__PURE__ */ React.createElement(ReviewBlock, { label: "peor valorada", review: item.reviews.bottom, color })) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#666", fontStyle: "italic" } }, "sin rese\xF1as de usuario disponibles para este t\xEDtulo")), !hideActions && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "anterior"), onSave && /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareToWhatsApp(item), style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4E4}"), "compartir"), /* @__PURE__ */ React.createElement("button", { onClick: onNext, style: { ...btnGhost, background: color, color: "#111", borderColor: color } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente"))), hideActions && onExportImage && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onExportImage(item), style: { ...btnGhost, background: color, color: "#111", borderColor: color, flex: "none", width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4F8}"), "exportar imagen para compartir")));
+    })(), estadoItem.nota && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", fontStyle: "italic" } }, '"', estadoItem.nota, '"'), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 4 } }, "tocar para editar")) : reviewOpen || estado !== "vista" ? reviewOpen && /* @__PURE__ */ React.createElement(MiniReviewForm, { onSave: guardarReview, onCancel: () => setReviewOpen(false), inicial: estadoItem }) : null, estado === "vista" && !reviewOpen && estadoItem?.rating && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: exportarImagen, disabled: exportando, style: { ...btnGhost, width: "100%", opacity: exportando ? 0.6 : 1 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4F8}"), exportando ? "generando imagen\u2026" : "exportar imagen"), exportMsg && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 6 } }, exportMsg)), estado !== "vista" && !reviewOpen && /* @__PURE__ */ React.createElement("button", { onClick: () => setReviewOpen(true), style: { ...btnGhost, width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4DD}"), "marcar como vista")), leads.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 6 } }, "reparto principal"), leads.map((c, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.7)", marginBottom: 2 } }, /* @__PURE__ */ React.createElement("b", { style: { color: "#fff" } }, c.name), c.character ? ` \u2014 ${c.character}` : "")), supporting.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6 } }, supporting.map((c) => c.name).join(" \xB7 "))), item.reviews ? /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 } }, "rese\xF1as de usuario"), /* @__PURE__ */ React.createElement(ReviewBlock, { label: "mejor valorada", review: item.reviews.top, color }), item.reviews.bottom && /* @__PURE__ */ React.createElement(ReviewBlock, { label: "peor valorada", review: item.reviews.bottom, color })) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#666", fontStyle: "italic" } }, "sin rese\xF1as de usuario disponibles para este t\xEDtulo")), !hideActions && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "anterior"), onSave && /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareToWhatsApp(item), style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4E4}"), "compartir"), /* @__PURE__ */ React.createElement("button", { onClick: onNext, style: { ...btnGhost, background: color, color: "#111", borderColor: color } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente"))));
   }
   function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
     useEffect17(() => {

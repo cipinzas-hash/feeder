@@ -8,10 +8,11 @@ import { CAT_COLORS } from "../shared/constants.js";
 const { useState, useEffect, useRef } = React;
 
 
-// ─── Exportar imagen para RRSS (solo desde el Buzón) ───────────────────────
-// Renderiza poster + título + rating + sinopsis en un canvas 1080×1920
-// (proporción Instagram Story) y lo descarga como PNG — el usuario lo sube
-// manualmente a la red social que quiera, no hay integración directa.
+// ─── Exportar imagen para RRSS (desde la ficha de Vitrina) ─────────────────
+// Canvas 1080×1920 (proporción Instagram Story), fondo negro, y solo cuatro
+// cosas: el cartel, TU puntuación (CINE_RATINGS), TU reseña (nota) y la firma
+// "angstapp" discreta. Se descarga como PNG; el usuario lo sube a mano a la red
+// social que quiera, no hay integración directa.
 function loadImageForCanvas(url) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -39,76 +40,133 @@ function wrapCanvasText(ctx, text, maxWidth) {
   return lines;
 }
 
-export async function exportCineShareImage(item, onError) {
+function rectRedondeado(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// Reseña: baja el tamaño de letra hasta que quepa en maxH; si ni a 26px cabe,
+// recorta con puntos suspensivos. Devuelve { size, lh, lines } y deja el font puesto.
+function disponerResena(ctx, nota, maxW, maxH) {
+  const texto = `“${nota.trim()}”`;
+  const fuente = size => `italic 400 ${size}px 'DM Sans', sans-serif`;
+  for (let size = 44; size >= 26; size -= 2) {
+    ctx.font = fuente(size);
+    const lh = Math.round(size * 1.42);
+    const lines = wrapCanvasText(ctx, texto, maxW);
+    if (lines.length * lh <= maxH) return { size, lh, lines };
+  }
+  const size = 26, lh = Math.round(size * 1.42);
+  ctx.font = fuente(size);
+  const max = Math.max(1, Math.floor(maxH / lh));
+  const lines = wrapCanvasText(ctx, texto, maxW).slice(0, max);
+  let ultima = lines[lines.length - 1];
+  while (ultima && ctx.measureText(ultima + "…").width > maxW) ultima = ultima.replace(/\s*\S+$/, "");
+  lines[lines.length - 1] = (ultima || "") + "…";
+  return { size, lh, lines };
+}
+
+export async function exportCineShareImage(item, review, onError) {
   const W = 1080, H = 1920;
   const canvas = document.createElement("canvas");
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext("2d");
 
+  // Las fuentes de Angst se cargan por demanda: pedirlas antes de dibujar.
+  try {
+    if (document.fonts && document.fonts.load) {
+      await Promise.all([
+        document.fonts.load("700 76px 'Caveat'"),
+        document.fonts.load("600 44px 'Caveat'"),
+        document.fonts.load("italic 400 44px 'DM Sans'"),
+      ]);
+    }
+  } catch (e) { /* si no cargan, el canvas usa la fuente de respaldo */ }
+
+  // Poster
+  let img = null;
+  if (item.image) {
+    try { img = await loadImageForCanvas(item.image); }
+    catch (e) {
+      onError && onError("no se pudo exportar el cartel de esta ficha (bloqueo de origen de la imagen) — probá con otro título");
+      return false;
+    }
+  }
+  const rating = CINE_RATINGS.find(r => r.id === review?.rating);
+  const nota = (review?.nota || "").trim();
+
+  const margenSup = 130, margenInf = 170, anchoTexto = 800;
+  const medidasCartel = pw => {
+    if (!img) return { dw: pw, dh: Math.round(pw * 1.5) };
+    const sc = Math.min(pw / img.width, (pw * 1.5) / img.height);
+    return { dw: Math.round(img.width * sc), dh: Math.round(img.height * sc) };
+  };
+
+  // Elegir el cartel más grande con el que la reseña aún se lee cómoda (>=36px).
+  // Sin reseña, el cartel va más grande y el bloque se centra.
+  let pw = nota ? 760 : 880, cartel, resena = null;
+  const anchos = nota ? [760, 680, 600, 540] : [880];
+  for (const candidato of anchos) {
+    pw = candidato;
+    cartel = medidasCartel(pw);
+    if (!nota) break;
+    const libre = (H - margenInf) - (margenSup + cartel.dh + 110 + 70);
+    resena = disponerResena(ctx, nota, anchoTexto, libre);
+    if (resena.size >= 36) break;
+  }
+
   // Fondo
-  ctx.fillStyle = "#0a0a0a";
+  ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, W, H);
 
-  // Poster — ocupa el ~68% superior, "cover" (recorta, no deforma)
-  const posterH = Math.round(H * 0.68);
-  try {
-    if (item.image) {
-      const img = await loadImageForCanvas(item.image);
-      const scale = Math.max(W / img.width, posterH / img.height);
-      const dw = img.width * scale, dh = img.height * scale;
-      ctx.drawImage(img, (W - dw) / 2, (posterH - dh) / 2, dw, dh);
-    } else {
-      ctx.fillStyle = "#1a1a1a";
-      ctx.fillRect(0, 0, W, posterH);
-    }
-  } catch (e) {
-    onError && onError("no se pudo exportar el poster de esta ficha (bloqueo de origen de la imagen) — probá con otro título");
-    return false;
-  }
+  // Posición vertical: con reseña arriba fija; sin reseña, bloque centrado.
+  const bloque = cartel.dh + 110 + 20;
+  const top = nota ? margenSup : Math.max(100, Math.round((H - margenInf + 60 - bloque) / 2));
+  const x = Math.round((W - cartel.dw) / 2);
 
-  // Degradé para que el texto de abajo se lea sobre el poster
-  const grad = ctx.createLinearGradient(0, posterH - 420, 0, posterH + 20);
-  grad.addColorStop(0, "rgba(10,10,10,0)");
-  grad.addColorStop(1, "rgba(10,10,10,1)");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, posterH - 420, W, 440);
-
-  const marginX = 64;
-  let y = posterH + 70;
-
-  // Título
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "700 58px 'DM Sans', sans-serif";
-  const titleLines = wrapCanvasText(ctx, item.title, W - marginX * 2).slice(0, 2);
-  for (const line of titleLines) { ctx.fillText(line, marginX, y); y += 66; }
-  y += 10;
-
-  // Rating (IMDb / RT / Metascore / TMDb — lo que haya)
-  const r = item.rating || {};
-  const chips = [];
-  if (r.imdb != null) chips.push(`★ ${r.imdb.toFixed(1)} IMDb`);
-  if (r.rt != null) chips.push(`🍅 ${r.rt}% RT`);
-  if (r.metascore != null) chips.push(`Ⓜ ${r.metascore} MC`);
-  if (!chips.length && r.tmdb != null) chips.push(`★ ${r.tmdb} TMDb`);
-  if (chips.length) {
-    ctx.font = "700 32px 'DM Sans', sans-serif";
-    ctx.fillStyle = "#f5c518";
-    ctx.fillText(chips.join("   "), marginX, y);
-    y += 56;
+  if (img) {
+    ctx.save();
+    rectRedondeado(ctx, x, top, cartel.dw, cartel.dh, 22);
+    ctx.clip();
+    ctx.drawImage(img, x, top, cartel.dw, cartel.dh);
+    ctx.restore();
   } else {
-    y += 20;
+    ctx.fillStyle = "#141414";
+    rectRedondeado(ctx, x, top, cartel.dw, cartel.dh, 22);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.textAlign = "center";
+    ctx.font = "700 56px 'Caveat', cursive";
+    ctx.fillText(item.title || "", W / 2, top + cartel.dh / 2);
   }
 
-  // Sinopsis
-  ctx.fillStyle = "rgba(255,255,255,0.8)";
-  ctx.font = "400 32px 'DM Sans', sans-serif";
-  const summaryLines = wrapCanvasText(ctx, item.summary || "", W - marginX * 2).slice(0, 7);
-  for (const line of summaryLines) { ctx.fillText(line, marginX, y); y += 42; }
+  ctx.textAlign = "center";
+  let y = top + cartel.dh + 110;
 
-  // Marca al pie
-  ctx.fillStyle = "rgba(255,255,255,0.3)";
-  ctx.font = "600 24px 'DM Sans', sans-serif";
-  ctx.fillText("ANGST", marginX, H - 50);
+  // Mi puntuación
+  if (rating) {
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 76px 'Caveat', cursive";
+    ctx.fillText(`${rating.emoji} ${rating.label}`, W / 2, y);
+  }
+
+  // Mi reseña
+  if (nota && resena) {
+    ctx.font = `italic 400 ${resena.size}px 'DM Sans', sans-serif`;
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    let ty = y + 70 + resena.size;
+    for (const line of resena.lines) { ctx.fillText(line, W / 2, ty); ty += resena.lh; }
+  }
+
+  // Firma discreta, con la letra de Angst
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.font = "600 44px 'Caveat', cursive";
+  ctx.fillText("angstapp", W / 2, H - 90);
 
   try {
     const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
@@ -123,7 +181,7 @@ export async function exportCineShareImage(item, onError) {
     setTimeout(() => URL.revokeObjectURL(url), 4000);
     return true;
   } catch (e) {
-    onError && onError("no se pudo exportar esta imagen (bloqueo del origen del poster) — probá con otro título");
+    onError && onError("no se pudo exportar esta imagen (bloqueo del origen del cartel) — probá con otro título");
     return false;
   }
 }
@@ -206,12 +264,21 @@ function MiniReviewForm({ onSave, onCancel, inicial }) {
   );
 }
 
-export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions, onExportImage }) {
+export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions }) {
   const cineEstado = useCineEstadoMap();
   useAvanceVersion(); // re-render cuando llega el avance de Simkl o cambian las marcas
   const estadoItem = cineEstado[item.guid];
   const estado = estadoEfectivo(cineEstado, item.guid);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [exportando, setExportando] = useState(false);
+  const [exportMsg, setExportMsg] = useState(null);
+  async function exportarImagen() {
+    if (exportando) return;
+    setExportando(true); setExportMsg(null);
+    const ok = await exportCineShareImage(item, estadoItem, msg => setExportMsg(msg));
+    setExportando(false);
+    if (ok) { setExportMsg("✓ imagen descargada"); setTimeout(() => setExportMsg(null), 2500); }
+  }
   function marcar(nuevoEstado) {
     if (nuevoEstado === "interesa") {
       // Copia completa: tiene que sobrevivir a la poda de 30 días de
@@ -339,6 +406,14 @@ export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategor
             ) : reviewOpen || estado !== "vista" ? (
               reviewOpen && <MiniReviewForm onSave={guardarReview} onCancel={() => setReviewOpen(false)} inicial={estadoItem} />
             ) : null}
+            {estado === "vista" && !reviewOpen && estadoItem?.rating && (
+              <div style={{ marginTop: 10 }}>
+                <button onClick={exportarImagen} disabled={exportando} style={{ ...btnGhost, width: "100%", opacity: exportando ? 0.6 : 1 }}>
+                  <span style={{ fontSize: 17 }}>📸</span>{exportando ? "generando imagen…" : "exportar imagen"}
+                </button>
+                {exportMsg && <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>{exportMsg}</div>}
+              </div>
+            )}
             {estado !== "vista" && !reviewOpen && (
               <button onClick={() => setReviewOpen(true)} style={{ ...btnGhost, width: "100%" }}>
                 <span style={{ fontSize: 17 }}>📝</span>marcar como vista
@@ -383,13 +458,6 @@ export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategor
             <button onClick={onNext} style={{ ...btnGhost, background: color, color: "#111", borderColor: color }}><span style={{ fontSize: 17 }}>➡️</span>siguiente</button>
           </div>
         </React.Fragment>
-      )}
-      {hideActions && onExportImage && (
-        <div style={{ display: "flex", gap: 6, padding: "10px 10px", background: "#111" }}>
-          <button onClick={() => onExportImage(item)} style={{ ...btnGhost, background: color, color: "#111", borderColor: color, flex: "none", width: "100%" }}>
-            <span style={{ fontSize: 17 }}>📸</span>exportar imagen para compartir
-          </button>
-        </div>
       )}
     </MarcoAngst>
   );
