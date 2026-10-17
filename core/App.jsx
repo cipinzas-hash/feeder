@@ -81,7 +81,6 @@ function AngstApp() {
   const [ejercicioDecks, setEjercicioDecks] = useState([]);
   const ejercicioDecksRef = useRef([]);
   const [calMarks, setCalMarks] = useState({});
-  const [semanaTab, setSemanaTab] = useState("semana");
   const [meleeMajors, setMeleeMajors] = useState([]);
   const [custody, setCustody] = useState({ baseDate:"2026-04-28", withKids:true, overrides:{} });
 
@@ -1578,7 +1577,7 @@ function AngstApp() {
 
       <div className="app">
         <div className="hdr">
-          <div className="hdr-title" style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{["Mi semana día a día","Presupuesto mensual","Emprendimientos","🧠 mindfulness","🩺 salud","🍄 Fadiman","🥗 Nutrición","🏋️ Ejercicio","🃏 Pokécripto"][page]}</div>
+          <div className="hdr-title" style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>angstapp</div>
           <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
             {saved&&<span className="saved-msg">guardado ✓</span>}
             {loadMsg&&<span style={{fontFamily:"'Caveat',cursive",color:loadMsg.startsWith("✓")?"#4caf50":loadMsg.startsWith("⚠")?"#f0a000":"#c00",fontSize:13,maxWidth:220}}>{loadMsg}</span>}
@@ -1644,10 +1643,13 @@ function AngstApp() {
         </div>
 
         {(()=>{
-          const TABS=[{label:"📅 Semana",emoji:"📅"},{label:"💵 Presupuesto",emoji:"💵"},{label:"📒 Emprendimientos",emoji:"📒"},{label:"🧠 mindfulness",emoji:"🧠"},{label:"🩺 salud",emoji:"🩺"},{label:"🍄 fadiman",emoji:"🍄"},{label:"🥗 nutrición",emoji:"🥗"},{label:"🏋️ ejercicio",emoji:"🏋️"},{label:"🃏 pokécripto",emoji:"🃏"},{label:"📰 feed",emoji:"📰"},{label:"🎬 vitrina",emoji:"🎬"}];
+          const TABS=[{label:"📅 Semana",emoji:"📅"},{label:"💵 Presupuesto",emoji:"💵"},{label:"📒 Emprendimientos",emoji:"📒"},{label:"🧠 mindfulness",emoji:"🧠"},{label:"🩺 salud",emoji:"🩺"},{label:"🍄 fadiman",emoji:"🍄"},{label:"🥗 nutrición",emoji:"🥗"},{label:"🏋️ ejercicio",emoji:"🏋️"},{label:"🃏 pokécripto",emoji:"🃏"},{label:"📰 feed",emoji:"📰"},{label:"🎬 vitrina",emoji:"🎬"},{label:"🌱 rutinas",emoji:"🌱"}];
+          // Orden visual: Rutinas va justo después de Semana. Los ids de página (índice en TABS) no se renumeran.
+          const ORDER=[0,11,1,2,3,4,5,6,7,8,9,10];
           return (
             <div className="tabs" style={{userSelect:"none"}}>
-              {TABS.map((tab,ti)=>{
+              {ORDER.map(ti=>{
+                const tab=TABS[ti];
                 const isActive=ti===page;
                 return (
                   <div key={ti}
@@ -1664,15 +1666,7 @@ function AngstApp() {
 
         {/* ── PLANNER ── */}
         {page===0&&(
-          <>
-            {/* Sub-tabs */}
-            <div style={{display:"flex",gap:0,padding:"8px 16px 0",background:"#fff",borderBottom:"1px solid #eee"}}>
-              {[{k:"semana",label:"📅 semana"},{k:"rutinas",label:"🌱 prácticas"}].map(({k,label})=>(
-                <button key={k} onClick={()=>setSemanaTab(k)} style={{fontFamily:"'Caveat',cursive",fontSize:15,padding:"6px 16px",background:"transparent",border:"none",borderBottom:semanaTab===k?"2px solid #111":"2px solid transparent",color:semanaTab===k?"#111":"#aaa",cursor:"pointer",transition:"all 0.15s"}}>{label}</button>
-              ))}
-            </div>
-            {semanaTab==="rutinas"&&<RoutinesPage routines={routines} onSave={saveRoutines} onAddToDay={(name,emoji)=>{const tk=fmtFull(new Date());const nid=Date.now();const dd=dayDataRef.current||{};const d=dd[tk]||makeEmptyDay();const nx={...dd,[tk]:{...d,tasks:[...d.tasks,{id:nid,text:(emoji?emoji+" ":"")+name,fixed:false,done:false}]}};setDayData(nx);dayDataRef.current=nx;saveToStorage({dayData:nx});}}/>}
-            {semanaTab==="semana"&&<><div className="wnav">
+          <><div className="wnav">
               <button className="nbtn" onClick={()=>updateWeekOffset(weekOffset-1)}>‹</button>
               <div className="wnav-dates">{fmt(weekStart)} — {fmt(addDays(weekStart,6))}</div>
               <button className="calbtn" onClick={()=>setCalOpen(true)}>📅</button>
@@ -2028,7 +2022,7 @@ function AngstApp() {
                 );
               })}
             </div>
-          </>}</>
+          </>
         )}
 
         {page===1&&<BudgetPage budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
@@ -2071,6 +2065,7 @@ function AngstApp() {
         />}
         {page===9&&<FeedPage/>}
         {page===10&&<VitrinaPage/>}
+        {page===11&&<RoutinesPage routines={routines} onSave={saveRoutines} onAddToDay={(name,emoji)=>{const tk=fmtFull(new Date());const nid=Date.now();const dd=dayDataRef.current||{};const d=dd[tk]||makeEmptyDay();const nx={...dd,[tk]:{...d,tasks:[...d.tasks,{id:nid,text:(emoji?emoji+" ":"")+name,fixed:false,done:false}]}};setDayData(nx);dayDataRef.current=nx;saveToStorage({dayData:nx});}}/>}
 
         <div className="ftr">
           <div className="ftr-copy">{STOIC_PHRASES[footerIdx]}</div>
