@@ -54,22 +54,21 @@ export function FormatoTag({ item }) {
   );
 }
 
-// ─── MarcoAngst — contenedor de las vistas de Feed y del detalle de Vitrina ──
-// Antes cada vista era position:fixed + inset:0 y tapaba todo el marco de
-// Angst (encabezado, pestañas, pie). Ahora vive dentro del marco, como los
-// demás módulos: mismo ancho máximo (480) y la altura que queda bajo las
-// pestañas, medida en vivo (el encabezado puede cambiar de alto). Las vistas
-// largas siguen scrolleando por dentro, con el mismo contenedor flex de antes.
-export function MarcoAngst({ children, style }) {
-  const ref = useRef(null);
+// ─── useAltoLibre — alto que queda en pantalla bajo un elemento ─────────────
+// Descuenta el pie de Angst (.ftr, frase + logo) para que el pie se vea sin
+// scrollear: el contenido de una vista llena la pantalla y el pie queda justo
+// debajo. Se mide en vivo (el encabezado y el pie pueden cambiar de alto).
+export function useAltoLibre(ref, minimo = 460) {
   const [alto, setAlto] = useState(null);
   useLayoutEffect(() => {
     function medir() {
       const el = ref.current;
       if (!el) return;
       const arriba = el.getBoundingClientRect().top + window.scrollY;
+      const pie = document.querySelector(".ftr");
+      const altoPie = pie ? pie.offsetHeight + 8 : 0; // + margin-top del pie
       const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-      setAlto(Math.max(460, Math.round(vh - arriba - 12)));
+      setAlto(Math.max(minimo, Math.round(vh - arriba - altoPie)));
     }
     medir();
     const t = setTimeout(medir, 350);
@@ -81,6 +80,18 @@ export function MarcoAngst({ children, style }) {
       window.removeEventListener("orientationchange", medir);
     };
   }, []);
+  return alto;
+}
+
+// ─── MarcoAngst — contenedor de las vistas de Feed y del detalle de Vitrina ──
+// Antes cada vista era position:fixed + inset:0 y tapaba todo el marco de
+// Angst (encabezado, pestañas, pie). Ahora vive dentro del marco, como los
+// demás módulos: mismo ancho máximo (480) y la altura que queda entre las
+// pestañas y el pie. Las vistas largas siguen scrolleando por dentro, con el
+// mismo contenedor flex de antes.
+export function MarcoAngst({ children, style }) {
+  const ref = useRef(null);
+  const alto = useAltoLibre(ref);
   return (
     <div ref={ref} style={{ position: "relative", width: "100%", maxWidth: 480, margin: "0 auto", height: alto || "70vh", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box", ...style }}>
       {children}

@@ -3,6 +3,7 @@ import { ArchivedFeed } from "./videoteca.jsx";
 import { MeleeFeed } from "./melee.jsx";
 import { CineCoverFlow, CineExtendedView } from "./cine.jsx";
 import { fetchVitrinaData } from "../shared/catalog.js";
+import { useAltoLibre } from "../shared/ui.jsx";
 
 const { useState, useEffect, useRef } = React;
 
@@ -14,6 +15,12 @@ const VITRINA_ICONS = { "Películas": "🎬", "Series": "📺", "Animación": "�
 // catálogo completo de 30 días, no solo lo cargado en la cola de Noticias.
 export function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, generatedAt, aviso, cargando }) {
   const items = vitrinaData[vitrinaCat] || [];
+  // La vista llena la pantalla hasta el pie de Angst (que queda visible, no
+  // empujado fuera por un min-height de 100vh) y el carrusel se centra en el
+  // espacio libre en vez de dejar un hueco debajo.
+  const raiz = useRef(null);
+  const alto = useAltoLibre(raiz, 0);
+  const esCarrusel = !["Microdocumentales", "Melee", "Conciertos"].includes(vitrinaCat);
   const segBtn = (active) => ({
     flex: 1, padding: "9px 4px", fontSize: 20,
     border: "1px solid", borderRadius: 20, cursor: "pointer",
@@ -22,7 +29,7 @@ export function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, gene
     borderColor: active ? (CAT_COLORS[vitrinaCat] || "#e91e8c") : "#333",
   });
   return (
-    <div style={{ paddingBottom: 16, background: "#111", minHeight: "100vh" }}>
+    <div ref={raiz} style={{ paddingBottom: 16, background: "#111", minHeight: alto || "100vh", boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "16px 18px 4px" }}>
         <span style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff" }}>🎬 vitrina audiovisual</span>
       </div>
@@ -42,20 +49,22 @@ export function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, gene
           {aviso.accion && <button onClick={aviso.accion.fn} style={{ background: "transparent", border: "1px solid currentColor", color: "inherit", borderRadius: 14, padding: "3px 10px", fontSize: 11, cursor: "pointer" }}>{aviso.accion.label}</button>}
         </div>
       )}
-      {/* Categorías de lista (no carrusel) vacías: decirlo, en vez de dejar la pantalla en blanco. */}
-      {!cargando && items.length === 0 && ["Microdocumentales", "Conciertos", "Melee"].includes(vitrinaCat) && (
-        <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#666", textAlign: "center", padding: "50px 20px" }}>
-          no hay ítems en esta categoría por ahora
-        </div>
-      )}
-      {vitrinaCat === "Microdocumentales"
-        ? <ArchivedFeed items={items} storageKey="angst-feed-microdocs-vistos-v1" />
-        : vitrinaCat === "Melee"
-        ? <MeleeFeed items={items} />
-        : vitrinaCat === "Conciertos"
-        ? <ArchivedFeed items={items} storageKey="angst-feed-conciertos-vistos-v1" />
-        : <CineCoverFlow items={items} onOpen={onOpen} generatedAt={generatedAt} categoria={vitrinaCat} />
-      }
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: esCarrusel ? "center" : "flex-start" }}>
+        {/* Categorías de lista (no carrusel) vacías: decirlo, en vez de dejar la pantalla en blanco. */}
+        {!cargando && items.length === 0 && ["Microdocumentales", "Conciertos", "Melee"].includes(vitrinaCat) && (
+          <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#666", textAlign: "center", padding: "50px 20px" }}>
+            no hay ítems en esta categoría por ahora
+          </div>
+        )}
+        {vitrinaCat === "Microdocumentales"
+          ? <ArchivedFeed items={items} storageKey="angst-feed-microdocs-vistos-v1" />
+          : vitrinaCat === "Melee"
+          ? <MeleeFeed items={items} />
+          : vitrinaCat === "Conciertos"
+          ? <ArchivedFeed items={items} storageKey="angst-feed-conciertos-vistos-v1" />
+          : <CineCoverFlow items={items} onOpen={onOpen} generatedAt={generatedAt} categoria={vitrinaCat} />
+        }
+      </div>
     </div>
   );
 }
