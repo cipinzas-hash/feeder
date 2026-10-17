@@ -1,3 +1,4 @@
+import { limpiarParaNuevoPeriodo } from "./presupuesto-modelo.js";
 const MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate()+n); return d; }
 function fmt(date) { return `${date.getDate()} ${MONTH_NAMES[date.getMonth()].slice(0,3)}`; }
@@ -22,11 +23,8 @@ function makeDefaultBudget() {
     if(!keys.length) return empty;
     const previous = budgets[keys[keys.length-1]];
     if(!previous || typeof previous !== "object") return empty;
-    const copy = JSON.parse(JSON.stringify(previous));
-    // Completion state belongs to the old period, not the new template.
-    ["gastos_base","personales","propositos"].forEach(sec => {
-      if(Array.isArray(copy[sec])) copy[sec] = copy[sec].map(row => ({...row, checked:false}));
-    });
+    // Gastos y apertura de sobres son del período viejo (core/presupuesto-modelo.js).
+    const copy = limpiarParaNuevoPeriodo(previous);
     return copy;
   } catch(e) {
     return empty;

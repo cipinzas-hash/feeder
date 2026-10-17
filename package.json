@@ -5,7 +5,8 @@
   "description": "Angst — planner semanal modular. modules/feed/ tiene su propio package.json (dependencias del pipeline de Actions, separadas de las del build principal).",
   "scripts": {
     "build": "node build/assemble.mjs",
-    "audit:export": "node tests/export-coverage.mjs && node tests/vitrina-restore.mjs"
+    "audit:export": "node tests/export-coverage.mjs && node tests/vitrina-restore.mjs",
+    "test:presupuesto": "node tests/presupuesto-modelo.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"

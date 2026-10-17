@@ -1,38 +1,12 @@
 import { MONTH_NAMES } from "../../core/dates.js";
 import { fmtCLP } from "../../core/format.js";
+import { resolverPeriodo, inicioSobres, estadoFila, sumaSubs, puedeEliminar, quitarGasto } from "../../core/presupuesto-modelo.js";
+import { AmountRow, GRID, COL, GAP, FUENTE, PAD_MONTO, celdaTitulo } from "./grilla.jsx";
+import CarteraPanel from "./CarteraPanel.jsx";
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
-function cloneBudgetForNextPeriod(source) {
-  if (!source || typeof source !== "object") return null;
-  return {
-    ...source,
-    ingresos: { ...(source.ingresos || {trabajo:0,emprendimiento:0,reventa:0,otros:0}) },
-    gastos_base: (source.gastos_base || []).map(r => ({...r, checked:false})),
-    personales: (source.personales || []).map(r => ({...r, checked:false})),
-    propositos: (source.propositos || []).map(r => ({...r, checked:false})),
-  };
-}
-
-function makeDefaultBudget() {
-  return { ingresos:{trabajo:0,emprendimiento:0,reventa:0,otros:0}, gastos_base:[], personales:[], propositos:[] };
-}
-
-function getPreviousPeriodKey(monthKey) {
-  const [year, month] = monthKey.split("-").map(Number);
-  const d = new Date(year, month - 2, 1);
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
-}
-
-function getBudgetForPeriod(budgets, monthKey) {
-  if (budgets && budgets[monthKey]) return budgets[monthKey];
-  let searchKey = monthKey;
-  for (let i = 0; i < 24; i++) {
-    searchKey = getPreviousPeriodKey(searchKey);
-    if (budgets && budgets[searchKey]) return cloneBudgetForNextPeriod(budgets[searchKey]);
-  }
-  return makeDefaultBudget();
-}
-
+// La lógica de períodos, sub-partidas, saldos y gastos vive en core/presupuesto-modelo.js (issue #24).
+const getBudgetForPeriod = resolverPeriodo;
 function PieChart({ data, total, annual }) {
   const CX = 100, CY = 100, R = 76;
   const GRAYS = ["#111","#333","#555","#777","#888","#999","#aaa","#bbb","#222","#444","#666","#ccc"];
@@ -67,27 +41,217 @@ function ChartModal({ title, emoji, rows, total, onClose }) { const [view,setVie
 
 function MonthSelectorModal({ currentYear, currentMonth, onSelect, onClose }) { const [year,setYear]=useState(currentYear); return <div style={{position:"fixed",inset:0,zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.6)"}} onClick={onClose}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",border:"2px dashed #111",borderRadius:14,overflow:"hidden",boxShadow:"6px 6px 0 #111",width:300}}><div style={{background:"#111",padding:"12px 18px",display:"flex",alignItems:"center",justifyContent:"space-between"}}><button onClick={()=>setYear(y=>y-1)} style={{background:"transparent",border:"none",color:"#fff",fontSize:22,cursor:"pointer",fontWeight:700}}>‹</button><div style={{fontFamily:"'Caveat',cursive",fontSize:22,color:"#fff",fontWeight:700}}>{year}</div><button onClick={()=>setYear(y=>y+1)} style={{background:"transparent",border:"none",color:"#fff",fontSize:22,cursor:"pointer",fontWeight:700}}>›</button></div><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:2,padding:12}}>{MONTH_NAMES.map((m,i)=>{const cur=i===currentMonth&&year===currentYear;const nowDate=new Date(),isNow=i===nowDate.getMonth()&&year===nowDate.getFullYear()&&!cur;return <button key={i} onClick={()=>{onSelect(year,i);onClose();}} style={{fontFamily:"'Caveat',cursive",fontSize:16,padding:"10px 6px",cursor:"pointer",background:cur?"#111":"transparent",color:cur?"#fff":isNow?"#111":"#555",border:cur?"none":isNow?"2px dashed #111":"1px dashed #eee",borderRadius:6,fontWeight:cur||isNow?700:400}}>{m.slice(0,3)}</button>})}</div><div style={{padding:"8px 12px 14px",textAlign:"center",fontFamily:"'Caveat',cursive",fontSize:13,color:"#bbb"}}>presupuestos corren del 25 al 24</div></div></div>; }
 
-function AmountRow({ value, total, onSave }) { const [ed,setEd]=useState(false);const [txt,setTxt]=useState(String(value));function commit(){const n=parseInt(txt.replace(/\D/g,""))||0;onSave(n);setEd(false);}function nudge(d){onSave(Math.max(0,value+d));}const btnStyle={background:"transparent",border:"1px dashed #e0e0e0",borderRadius:4,color:"#bbb",fontSize:13,width:22,height:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontWeight:700,lineHeight:1,padding:0,transition:"all 0.12s"};return <div style={{display:"flex",alignItems:"center",gap:2,justifyContent:"flex-end"}}><button style={btnStyle} onClick={()=>nudge(-1000)}>‹</button>{ed?<input autoFocus value={txt} onChange={e=>{const v=e.target.value;setTxt(v);onSave(parseInt(v.replace(/\D/g,""))||0);}} onBlur={commit} onKeyDown={e=>{if(e.key==="Enter"||e.key==="Escape")commit();}} style={{width:82,border:"1px dashed #aaa",background:"#fafafa",borderRadius:4,padding:"2px 5px",fontSize:13,fontFamily:"'DM Sans',sans-serif",color:"#111",outline:"none",textAlign:"right"}}/>:<div onClick={()=>{setTxt(String(value));setEd(true);}} style={{width:82,cursor:"pointer",fontSize:13,color:"#333",fontFamily:"'DM Sans',sans-serif",textAlign:"right",padding:"2px 5px",border:"1px solid transparent",borderRadius:4}}>{fmtCLP(value)}</div>}<button style={btnStyle} onClick={()=>nudge(1000)}>›</button></div>; }
 
-const COL="minmax(90px,1fr) 130px 46px 82px 26px";
-function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit, checkable, onRowSave, onRowAdd, onRowDelete, onRowCheck, onChartOpen }) { const T=totalIngreso;const pct=T>0?((subtotal/T)*100).toFixed(1):"-";const [hover,setHover]=useState(false);const [adding,setAdding]=useState(false);const [newLabel,setNewLabel]=useState("");const [newEmoji,setNewEmoji]=useState("📌");const [editId,setEditId]=useState(null);const [editLabel,setEditLabel]=useState("");function confirmAdd(){if(!newLabel.trim())return;onRowAdd(secKey,{id:Date.now().toString(),emoji:newEmoji,label:newLabel.trim(),monto:0});setNewLabel("");setNewEmoji("📌");setAdding(false);}return <div style={{marginBottom:20}}><div onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)} style={{background:hover?"#222":"#111",padding:"10px 14px",borderRadius:"8px 8px 0 0",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background 0.15s"}}><div onClick={()=>onChartOpen({title,emoji,rows,total:subtotal})} style={{fontFamily:"'Caveat',cursive",fontSize:20,color:"#fff",fontWeight:700,flex:1}}>{emoji} {title}</div><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#666"}} onClick={()=>onChartOpen({title,emoji,rows,total:subtotal})}>{pct}% · {fmtCLP(subtotal)}</span>{canEdit&&<button onClick={e=>{e.stopPropagation();setAdding(a=>!a);}} style={{background:"transparent",border:"1px dashed #555",borderRadius:4,color:"#aaa",fontSize:11,padding:"2px 8px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",letterSpacing:1}}>+ agregar</button>}</div></div><div style={{border:"1px solid #eee",borderTop:"none",borderRadius:"0 0 8px 8px",overflow:"hidden"}}><div style={{display:"grid",gridTemplateColumns:checkable?"24px "+COL:COL,gap:4,padding:"6px 12px",background:"#f8f8f8",borderBottom:"1px solid #eee"}}>{checkable&&<div/>}<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb",letterSpacing:2,textTransform:"uppercase"}}>Fondo</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb",letterSpacing:1,textAlign:"right",paddingRight:24}}>$ Mensual</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb",letterSpacing:1,textAlign:"center"}}>%</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb",letterSpacing:1,textAlign:"right"}}>Proy. anual</div><div/></div>{rows.map((row,i)=>{const rp=T>0?((row.monto/T)*100).toFixed(1):"-";return <div key={row.id} style={{display:"grid",gridTemplateColumns:checkable?"24px "+COL:COL,gap:4,padding:"9px 12px",borderBottom:i<rows.length-1?"1px dashed #f0f0f0":"none",alignItems:"center",background:i%2===0?"#fff":"#fafafa"}}>{checkable&&<div onClick={()=>onRowCheck&&onRowCheck(secKey,row.id,!row.checked)} style={{display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}><div style={{width:16,height:16,borderRadius:3,border:row.checked?"none":"1.5px dashed #ccc",background:row.checked?"#111":"transparent",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.15s",flexShrink:0}}>{row.checked&&<span style={{color:"#fff",fontSize:10,fontWeight:700,lineHeight:1}}>✓</span>}</div></div>}<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:row.checked?"#bbb":"#333",textDecoration:row.checked?"line-through":"none",display:"flex",alignItems:"center",gap:5,minWidth:0}}><span style={{flexShrink:0}}>{row.emoji}</span>{editId===row.id?<input autoFocus value={editLabel} onChange={e=>{const v=e.target.value;setEditLabel(v);if(v.trim())onRowSave(secKey,row.id,row.monto,v);}} onBlur={()=>{if(editLabel.trim())onRowSave(secKey,row.id,row.monto,editLabel);setEditId(null);}} onKeyDown={e=>{if(e.key==="Enter"){if(editLabel.trim())onRowSave(secKey,row.id,row.monto,editLabel);setEditId(null);}if(e.key==="Escape")setEditId(null);}} style={{fontSize:12,border:"1px dashed #aaa",borderRadius:4,padding:"1px 5px",outline:"none",background:"#fafafa",width:"100%"}}/>:<span onClick={()=>{setEditLabel(row.label);setEditId(row.id);}} style={{cursor:"pointer",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title="clic para editar">{row.label}</span>}</div><AmountRow value={row.monto} total={T} onSave={v=>onRowSave(secKey,row.id,v,row.label)}/><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#aaa",textAlign:"center"}}>{rp}%</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#bbb",textAlign:"right"}}>{fmtCLP(row.monto*12)}</div>{canEdit?<button onClick={()=>onRowDelete(secKey,row.id)} style={{background:"transparent",border:"none",color:"#e0e0e0",fontSize:16,cursor:"pointer",lineHeight:1,padding:0,textAlign:"center"}} onMouseEnter={e=>e.currentTarget.style.color="#c00"} onMouseLeave={e=>e.currentTarget.style.color="#e0e0e0"}>×</button>:<div/>}</div>})}{adding&&<div style={{padding:"10px 12px",borderTop:"1px dashed #eee",background:"#fafafa",display:"flex",gap:6,alignItems:"center"}}><input value={newEmoji} onChange={e=>setNewEmoji(e.target.value)} style={{width:34,textAlign:"center",border:"1px dashed #ccc",borderRadius:4,padding:"3px",fontSize:15,outline:"none"}} placeholder="📌"/><input autoFocus value={newLabel} onChange={e=>setNewLabel(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")confirmAdd();if(e.key==="Escape")setAdding(false);}} placeholder="nombre del fondo..." style={{flex:1,border:"1px dashed #ccc",borderRadius:4,padding:"4px 8px",fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}/><button onClick={confirmAdd} style={{background:"#111",color:"#fff",border:"none",borderRadius:4,padding:"4px 10px",fontSize:12,cursor:"pointer"}}>✓</button><button onClick={()=>setAdding(false)} style={{background:"transparent",border:"none",color:"#bbb",fontSize:18,cursor:"pointer"}}>×</button></div>}<div style={{display:"grid",gridTemplateColumns:COL,gap:4,padding:"9px 12px",background:"#f3f3f3",alignItems:"center"}}><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#111",fontWeight:700}}>Subtotal</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#111",fontWeight:700,textAlign:"right",paddingRight:24}}>{fmtCLP(subtotal)}</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#666",textAlign:"center",fontWeight:600}}>{pct}%</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#666",textAlign:"right",fontWeight:600}}>{fmtCLP(subtotal*12)}</div><div/></div></div></div>; }
+const celda = (extra) => ({ fontFamily: FUENTE, ...extra });
+
+function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit, onRowSave, onRowAdd, onRowDelete, onRowCheck, onChartOpen, cartera }) {
+  const T = totalIngreso;
+  const pct = T > 0 ? ((subtotal / T) * 100).toFixed(1) : "-";
+  const [hover, setHover] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [newLabel, setNewLabel] = useState("");
+  const [newEmoji, setNewEmoji] = useState("📌");
+  const [editId, setEditId] = useState(null);
+  const [editLabel, setEditLabel] = useState("");
+  const [abiertas, setAbiertas] = useState({});
+  function confirmAdd() {
+    if (!newLabel.trim()) return;
+    onRowAdd(secKey, { id: Date.now().toString(), emoji: newEmoji, label: newLabel.trim(), monto: 0 });
+    setNewLabel(""); setNewEmoji("📌"); setAdding(false);
+  }
+  const abrirGrafico = () => onChartOpen({ title, emoji, rows, total: subtotal });
+  const etiquetaSaldo = secKey === "personales" ? "Ahorrado" : "Saldo";
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} style={{ background: hover ? "#222" : "#111", padding: "10px 14px", borderRadius: "8px 8px 0 0", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", transition: "background 0.15s" }}>
+        <div onClick={abrirGrafico} style={{ fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700, flex: 1 }}>{emoji} {title}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={celda({ fontSize: 11, color: "#666" })} onClick={abrirGrafico}>{pct}% · {fmtCLP(subtotal)}</span>
+          {canEdit && <button onClick={e => { e.stopPropagation(); setAdding(a => !a); }} style={{ background: "transparent", border: "1px dashed #555", borderRadius: 4, color: "#aaa", fontSize: 11, padding: "2px 8px", cursor: "pointer", fontFamily: FUENTE, letterSpacing: 1 }}>+ agregar</button>}
+        </div>
+      </div>
+      <div style={{ border: "1px solid #eee", borderTop: "none", borderRadius: "0 0 8px 8px", overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "7px 12px", background: "#f8f8f8", borderBottom: "1px solid #eee" }}>
+          <div/>
+          <div style={{ ...celdaTitulo, letterSpacing: 2, textTransform: "uppercase" }}>Fondo</div>
+          <div style={{ ...celdaTitulo, textAlign: "right", paddingRight: PAD_MONTO }}>$ Mensual</div>
+          <div style={{ ...celdaTitulo, textAlign: "right" }}>%</div>
+          <div style={{ ...celdaTitulo, textAlign: "right" }}>Proy. anual</div>
+          <div/>
+        </div>
+        {rows.map((row, i) => {
+          const rp = T > 0 ? ((row.monto / T) * 100).toFixed(1) : "-";
+          const estado = cartera && cartera.sobresOn ? estadoFila(cartera.budgets, cartera.periodo, secKey, row) : null;
+          const abierta = !!abiertas[row.id];
+          const nSubs = (row.subs || []).length;
+          return (
+            <div key={row.id} style={{ borderBottom: i < rows.length - 1 ? "1px dashed #f0f0f0" : "none", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+              <div style={{ display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "11px 12px", alignItems: "center" }}>
+                <div onClick={() => onRowCheck && onRowCheck(secKey, row.id, !row.checked)} style={{ display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                  <div style={{ width: 16, height: 16, borderRadius: 3, border: row.checked ? "none" : "1.5px dashed #ccc", background: row.checked ? "#111" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", flexShrink: 0 }}>{row.checked && <span style={{ color: "#fff", fontSize: 10, fontWeight: 700, lineHeight: 1 }}>✓</span>}</div>
+                </div>
+                <div style={celda({ fontSize: 13, color: row.checked ? "#bbb" : "#333", textDecoration: row.checked ? "line-through" : "none", display: "flex", alignItems: "center", gap: 5, minWidth: 0 })}>
+                  <span style={{ flexShrink: 0 }}>{row.emoji}</span>
+                  {editId === row.id
+                    ? <input autoFocus value={editLabel} onChange={e => { const v = e.target.value; setEditLabel(v); if (v.trim()) onRowSave(secKey, row.id, row.monto, v); }}
+                        onBlur={() => { if (editLabel.trim()) onRowSave(secKey, row.id, row.monto, editLabel); setEditId(null); }}
+                        onKeyDown={e => { if (e.key === "Enter") { if (editLabel.trim()) onRowSave(secKey, row.id, row.monto, editLabel); setEditId(null); } if (e.key === "Escape") setEditId(null); }}
+                        style={{ fontSize: 12, border: "1px dashed #aaa", borderRadius: 4, padding: "1px 5px", outline: "none", background: "#fafafa", width: "100%", minWidth: 0 }}/>
+                    : <span onClick={() => { setEditLabel(row.label); setEditId(row.id); }} style={{ cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title="clic para editar">{row.label}</span>}
+                </div>
+                <AmountRow value={row.monto} min={sumaSubs(row)} onSave={v => onRowSave(secKey, row.id, v, row.label)}/>
+                <div style={celda({ fontSize: 11, color: "#aaa", textAlign: "right" })}>{rp}%</div>
+                <div style={celda({ fontSize: 11, color: "#bbb", textAlign: "right" })}>{fmtCLP(row.monto * 12)}</div>
+                {canEdit
+                  ? <button onClick={() => onRowDelete(secKey, row.id)} style={{ background: "transparent", border: "none", color: "#e0e0e0", fontSize: 16, cursor: "pointer", lineHeight: 1, padding: 0, textAlign: "center" }} onMouseEnter={e => e.currentTarget.style.color = "#c00"} onMouseLeave={e => e.currentTarget.style.color = "#e0e0e0"}>×</button>
+                  : <div/>}
+              </div>
+              {cartera && (
+                <div onClick={() => setAbiertas(a => ({ ...a, [row.id]: !a[row.id] }))} style={celda({ padding: "0 12px 9px 42px", fontSize: 11, color: "#999", cursor: "pointer", display: "flex", gap: 6 })}>
+                  <span>{abierta ? "▾" : "▸"}</span>
+                  <span>{nSubs > 0 ? `${nSubs} sub-partida${nSubs > 1 ? "s" : ""}` : "sub-partidas"}</span>
+                  {estado && <span style={{ color: estado.saldo < 0 ? "#c00" : "#555" }}>· {etiquetaSaldo.toLowerCase()} {fmtCLP(estado.saldo)}</span>}
+                </div>
+              )}
+              {cartera && abierta && (
+                <CarteraPanel sec={secKey} row={row} periodo={cartera.periodo} budgets={cartera.budgets} budget={cartera.budget} estado={estado}
+                  sobresOn={cartera.sobresOn} esInicio={cartera.esInicio} etiquetaSaldo={etiquetaSaldo}
+                  onPatchRow={patch => cartera.onPatchRow(secKey, row.id, patch)} onDeleteGasto={cartera.onDeleteGasto}
+                  onApertura={cartera.onApertura} onAviso={cartera.onAviso}/>
+              )}
+            </div>
+          );
+        })}
+        {adding && (
+          <div style={{ padding: "10px 12px", borderTop: "1px dashed #eee", background: "#fafafa", display: "flex", gap: 6, alignItems: "center" }}>
+            <input value={newEmoji} onChange={e => setNewEmoji(e.target.value)} style={{ width: 34, textAlign: "center", border: "1px dashed #ccc", borderRadius: 4, padding: 3, fontSize: 15, outline: "none" }} placeholder="📌"/>
+            <input autoFocus value={newLabel} onChange={e => setNewLabel(e.target.value)} onKeyDown={e => { if (e.key === "Enter") confirmAdd(); if (e.key === "Escape") setAdding(false); }} placeholder="nombre del fondo..." style={{ flex: 1, border: "1px dashed #ccc", borderRadius: 4, padding: "4px 8px", fontSize: 13, fontFamily: FUENTE, outline: "none", background: "#fff" }}/>
+            <button onClick={confirmAdd} style={{ background: "#111", color: "#fff", border: "none", borderRadius: 4, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>✓</button>
+            <button onClick={() => setAdding(false)} style={{ background: "transparent", border: "none", color: "#bbb", fontSize: 18, cursor: "pointer" }}>×</button>
+          </div>
+        )}
+        <div style={{ display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "10px 12px", background: "#f3f3f3", alignItems: "center" }}>
+          <div/>
+          <div style={celda({ fontSize: 12, color: "#111", fontWeight: 700 })}>Subtotal</div>
+          <div style={celda({ fontSize: 13, color: "#111", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO })}>{fmtCLP(subtotal)}</div>
+          <div style={celda({ fontSize: 11, color: "#666", textAlign: "right", fontWeight: 600 })}>{pct}%</div>
+          <div style={celda({ fontSize: 11, color: "#666", textAlign: "right", fontWeight: 600 })}>{fmtCLP(subtotal * 12)}</div>
+          <div/>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function BudgetPage({ budgets, onSaveBudget }) {
-  const [chartData,setChartData]=useState(null);const [ingChart,setIngChart]=useState(false);const [monthModal,setMonthModal]=useState(false);const now=new Date();
-  const [selYear,setSelYear]=useState(now.getFullYear());const [selMonth,setSelMonth]=useState(now.getDate()>=25?now.getMonth():(now.getMonth()-1+12)%12);
-  const monthKey=`${selYear}-${String(selMonth+1).padStart(2,'0')}`;
-  const budget=getBudgetForPeriod(budgets,monthKey);
-  const periodLabel=`25 ${MONTH_NAMES[selMonth].slice(0,3)} — 24 ${MONTH_NAMES[(selMonth+1)%12].slice(0,3)} ${selYear}`;
-  const ing=budget.ingresos;
-  const totalIngreso=ing.trabajo+ing.emprendimiento+ing.reventa+ing.otros;
-  function save(updated){onSaveBudget(monthKey,updated);}
-  function updIng(k,v){save({...budget,ingresos:{...budget.ingresos,[k]:v}});}
-  function updRow(sec,id,monto,label){save({...budget,[sec]:budget[sec].map(r=>r.id===id?{...r,monto,label}:r)});}
-  function addRow(sec,row){save({...budget,[sec]:[...budget[sec],row]});}
-  function delRow(sec,id){save({...budget,[sec]:budget[sec].filter(r=>r.id!==id)});}
-  function checkRow(sec,id,checked){save({...budget,[sec]:budget[sec].map(r=>r.id===id?{...r,checked}:r)});}
-  const sumBase=budget.gastos_base.reduce((s,r)=>s+r.monto,0);const sumPers=budget.personales.reduce((s,r)=>s+r.monto,0);const sumProp=budget.propositos.reduce((s,r)=>s+r.monto,0);const totalGasto=sumBase+sumPers+sumProp;const remainder=totalIngreso-totalGasto;const T=totalIngreso;
-  return <div style={{padding:"16px",maxWidth:720,margin:"0 auto"}}>{ingChart&&<IngresoChartModal budgets={budgets} selYear={selYear} selMonth={selMonth} onClose={()=>setIngChart(false)}/>} {chartData&&<ChartModal title={chartData.title} emoji={chartData.emoji} rows={chartData.rows} total={chartData.total} onClose={()=>setChartData(null)}/>} {monthModal&&<MonthSelectorModal currentYear={selYear} currentMonth={selMonth} onSelect={(y,m)=>{setSelYear(y);setSelMonth(m);}} onClose={()=>setMonthModal(false)}/>}<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,gap:8,flexWrap:"wrap"}}><div style={{display:"flex",alignItems:"center",gap:4}}><button onClick={()=>{const nm=selMonth===0?11:selMonth-1;const ny=selMonth===0?selYear-1:selYear;setSelMonth(nm);setSelYear(ny);}} style={{background:"transparent",border:"1px dashed #ddd",borderRadius:8,padding:"6px 11px",cursor:"pointer",color:"#888",fontSize:16,lineHeight:1}}>‹</button><button onClick={()=>setMonthModal(true)} style={{fontFamily:"'Caveat',cursive",fontSize:17,color:"#555",background:"transparent",border:"1px dashed #ddd",borderRadius:8,padding:"7px 14px",cursor:"pointer"}}>📅 {periodLabel}</button><button onClick={()=>{const nm=selMonth===11?0:selMonth+1;const ny=selMonth===11?selYear+1:selYear;setSelMonth(nm);setSelYear(ny);}} style={{background:"transparent",border:"1px dashed #ddd",borderRadius:8,padding:"6px 11px",cursor:"pointer",color:"#888",fontSize:16,lineHeight:1}}>›</button></div></div><div style={{marginBottom:20}}><div style={{background:"#111",padding:"10px 14px",borderRadius:"8px 8px 0 0",display:"flex",alignItems:"center",justifyContent:"space-between"}}><div onClick={()=>setIngChart(true)} style={{fontFamily:"'Caveat',cursive",fontSize:20,color:"#fff",fontWeight:700,cursor:"pointer"}}>💵 Ingresos <span style={{fontSize:13,opacity:0.5}}>▸</span></div><div style={{fontFamily:"'Caveat',cursive",fontSize:22,color:"#fff",fontWeight:700}}>{fmtCLP(totalIngreso)}</div></div><div style={{border:"1px solid #eee",borderTop:"none",borderRadius:"0 0 8px 8px",overflow:"hidden"}}><div style={{display:"grid",gridTemplateColumns:"1fr 115px",gap:4,padding:"6px 12px",background:"#f8f8f8",borderBottom:"1px solid #eee"}}><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb",letterSpacing:2,textTransform:"uppercase"}}>Fuente</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb",letterSpacing:1,textAlign:"right",paddingRight:24}}>$ Mensual</div></div>{[{k:"trabajo",l:"Trabajo principal",e:"🏢"},{k:"emprendimiento",l:"Emprendimiento",e:"🛠️"},{k:"reventa",l:"Reventa",e:"♻️"},{k:"otros",l:"Otros",e:"➕"}].map((s,i)=><div key={s.k} style={{display:"grid",gridTemplateColumns:"1fr auto",gap:8,padding:"9px 12px",borderBottom:i<3?"1px dashed #f0f0f0":"none",alignItems:"center",background:i%2===0?"#fff":"#fafafa"}}><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#333",display:"flex",alignItems:"center",gap:6}}><span>{s.e}</span><span>{s.l}</span></div><AmountRow value={ing[s.k]} total={0} onSave={v=>updIng(s.k,v)}/></div>)}</div></div><BudgetSec title="Gastos Base" emoji="🧱" rows={budget.gastos_base} secKey="gastos_base" checkable onRowCheck={checkRow} subtotal={sumBase} totalIngreso={T} canEdit onRowSave={updRow} onRowAdd={addRow} onRowDelete={delRow} onChartOpen={setChartData}/><BudgetSec title="Fondos Personales" emoji="👤" rows={budget.personales} secKey="personales" checkable onRowCheck={checkRow} subtotal={sumPers} totalIngreso={T} canEdit={false} onRowSave={updRow} onRowAdd={addRow} onRowDelete={delRow} onChartOpen={setChartData}/><BudgetSec title="Fondos por Propósito" emoji="📦" rows={budget.propositos} secKey="propositos" checkable onRowCheck={checkRow} subtotal={sumProp} totalIngreso={T} canEdit onRowSave={updRow} onRowAdd={addRow} onRowDelete={delRow} onChartOpen={setChartData}/><div style={{border:"2px solid #111",borderRadius:8,overflow:"hidden",marginBottom:8}}><div style={{display:"grid",gridTemplateColumns:COL,gap:4,padding:"12px 12px",background:"#111",alignItems:"center"}}><div style={{fontFamily:"'Caveat',cursive",fontSize:18,color:"#fff",fontWeight:700}}>Total distribuido</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,color:"#fff",fontWeight:700,textAlign:"right",paddingRight:24}}>{fmtCLP(totalGasto)}</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#888",textAlign:"center"}}>{T>0?((totalGasto/T)*100).toFixed(1):"-"}%</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#888",textAlign:"right"}}>{fmtCLP(totalGasto*12)}</div><div/></div><div style={{display:"grid",gridTemplateColumns:COL,gap:4,padding:"10px 12px",background:remainder<0?"#fff5f5":"#f9f9f9",alignItems:"center"}}><div style={{fontFamily:"'Caveat',cursive",fontSize:16,color:remainder<0?"#c00":"#555"}}>{remainder<0?"⚠️ Déficit":"Remanente"}</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,color:remainder<0?"#c00":"#111",fontWeight:700,textAlign:"right",paddingRight:24}}>{fmtCLP(Math.abs(remainder))}</div><div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#aaa",textAlign:"center"}}>{T>0?((Math.abs(remainder)/T)*100).toFixed(1):"-"}%</div><div/><div/></div></div><div style={{height:32}}/></div>;
+  const [chartData, setChartData] = useState(null);
+  const [ingChart, setIngChart] = useState(false);
+  const [monthModal, setMonthModal] = useState(false);
+  const [aviso, setAviso] = useState("");
+  const avisoRef = useRef(null);
+  const now = new Date();
+  const [selYear, setSelYear] = useState(now.getFullYear());
+  const [selMonth, setSelMonth] = useState(now.getDate() >= 25 ? now.getMonth() : (now.getMonth() - 1 + 12) % 12);
+  const monthKey = `${selYear}-${String(selMonth + 1).padStart(2, "0")}`;
+  const budget = getBudgetForPeriod(budgets, monthKey);
+  const periodLabel = `25 ${MONTH_NAMES[selMonth].slice(0, 3)} — 24 ${MONTH_NAMES[(selMonth + 1) % 12].slice(0, 3)} ${selYear}`;
+  const ing = budget.ingresos;
+  const totalIngreso = ing.trabajo + ing.emprendimiento + ing.reventa + ing.otros;
+  const inicio = inicioSobres(budgets);
+  const sobresOn = !!inicio && monthKey >= inicio;
+  function mostrarAviso(msg) {
+    setAviso(msg);
+    clearTimeout(avisoRef.current);
+    avisoRef.current = setTimeout(() => setAviso(""), 6000);
+  }
+  function save(updated) { onSaveBudget(monthKey, updated); }
+  function updIng(k, v) { save({ ...budget, ingresos: { ...budget.ingresos, [k]: v } }); }
+  function updRow(sec, id, monto, label) {
+    save({ ...budget, [sec]: budget[sec].map(r => r.id === id ? { ...r, monto: Math.max(monto, sumaSubs(r)), label } : r) });
+  }
+  function addRow(sec, row) { save({ ...budget, [sec]: [...budget[sec], row] }); }
+  function delRow(sec, id) {
+    const row = budget[sec].find(r => r.id === id);
+    if (row && sec !== "gastos_base") {
+      const p = puedeEliminar(budgets, monthKey, sec, row);
+      if (!p.ok) { mostrarAviso(`No se puede eliminar «${row.label}». ${p.motivo}`); return; }
+    }
+    save({ ...budget, [sec]: budget[sec].filter(r => r.id !== id) });
+  }
+  function checkRow(sec, id, checked) { save({ ...budget, [sec]: budget[sec].map(r => r.id === id ? { ...r, checked } : r) }); }
+  function patchRow(sec, id, patch) { save({ ...budget, [sec]: budget[sec].map(r => r.id === id ? { ...r, ...patch } : r) }); }
+  function delGasto(id) { save(quitarGasto(budget, id)); }
+  function setApertura(clave, v) { save({ ...budget, apertura: { ...(budget.apertura || {}), [clave]: v } }); }
+  function iniciarSobres() { save({ ...budget, apertura: budget.apertura || {} }); }
+
+  const sumBase = budget.gastos_base.reduce((s, r) => s + r.monto, 0);
+  const sumPers = budget.personales.reduce((s, r) => s + r.monto, 0);
+  const sumProp = budget.propositos.reduce((s, r) => s + r.monto, 0);
+  const totalGasto = sumBase + sumPers + sumProp;
+  const remainder = totalIngreso - totalGasto;
+  const T = totalIngreso;
+  const cartera = { budgets, budget, periodo: monthKey, sobresOn, esInicio: monthKey === inicio, onPatchRow: patchRow, onDeleteGasto: delGasto, onApertura: setApertura, onAviso: mostrarAviso };
+  const secProps = { totalIngreso: T, onRowSave: updRow, onRowAdd: addRow, onRowDelete: delRow, onRowCheck: checkRow, onChartOpen: setChartData };
+  const navBtn = { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "6px 11px", cursor: "pointer", color: "#888", fontSize: 16, lineHeight: 1 };
+
+  return (
+    <div style={{ padding: "16px", maxWidth: 720, margin: "0 auto" }}>
+      {ingChart && <IngresoChartModal budgets={budgets} selYear={selYear} selMonth={selMonth} onClose={() => setIngChart(false)}/>}
+      {chartData && <ChartModal title={chartData.title} emoji={chartData.emoji} rows={chartData.rows} total={chartData.total} onClose={() => setChartData(null)}/>}
+      {monthModal && <MonthSelectorModal currentYear={selYear} currentMonth={selMonth} onSelect={(y, m) => { setSelYear(y); setSelMonth(m); }} onClose={() => setMonthModal(false)}/>}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 8, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <button onClick={() => { const nm = selMonth === 0 ? 11 : selMonth - 1; const ny = selMonth === 0 ? selYear - 1 : selYear; setSelMonth(nm); setSelYear(ny); }} style={navBtn}>‹</button>
+          <button onClick={() => setMonthModal(true)} style={{ fontFamily: "'Caveat',cursive", fontSize: 17, color: "#555", background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "7px 14px", cursor: "pointer" }}>📅 {periodLabel}</button>
+          <button onClick={() => { const nm = selMonth === 11 ? 0 : selMonth + 1; const ny = selMonth === 11 ? selYear + 1 : selYear; setSelMonth(nm); setSelYear(ny); }} style={navBtn}>›</button>
+        </div>
+        {inicio
+          ? <span style={celda({ fontSize: 11, color: "#888" })}>🧾 sobres desde {MONTH_NAMES[parseInt(inicio.slice(5)) - 1].slice(0, 3)} {inicio.slice(0, 4)}</span>
+          : <button onClick={iniciarSobres} title="Activa saldos, gastos y sobrantes por cartera a partir de este período" style={{ ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: "#555", padding: "7px 12px" }}>🧾 iniciar sobres</button>}
+      </div>
+      {aviso && <div style={celda({ fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", marginBottom: 14 })}>{aviso}</div>}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ background: "#111", padding: "10px 14px", borderRadius: "8px 8px 0 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div onClick={() => setIngChart(true)} style={{ fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700, cursor: "pointer" }}>💵 Ingresos <span style={{ fontSize: 13, opacity: 0.5 }}>▸</span></div>
+          <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 }}>{fmtCLP(totalIngreso)}</div>
+        </div>
+        <div style={{ border: "1px solid #eee", borderTop: "none", borderRadius: "0 0 8px 8px", overflow: "hidden" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: GAP, padding: "7px 12px", background: "#f8f8f8", borderBottom: "1px solid #eee" }}>
+            <div style={{ ...celdaTitulo, letterSpacing: 2, textTransform: "uppercase" }}>Fuente</div>
+            <div style={{ ...celdaTitulo, textAlign: "right", paddingRight: PAD_MONTO, width: 120 - PAD_MONTO }}>$ Mensual</div>
+          </div>
+          {[{ k: "trabajo", l: "Trabajo principal", e: "🏢" }, { k: "emprendimiento", l: "Emprendimiento", e: "🛠️" }, { k: "reventa", l: "Reventa", e: "♻️" }, { k: "otros", l: "Otros", e: "➕" }].map((s, i) => (
+            <div key={s.k} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: GAP, padding: "11px 12px", borderBottom: i < 3 ? "1px dashed #f0f0f0" : "none", alignItems: "center", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+              <div style={celda({ fontSize: 13, color: "#333", display: "flex", alignItems: "center", gap: 6 })}><span>{s.e}</span><span>{s.l}</span></div>
+              <AmountRow value={ing[s.k]} onSave={v => updIng(s.k, v)}/>
+            </div>
+          ))}
+        </div>
+      </div>
+      <BudgetSec title="Gastos Base" emoji="🧱" rows={budget.gastos_base} secKey="gastos_base" subtotal={sumBase} canEdit {...secProps}/>
+      <BudgetSec title="Fondos Personales" emoji="👤" rows={budget.personales} secKey="personales" subtotal={sumPers} canEdit={false} cartera={cartera} {...secProps}/>
+      <BudgetSec title="Fondos por Propósito" emoji="📦" rows={budget.propositos} secKey="propositos" subtotal={sumProp} canEdit cartera={cartera} {...secProps}/>
+      <div style={{ border: "2px solid #111", borderRadius: 8, overflow: "hidden", marginBottom: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "12px 12px", background: "#111", alignItems: "center" }}>
+          <div/>
+          <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", fontWeight: 700 }}>Total distribuido</div>
+          <div style={celda({ fontSize: 14, color: "#fff", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO })}>{fmtCLP(totalGasto)}</div>
+          <div style={celda({ fontSize: 12, color: "#888", textAlign: "right" })}>{T > 0 ? ((totalGasto / T) * 100).toFixed(1) : "-"}%</div>
+          <div style={celda({ fontSize: 12, color: "#888", textAlign: "right" })}>{fmtCLP(totalGasto * 12)}</div>
+          <div/>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "10px 12px", background: remainder < 0 ? "#fff5f5" : "#f9f9f9", alignItems: "center" }}>
+          <div/>
+          <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: remainder < 0 ? "#c00" : "#555" }}>{remainder < 0 ? "⚠️ Déficit" : "Remanente"}</div>
+          <div style={celda({ fontSize: 14, color: remainder < 0 ? "#c00" : "#111", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO })}>{fmtCLP(Math.abs(remainder))}</div>
+          <div style={celda({ fontSize: 12, color: "#aaa", textAlign: "right" })}>{T > 0 ? ((Math.abs(remainder) / T) * 100).toFixed(1) : "-"}%</div>
+          <div/><div/>
+        </div>
+      </div>
+      <div style={{ height: 32 }}/>
+    </div>
+  );
 }
 
 export default BudgetPage;

@@ -16,6 +16,7 @@ import { makeDefaultNutria } from "../modules/nutria/defaults.js";
 import EjercicioPage from "../modules/ejercicio/EjercicioPage.jsx";
 import NutricionPage from "../modules/nutricion/NutricionPage.jsx";
 import BudgetPage from "../modules/presupuesto/BudgetPage.jsx";
+import GastoModal from "../modules/presupuesto/GastoModal.jsx";
 import EspritPage from "../modules/espiritu/EspritPage.jsx";
 import FeedPage from "../modules/feed/FeedPage.jsx";
 import VitrinaPage from "../modules/vitrina/VitrinaPage.jsx";
@@ -60,6 +61,7 @@ const STOIC_PHRASES = [
 
 function AngstApp() {
   const [page, setPage] = useState(0);
+  const [gastoOpen, setGastoOpen] = useState(false);
   // dayData: flat dict keyed by "YYYY-MM-DD" → individual day object
   // This ensures each calendar date is fully independent
   const [dayData, setDayData] = useState({});
@@ -1588,6 +1590,7 @@ function AngstApp() {
               📂<input type="file" accept=".xlsx,.xls,.json" onChange={handleLoad} style={{position:"absolute",inset:0,opacity:0,cursor:"pointer",width:"100%",height:"100%",fontSize:0}}/>
             </label>
             <button className={`disk-btn${exportOk===true?" ok":""}`} onClick={handleExport} title="Descargar backup .json">💾</button>
+            <button className="disk-btn" onClick={()=>setGastoOpen(true)} title="Registrar un gasto">💸</button>
             <button className="disk-btn" onClick={pushStateToRepo} title="Guardar el estado completo en Angst-data">📤</button>
             <button className="disk-btn" onClick={leerDeRepo} title="Leer el estado completo desde Angst-data">📥</button>
             {stateSyncMsg&&<span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:stateSyncMsg.startsWith("✓")?"#4caf50":"#f0a000",marginLeft:4}}>{stateSyncMsg}</span>}
@@ -2026,6 +2029,7 @@ function AngstApp() {
         )}
 
         {page===1&&<BudgetPage budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
+        {gastoOpen&&<GastoModal budgets={budgets} onSaveBudget={updateBudgetForMonth} onClose={()=>setGastoOpen(false)}/>}
         {page===2&&<NutriaPage data={nutria} saveData={updateNutria} budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
         {page===3&&<EspritPage dayData={dayData} calMarks={calMarks} updateDay={updateDay} kidsHealth={kidsHealth}/>}
         {page===4&&<SaludPage kidsHealth={kidsHealth} saveKidsHealth={saveKidsHealth} dayData={dayData} updateDay={updateDay} calMarks={calMarks} saveCalMarks={(nm)=>{setCalMarks(nm);calMarksRef.current=nm;saveToStorage({calMarks:nm});}}/>}
