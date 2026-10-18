@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-18T13:48:26.308Z",
+  "generatedAt": "2026-10-18T17:07:09.083Z",
   "categories": [
     {
       "cat": "Películas",
@@ -167,87 +167,6 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1101412",
-          "title": "Fall 2: Deadpoint",
-          "link": "https://www.themoviedb.org/movie/1101412",
-          "summary": "Tras la muerte de su intrépida hermana Shiloh, Jax emprende una peligrosa escalada con una vieja amiga para honrar su memoria. Mientras caminan sobre la cuerda floja por los peligrosos tablones del monte Kwan, en Tailandia, un aterrador desprendimiento de rocas las deja varadas a 1.500 metros de altura. En medio de vértigos, verdades oscuras y giros crueles, Jax debe enfrentarse a sus miedos más profundos para luchar por la supervivencia.",
-          "image": "https://image.tmdb.org/t/p/w500/7ODJFeX9gp4QfK6aFItw4CCrPfr.jpg",
-          "pubDate": "2026-09-01",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-02T08:02:33.479Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 5.7,
-            "rt": 55,
-            "metascore": 53,
-            "tmdb": 6.1
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "Krs0VDIjhmE",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Harriet Slater",
-              "character": "Jax Hunter",
-              "order": 0
-            },
-            {
-              "name": "Arsema Thomas",
-              "character": "Luce",
-              "order": 1
-            },
-            {
-              "name": "Tom Brittney",
-              "character": "Jon Platt",
-              "order": 2
-            },
-            {
-              "name": "Virginia Gardner",
-              "character": "Shiloh Hunter",
-              "order": 3
-            },
-            {
-              "name": "สหจักร บุญธนกิจ",
-              "character": "Thai Barman",
-              "order": 4
-            },
-            {
-              "name": "Korakod Yensuk",
-              "character": "Large Woman",
-              "order": 5
-            },
-            {
-              "name": "Jordan Coleman",
-              "character": "Luce",
-              "order": 6
-            },
-            {
-              "name": "Maryna Bennett",
-              "character": "Female Teenager",
-              "order": 7
-            },
-            {
-              "name": "Noen Perez",
-              "character": "Male Teenager",
-              "order": 8
-            },
-            {
-              "name": "Nattapon Sukphiam",
-              "character": "Thai Climber 1",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
           "guid": "tmdb-movie-1153576",
           "title": "Street Fighter",
           "link": "https://www.themoviedb.org/movie/1153576",
@@ -327,6 +246,87 @@
             }
           ],
           "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1101412",
+          "title": "Fall 2: Deadpoint",
+          "link": "https://www.themoviedb.org/movie/1101412",
+          "summary": "Tras la muerte de su intrépida hermana Shiloh, Jax emprende una peligrosa escalada con una vieja amiga para honrar su memoria. Mientras caminan sobre la cuerda floja por los peligrosos tablones del monte Kwan, en Tailandia, un aterrador desprendimiento de rocas las deja varadas a 1.500 metros de altura. En medio de vértigos, verdades oscuras y giros crueles, Jax debe enfrentarse a sus miedos más profundos para luchar por la supervivencia.",
+          "image": "https://image.tmdb.org/t/p/w500/7ODJFeX9gp4QfK6aFItw4CCrPfr.jpg",
+          "pubDate": "2026-09-01",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-02T08:02:33.479Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 5.7,
+            "rt": 55,
+            "metascore": 53,
+            "tmdb": 6.1
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "Krs0VDIjhmE",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Harriet Slater",
+              "character": "Jax Hunter",
+              "order": 0
+            },
+            {
+              "name": "Arsema Thomas",
+              "character": "Luce",
+              "order": 1
+            },
+            {
+              "name": "Tom Brittney",
+              "character": "Jon Platt",
+              "order": 2
+            },
+            {
+              "name": "Virginia Gardner",
+              "character": "Shiloh Hunter",
+              "order": 3
+            },
+            {
+              "name": "สหจักร บุญธนกิจ",
+              "character": "Thai Barman",
+              "order": 4
+            },
+            {
+              "name": "Korakod Yensuk",
+              "character": "Large Woman",
+              "order": 5
+            },
+            {
+              "name": "Jordan Coleman",
+              "character": "Luce",
+              "order": 6
+            },
+            {
+              "name": "Maryna Bennett",
+              "character": "Female Teenager",
+              "order": 7
+            },
+            {
+              "name": "Noen Perez",
+              "character": "Male Teenager",
+              "order": 8
+            },
+            {
+              "name": "Nattapon Sukphiam",
+              "character": "Thai Climber 1",
+              "order": 9
+            }
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1302904",
@@ -653,6 +653,87 @@
           "trending": false
         },
         {
+          "guid": "tmdb-movie-1255833",
+          "title": "Whalefall",
+          "link": "https://www.themoviedb.org/movie/1255833",
+          "summary": "Tras la muerte de su padre, Jay Gardiner se sumerge en la costa central de California en busca de sus restos, pero es tragado por una ballena. Atrapado en su interior con solo una hora de oxígeno restante, Jay se da cuenta de que las lecciones que su padre le enseñó pueden ser la clave para escapar.",
+          "image": "https://image.tmdb.org/t/p/w500/jmGVSLOrH9IxtcffbldrEHX4IfB.jpg",
+          "pubDate": "2026-10-14",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-15T00:19:09.402Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.9
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "Dw-5ZGapGTQ",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Austin Abrams",
+              "character": "Jay Gardiner",
+              "order": 0
+            },
+            {
+              "name": "Josh Brolin",
+              "character": "Mitt Gardiner",
+              "order": 1
+            },
+            {
+              "name": "Elisabeth Shue",
+              "character": "Zara Gardiner",
+              "order": 2
+            },
+            {
+              "name": "John Ortiz",
+              "character": "Hewey",
+              "order": 3
+            },
+            {
+              "name": "Jane Levy",
+              "character": "Eva Gardiner",
+              "order": 4
+            },
+            {
+              "name": "Emily Rudd",
+              "character": "Nan Gardiner",
+              "order": 5
+            },
+            {
+              "name": "Kamy D. Bruder",
+              "character": "Whale Watcher Man",
+              "order": 6
+            },
+            {
+              "name": "Sam Franich",
+              "character": "Jay at 10",
+              "order": 8
+            },
+            {
+              "name": "Nicholas Gould",
+              "character": "US Coast Guard Petty Officer Third Class Whaley",
+              "order": 9
+            },
+            {
+              "name": "Laurel Lane Bowen",
+              "character": "Cafe Patron",
+              "order": 10
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1248832",
           "title": "Digger",
           "link": "https://www.themoviedb.org/movie/1248832",
@@ -734,52 +815,6 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1263337",
-          "title": "En el corazón de la bestia",
-          "link": "https://www.themoviedb.org/movie/1263337",
-          "summary": "Tras sobrevivir a un brutal accidente aéreo, el oficial de las Fuerzas Especiales James Belmont y su perro de combate Odín intentan intentarán regresar a la civilización desde un remoto lugar en medio de los parajes salvajes de Alaska.",
-          "image": "https://image.tmdb.org/t/p/w500/h9Ql2vsltCOuf44c28nInxjzL2m.jpg",
-          "pubDate": "2026-09-19",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-19T13:43:53.697Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.5,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.8
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "UkMuGKqAux4",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Brad Pitt",
-              "character": "James Belmont",
-              "order": 0
-            },
-            {
-              "name": "J.K. Simmons",
-              "character": "Walter Boone",
-              "order": 1
-            },
-            {
-              "name": "Anna Lambe",
-              "character": "",
-              "order": 2
-            }
-          ],
-          "trending": false
-        },
-        {
           "guid": "tmdb-movie-1561726",
           "title": "Masterplan",
           "link": "https://www.themoviedb.org/movie/1561726",
@@ -851,6 +886,67 @@
               "name": "Julia Messina",
               "character": "TV Reporter",
               "order": 8
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1288069",
+          "title": "Tenzing",
+          "link": "https://www.themoviedb.org/movie/1288069",
+          "summary": "Un hombre se embarca en una arriesgada expedición para, contra todo pronóstico, intentar cumplir el sueño de ser el primero en alcanzar la cima del Everest.",
+          "image": "https://image.tmdb.org/t/p/w500/5i3qw2aDNQP6SWl2hNQaiIoUYHE.jpg",
+          "pubDate": "2026-10-09",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-16T14:36:51.400Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.7,
+            "rt": 95,
+            "metascore": 67,
+            "tmdb": 6.7
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "KkYCY5YR12U",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "更登彭措",
+              "character": "Tenzing Norgay",
+              "order": 0
+            },
+            {
+              "name": "Tom Hiddleston",
+              "character": "Sir Edmund Hillary",
+              "order": 1
+            },
+            {
+              "name": "Willem Dafoe",
+              "character": "Colonel John Hunt",
+              "order": 2
+            },
+            {
+              "name": "Caitríona Balfe",
+              "character": "Jill Henderson",
+              "order": 3
+            },
+            {
+              "name": "Thinley Lhamo",
+              "character": "Dawa Norgay",
+              "order": 4
+            },
+            {
+              "name": "Tenzing Dalha",
+              "character": "Young Tenzing",
+              "order": 5
             }
           ],
           "trending": true
@@ -932,67 +1028,6 @@
               "name": "Marisa Tomei",
               "character": "May Parker",
               "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1288069",
-          "title": "Tenzing",
-          "link": "https://www.themoviedb.org/movie/1288069",
-          "summary": "Un hombre se embarca en una arriesgada expedición para, contra todo pronóstico, intentar cumplir el sueño de ser el primero en alcanzar la cima del Everest.",
-          "image": "https://image.tmdb.org/t/p/w500/5i3qw2aDNQP6SWl2hNQaiIoUYHE.jpg",
-          "pubDate": "2026-10-09",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-16T14:36:51.400Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.7,
-            "rt": 95,
-            "metascore": 67,
-            "tmdb": 6.7
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "KkYCY5YR12U",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "更登彭措",
-              "character": "Tenzing Norgay",
-              "order": 0
-            },
-            {
-              "name": "Tom Hiddleston",
-              "character": "Sir Edmund Hillary",
-              "order": 1
-            },
-            {
-              "name": "Willem Dafoe",
-              "character": "Colonel John Hunt",
-              "order": 2
-            },
-            {
-              "name": "Caitríona Balfe",
-              "character": "Jill Henderson",
-              "order": 3
-            },
-            {
-              "name": "Thinley Lhamo",
-              "character": "Dawa Norgay",
-              "order": 4
-            },
-            {
-              "name": "Tenzing Dalha",
-              "character": "Young Tenzing",
-              "order": 5
             }
           ],
           "trending": true
@@ -1160,87 +1195,6 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1255833",
-          "title": "Whalefall",
-          "link": "https://www.themoviedb.org/movie/1255833",
-          "summary": "Tras la muerte de su padre, Jay Gardiner se sumerge en la costa central de California en busca de sus restos, pero es tragado por una ballena. Atrapado en su interior con solo una hora de oxígeno restante, Jay se da cuenta de que las lecciones que su padre le enseñó pueden ser la clave para escapar.",
-          "image": "https://image.tmdb.org/t/p/w500/jmGVSLOrH9IxtcffbldrEHX4IfB.jpg",
-          "pubDate": "2026-10-14",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-15T00:19:09.402Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.9
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "Dw-5ZGapGTQ",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Austin Abrams",
-              "character": "Jay Gardiner",
-              "order": 0
-            },
-            {
-              "name": "Josh Brolin",
-              "character": "Mitt Gardiner",
-              "order": 1
-            },
-            {
-              "name": "Elisabeth Shue",
-              "character": "Zara Gardiner",
-              "order": 2
-            },
-            {
-              "name": "John Ortiz",
-              "character": "Hewey",
-              "order": 3
-            },
-            {
-              "name": "Jane Levy",
-              "character": "Eva Gardiner",
-              "order": 4
-            },
-            {
-              "name": "Emily Rudd",
-              "character": "Nan Gardiner",
-              "order": 5
-            },
-            {
-              "name": "Kamy D. Bruder",
-              "character": "Whale Watcher Man",
-              "order": 6
-            },
-            {
-              "name": "Sam Franich",
-              "character": "Jay at 10",
-              "order": 8
-            },
-            {
-              "name": "Nicholas Gould",
-              "character": "US Coast Guard Petty Officer Third Class Whaley",
-              "order": 9
-            },
-            {
-              "name": "Laurel Lane Bowen",
-              "character": "Cafe Patron",
-              "order": 10
-            }
-          ],
-          "trending": true
-        },
-        {
           "guid": "tmdb-movie-1514026",
           "title": "Buddy",
           "link": "https://www.themoviedb.org/movie/1514026",
@@ -1316,87 +1270,6 @@
             {
               "name": "Topher Grace",
               "character": "Ben",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1377237",
-          "title": "Entrega al límite",
-          "link": "https://www.themoviedb.org/movie/1377237",
-          "summary": "Un exsoldado se ve envuelto en una brutal carrera contrarreloj cuando una entrega médica crucial los convierte, a él y a su inesperada compañera, en el objetivo de un cártel despiadado. A medida que la misión se transforma en una cacería mortal, cada desvío, retraso y bala los acerca más al fracaso. Acosados ​​por la traición desde todos los frentes, deberán sobrevivir a la persecución y entregar su carga para salvar la vida de una niña.",
-          "image": "https://image.tmdb.org/t/p/w500/pmjSjZtFOYDWhAs4B2AbBE8hTQf.jpg",
-          "pubDate": "2026-09-07",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-14T14:55:12.557Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.6,
-            "rt": null,
-            "metascore": 55,
-            "tmdb": 8.3
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "B6Z9MM1LhEA",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Alan Ritchson",
-              "character": "Hank Malone",
-              "order": 0
-            },
-            {
-              "name": "Owen Wilson",
-              "character": "Ben Bishop",
-              "order": 1
-            },
-            {
-              "name": "Rodrigo Santoro",
-              "character": "Damian Zaldivar",
-              "order": 2
-            },
-            {
-              "name": "Leila George",
-              "character": "Kate Baker",
-              "order": 3
-            },
-            {
-              "name": "Kate Box",
-              "character": "Dr. Ainsley",
-              "order": 4
-            },
-            {
-              "name": "Peta Sergeant",
-              "character": "Nurse Julie",
-              "order": 5
-            },
-            {
-              "name": "Cecilia Toussaint",
-              "character": "Donna Zaldivar",
-              "order": 6
-            },
-            {
-              "name": "Geraldine Hakewill",
-              "character": "Monica",
-              "order": 7
-            },
-            {
-              "name": "Goran D. Kleut",
-              "character": "Luke",
-              "order": 8
-            },
-            {
-              "name": "Scarlett Crabtree",
-              "character": "Ellie Baker",
               "order": 9
             }
           ],
@@ -1482,6 +1355,133 @@
             }
           ],
           "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1263337",
+          "title": "En el corazón de la bestia",
+          "link": "https://www.themoviedb.org/movie/1263337",
+          "summary": "Tras sobrevivir a un brutal accidente aéreo, el oficial de las Fuerzas Especiales James Belmont y su perro de combate Odín intentan intentarán regresar a la civilización desde un remoto lugar en medio de los parajes salvajes de Alaska.",
+          "image": "https://image.tmdb.org/t/p/w500/h9Ql2vsltCOuf44c28nInxjzL2m.jpg",
+          "pubDate": "2026-09-19",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-19T13:43:53.697Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.5,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.8
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "UkMuGKqAux4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Brad Pitt",
+              "character": "James Belmont",
+              "order": 0
+            },
+            {
+              "name": "J.K. Simmons",
+              "character": "Walter Boone",
+              "order": 1
+            },
+            {
+              "name": "Anna Lambe",
+              "character": "",
+              "order": 2
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-movie-1377237",
+          "title": "Entrega al límite",
+          "link": "https://www.themoviedb.org/movie/1377237",
+          "summary": "Un exsoldado se ve envuelto en una brutal carrera contrarreloj cuando una entrega médica crucial los convierte, a él y a su inesperada compañera, en el objetivo de un cártel despiadado. A medida que la misión se transforma en una cacería mortal, cada desvío, retraso y bala los acerca más al fracaso. Acosados ​​por la traición desde todos los frentes, deberán sobrevivir a la persecución y entregar su carga para salvar la vida de una niña.",
+          "image": "https://image.tmdb.org/t/p/w500/pmjSjZtFOYDWhAs4B2AbBE8hTQf.jpg",
+          "pubDate": "2026-09-07",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-14T14:55:12.557Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.6,
+            "rt": null,
+            "metascore": 55,
+            "tmdb": 8.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "B6Z9MM1LhEA",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Alan Ritchson",
+              "character": "Hank Malone",
+              "order": 0
+            },
+            {
+              "name": "Owen Wilson",
+              "character": "Ben Bishop",
+              "order": 1
+            },
+            {
+              "name": "Rodrigo Santoro",
+              "character": "Damian Zaldivar",
+              "order": 2
+            },
+            {
+              "name": "Leila George",
+              "character": "Kate Baker",
+              "order": 3
+            },
+            {
+              "name": "Kate Box",
+              "character": "Dr. Ainsley",
+              "order": 4
+            },
+            {
+              "name": "Peta Sergeant",
+              "character": "Nurse Julie",
+              "order": 5
+            },
+            {
+              "name": "Cecilia Toussaint",
+              "character": "Donna Zaldivar",
+              "order": 6
+            },
+            {
+              "name": "Geraldine Hakewill",
+              "character": "Monica",
+              "order": 7
+            },
+            {
+              "name": "Goran D. Kleut",
+              "character": "Luke",
+              "order": 8
+            },
+            {
+              "name": "Scarlett Crabtree",
+              "character": "Ellie Baker",
+              "order": 9
+            }
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1003596",
@@ -4054,6 +4054,192 @@
           ]
         },
         {
+          "guid": "tmdb-tv-549",
+          "title": "Ley y orden",
+          "link": "https://www.themoviedb.org/tv/549",
+          "summary": "Serie sobre la investigación de crímenes en la ciudad de Nueva York. Policías y jueces son los principales protagonistas.",
+          "image": "https://image.tmdb.org/t/p/w500/vcr8xAdptafbIiU16alUgVak6aM.jpg",
+          "pubDate": "1990-09-13",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-10-01T16:55:04.458Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.8,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.3
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-08",
+          "numberOfSeasons": 26,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 22,
+              "fechaEstreno": "1990-09-13"
+            },
+            {
+              "numero": 2,
+              "episodios": 22,
+              "fechaEstreno": "1991-09-17"
+            },
+            {
+              "numero": 3,
+              "episodios": 22,
+              "fechaEstreno": "1992-09-23"
+            },
+            {
+              "numero": 4,
+              "episodios": 22,
+              "fechaEstreno": "1993-09-15"
+            },
+            {
+              "numero": 5,
+              "episodios": 23,
+              "fechaEstreno": "1994-09-21"
+            },
+            {
+              "numero": 6,
+              "episodios": 23,
+              "fechaEstreno": "1995-09-20"
+            },
+            {
+              "numero": 7,
+              "episodios": 23,
+              "fechaEstreno": "1996-09-18"
+            },
+            {
+              "numero": 8,
+              "episodios": 24,
+              "fechaEstreno": "1997-09-24"
+            },
+            {
+              "numero": 9,
+              "episodios": 24,
+              "fechaEstreno": "1998-09-23"
+            },
+            {
+              "numero": 10,
+              "episodios": 24,
+              "fechaEstreno": "1999-09-22"
+            },
+            {
+              "numero": 11,
+              "episodios": 24,
+              "fechaEstreno": "2000-10-18"
+            },
+            {
+              "numero": 12,
+              "episodios": 24,
+              "fechaEstreno": "2001-09-26"
+            },
+            {
+              "numero": 13,
+              "episodios": 24,
+              "fechaEstreno": "2002-10-02"
+            },
+            {
+              "numero": 14,
+              "episodios": 24,
+              "fechaEstreno": "2003-09-24"
+            },
+            {
+              "numero": 15,
+              "episodios": 24,
+              "fechaEstreno": "2004-09-22"
+            },
+            {
+              "numero": 16,
+              "episodios": 22,
+              "fechaEstreno": "2005-09-21"
+            },
+            {
+              "numero": 17,
+              "episodios": 22,
+              "fechaEstreno": "2006-09-22"
+            },
+            {
+              "numero": 18,
+              "episodios": 18,
+              "fechaEstreno": "2008-01-02"
+            },
+            {
+              "numero": 19,
+              "episodios": 22,
+              "fechaEstreno": "2008-11-05"
+            },
+            {
+              "numero": 20,
+              "episodios": 23,
+              "fechaEstreno": "2009-09-25"
+            },
+            {
+              "numero": 21,
+              "episodios": 10,
+              "fechaEstreno": "2022-02-24"
+            },
+            {
+              "numero": 22,
+              "episodios": 22,
+              "fechaEstreno": "2022-09-22"
+            },
+            {
+              "numero": 23,
+              "episodios": 13,
+              "fechaEstreno": "2024-01-18"
+            },
+            {
+              "numero": 24,
+              "episodios": 22,
+              "fechaEstreno": "2024-10-03"
+            },
+            {
+              "numero": 25,
+              "episodios": 21,
+              "fechaEstreno": "2025-09-25"
+            },
+            {
+              "numero": 26,
+              "episodios": 4,
+              "fechaEstreno": "2026-10-08"
+            }
+          ],
+          "currentSeason": 25,
+          "reviews": null,
+          "trailer": {
+            "key": "RzN8cPlcMTU",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Maura Tierney",
+              "character": "Jessica Brady",
+              "order": 0
+            },
+            {
+              "name": "David Ajala",
+              "character": "Theo Walker",
+              "order": 1
+            },
+            {
+              "name": "Tony Goldwyn",
+              "character": "Nicholas Baxter",
+              "order": 2
+            },
+            {
+              "name": "Hugh Dancy",
+              "character": "Nolan Price",
+              "order": 3
+            },
+            {
+              "name": "Odelya Halevi",
+              "character": "Samantha Maroun",
+              "order": 4
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-2734",
           "title": "Ley y orden: Unidad de Víctimas Especiales",
           "link": "https://www.themoviedb.org/tv/2734",
@@ -4258,299 +4444,6 @@
               "order": 25
             }
           ]
-        },
-        {
-          "guid": "tmdb-tv-549",
-          "title": "Ley y orden",
-          "link": "https://www.themoviedb.org/tv/549",
-          "summary": "Serie sobre la investigación de crímenes en la ciudad de Nueva York. Policías y jueces son los principales protagonistas.",
-          "image": "https://image.tmdb.org/t/p/w500/vcr8xAdptafbIiU16alUgVak6aM.jpg",
-          "pubDate": "1990-09-13",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-10-01T16:55:04.458Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.8,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.3
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-08",
-          "numberOfSeasons": 26,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 22,
-              "fechaEstreno": "1990-09-13"
-            },
-            {
-              "numero": 2,
-              "episodios": 22,
-              "fechaEstreno": "1991-09-17"
-            },
-            {
-              "numero": 3,
-              "episodios": 22,
-              "fechaEstreno": "1992-09-23"
-            },
-            {
-              "numero": 4,
-              "episodios": 22,
-              "fechaEstreno": "1993-09-15"
-            },
-            {
-              "numero": 5,
-              "episodios": 23,
-              "fechaEstreno": "1994-09-21"
-            },
-            {
-              "numero": 6,
-              "episodios": 23,
-              "fechaEstreno": "1995-09-20"
-            },
-            {
-              "numero": 7,
-              "episodios": 23,
-              "fechaEstreno": "1996-09-18"
-            },
-            {
-              "numero": 8,
-              "episodios": 24,
-              "fechaEstreno": "1997-09-24"
-            },
-            {
-              "numero": 9,
-              "episodios": 24,
-              "fechaEstreno": "1998-09-23"
-            },
-            {
-              "numero": 10,
-              "episodios": 24,
-              "fechaEstreno": "1999-09-22"
-            },
-            {
-              "numero": 11,
-              "episodios": 24,
-              "fechaEstreno": "2000-10-18"
-            },
-            {
-              "numero": 12,
-              "episodios": 24,
-              "fechaEstreno": "2001-09-26"
-            },
-            {
-              "numero": 13,
-              "episodios": 24,
-              "fechaEstreno": "2002-10-02"
-            },
-            {
-              "numero": 14,
-              "episodios": 24,
-              "fechaEstreno": "2003-09-24"
-            },
-            {
-              "numero": 15,
-              "episodios": 24,
-              "fechaEstreno": "2004-09-22"
-            },
-            {
-              "numero": 16,
-              "episodios": 22,
-              "fechaEstreno": "2005-09-21"
-            },
-            {
-              "numero": 17,
-              "episodios": 22,
-              "fechaEstreno": "2006-09-22"
-            },
-            {
-              "numero": 18,
-              "episodios": 18,
-              "fechaEstreno": "2008-01-02"
-            },
-            {
-              "numero": 19,
-              "episodios": 22,
-              "fechaEstreno": "2008-11-05"
-            },
-            {
-              "numero": 20,
-              "episodios": 23,
-              "fechaEstreno": "2009-09-25"
-            },
-            {
-              "numero": 21,
-              "episodios": 10,
-              "fechaEstreno": "2022-02-24"
-            },
-            {
-              "numero": 22,
-              "episodios": 22,
-              "fechaEstreno": "2022-09-22"
-            },
-            {
-              "numero": 23,
-              "episodios": 13,
-              "fechaEstreno": "2024-01-18"
-            },
-            {
-              "numero": 24,
-              "episodios": 22,
-              "fechaEstreno": "2024-10-03"
-            },
-            {
-              "numero": 25,
-              "episodios": 21,
-              "fechaEstreno": "2025-09-25"
-            },
-            {
-              "numero": 26,
-              "episodios": 4,
-              "fechaEstreno": "2026-10-08"
-            }
-          ],
-          "currentSeason": 25,
-          "reviews": null,
-          "trailer": {
-            "key": "RzN8cPlcMTU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Maura Tierney",
-              "character": "Jessica Brady",
-              "order": 0
-            },
-            {
-              "name": "David Ajala",
-              "character": "Theo Walker",
-              "order": 1
-            },
-            {
-              "name": "Tony Goldwyn",
-              "character": "Nicholas Baxter",
-              "order": 2
-            },
-            {
-              "name": "Hugh Dancy",
-              "character": "Nolan Price",
-              "order": 3
-            },
-            {
-              "name": "Odelya Halevi",
-              "character": "Samantha Maroun",
-              "order": 4
-            }
-          ]
-        },
-        {
-          "guid": "tmdb-tv-61818",
-          "title": "Late Night with Seth Meyers",
-          "link": "https://www.themoviedb.org/tv/61818",
-          "summary": "Seth Meyers, who is \"Saturday Night Live's\" longest serving anchor on the show's wildly popular \"Weekend Update,\" takes over as host of NBC's \"Late Night\" — home to A-list celebrity guests, memorable comedy and the best in musical talent. As the Emmy Award-winning head writer for \"SNL,\" Meyers has established a reputation for sharp wit and perfectly timed comedy, and has gained fame for his spot-on jokes and satire. Meyers takes his departure from \"SNL\" to his new post at \"Late Night,\" as Jimmy Fallon moves to \"The Tonight Show\".",
-          "image": "https://image.tmdb.org/t/p/w500/u8VruEGv7mtyJihVn2CSA1u90pk.jpg",
-          "pubDate": "2014-02-25",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-18T14:09:41.193Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.3,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 5.1
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-22",
-          "numberOfSeasons": 14,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 99,
-              "fechaEstreno": "2014-02-25"
-            },
-            {
-              "numero": 2,
-              "episodios": 161,
-              "fechaEstreno": "2014-09-23"
-            },
-            {
-              "numero": 3,
-              "episodios": 160,
-              "fechaEstreno": "2015-09-22"
-            },
-            {
-              "numero": 4,
-              "episodios": 162,
-              "fechaEstreno": "2016-09-20"
-            },
-            {
-              "numero": 5,
-              "episodios": 154,
-              "fechaEstreno": "2017-09-26"
-            },
-            {
-              "numero": 6,
-              "episodios": 150,
-              "fechaEstreno": "2018-09-25"
-            },
-            {
-              "numero": 7,
-              "episodios": 153,
-              "fechaEstreno": "2019-09-24"
-            },
-            {
-              "numero": 8,
-              "episodios": 155,
-              "fechaEstreno": "2020-09-22"
-            },
-            {
-              "numero": 9,
-              "episodios": 137,
-              "fechaEstreno": "2021-09-21"
-            },
-            {
-              "numero": 10,
-              "episodios": 91,
-              "fechaEstreno": "2022-09-20"
-            },
-            {
-              "numero": 11,
-              "episodios": 140,
-              "fechaEstreno": "2023-10-03"
-            },
-            {
-              "numero": 12,
-              "episodios": 141,
-              "fechaEstreno": "2024-09-24"
-            },
-            {
-              "numero": 13,
-              "episodios": 124,
-              "fechaEstreno": "2025-09-22"
-            },
-            {
-              "numero": 14,
-              "episodios": 4,
-              "fechaEstreno": "2026-09-22"
-            }
-          ],
-          "currentSeason": 13,
-          "reviews": null,
-          "trailer": {
-            "key": "rLwbzGyC6t4",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Seth Meyers",
-              "character": "Self - Host",
-              "order": 0
-            }
-          ],
-          "trending": false
         },
         {
           "guid": "tmdb-tv-4614",
@@ -5207,6 +5100,92 @@
           "trending": false
         },
         {
+          "guid": "tmdb-tv-213375",
+          "title": "VisionQuest",
+          "link": "https://www.themoviedb.org/tv/213375",
+          "summary": "Tras reiniciarse, Visión ha estado huyendo de quienes pretenden convertirlo en un arma y ahora se encuentra escondido. Buscando un nuevo propósito, pide consejo a las distintas IA que están integradas en su programación, incluidos Friday, Edith, Jarvis y el infame Ultrón. Su discreta existencia llega a su fin cuando una recompensa por su cabeza le obliga a huir junto a Thomas Shepard, un misterioso joven que podría ser la reencarnación de su hijo. Mientras evita ser capturado, Visión tendrá que enfrentarse a su propia naturaleza, resistirse a la influencia de Ultrón y desentrañar el misterio que rodea a su joven compañero si quiere sobrevivir.",
+          "image": "https://image.tmdb.org/t/p/w500/hXlvDq98VMg3WJWTDzwcPeMk39A.jpg",
+          "pubDate": "2026-10-13",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-10-15T07:05:08.534Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 9
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-20",
+          "numberOfSeasons": 1,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 8,
+              "fechaEstreno": "2026-10-13"
+            }
+          ],
+          "currentSeason": 1,
+          "reviews": null,
+          "trailer": {
+            "key": "sXKnmgmbkoE",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Paul Bettany",
+              "character": "Vision",
+              "order": 0
+            },
+            {
+              "name": "James Spader",
+              "character": "Ultron",
+              "order": 1
+            },
+            {
+              "name": "Ruaridh Mollica",
+              "character": "Thomas",
+              "order": 2
+            },
+            {
+              "name": "Todd Stashwick",
+              "character": "Paladin",
+              "order": 3
+            },
+            {
+              "name": "Lauren Morais",
+              "character": "Lisa Molinari",
+              "order": 4
+            },
+            {
+              "name": "Orla Brady",
+              "character": "F.R.I.D.A.Y.",
+              "order": 5
+            },
+            {
+              "name": "Diane Morgan",
+              "character": "Handler",
+              "order": 6
+            },
+            {
+              "name": "Ben Crompton",
+              "character": "Clancy",
+              "order": 7
+            },
+            {
+              "name": "Polly Frame",
+              "character": "Fiona Guthrie",
+              "order": 8
+            },
+            {
+              "name": "Henry Lewis",
+              "character": "D.U.M.-E.",
+              "order": 9
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-72879",
           "title": "Demain nous appartient",
           "link": "https://www.themoviedb.org/tv/72879",
@@ -5491,90 +5470,103 @@
           "trending": false
         },
         {
-          "guid": "tmdb-tv-213375",
-          "title": "VisionQuest",
-          "link": "https://www.themoviedb.org/tv/213375",
-          "summary": "Tras reiniciarse, Visión ha estado huyendo de quienes pretenden convertirlo en un arma y ahora se encuentra escondido. Buscando un nuevo propósito, pide consejo a las distintas IA que están integradas en su programación, incluidos Friday, Edith, Jarvis y el infame Ultrón. Su discreta existencia llega a su fin cuando una recompensa por su cabeza le obliga a huir junto a Thomas Shepard, un misterioso joven que podría ser la reencarnación de su hijo. Mientras evita ser capturado, Visión tendrá que enfrentarse a su propia naturaleza, resistirse a la influencia de Ultrón y desentrañar el misterio que rodea a su joven compañero si quiere sobrevivir.",
-          "image": "https://image.tmdb.org/t/p/w500/hXlvDq98VMg3WJWTDzwcPeMk39A.jpg",
-          "pubDate": "2026-10-13",
+          "guid": "tmdb-tv-247718",
+          "title": "Tierra de mafiosos",
+          "link": "https://www.themoviedb.org/tv/247718",
+          "summary": "El poder está en juego cuando los Harrigan y los Stevenson, dos familias criminales londinenses en guerra, se enfrentan en una batalla de matar o morir que amenaza con derribar imperios y arruinar vidas. Atrapado en el fuego cruzado está Harry Da Souza, el astuto \"solucionador\" tan peligroso como atractivo, que sabe muy bien dónde están las lealtades cuando las fuerzas opuestas chocan. A medida que los reinos se enfrentan, se cruzarán las líneas, y la única gracia salvadora es una garantía de vida o muerte: la familia por encima de todo.",
+          "image": "https://image.tmdb.org/t/p/w500/xOBnonAeHiZuiTPOLBFMFSPI6jy.jpg",
+          "pubDate": "2025-03-30",
           "source": "TMDb",
           "categoria": "Series",
-          "firstSeenAt": "2026-10-15T07:05:08.534Z",
+          "firstSeenAt": "2026-09-19T07:06:56.670Z",
           "fullText": null,
           "rating": {
-            "imdb": null,
+            "imdb": 8.3,
             "rt": null,
             "metascore": null,
-            "tmdb": 9
+            "tmdb": 8.4
           },
           "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-20",
-          "numberOfSeasons": 1,
+          "nextEpisodeDate": "2026-09-25",
+          "numberOfSeasons": 2,
           "seasons": [
             {
               "numero": 1,
-              "episodios": 8,
-              "fechaEstreno": "2026-10-13"
+              "episodios": 10,
+              "fechaEstreno": "2025-03-30"
+            },
+            {
+              "numero": 2,
+              "episodios": 10,
+              "fechaEstreno": "2026-09-18"
             }
           ],
-          "currentSeason": 1,
-          "reviews": null,
+          "currentSeason": 2,
+          "reviews": {
+            "top": {
+              "rating": 8,
+              "text": "(CASTELLANO) Hay series que entran por pura presencia, y esta es de esas. Desde los primeros minutos, Tierra de mafiosos deja claro que su mayor arma no es la trama –que ya la hemos visto mil veces– sino ese desfile de actores que parece estar disfrutando más que nadie. Tom Hardy está brutal, pero quien me ha dejado loco es Harry (Paddy Considine): cada gesto, cada silencio, cada mirada… es de esos personajes que te incomodan sin levantar la voz. Y luego está Helen Mirren, que aquí directamente da miedo. Una frialdad que corta, una maldad sin freno. Impone muchísimo.\r\n\r\nLa historia no sorprende demasiado, pero funciona. Tiene ese punto reconocible de las ficciones de mafias familiares, con traiciones, tensiones y conversaciones que parecen una calma tensa a punto de estallar. Podría tener ",
+              "author": "Marco-Hugo Landeta Vacas"
+            },
+            "bottom": null
+          },
           "trailer": {
-            "key": "sXKnmgmbkoE",
+            "key": "qKGgw7Ob5f4",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Paul Bettany",
-              "character": "Vision",
+              "name": "Tom Hardy",
+              "character": "Harry Da Souza",
               "order": 0
             },
             {
-              "name": "James Spader",
-              "character": "Ultron",
+              "name": "Pierce Brosnan",
+              "character": "Conrad Harrigan",
               "order": 1
             },
             {
-              "name": "Ruaridh Mollica",
-              "character": "Thomas",
+              "name": "Paddy Considine",
+              "character": "Kevin Harrigan",
               "order": 2
             },
             {
-              "name": "Todd Stashwick",
-              "character": "Paladin",
+              "name": "Joanne Froggatt",
+              "character": "Jan Da Souza",
               "order": 3
             },
             {
-              "name": "Lauren Morais",
-              "character": "Lisa Molinari",
+              "name": "Lara Pulver",
+              "character": "Bella Harrigan",
               "order": 4
             },
             {
-              "name": "Orla Brady",
-              "character": "F.R.I.D.A.Y.",
+              "name": "Anson Boon",
+              "character": "Eddie Harrigan",
               "order": 5
             },
             {
-              "name": "Diane Morgan",
-              "character": "Handler",
+              "name": "Mandeep Dhillon",
+              "character": "Seraphina Harrigan",
               "order": 6
             },
             {
-              "name": "Ben Crompton",
-              "character": "Clancy",
-              "order": 7
-            },
-            {
-              "name": "Polly Frame",
-              "character": "Fiona Guthrie",
+              "name": "Jasmine Jobson",
+              "character": "Zosia",
               "order": 8
             },
             {
-              "name": "Henry Lewis",
-              "character": "D.U.M.-E.",
+              "name": "Teddie Allen",
+              "character": "Gina Da Souza",
               "order": 9
+            },
+            {
+              "name": "Emmett J. Scanlan",
+              "character": "Paul",
+              "order": 10
             }
-          ]
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-tv-2661",
@@ -5790,105 +5782,6 @@
             "site": "YouTube"
           },
           "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-247718",
-          "title": "Tierra de mafiosos",
-          "link": "https://www.themoviedb.org/tv/247718",
-          "summary": "El poder está en juego cuando los Harrigan y los Stevenson, dos familias criminales londinenses en guerra, se enfrentan en una batalla de matar o morir que amenaza con derribar imperios y arruinar vidas. Atrapado en el fuego cruzado está Harry Da Souza, el astuto \"solucionador\" tan peligroso como atractivo, que sabe muy bien dónde están las lealtades cuando las fuerzas opuestas chocan. A medida que los reinos se enfrentan, se cruzarán las líneas, y la única gracia salvadora es una garantía de vida o muerte: la familia por encima de todo.",
-          "image": "https://image.tmdb.org/t/p/w500/xOBnonAeHiZuiTPOLBFMFSPI6jy.jpg",
-          "pubDate": "2025-03-30",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-19T07:06:56.670Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.3,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.4
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-25",
-          "numberOfSeasons": 2,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 10,
-              "fechaEstreno": "2025-03-30"
-            },
-            {
-              "numero": 2,
-              "episodios": 10,
-              "fechaEstreno": "2026-09-18"
-            }
-          ],
-          "currentSeason": 2,
-          "reviews": {
-            "top": {
-              "rating": 8,
-              "text": "(CASTELLANO) Hay series que entran por pura presencia, y esta es de esas. Desde los primeros minutos, Tierra de mafiosos deja claro que su mayor arma no es la trama –que ya la hemos visto mil veces– sino ese desfile de actores que parece estar disfrutando más que nadie. Tom Hardy está brutal, pero quien me ha dejado loco es Harry (Paddy Considine): cada gesto, cada silencio, cada mirada… es de esos personajes que te incomodan sin levantar la voz. Y luego está Helen Mirren, que aquí directamente da miedo. Una frialdad que corta, una maldad sin freno. Impone muchísimo.\r\n\r\nLa historia no sorprende demasiado, pero funciona. Tiene ese punto reconocible de las ficciones de mafias familiares, con traiciones, tensiones y conversaciones que parecen una calma tensa a punto de estallar. Podría tener ",
-              "author": "Marco-Hugo Landeta Vacas"
-            },
-            "bottom": null
-          },
-          "trailer": {
-            "key": "qKGgw7Ob5f4",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Tom Hardy",
-              "character": "Harry Da Souza",
-              "order": 0
-            },
-            {
-              "name": "Pierce Brosnan",
-              "character": "Conrad Harrigan",
-              "order": 1
-            },
-            {
-              "name": "Paddy Considine",
-              "character": "Kevin Harrigan",
-              "order": 2
-            },
-            {
-              "name": "Joanne Froggatt",
-              "character": "Jan Da Souza",
-              "order": 3
-            },
-            {
-              "name": "Lara Pulver",
-              "character": "Bella Harrigan",
-              "order": 4
-            },
-            {
-              "name": "Anson Boon",
-              "character": "Eddie Harrigan",
-              "order": 5
-            },
-            {
-              "name": "Mandeep Dhillon",
-              "character": "Seraphina Harrigan",
-              "order": 6
-            },
-            {
-              "name": "Jasmine Jobson",
-              "character": "Zosia",
-              "order": 8
-            },
-            {
-              "name": "Teddie Allen",
-              "character": "Gina Da Souza",
-              "order": 9
-            },
-            {
-              "name": "Emmett J. Scanlan",
-              "character": "Paul",
-              "order": 10
-            }
-          ],
           "trending": false
         },
         {
