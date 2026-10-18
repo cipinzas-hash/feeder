@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-17T21:52:31.848Z",
+  "generatedAt": "2026-10-18T02:08:46.124Z",
   "categories": [
     {
       "cat": "Melee",
@@ -137,12 +137,45 @@
           }
         },
         {
+          "guid": "melee-tournament/platfight-gaming-championships-2026/event/melee-singles-(a)-|-nana-plays-bass-vs-yb-|-friend-losers-round-1",
+          "title": "Nana Plays Bass [seed 23] venció a Friend [seed 13]",
+          "link": "https://www.start.gg/tournament/platfight-gaming-championships-2026/event/melee-singles",
+          "summary": "Losers Round 1 de Platfight 2026.",
+          "ronda": "Losers Round 1",
+          "image": null,
+          "pubDate": "2026-10-17T17:00:00.000Z",
+          "source": "Platfight 2026",
+          "categoria": "Melee",
+          "fullText": null,
+          "tipo": "video",
+          "videoId": null,
+          "startSeconds": 0,
+          "esUpset": true,
+          "viaSSBMRank": false,
+          "seedDiff": 10,
+          "rankDiff": null,
+          "ganador": {
+            "nombre": "(A) | Nana Plays Bass",
+            "seed": 23,
+            "ssbmrank": null,
+            "pj": null,
+            "foto": null
+          },
+          "perdedor": {
+            "nombre": "yb | Friend",
+            "seed": 13,
+            "ssbmrank": null,
+            "pj": null,
+            "foto": null
+          }
+        },
+        {
           "guid": "melee-seedreport-tournament/platfight-gaming-championships-2026/event/melee-singles",
           "title": "Reporte de seeds — Platfight 2026",
           "link": "https://www.start.gg/tournament/platfight-gaming-championships-2026/event/melee-singles",
-          "summary": "25/32 del top 32 sostienen su seed. 7 ya cayeron.",
+          "summary": "20/32 del top 32 sostienen su seed. 12 ya cayeron.",
           "image": null,
-          "pubDate": "2026-10-17T21:52:31.470Z",
+          "pubDate": "2026-10-18T02:08:45.786Z",
           "source": "Platfight 2026",
           "categoria": "Melee",
           "fullText": null,
@@ -222,11 +255,15 @@
               "nombre": "Lil Corner | chape",
               "seed": 8,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 0,
-              "eliminadoPor": null,
-              "ronda": null,
-              "esUpset": false
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "NSE | Maher",
+                "seed": 9,
+                "ssbmrank": 72
+              },
+              "ronda": "Winners Semi-Final",
+              "esUpset": true
             },
             {
               "nombre": "NSE | Maher",
@@ -272,11 +309,15 @@
               "nombre": "yb | Friend",
               "seed": 13,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
-              "esUpset": false
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "(A) | Nana Plays Bass",
+                "seed": 23,
+                "ssbmrank": null
+              },
+              "ronda": "Losers Round 1",
+              "esUpset": true
             },
             {
               "nombre": "aujory",
@@ -302,10 +343,14 @@
               "nombre": "Alberta | Odin",
               "seed": 16,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 0,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "LuckyStats.gg | RapMonster",
+                "seed": 1,
+                "ssbmrank": 28
+              },
+              "ronda": "Winners Semi-Final",
               "esUpset": false
             },
             {
@@ -313,7 +358,7 @@
               "seed": 17,
               "foto": null,
               "sostiene": true,
-              "derrotas": 0,
+              "derrotas": 1,
               "eliminadoPor": null,
               "ronda": null,
               "esUpset": false
@@ -390,18 +435,22 @@
               "nombre": "Necroflyer",
               "seed": 24,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 0,
-              "eliminadoPor": null,
-              "ronda": null,
-              "esUpset": false
+              "sostiene": false,
+              "derrotas": 4,
+              "eliminadoPor": {
+                "nombre": "2claws | Aitch",
+                "seed": 25,
+                "ssbmrank": null
+              },
+              "ronda": "Losers Round 4",
+              "esUpset": true
             },
             {
               "nombre": "2claws | Aitch",
               "seed": 25,
               "foto": null,
               "sostiene": true,
-              "derrotas": 0,
+              "derrotas": 1,
               "eliminadoPor": null,
               "ronda": null,
               "esUpset": false
@@ -490,10 +539,14 @@
               "nombre": "Krizski",
               "seed": 32,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "2claws | Aitch",
+                "seed": 25,
+                "ssbmrank": null
+              },
+              "ronda": "Losers Round 3",
               "esUpset": false
             }
           ],
@@ -1695,7 +1748,7 @@
     {
       "slug": "tournament/platfight-gaming-championships-2026/event/melee-singles",
       "tournamentName": "Platfight 2026",
-      "setsCount": 300
+      "setsCount": 340
     },
     {
       "slug": "tournament/port-priority-dx/event/melee-singles",
