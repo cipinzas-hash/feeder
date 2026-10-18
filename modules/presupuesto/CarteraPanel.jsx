@@ -40,7 +40,7 @@ function GastoFila({ g, nombre, onDelete }) {
           ? <span style={{ ...sub, fontSize: 11 }}><span onClick={onDelete} style={{ color: "#c00", cursor: "pointer", marginRight: 6 }}>borrar</span><span onClick={() => setSeguro(false)} style={{ color: "#999", cursor: "pointer" }}>no</span></span>
           : <button onClick={() => setSeguro(true)} style={{ background: "transparent", border: "none", color: "#ddd", fontSize: 14, cursor: "pointer", lineHeight: 1, padding: 0 }}>×</button>}
       </div>
-      {g.nota && <div style={{ ...sub, fontSize: 11, color: "#888", paddingLeft: 52 }}>{g.nota}</div>}
+      {(g.nota || g.prestamoId) && <div style={{ ...sub, fontSize: 11, color: "#888", paddingLeft: 52 }}>{g.nota}{g.prestamoId && <span style={{ color: "#a60", marginLeft: g.nota ? 6 : 0 }}>💳 con préstamo</span>}</div>}
     </div>
   );
 }
@@ -112,7 +112,7 @@ export default function CarteraPanel({ sec, row, periodo, budgets, budget, estad
           <div style={{ ...celdaTitulo, letterSpacing: 2, textTransform: "uppercase", padding: "4px 0" }}>Gastos del período</div>
           {gastos.length === 0
             ? <div style={{ ...sub, color: "#bbb", fontSize: 11, padding: "4px 0" }}>Sin gastos registrados.</div>
-            : gastos.map(g => <GastoFila key={g.id} g={g} nombre={nombreDe(g.subId)} onDelete={() => onDeleteGasto(g.id)}/>)}
+            : gastos.map(g => <GastoFila key={g.id} g={g} nombre={nombreDe(g.subId)} onDelete={() => { const motivo = onDeleteGasto(g.id); if (typeof motivo === "string") onAviso(motivo); }}/>)}
         </div>
       )}
     </div>

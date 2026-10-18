@@ -1,5 +1,5 @@
 import { fmtCLP } from "../../core/format.js";
-import { estadoFila } from "../../core/presupuesto-modelo.js";
+import { estadoFila, resumenDeudas } from "../../core/presupuesto-modelo.js";
 import CarteraPanel from "./CarteraPanel.jsx";
 import { FUENTE } from "./grilla.jsx";
 const { useState, useEffect } = React;
@@ -29,6 +29,7 @@ export default function CarteraVentana({ carteras, index, onIndex, onClose, budg
 
   const estado = sobresOn ? estadoFila(budgets, periodo, sec, row) : null;
   const etiqueta = sec === "personales" ? "Ahorrado" : "Saldo";
+  const deudas = sobresOn ? resumenDeudas(budgets, periodo, sec, row.id) : null;
   const dato = (titulo, valor, color) => (
     <div style={{ flex: 1, textAlign: "center" }}>
       <div style={{ fontFamily: FUENTE, fontSize: 9, color: "#aaa", letterSpacing: 1, textTransform: "uppercase" }}>{titulo}</div>
@@ -54,6 +55,18 @@ export default function CarteraVentana({ carteras, index, onIndex, onClose, budg
             {estado ? dato(etiqueta, fmtCLP(estado.saldo), estado.saldo < 0 ? "#c00" : "#111") : dato(etiqueta, "—", "#bbb")}
             {estado ? dato("Gastado", fmtCLP(estado.gastado)) : dato("Gastado", "—", "#bbb")}
           </div>
+          {estado && (
+            <div style={{ fontFamily: FUENTE, fontSize: 11, color: "#888", lineHeight: 1.6, marginBottom: 8 }}>
+              Al empezar el período debía haber <b style={{ color: "#333" }}>{fmtCLP(estado.debiaHaber)}</b> en el sobre
+              {(estado.devPagada > 0 || estado.devRecibida > 0) && <span> ({estado.devPagada > 0 && `−${fmtCLP(estado.devPagada)} de devolución`}{estado.devPagada > 0 && estado.devRecibida > 0 && ", "}{estado.devRecibida > 0 && `+${fmtCLP(estado.devRecibida)} devueltos`})</span>}.
+            </div>
+          )}
+          {deudas && (deudas.debe > 0 || deudas.teDeben > 0) && (
+            <div style={{ fontFamily: FUENTE, fontSize: 12, color: "#8a5a00", background: "#fffaf0", border: "1px dashed #e0b070", borderRadius: 6, padding: "8px 10px", marginBottom: 10, lineHeight: 1.5 }}>
+              {deudas.debe > 0 && <div>💳 Debe <b>{fmtCLP(deudas.debe)}</b> a otras carteras: se descuenta solo de su asignación (máx. 50%).</div>}
+              {deudas.teDeben > 0 && <div>↩️ Le deben <b>{fmtCLP(deudas.teDeben)}</b>: vuelven solos a este sobre.</div>}
+            </div>
+          )}
           {aviso && <div style={{ fontFamily: FUENTE, fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", margin: "6px 0 10px" }}>{aviso}</div>}
           {!sobresOn && <div style={{ fontFamily: FUENTE, fontSize: 12, color: "#999", padding: "4px 0 10px" }}>Los sobres no están iniciados en este período: toca 🧾 en Presupuesto para activar saldos y gastos.</div>}
           <CarteraPanel sec={sec} row={row} periodo={periodo} budgets={budgets} budget={budget} estado={estado} sobresOn={sobresOn} esInicio={esInicio} etiquetaSaldo={etiqueta}

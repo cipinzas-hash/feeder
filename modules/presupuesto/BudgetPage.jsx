@@ -1,9 +1,10 @@
 import { MONTH_NAMES } from "../../core/dates.js";
 import { fmtCLP } from "../../core/format.js";
-import { resolverPeriodo, inicioSobres, estadoFila, sumaSubs, puedeEliminar, quitarGasto } from "../../core/presupuesto-modelo.js";
+import { resolverPeriodo, inicioSobres, sumaSubs, puedeEliminar, quitarGasto, puedeQuitarGasto } from "../../core/presupuesto-modelo.js";
 import { AmountRow, GRID, COL, GAP, FUENTE, PAD_MONTO, celdaTitulo } from "./grilla.jsx";
 import CarteraVentana from "./CarteraVentana.jsx";
 import GastoModal from "./GastoModal.jsx";
+import GuiaSobres from "./GuiaSobres.jsx";
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
 // La lógica de períodos, sub-partidas, saldos y gastos vive en core/presupuesto-modelo.js (issue #24).
@@ -136,6 +137,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
   const [aviso, setAviso] = useState("");
   const [ventana, setVentana] = useState(null);   // {sec,rowId} de la cartera abierta
   const [gastoDesde, setGastoDesde] = useState(null);
+  const [guia, setGuia] = useState(false);
   const avisoRef = useRef(null);
   const now = new Date();
   const [selYear, setSelYear] = useState(now.getFullYear());
@@ -168,7 +170,12 @@ function BudgetPage({ budgets, onSaveBudget }) {
   }
   function checkRow(sec, id, checked) { save({ ...budget, [sec]: budget[sec].map(r => r.id === id ? { ...r, checked } : r) }); }
   function patchRow(sec, id, patch) { save({ ...budget, [sec]: budget[sec].map(r => r.id === id ? { ...r, ...patch } : r) }); }
-  function delGasto(id) { save(quitarGasto(budget, id)); }
+  function delGasto(id) {
+    const g = (budget.gastos || []).find(x => x.id === id);
+    const p = puedeQuitarGasto(budgets, g);
+    if (!p.ok) return p.motivo;          // la ventana de la cartera muestra el motivo
+    save(quitarGasto(budget, id));
+  }
   function setApertura(clave, v) { save({ ...budget, apertura: { ...(budget.apertura || {}), [clave]: v } }); }
   function iniciarSobres() { save({ ...budget, apertura: budget.apertura || {} }); }
 
@@ -192,6 +199,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
       {idxVentana >= 0 && <CarteraVentana carteras={carteras} index={idxVentana} onIndex={i => setVentana({ sec: carteras[i].sec, rowId: carteras[i].row.id })} onClose={() => setVentana(null)}
         budgets={budgets} budget={budget} periodo={monthKey} sobresOn={sobresOn} esInicio={monthKey === inicio}
         onPatchRow={patchRow} onDeleteGasto={delGasto} onApertura={setApertura} onGasto={(sec, id) => setGastoDesde(`${sec}|${id}`)}/>}
+      {guia && <GuiaSobres budgets={budgets} periodo={monthKey} etiquetaPeriodo={periodLabel} onClose={() => setGuia(false)}/>}
       {gastoDesde && <GastoModal budgets={budgets} inicial={gastoDesde} onSaveBudget={onSaveBudget} onClose={() => setGastoDesde(null)}/>}
       {monthModal && <MonthSelectorModal currentYear={selYear} currentMonth={selMonth} onSelect={(y, m) => { setSelYear(y); setSelMonth(m); }} onClose={() => setMonthModal(false)}/>}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 8, flexWrap: "wrap" }}>
@@ -201,7 +209,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
           <button onClick={() => { const nm = selMonth === 11 ? 0 : selMonth + 1; const ny = selMonth === 11 ? selYear + 1 : selYear; setSelMonth(nm); setSelYear(ny); }} style={navBtn}>›</button>
         </div>
         {inicio
-          ? <span style={celda({ fontSize: 11, color: "#888" })}>🧾 sobres desde {MONTH_NAMES[parseInt(inicio.slice(5)) - 1].slice(0, 3)} {inicio.slice(0, 4)}</span>
+          ? <button onClick={() => setGuia(true)} title="Cuánto debe haber en cada sobre" style={{ ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: "#555", padding: "7px 12px" }}>🧾 sobres{sobresOn ? "" : " (desde " + MONTH_NAMES[parseInt(inicio.slice(5)) - 1].slice(0, 3) + ")"} ▸</button>
           : <button onClick={iniciarSobres} title="Activa saldos, gastos y sobrantes por cartera a partir de este período" style={{ ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: "#555", padding: "7px 12px" }}>🧾 iniciar sobres</button>}
       </div>
       {aviso && <div style={celda({ fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", marginBottom: 14 })}>{aviso}</div>}
