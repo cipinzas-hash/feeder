@@ -8,10 +8,15 @@ const rotulo = { fontFamily: F, fontSize: 10, color: "#999", letterSpacing: 2, t
 
 // Botón "Gasto" del menú principal: pregunta cartera o fondo personal, sub-partida,
 // monto, fecha y nota. Un gasto mayor al saldo del sobre no se registra.
-export default function GastoModal({ budgets, onSaveBudget, onClose }) {
+export default function GastoModal({ budgets, onSaveBudget, onClose, inicial }) {
   const [fecha, setFecha] = useState(fechaISO(new Date()));
-  const [cartera, setCartera] = useState("");   // "sec|rowId"
-  const [subId, setSubId] = useState("null");
+  const [cartera, setCartera] = useState(inicial || "");   // "sec|rowId"
+  const [subId, setSubId] = useState(() => {
+    if (!inicial) return "null";
+    const [s0, id0] = inicial.split("|");
+    const f0 = (resolverPeriodo(budgets, periodoDeFecha(new Date()))[s0] || []).find(r => r.id === id0);
+    return f0 && f0.subs && f0.subs.length ? String(f0.subs[0].id) : "null";
+  });
   const [monto, setMonto] = useState("");
   const [nota, setNota] = useState("");
   const [error, setError] = useState("");

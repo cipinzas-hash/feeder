@@ -45,7 +45,7 @@ function GastoFila({ g, nombre, onDelete }) {
   );
 }
 
-// Detalle de una cartera: reparto en sub-partidas, saldos de sus sobres y gastos del período.
+// Contenido de la ventana de una cartera: reparto en sub-partidas, saldos de sus sobres y gastos del período.
 export default function CarteraPanel({ sec, row, periodo, budgets, budget, estado, sobresOn, esInicio, etiquetaSaldo, onPatchRow, onDeleteGasto, onApertura, onAviso }) {
   const [adding, setAdding] = useState(false);
   const [emoji, setEmoji] = useState("");
@@ -68,7 +68,7 @@ export default function CarteraPanel({ sec, row, periodo, budgets, budget, estad
   const bolsillosInicio = estado ? estado.items : [];
 
   return (
-    <div style={{ padding: "4px 12px 12px 42px", background: "#fcfcfc", borderBottom: "1px solid #eee" }}>
+    <div style={{ padding: "4px 0 8px" }}>
       <div style={{ display: "grid", gridTemplateColumns: COL, gap: GAP, padding: "2px 0 4px" }}>
         <div style={{ ...celdaTitulo, letterSpacing: 2, textTransform: "uppercase" }}>Sub-partidas</div>
         <div style={{ ...celdaTitulo, textAlign: "right", paddingRight: PAD_MONTO }}>$ Asignado</div>

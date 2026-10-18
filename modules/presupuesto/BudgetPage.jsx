@@ -2,7 +2,8 @@ import { MONTH_NAMES } from "../../core/dates.js";
 import { fmtCLP } from "../../core/format.js";
 import { resolverPeriodo, inicioSobres, estadoFila, sumaSubs, puedeEliminar, quitarGasto } from "../../core/presupuesto-modelo.js";
 import { AmountRow, GRID, COL, GAP, FUENTE, PAD_MONTO, celdaTitulo } from "./grilla.jsx";
-import CarteraPanel from "./CarteraPanel.jsx";
+import CarteraVentana from "./CarteraVentana.jsx";
+import GastoModal from "./GastoModal.jsx";
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
 // La lógica de períodos, sub-partidas, saldos y gastos vive en core/presupuesto-modelo.js (issue #24).
@@ -44,7 +45,7 @@ function MonthSelectorModal({ currentYear, currentMonth, onSelect, onClose }) { 
 
 const celda = (extra) => ({ fontFamily: FUENTE, ...extra });
 
-function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit, onRowSave, onRowAdd, onRowDelete, onRowCheck, onChartOpen, cartera }) {
+function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit, onRowSave, onRowAdd, onRowDelete, onRowCheck, onChartOpen, onOpenCartera }) {
   const T = totalIngreso;
   const pct = T > 0 ? ((subtotal / T) * 100).toFixed(1) : "-";
   const [hover, setHover] = useState(false);
@@ -53,14 +54,12 @@ function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit
   const [newEmoji, setNewEmoji] = useState("📌");
   const [editId, setEditId] = useState(null);
   const [editLabel, setEditLabel] = useState("");
-  const [abiertas, setAbiertas] = useState({});
   function confirmAdd() {
     if (!newLabel.trim()) return;
     onRowAdd(secKey, { id: Date.now().toString(), emoji: newEmoji, label: newLabel.trim(), monto: 0 });
     setNewLabel(""); setNewEmoji("📌"); setAdding(false);
   }
   const abrirGrafico = () => onChartOpen({ title, emoji, rows, total: subtotal });
-  const etiquetaSaldo = secKey === "personales" ? "Ahorrado" : "Saldo";
 
   return (
     <div style={{ marginBottom: 20 }}>
@@ -82,9 +81,6 @@ function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit
         </div>
         {rows.map((row, i) => {
           const rp = T > 0 ? ((row.monto / T) * 100).toFixed(1) : "-";
-          const estado = cartera && cartera.sobresOn ? estadoFila(cartera.budgets, cartera.periodo, secKey, row) : null;
-          const abierta = !!abiertas[row.id];
-          const nSubs = (row.subs || []).length;
           return (
             <div key={row.id} style={{ borderBottom: i < rows.length - 1 ? "1px dashed #f0f0f0" : "none", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
               <div style={{ display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "11px 12px", alignItems: "center" }}>
@@ -92,7 +88,9 @@ function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit
                   <div style={{ width: 16, height: 16, borderRadius: 3, border: row.checked ? "none" : "1.5px dashed #ccc", background: row.checked ? "#111" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", flexShrink: 0 }}>{row.checked && <span style={{ color: "#fff", fontSize: 10, fontWeight: 700, lineHeight: 1 }}>✓</span>}</div>
                 </div>
                 <div style={celda({ fontSize: 13, color: row.checked ? "#bbb" : "#333", textDecoration: row.checked ? "line-through" : "none", display: "flex", alignItems: "center", gap: 5, minWidth: 0 })}>
-                  <span style={{ flexShrink: 0 }}>{row.emoji}</span>
+                  {onOpenCartera
+                    ? <span onClick={() => onOpenCartera(secKey, row.id)} title="Abrir cartera" style={{ flexShrink: 0, cursor: "pointer", border: "1px dashed #ccc", borderRadius: 6, padding: "1px 4px", lineHeight: 1.3 }}>{row.emoji}</span>
+                    : <span style={{ flexShrink: 0 }}>{row.emoji}</span>}
                   {editId === row.id
                     ? <input autoFocus value={editLabel} onChange={e => { const v = e.target.value; setEditLabel(v); if (v.trim()) onRowSave(secKey, row.id, row.monto, v); }}
                         onBlur={() => { if (editLabel.trim()) onRowSave(secKey, row.id, row.monto, editLabel); setEditId(null); }}
@@ -101,25 +99,12 @@ function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit
                     : <span onClick={() => { setEditLabel(row.label); setEditId(row.id); }} style={{ cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title="clic para editar">{row.label}</span>}
                 </div>
                 <AmountRow value={row.monto} min={sumaSubs(row)} onSave={v => onRowSave(secKey, row.id, v, row.label)}/>
-                <div style={celda({ fontSize: 11, color: "#aaa", textAlign: "right" })}>{rp}%</div>
-                <div style={celda({ fontSize: 11, color: "#bbb", textAlign: "right" })}>{fmtCLP(row.monto * 12)}</div>
+                <div onClick={onOpenCartera ? () => onOpenCartera(secKey, row.id) : undefined} style={celda({ fontSize: 11, color: "#aaa", textAlign: "right", cursor: onOpenCartera ? "pointer" : "default" })}>{rp}%</div>
+                <div onClick={onOpenCartera ? () => onOpenCartera(secKey, row.id) : undefined} style={celda({ fontSize: 11, color: "#bbb", textAlign: "right", cursor: onOpenCartera ? "pointer" : "default" })}>{fmtCLP(row.monto * 12)}</div>
                 {canEdit
                   ? <button onClick={() => onRowDelete(secKey, row.id)} style={{ background: "transparent", border: "none", color: "#e0e0e0", fontSize: 16, cursor: "pointer", lineHeight: 1, padding: 0, textAlign: "center" }} onMouseEnter={e => e.currentTarget.style.color = "#c00"} onMouseLeave={e => e.currentTarget.style.color = "#e0e0e0"}>×</button>
                   : <div/>}
               </div>
-              {cartera && (
-                <div onClick={() => setAbiertas(a => ({ ...a, [row.id]: !a[row.id] }))} style={celda({ padding: "0 12px 9px 42px", fontSize: 11, color: "#999", cursor: "pointer", display: "flex", gap: 6 })}>
-                  <span>{abierta ? "▾" : "▸"}</span>
-                  <span>{nSubs > 0 ? `${nSubs} sub-partida${nSubs > 1 ? "s" : ""}` : "sub-partidas"}</span>
-                  {estado && <span style={{ color: estado.saldo < 0 ? "#c00" : "#555" }}>· {etiquetaSaldo.toLowerCase()} {fmtCLP(estado.saldo)}</span>}
-                </div>
-              )}
-              {cartera && abierta && (
-                <CarteraPanel sec={secKey} row={row} periodo={cartera.periodo} budgets={cartera.budgets} budget={cartera.budget} estado={estado}
-                  sobresOn={cartera.sobresOn} esInicio={cartera.esInicio} etiquetaSaldo={etiquetaSaldo}
-                  onPatchRow={patch => cartera.onPatchRow(secKey, row.id, patch)} onDeleteGasto={cartera.onDeleteGasto}
-                  onApertura={cartera.onApertura} onAviso={cartera.onAviso}/>
-              )}
             </div>
           );
         })}
@@ -149,6 +134,8 @@ function BudgetPage({ budgets, onSaveBudget }) {
   const [ingChart, setIngChart] = useState(false);
   const [monthModal, setMonthModal] = useState(false);
   const [aviso, setAviso] = useState("");
+  const [ventana, setVentana] = useState(null);   // {sec,rowId} de la cartera abierta
+  const [gastoDesde, setGastoDesde] = useState(null);
   const avisoRef = useRef(null);
   const now = new Date();
   const [selYear, setSelYear] = useState(now.getFullYear());
@@ -191,7 +178,10 @@ function BudgetPage({ budgets, onSaveBudget }) {
   const totalGasto = sumBase + sumPers + sumProp;
   const remainder = totalIngreso - totalGasto;
   const T = totalIngreso;
-  const cartera = { budgets, budget, periodo: monthKey, sobresOn, esInicio: monthKey === inicio, onPatchRow: patchRow, onDeleteGasto: delGasto, onApertura: setApertura, onAviso: mostrarAviso };
+  // Carteras en el orden en que se ven en pantalla; la ventana navega entre ellas con ‹ ›.
+  const carteras = [...budget.personales.map(r => ({ sec: "personales", row: r })), ...budget.propositos.map(r => ({ sec: "propositos", row: r }))];
+  const idxVentana = ventana ? carteras.findIndex(c => c.sec === ventana.sec && c.row.id === ventana.rowId) : -1;
+  const abrirCartera = (sec, rowId) => setVentana({ sec, rowId });
   const secProps = { totalIngreso: T, onRowSave: updRow, onRowAdd: addRow, onRowDelete: delRow, onRowCheck: checkRow, onChartOpen: setChartData };
   const navBtn = { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "6px 11px", cursor: "pointer", color: "#888", fontSize: 16, lineHeight: 1 };
 
@@ -199,6 +189,10 @@ function BudgetPage({ budgets, onSaveBudget }) {
     <div style={{ padding: "16px", maxWidth: 720, margin: "0 auto" }}>
       {ingChart && <IngresoChartModal budgets={budgets} selYear={selYear} selMonth={selMonth} onClose={() => setIngChart(false)}/>}
       {chartData && <ChartModal title={chartData.title} emoji={chartData.emoji} rows={chartData.rows} total={chartData.total} onClose={() => setChartData(null)}/>}
+      {idxVentana >= 0 && <CarteraVentana carteras={carteras} index={idxVentana} onIndex={i => setVentana({ sec: carteras[i].sec, rowId: carteras[i].row.id })} onClose={() => setVentana(null)}
+        budgets={budgets} budget={budget} periodo={monthKey} sobresOn={sobresOn} esInicio={monthKey === inicio}
+        onPatchRow={patchRow} onDeleteGasto={delGasto} onApertura={setApertura} onGasto={(sec, id) => setGastoDesde(`${sec}|${id}`)}/>}
+      {gastoDesde && <GastoModal budgets={budgets} inicial={gastoDesde} onSaveBudget={onSaveBudget} onClose={() => setGastoDesde(null)}/>}
       {monthModal && <MonthSelectorModal currentYear={selYear} currentMonth={selMonth} onSelect={(y, m) => { setSelYear(y); setSelMonth(m); }} onClose={() => setMonthModal(false)}/>}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 8, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -230,8 +224,8 @@ function BudgetPage({ budgets, onSaveBudget }) {
         </div>
       </div>
       <BudgetSec title="Gastos Base" emoji="🧱" rows={budget.gastos_base} secKey="gastos_base" subtotal={sumBase} canEdit {...secProps}/>
-      <BudgetSec title="Fondos Personales" emoji="👤" rows={budget.personales} secKey="personales" subtotal={sumPers} canEdit={false} cartera={cartera} {...secProps}/>
-      <BudgetSec title="Fondos por Propósito" emoji="📦" rows={budget.propositos} secKey="propositos" subtotal={sumProp} canEdit cartera={cartera} {...secProps}/>
+      <BudgetSec title="Fondos Personales" emoji="👤" rows={budget.personales} secKey="personales" subtotal={sumPers} canEdit={false} onOpenCartera={abrirCartera} {...secProps}/>
+      <BudgetSec title="Fondos por Propósito" emoji="📦" rows={budget.propositos} secKey="propositos" subtotal={sumProp} canEdit onOpenCartera={abrirCartera} {...secProps}/>
       <div style={{ border: "2px solid #111", borderRadius: 8, overflow: "hidden", marginBottom: 8 }}>
         <div style={{ display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "12px 12px", background: "#111", alignItems: "center" }}>
           <div/>
