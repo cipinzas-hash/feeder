@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-18T02:08:46.124Z",
+  "generatedAt": "2026-10-18T08:25:38.646Z",
   "categories": [
     {
       "cat": "Melee",
@@ -173,9 +173,9 @@
           "guid": "melee-seedreport-tournament/platfight-gaming-championships-2026/event/melee-singles",
           "title": "Reporte de seeds — Platfight 2026",
           "link": "https://www.start.gg/tournament/platfight-gaming-championships-2026/event/melee-singles",
-          "summary": "20/32 del top 32 sostienen su seed. 12 ya cayeron.",
+          "summary": "22/32 del top 32 sostienen su seed. 10 ya cayeron.",
           "image": null,
-          "pubDate": "2026-10-18T02:08:45.786Z",
+          "pubDate": "2026-10-18T08:25:38.354Z",
           "source": "Platfight 2026",
           "categoria": "Melee",
           "fullText": null,
@@ -255,15 +255,11 @@
               "nombre": "Lil Corner | chape",
               "seed": 8,
               "foto": null,
-              "sostiene": false,
-              "derrotas": 2,
-              "eliminadoPor": {
-                "nombre": "NSE | Maher",
-                "seed": 9,
-                "ssbmrank": 72
-              },
-              "ronda": "Winners Semi-Final",
-              "esUpset": true
+              "sostiene": true,
+              "derrotas": 1,
+              "eliminadoPor": null,
+              "ronda": null,
+              "esUpset": false
             },
             {
               "nombre": "NSE | Maher",
@@ -343,14 +339,10 @@
               "nombre": "Alberta | Odin",
               "seed": 16,
               "foto": null,
-              "sostiene": false,
-              "derrotas": 2,
-              "eliminadoPor": {
-                "nombre": "LuckyStats.gg | RapMonster",
-                "seed": 1,
-                "ssbmrank": 28
-              },
-              "ronda": "Winners Semi-Final",
+              "sostiene": true,
+              "derrotas": 1,
+              "eliminadoPor": null,
+              "ronda": null,
               "esUpset": false
             },
             {
@@ -436,7 +428,7 @@
               "seed": 24,
               "foto": null,
               "sostiene": false,
-              "derrotas": 4,
+              "derrotas": 2,
               "eliminadoPor": {
                 "nombre": "2claws | Aitch",
                 "seed": 25,
