@@ -11,6 +11,10 @@
 //                 multifinanciamiento: cuando un gasto supera el saldo, el faltante se pide a otras
 //                 carteras. La devolución es automática (ver simular()): cada período se descuenta
 //                 hasta el 50% de la asignación de la cartera deudora, desde el período siguiente.
+//   budget.arqueo {fecha, filas:[{sec,rowId,label,emoji,esperado,contado,diferencia,nota}]}
+//                 conteo físico de cada sobre al cierre del período. Es obligatorio antes de
+//                 generar el período siguiente; una diferencia no bloquea, queda documentada.
+//   fila.subs[].meta {objetivo, fecha:"YYYY-MM-DD"}  meta de ahorro con fecha de una sub-partida.
 //
 // Carteras = fondos por propósito y fondos personales. Los gastos base quedan fuera.
 // Un "bolsillo" es una sub-partida o, con subId null, lo no repartido de la cartera
@@ -18,7 +22,7 @@
 
 export const CARTERAS = ["propositos", "personales"];
 export const SECCIONES = ["gastos_base", "personales", "propositos"];
-const CAMPOS_TRANSITORIOS = ["gastos", "apertura", "prestamos"]; // no se heredan al período siguiente
+const CAMPOS_TRANSITORIOS = ["gastos", "apertura", "prestamos", "arqueo"]; // no se heredan al período siguiente
 
 export function presupuestoVacio() {
   return { ingresos: { trabajo: 0, emprendimiento: 0, reventa: 0, otros: 0 }, gastos_base: [], personales: [], propositos: [] };
@@ -213,7 +217,7 @@ export function estadoFila(budgets, periodo, sec, row) {
   const items = bolsillosDe(sec, row).map(b => ({ ...b, estado: estadoBolsillo(budgets, periodo, sec, row.id, b.subId) }));
   if (items.some(i => !i.estado)) return null;
   const suma = campo => items.reduce((s, i) => s + i.estado[campo], 0);
-  return { items, saldo: suma("saldo"), gastado: suma("gastado"), debiaHaber: suma("debiaHaber"), inicial: suma("inicial"), asignado: suma("asignado"), devPagada: suma("devPagada"), devRecibida: suma("devRecibida") };
+  return { items, saldo: suma("saldo"), gastado: suma("gastado"), debiaHaber: suma("debiaHaber"), inicial: suma("inicial"), asignado: suma("asignado"), devPagada: suma("devPagada"), devRecibida: suma("devRecibida"), prestamoRecibido: suma("prestamoRecibido"), prestamoDado: suma("prestamoDado") };
 }
 
 // Deudas de una cartera al cierre del período: lo que debe y lo que le deben.
@@ -318,6 +322,8 @@ function validarFuentes(budgets, periodo, destino, falta, fuentes) {
 // Devuelve {periodo, budget} con el gasto agregado (y el préstamo, si el gasto supera el saldo), o {error}.
 // No modifica budgets. `fuentes` solo se usa cuando falta saldo.
 export function agregarGasto(budgets, { fecha, sec, rowId, subId, monto, nota, fuentes }) {
+  const puede = puedeGenerarPeriodo(budgets, periodoDeFecha(fecha));
+  if (!puede.ok) return { error: puede.motivo };
   const m = Math.round(monto);
   const v = validarGasto(budgets, { fecha, sec, rowId, subId, monto: m });
   const base0 = resolverPeriodo(budgets, periodoDeFecha(fecha));
@@ -351,6 +357,105 @@ export function puedeQuitarGasto(budgets, gasto) {
   const p = sim.prestamos.find(x => x.id === gasto.prestamoId);
   if (p && p.pendiente !== p.total) return { ok: false, motivo: "Su préstamo ya empezó a devolverse: no se puede borrar este gasto." };
   return { ok: true };
+}
+
+// ── Arqueo mensual, rendición y metas (fase 3) ──────────────────────────────
+const SECCIONES_CARTERA = ["personales", "propositos"]; // orden en que se ven en pantalla
+
+// Primer período desde que se iniciaron los sobres que todavía no tiene arqueo, si es anterior a `antesDe`.
+export function primerArqueoPendiente(budgets, antesDe) {
+  const inicio = inicioSobres(budgets);
+  if (!inicio) return null;
+  let k = inicio;
+  for (let i = 0; k < antesDe && i < 600; i++, k = claveSiguiente(k)) {
+    const b = resolverPeriodo(budgets, k);
+    if (!(b.arqueo && Array.isArray(b.arqueo.filas))) return k;
+  }
+  return null;
+}
+
+// Un período que todavía no existe solo se puede generar si los anteriores ya tienen su arqueo.
+export function puedeGenerarPeriodo(budgets, periodo) {
+  if (budgets && budgets[periodo]) return { ok: true };
+  const inicio = inicioSobres(budgets);
+  if (!inicio || periodo <= inicio) return { ok: true };
+  const pendiente = primerArqueoPendiente(budgets, periodo);
+  if (!pendiente) return { ok: true };
+  return { ok: false, requiere: pendiente, motivo: "Antes de generar este período haz el arqueo del período anterior." };
+}
+
+// Qué debería haber en cada sobre al cierre del período, según los registros. null si los sobres no están activos.
+export function filasArqueo(budgets, periodo) {
+  const b = resolverPeriodo(budgets, periodo);
+  const filas = [];
+  for (const sec of SECCIONES_CARTERA) {
+    for (const row of (b[sec] || [])) {
+      const e = estadoFila(budgets, periodo, sec, row);
+      if (!e) return null;
+      filas.push({ sec, rowId: row.id, label: row.label, emoji: row.emoji || "", esperado: e.saldo });
+    }
+  }
+  return filas;
+}
+
+// `conteos`: {"sec|rowId": efectivo contado}; `notas`: {"sec|rowId": texto}. Devuelve {periodo, budget} o {error}.
+// Una diferencia no bloquea: se documenta en el período. Se puede repetir mientras no se use el siguiente.
+export function guardarArqueo(budgets, periodo, { fecha, conteos, notas }) {
+  const filas = filasArqueo(budgets, periodo);
+  if (!filas) return { error: "Primero inicia los sobres en Presupuesto (botón 🧾)." };
+  const puede = puedeGenerarPeriodo(budgets, periodo);
+  if (!puede.ok) return { error: "Primero haz el arqueo de un período anterior." };
+  const faltan = [];
+  const datos = filas.map(f => {
+    const k = f.sec + "|" + f.rowId;
+    const c = conteos && conteos[k];
+    if (!Number.isFinite(c) || c < 0) { faltan.push(f.label); return null; }
+    return { ...f, contado: Math.round(c), diferencia: Math.round(c) - f.esperado, nota: ((notas && notas[k]) || "").trim() };
+  });
+  if (faltan.length) return { error: "Falta contar: " + faltan.join(", ") + "." };
+  const base = resolverPeriodo(budgets, periodo);
+  return { periodo, budget: { ...base, arqueo: { fecha: fechaISO(fechaDe(fecha || new Date())), filas: datos } } };
+}
+
+// Informe del período: por cartera, lo asignado, gastado, prestado, el saldo y el resultado del arqueo.
+export function rendicion(budgets, periodo) {
+  const b = resolverPeriodo(budgets, periodo);
+  const filas = [];
+  for (const sec of SECCIONES_CARTERA) {
+    for (const row of (b[sec] || [])) {
+      const e = estadoFila(budgets, periodo, sec, row);
+      if (!e) return null;
+      const arq = b.arqueo && Array.isArray(b.arqueo.filas) ? b.arqueo.filas.find(x => x.sec === sec && x.rowId === row.id) : null;
+      const gastos = gastosDe(b, sec, row.id).slice().sort((x, y) => (x.fecha < y.fecha ? -1 : x.fecha > y.fecha ? 1 : 0))
+        .map(g => ({ ...g, sub: g.subId == null ? (row.subs && row.subs.length ? "Sin repartir" : row.label) : ((row.subs || []).find(x => x.id === g.subId) || { label: "(sub-partida eliminada)" }).label }));
+      filas.push({ sec, row, ...e, gastos, arqueo: arq, deudas: resumenDeudas(budgets, periodo, sec, row.id) });
+    }
+  }
+  const suma = c => filas.reduce((s, f) => s + f[c], 0);
+  return {
+    filas, arqueoFecha: b.arqueo ? b.arqueo.fecha : null,
+    totales: { asignado: suma("asignado"), gastado: suma("gastado"), saldo: suma("saldo"), prestamoDado: suma("prestamoDado"), prestamoRecibido: suma("prestamoRecibido"),
+      diferencia: b.arqueo ? filas.reduce((s, f) => s + (f.arqueo ? f.arqueo.diferencia : 0), 0) : null },
+  };
+}
+
+// Meta con fecha de una sub-partida. `saldo` es lo ahorrado al cierre del período; `aporteMensual` lo que se le asigna cada mes.
+// Los aportes futuros son los de los períodos siguientes cuyo inicio (día 25) cae hasta la fecha de la meta.
+export function progresoMeta({ saldo, objetivo, fecha, periodo, aporteMensual }) {
+  const falta = Math.max(0, (objetivo || 0) - (saldo || 0));
+  if (falta === 0) return { cumplida: true, falta: 0, meses: 0, necesario: 0, alDia: true, cumpleEn: null };
+  const limite = fechaDe(fecha);
+  const inicioDe = k => { const [a, m] = partes(k); return new Date(a, m, 25); };
+  let meses = 0;
+  for (let k = claveSiguiente(periodo), i = 0; i < 600 && inicioDe(k) <= limite; i++, k = claveSiguiente(k)) meses++;
+  const necesario = meses > 0 ? Math.ceil(falta / meses) : falta;
+  let cumpleEn = null;
+  if (aporteMensual > 0) {
+    cumpleEn = periodo;
+    for (let i = 0, n = Math.ceil(falta / aporteMensual); i < n; i++) cumpleEn = claveSiguiente(cumpleEn);
+  }
+  const alDia = cumpleEn !== null && inicioDe(cumpleEn) <= limite;
+  return { cumplida: false, falta, meses, necesario, alDia, cumpleEn };
 }
 
 // ── Eliminaciones seguras ───────────────────────────────────────────────────

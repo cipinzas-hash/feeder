@@ -4,6 +4,7 @@ import {
   periodoDeFecha, limpiarParaNuevoPeriodo, resolverPeriodo, inicioSobres, estadoBolsillo, estadoFila,
   validarGasto, agregarGasto, quitarGasto, puedeEliminar, maxSubMonto, bolsillosDe, sinRepartir, claveBolsillo,
   puedeQuitarGasto, resumenDeudas, guiaSobres, capacidadPrestamo, candidatosPrestamo, sugerirFuentes,
+  puedeGenerarPeriodo, primerArqueoPendiente, filasArqueo, guardarArqueo, rendicion, progresoMeta,
 } from "../core/presupuesto-modelo.js";
 
 // Períodos 25 → 24
@@ -140,6 +141,57 @@ assert.equal(puedeEliminar({ "2026-09": oct }, "2026-09", "propositos", fila(), 
   const sin = quitarGasto(B["2026-09"], B["2026-09"].gastos[0].id);
   assert.equal((sin.prestamos || []).length, 0); assert.equal(sin.gastos.length, 0);
   assert.equal(limpiarParaNuevoPeriodo(B["2026-09"]).prestamos, undefined);
+}
+
+// ── Arqueo, rendición y metas (fase 3) ──────────────────────────────────────
+{
+  const rop = () => ({ id: "r1", emoji: "👕", label: "Ropa", monto: 100000, subs: [{ id: "s1", label: "Colegio", monto: 60000 }, { id: "s2", label: "Calzado", monto: 30000 }] });
+  const hog = () => ({ id: "r2", emoji: "🏠", label: "Hogar", monto: 40000 });
+  const mk = extra => ({ ingresos: {}, gastos_base: [], personales: [], propositos: [rop(), hog()], ...extra });
+  let B = { "2026-09": mk({ apertura: {} }) };
+
+  // El período siguiente no se genera sin el arqueo del anterior
+  assert.equal(puedeGenerarPeriodo(B, "2026-09").ok, true);                       // el período inicial siempre
+  assert.equal(puedeGenerarPeriodo(B, "2026-10").ok, false);
+  assert.equal(puedeGenerarPeriodo(B, "2026-10").requiere, "2026-09");
+  assert.equal(puedeGenerarPeriodo(B, "2026-12").requiere, "2026-09");            // la cadena exige el primero pendiente
+  assert.equal(puedeGenerarPeriodo({ "2026-10": mk({}) }, "2026-10").ok, true);   // sin sobres no hay compuerta
+  assert.ok(agregarGasto(B, { fecha: "2026-10-26", sec: "propositos", rowId: "r2", subId: null, monto: 1000 }).error);   // octubre arranca el 25
+
+  // Esperado al cierre = saldo según registros
+  const g = agregarGasto(B, { fecha: "2026-09-30", sec: "propositos", rowId: "r2", subId: null, monto: 5000, nota: "fugas" });
+  B = { "2026-09": g.budget };
+  const esp = filasArqueo(B, "2026-09");
+  assert.deepEqual(esp.map(f => [f.rowId, f.esperado]), [["r1", 100000], ["r2", 35000]]);
+
+  // Todos los sobres deben contarse; una diferencia no bloquea y queda documentada
+  assert.match(guardarArqueo(B, "2026-09", { fecha: "2026-10-24", conteos: { "propositos|r1": 100000 } }).error, /Falta contar/);
+  const a = guardarArqueo(B, "2026-09", { fecha: "2026-10-24", conteos: { "propositos|r1": 100000, "propositos|r2": 33000 }, notas: { "propositos|r2": "se me perdió una boleta" } });
+  assert.ok(!a.error, a.error);
+  const f2 = a.budget.arqueo.filas.find(f => f.rowId === "r2");
+  assert.deepEqual([f2.esperado, f2.contado, f2.diferencia, f2.nota], [35000, 33000, -2000, "se me perdió una boleta"]);
+  B = { "2026-09": a.budget };
+  assert.equal(puedeGenerarPeriodo(B, "2026-10").ok, true);
+  assert.equal(primerArqueoPendiente(B, "2026-12"), "2026-10");
+  assert.ok(agregarGasto(B, { fecha: "2026-10-26", sec: "propositos", rowId: "r2", subId: null, monto: 1000 }).periodo === "2026-10");
+  assert.equal(limpiarParaNuevoPeriodo(B["2026-09"]).arqueo, undefined);           // no se hereda
+
+  // Rendición del período
+  const r = rendicion(B, "2026-09");
+  assert.equal(r.totales.asignado, 140000); assert.equal(r.totales.gastado, 5000); assert.equal(r.totales.saldo, 135000);
+  assert.equal(r.totales.diferencia, -2000);
+  const hogar = r.filas.find(f => f.row.id === "r2");
+  assert.equal(hogar.gastos.length, 1); assert.equal(hogar.gastos[0].nota, "fugas"); assert.equal(hogar.arqueo.diferencia, -2000);
+  assert.equal(rendicion({ "2026-09": mk({}) }, "2026-09"), null);
+
+  // Metas con fecha: período 2026-09; aportes futuros en 25-oct, 25-nov, 25-dic
+  let m = progresoMeta({ saldo: 10000, objetivo: 100000, fecha: "2026-12-31", periodo: "2026-09", aporteMensual: 30000 });
+  assert.deepEqual([m.falta, m.meses, m.necesario, m.alDia, m.cumpleEn], [90000, 3, 30000, true, "2026-12"]);
+  m = progresoMeta({ saldo: 10000, objetivo: 100000, fecha: "2026-12-31", periodo: "2026-09", aporteMensual: 20000 });
+  assert.deepEqual([m.necesario, m.alDia, m.cumpleEn], [30000, false, "2027-02"]);
+  assert.equal(progresoMeta({ saldo: 0, objetivo: 50000, fecha: "2026-10-10", periodo: "2026-09", aporteMensual: 50000 }).meses, 0);  // vence antes del próximo aporte
+  assert.equal(progresoMeta({ saldo: 100000, objetivo: 100000, fecha: "2026-12-31", periodo: "2026-09", aporteMensual: 0 }).cumplida, true);
+  assert.equal(progresoMeta({ saldo: 0, objetivo: 100000, fecha: "2026-12-31", periodo: "2026-09", aporteMensual: 0 }).cumpleEn, null);
 }
 
 console.log("presupuesto-modelo: OK");

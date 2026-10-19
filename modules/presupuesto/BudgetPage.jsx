@@ -1,10 +1,11 @@
 import { MONTH_NAMES } from "../../core/dates.js";
 import { fmtCLP } from "../../core/format.js";
-import { resolverPeriodo, inicioSobres, sumaSubs, puedeEliminar, quitarGasto, puedeQuitarGasto } from "../../core/presupuesto-modelo.js";
+import { resolverPeriodo, inicioSobres, sumaSubs, puedeEliminar, quitarGasto, puedeQuitarGasto, puedeGenerarPeriodo } from "../../core/presupuesto-modelo.js";
 import { AmountRow, GRID, COL, GAP, FUENTE, PAD_MONTO, celdaTitulo } from "./grilla.jsx";
 import CarteraVentana from "./CarteraVentana.jsx";
 import GastoModal from "./GastoModal.jsx";
 import GuiaSobres from "./GuiaSobres.jsx";
+import ArqueoModal from "./ArqueoModal.jsx";
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
 // La lógica de períodos, sub-partidas, saldos y gastos vive en core/presupuesto-modelo.js (issue #24).
@@ -138,6 +139,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
   const [ventana, setVentana] = useState(null);   // {sec,rowId} de la cartera abierta
   const [gastoDesde, setGastoDesde] = useState(null);
   const [guia, setGuia] = useState(false);
+  const [cierre, setCierre] = useState(null);   // {periodo, tab} del cierre abierto
   const avisoRef = useRef(null);
   const now = new Date();
   const [selYear, setSelYear] = useState(now.getFullYear());
@@ -149,12 +151,19 @@ function BudgetPage({ budgets, onSaveBudget }) {
   const totalIngreso = ing.trabajo + ing.emprendimiento + ing.reventa + ing.otros;
   const inicio = inicioSobres(budgets);
   const sobresOn = !!inicio && monthKey >= inicio;
+  const finPeriodo = new Date(selYear + (selMonth === 11 ? 1 : 0), (selMonth + 1) % 12, 24);
+  const arqueoVence = sobresOn && !budget.arqueo && new Date() >= finPeriodo;   // llegó el día 24 y falta el arqueo
   function mostrarAviso(msg) {
     setAviso(msg);
     clearTimeout(avisoRef.current);
     avisoRef.current = setTimeout(() => setAviso(""), 6000);
   }
-  function save(updated) { onSaveBudget(monthKey, updated); }
+  // Un período nuevo no se genera mientras falte el arqueo del anterior.
+  const compuerta = puedeGenerarPeriodo(budgets, monthKey);
+  function save(updated) {
+    if (!compuerta.ok) { mostrarAviso(`${compuerta.motivo} Toca 🔍 cierre.`); return; }
+    onSaveBudget(monthKey, updated);
+  }
   function updIng(k, v) { save({ ...budget, ingresos: { ...budget.ingresos, [k]: v } }); }
   function updRow(sec, id, monto, label) {
     save({ ...budget, [sec]: budget[sec].map(r => r.id === id ? { ...r, monto: Math.max(monto, sumaSubs(r)), label } : r) });
@@ -199,6 +208,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
       {idxVentana >= 0 && <CarteraVentana carteras={carteras} index={idxVentana} onIndex={i => setVentana({ sec: carteras[i].sec, rowId: carteras[i].row.id })} onClose={() => setVentana(null)}
         budgets={budgets} budget={budget} periodo={monthKey} sobresOn={sobresOn} esInicio={monthKey === inicio}
         onPatchRow={patchRow} onDeleteGasto={delGasto} onApertura={setApertura} onGasto={(sec, id) => setGastoDesde(`${sec}|${id}`)}/>}
+      {cierre && <ArqueoModal budgets={budgets} periodo={cierre.periodo} tabInicial={cierre.tab} onSaveBudget={onSaveBudget} onClose={() => setCierre(null)}/>}
       {guia && <GuiaSobres budgets={budgets} periodo={monthKey} etiquetaPeriodo={periodLabel} onClose={() => setGuia(false)}/>}
       {gastoDesde && <GastoModal budgets={budgets} inicial={gastoDesde} onSaveBudget={onSaveBudget} onClose={() => setGastoDesde(null)}/>}
       {monthModal && <MonthSelectorModal currentYear={selYear} currentMonth={selMonth} onSelect={(y, m) => { setSelYear(y); setSelMonth(m); }} onClose={() => setMonthModal(false)}/>}
@@ -208,10 +218,14 @@ function BudgetPage({ budgets, onSaveBudget }) {
           <button onClick={() => setMonthModal(true)} style={{ fontFamily: "'Caveat',cursive", fontSize: 17, color: "#555", background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "7px 14px", cursor: "pointer" }}>📅 {periodLabel}</button>
           <button onClick={() => { const nm = selMonth === 11 ? 0 : selMonth + 1; const ny = selMonth === 11 ? selYear + 1 : selYear; setSelMonth(nm); setSelYear(ny); }} style={navBtn}>›</button>
         </div>
-        {inicio
-          ? <button onClick={() => setGuia(true)} title="Cuánto debe haber en cada sobre" style={{ ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: "#555", padding: "7px 12px" }}>🧾 sobres{sobresOn ? "" : " (desde " + MONTH_NAMES[parseInt(inicio.slice(5)) - 1].slice(0, 3) + ")"} ▸</button>
-          : <button onClick={iniciarSobres} title="Activa saldos, gastos y sobrantes por cartera a partir de este período" style={{ ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: "#555", padding: "7px 12px" }}>🧾 iniciar sobres</button>}
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          {sobresOn && <button onClick={() => setCierre({ periodo: compuerta.ok ? monthKey : compuerta.requiere, tab: undefined })} title="Arqueo y rendición del período" style={{ ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: arqueoVence ? "#a60" : "#555", padding: "7px 12px", borderColor: arqueoVence ? "#e0b070" : "#ddd" }}>🔍 cierre{arqueoVence ? " ●" : ""}</button>}
+          {inicio
+            ? <button onClick={() => setGuia(true)} title="Cuánto debe haber en cada sobre" style={{ ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: "#555", padding: "7px 12px" }}>🧾 sobres{sobresOn ? "" : " (desde " + MONTH_NAMES[parseInt(inicio.slice(5)) - 1].slice(0, 3) + ")"} ▸</button>
+            : <button onClick={iniciarSobres} title="Activa saldos, gastos y sobrantes por cartera a partir de este período" style={{ ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: "#555", padding: "7px 12px" }}>🧾 iniciar sobres</button>}
+        </div>
       </div>
+      {!compuerta.ok && <div style={celda({ fontSize: 12, color: "#8a5a00", background: "#fffaf0", border: "1px dashed #e0b070", borderRadius: 6, padding: "8px 10px", marginBottom: 14, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" })}><span style={{ flex: 1 }}>🔒 Este período aún no existe: {compuerta.motivo.toLowerCase()}</span><button onClick={() => setCierre({ periodo: compuerta.requiere })} style={{ background: "#111", color: "#fff", border: "none", borderRadius: 6, padding: "5px 12px", fontSize: 12, cursor: "pointer" }}>Hacer el arqueo</button></div>}
       {aviso && <div style={celda({ fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", marginBottom: 14 })}>{aviso}</div>}
       <div style={{ marginBottom: 20 }}>
         <div style={{ background: "#111", padding: "10px 14px", borderRadius: "8px 8px 0 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>

@@ -211,7 +211,7 @@ var __angst = (() => {
   // core/presupuesto-modelo.js
   var CARTERAS = ["propositos", "personales"];
   var SECCIONES = ["gastos_base", "personales", "propositos"];
-  var CAMPOS_TRANSITORIOS = ["gastos", "apertura", "prestamos"];
+  var CAMPOS_TRANSITORIOS = ["gastos", "apertura", "prestamos", "arqueo"];
   function presupuestoVacio() {
     return { ingresos: { trabajo: 0, emprendimiento: 0, reventa: 0, otros: 0 }, gastos_base: [], personales: [], propositos: [] };
   }
@@ -334,10 +334,10 @@ var __angst = (() => {
     }
     if (porHasta.has(hasta)) return porHasta.get(hasta);
     const meses = {}, prestamos = [];
-    const mov = (m, clave, campo2, v) => {
+    const mov = (m, clave, campo3, v) => {
       meses[m] = meses[m] || {};
       meses[m][clave] = meses[m][clave] || { pres: 0, dado: 0, pag: 0, rec: 0 };
-      meses[m][clave][campo2] += v;
+      meses[m][clave][campo3] += v;
     };
     let k = claves[0];
     for (let i = 0; k <= hasta && i < 600; i++, k = claveSiguiente(k)) {
@@ -407,8 +407,8 @@ var __angst = (() => {
   function estadoFila(budgets, periodo, sec, row) {
     const items = bolsillosDe(sec, row).map((b) => ({ ...b, estado: estadoBolsillo(budgets, periodo, sec, row.id, b.subId) }));
     if (items.some((i) => !i.estado)) return null;
-    const suma = (campo2) => items.reduce((s, i) => s + i.estado[campo2], 0);
-    return { items, saldo: suma("saldo"), gastado: suma("gastado"), debiaHaber: suma("debiaHaber"), inicial: suma("inicial"), asignado: suma("asignado"), devPagada: suma("devPagada"), devRecibida: suma("devRecibida") };
+    const suma = (campo3) => items.reduce((s, i) => s + i.estado[campo3], 0);
+    return { items, saldo: suma("saldo"), gastado: suma("gastado"), debiaHaber: suma("debiaHaber"), inicial: suma("inicial"), asignado: suma("asignado"), devPagada: suma("devPagada"), devRecibida: suma("devRecibida"), prestamoRecibido: suma("prestamoRecibido"), prestamoDado: suma("prestamoDado") };
   }
   function resumenDeudas(budgets, periodo, sec, rowId) {
     const sim = simular(budgets, periodo);
@@ -500,6 +500,8 @@ var __angst = (() => {
     return null;
   }
   function agregarGasto(budgets, { fecha, sec, rowId, subId, monto, nota, fuentes }) {
+    const puede = puedeGenerarPeriodo(budgets, periodoDeFecha(fecha));
+    if (!puede.ok) return { error: puede.motivo };
     const m = Math.round(monto);
     const v = validarGasto(budgets, { fecha, sec, rowId, subId, monto: m });
     const base0 = resolverPeriodo(budgets, periodoDeFecha(fecha));
@@ -529,6 +531,101 @@ var __angst = (() => {
     const p = sim.prestamos.find((x) => x.id === gasto.prestamoId);
     if (p && p.pendiente !== p.total) return { ok: false, motivo: "Su pr\xE9stamo ya empez\xF3 a devolverse: no se puede borrar este gasto." };
     return { ok: true };
+  }
+  var SECCIONES_CARTERA = ["personales", "propositos"];
+  function primerArqueoPendiente(budgets, antesDe) {
+    const inicio = inicioSobres(budgets);
+    if (!inicio) return null;
+    let k = inicio;
+    for (let i = 0; k < antesDe && i < 600; i++, k = claveSiguiente(k)) {
+      const b = resolverPeriodo(budgets, k);
+      if (!(b.arqueo && Array.isArray(b.arqueo.filas))) return k;
+    }
+    return null;
+  }
+  function puedeGenerarPeriodo(budgets, periodo) {
+    if (budgets && budgets[periodo]) return { ok: true };
+    const inicio = inicioSobres(budgets);
+    if (!inicio || periodo <= inicio) return { ok: true };
+    const pendiente = primerArqueoPendiente(budgets, periodo);
+    if (!pendiente) return { ok: true };
+    return { ok: false, requiere: pendiente, motivo: "Antes de generar este per\xEDodo haz el arqueo del per\xEDodo anterior." };
+  }
+  function filasArqueo(budgets, periodo) {
+    const b = resolverPeriodo(budgets, periodo);
+    const filas = [];
+    for (const sec of SECCIONES_CARTERA) {
+      for (const row of b[sec] || []) {
+        const e = estadoFila(budgets, periodo, sec, row);
+        if (!e) return null;
+        filas.push({ sec, rowId: row.id, label: row.label, emoji: row.emoji || "", esperado: e.saldo });
+      }
+    }
+    return filas;
+  }
+  function guardarArqueo(budgets, periodo, { fecha, conteos, notas }) {
+    const filas = filasArqueo(budgets, periodo);
+    if (!filas) return { error: "Primero inicia los sobres en Presupuesto (bot\xF3n \u{1F9FE})." };
+    const puede = puedeGenerarPeriodo(budgets, periodo);
+    if (!puede.ok) return { error: "Primero haz el arqueo de un per\xEDodo anterior." };
+    const faltan = [];
+    const datos = filas.map((f2) => {
+      const k = f2.sec + "|" + f2.rowId;
+      const c = conteos && conteos[k];
+      if (!Number.isFinite(c) || c < 0) {
+        faltan.push(f2.label);
+        return null;
+      }
+      return { ...f2, contado: Math.round(c), diferencia: Math.round(c) - f2.esperado, nota: (notas && notas[k] || "").trim() };
+    });
+    if (faltan.length) return { error: "Falta contar: " + faltan.join(", ") + "." };
+    const base = resolverPeriodo(budgets, periodo);
+    return { periodo, budget: { ...base, arqueo: { fecha: fechaISO(fechaDe(fecha || /* @__PURE__ */ new Date())), filas: datos } } };
+  }
+  function rendicion(budgets, periodo) {
+    const b = resolverPeriodo(budgets, periodo);
+    const filas = [];
+    for (const sec of SECCIONES_CARTERA) {
+      for (const row of b[sec] || []) {
+        const e = estadoFila(budgets, periodo, sec, row);
+        if (!e) return null;
+        const arq = b.arqueo && Array.isArray(b.arqueo.filas) ? b.arqueo.filas.find((x) => x.sec === sec && x.rowId === row.id) : null;
+        const gastos = gastosDe(b, sec, row.id).slice().sort((x, y) => x.fecha < y.fecha ? -1 : x.fecha > y.fecha ? 1 : 0).map((g) => ({ ...g, sub: g.subId == null ? row.subs && row.subs.length ? "Sin repartir" : row.label : ((row.subs || []).find((x) => x.id === g.subId) || { label: "(sub-partida eliminada)" }).label }));
+        filas.push({ sec, row, ...e, gastos, arqueo: arq, deudas: resumenDeudas(budgets, periodo, sec, row.id) });
+      }
+    }
+    const suma = (c) => filas.reduce((s, f2) => s + f2[c], 0);
+    return {
+      filas,
+      arqueoFecha: b.arqueo ? b.arqueo.fecha : null,
+      totales: {
+        asignado: suma("asignado"),
+        gastado: suma("gastado"),
+        saldo: suma("saldo"),
+        prestamoDado: suma("prestamoDado"),
+        prestamoRecibido: suma("prestamoRecibido"),
+        diferencia: b.arqueo ? filas.reduce((s, f2) => s + (f2.arqueo ? f2.arqueo.diferencia : 0), 0) : null
+      }
+    };
+  }
+  function progresoMeta({ saldo, objetivo, fecha, periodo, aporteMensual }) {
+    const falta = Math.max(0, (objetivo || 0) - (saldo || 0));
+    if (falta === 0) return { cumplida: true, falta: 0, meses: 0, necesario: 0, alDia: true, cumpleEn: null };
+    const limite = fechaDe(fecha);
+    const inicioDe = (k) => {
+      const [a, m] = partes(k);
+      return new Date(a, m, 25);
+    };
+    let meses = 0;
+    for (let k = claveSiguiente(periodo), i = 0; i < 600 && inicioDe(k) <= limite; i++, k = claveSiguiente(k)) meses++;
+    const necesario = meses > 0 ? Math.ceil(falta / meses) : falta;
+    let cumpleEn = null;
+    if (aporteMensual > 0) {
+      cumpleEn = periodo;
+      for (let i = 0, n = Math.ceil(falta / aporteMensual); i < n; i++) cumpleEn = claveSiguiente(cumpleEn);
+    }
+    const alDia = cumpleEn !== null && inicioDe(cumpleEn) <= limite;
+    return { cumplida: false, falta, meses, necesario, alDia, cumpleEn };
   }
   function puedeEliminar(budgets, periodo, sec, row, subId) {
     const inicio = inicioSobres(budgets);
@@ -2185,42 +2282,42 @@ var __angst = (() => {
   function validarPayloadExport(payload) {
     const problemas = [];
     if (!payload || typeof payload !== "object") return ["payload vac\xEDo"];
-    for (const [campo2, tipo] of Object.entries(CORE_EXPORT_FIELDS)) {
-      const v = payload[campo2];
+    for (const [campo3, tipo] of Object.entries(CORE_EXPORT_FIELDS)) {
+      const v = payload[campo3];
       if (tipo === "nullable") {
-        if (v === void 0) problemas.push(`${campo2}: falta`);
+        if (v === void 0) problemas.push(`${campo3}: falta`);
         continue;
       }
       if (v === void 0 || v === null) {
-        problemas.push(`${campo2}: falta`);
+        problemas.push(`${campo3}: falta`);
         continue;
       }
-      if (!TIPOS_OK[tipo](v)) problemas.push(`${campo2}: se esperaba ${tipo}`);
+      if (!TIPOS_OK[tipo](v)) problemas.push(`${campo3}: se esperaba ${tipo}`);
     }
-    for (const campo2 of Object.keys(LOCAL_KEY_FIELDS)) {
-      if (!(campo2 in payload)) problemas.push(`${campo2}: falta`);
+    for (const campo3 of Object.keys(LOCAL_KEY_FIELDS)) {
+      if (!(campo3 in payload)) problemas.push(`${campo3}: falta`);
     }
     return problemas;
   }
   function leerCamposLocales(storage = globalThis.localStorage) {
     const out = {};
-    for (const [campo2, clave] of Object.entries(LOCAL_KEY_FIELDS)) {
+    for (const [campo3, clave] of Object.entries(LOCAL_KEY_FIELDS)) {
       try {
         const v = storage.getItem(clave);
-        out[campo2] = v ? JSON.parse(v) : null;
+        out[campo3] = v ? JSON.parse(v) : null;
       } catch (e) {
-        out[campo2] = null;
+        out[campo3] = null;
       }
     }
     return out;
   }
   function escribirCamposLocales(payload, storage = globalThis.localStorage) {
     const escritos = [];
-    for (const [campo2, clave] of Object.entries(LOCAL_KEY_FIELDS)) {
-      if (payload?.[campo2] == null) continue;
+    for (const [campo3, clave] of Object.entries(LOCAL_KEY_FIELDS)) {
+      if (payload?.[campo3] == null) continue;
       try {
-        storage.setItem(clave, JSON.stringify(payload[campo2]));
-        escritos.push(campo2);
+        storage.setItem(clave, JSON.stringify(payload[campo3]));
+        escritos.push(campo3);
       } catch (e) {
       }
     }
@@ -9076,14 +9173,61 @@ var __angst = (() => {
     return `${d.getDate()} ${MONTH_NAMES[d.getMonth()].slice(0, 3)}`;
   };
   var sub = { fontFamily: FUENTE, fontSize: 12, color: "#444" };
-  function SubFila({ s, row, est, sobresOn, onPatch, onDelete }) {
+  var etiquetaMes = (k) => `${MONTH_NAMES[parseInt(k.slice(5)) - 1].slice(0, 3)} ${k.slice(0, 4)}`;
+  var fechaLarga = (iso) => {
+    const d = fechaDe(iso);
+    return `${d.getDate()} ${MONTH_NAMES[d.getMonth()].slice(0, 3)} ${d.getFullYear()}`;
+  };
+  function MetaLinea({ s, est, periodo }) {
+    const m = s.meta;
+    if (!m) return null;
+    const p = progresoMeta({ saldo: est ? est.saldo : 0, objetivo: m.objetivo, fecha: m.fecha, periodo, aporteMensual: s.monto });
+    let txt, color;
+    if (p.cumplida) {
+      txt = `\u{1F3AF} Meta de ${fmtCLP(m.objetivo)} cumplida`;
+      color = "#070";
+    } else {
+      txt = `\u{1F3AF} ${fmtCLP(m.objetivo)} para el ${fechaLarga(m.fecha)} \xB7 faltan ${fmtCLP(p.falta)}`;
+      if (p.meses === 0) txt += " \xB7 vence antes del pr\xF3ximo aporte";
+      else if (p.alDia) txt += ` \xB7 al d\xEDa, se cumple en ${etiquetaMes(p.cumpleEn)}`;
+      else txt += ` \xB7 necesita ${fmtCLP(p.necesario)}/mes (hoy ${fmtCLP(s.monto)})` + (p.cumpleEn ? `; con el aporte actual se cumplir\xEDa en ${etiquetaMes(p.cumpleEn)}` : "");
+      color = p.alDia ? "#070" : "#c60";
+    }
+    return /* @__PURE__ */ React.createElement("div", { style: { ...sub, fontSize: 11, color, padding: "0 0 6px", lineHeight: 1.4 } }, txt);
+  }
+  function SubFila({ s, row, est, sobresOn, periodo, onPatch, onDelete }) {
     const [edit, setEdit] = useState10(false);
     const [txt, setTxt] = useState10(s.label);
+    const [metaAbierta, setMetaAbierta] = useState10(false);
+    const [obj, setObj] = useState10(s.meta ? String(s.meta.objetivo) : "");
+    const [fec, setFec] = useState10(s.meta ? s.meta.fecha : "");
+    const [errMeta, setErrMeta] = useState10("");
     function guardarNombre() {
       if (txt.trim()) onPatch({ subs: row.subs.map((x) => x.id === s.id ? { ...x, label: txt.trim() } : x) });
       setEdit(false);
     }
-    return /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: COL, gap: GAP, alignItems: "center", padding: "6px 0", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { ...sub, display: "flex", gap: 5, minWidth: 0, alignItems: "center" } }, s.emoji && /* @__PURE__ */ React.createElement("span", { style: { flexShrink: 0 } }, s.emoji), edit ? /* @__PURE__ */ React.createElement(
+    function guardarMeta() {
+      const o = parseInt(String(obj).replace(/\D/g, "")) || 0;
+      if (o <= 0 || !/^\d{4}-\d{2}-\d{2}$/.test(fec)) {
+        setErrMeta("Indica el monto y la fecha de la meta.");
+        return;
+      }
+      setErrMeta("");
+      onPatch({ subs: row.subs.map((x) => x.id === s.id ? { ...x, meta: { objetivo: o, fecha: fec } } : x) });
+      setMetaAbierta(false);
+    }
+    function quitarMeta() {
+      onPatch({ subs: row.subs.map((x) => {
+        if (x.id !== s.id) return x;
+        const { meta, ...resto } = x;
+        return resto;
+      }) });
+      setObj("");
+      setFec("");
+      setErrMeta("");
+      setMetaAbierta(false);
+    }
+    return /* @__PURE__ */ React.createElement("div", { style: { borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: COL, gap: GAP, alignItems: "center", padding: "6px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { ...sub, display: "flex", gap: 5, minWidth: 0, alignItems: "center" } }, s.emoji && /* @__PURE__ */ React.createElement("span", { style: { flexShrink: 0 } }, s.emoji), edit ? /* @__PURE__ */ React.createElement(
       "input",
       {
         autoFocus: true,
@@ -9099,7 +9243,7 @@ var __angst = (() => {
     ) : /* @__PURE__ */ React.createElement("span", { onClick: () => {
       setTxt(s.label);
       setEdit(true);
-    }, title: "clic para editar", style: { cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, s.label)), /* @__PURE__ */ React.createElement(AmountRow, { value: s.monto, max: maxSubMonto(row, s.id), onSave: (v) => onPatch({ subs: row.subs.map((x) => x.id === s.id ? { ...x, monto: v } : x) }) }), /* @__PURE__ */ React.createElement("div", { style: { gridColumn: "3 / 5", ...sub, textAlign: "right", color: est && est.saldo < 0 ? "#c00" : "#111", fontWeight: 600 } }, sobresOn && est ? fmtCLP(est.saldo) : "\u2014"), /* @__PURE__ */ React.createElement(
+    }, title: "clic para editar", style: { cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, s.label), /* @__PURE__ */ React.createElement("span", { onClick: () => setMetaAbierta((a) => !a), title: "Meta con fecha", style: { cursor: "pointer", flexShrink: 0, fontSize: 12, opacity: s.meta ? 1 : 0.35 } }, "\u{1F3AF}")), /* @__PURE__ */ React.createElement(AmountRow, { value: s.monto, max: maxSubMonto(row, s.id), onSave: (v) => onPatch({ subs: row.subs.map((x) => x.id === s.id ? { ...x, monto: v } : x) }) }), /* @__PURE__ */ React.createElement("div", { style: { gridColumn: "3 / 5", ...sub, textAlign: "right", color: est && est.saldo < 0 ? "#c00" : "#111", fontWeight: 600 } }, sobresOn && est ? fmtCLP(est.saldo) : "\u2014"), /* @__PURE__ */ React.createElement(
       "button",
       {
         onClick: onDelete,
@@ -9108,7 +9252,13 @@ var __angst = (() => {
         onMouseLeave: (e) => e.currentTarget.style.color = "#ddd"
       },
       "\xD7"
-    ));
+    )), /* @__PURE__ */ React.createElement(MetaLinea, { s, est, periodo }), metaAbierta && /* @__PURE__ */ React.createElement("div", { style: { background: "#f8f8f8", border: "1px dashed #ddd", borderRadius: 6, padding: "8px 10px", margin: "0 0 8px" } }, /* @__PURE__ */ React.createElement("div", { style: { ...sub, fontSize: 11, color: "#888", marginBottom: 6 } }, "Meta de ahorro con fecha para \xAB", s.label, "\xBB"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" } }, /* @__PURE__ */ React.createElement("input", { inputMode: "numeric", placeholder: "$ objetivo", value: obj ? fmtCLP(parseInt(String(obj).replace(/\D/g, "")) || 0) : "", onChange: (e) => {
+      setObj(e.target.value);
+      setErrMeta("");
+    }, style: { width: 110, border: "1px dashed #bbb", borderRadius: 4, padding: "5px 8px", fontSize: 13, fontFamily: FUENTE, textAlign: "right", outline: "none", background: "#fff" } }), /* @__PURE__ */ React.createElement("input", { type: "date", value: fec, onChange: (e) => {
+      setFec(e.target.value);
+      setErrMeta("");
+    }, style: { border: "1px dashed #bbb", borderRadius: 4, padding: "4px 6px", fontSize: 13, fontFamily: FUENTE, outline: "none", background: "#fff" } }), /* @__PURE__ */ React.createElement("button", { onClick: guardarMeta, style: { background: "#111", color: "#fff", border: "none", borderRadius: 4, padding: "5px 12px", fontSize: 12, cursor: "pointer" } }, "\u2713"), s.meta && /* @__PURE__ */ React.createElement("button", { onClick: quitarMeta, style: { background: "transparent", border: "none", color: "#c00", fontSize: 11, cursor: "pointer", fontFamily: FUENTE } }, "quitar meta")), errMeta && /* @__PURE__ */ React.createElement("div", { style: { ...sub, fontSize: 11, color: "#c00", marginTop: 6 } }, errMeta)));
   }
   function GastoFila({ g, nombre, onDelete }) {
     const [seguro, setSeguro] = useState10(false);
@@ -9139,7 +9289,7 @@ var __angst = (() => {
     const nombreDe = (id) => id == null ? subs.length ? "Sin repartir" : row.label : (subs.find((x) => x.id === id) || {}).label || "(sub-partida eliminada)";
     const libre = sinRepartir(row);
     const bolsillosInicio = estado ? estado.items : [];
-    return /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 0 8px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: COL, gap: GAP, padding: "2px 0 4px" } }, /* @__PURE__ */ React.createElement("div", { style: { ...celdaTitulo, letterSpacing: 2, textTransform: "uppercase" } }, "Sub-partidas"), /* @__PURE__ */ React.createElement("div", { style: { ...celdaTitulo, textAlign: "right", paddingRight: PAD_MONTO } }, "$ Asignado"), /* @__PURE__ */ React.createElement("div", { style: { ...celdaTitulo, gridColumn: "3 / 5", textAlign: "right" } }, etiquetaSaldo), /* @__PURE__ */ React.createElement("div", null)), subs.map((s) => /* @__PURE__ */ React.createElement(SubFila, { key: s.id, s, row, est: porId[s.id], sobresOn, onPatch: onPatchRow, onDelete: () => quitar(s) })), subs.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: COL, gap: GAP, padding: "6px 0", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { ...sub, color: "#888" } }, "Sin repartir"), /* @__PURE__ */ React.createElement("div", { style: { ...sub, textAlign: "right", paddingRight: PAD_MONTO, color: "#888" } }, fmtCLP(libre)), /* @__PURE__ */ React.createElement("div", { style: { gridColumn: "3 / 5", ...sub, textAlign: "right", color: "#888" } }, sobresOn && porId["null"] ? fmtCLP(porId["null"].saldo) : "\u2014"), /* @__PURE__ */ React.createElement("div", null)), adding ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center", padding: "8px 0" } }, /* @__PURE__ */ React.createElement("input", { value: emoji, onChange: (e) => setEmoji(e.target.value), placeholder: "\u{1F4CC}", style: { width: 34, textAlign: "center", border: "1px dashed #ccc", borderRadius: 4, padding: 3, fontSize: 15, outline: "none" } }), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 0 8px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: COL, gap: GAP, padding: "2px 0 4px" } }, /* @__PURE__ */ React.createElement("div", { style: { ...celdaTitulo, letterSpacing: 2, textTransform: "uppercase" } }, "Sub-partidas"), /* @__PURE__ */ React.createElement("div", { style: { ...celdaTitulo, textAlign: "right", paddingRight: PAD_MONTO } }, "$ Asignado"), /* @__PURE__ */ React.createElement("div", { style: { ...celdaTitulo, gridColumn: "3 / 5", textAlign: "right" } }, etiquetaSaldo), /* @__PURE__ */ React.createElement("div", null)), subs.map((s) => /* @__PURE__ */ React.createElement(SubFila, { key: s.id, s, row, est: porId[s.id], sobresOn, periodo, onPatch: onPatchRow, onDelete: () => quitar(s) })), subs.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: COL, gap: GAP, padding: "6px 0", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { ...sub, color: "#888" } }, "Sin repartir"), /* @__PURE__ */ React.createElement("div", { style: { ...sub, textAlign: "right", paddingRight: PAD_MONTO, color: "#888" } }, fmtCLP(libre)), /* @__PURE__ */ React.createElement("div", { style: { gridColumn: "3 / 5", ...sub, textAlign: "right", color: "#888" } }, sobresOn && porId["null"] ? fmtCLP(porId["null"].saldo) : "\u2014"), /* @__PURE__ */ React.createElement("div", null)), adding ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center", padding: "8px 0" } }, /* @__PURE__ */ React.createElement("input", { value: emoji, onChange: (e) => setEmoji(e.target.value), placeholder: "\u{1F4CC}", style: { width: 34, textAlign: "center", border: "1px dashed #ccc", borderRadius: 4, padding: 3, fontSize: 15, outline: "none" } }), /* @__PURE__ */ React.createElement(
       "input",
       {
         autoFocus: true,
@@ -9305,14 +9455,90 @@ var __angst = (() => {
   }
 
   // modules/presupuesto/GuiaSobres.jsx
-  function GuiaSobres({ budgets, periodo, etiquetaPeriodo, onClose }) {
+  function GuiaSobres({ budgets, periodo, etiquetaPeriodo: etiquetaPeriodo2, onClose }) {
     const g = guiaSobres(budgets, periodo);
-    const linea = (txt, v, signo) => v ? /* @__PURE__ */ React.createElement("span", { style: { marginRight: 8 } }, signo, fmtCLP(Math.abs(v)), " ", txt) : null;
-    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1e3, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: "min(96vw,520px)", maxHeight: "92vh", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, "\u{1F9FE} Cu\xE1nto debe haber en cada sobre"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 10, color: "#777", letterSpacing: 1 } }, "AL EMPEZAR EL PER\xCDODO \xB7 ", etiquetaPeriodo)), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#888", fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { overflowY: "auto", padding: "8px 18px 18px" } }, !g ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#999", padding: "16px 0" } }, "Los sobres no est\xE1n iniciados en este per\xEDodo.") : /* @__PURE__ */ React.createElement(React.Fragment, null, g.filas.map((f2) => /* @__PURE__ */ React.createElement("div", { key: f2.sec + f2.row.id, style: { padding: "10px 0", borderBottom: "1px dashed #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: FUENTE, fontSize: 14, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f2.row.emoji, " ", f2.row.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 16, fontWeight: 700, color: "#111" } }, fmtCLP(f2.debiaHaber))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#999", marginTop: 3, lineHeight: 1.5 } }, linea("de arrastre", f2.inicial, ""), linea("asignado", f2.asignado, "+"), linea("de devoluci\xF3n", f2.devPagada, "\u2212"), linea("devueltos a este sobre", f2.devRecibida, "+")), (f2.deudas.debe > 0 || f2.deudas.teDeben > 0) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#a60", marginTop: 2 } }, f2.deudas.debe > 0 && `Debe ${fmtCLP(f2.deudas.debe)} a otras carteras. `, f2.deudas.teDeben > 0 && `Le deben ${fmtCLP(f2.deudas.teDeben)}.`))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "14px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: "#555", fontWeight: 700 } }, "Efectivo total en sobres"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17, fontWeight: 700, color: "#111" } }, fmtCLP(g.total)))))));
+    const linea = (txt, v, signo2) => v ? /* @__PURE__ */ React.createElement("span", { style: { marginRight: 8 } }, signo2, fmtCLP(Math.abs(v)), " ", txt) : null;
+    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1e3, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: "min(96vw,520px)", maxHeight: "92vh", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, "\u{1F9FE} Cu\xE1nto debe haber en cada sobre"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 10, color: "#777", letterSpacing: 1 } }, "AL EMPEZAR EL PER\xCDODO \xB7 ", etiquetaPeriodo2)), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#888", fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { overflowY: "auto", padding: "8px 18px 18px" } }, !g ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#999", padding: "16px 0" } }, "Los sobres no est\xE1n iniciados en este per\xEDodo.") : /* @__PURE__ */ React.createElement(React.Fragment, null, g.filas.map((f2) => /* @__PURE__ */ React.createElement("div", { key: f2.sec + f2.row.id, style: { padding: "10px 0", borderBottom: "1px dashed #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: FUENTE, fontSize: 14, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f2.row.emoji, " ", f2.row.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 16, fontWeight: 700, color: "#111" } }, fmtCLP(f2.debiaHaber))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#999", marginTop: 3, lineHeight: 1.5 } }, linea("de arrastre", f2.inicial, ""), linea("asignado", f2.asignado, "+"), linea("de devoluci\xF3n", f2.devPagada, "\u2212"), linea("devueltos a este sobre", f2.devRecibida, "+")), (f2.deudas.debe > 0 || f2.deudas.teDeben > 0) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#a60", marginTop: 2 } }, f2.deudas.debe > 0 && `Debe ${fmtCLP(f2.deudas.debe)} a otras carteras. `, f2.deudas.teDeben > 0 && `Le deben ${fmtCLP(f2.deudas.teDeben)}.`))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "14px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: "#555", fontWeight: 700 } }, "Efectivo total en sobres"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17, fontWeight: 700, color: "#111" } }, fmtCLP(g.total)))))));
+  }
+
+  // modules/presupuesto/ArqueoModal.jsx
+  var { useState: useState13, useMemo: useMemo7 } = React;
+  var campo2 = { boxSizing: "border-box", border: "1px dashed #bbb", borderRadius: 6, padding: "8px 10px", fontSize: 15, fontFamily: FUENTE, background: "#fff", outline: "none", color: "#111", textAlign: "right", width: 130 };
+  var rotulo2 = { fontFamily: FUENTE, fontSize: 9, color: "#aaa", letterSpacing: 2, textTransform: "uppercase" };
+  var fechaCorta3 = (iso) => {
+    const d = fechaDe(iso);
+    return `${d.getDate()} ${MONTH_NAMES[d.getMonth()].slice(0, 3)}`;
+  };
+  var etiquetaPeriodo = (k) => {
+    const [a, m] = k.split("-").map(Number);
+    const s = claveSiguiente(k);
+    const m2 = parseInt(s.slice(5)) - 1;
+    return `25 ${MONTH_NAMES[m - 1].slice(0, 3)} \u2014 24 ${MONTH_NAMES[m2].slice(0, 3)} ${m === 12 ? a + 1 : a}`;
+  };
+  var colorDif = (d) => d === 0 ? "#070" : "#c60";
+  var signo = (d) => (d > 0 ? "+" : d < 0 ? "\u2212" : "") + fmtCLP(Math.abs(d));
+  function ArqueoModal({ budgets, periodo, onSaveBudget, onClose, tabInicial }) {
+    const filas = useMemo7(() => filasArqueo(budgets, periodo), [budgets, periodo]);
+    const guardado = resolverPeriodo(budgets, periodo).arqueo;
+    const [tab, setTab] = useState13(tabInicial || (guardado ? "rendicion" : "arqueo"));
+    const [fecha, setFecha] = useState13(guardado ? guardado.fecha : fechaISO(/* @__PURE__ */ new Date()));
+    const [conteos, setConteos] = useState13(() => Object.fromEntries((guardado && guardado.filas || []).map((f2) => [f2.sec + "|" + f2.rowId, String(f2.contado)])));
+    const [notas, setNotas] = useState13(() => Object.fromEntries((guardado && guardado.filas || []).filter((f2) => f2.nota).map((f2) => [f2.sec + "|" + f2.rowId, f2.nota])));
+    const [error, setError] = useState13("");
+    const [copiado, setCopiado] = useState13(false);
+    const num = (v) => v === void 0 || v === "" ? null : parseInt(String(v).replace(/\D/g, "")) || 0;
+    const rend = useMemo7(() => rendicion(budgets, periodo), [budgets, periodo]);
+    const completo = !!filas && filas.every((f2) => num(conteos[f2.sec + "|" + f2.rowId]) !== null);
+    const totEsperado = filas ? filas.reduce((s, f2) => s + f2.esperado, 0) : 0;
+    const totContado = filas ? filas.reduce((s, f2) => s + (num(conteos[f2.sec + "|" + f2.rowId]) || 0), 0) : 0;
+    function guardar() {
+      const c = {};
+      (filas || []).forEach((f2) => {
+        const v = num(conteos[f2.sec + "|" + f2.rowId]);
+        if (v !== null) c[f2.sec + "|" + f2.rowId] = v;
+      });
+      const r = guardarArqueo(budgets, periodo, { fecha, conteos: c, notas });
+      if (r.error) {
+        setError(r.error);
+        return;
+      }
+      setError("");
+      onSaveBudget(r.periodo, r.budget);
+      setTab("rendicion");
+    }
+    function copiar() {
+      if (!rend) return;
+      const l = [`Rendici\xF3n ${etiquetaPeriodo(periodo)}`];
+      rend.filas.forEach((f2) => {
+        l.push(`
+${f2.row.emoji} ${f2.row.label}: asignado ${fmtCLP(f2.asignado)}, gastado ${fmtCLP(f2.gastado)}, saldo ${fmtCLP(f2.saldo)}`);
+        f2.gastos.forEach((g) => l.push(`  ${fechaCorta3(g.fecha)} \xB7 ${g.sub} \xB7 ${fmtCLP(g.monto)}${g.nota ? " \xB7 " + g.nota : ""}${g.prestamoId ? " \xB7 con pr\xE9stamo" : ""}`));
+        if (f2.arqueo) l.push(`  Arqueo: deb\xEDa haber ${fmtCLP(f2.arqueo.esperado)}, contado ${fmtCLP(f2.arqueo.contado)}, diferencia ${signo(f2.arqueo.diferencia)}${f2.arqueo.nota ? " (" + f2.arqueo.nota + ")" : ""}`);
+      });
+      l.push(`
+Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.totales.gastado)}${rend.totales.diferencia !== null ? " \xB7 diferencia de arqueo " + signo(rend.totales.diferencia) : ""}`);
+      try {
+        navigator.clipboard.writeText(l.join("\n"));
+        setCopiado(true);
+        setTimeout(() => setCopiado(false), 2500);
+      } catch (e) {
+        setError("No se pudo copiar.");
+      }
+    }
+    const tabBtn = (id, txt) => /* @__PURE__ */ React.createElement("button", { onClick: () => setTab(id), style: { flex: 1, padding: "9px 0", background: tab === id ? "#fff" : "transparent", color: tab === id ? "#111" : "#888", border: "none", borderRadius: "8px 8px 0 0", fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, cursor: "pointer" } }, txt);
+    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1e3, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: "min(96vw,540px)", maxHeight: "92vh", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, "\u{1F50D} Cierre del per\xEDodo"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 10, color: "#777", letterSpacing: 1 } }, etiquetaPeriodo(periodo))), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#888", fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 8 } }, tabBtn("arqueo", "Arqueo"), tabBtn("rendicion", "Rendici\xF3n"))), /* @__PURE__ */ React.createElement("div", { style: { overflowY: "auto", padding: "14px 18px 18px" } }, !filas && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#999", padding: "16px 0" } }, "Los sobres no est\xE1n iniciados en este per\xEDodo: toca \u{1F9FE} en Presupuesto."), filas && tab === "arqueo" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#777", lineHeight: 1.5, marginBottom: 10 } }, "Cuenta el efectivo que hay en cada sobre y escr\xEDbelo. Si no cuadra con los registros, el cierre igual se guarda y la diferencia queda documentada."), guardado && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#070", background: "#f3fbf3", border: "1px dashed #b5deb5", borderRadius: 6, padding: "6px 10px", marginBottom: 10 } }, "Arqueo guardado el ", fechaCorta3(guardado.fecha), ". Puedes rehacerlo."), filas.map((f2) => {
+      const k = f2.sec + "|" + f2.rowId;
+      const c = num(conteos[k]);
+      const dif = c === null ? null : c - f2.esperado;
+      return /* @__PURE__ */ React.createElement("div", { key: k, style: { padding: "10px 0", borderBottom: "1px dashed #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 14, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f2.emoji, " ", f2.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#999" } }, "deber\xEDa haber ", /* @__PURE__ */ React.createElement("b", { style: { color: "#555" } }, fmtCLP(f2.esperado)))), /* @__PURE__ */ React.createElement("input", { inputMode: "numeric", placeholder: "contado", value: conteos[k] === void 0 || conteos[k] === "" ? "" : fmtCLP(num(conteos[k])), onChange: (e) => {
+        setConteos({ ...conteos, [k]: e.target.value });
+        setError("");
+      }, style: campo2 })), dif !== null && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: colorDif(dif), textAlign: "right", marginTop: 4 } }, dif === 0 ? "cuadra" : `diferencia ${signo(dif)}`), dif !== null && dif !== 0 && /* @__PURE__ */ React.createElement("input", { placeholder: "\xBFa qu\xE9 se debe? (opcional)", value: notas[k] || "", onChange: (e) => setNotas({ ...notas, [k]: e.target.value }), style: { ...campo2, width: "100%", textAlign: "left", fontSize: 12, marginTop: 6, padding: "6px 8px" } }));
+    }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "12px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#777" } }, "Esperado ", fmtCLP(totEsperado), " \xB7 contado ", fmtCLP(totContado)), completo && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: colorDif(totContado - totEsperado) } }, totContado === totEsperado ? "todo cuadra" : `diferencia ${signo(totContado - totEsperado)}`)), /* @__PURE__ */ React.createElement("div", { style: { ...rotulo2, margin: "10px 0 4px" } }, "Fecha del arqueo"), /* @__PURE__ */ React.createElement("input", { type: "date", value: fecha, onChange: (e) => setFecha(e.target.value || fechaISO(/* @__PURE__ */ new Date())), style: { ...campo2, width: "100%", textAlign: "left" } }), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#c00", marginTop: 12 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: guardar, disabled: !completo, style: { width: "100%", marginTop: 14, padding: "13px", background: completo ? "#111" : "#ccc", color: "#fff", border: "none", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, cursor: completo ? "pointer" : "default" } }, guardado ? "Guardar de nuevo" : "Guardar arqueo")), filas && tab === "rendicion" && rend && /* @__PURE__ */ React.createElement(React.Fragment, null, rend.arqueoFecha ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#777", marginBottom: 8 } }, "Arqueo del ", fechaCorta3(rend.arqueoFecha), ".") : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#a60", background: "#fffaf0", border: "1px dashed #e0b070", borderRadius: 6, padding: "6px 10px", marginBottom: 8 } }, "Falta el arqueo de este per\xEDodo: hazlo en la pesta\xF1a Arqueo."), rend.filas.map((f2) => /* @__PURE__ */ React.createElement("div", { key: f2.sec + f2.row.id, style: { padding: "10px 0", borderBottom: "1px dashed #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: FUENTE, fontSize: 14, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f2.row.emoji, " ", f2.row.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 15, fontWeight: 700, color: f2.saldo < 0 ? "#c00" : "#111" } }, fmtCLP(f2.saldo))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#999", marginTop: 3, lineHeight: 1.5 } }, "asignado ", fmtCLP(f2.asignado), " \xB7 gastado ", fmtCLP(f2.gastado), f2.prestamoRecibido > 0 && ` \xB7 pidi\xF3 ${fmtCLP(f2.prestamoRecibido)}`, f2.prestamoDado > 0 && ` \xB7 prest\xF3 ${fmtCLP(f2.prestamoDado)}`, f2.devPagada > 0 && ` \xB7 devolvi\xF3 ${fmtCLP(f2.devPagada)}`, f2.devRecibida > 0 && ` \xB7 le devolvieron ${fmtCLP(f2.devRecibida)}`), f2.arqueo && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: colorDif(f2.arqueo.diferencia), marginTop: 3 } }, "arqueo: contado ", fmtCLP(f2.arqueo.contado), " de ", fmtCLP(f2.arqueo.esperado), " \xB7 ", f2.arqueo.diferencia === 0 ? "cuadra" : `diferencia ${signo(f2.arqueo.diferencia)}`, f2.arqueo.nota ? ` \xB7 ${f2.arqueo.nota}` : ""), (f2.deudas.debe > 0 || f2.deudas.teDeben > 0) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#a60", marginTop: 2 } }, f2.deudas.debe > 0 && `Debe ${fmtCLP(f2.deudas.debe)}. `, f2.deudas.teDeben > 0 && `Le deben ${fmtCLP(f2.deudas.teDeben)}.`), f2.gastos.length > 0 && /* @__PURE__ */ React.createElement("details", { style: { marginTop: 4 } }, /* @__PURE__ */ React.createElement("summary", { style: { fontFamily: FUENTE, fontSize: 11, color: "#666", cursor: "pointer" } }, f2.gastos.length, " gasto", f2.gastos.length > 1 ? "s" : ""), f2.gastos.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.id, style: { fontFamily: FUENTE, fontSize: 12, color: "#444", padding: "3px 0 3px 8px", display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#999", width: 44, flexShrink: 0 } }, fechaCorta3(g.fecha)), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0 } }, g.sub, g.nota ? ` \xB7 ${g.nota}` : "", g.prestamoId ? " \u{1F4B3}" : ""), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, fmtCLP(g.monto))))))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "14px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#555" } }, "Asignado ", fmtCLP(rend.totales.asignado), " \xB7 gastado ", fmtCLP(rend.totales.gastado)), rend.totales.diferencia !== null && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: colorDif(rend.totales.diferencia) } }, rend.totales.diferencia === 0 ? "todo cuadra" : `diferencia ${signo(rend.totales.diferencia)}`)), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#c00", marginTop: 8 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: copiar, style: { width: "100%", marginTop: 14, padding: "11px", background: "transparent", color: "#555", border: "1px dashed #bbb", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 18, cursor: "pointer" } }, copiado ? "\u2713 copiado" : "Copiar rendici\xF3n")))));
   }
 
   // modules/presupuesto/BudgetPage.jsx
-  var { useState: useState13, useEffect: useEffect10, useRef: useRef8, useMemo: useMemo7, useCallback: useCallback6 } = React;
+  var { useState: useState14, useEffect: useEffect10, useRef: useRef8, useMemo: useMemo8, useCallback: useCallback6 } = React;
   var getBudgetForPeriod = resolverPeriodo;
   function PieChart({ data, total, annual }) {
     const CX = 100, CY = 100, R = 76;
@@ -9330,7 +9556,7 @@ var __angst = (() => {
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("svg", { width: "200", height: "200", viewBox: "0 0 200 200" }, slices.map((s, i) => /* @__PURE__ */ React.createElement("path", { key: i, d: s.path, fill: s.color, stroke: "#fff", strokeWidth: "1.5" })), slices.map((s, i) => s.big && /* @__PURE__ */ React.createElement("text", { key: `em${i}`, x: s.ex.toFixed(1), y: s.ey.toFixed(1), textAnchor: "middle", dominantBaseline: "middle", fontSize: "12" }, s.emoji)), /* @__PURE__ */ React.createElement("circle", { cx: CX, cy: CY, r: 34, fill: "#fff" }), /* @__PURE__ */ React.createElement("text", { x: CX, y: CY - 5, textAnchor: "middle", dominantBaseline: "middle", fontFamily: "'Caveat',cursive", fontSize: "12", fill: "#111", fontWeight: "700" }, annual ? "anual" : "mensual"), /* @__PURE__ */ React.createElement("text", { x: CX, y: CY + 10, textAnchor: "middle", dominantBaseline: "middle", fontFamily: "'DM Sans',sans-serif", fontSize: "9", fill: "#555" }, fmtCLP(annual ? total * 12 : total))), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", display: "flex", flexDirection: "column", gap: 4, padding: "0 4px" } }, slices.map((s, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 6 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 9, height: 9, borderRadius: 2, background: s.color, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#444" } }, s.emoji, " ", s.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#111", fontWeight: 600 } }, fmtCLP(s.monto)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", width: 32, textAlign: "right" } }, s.pct, "%")))));
   }
   function IngresoChartModal({ budgets, selYear, selMonth, onClose }) {
-    const [view, setView] = useState13(0);
+    const [view, setView] = useState14(0);
     const GRAYS = ["#111", "#333", "#555", "#777", "#aaa", "#ccc"];
     const sources = [{ k: "trabajo", l: "Trabajo", e: "\u{1F3E2}" }, { k: "emprendimiento", l: "Emprend.", e: "\u{1F6E0}\uFE0F" }, { k: "reventa", l: "Reventa", e: "\u{1F504}" }, { k: "otros", l: "Otros", e: "\u2728" }];
     const monthKey = `${selYear}-${String(selMonth + 1).padStart(2, "0")}`;
@@ -9354,11 +9580,11 @@ var __angst = (() => {
     }))))));
   }
   function ChartModal({ title, emoji, rows, total, onClose }) {
-    const [view, setView] = useState13(0);
+    const [view, setView] = useState14(0);
     return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }, onClick: onClose }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: 320, maxHeight: "90vh", overflowY: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700 } }, emoji, " ", title), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#555", fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", borderBottom: "1px solid #eee" } }, ["Mensual", "Anual"].map((lbl, idx) => /* @__PURE__ */ React.createElement("button", { key: idx, onClick: () => setView(idx), style: { flex: 1, padding: "10px", fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, cursor: "pointer", background: view === idx ? "#111" : "#fff", color: view === idx ? "#fff" : "#999", border: "none", transition: "all 0.15s" } }, lbl))), /* @__PURE__ */ React.createElement("div", { style: { padding: "16px" } }, /* @__PURE__ */ React.createElement(PieChart, { data: rows, total, annual: view === 1 }))));
   }
   function MonthSelectorModal({ currentYear, currentMonth, onSelect, onClose }) {
-    const [year, setYear] = useState13(currentYear);
+    const [year, setYear] = useState14(currentYear);
     return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }, onClick: onClose }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: 300 } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setYear((y) => y - 1), style: { background: "transparent", border: "none", color: "#fff", fontSize: 22, cursor: "pointer", fontWeight: 700 } }, "\u2039"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, year), /* @__PURE__ */ React.createElement("button", { onClick: () => setYear((y) => y + 1), style: { background: "transparent", border: "none", color: "#fff", fontSize: 22, cursor: "pointer", fontWeight: 700 } }, "\u203A")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 2, padding: 12 } }, MONTH_NAMES.map((m, i) => {
       const cur = i === currentMonth && year === currentYear;
       const nowDate = /* @__PURE__ */ new Date(), isNow = i === nowDate.getMonth() && year === nowDate.getFullYear() && !cur;
@@ -9372,12 +9598,12 @@ var __angst = (() => {
   function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit, onRowSave, onRowAdd, onRowDelete, onRowCheck, onChartOpen, onOpenCartera }) {
     const T = totalIngreso;
     const pct = T > 0 ? (subtotal / T * 100).toFixed(1) : "-";
-    const [hover, setHover] = useState13(false);
-    const [adding, setAdding] = useState13(false);
-    const [newLabel, setNewLabel] = useState13("");
-    const [newEmoji, setNewEmoji] = useState13("\u{1F4CC}");
-    const [editId, setEditId] = useState13(null);
-    const [editLabel, setEditLabel] = useState13("");
+    const [hover, setHover] = useState14(false);
+    const [adding, setAdding] = useState14(false);
+    const [newLabel, setNewLabel] = useState14("");
+    const [newEmoji, setNewEmoji] = useState14("\u{1F4CC}");
+    const [editId, setEditId] = useState14(null);
+    const [editLabel, setEditLabel] = useState14("");
     function confirmAdd() {
       if (!newLabel.trim()) return;
       onRowAdd(secKey, { id: Date.now().toString(), emoji: newEmoji, label: newLabel.trim(), monto: 0 });
@@ -9424,17 +9650,18 @@ var __angst = (() => {
     }, placeholder: "nombre del fondo...", style: { flex: 1, border: "1px dashed #ccc", borderRadius: 4, padding: "4px 8px", fontSize: 13, fontFamily: FUENTE, outline: "none", background: "#fff" } }), /* @__PURE__ */ React.createElement("button", { onClick: confirmAdd, style: { background: "#111", color: "#fff", border: "none", borderRadius: 4, padding: "4px 10px", fontSize: 12, cursor: "pointer" } }, "\u2713"), /* @__PURE__ */ React.createElement("button", { onClick: () => setAdding(false), style: { background: "transparent", border: "none", color: "#bbb", fontSize: 18, cursor: "pointer" } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "10px 12px", background: "#f3f3f3", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#111", fontWeight: 700 }) }, "Subtotal"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 13, color: "#111", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO }) }, fmtCLP(subtotal)), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 11, color: "#666", textAlign: "right", fontWeight: 600 }) }, pct, "%"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 11, color: "#666", textAlign: "right", fontWeight: 600 }) }, fmtCLP(subtotal * 12)), /* @__PURE__ */ React.createElement("div", null))));
   }
   function BudgetPage({ budgets, onSaveBudget }) {
-    const [chartData, setChartData] = useState13(null);
-    const [ingChart, setIngChart] = useState13(false);
-    const [monthModal, setMonthModal] = useState13(false);
-    const [aviso, setAviso] = useState13("");
-    const [ventana, setVentana] = useState13(null);
-    const [gastoDesde, setGastoDesde] = useState13(null);
-    const [guia, setGuia] = useState13(false);
+    const [chartData, setChartData] = useState14(null);
+    const [ingChart, setIngChart] = useState14(false);
+    const [monthModal, setMonthModal] = useState14(false);
+    const [aviso, setAviso] = useState14("");
+    const [ventana, setVentana] = useState14(null);
+    const [gastoDesde, setGastoDesde] = useState14(null);
+    const [guia, setGuia] = useState14(false);
+    const [cierre, setCierre] = useState14(null);
     const avisoRef = useRef8(null);
     const now = /* @__PURE__ */ new Date();
-    const [selYear, setSelYear] = useState13(now.getFullYear());
-    const [selMonth, setSelMonth] = useState13(now.getDate() >= 25 ? now.getMonth() : (now.getMonth() - 1 + 12) % 12);
+    const [selYear, setSelYear] = useState14(now.getFullYear());
+    const [selMonth, setSelMonth] = useState14(now.getDate() >= 25 ? now.getMonth() : (now.getMonth() - 1 + 12) % 12);
     const monthKey = `${selYear}-${String(selMonth + 1).padStart(2, "0")}`;
     const budget = getBudgetForPeriod(budgets, monthKey);
     const periodLabel = `25 ${MONTH_NAMES[selMonth].slice(0, 3)} \u2014 24 ${MONTH_NAMES[(selMonth + 1) % 12].slice(0, 3)} ${selYear}`;
@@ -9442,12 +9669,19 @@ var __angst = (() => {
     const totalIngreso = ing.trabajo + ing.emprendimiento + ing.reventa + ing.otros;
     const inicio = inicioSobres(budgets);
     const sobresOn = !!inicio && monthKey >= inicio;
+    const finPeriodo = new Date(selYear + (selMonth === 11 ? 1 : 0), (selMonth + 1) % 12, 24);
+    const arqueoVence = sobresOn && !budget.arqueo && /* @__PURE__ */ new Date() >= finPeriodo;
     function mostrarAviso(msg) {
       setAviso(msg);
       clearTimeout(avisoRef.current);
       avisoRef.current = setTimeout(() => setAviso(""), 6e3);
     }
+    const compuerta = puedeGenerarPeriodo(budgets, monthKey);
     function save(updated) {
+      if (!compuerta.ok) {
+        mostrarAviso(`${compuerta.motivo} Toca \u{1F50D} cierre.`);
+        return;
+      }
       onSaveBudget(monthKey, updated);
     }
     function updIng(k, v) {
@@ -9516,7 +9750,7 @@ var __angst = (() => {
         onApertura: setApertura,
         onGasto: (sec, id) => setGastoDesde(`${sec}|${id}`)
       }
-    ), guia && /* @__PURE__ */ React.createElement(GuiaSobres, { budgets, periodo: monthKey, etiquetaPeriodo: periodLabel, onClose: () => setGuia(false) }), gastoDesde && /* @__PURE__ */ React.createElement(GastoModal, { budgets, inicial: gastoDesde, onSaveBudget, onClose: () => setGastoDesde(null) }), monthModal && /* @__PURE__ */ React.createElement(MonthSelectorModal, { currentYear: selYear, currentMonth: selMonth, onSelect: (y, m) => {
+    ), cierre && /* @__PURE__ */ React.createElement(ArqueoModal, { budgets, periodo: cierre.periodo, tabInicial: cierre.tab, onSaveBudget, onClose: () => setCierre(null) }), guia && /* @__PURE__ */ React.createElement(GuiaSobres, { budgets, periodo: monthKey, etiquetaPeriodo: periodLabel, onClose: () => setGuia(false) }), gastoDesde && /* @__PURE__ */ React.createElement(GastoModal, { budgets, inicial: gastoDesde, onSaveBudget, onClose: () => setGastoDesde(null) }), monthModal && /* @__PURE__ */ React.createElement(MonthSelectorModal, { currentYear: selYear, currentMonth: selMonth, onSelect: (y, m) => {
       setSelYear(y);
       setSelMonth(m);
     }, onClose: () => setMonthModal(false) }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 8, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 4 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => {
@@ -9529,7 +9763,7 @@ var __angst = (() => {
       const ny = selMonth === 11 ? selYear + 1 : selYear;
       setSelMonth(nm);
       setSelYear(ny);
-    }, style: navBtn }, "\u203A")), inicio ? /* @__PURE__ */ React.createElement("button", { onClick: () => setGuia(true), title: "Cu\xE1nto debe haber en cada sobre", style: { ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: "#555", padding: "7px 12px" } }, "\u{1F9FE} sobres", sobresOn ? "" : " (desde " + MONTH_NAMES[parseInt(inicio.slice(5)) - 1].slice(0, 3) + ")", " \u25B8") : /* @__PURE__ */ React.createElement("button", { onClick: iniciarSobres, title: "Activa saldos, gastos y sobrantes por cartera a partir de este per\xEDodo", style: { ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: "#555", padding: "7px 12px" } }, "\u{1F9FE} iniciar sobres")), aviso && /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", marginBottom: 14 }) }, aviso), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "10px 14px", borderRadius: "8px 8px 0 0", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { onClick: () => setIngChart(true), style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700, cursor: "pointer" } }, "\u{1F4B5} Ingresos ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, opacity: 0.5 } }, "\u25B8")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, fmtCLP(totalIngreso))), /* @__PURE__ */ React.createElement("div", { style: { border: "1px solid #eee", borderTop: "none", borderRadius: "0 0 8px 8px", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: GAP, padding: "7px 12px", background: "#f8f8f8", borderBottom: "1px solid #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { ...celdaTitulo, letterSpacing: 2, textTransform: "uppercase" } }, "Fuente"), /* @__PURE__ */ React.createElement("div", { style: { ...celdaTitulo, textAlign: "right", paddingRight: PAD_MONTO, width: 120 - PAD_MONTO } }, "$ Mensual")), [{ k: "trabajo", l: "Trabajo principal", e: "\u{1F3E2}" }, { k: "emprendimiento", l: "Emprendimiento", e: "\u{1F6E0}\uFE0F" }, { k: "reventa", l: "Reventa", e: "\u267B\uFE0F" }, { k: "otros", l: "Otros", e: "\u2795" }].map((s, i) => /* @__PURE__ */ React.createElement("div", { key: s.k, style: { display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: GAP, padding: "11px 12px", borderBottom: i < 3 ? "1px dashed #f0f0f0" : "none", alignItems: "center", background: i % 2 === 0 ? "#fff" : "#fafafa" } }, /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 13, color: "#333", display: "flex", alignItems: "center", gap: 6 }) }, /* @__PURE__ */ React.createElement("span", null, s.e), /* @__PURE__ */ React.createElement("span", null, s.l)), /* @__PURE__ */ React.createElement(AmountRow, { value: ing[s.k], onSave: (v) => updIng(s.k, v) }))))), /* @__PURE__ */ React.createElement(BudgetSec, { title: "Gastos Base", emoji: "\u{1F9F1}", rows: budget.gastos_base, secKey: "gastos_base", subtotal: sumBase, canEdit: true, ...secProps }), /* @__PURE__ */ React.createElement(BudgetSec, { title: "Fondos Personales", emoji: "\u{1F464}", rows: budget.personales, secKey: "personales", subtotal: sumPers, canEdit: false, onOpenCartera: abrirCartera, ...secProps }), /* @__PURE__ */ React.createElement(BudgetSec, { title: "Fondos por Prop\xF3sito", emoji: "\u{1F4E6}", rows: budget.propositos, secKey: "propositos", subtotal: sumProp, canEdit: true, onOpenCartera: abrirCartera, ...secProps }), /* @__PURE__ */ React.createElement("div", { style: { border: "2px solid #111", borderRadius: 8, overflow: "hidden", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "12px 12px", background: "#111", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", fontWeight: 700 } }, "Total distribuido"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 14, color: "#fff", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO }) }, fmtCLP(totalGasto)), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#888", textAlign: "right" }) }, T > 0 ? (totalGasto / T * 100).toFixed(1) : "-", "%"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#888", textAlign: "right" }) }, fmtCLP(totalGasto * 12)), /* @__PURE__ */ React.createElement("div", null)), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "10px 12px", background: remainder < 0 ? "#fff5f5" : "#f9f9f9", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: remainder < 0 ? "#c00" : "#555" } }, remainder < 0 ? "\u26A0\uFE0F D\xE9ficit" : "Remanente"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 14, color: remainder < 0 ? "#c00" : "#111", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO }) }, fmtCLP(Math.abs(remainder))), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#aaa", textAlign: "right" }) }, T > 0 ? (Math.abs(remainder) / T * 100).toFixed(1) : "-", "%"), /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", null))), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
+    }, style: navBtn }, "\u203A")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } }, sobresOn && /* @__PURE__ */ React.createElement("button", { onClick: () => setCierre({ periodo: compuerta.ok ? monthKey : compuerta.requiere, tab: void 0 }), title: "Arqueo y rendici\xF3n del per\xEDodo", style: { ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: arqueoVence ? "#a60" : "#555", padding: "7px 12px", borderColor: arqueoVence ? "#e0b070" : "#ddd" } }, "\u{1F50D} cierre", arqueoVence ? " \u25CF" : ""), inicio ? /* @__PURE__ */ React.createElement("button", { onClick: () => setGuia(true), title: "Cu\xE1nto debe haber en cada sobre", style: { ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: "#555", padding: "7px 12px" } }, "\u{1F9FE} sobres", sobresOn ? "" : " (desde " + MONTH_NAMES[parseInt(inicio.slice(5)) - 1].slice(0, 3) + ")", " \u25B8") : /* @__PURE__ */ React.createElement("button", { onClick: iniciarSobres, title: "Activa saldos, gastos y sobrantes por cartera a partir de este per\xEDodo", style: { ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: "#555", padding: "7px 12px" } }, "\u{1F9FE} iniciar sobres"))), !compuerta.ok && /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#8a5a00", background: "#fffaf0", border: "1px dashed #e0b070", borderRadius: 6, padding: "8px 10px", marginBottom: 14, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }) }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, "\u{1F512} Este per\xEDodo a\xFAn no existe: ", compuerta.motivo.toLowerCase()), /* @__PURE__ */ React.createElement("button", { onClick: () => setCierre({ periodo: compuerta.requiere }), style: { background: "#111", color: "#fff", border: "none", borderRadius: 6, padding: "5px 12px", fontSize: 12, cursor: "pointer" } }, "Hacer el arqueo")), aviso && /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", marginBottom: 14 }) }, aviso), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "10px 14px", borderRadius: "8px 8px 0 0", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { onClick: () => setIngChart(true), style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700, cursor: "pointer" } }, "\u{1F4B5} Ingresos ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, opacity: 0.5 } }, "\u25B8")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, fmtCLP(totalIngreso))), /* @__PURE__ */ React.createElement("div", { style: { border: "1px solid #eee", borderTop: "none", borderRadius: "0 0 8px 8px", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: GAP, padding: "7px 12px", background: "#f8f8f8", borderBottom: "1px solid #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { ...celdaTitulo, letterSpacing: 2, textTransform: "uppercase" } }, "Fuente"), /* @__PURE__ */ React.createElement("div", { style: { ...celdaTitulo, textAlign: "right", paddingRight: PAD_MONTO, width: 120 - PAD_MONTO } }, "$ Mensual")), [{ k: "trabajo", l: "Trabajo principal", e: "\u{1F3E2}" }, { k: "emprendimiento", l: "Emprendimiento", e: "\u{1F6E0}\uFE0F" }, { k: "reventa", l: "Reventa", e: "\u267B\uFE0F" }, { k: "otros", l: "Otros", e: "\u2795" }].map((s, i) => /* @__PURE__ */ React.createElement("div", { key: s.k, style: { display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: GAP, padding: "11px 12px", borderBottom: i < 3 ? "1px dashed #f0f0f0" : "none", alignItems: "center", background: i % 2 === 0 ? "#fff" : "#fafafa" } }, /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 13, color: "#333", display: "flex", alignItems: "center", gap: 6 }) }, /* @__PURE__ */ React.createElement("span", null, s.e), /* @__PURE__ */ React.createElement("span", null, s.l)), /* @__PURE__ */ React.createElement(AmountRow, { value: ing[s.k], onSave: (v) => updIng(s.k, v) }))))), /* @__PURE__ */ React.createElement(BudgetSec, { title: "Gastos Base", emoji: "\u{1F9F1}", rows: budget.gastos_base, secKey: "gastos_base", subtotal: sumBase, canEdit: true, ...secProps }), /* @__PURE__ */ React.createElement(BudgetSec, { title: "Fondos Personales", emoji: "\u{1F464}", rows: budget.personales, secKey: "personales", subtotal: sumPers, canEdit: false, onOpenCartera: abrirCartera, ...secProps }), /* @__PURE__ */ React.createElement(BudgetSec, { title: "Fondos por Prop\xF3sito", emoji: "\u{1F4E6}", rows: budget.propositos, secKey: "propositos", subtotal: sumProp, canEdit: true, onOpenCartera: abrirCartera, ...secProps }), /* @__PURE__ */ React.createElement("div", { style: { border: "2px solid #111", borderRadius: 8, overflow: "hidden", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "12px 12px", background: "#111", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", fontWeight: 700 } }, "Total distribuido"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 14, color: "#fff", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO }) }, fmtCLP(totalGasto)), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#888", textAlign: "right" }) }, T > 0 ? (totalGasto / T * 100).toFixed(1) : "-", "%"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#888", textAlign: "right" }) }, fmtCLP(totalGasto * 12)), /* @__PURE__ */ React.createElement("div", null)), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "10px 12px", background: remainder < 0 ? "#fff5f5" : "#f9f9f9", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: remainder < 0 ? "#c00" : "#555" } }, remainder < 0 ? "\u26A0\uFE0F D\xE9ficit" : "Remanente"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 14, color: remainder < 0 ? "#c00" : "#111", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO }) }, fmtCLP(Math.abs(remainder))), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#aaa", textAlign: "right" }) }, T > 0 ? (Math.abs(remainder) / T * 100).toFixed(1) : "-", "%"), /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", null))), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
   }
   var BudgetPage_default = BudgetPage;
 
@@ -10133,7 +10367,7 @@ var __angst = (() => {
   var EspritPage_default = EspritPage;
 
   // modules/shared/constants.js
-  var { useState: useState14, useEffect: useEffect11, useRef: useRef9 } = React;
+  var { useState: useState15, useEffect: useEffect11, useRef: useRef9 } = React;
   var FEED_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/feed.json";
   var CINE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/cine.json";
   var MELEE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/melee.json";
@@ -10174,7 +10408,7 @@ var __angst = (() => {
   var STORAGE_KEY = "angst-feed-proto-v1";
 
   // modules/shared/ui.jsx
-  var { useState: useState15, useEffect: useEffect12, useLayoutEffect, useRef: useRef10 } = React;
+  var { useState: useState16, useEffect: useEffect12, useLayoutEffect, useRef: useRef10 } = React;
   var btnGhost = { flex: 1, background: "transparent", border: "1px dashed #444", color: "#aaa", borderRadius: 10, padding: "10px 6px", fontFamily: "'DM Sans',sans-serif", fontSize: 10, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 };
   function shareToWhatsApp(item) {
     const text = encodeURIComponent(`${item.title}
@@ -10216,7 +10450,7 @@ ${item.link}`);
     } }, b)));
   }
   function useAltoLibre(ref, minimo = 460, reserva = 0, deps = []) {
-    const [alto, setAlto] = useState15(null);
+    const [alto, setAlto] = useState16(null);
     useLayoutEffect(() => {
       function medir() {
         const el = ref.current;
@@ -10246,7 +10480,7 @@ ${item.link}`);
   }
 
   // modules/shared/catalog.js
-  var { useState: useState16, useEffect: useEffect13, useRef: useRef11 } = React;
+  var { useState: useState17, useEffect: useEffect13, useRef: useRef11 } = React;
   function roundRobinMerge(byCategoryArrays) {
     const queues = byCategoryArrays.map((c) => ({ cat: c.cat, items: [...c.items] }));
     const out = [];
@@ -10311,7 +10545,7 @@ ${item.link}`);
   }
 
   // modules/feed/FeedPage.jsx
-  var { useState: useState17, useEffect: useEffect14, useRef: useRef12 } = React;
+  var { useState: useState18, useEffect: useEffect14, useRef: useRef12 } = React;
   function cardsFor(formato) {
     if (formato === "musica") return { Story: MusicStoryCard, Extended: MusicExtendedView };
     return { Story: StoryCard, Extended: ExtendedView };
@@ -10347,7 +10581,7 @@ ${item.link}`);
   }
   function StoryCard({ item, onSkip, onExpand, onSave, onChangeCategory, onShuffle, onOpenBuzon, onOpenDiag, hasDiag, onRefresh, canRefresh, refreshing, buzonCount }) {
     const color = CAT_COLORS[item.categoria] || "#888";
-    const [imgFailed, setImgFailed] = useState17(false);
+    const [imgFailed, setImgFailed] = useState18(false);
     useEffect14(() => {
       setImgFailed(false);
     }, [item.guid]);
@@ -10360,7 +10594,7 @@ ${item.link}`);
     const hasSoundcloud = !!item.soundcloudEmbedUrl;
     const hasListen = hasVideo || hasBandcamp || hasSoundcloud;
     const thumb = hasVideo ? `https://img.youtube.com/vi/${item.videoId}/hqdefault.jpg` : null;
-    const [imgFailed, setImgFailed] = useState17(false);
+    const [imgFailed, setImgFailed] = useState18(false);
     useEffect14(() => {
       setImgFailed(false);
     }, [item.guid]);
@@ -10407,7 +10641,7 @@ ${item.link}`);
     ) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 } }, item.summary)), !hideActions && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "categor\xEDa"), /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareToWhatsApp(item), style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4E4}"), "compartir"), /* @__PURE__ */ React.createElement("button", { onClick: onNext, style: { ...btnGhost, background: color, color: "#111", borderColor: color } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente")));
   }
   function ExtendedView({ item, onBack, onNext, onSave, onChangeCategory, hideActions }) {
-    const [scrollPct, setScrollPct] = useState17(0);
+    const [scrollPct, setScrollPct] = useState18(0);
     function onScroll(e) {
       const el = e.target;
       const max = el.scrollHeight - el.clientHeight;
@@ -10449,7 +10683,7 @@ ${item.link}`);
     ) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#888", lineHeight: 1.6 } }, "el Action no pudo extraer el texto completo de esta en particular.", " ", /* @__PURE__ */ React.createElement("a", { href: item.link, target: "_blank", rel: "noopener", style: { color } }, "ver original \u2197"))), !hideActions && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "categor\xEDa"), /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareToWhatsApp(item), style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4E4}"), "compartir"), /* @__PURE__ */ React.createElement("button", { onClick: onNext, style: { ...btnGhost, background: color, color: "#111", borderColor: color } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente")));
   }
   function EndScreen({ onGoBuzon, onRefresh, canRefresh, refreshing, nextRefreshAt, refreshMsg, onReset, onOpenDiag, hasDiag }) {
-    const [now, setNow] = useState17(Date.now());
+    const [now, setNow] = useState18(Date.now());
     useEffect14(() => {
       const iv = setInterval(() => setNow(Date.now()), 3e4);
       return () => clearInterval(iv);
@@ -10459,7 +10693,7 @@ ${item.link}`);
     return /* @__PURE__ */ React.createElement(MarcoAngst, { style: { background: "#0a0a0a", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 24 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 44, fontWeight: 700, color: "#fff" } }, "est\xE1s al d\xEDa \u2713"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.4)", textAlign: "center" } }, refreshMsg || (msLeft > 0 ? `pr\xF3xima actualizaci\xF3n en ${hLeft > 0 ? hLeft + "h " : ""}${mLeft}m` : "ya pod\xE9s buscar novedades")), canRefresh && /* @__PURE__ */ React.createElement("button", { onClick: onRefresh, disabled: refreshing, style: { background: "#fff", border: "none", color: "#111", borderRadius: 20, padding: "10px 22px", fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, cursor: "pointer", opacity: refreshing ? 0.5 : 1 } }, refreshing ? "buscando\u2026" : "\u21BB buscar novedades"), /* @__PURE__ */ React.createElement("button", { onClick: onGoBuzon, style: { background: "transparent", border: "1px dashed #333", color: "#aaa", borderRadius: 20, padding: "9px 20px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, cursor: "pointer" } }, "\u{1F4CC} ver buz\xF3n"), /* @__PURE__ */ React.createElement("button", { onClick: onOpenDiag, disabled: !hasDiag, style: { background: "transparent", border: "1px dashed #333", color: hasDiag ? "#aaa" : "#333", borderRadius: 20, padding: "9px 20px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, cursor: hasDiag ? "pointer" : "default" } }, "\u{1FA7A} ver diagn\xF3stico"), /* @__PURE__ */ React.createElement("button", { onClick: onReset, style: { background: "transparent", border: "none", color: "#333", fontSize: 10, textDecoration: "underline", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", marginTop: 8 } }, "\u{1F9EA} resetear estado (solo para probar)"));
   }
   function BuzonView({ buzon, onClose, onOpen, onRemove }) {
-    const [filterCat, setFilterCat] = useState17("todas");
+    const [filterCat, setFilterCat] = useState18("todas");
     const cats = ["todas", ...Object.keys(CAT_COLORS).filter((c) => !VITRINA_CATEGORIAS.includes(c))];
     const filtered = filterCat === "todas" ? buzon : buzon.filter((b) => b.categoria === filterCat);
     return /* @__PURE__ */ React.createElement(MarcoAngst, { style: { background: "#0a0a0a", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 18px 10px", display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff" } }, "\u{1F4CC} buz\xF3n")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "0 18px 12px", overflowX: "auto" } }, cats.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setFilterCat(c), style: {
@@ -10484,19 +10718,19 @@ ${item.link}`);
     return /* @__PURE__ */ React.createElement(MarcoAngst, { style: { background: "#0a0a0a", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 18px 8px", display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff" } }, "\u{1FA7A} diagn\xF3stico del JSON")), /* @__PURE__ */ React.createElement("div", { style: { padding: "0 18px 4px", fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)" } }, diag.length > 0 ? `${total} items totales \xB7 ${totalText} con texto completo` : "todav\xEDa no se ley\xF3 el JSON en esta sesi\xF3n"), generatedAt && /* @__PURE__ */ React.createElement("div", { style: { padding: "0 18px 10px", fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)" } }, "el Action gener\xF3 este JSON: ", new Date(generatedAt).toLocaleString("es-CL")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "0 18px 30px" } }, diag.map((d, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", gap: 8, padding: "7px 0", borderBottom: "1px solid #1a1a1a", fontFamily: "'DM Sans',sans-serif", fontSize: 11, alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("span", { style: { flexShrink: 0, color: d.count > 0 ? "#7cb890" : "#c77" } }, d.count > 0 ? "\u2713" : "\u2717"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, color: "#999" } }, d.cat), /* @__PURE__ */ React.createElement("span", { style: { color: "#666", maxWidth: 160, textAlign: "right" } }, d.count, " items \xB7 ", d.withText, " con texto")))));
   }
   function FeedPage() {
-    const [loaded, setLoaded] = useState17(false);
-    const [queue, setQueue] = useState17([]);
-    const [seen, setSeen] = useState17([]);
-    const [buzon, setBuzon] = useState17([]);
-    const [lastRefresh, setLastRefresh] = useState17(null);
-    const [view, setView] = useState17("story");
-    const [refreshing, setRefreshing] = useState17(false);
-    const [refreshMsg, setRefreshMsg] = useState17(null);
-    const [refreshDiag, setRefreshDiag] = useState17([]);
-    const [feedGeneratedAt, setFeedGeneratedAt] = useState17(null);
-    const [toast, setToast] = useState17(null);
-    const [buzonOpenItem, setBuzonOpenItem] = useState17(null);
-    const [showDiagPanel, setShowDiagPanel] = useState17(false);
+    const [loaded, setLoaded] = useState18(false);
+    const [queue, setQueue] = useState18([]);
+    const [seen, setSeen] = useState18([]);
+    const [buzon, setBuzon] = useState18([]);
+    const [lastRefresh, setLastRefresh] = useState18(null);
+    const [view, setView] = useState18("story");
+    const [refreshing, setRefreshing] = useState18(false);
+    const [refreshMsg, setRefreshMsg] = useState18(null);
+    const [refreshDiag, setRefreshDiag] = useState18([]);
+    const [feedGeneratedAt, setFeedGeneratedAt] = useState18(null);
+    const [toast, setToast] = useState18(null);
+    const [buzonOpenItem, setBuzonOpenItem] = useState18(null);
+    const [showDiagPanel, setShowDiagPanel] = useState18(false);
     const queueRef = useRef12([]);
     const seenRef = useRef12([]);
     const buzonRef = useRef12([]);
@@ -10680,7 +10914,7 @@ ${item.link}`);
   var FeedPage_default = FeedPage;
 
   // modules/vitrina/videoteca.jsx
-  var { useState: useState18, useEffect: useEffect15, useRef: useRef13 } = React;
+  var { useState: useState19, useEffect: useEffect15, useRef: useRef13 } = React;
   function loadArchivedVistos(storageKey) {
     try {
       const raw = localStorage.getItem(storageKey);
@@ -10700,7 +10934,7 @@ ${item.link}`);
   var ARCHIVEDFEED_MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
   function LazyEmbed({ videoId, title }) {
     const ref = useRef13(null);
-    const [visible, setVisible] = useState18(false);
+    const [visible, setVisible] = useState19(false);
     useEffect15(() => {
       if (visible || !ref.current) return;
       const obs = new IntersectionObserver((entries) => {
@@ -10769,11 +11003,11 @@ ${item.link}`);
     } }, c)));
   }
   function ArchivedFeed({ items, storageKey }) {
-    const [vistos, setVistos] = useState18(() => loadArchivedVistos(storageKey));
+    const [vistos, setVistos] = useState19(() => loadArchivedVistos(storageKey));
     const noInteresaKey = storageKey + "-no-interesa";
-    const [noInteresa, setNoInteresa] = useState18(() => loadArchivedVistos(noInteresaKey));
-    const [canal, setCanal] = useState18("Todos");
-    const [openPeriods, setOpenPeriods] = useState18(() => /* @__PURE__ */ new Set());
+    const [noInteresa, setNoInteresa] = useState19(() => loadArchivedVistos(noInteresaKey));
+    const [canal, setCanal] = useState19("Todos");
+    const [openPeriods, setOpenPeriods] = useState19(() => /* @__PURE__ */ new Set());
     function toggleVisto(guid) {
       setVistos((prev) => {
         const next = new Set(prev);
@@ -10836,7 +11070,7 @@ ${item.link}`);
   }
 
   // modules/vitrina/melee.jsx
-  var { useState: useState19, useEffect: useEffect16, useRef: useRef14 } = React;
+  var { useState: useState20, useEffect: useEffect16, useRef: useRef14 } = React;
   var CHARACTER_ICONS = {
     "Fox": { ab: "FOX", bg: "#8a8a8a" },
     "Falco": { ab: "FAL", bg: "#3f6fd1" },
@@ -10945,9 +11179,9 @@ ${item.link}`);
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement(CharIcon, { pj: g.pj, juegosGanados: g.juegosGanados }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#4caf7d" } }, stripSponsorTag(g.nombre), " ", /* @__PURE__ */ React.createElement("span", { style: { color: "#999", fontWeight: 400 } }, etiquetaJugador(g), g.pj ? ` \xB7 ${g.pj}` : "")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, marginTop: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#777" } }, "venci\xF3 a "), /* @__PURE__ */ React.createElement("span", { style: { color: "#e05a5a", fontWeight: 700 } }, stripSponsorTag(p.nombre)), /* @__PURE__ */ React.createElement("span", { style: { color: "#777" } }, " ", etiquetaJugador(p), p.pj ? ` \xB7 ${p.pj}` : ""), item.viaSSBMRank && /* @__PURE__ */ React.createElement("span", { style: { color: "#ff6600" } }, " \xB7 v\xEDa SSBMRank"))), /* @__PURE__ */ React.createElement(CharIcon, { pj: p.pj, size: 30, juegosGanados: p.juegosGanados }));
   }
   function MeleeFeed({ items }) {
-    const [openTournament, setOpenTournament] = useState19(null);
-    const [vodVistos, setVodVistos] = useState19(() => loadMeleeVodVistos());
-    const [openSections, setOpenSections] = useState19(() => /* @__PURE__ */ new Set());
+    const [openTournament, setOpenTournament] = useState20(null);
+    const [vodVistos, setVodVistos] = useState20(() => loadMeleeVodVistos());
+    const [openSections, setOpenSections] = useState20(() => /* @__PURE__ */ new Set());
     function toggleSection(key) {
       setOpenSections((prev) => {
         const next = new Set(prev);
@@ -11131,11 +11365,11 @@ ${item.link}`);
   }
 
   // modules/vitrina/series.jsx
-  var { useState: useState20, useEffect: useEffect17, useRef: useRef15 } = React;
+  var { useState: useState21, useEffect: useEffect17, useRef: useRef15 } = React;
   function SeriesProgreso({ item, progresoActual, onMarcar }) {
     const seasons = item.seasons;
-    const [temporada, setTemporada] = useState20(progresoActual?.temporada || seasons?.[0]?.numero || 1);
-    const [episodio, setEpisodio] = useState20(progresoActual?.episodio || 1);
+    const [temporada, setTemporada] = useState21(progresoActual?.temporada || seasons?.[0]?.numero || 1);
+    const [episodio, setEpisodio] = useState21(progresoActual?.episodio || 1);
     const seasonInfo = seasons?.find((s) => s.numero === temporada);
     const maxEp = seasonInfo?.episodios || 99;
     const diasProximoEp = diasHasta(item.nextEpisodeDate);
@@ -11182,7 +11416,7 @@ ${item.link}`);
     const cineEstado = useCineEstadoMap();
     const estado = estadoEfectivo(cineEstado, item.guid);
     const inicial = vista.siguiente?.t ?? vista.temporadas[vista.temporadas.length - 1]?.n;
-    const [abiertas, setAbiertas] = useState20(() => new Set(inicial != null ? [inicial] : []));
+    const [abiertas, setAbiertas] = useState21(() => new Set(inicial != null ? [inicial] : []));
     const fuente = { fontFamily: "'DM Sans',sans-serif" };
     const diasProximo = vista.proximo?.fecha ? diasHasta(vista.proximo.fecha) : null;
     function actuar(fn) {
@@ -11248,7 +11482,7 @@ ${item.link}`);
   }
 
   // modules/vitrina/cine.jsx
-  var { useState: useState21, useEffect: useEffect18, useLayoutEffect: useLayoutEffect2, useRef: useRef16 } = React;
+  var { useState: useState22, useEffect: useEffect18, useLayoutEffect: useLayoutEffect2, useRef: useRef16 } = React;
   function loadImageForCanvas(url) {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -11416,8 +11650,8 @@ ${item.link}`);
     return /* @__PURE__ */ React.createElement("div", { style: { background: "#151515", borderRadius: 10, padding: "10px 12px", marginBottom: 8, borderLeft: `2px solid ${color}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" } }, label), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color, fontWeight: 700 } }, review.rating, "/10")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 } }, review.text), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 6 } }, "\u2014 ", review.author));
   }
   function MiniReviewForm({ onSave, onCancel, inicial }) {
-    const [ratingId, setRatingId] = useState21(inicial?.rating || null);
-    const [nota, setNota] = useState21(inicial?.nota || "");
+    const [ratingId, setRatingId] = useState22(inicial?.rating || null);
+    const [nota, setNota] = useState22(inicial?.nota || "");
     return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" } }, CINE_RATINGS.map((r) => /* @__PURE__ */ React.createElement("button", { key: r.id, onClick: () => setRatingId(r.id), style: {
       fontFamily: "'DM Sans',sans-serif",
       fontSize: 11,
@@ -11468,9 +11702,9 @@ ${item.link}`);
     useAvanceVersion();
     const estadoItem = cineEstado[item.guid];
     const estado = estadoEfectivo(cineEstado, item.guid);
-    const [reviewOpen, setReviewOpen] = useState21(false);
-    const [exportando, setExportando] = useState21(false);
-    const [exportMsg, setExportMsg] = useState21(null);
+    const [reviewOpen, setReviewOpen] = useState22(false);
+    const [exportando, setExportando] = useState22(false);
+    const [exportMsg, setExportMsg] = useState22(null);
     async function exportarImagen() {
       if (exportando) return;
       setExportando(true);
@@ -11547,10 +11781,10 @@ ${item.link}`);
     const CARD_W = 160;
     const GAP2 = 20;
     const ITEM_W = CARD_W + GAP2;
-    const [pos, setPos] = useState21(0);
-    const [k, setK] = useState21(1);
+    const [pos, setPos] = useState22(0);
+    const [k, setK] = useState22(1);
     const ESPACIADO = ITEM_W * (1 + (k - 1) * 0.5);
-    const [h0, setH0] = useState21(0);
+    const [h0, setH0] = useState22(0);
     const contRef = useRef16(null);
     const cardRef = useRef16(null);
     const posRef = useRef16(0);
@@ -11628,18 +11862,18 @@ ${item.link}`);
       [simklDiscoveryAll, itemGuidsEnCartelera, exemptGuids, categoria]
     );
     const fullItems = exemptExtra.length || simklExtra.length ? [...items, ...exemptExtra, ...simklExtra] : items;
-    const [sortBy, setSortBy] = useState21("default");
-    const [ocultarDescartadas, setOcultarDescartadas] = useState21(true);
-    const [ocultarVistas, setOcultarVistas] = useState21(true);
-    const [soloInteresa, setSoloInteresa] = useState21(false);
-    const [soloNovedades, setSoloNovedades] = useState21(false);
-    const [soloPendientes, setSoloPendientes] = useState21(false);
+    const [sortBy, setSortBy] = useState22("default");
+    const [ocultarDescartadas, setOcultarDescartadas] = useState22(true);
+    const [ocultarVistas, setOcultarVistas] = useState22(true);
+    const [soloInteresa, setSoloInteresa] = useState22(false);
+    const [soloNovedades, setSoloNovedades] = useState22(false);
+    const [soloPendientes, setSoloPendientes] = useState22(false);
     const puedePendientes = categoria === "Series" || categoria === "Animaci\xF3n";
     useEffect18(() => {
       setSoloPendientes(false);
     }, [categoria]);
-    const [soloEstrenos, setSoloEstrenos] = useState21(false);
-    const [ocultarTrending, setOcultarTrending] = useState21(false);
+    const [soloEstrenos, setSoloEstrenos] = useState22(false);
+    const [ocultarTrending, setOcultarTrending] = useState22(false);
     const esPelicula = categoria === "Pel\xEDculas";
     const sortedItems = React.useMemo(() => {
       let arr = fullItems;
@@ -11984,7 +12218,7 @@ Toco reintentar ahora.`);
   }
 
   // modules/vitrina/VitrinaPage.jsx
-  var { useState: useState22, useEffect: useEffect19, useRef: useRef17 } = React;
+  var { useState: useState23, useEffect: useEffect19, useRef: useRef17 } = React;
   var VITRINA_ICONS = { "Pel\xEDculas": "\u{1F3AC}", "Series": "\u{1F4FA}", "Animaci\xF3n": "\u26E9\uFE0F", "Microdocumentales": "\u{1F3A5}", "Melee": "\u{1F579}\uFE0F", "Conciertos": "\u{1F3AA}" };
   function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, generatedAt, aviso, cargando: cargando2 }) {
     const items = vitrinaData[vitrinaCat] || [];
@@ -12015,11 +12249,11 @@ Toco reintentar ahora.`);
     } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, aviso.texto), aviso.accion && /* @__PURE__ */ React.createElement("button", { onClick: aviso.accion.fn, style: { background: "transparent", border: "1px solid currentColor", color: "inherit", borderRadius: 14, padding: "3px 10px", fontSize: 11, cursor: "pointer" } }, aviso.accion.label)), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column" } }, !cargando2 && items.length === 0 && ["Microdocumentales", "Conciertos", "Melee"].includes(vitrinaCat) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#666", textAlign: "center", padding: "50px 20px" } }, "no hay \xEDtems en esta categor\xEDa por ahora"), vitrinaCat === "Microdocumentales" ? /* @__PURE__ */ React.createElement(ArchivedFeed, { items, storageKey: "angst-feed-microdocs-vistos-v1" }) : vitrinaCat === "Melee" ? /* @__PURE__ */ React.createElement(MeleeFeed, { items }) : vitrinaCat === "Conciertos" ? /* @__PURE__ */ React.createElement(ArchivedFeed, { items, storageKey: "angst-feed-conciertos-vistos-v1" }) : /* @__PURE__ */ React.createElement(CineCoverFlow, { items, onOpen, generatedAt, categoria: vitrinaCat })));
   }
   function VitrinaPage() {
-    const [vitrinaCat, setVitrinaCat] = useState22("Pel\xEDculas");
-    const [vitrinaData, setVitrinaData] = useState22({ "Pel\xEDculas": [], "Series": [], "Animaci\xF3n": [], "Microdocumentales": [], "Melee": [], "Conciertos": [] });
-    const [vitrinaOpenItem, setVitrinaOpenItem] = useState22(null);
-    const [generatedAt, setGeneratedAt] = useState22(null);
-    const [carga, setCarga] = useState22({ cargando: true, error: null, fuentes: null });
+    const [vitrinaCat, setVitrinaCat] = useState23("Pel\xEDculas");
+    const [vitrinaData, setVitrinaData] = useState23({ "Pel\xEDculas": [], "Series": [], "Animaci\xF3n": [], "Microdocumentales": [], "Melee": [], "Conciertos": [] });
+    const [vitrinaOpenItem, setVitrinaOpenItem] = useState23(null);
+    const [generatedAt, setGeneratedAt] = useState23(null);
+    const [carga, setCarga] = useState23({ cargando: true, error: null, fuentes: null });
     function cargar() {
       setCarga((c) => ({ ...c, cargando: true, error: null }));
       fetchVitrinaData().then(({ vitrina, fuentes, generatedAt: g }) => {
@@ -12069,7 +12303,7 @@ Toco reintentar ahora.`);
   var VitrinaPage_default = VitrinaPage;
 
   // core/App.jsx
-  var { useState: useState23, useEffect: useEffect20, useRef: useRef18, useMemo: useMemo8, useCallback: useCallback7 } = React;
+  var { useState: useState24, useEffect: useEffect20, useRef: useRef18, useMemo: useMemo9, useCallback: useCallback7 } = React;
   async function localGet(key) {
     const val = localStorage.getItem(key);
     if (val === null) return null;
@@ -12118,29 +12352,29 @@ Toco reintentar ahora.`);
     "el tiempo es el \xFAnico activo que no se recupera."
   ];
   function AngstApp() {
-    const [page, setPage] = useState23(0);
-    const [gastoOpen, setGastoOpen] = useState23(false);
-    const [dayData, setDayData] = useState23({});
-    const [weekOffset, setWeekOffset] = useState23(0);
-    const [budgets, setBudgets] = useState23({});
-    const [nutria, setNutria] = useState23(makeDefaultNutria());
-    const [fadimanData, setFadimanData] = useState23({});
+    const [page, setPage] = useState24(0);
+    const [gastoOpen, setGastoOpen] = useState24(false);
+    const [dayData, setDayData] = useState24({});
+    const [weekOffset, setWeekOffset] = useState24(0);
+    const [budgets, setBudgets] = useState24({});
+    const [nutria, setNutria] = useState24(makeDefaultNutria());
+    const [fadimanData, setFadimanData] = useState24({});
     const fadimanDataRef = useRef18({});
-    const [nutriLog, setNutriLog] = useState23({});
-    const [ejercicioLog, setEjercicioLog] = useState23({});
+    const [nutriLog, setNutriLog] = useState24({});
+    const [ejercicioLog, setEjercicioLog] = useState24({});
     const nutriLogRef = useRef18({});
-    const [customFoods, setCustomFoods] = useState23({});
+    const [customFoods, setCustomFoods] = useState24({});
     const customFoodsRef = useRef18({});
-    const [foodOverrides, setFoodOverrides] = useState23({});
+    const [foodOverrides, setFoodOverrides] = useState24({});
     const foodOverridesRef = useRef18({});
-    const [customEjercicios, setCustomEjercicios] = useState23({});
+    const [customEjercicios, setCustomEjercicios] = useState24({});
     const customEjerciciosRef = useRef18({});
     const ejercicioLogRef = useRef18({});
-    const [ejercicioDecks, setEjercicioDecks] = useState23([]);
+    const [ejercicioDecks, setEjercicioDecks] = useState24([]);
     const ejercicioDecksRef = useRef18([]);
-    const [calMarks, setCalMarks] = useState23({});
-    const [meleeMajors, setMeleeMajors] = useState23([]);
-    const [custody, setCustody] = useState23({ baseDate: "2026-04-28", withKids: true, overrides: {} });
+    const [calMarks, setCalMarks] = useState24({});
+    const [meleeMajors, setMeleeMajors] = useState24([]);
+    const [custody, setCustody] = useState24({ baseDate: "2026-04-28", withKids: true, overrides: {} });
     const POKEMON_EVENTS = [
       { name: "Lima Special Championships \u{1F1F5}\u{1F1EA}", start: "2026-05-23", end: "2026-05-24", url: "https://www.pokemon.com/us/play-pokemon/pokemon-events/find-a-pokemon-event/" },
       { name: "NAIC \u2014 North America Internationals \u{1F1FA}\u{1F1F8}", start: "2026-06-12", end: "2026-06-14", url: "https://www.pokemon.com/us/play-pokemon/pokemon-events/find-a-pokemon-event/" },
@@ -12151,22 +12385,22 @@ Toco reintentar ahora.`);
     const SC2_EVENTS = [
       { name: "BlizzCon \u2014 Blizzard Classic Cup (SC2) \u{1F3AE}", start: "2026-09-12", end: "2026-09-13", url: "https://blizzcon.com" }
     ];
-    const [editingTask, setEditingTask] = useState23(null);
-    const [editText, setEditText] = useState23("");
-    const [clockOpen, setClockOpen] = useState23(null);
-    const [notifClockOpen, setNotifClockOpen] = useState23(null);
-    const [calOpen, setCalOpen] = useState23(false);
-    const [minimized, setMinimized] = useState23({});
-    const [loaded, setLoaded] = useState23(false);
-    const [notifGranted, setNotifGranted] = useState23(false);
-    const [saved, setSaved] = useState23(false);
-    const [footerIdx, setFooterIdx] = useState23(() => Math.floor(Math.random() * STOIC_PHRASES.length));
-    const [exportOk, setExportOk] = useState23(null);
-    const [loadMsg, setLoadMsg] = useState23(null);
+    const [editingTask, setEditingTask] = useState24(null);
+    const [editText, setEditText] = useState24("");
+    const [clockOpen, setClockOpen] = useState24(null);
+    const [notifClockOpen, setNotifClockOpen] = useState24(null);
+    const [calOpen, setCalOpen] = useState24(false);
+    const [minimized, setMinimized] = useState24({});
+    const [loaded, setLoaded] = useState24(false);
+    const [notifGranted, setNotifGranted] = useState24(false);
+    const [saved, setSaved] = useState24(false);
+    const [footerIdx, setFooterIdx] = useState24(() => Math.floor(Math.random() * STOIC_PHRASES.length));
+    const [exportOk, setExportOk] = useState24(null);
+    const [loadMsg, setLoadMsg] = useState24(null);
     const PODCAST_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
     const PODCAST_AUTH_KEY = "angst-simkl-auth-v1";
-    const [podcastLatest, setPodcastLatest] = useState23(null);
-    const [podcastDispatched, setPodcastDispatched] = useState23(() => {
+    const [podcastLatest, setPodcastLatest] = useState24(null);
+    const [podcastDispatched, setPodcastDispatched] = useState24(() => {
       try {
         const v = localStorage.getItem("angst-podcast-dispatched-v1");
         return v ? JSON.parse(v) : [];
@@ -12174,16 +12408,16 @@ Toco reintentar ahora.`);
         return [];
       }
     });
-    const [nowPlaying, setNowPlaying] = useState23(null);
-    const [podcastMenuOpen, setPodcastMenuOpen] = useState23(false);
-    const [activeShowIdx, setActiveShowIdx] = useState23(0);
-    const [podcastPlaying, setPodcastPlaying] = useState23(false);
-    const [podcastProgress, setPodcastProgress] = useState23({ current: 0, duration: 0 });
-    const [newPodcastNombre, setNewPodcastNombre] = useState23("");
-    const [newPodcastUrl, setNewPodcastUrl] = useState23("");
-    const [addPodcastBusy, setAddPodcastBusy] = useState23(false);
-    const [addPodcastMsg, setAddPodcastMsg] = useState23(null);
-    const [playerPos, setPlayerPos] = useState23(() => {
+    const [nowPlaying, setNowPlaying] = useState24(null);
+    const [podcastMenuOpen, setPodcastMenuOpen] = useState24(false);
+    const [activeShowIdx, setActiveShowIdx] = useState24(0);
+    const [podcastPlaying, setPodcastPlaying] = useState24(false);
+    const [podcastProgress, setPodcastProgress] = useState24({ current: 0, duration: 0 });
+    const [newPodcastNombre, setNewPodcastNombre] = useState24("");
+    const [newPodcastUrl, setNewPodcastUrl] = useState24("");
+    const [addPodcastBusy, setAddPodcastBusy] = useState24(false);
+    const [addPodcastMsg, setAddPodcastMsg] = useState24(null);
+    const [playerPos, setPlayerPos] = useState24(() => {
       try {
         const v = localStorage.getItem("angst-podcast-player-pos-v1");
         if (v) return JSON.parse(v);
@@ -12416,33 +12650,33 @@ Toco reintentar ahora.`);
     const routinesRef = useRef18([]);
     const recurringRef = useRef18([]);
     const lastRolloverRef = useRef18(null);
-    const [routines, setRoutines] = useState23([]);
-    const [recurring, setRecurring] = useState23([]);
-    const [lastRollover, setLastRollover] = useState23(null);
-    const [cookingOpts, setCookingOpts] = useState23([...DEFAULT_COOKING_OPTS]);
-    const [aseoOpts, setAseoOpts] = useState23([...DEFAULT_ASEO_OPTS]);
-    const [comprasOpen, setComprasOpen] = useState23(null);
-    const [searchOpen, setSearchOpen] = useState23(false);
-    const [scheduleOpen, setScheduleOpen] = useState23(null);
-    const [liftedTask, setLiftedTask] = useState23(null);
-    const [taskDragTarget, setTaskDragTarget] = useState23(null);
+    const [routines, setRoutines] = useState24([]);
+    const [recurring, setRecurring] = useState24([]);
+    const [lastRollover, setLastRollover] = useState24(null);
+    const [cookingOpts, setCookingOpts] = useState24([...DEFAULT_COOKING_OPTS]);
+    const [aseoOpts, setAseoOpts] = useState24([...DEFAULT_ASEO_OPTS]);
+    const [comprasOpen, setComprasOpen] = useState24(null);
+    const [searchOpen, setSearchOpen] = useState24(false);
+    const [scheduleOpen, setScheduleOpen] = useState24(null);
+    const [liftedTask, setLiftedTask] = useState24(null);
+    const [taskDragTarget, setTaskDragTarget] = useState24(null);
     const holdTimerRef = useRef18(null);
     const taskTouchX = useRef18(0);
     const taskTouchY = useRef18(0);
-    const [openFMenu, setOpenFMenu] = useState23(null);
-    const [kidsHealth, setKidsHealth] = useState23(emptyKidsHealth);
+    const [openFMenu, setOpenFMenu] = useState24(null);
+    const [kidsHealth, setKidsHealth] = useState24(emptyKidsHealth);
     const kidsHealthRef = useRef18(null);
     if (kidsHealthRef.current === null) kidsHealthRef.current = emptyKidsHealth();
-    const [pokeInventario, setPokeInventario] = useState23([]);
+    const [pokeInventario, setPokeInventario] = useState24([]);
     const pokeInventarioRef = useRef18([]);
-    const [pokeCarpetas, setPokeCarpetas] = useState23([...CARPETAS_DEFAULT]);
+    const [pokeCarpetas, setPokeCarpetas] = useState24([...CARPETAS_DEFAULT]);
     const pokeCarpetasRef = useRef18([...CARPETAS_DEFAULT]);
-    const [pokeDarkCatalogo, setPokeDarkCatalogo] = useState23([]);
+    const [pokeDarkCatalogo, setPokeDarkCatalogo] = useState24([]);
     const pokeDarkCatalogoRef = useRef18([]);
-    const [pokePriceCache, setPokePriceCache] = useState23({});
+    const [pokePriceCache, setPokePriceCache] = useState24({});
     const pokePriceCacheRef = useRef18({});
     const TCG_KEY_STORAGE = "angst-tcg-price-key";
-    const [pokeApiKey, setPokeApiKey] = useState23(() => {
+    const [pokeApiKey, setPokeApiKey] = useState24(() => {
       try {
         return localStorage.getItem(TCG_KEY_STORAGE) || "";
       } catch (e) {
@@ -12456,13 +12690,13 @@ Toco reintentar ahora.`);
       }
       setPokeApiKey(k);
     }
-    const [nutriDecks, setNutriDecks] = useState23([]);
+    const [nutriDecks, setNutriDecks] = useState24([]);
     const nutriDecksRef = useRef18([]);
     const ANGST_STATE_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
     const ANGST_STATE_AUTH_KEY = "angst-simkl-auth-v1";
     const ANGST_STATE_PATH = "angst-full-state.json";
     const ANGST_STATE_BRANCH = "state-sync";
-    const [stateSyncMsg, setStateSyncMsg] = useState23(null);
+    const [stateSyncMsg, setStateSyncMsg] = useState24(null);
     function markLocalEdit() {
       marcarEdicionLocal();
     }
