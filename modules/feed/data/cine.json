@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-19T07:24:57.308Z",
+  "generatedAt": "2026-10-19T16:50:28.955Z",
   "categories": [
     {
       "cat": "Películas",
@@ -167,87 +167,6 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1101412",
-          "title": "Fall 2: Deadpoint",
-          "link": "https://www.themoviedb.org/movie/1101412",
-          "summary": "Tras la muerte de su intrépida hermana Shiloh, Jax emprende una peligrosa escalada con una vieja amiga para honrar su memoria. Mientras caminan sobre la cuerda floja por los peligrosos tablones del monte Kwan, en Tailandia, un aterrador desprendimiento de rocas las deja varadas a 1.500 metros de altura. En medio de vértigos, verdades oscuras y giros crueles, Jax debe enfrentarse a sus miedos más profundos para luchar por la supervivencia.",
-          "image": "https://image.tmdb.org/t/p/w500/7ODJFeX9gp4QfK6aFItw4CCrPfr.jpg",
-          "pubDate": "2026-09-01",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-02T08:02:33.479Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 5.7,
-            "rt": 55,
-            "metascore": 53,
-            "tmdb": 6.1
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "Krs0VDIjhmE",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Harriet Slater",
-              "character": "Jax Hunter",
-              "order": 0
-            },
-            {
-              "name": "Arsema Thomas",
-              "character": "Luce",
-              "order": 1
-            },
-            {
-              "name": "Tom Brittney",
-              "character": "Jon Platt",
-              "order": 2
-            },
-            {
-              "name": "Virginia Gardner",
-              "character": "Shiloh Hunter",
-              "order": 3
-            },
-            {
-              "name": "สหจักร บุญธนกิจ",
-              "character": "Thai Barman",
-              "order": 4
-            },
-            {
-              "name": "Korakod Yensuk",
-              "character": "Large Woman",
-              "order": 5
-            },
-            {
-              "name": "Jordan Coleman",
-              "character": "Luce",
-              "order": 6
-            },
-            {
-              "name": "Maryna Bennett",
-              "character": "Female Teenager",
-              "order": 7
-            },
-            {
-              "name": "Noen Perez",
-              "character": "Male Teenager",
-              "order": 8
-            },
-            {
-              "name": "Nattapon Sukphiam",
-              "character": "Thai Climber 1",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
           "guid": "tmdb-movie-1153576",
           "title": "Street Fighter",
           "link": "https://www.themoviedb.org/movie/1153576",
@@ -327,6 +246,87 @@
             }
           ],
           "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1101412",
+          "title": "Fall 2: Deadpoint",
+          "link": "https://www.themoviedb.org/movie/1101412",
+          "summary": "Tras la muerte de su intrépida hermana Shiloh, Jax emprende una peligrosa escalada con una vieja amiga para honrar su memoria. Mientras caminan sobre la cuerda floja por los peligrosos tablones del monte Kwan, en Tailandia, un aterrador desprendimiento de rocas las deja varadas a 1.500 metros de altura. En medio de vértigos, verdades oscuras y giros crueles, Jax debe enfrentarse a sus miedos más profundos para luchar por la supervivencia.",
+          "image": "https://image.tmdb.org/t/p/w500/7ODJFeX9gp4QfK6aFItw4CCrPfr.jpg",
+          "pubDate": "2026-09-01",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-02T08:02:33.479Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 5.7,
+            "rt": 55,
+            "metascore": 53,
+            "tmdb": 6.1
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "Krs0VDIjhmE",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Harriet Slater",
+              "character": "Jax Hunter",
+              "order": 0
+            },
+            {
+              "name": "Arsema Thomas",
+              "character": "Luce",
+              "order": 1
+            },
+            {
+              "name": "Tom Brittney",
+              "character": "Jon Platt",
+              "order": 2
+            },
+            {
+              "name": "Virginia Gardner",
+              "character": "Shiloh Hunter",
+              "order": 3
+            },
+            {
+              "name": "สหจักร บุญธนกิจ",
+              "character": "Thai Barman",
+              "order": 4
+            },
+            {
+              "name": "Korakod Yensuk",
+              "character": "Large Woman",
+              "order": 5
+            },
+            {
+              "name": "Jordan Coleman",
+              "character": "Luce",
+              "order": 6
+            },
+            {
+              "name": "Maryna Bennett",
+              "character": "Female Teenager",
+              "order": 7
+            },
+            {
+              "name": "Noen Perez",
+              "character": "Male Teenager",
+              "order": 8
+            },
+            {
+              "name": "Nattapon Sukphiam",
+              "character": "Thai Climber 1",
+              "order": 9
+            }
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1302904",
@@ -486,6 +486,87 @@
               "name": "Millie Wood",
               "character": "Little Girl",
               "order": 9
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-movie-1255833",
+          "title": "Whalefall",
+          "link": "https://www.themoviedb.org/movie/1255833",
+          "summary": "Tras la muerte de su padre, Jay Gardiner se sumerge en la costa central de California en busca de sus restos, pero es tragado por una ballena. Atrapado en su interior con solo una hora de oxígeno restante, Jay se da cuenta de que las lecciones que su padre le enseñó pueden ser la clave para escapar.",
+          "image": "https://image.tmdb.org/t/p/w500/jmGVSLOrH9IxtcffbldrEHX4IfB.jpg",
+          "pubDate": "2026-10-14",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-15T00:19:09.402Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.8
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "Dw-5ZGapGTQ",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Austin Abrams",
+              "character": "Jay Gardiner",
+              "order": 0
+            },
+            {
+              "name": "Josh Brolin",
+              "character": "Mitt Gardiner",
+              "order": 1
+            },
+            {
+              "name": "Elisabeth Shue",
+              "character": "Zara Gardiner",
+              "order": 2
+            },
+            {
+              "name": "John Ortiz",
+              "character": "Hewey",
+              "order": 3
+            },
+            {
+              "name": "Jane Levy",
+              "character": "Eva Gardiner",
+              "order": 4
+            },
+            {
+              "name": "Emily Rudd",
+              "character": "Nan Gardiner",
+              "order": 5
+            },
+            {
+              "name": "Kamy D. Bruder",
+              "character": "Whale Watcher Man",
+              "order": 6
+            },
+            {
+              "name": "Sam Franich",
+              "character": "Jay at 10",
+              "order": 8
+            },
+            {
+              "name": "Nicholas Gould",
+              "character": "US Coast Guard Petty Officer Third Class Whaley",
+              "order": 9
+            },
+            {
+              "name": "Laurel Lane Bowen",
+              "character": "Cafe Patron",
+              "order": 10
             }
           ],
           "trending": true
@@ -653,20 +734,258 @@
           "trending": false
         },
         {
-          "guid": "tmdb-movie-1255833",
-          "title": "Whalefall",
-          "link": "https://www.themoviedb.org/movie/1255833",
-          "summary": "Tras la muerte de su padre, Jay Gardiner se sumerge en la costa central de California en busca de sus restos, pero es tragado por una ballena. Atrapado en su interior con solo una hora de oxígeno restante, Jay se da cuenta de que las lecciones que su padre le enseñó pueden ser la clave para escapar.",
-          "image": "https://image.tmdb.org/t/p/w500/jmGVSLOrH9IxtcffbldrEHX4IfB.jpg",
-          "pubDate": "2026-10-14",
+          "guid": "tmdb-movie-1561726",
+          "title": "Masterplan",
+          "link": "https://www.themoviedb.org/movie/1561726",
+          "summary": "Un legendario ladrón se propone robar la Mona Lisa y recluta a dos jóvenes para que le ayuden: Chiara, una experta en cibercrimen italiana, y Jay, un especialista en explosivos francés. Más tarde, les confiesa que es el padre de ambos. Tras una caótica reunión, los miembros de esta nueva familia deben aprender a trabajar juntos y a no matarse entre ellos para completar con éxito el robo del siglo.",
+          "image": "https://image.tmdb.org/t/p/w500/pLLvKhqTngUispTyDofvoEDKrxa.jpg",
+          "pubDate": "2026-10-16",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-10-15T00:19:09.402Z",
+          "firstSeenAt": "2026-10-16T14:36:51.506Z",
           "fullText": null,
           "rating": {
             "imdb": null,
             "rt": null,
             "metascore": null,
+            "tmdb": 7.1
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "gc0t8AfMP6k",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Stanley Tucci",
+              "character": "Roger",
+              "order": 0
+            },
+            {
+              "name": "Simona Tabasco",
+              "character": "Chiara",
+              "order": 1
+            },
+            {
+              "name": "Victor Belmondo",
+              "character": "Jay",
+              "order": 2
+            },
+            {
+              "name": "Eliott Margueron",
+              "character": "",
+              "order": 3
+            },
+            {
+              "name": "Bruno Bilotta",
+              "character": "Scary Big Roman",
+              "order": 4
+            },
+            {
+              "name": "Barbara Lo Gaglio",
+              "character": "Professor",
+              "order": 5
+            },
+            {
+              "name": "Etienne Guillou-Kervern",
+              "character": "French Spook Officer",
+              "order": 6
+            },
+            {
+              "name": "Srbo Markovic",
+              "character": "Bruno's Bodyguard",
+              "order": 7
+            },
+            {
+              "name": "Julia Messina",
+              "character": "TV Reporter",
+              "order": 8
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1400940",
+          "title": "Clayface",
+          "link": "https://www.themoviedb.org/movie/1400940",
+          "summary": "Una criatura cambiante hecha de arcilla mágica acecha Ciudad Gótica, alternando entre villano y aliado de Batman. Varias figuras trágicas han asumido el manto de Cara de Barro a lo largo de los años.",
+          "image": "https://image.tmdb.org/t/p/w500/6ihSDJlBNcvoTWzSA0jonZyOXTs.jpg",
+          "pubDate": "2026-10-21",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-09-19T20:10:41.997Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "f7jlCqdtwdM",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Rhys Harries",
+              "character": "Matt Hagen / Clayface",
+              "order": 0
+            },
+            {
+              "name": "Naomi Ackie",
+              "character": "Caitlyn Corr",
+              "order": 1
+            },
+            {
+              "name": "Eddie Marsan",
+              "character": "",
+              "order": 2
+            },
+            {
+              "name": "Max Minghella",
+              "character": "John Borrelli",
+              "order": 3
+            },
+            {
+              "name": "David Dencik",
+              "character": "",
+              "order": 4
+            },
+            {
+              "name": "Francesca Corney",
+              "character": "",
+              "order": 5
+            },
+            {
+              "name": "Ruby Sear",
+              "character": "Theresa",
+              "order": 6
+            },
+            {
+              "name": "Wil Coban",
+              "character": "Bones",
+              "order": 7
+            },
+            {
+              "name": "Joshua James",
+              "character": "Corey Bowery",
+              "order": 8
+            },
+            {
+              "name": "Jake Curran",
+              "character": "Patches",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1198654",
+          "title": "Malas manzanas",
+          "link": "https://www.themoviedb.org/movie/1198654",
+          "summary": "Una maestra de primaria con dificultades empieza a tomar decisiones cuestionables después de que uno de sus alumnos resulta herido.",
+          "image": "https://image.tmdb.org/t/p/w500/kFQaT7NuZvLx7hFmPhigaTedOOB.jpg",
+          "pubDate": "2026-09-10",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-19T16:50:27.974Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.2,
+            "rt": 84,
+            "metascore": 65,
+            "tmdb": 7.2
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "4nhu80EmVQE",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Saoirse Ronan",
+              "character": "Maria",
+              "order": 0
+            },
+            {
+              "name": "Eddie Waller",
+              "character": "Danny",
+              "order": 1
+            },
+            {
+              "name": "Nia Brown",
+              "character": "Pauline",
+              "order": 2
+            },
+            {
+              "name": "Jacob Anderson",
+              "character": "Sam",
+              "order": 3
+            },
+            {
+              "name": "Rakie Ayola",
+              "character": "Sylvia",
+              "order": 4
+            },
+            {
+              "name": "Sean Gilder",
+              "character": "Frank",
+              "order": 5
+            },
+            {
+              "name": "Robert Emms",
+              "character": "Josh",
+              "order": 6
+            },
+            {
+              "name": "Kerry Howard",
+              "character": "PC Williams",
+              "order": 7
+            },
+            {
+              "name": "Jaye Jacobs",
+              "character": "Khaliya's Mum",
+              "order": 8
+            },
+            {
+              "name": "Joanna van Kampen",
+              "character": "Carys's Mum",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1288069",
+          "title": "Tenzing",
+          "link": "https://www.themoviedb.org/movie/1288069",
+          "summary": "Un hombre se embarca en una arriesgada expedición para, contra todo pronóstico, intentar cumplir el sueño de ser el primero en alcanzar la cima del Everest.",
+          "image": "https://image.tmdb.org/t/p/w500/5i3qw2aDNQP6SWl2hNQaiIoUYHE.jpg",
+          "pubDate": "2026-10-09",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-16T14:36:51.400Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.7,
+            "rt": 95,
+            "metascore": 67,
             "tmdb": 6.7
           },
           "status": "Released",
@@ -676,108 +995,42 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "Dw-5ZGapGTQ",
+            "key": "KkYCY5YR12U",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Austin Abrams",
-              "character": "Jay Gardiner",
+              "name": "更登彭措",
+              "character": "Tenzing Norgay",
               "order": 0
             },
             {
-              "name": "Josh Brolin",
-              "character": "Mitt Gardiner",
+              "name": "Tom Hiddleston",
+              "character": "Sir Edmund Hillary",
               "order": 1
             },
             {
-              "name": "Elisabeth Shue",
-              "character": "Zara Gardiner",
+              "name": "Willem Dafoe",
+              "character": "Colonel John Hunt",
               "order": 2
             },
             {
-              "name": "John Ortiz",
-              "character": "Hewey",
+              "name": "Caitríona Balfe",
+              "character": "Jill Henderson",
               "order": 3
             },
             {
-              "name": "Jane Levy",
-              "character": "Eva Gardiner",
+              "name": "Thinley Lhamo",
+              "character": "Dawa Norgay",
               "order": 4
             },
             {
-              "name": "Emily Rudd",
-              "character": "Nan Gardiner",
+              "name": "Tenzing Dalha",
+              "character": "Young Tenzing",
               "order": 5
-            },
-            {
-              "name": "Kamy D. Bruder",
-              "character": "Whale Watcher Man",
-              "order": 6
-            },
-            {
-              "name": "Sam Franich",
-              "character": "Jay at 10",
-              "order": 8
-            },
-            {
-              "name": "Nicholas Gould",
-              "character": "US Coast Guard Petty Officer Third Class Whaley",
-              "order": 9
-            },
-            {
-              "name": "Laurel Lane Bowen",
-              "character": "Cafe Patron",
-              "order": 10
             }
           ],
           "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1263337",
-          "title": "En el corazón de la bestia",
-          "link": "https://www.themoviedb.org/movie/1263337",
-          "summary": "Tras sobrevivir a un brutal accidente aéreo, el oficial de las Fuerzas Especiales James Belmont y su perro de combate Odín intentan intentarán regresar a la civilización desde un remoto lugar en medio de los parajes salvajes de Alaska.",
-          "image": "https://image.tmdb.org/t/p/w500/h9Ql2vsltCOuf44c28nInxjzL2m.jpg",
-          "pubDate": "2026-09-19",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-19T13:43:53.697Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.5,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.8
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "UkMuGKqAux4",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Brad Pitt",
-              "character": "James Belmont",
-              "order": 0
-            },
-            {
-              "name": "J.K. Simmons",
-              "character": "Walter Boone",
-              "order": 1
-            },
-            {
-              "name": "Anna Lambe",
-              "character": "",
-              "order": 2
-            }
-          ],
-          "trending": false
         },
         {
           "guid": "tmdb-movie-969681",
@@ -856,143 +1109,6 @@
               "name": "Marisa Tomei",
               "character": "May Parker",
               "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1288069",
-          "title": "Tenzing",
-          "link": "https://www.themoviedb.org/movie/1288069",
-          "summary": "Un hombre se embarca en una arriesgada expedición para, contra todo pronóstico, intentar cumplir el sueño de ser el primero en alcanzar la cima del Everest.",
-          "image": "https://image.tmdb.org/t/p/w500/5i3qw2aDNQP6SWl2hNQaiIoUYHE.jpg",
-          "pubDate": "2026-10-09",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-16T14:36:51.400Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.7,
-            "rt": 95,
-            "metascore": 67,
-            "tmdb": 6.7
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "KkYCY5YR12U",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "更登彭措",
-              "character": "Tenzing Norgay",
-              "order": 0
-            },
-            {
-              "name": "Tom Hiddleston",
-              "character": "Sir Edmund Hillary",
-              "order": 1
-            },
-            {
-              "name": "Willem Dafoe",
-              "character": "Colonel John Hunt",
-              "order": 2
-            },
-            {
-              "name": "Caitríona Balfe",
-              "character": "Jill Henderson",
-              "order": 3
-            },
-            {
-              "name": "Thinley Lhamo",
-              "character": "Dawa Norgay",
-              "order": 4
-            },
-            {
-              "name": "Tenzing Dalha",
-              "character": "Young Tenzing",
-              "order": 5
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1561726",
-          "title": "Masterplan",
-          "link": "https://www.themoviedb.org/movie/1561726",
-          "summary": "Un legendario ladrón se propone robar la Mona Lisa y recluta a dos jóvenes para que le ayuden: Chiara, una experta en cibercrimen italiana, y Jay, un especialista en explosivos francés. Más tarde, les confiesa que es el padre de ambos. Tras una caótica reunión, los miembros de esta nueva familia deben aprender a trabajar juntos y a no matarse entre ellos para completar con éxito el robo del siglo.",
-          "image": "https://image.tmdb.org/t/p/w500/pLLvKhqTngUispTyDofvoEDKrxa.jpg",
-          "pubDate": "2026-10-16",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-16T14:36:51.506Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.1
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "gc0t8AfMP6k",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Stanley Tucci",
-              "character": "Roger",
-              "order": 0
-            },
-            {
-              "name": "Simona Tabasco",
-              "character": "Chiara",
-              "order": 1
-            },
-            {
-              "name": "Victor Belmondo",
-              "character": "Jay",
-              "order": 2
-            },
-            {
-              "name": "Eliott Margueron",
-              "character": "",
-              "order": 3
-            },
-            {
-              "name": "Bruno Bilotta",
-              "character": "Scary Big Roman",
-              "order": 4
-            },
-            {
-              "name": "Barbara Lo Gaglio",
-              "character": "Professor",
-              "order": 5
-            },
-            {
-              "name": "Etienne Guillou-Kervern",
-              "character": "French Spook Officer",
-              "order": 6
-            },
-            {
-              "name": "Srbo Markovic",
-              "character": "Bruno's Bodyguard",
-              "order": 7
-            },
-            {
-              "name": "Julia Messina",
-              "character": "TV Reporter",
-              "order": 8
             }
           ],
           "trending": true
@@ -1157,7 +1273,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1148365",
@@ -1238,7 +1354,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1377237",
@@ -1319,88 +1435,7 @@
               "order": 9
             }
           ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1400940",
-          "title": "Clayface",
-          "link": "https://www.themoviedb.org/movie/1400940",
-          "summary": "Una criatura cambiante hecha de arcilla mágica acecha Ciudad Gótica, alternando entre villano y aliado de Batman. Varias figuras trágicas han asumido el manto de Cara de Barro a lo largo de los años.",
-          "image": "https://image.tmdb.org/t/p/w500/6ihSDJlBNcvoTWzSA0jonZyOXTs.jpg",
-          "pubDate": "2026-10-21",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-09-19T20:10:41.997Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.3
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "f7jlCqdtwdM",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Tom Rhys Harries",
-              "character": "Matt Hagen / Clayface",
-              "order": 0
-            },
-            {
-              "name": "Naomi Ackie",
-              "character": "Caitlyn Corr",
-              "order": 1
-            },
-            {
-              "name": "Eddie Marsan",
-              "character": "",
-              "order": 2
-            },
-            {
-              "name": "Max Minghella",
-              "character": "John Borrelli",
-              "order": 3
-            },
-            {
-              "name": "David Dencik",
-              "character": "",
-              "order": 4
-            },
-            {
-              "name": "Francesca Corney",
-              "character": "",
-              "order": 5
-            },
-            {
-              "name": "Ruby Sear",
-              "character": "Theresa",
-              "order": 6
-            },
-            {
-              "name": "Wil Coban",
-              "character": "Bones",
-              "order": 7
-            },
-            {
-              "name": "Joshua James",
-              "character": "Corey Bowery",
-              "order": 8
-            },
-            {
-              "name": "Jake Curran",
-              "character": "Patches",
-              "order": 9
-            }
-          ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1248832",
@@ -3811,6 +3846,212 @@
           ]
         },
         {
+          "guid": "tmdb-tv-2734",
+          "title": "Ley y orden: Unidad de Víctimas Especiales",
+          "link": "https://www.themoviedb.org/tv/2734",
+          "summary": "‘Ley y Orden: Unidad de Víctimas Especiales’ es una serie de televisión estadounidense grabada en Nueva York donde es también principalmente producida. Con el estilo de la original ‘Ley y Orden’ los episodios son usualmente \"sacados de los titulares\" o basados libremente en verdaderos asesinatos que han recibido la atención de los medios.",
+          "image": "https://image.tmdb.org/t/p/w500/kvo558UKEhp8v3JoRGCSIx3Xxab.jpg",
+          "pubDate": "1999-09-20",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-10-01T16:55:04.382Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.1,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-08",
+          "numberOfSeasons": 28,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 22,
+              "fechaEstreno": "1999-09-20"
+            },
+            {
+              "numero": 2,
+              "episodios": 21,
+              "fechaEstreno": "2000-10-20"
+            },
+            {
+              "numero": 3,
+              "episodios": 23,
+              "fechaEstreno": "2001-09-28"
+            },
+            {
+              "numero": 4,
+              "episodios": 25,
+              "fechaEstreno": "2002-09-27"
+            },
+            {
+              "numero": 5,
+              "episodios": 25,
+              "fechaEstreno": "2003-09-23"
+            },
+            {
+              "numero": 6,
+              "episodios": 23,
+              "fechaEstreno": "2004-09-21"
+            },
+            {
+              "numero": 7,
+              "episodios": 22,
+              "fechaEstreno": "2005-09-20"
+            },
+            {
+              "numero": 8,
+              "episodios": 22,
+              "fechaEstreno": "2006-09-19"
+            },
+            {
+              "numero": 9,
+              "episodios": 19,
+              "fechaEstreno": "2007-09-25"
+            },
+            {
+              "numero": 10,
+              "episodios": 22,
+              "fechaEstreno": "2008-09-22"
+            },
+            {
+              "numero": 11,
+              "episodios": 24,
+              "fechaEstreno": "2009-09-23"
+            },
+            {
+              "numero": 12,
+              "episodios": 24,
+              "fechaEstreno": "2010-09-22"
+            },
+            {
+              "numero": 13,
+              "episodios": 23,
+              "fechaEstreno": "2011-09-21"
+            },
+            {
+              "numero": 14,
+              "episodios": 24,
+              "fechaEstreno": "2012-09-26"
+            },
+            {
+              "numero": 15,
+              "episodios": 24,
+              "fechaEstreno": "2013-09-25"
+            },
+            {
+              "numero": 16,
+              "episodios": 23,
+              "fechaEstreno": "2014-09-24"
+            },
+            {
+              "numero": 17,
+              "episodios": 23,
+              "fechaEstreno": "2015-09-23"
+            },
+            {
+              "numero": 18,
+              "episodios": 21,
+              "fechaEstreno": "2016-09-21"
+            },
+            {
+              "numero": 19,
+              "episodios": 24,
+              "fechaEstreno": "2017-09-27"
+            },
+            {
+              "numero": 20,
+              "episodios": 24,
+              "fechaEstreno": "2018-09-27"
+            },
+            {
+              "numero": 21,
+              "episodios": 20,
+              "fechaEstreno": "2019-09-26"
+            },
+            {
+              "numero": 22,
+              "episodios": 16,
+              "fechaEstreno": "2020-11-12"
+            },
+            {
+              "numero": 23,
+              "episodios": 22,
+              "fechaEstreno": "2021-09-23"
+            },
+            {
+              "numero": 24,
+              "episodios": 22,
+              "fechaEstreno": "2022-09-22"
+            },
+            {
+              "numero": 25,
+              "episodios": 13,
+              "fechaEstreno": "2024-01-18"
+            },
+            {
+              "numero": 26,
+              "episodios": 22,
+              "fechaEstreno": "2024-10-03"
+            },
+            {
+              "numero": 27,
+              "episodios": 21,
+              "fechaEstreno": "2025-09-25"
+            },
+            {
+              "numero": 28,
+              "episodios": 4,
+              "fechaEstreno": "2026-10-08"
+            }
+          ],
+          "currentSeason": 27,
+          "reviews": null,
+          "trailer": {
+            "key": "MhGI_1DIhxw",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Mariska Hargitay",
+              "character": "Olivia Benson",
+              "order": 0
+            },
+            {
+              "name": "Ice-T",
+              "character": "Odafin 'Fin' Tutuola",
+              "order": 1
+            },
+            {
+              "name": "Kelli Giddish",
+              "character": "Amanda Rollins",
+              "order": 4
+            },
+            {
+              "name": "Peter Scanavino",
+              "character": "Dominick 'Sonny' Carisi Jr.",
+              "order": 6
+            },
+            {
+              "name": "Aimé Donna Kelly",
+              "character": "Renee Curry",
+              "order": 7
+            },
+            {
+              "name": "Kevin Kane",
+              "character": "Terry Bruno",
+              "order": 8
+            },
+            {
+              "name": "Corey Cott",
+              "character": "Jake Griffin",
+              "order": 25
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-549",
           "title": "Ley y orden",
           "link": "https://www.themoviedb.org/tv/549",
@@ -4079,212 +4320,6 @@
               "name": "강개리",
               "character": "Self – Former Member",
               "order": 10
-            }
-          ]
-        },
-        {
-          "guid": "tmdb-tv-2734",
-          "title": "Ley y orden: Unidad de Víctimas Especiales",
-          "link": "https://www.themoviedb.org/tv/2734",
-          "summary": "‘Ley y Orden: Unidad de Víctimas Especiales’ es una serie de televisión estadounidense grabada en Nueva York donde es también principalmente producida. Con el estilo de la original ‘Ley y Orden’ los episodios son usualmente \"sacados de los titulares\" o basados libremente en verdaderos asesinatos que han recibido la atención de los medios.",
-          "image": "https://image.tmdb.org/t/p/w500/kvo558UKEhp8v3JoRGCSIx3Xxab.jpg",
-          "pubDate": "1999-09-20",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-10-01T16:55:04.382Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.1,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-08",
-          "numberOfSeasons": 28,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 22,
-              "fechaEstreno": "1999-09-20"
-            },
-            {
-              "numero": 2,
-              "episodios": 21,
-              "fechaEstreno": "2000-10-20"
-            },
-            {
-              "numero": 3,
-              "episodios": 23,
-              "fechaEstreno": "2001-09-28"
-            },
-            {
-              "numero": 4,
-              "episodios": 25,
-              "fechaEstreno": "2002-09-27"
-            },
-            {
-              "numero": 5,
-              "episodios": 25,
-              "fechaEstreno": "2003-09-23"
-            },
-            {
-              "numero": 6,
-              "episodios": 23,
-              "fechaEstreno": "2004-09-21"
-            },
-            {
-              "numero": 7,
-              "episodios": 22,
-              "fechaEstreno": "2005-09-20"
-            },
-            {
-              "numero": 8,
-              "episodios": 22,
-              "fechaEstreno": "2006-09-19"
-            },
-            {
-              "numero": 9,
-              "episodios": 19,
-              "fechaEstreno": "2007-09-25"
-            },
-            {
-              "numero": 10,
-              "episodios": 22,
-              "fechaEstreno": "2008-09-22"
-            },
-            {
-              "numero": 11,
-              "episodios": 24,
-              "fechaEstreno": "2009-09-23"
-            },
-            {
-              "numero": 12,
-              "episodios": 24,
-              "fechaEstreno": "2010-09-22"
-            },
-            {
-              "numero": 13,
-              "episodios": 23,
-              "fechaEstreno": "2011-09-21"
-            },
-            {
-              "numero": 14,
-              "episodios": 24,
-              "fechaEstreno": "2012-09-26"
-            },
-            {
-              "numero": 15,
-              "episodios": 24,
-              "fechaEstreno": "2013-09-25"
-            },
-            {
-              "numero": 16,
-              "episodios": 23,
-              "fechaEstreno": "2014-09-24"
-            },
-            {
-              "numero": 17,
-              "episodios": 23,
-              "fechaEstreno": "2015-09-23"
-            },
-            {
-              "numero": 18,
-              "episodios": 21,
-              "fechaEstreno": "2016-09-21"
-            },
-            {
-              "numero": 19,
-              "episodios": 24,
-              "fechaEstreno": "2017-09-27"
-            },
-            {
-              "numero": 20,
-              "episodios": 24,
-              "fechaEstreno": "2018-09-27"
-            },
-            {
-              "numero": 21,
-              "episodios": 20,
-              "fechaEstreno": "2019-09-26"
-            },
-            {
-              "numero": 22,
-              "episodios": 16,
-              "fechaEstreno": "2020-11-12"
-            },
-            {
-              "numero": 23,
-              "episodios": 22,
-              "fechaEstreno": "2021-09-23"
-            },
-            {
-              "numero": 24,
-              "episodios": 22,
-              "fechaEstreno": "2022-09-22"
-            },
-            {
-              "numero": 25,
-              "episodios": 13,
-              "fechaEstreno": "2024-01-18"
-            },
-            {
-              "numero": 26,
-              "episodios": 22,
-              "fechaEstreno": "2024-10-03"
-            },
-            {
-              "numero": 27,
-              "episodios": 21,
-              "fechaEstreno": "2025-09-25"
-            },
-            {
-              "numero": 28,
-              "episodios": 4,
-              "fechaEstreno": "2026-10-08"
-            }
-          ],
-          "currentSeason": 27,
-          "reviews": null,
-          "trailer": {
-            "key": "MhGI_1DIhxw",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Mariska Hargitay",
-              "character": "Olivia Benson",
-              "order": 0
-            },
-            {
-              "name": "Ice-T",
-              "character": "Odafin 'Fin' Tutuola",
-              "order": 1
-            },
-            {
-              "name": "Kelli Giddish",
-              "character": "Amanda Rollins",
-              "order": 4
-            },
-            {
-              "name": "Peter Scanavino",
-              "character": "Dominick 'Sonny' Carisi Jr.",
-              "order": 6
-            },
-            {
-              "name": "Aimé Donna Kelly",
-              "character": "Renee Curry",
-              "order": 7
-            },
-            {
-              "name": "Kevin Kane",
-              "character": "Terry Bruno",
-              "order": 8
-            },
-            {
-              "name": "Corey Cott",
-              "character": "Jake Griffin",
-              "order": 25
             }
           ]
         },
@@ -4977,7 +5012,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 9
+            "tmdb": 8.8
           },
           "status": "Returning Series",
           "nextEpisodeDate": "2026-10-20",
@@ -5047,103 +5082,6 @@
               "order": 9
             }
           ]
-        },
-        {
-          "guid": "tmdb-tv-72879",
-          "title": "Demain nous appartient",
-          "link": "https://www.themoviedb.org/tv/72879",
-          "summary": "The story revolves around the people of Sète, France. Their lives are punctuated by family rivalries, romance and scenes from daily life, but also by plots involving police investigations, secrets and betrayals.",
-          "image": "https://image.tmdb.org/t/p/w500/7BjipkA48xXLauTg45QKiOb144a.jpg",
-          "pubDate": "2017-07-17",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-10-11T08:23:42.223Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 5.1,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.3
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-12",
-          "numberOfSeasons": 3,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 2020,
-              "fechaEstreno": "2017-07-17"
-            },
-            {
-              "numero": 2,
-              "episodios": 260,
-              "fechaEstreno": "2025-09-01"
-            },
-            {
-              "numero": 3,
-              "episodios": 35,
-              "fechaEstreno": "2026-08-31"
-            }
-          ],
-          "currentSeason": 3,
-          "reviews": null,
-          "trailer": {
-            "key": "fjNxHqcn0rU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Ingrid Chauvin",
-              "character": "Chloé Delcourt",
-              "order": 0
-            },
-            {
-              "name": "Charlotte Valandrey",
-              "character": "Laurence",
-              "order": 1
-            },
-            {
-              "name": "Alexandre Brasseur",
-              "character": "Alex Bertrand",
-              "order": 2
-            },
-            {
-              "name": "Lorie Pester",
-              "character": "Lucie Salducci",
-              "order": 3
-            },
-            {
-              "name": "Samy Gharbi",
-              "character": "Karim Saeed",
-              "order": 4
-            },
-            {
-              "name": "Solène Hébert",
-              "character": "Victoire Lazzari",
-              "order": 5
-            },
-            {
-              "name": "Clément Remiens",
-              "character": "Maxime Delcourt",
-              "order": 6
-            },
-            {
-              "name": "Juliette Tresanini",
-              "character": "Sandrine Lazzari",
-              "order": 7
-            },
-            {
-              "name": "Cyril Garnier",
-              "character": "Thomas Delcourt",
-              "order": 8
-            },
-            {
-              "name": "Luce Mouchel",
-              "character": "Marianne Delcourt",
-              "order": 9
-            }
-          ],
-          "trending": false
         },
         {
           "guid": "tmdb-tv-206559",
@@ -5331,6 +5269,201 @@
             }
           ],
           "trending": false
+        },
+        {
+          "guid": "tmdb-tv-72879",
+          "title": "Demain nous appartient",
+          "link": "https://www.themoviedb.org/tv/72879",
+          "summary": "The story revolves around the people of Sète, France. Their lives are punctuated by family rivalries, romance and scenes from daily life, but also by plots involving police investigations, secrets and betrayals.",
+          "image": "https://image.tmdb.org/t/p/w500/7BjipkA48xXLauTg45QKiOb144a.jpg",
+          "pubDate": "2017-07-17",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-10-11T08:23:42.223Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 5.1,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.3
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-12",
+          "numberOfSeasons": 3,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 2020,
+              "fechaEstreno": "2017-07-17"
+            },
+            {
+              "numero": 2,
+              "episodios": 260,
+              "fechaEstreno": "2025-09-01"
+            },
+            {
+              "numero": 3,
+              "episodios": 35,
+              "fechaEstreno": "2026-08-31"
+            }
+          ],
+          "currentSeason": 3,
+          "reviews": null,
+          "trailer": {
+            "key": "fjNxHqcn0rU",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Ingrid Chauvin",
+              "character": "Chloé Delcourt",
+              "order": 0
+            },
+            {
+              "name": "Charlotte Valandrey",
+              "character": "Laurence",
+              "order": 1
+            },
+            {
+              "name": "Alexandre Brasseur",
+              "character": "Alex Bertrand",
+              "order": 2
+            },
+            {
+              "name": "Lorie Pester",
+              "character": "Lucie Salducci",
+              "order": 3
+            },
+            {
+              "name": "Samy Gharbi",
+              "character": "Karim Saeed",
+              "order": 4
+            },
+            {
+              "name": "Solène Hébert",
+              "character": "Victoire Lazzari",
+              "order": 5
+            },
+            {
+              "name": "Clément Remiens",
+              "character": "Maxime Delcourt",
+              "order": 6
+            },
+            {
+              "name": "Juliette Tresanini",
+              "character": "Sandrine Lazzari",
+              "order": 7
+            },
+            {
+              "name": "Cyril Garnier",
+              "character": "Thomas Delcourt",
+              "order": 8
+            },
+            {
+              "name": "Luce Mouchel",
+              "character": "Marianne Delcourt",
+              "order": 9
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-tv-247718",
+          "title": "Tierra de mafiosos",
+          "link": "https://www.themoviedb.org/tv/247718",
+          "summary": "El poder está en juego cuando los Harrigan y los Stevenson, dos familias criminales londinenses en guerra, se enfrentan en una batalla de matar o morir que amenaza con derribar imperios y arruinar vidas. Atrapado en el fuego cruzado está Harry Da Souza, el astuto \"solucionador\" tan peligroso como atractivo, que sabe muy bien dónde están las lealtades cuando las fuerzas opuestas chocan. A medida que los reinos se enfrentan, se cruzarán las líneas, y la única gracia salvadora es una garantía de vida o muerte: la familia por encima de todo.",
+          "image": "https://image.tmdb.org/t/p/w500/xOBnonAeHiZuiTPOLBFMFSPI6jy.jpg",
+          "pubDate": "2025-03-30",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-10-19T16:50:28.479Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.3,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.5
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-23",
+          "numberOfSeasons": 2,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 10,
+              "fechaEstreno": "2025-03-30"
+            },
+            {
+              "numero": 2,
+              "episodios": 10,
+              "fechaEstreno": "2026-09-18"
+            }
+          ],
+          "currentSeason": 2,
+          "reviews": {
+            "top": {
+              "rating": 8,
+              "text": "(CASTELLANO) Hay series que entran por pura presencia, y esta es de esas. Desde los primeros minutos, Tierra de mafiosos deja claro que su mayor arma no es la trama –que ya la hemos visto mil veces– sino ese desfile de actores que parece estar disfrutando más que nadie. Tom Hardy está brutal, pero quien me ha dejado loco es Harry (Paddy Considine): cada gesto, cada silencio, cada mirada… es de esos personajes que te incomodan sin levantar la voz. Y luego está Helen Mirren, que aquí directamente da miedo. Una frialdad que corta, una maldad sin freno. Impone muchísimo.\r\n\r\nLa historia no sorprende demasiado, pero funciona. Tiene ese punto reconocible de las ficciones de mafias familiares, con traiciones, tensiones y conversaciones que parecen una calma tensa a punto de estallar. Podría tener ",
+              "author": "Marco-Hugo Landeta Vacas"
+            },
+            "bottom": null
+          },
+          "trailer": {
+            "key": "qKGgw7Ob5f4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Hardy",
+              "character": "Harry Da Souza",
+              "order": 0
+            },
+            {
+              "name": "Pierce Brosnan",
+              "character": "Conrad Harrigan",
+              "order": 1
+            },
+            {
+              "name": "Paddy Considine",
+              "character": "Kevin Harrigan",
+              "order": 2
+            },
+            {
+              "name": "Joanne Froggatt",
+              "character": "Jan Da Souza",
+              "order": 3
+            },
+            {
+              "name": "Lara Pulver",
+              "character": "Isabella 'Bella' Harrigan",
+              "order": 4
+            },
+            {
+              "name": "Anson Boon",
+              "character": "Eddie Harrigan",
+              "order": 5
+            },
+            {
+              "name": "Mandeep Dhillon",
+              "character": "Seraphina Harrigan",
+              "order": 6
+            },
+            {
+              "name": "Jasmine Jobson",
+              "character": "Zosia",
+              "order": 8
+            },
+            {
+              "name": "Teddie Allen",
+              "character": "Gina Da Souza",
+              "order": 9
+            },
+            {
+              "name": "Emmett J. Scanlan",
+              "character": "Paul",
+              "order": 10
+            }
+          ]
         },
         {
           "guid": "tmdb-tv-2661",
@@ -5543,207 +5676,6 @@
           "reviews": null,
           "trailer": {
             "key": "FY4TBfTLPEM",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-4656",
-          "title": "Raw",
-          "link": "https://www.themoviedb.org/tv/4656",
-          "summary": "A regularly scheduled, live, year-round program featuring some of the biggest WWE Superstars.",
-          "image": "https://image.tmdb.org/t/p/w500/fstEe6RsyNyPUnMwNcL20iNl0nE.jpg",
-          "pubDate": "1993-01-11",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-19T13:43:53.848Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.8,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.8
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-21",
-          "numberOfSeasons": 34,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 45,
-              "fechaEstreno": "1993-01-10"
-            },
-            {
-              "numero": 2,
-              "episodios": 47,
-              "fechaEstreno": "1994-01-03"
-            },
-            {
-              "numero": 3,
-              "episodios": 48,
-              "fechaEstreno": "1995-01-02"
-            },
-            {
-              "numero": 4,
-              "episodios": 51,
-              "fechaEstreno": "1996-01-01"
-            },
-            {
-              "numero": 5,
-              "episodios": 52,
-              "fechaEstreno": "1997-01-06"
-            },
-            {
-              "numero": 6,
-              "episodios": 52,
-              "fechaEstreno": "1998-01-05"
-            },
-            {
-              "numero": 7,
-              "episodios": 52,
-              "fechaEstreno": "1999-01-04"
-            },
-            {
-              "numero": 8,
-              "episodios": 52,
-              "fechaEstreno": "2000-01-03"
-            },
-            {
-              "numero": 9,
-              "episodios": 53,
-              "fechaEstreno": "2001-01-01"
-            },
-            {
-              "numero": 10,
-              "episodios": 52,
-              "fechaEstreno": "2002-01-07"
-            },
-            {
-              "numero": 11,
-              "episodios": 52,
-              "fechaEstreno": "2003-01-06"
-            },
-            {
-              "numero": 12,
-              "episodios": 52,
-              "fechaEstreno": "2004-01-05"
-            },
-            {
-              "numero": 13,
-              "episodios": 52,
-              "fechaEstreno": "2005-01-03"
-            },
-            {
-              "numero": 14,
-              "episodios": 52,
-              "fechaEstreno": "2006-01-02"
-            },
-            {
-              "numero": 15,
-              "episodios": 53,
-              "fechaEstreno": "2007-01-01"
-            },
-            {
-              "numero": 16,
-              "episodios": 52,
-              "fechaEstreno": "2008-01-07"
-            },
-            {
-              "numero": 17,
-              "episodios": 52,
-              "fechaEstreno": "2009-01-05"
-            },
-            {
-              "numero": 18,
-              "episodios": 52,
-              "fechaEstreno": "2010-01-04"
-            },
-            {
-              "numero": 19,
-              "episodios": 52,
-              "fechaEstreno": "2011-01-03"
-            },
-            {
-              "numero": 20,
-              "episodios": 53,
-              "fechaEstreno": "2012-01-02"
-            },
-            {
-              "numero": 21,
-              "episodios": 52,
-              "fechaEstreno": "2013-01-07"
-            },
-            {
-              "numero": 22,
-              "episodios": 52,
-              "fechaEstreno": "2014-01-05"
-            },
-            {
-              "numero": 23,
-              "episodios": 52,
-              "fechaEstreno": "2015-01-04"
-            },
-            {
-              "numero": 24,
-              "episodios": 52,
-              "fechaEstreno": "2016-01-03"
-            },
-            {
-              "numero": 25,
-              "episodios": 52,
-              "fechaEstreno": "2017-01-01"
-            },
-            {
-              "numero": 26,
-              "episodios": 53,
-              "fechaEstreno": "2017-12-31"
-            },
-            {
-              "numero": 27,
-              "episodios": 52,
-              "fechaEstreno": "2019-01-06"
-            },
-            {
-              "numero": 28,
-              "episodios": 52,
-              "fechaEstreno": "2020-01-05"
-            },
-            {
-              "numero": 29,
-              "episodios": 52,
-              "fechaEstreno": "2021-01-03"
-            },
-            {
-              "numero": 30,
-              "episodios": 52,
-              "fechaEstreno": "2022-01-02"
-            },
-            {
-              "numero": 31,
-              "episodios": 52,
-              "fechaEstreno": "2023-01-01"
-            },
-            {
-              "numero": 32,
-              "episodios": 53,
-              "fechaEstreno": "2023-12-29"
-            },
-            {
-              "numero": 33,
-              "episodios": 52,
-              "fechaEstreno": "2024-12-31"
-            },
-            {
-              "numero": 34,
-              "episodios": 41,
-              "fechaEstreno": "2026-01-05"
-            }
-          ],
-          "currentSeason": 34,
-          "reviews": null,
-          "trailer": {
-            "key": "FVO6mUQMon8",
             "site": "YouTube"
           },
           "cast": [],
