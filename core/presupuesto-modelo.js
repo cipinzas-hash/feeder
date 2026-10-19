@@ -458,6 +458,54 @@ export function progresoMeta({ saldo, objetivo, fecha, periodo, aporteMensual })
   return { cumplida: false, falta, meses, necesario, alDia, cumpleEn };
 }
 
+// ── Proyección anual y ritmo del sobre (fase 4) ─────────────────────────────
+// Proyección de los próximos 12 períodos desde `periodo` (incluido), fila por fila. `actual` es el
+// presupuesto que se está viendo. Cada mes cuenta con lo que realmente se asignó; un mes dentro del
+// registro sin presupuesto cuenta como cero; los meses futuros (después del último guardado) usan el
+// promedio de los últimos 12 meses en registro, con los ceros incluidos y dividiendo por el total
+// de meses de esa ventana (o por los que lleve el registro). Sin registro alguno: monto × 12.
+// Devuelve {filas:{sec:{rowId:anual}}, mesesPromedio}.
+export function proyeccionAnual(budgets, periodo, actual) {
+  const claves = Object.keys(budgets || {}).filter(claveMesValida).sort();
+  const ultima = claves.length ? claves[claves.length - 1] : null;
+  const primera = claves.length ? claves[0] : null;
+  const montoEn = (k, sec, rowId) => {
+    const b = k === periodo ? actual : (budgets || {})[k];
+    const r = b && (b[sec] || []).find(x => x.id === rowId);
+    return r ? (r.monto || 0) : 0;
+  };
+  const ventana = [];
+  if (ultima) for (let k = ultima, i = 0; i < 12 && k >= primera; i++, k = claveAnterior(k)) ventana.unshift(k);
+  const filas = {};
+  for (const sec of SECCIONES) {
+    filas[sec] = {};
+    for (const row of (actual[sec] || [])) {
+      const prom = ventana.length ? Math.round(ventana.reduce((t, k) => t + montoEn(k, sec, row.id), 0) / ventana.length) : (row.monto || 0);
+      let total = 0, k = periodo;
+      for (let i = 0; i < 12; i++, k = claveSiguiente(k)) {
+        if (i === 0) total += row.monto || 0;
+        else if (budgets && budgets[k]) total += montoEn(k, sec, row.id);
+        else total += ultima && k <= ultima ? 0 : prom;
+      }
+      filas[sec][row.id] = total;
+    }
+  }
+  return { filas, mesesPromedio: ventana.length };
+}
+
+// Ritmo del sobre: lo gastado frente a lo disponible en el período, contra el avance del período (25 → 24).
+// estado: "bien" (gasta al ritmo del calendario o menos), "atento" (hasta 15 puntos por delante) o "adelantado".
+export function ritmoSobre({ gastado, disponible, periodo, hoy }) {
+  if (!(disponible > 0)) return null;
+  const [a, m] = partes(periodo);
+  const inicio = new Date(a, m, 25), fin = new Date(a, m + 1, 25);
+  const ahora = hoy instanceof Date ? hoy : new Date();
+  const pctPeriodo = Math.max(0, Math.min(1, (ahora - inicio) / (fin - inicio)));
+  const pctGastado = Math.max(0, gastado) / disponible;
+  const estado = pctGastado <= pctPeriodo ? "bien" : pctGastado <= pctPeriodo + 0.15 ? "atento" : "adelantado";
+  return { pctGastado, pctPeriodo, estado };
+}
+
 // ── Eliminaciones seguras ───────────────────────────────────────────────────
 // Con sobres activos no se borra un bolsillo con saldo o con gastos registrados.
 export function puedeEliminar(budgets, periodo, sec, row, subId) {

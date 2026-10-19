@@ -1,6 +1,6 @@
 import { MONTH_NAMES } from "../../core/dates.js";
 import { fmtCLP } from "../../core/format.js";
-import { resolverPeriodo, inicioSobres, sumaSubs, puedeEliminar, quitarGasto, puedeQuitarGasto, puedeGenerarPeriodo } from "../../core/presupuesto-modelo.js";
+import { resolverPeriodo, inicioSobres, sumaSubs, puedeEliminar, quitarGasto, puedeQuitarGasto, puedeGenerarPeriodo, proyeccionAnual } from "../../core/presupuesto-modelo.js";
 import { AmountRow, GRID, COL, GAP, FUENTE, PAD_MONTO, celdaTitulo } from "./grilla.jsx";
 import CarteraVentana from "./CarteraVentana.jsx";
 import GastoModal from "./GastoModal.jsx";
@@ -47,7 +47,7 @@ function MonthSelectorModal({ currentYear, currentMonth, onSelect, onClose }) { 
 
 const celda = (extra) => ({ fontFamily: FUENTE, ...extra });
 
-function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit, onRowSave, onRowAdd, onRowDelete, onRowCheck, onChartOpen, onOpenCartera }) {
+function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit, onRowSave, onRowAdd, onRowDelete, onRowCheck, onChartOpen, onOpenCartera, anual }) {
   const T = totalIngreso;
   const pct = T > 0 ? ((subtotal / T) * 100).toFixed(1) : "-";
   const [hover, setHover] = useState(false);
@@ -62,6 +62,7 @@ function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit
     setNewLabel(""); setNewEmoji("📌"); setAdding(false);
   }
   const abrirGrafico = () => onChartOpen({ title, emoji, rows, total: subtotal });
+  const anualSub = rows.reduce((t, r) => t + ((anual && anual[r.id] != null) ? anual[r.id] : r.monto * 12), 0);
 
   return (
     <div style={{ marginBottom: 20 }}>
@@ -102,7 +103,7 @@ function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit
                 </div>
                 <AmountRow value={row.monto} min={sumaSubs(row)} onSave={v => onRowSave(secKey, row.id, v, row.label)}/>
                 <div onClick={onOpenCartera ? () => onOpenCartera(secKey, row.id) : undefined} style={celda({ fontSize: 11, color: "#aaa", textAlign: "right", cursor: onOpenCartera ? "pointer" : "default" })}>{rp}%</div>
-                <div onClick={onOpenCartera ? () => onOpenCartera(secKey, row.id) : undefined} style={celda({ fontSize: 11, color: "#bbb", textAlign: "right", cursor: onOpenCartera ? "pointer" : "default" })}>{fmtCLP(row.monto * 12)}</div>
+                <div onClick={onOpenCartera ? () => onOpenCartera(secKey, row.id) : undefined} style={celda({ fontSize: 11, color: "#bbb", textAlign: "right", cursor: onOpenCartera ? "pointer" : "default" })}>{fmtCLP((anual && anual[row.id] != null) ? anual[row.id] : row.monto * 12)}</div>
                 {canEdit
                   ? <button onClick={() => onRowDelete(secKey, row.id)} style={{ background: "transparent", border: "none", color: "#e0e0e0", fontSize: 16, cursor: "pointer", lineHeight: 1, padding: 0, textAlign: "center" }} onMouseEnter={e => e.currentTarget.style.color = "#c00"} onMouseLeave={e => e.currentTarget.style.color = "#e0e0e0"}>×</button>
                   : <div/>}
@@ -123,7 +124,7 @@ function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit
           <div style={celda({ fontSize: 12, color: "#111", fontWeight: 700 })}>Subtotal</div>
           <div style={celda({ fontSize: 13, color: "#111", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO })}>{fmtCLP(subtotal)}</div>
           <div style={celda({ fontSize: 11, color: "#666", textAlign: "right", fontWeight: 600 })}>{pct}%</div>
-          <div style={celda({ fontSize: 11, color: "#666", textAlign: "right", fontWeight: 600 })}>{fmtCLP(subtotal * 12)}</div>
+          <div style={celda({ fontSize: 11, color: "#666", textAlign: "right", fontWeight: 600 })}>{fmtCLP(anualSub)}</div>
           <div/>
         </div>
       </div>
@@ -192,6 +193,8 @@ function BudgetPage({ budgets, onSaveBudget }) {
   const sumPers = budget.personales.reduce((s, r) => s + r.monto, 0);
   const sumProp = budget.propositos.reduce((s, r) => s + r.monto, 0);
   const totalGasto = sumBase + sumPers + sumProp;
+  const proy = proyeccionAnual(budgets, monthKey, budget);
+  const anualTotal = ["gastos_base", "personales", "propositos"].reduce((t, sec) => t + Object.values(proy.filas[sec]).reduce((a, b) => a + b, 0), 0);
   const remainder = totalIngreso - totalGasto;
   const T = totalIngreso;
   // Carteras en el orden en que se ven en pantalla; la ventana navega entre ellas con ‹ ›.
@@ -245,16 +248,16 @@ function BudgetPage({ budgets, onSaveBudget }) {
           ))}
         </div>
       </div>
-      <BudgetSec title="Gastos Base" emoji="🧱" rows={budget.gastos_base} secKey="gastos_base" subtotal={sumBase} canEdit {...secProps}/>
-      <BudgetSec title="Fondos Personales" emoji="👤" rows={budget.personales} secKey="personales" subtotal={sumPers} canEdit={false} onOpenCartera={abrirCartera} {...secProps}/>
-      <BudgetSec title="Fondos por Propósito" emoji="📦" rows={budget.propositos} secKey="propositos" subtotal={sumProp} canEdit onOpenCartera={abrirCartera} {...secProps}/>
+      <BudgetSec title="Gastos Base" emoji="🧱" rows={budget.gastos_base} secKey="gastos_base" subtotal={sumBase} canEdit anual={proy.filas.gastos_base} {...secProps}/>
+      <BudgetSec title="Fondos Personales" emoji="👤" rows={budget.personales} secKey="personales" subtotal={sumPers} canEdit={false} onOpenCartera={abrirCartera} anual={proy.filas.personales} {...secProps}/>
+      <BudgetSec title="Fondos por Propósito" emoji="📦" rows={budget.propositos} secKey="propositos" subtotal={sumProp} canEdit onOpenCartera={abrirCartera} anual={proy.filas.propositos} {...secProps}/>
       <div style={{ border: "2px solid #111", borderRadius: 8, overflow: "hidden", marginBottom: 8 }}>
         <div style={{ display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "12px 12px", background: "#111", alignItems: "center" }}>
           <div/>
           <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", fontWeight: 700 }}>Total distribuido</div>
           <div style={celda({ fontSize: 14, color: "#fff", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO })}>{fmtCLP(totalGasto)}</div>
           <div style={celda({ fontSize: 12, color: "#888", textAlign: "right" })}>{T > 0 ? ((totalGasto / T) * 100).toFixed(1) : "-"}%</div>
-          <div style={celda({ fontSize: 12, color: "#888", textAlign: "right" })}>{fmtCLP(totalGasto * 12)}</div>
+          <div style={celda({ fontSize: 12, color: "#888", textAlign: "right" })}>{fmtCLP(anualTotal)}</div>
           <div/>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "10px 12px", background: remainder < 0 ? "#fff5f5" : "#f9f9f9", alignItems: "center" }}>
@@ -265,6 +268,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
           <div/><div/>
         </div>
       </div>
+      <div style={celda({ fontSize: 10, color: "#aaa", lineHeight: 1.5, padding: "4px 4px 0" })}>Proy. anual: los próximos 12 períodos con el monto asignado en cada mes. Los meses que aún no existen usan el promedio de {proy.mesesPromedio > 0 ? `los últimos ${proy.mesesPromedio} mes${proy.mesesPromedio > 1 ? "es" : ""} en registro` : "este mes (aún no hay registro)"}, contando como cero los meses sin presupuesto.</div>
       <div style={{ height: 32 }}/>
     </div>
   );

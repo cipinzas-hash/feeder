@@ -5,6 +5,7 @@ import {
   validarGasto, agregarGasto, quitarGasto, puedeEliminar, maxSubMonto, bolsillosDe, sinRepartir, claveBolsillo,
   puedeQuitarGasto, resumenDeudas, guiaSobres, capacidadPrestamo, candidatosPrestamo, sugerirFuentes,
   puedeGenerarPeriodo, primerArqueoPendiente, filasArqueo, guardarArqueo, rendicion, progresoMeta,
+  proyeccionAnual, ritmoSobre,
 } from "../core/presupuesto-modelo.js";
 
 // Períodos 25 → 24
@@ -192,6 +193,39 @@ assert.equal(puedeEliminar({ "2026-09": oct }, "2026-09", "propositos", fila(), 
   assert.equal(progresoMeta({ saldo: 0, objetivo: 50000, fecha: "2026-10-10", periodo: "2026-09", aporteMensual: 50000 }).meses, 0);  // vence antes del próximo aporte
   assert.equal(progresoMeta({ saldo: 100000, objetivo: 100000, fecha: "2026-12-31", periodo: "2026-09", aporteMensual: 0 }).cumplida, true);
   assert.equal(progresoMeta({ saldo: 0, objetivo: 100000, fecha: "2026-12-31", periodo: "2026-09", aporteMensual: 0 }).cumpleEn, null);
+}
+
+// ── Proyección anual y ritmo del sobre (fase 4) ─────────────────────────────
+{
+  const mkb = monto => ({ ingresos: {}, gastos_base: [], personales: [], propositos: [{ id: "r1", label: "Ropa", monto }] });
+  const anual = (B, per, act) => proyeccionAnual(B, per, act).filas.propositos.r1;
+  // Meses con asignación distinta: ago 100, sep 200, oct 300 → promedio 200
+  let B = { "2026-08": mkb(100), "2026-09": mkb(200), "2026-10": mkb(300) };
+  assert.equal(anual(B, "2026-10", B["2026-10"]), 300 + 11 * 200);
+  assert.equal(proyeccionAnual(B, "2026-10", B["2026-10"]).mesesPromedio, 3);
+  // Desde agosto: ago 100 + sep 200 + oct 300 reales + 9 meses de promedio
+  assert.equal(anual(B, "2026-08", B["2026-08"]), 100 + 200 + 300 + 9 * 200);
+  // Un mes sin presupuesto cuenta como cero en el promedio y en la proyección
+  B = { "2026-08": mkb(100), "2026-10": mkb(300) };
+  assert.equal(anual(B, "2026-08", B["2026-08"]), 100 + 0 + 300 + 9 * 133);       // promedio (100+0+300)/3 = 133
+  // Período que aún no se guarda: usa lo que se ve para ese mes y el promedio para los siguientes
+  assert.equal(anual(B, "2026-11", mkb(500)), 500 + 11 * 133);
+  // Sin registro: el comportamiento de antes (monto × 12)
+  assert.equal(anual({}, "2026-09", mkb(250)), 250 * 12);
+  // La ventana del promedio son los últimos 12 meses del registro
+  const largo = {}; for (let i = 0; i < 14; i++) { const d = new Date(2025, 5 + i, 1); const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; largo[k] = mkb(i < 2 ? 10000 : 100); }
+  assert.equal(proyeccionAnual(largo, "2026-07", largo["2026-07"]).mesesPromedio, 12);   // los dos primeros meses (10.000) quedan fuera
+  assert.equal(proyeccionAnual(largo, "2026-07", largo["2026-07"]).filas.propositos.r1, 100 * 12);
+
+  // Ritmo: período 2026-09 corre del 25 sep al 25 oct (30 días)
+  const mitad = new Date(2026, 9, 10);               // 15 de 30 días
+  let r = ritmoSobre({ gastado: 40000, disponible: 100000, periodo: "2026-09", hoy: mitad });
+  assert.equal(Math.round(r.pctPeriodo * 100), 50); assert.equal(r.pctGastado, 0.4); assert.equal(r.estado, "bien");
+  assert.equal(ritmoSobre({ gastado: 60000, disponible: 100000, periodo: "2026-09", hoy: mitad }).estado, "atento");
+  assert.equal(ritmoSobre({ gastado: 70000, disponible: 100000, periodo: "2026-09", hoy: mitad }).estado, "adelantado");
+  assert.equal(ritmoSobre({ gastado: 10, disponible: 100, periodo: "2026-09", hoy: new Date(2026, 8, 1) }).pctPeriodo, 0);    // antes de empezar
+  assert.equal(ritmoSobre({ gastado: 10, disponible: 100, periodo: "2026-09", hoy: new Date(2027, 0, 1) }).pctPeriodo, 1);    // período cerrado
+  assert.equal(ritmoSobre({ gastado: 0, disponible: 0, periodo: "2026-09", hoy: mitad }), null);
 }
 
 console.log("presupuesto-modelo: OK");

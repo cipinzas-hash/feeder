@@ -1,5 +1,5 @@
 import { fmtCLP } from "../../core/format.js";
-import { estadoFila, resumenDeudas } from "../../core/presupuesto-modelo.js";
+import { estadoFila, resumenDeudas, ritmoSobre } from "../../core/presupuesto-modelo.js";
 import CarteraPanel from "./CarteraPanel.jsx";
 import { FUENTE } from "./grilla.jsx";
 const { useState, useEffect } = React;
@@ -30,6 +30,10 @@ export default function CarteraVentana({ carteras, index, onIndex, onClose, budg
   const estado = sobresOn ? estadoFila(budgets, periodo, sec, row) : null;
   const etiqueta = sec === "personales" ? "Ahorrado" : "Saldo";
   const deudas = sobresOn ? resumenDeudas(budgets, periodo, sec, row.id) : null;
+  // Ritmo del sobre: lo gastado frente a lo disponible en el período, contra el avance del calendario (25 → 24).
+  const ritmo = estado ? ritmoSobre({ gastado: estado.gastado, disponible: estado.debiaHaber + estado.prestamoRecibido - estado.prestamoDado, periodo }) : null;
+  const colorRitmo = ritmo ? { bien: "#3a9a3a", atento: "#e0a020", adelantado: "#c33" }[ritmo.estado] : "#ccc";
+  const textoRitmo = ritmo ? { bien: "Vas al ritmo del mes o mejor.", atento: "Vas un poco por delante del calendario.", adelantado: "Gastas más rápido que el mes: el sobre puede quedarse corto antes del 24." }[ritmo.estado] : "";
   const dato = (titulo, valor, color) => (
     <div style={{ flex: 1, textAlign: "center" }}>
       <div style={{ fontFamily: FUENTE, fontSize: 9, color: "#aaa", letterSpacing: 1, textTransform: "uppercase" }}>{titulo}</div>
@@ -55,6 +59,19 @@ export default function CarteraVentana({ carteras, index, onIndex, onClose, budg
             {estado ? dato(etiqueta, fmtCLP(estado.saldo), estado.saldo < 0 ? "#c00" : "#111") : dato(etiqueta, "—", "#bbb")}
             {estado ? dato("Gastado", fmtCLP(estado.gastado)) : dato("Gastado", "—", "#bbb")}
           </div>
+          {ritmo && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontFamily: FUENTE, fontSize: 11, color: "#888", display: "flex", justifyContent: "space-between" }}>
+                <span>Ritmo del sobre</span>
+                <span style={{ color: colorRitmo }}>{Math.round(ritmo.pctGastado * 100)}% gastado · período al {Math.round(ritmo.pctPeriodo * 100)}%</span>
+              </div>
+              <div style={{ position: "relative", height: 10, background: "#eee", borderRadius: 5, margin: "6px 0 4px" }}>
+                <div style={{ width: Math.min(100, ritmo.pctGastado * 100) + "%", height: "100%", background: colorRitmo, borderRadius: 5 }}/>
+                <div title="avance del período" style={{ position: "absolute", left: `calc(${ritmo.pctPeriodo * 100}% - 1px)`, top: -3, bottom: -3, width: 2, background: "#111" }}/>
+              </div>
+              <div style={{ fontFamily: FUENTE, fontSize: 11, color: colorRitmo }}>{textoRitmo}</div>
+            </div>
+          )}
           {estado && (
             <div style={{ fontFamily: FUENTE, fontSize: 11, color: "#888", lineHeight: 1.6, marginBottom: 8 }}>
               Al empezar el período debía haber <b style={{ color: "#333" }}>{fmtCLP(estado.debiaHaber)}</b> en el sobre
