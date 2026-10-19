@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-18T22:03:49.150Z",
+  "generatedAt": "2026-10-19T02:25:03.386Z",
   "categories": [
     {
       "cat": "Melee",
@@ -602,9 +602,9 @@
           "guid": "melee-seedreport-tournament/platfight-gaming-championships-2026/event/melee-singles",
           "title": "Reporte de seeds — Platfight 2026",
           "link": "https://www.start.gg/tournament/platfight-gaming-championships-2026/event/melee-singles",
-          "summary": "12/32 del top 32 sostienen su seed. 20 ya cayeron.",
+          "summary": "5/32 del top 32 sostienen su seed. 27 ya cayeron.",
           "image": null,
-          "pubDate": "2026-10-18T22:03:48.556Z",
+          "pubDate": "2026-10-19T02:25:02.881Z",
           "source": "Platfight 2026",
           "categoria": "Melee",
           "fullText": null,
@@ -635,7 +635,7 @@
               "seed": 3,
               "foto": null,
               "sostiene": true,
-              "derrotas": 0,
+              "derrotas": 1,
               "eliminadoPor": null,
               "ronda": null,
               "esUpset": false
@@ -654,11 +654,15 @@
               "nombre": "The Yard | Magi",
               "seed": 5,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 0,
-              "eliminadoPor": null,
-              "ronda": null,
-              "esUpset": false
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "Tempo | Axe",
+                "seed": 6,
+                "ssbmrank": 6
+              },
+              "ronda": "Losers Quarter-Final",
+              "esUpset": true
             },
             {
               "nombre": "Tempo | Axe",
@@ -674,40 +678,56 @@
               "nombre": "69% | Fiction",
               "seed": 7,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "Tempo | Axe",
+                "seed": 6,
+                "ssbmrank": 6
+              },
+              "ronda": "Losers Round 1",
               "esUpset": false
             },
             {
               "nombre": "Lil Corner | chape",
               "seed": 8,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "69% | Fiction",
+                "seed": 7,
+                "ssbmrank": null
+              },
+              "ronda": "Losers Round 3",
               "esUpset": false
             },
             {
               "nombre": "NSE | Maher",
               "seed": 9,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "MEOW | Free Cuba",
+                "seed": 4,
+                "ssbmrank": null
+              },
+              "ronda": "Losers Round 1",
               "esUpset": false
             },
             {
               "nombre": "DayDream",
               "seed": 10,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "NSE | Maher",
+                "seed": 9,
+                "ssbmrank": 72
+              },
+              "ronda": "Losers Round 3",
               "esUpset": false
             },
             {
@@ -728,10 +748,14 @@
               "nombre": "Venison",
               "seed": 12,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "Tempo | Axe",
+                "seed": 6,
+                "ssbmrank": 6
+              },
+              "ronda": "Losers Round 3",
               "esUpset": false
             },
             {
@@ -752,10 +776,14 @@
               "nombre": "aujory",
               "seed": 14,
               "foto": null,
-              "sostiene": true,
-              "derrotas": 1,
-              "eliminadoPor": null,
-              "ronda": null,
+              "sostiene": false,
+              "derrotas": 2,
+              "eliminadoPor": {
+                "nombre": "MEOW | Free Cuba",
+                "seed": 4,
+                "ssbmrank": null
+              },
+              "ronda": "Losers Round 3",
               "esUpset": false
             },
             {
@@ -805,7 +833,7 @@
               "seed": 18,
               "foto": null,
               "sostiene": false,
-              "derrotas": 4,
+              "derrotas": 3,
               "eliminadoPor": {
                 "nombre": "Jackson",
                 "seed": 33,
@@ -917,7 +945,7 @@
               "seed": 26,
               "foto": null,
               "sostiene": false,
-              "derrotas": 3,
+              "derrotas": 2,
               "eliminadoPor": {
                 "nombre": "Birmi",
                 "seed": 31,
@@ -1018,9 +1046,9 @@
           "guid": "melee-top8-tournament/platfight-gaming-championships-2026/event/melee-singles",
           "title": "Top 8 de Platfight 2026",
           "link": "https://www.start.gg/tournament/platfight-gaming-championships-2026/event/melee-singles",
-          "summary": "Quedaron: LuckyStats.gg | RapMonster [1], LuckyStats.gg | Soonsay [2], Eggdog | Salt [3], The Yard | Magi [4].",
+          "summary": "Quedaron: LuckyStats.gg | RapMonster [1], LuckyStats.gg | Soonsay [2], Eggdog | Salt [3], The Yard | Magi [4], MEOW | Free Cuba [5], Tempo | Axe [6], 69% | Fiction [7], NSE | Maher [8].",
           "image": null,
-          "pubDate": "2026-10-18T22:03:48.556Z",
+          "pubDate": "2026-10-19T02:25:02.881Z",
           "source": "Platfight 2026",
           "categoria": "Melee",
           "fullText": null,
@@ -1044,6 +1072,26 @@
             {
               "nombre": "The Yard | Magi",
               "seed": 4,
+              "foto": null
+            },
+            {
+              "nombre": "MEOW | Free Cuba",
+              "seed": 5,
+              "foto": null
+            },
+            {
+              "nombre": "Tempo | Axe",
+              "seed": 6,
+              "foto": null
+            },
+            {
+              "nombre": "69% | Fiction",
+              "seed": 7,
+              "foto": null
+            },
+            {
+              "nombre": "NSE | Maher",
+              "seed": 8,
               "foto": null
             }
           ],
