@@ -20,6 +20,7 @@ import GastoModal from "../modules/presupuesto/GastoModal.jsx";
 import EspritPage from "../modules/espiritu/EspritPage.jsx";
 import FeedPage from "../modules/feed/FeedPage.jsx";
 import VitrinaPage from "../modules/vitrina/VitrinaPage.jsx";
+import SemanaDashboard from "./SemanaDashboard.jsx";
 
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
@@ -594,6 +595,45 @@ function AngstApp() {
 
   const weekStart = addDays(BASE_DATE, weekOffset*7);
 
+  // ── Lineamiento "módulo colapsado, scroll solo al expandir" (prueba en Semana) ──
+  const semanaBodyRef = useRef(null);
+  const semanaKeys = Array.from({length:7},(_,k)=>fmtFull(addDays(weekStart,k)));
+  const hayDiaAbierto = semanaKeys.some(k=>!minimized[k]);
+  const [semanaValvula, setSemanaValvula] = useState(false);
+  const [dashAbierto, setDashAbierto] = useState(false);
+  const hayAbierto = hayDiaAbierto || dashAbierto;
+  // Acordeón exclusivo: abrir un día (o el resumen) cierra todo lo demás.
+  function toggleDash(){
+    if(!dashAbierto){
+      setMinimized(m=>{ const next={...m}; semanaKeys.forEach(k=>{ next[k]=true; }); return next; });
+    }
+    setDashAbierto(v=>!v);
+  }
+  function toggleDia(dateKey){
+    setDashAbierto(false);
+    setMinimized(m=>{
+      const abrir = !!m[dateKey];
+      const next = {...m};
+      semanaKeys.forEach(k=>{ next[k] = true; });
+      if(abrir) next[dateKey] = false;
+      return next;
+    });
+  }
+  // R3: sin nada expandido no hay scroll (y vuelve al inicio). Válvula = detector:
+  // si aun colapsado desborda, se habilita el scroll y se avisa en consola.
+  useEffect(()=>{
+    const el = semanaBodyRef.current;
+    if(!el || page!==0) return;
+    if(hayAbierto){ setSemanaValvula(false); return; }
+    el.scrollTop = 0;
+    const id = requestAnimationFrame(()=>{
+      const exceso = el.scrollHeight - el.clientHeight;
+      if(exceso>4){ console.warn(`semana desborda ${exceso} px colapsado`); setSemanaValvula(true); }
+      else setSemanaValvula(false);
+    });
+    return ()=>cancelAnimationFrame(id);
+  });
+
   // Get day object for a specific date key, returning empty day if not yet created
   function getDay(dateKey) {
     return dayDataRef.current[dateKey] || makeEmptyDay();
@@ -855,7 +895,7 @@ function AngstApp() {
         const d = new Date(weekStartDate);
         d.setDate(d.getDate()+i);
         const dk = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-        if(dk !== fmtFull(new Date())) initMin[dk] = true;
+        initMin[dk] = true;
       }
       setMinimized(initMin);
     }
@@ -1064,14 +1104,14 @@ function AngstApp() {
     setWeekOffset(off);
     weekOffsetRef.current = off;
     saveToStorage({weekOffset: off});
-    // Minimizar todos los días de la nueva semana excepto hoy
-    const todayKey = fmtFull(new Date());
+    // Minimizar todos los días de la nueva semana (lineamiento: se abre colapsado)
+    setDashAbierto(false);
     const newWeekStart = addDays(BASE_DATE, off*7);
     const initMin = {};
     for(let i=0;i<7;i++){
       const d = new Date(newWeekStart); d.setDate(d.getDate()+i);
       const dk = fmtFull(d);
-      if(dk !== todayKey) initMin[dk] = true;
+      initMin[dk] = true;
     }
     setMinimized(prev => ({...prev, ...initMin}));
   }
@@ -1483,7 +1523,6 @@ function AngstApp() {
         .tab{font-family:'Caveat',cursive;font-size:17px;color:#777;padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;font-weight:700;white-space:nowrap;}
         .tab.active{color:#fff;border-bottom:2px solid #fff;}
         .tab:hover{color:#bbb;}
-        .wnav{background:#fff;border-bottom:1px solid #eee;padding:11px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
         .wnav-dates{font-family:'Caveat',cursive;font-size:20px;color:#555;flex:1;text-align:center;}
         .nbtn{background:transparent;border:1px dashed #ddd;border-radius:8px;padding:8px 14px;cursor:pointer;color:#999;font-size:22px;line-height:1;font-weight:700;transition:all 0.15s;}
         .nbtn:hover{border-color:#111;color:#111;}
@@ -1547,6 +1586,61 @@ function AngstApp() {
         .ftr{background:#111;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
         .ftr-copy{font-family:'Caveat',cursive;font-size:15px;color:#fff;font-weight:600;}
         .ftr-logo{font-family:'DM Sans',sans-serif;font-weight:700;font-size:12px;color:#fff;letter-spacing:4px;text-transform:uppercase;border:1px solid #fff;padding:4px 10px;}
+        .app-fit{height:100vh;height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
+        .app-fit>.hdr,.app-fit>.tabs,.app-fit>.ftr{flex:none;}
+        .app-fit>.ftr{margin-top:0;}
+        .semana{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
+        .semana-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
+        .semana-body[data-expandido="true"],.semana-body[data-valvula="true"]{overflow-y:auto;}
+        .semana-body[data-expandido="true"]>*{flex:none;}
+        .grid.semana-days{flex:none;width:100%;}
+        .dashpanel{flex:1 0 auto;margin:10px 10px 0;background:#111;border-radius:16px;padding:8px 12px 10px;color:#fff;font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;justify-content:space-between;gap:6px;}
+        .dp-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+        .dp-nav .nbtn{border-color:#444;color:#aaa;padding:2px 12px;font-size:18px;}
+        .dp-nav .calbtn{border-color:#444;padding:3px 10px;font-size:15px;}
+        .dp-nav .wnav-dates{color:#ddd;font-size:20px;line-height:1;}
+        .dw-grid{display:flex;gap:2px;align-items:flex-start;}
+        .dw-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;}
+        .dw-col.pasado{opacity:.5;}
+        .dw-dow{font:700 9px 'DM Sans',sans-serif;color:#777;text-transform:uppercase;letter-spacing:1px;}
+        .dw-col.hoy .dw-dow{color:#fff;text-decoration:underline;}
+        .dw-ic{height:13px;font-size:11px;line-height:13px;white-space:nowrap;letter-spacing:-1px;}
+        .dw-kid{display:block;width:6px;height:6px;border-radius:50%;border:1px solid #666;}
+        .dw-kid.on{background:#fff;border-color:#fff;}
+        .aro{position:relative;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;}
+        .aro svg{position:absolute;inset:0;width:100%;height:100%;}
+        .aro-t{fill:none;stroke:rgba(255,255,255,0.12);stroke-width:3;}
+        .aro-p{fill:none;stroke-width:3;stroke-linecap:round;}
+        .aro-n{position:relative;font-family:'Caveat',cursive;font-size:19px;line-height:1;color:#bbb;}
+        .dw-col.hoy .aro-n{color:#fff;text-decoration:underline;}
+        .dp-info{display:flex;align-items:center;gap:8px;cursor:pointer;}
+        .dp-lineas{flex:1;min-width:0;}
+        .dp-l1,.dp-l2{font-size:12px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .dp-l2{color:#999;}
+        .dash-det{display:flex;flex-direction:column;gap:14px;padding-top:6px;}
+        .dash-sec{display:flex;align-items:center;gap:10px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#777;font-weight:700;margin-bottom:6px;}
+        .dash-sec::after{content:"";flex:1;height:1px;background:rgba(255,255,255,0.1);}
+        .dash-hoy{font-size:13px;line-height:1.4;}
+        .dash-dim{color:#777;font-size:11px;}
+        .dq-row{display:flex;gap:12px;align-items:baseline;padding:5px 0;border-top:1px solid rgba(255,255,255,0.07);}
+        .dq-row:first-of-type{border-top:none;}
+        .dq-d{flex:none;width:52px;font-family:'Caveat',cursive;font-size:19px;line-height:1;color:#bbb;}
+        .dq-row.hoy .dq-d{color:#fff;}
+        .dq-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:13px;}
+        .dq-h{color:#888;font-size:11px;}
+        .dash-ev{display:flex;align-items:center;gap:8px;text-decoration:none;color:#fff;font-size:12px;padding:3px 0;}
+        .dash-ev b{width:3px;height:12px;border-radius:2px;flex:none;}
+        .dash-ev-n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        @media (max-width:640px){
+          .grid.semana-days{display:flex;flex-direction:column;gap:10px;}
+          .semana-body[data-expandido="false"] .grid.semana-days{flex:0 1 auto;min-height:0;}
+          .semana-body[data-expandido="false"] .semana-days .card{flex:0 1 61px;min-height:44px;}
+          .semana-body[data-expandido="false"] .semana-days .card>.blk{flex:1;display:flex;flex-direction:column;justify-content:center;}
+          .semana-body[data-expandido="false"] .semana-days .dhdr{padding-top:0;padding-bottom:0;}
+        }
+        @media (max-height:849px){.grid.semana-days{gap:8px;padding-top:8px;padding-bottom:8px;}.dp-l2{display:none;}}
+        @media (max-height:679px){.semana .dname{font-size:26px;}.grid.semana-days{gap:5px;padding-top:6px;padding-bottom:6px;}}
+        @media (max-height:699px){.dashpanel{padding:6px 10px 8px;gap:4px;margin-top:8px;}.dp-nav .nbtn{padding:0 10px;font-size:16px;}.dp-nav .calbtn{padding:2px 8px;font-size:13px;}.aro{width:28px;height:28px;}.aro-n{font-size:17px;}.dw-dow{font-size:8px;}.dw-ic{height:12px;line-height:12px;}}
         @media(max-width:640px){.grid{padding:10px;gap:10px;grid-template-columns:1fr;}}
       `}</style>
 
@@ -1577,7 +1671,7 @@ function AngstApp() {
       }}/>}
       {calOpen&&<CalendarModal weekStart={weekStart} marks={calMarks} onMark={handleMark} dayData={dayData} calMarks={calMarks} kidsHealth={kidsHealth} onWeekSelect={date=>{const dow=date.getDay();const mon=addDays(date,-(dow===0?6:dow-1));const diff=Math.round((mon-BASE_DATE)/(7*86400000));updateWeekOffset(diff);}} onClose={()=>setCalOpen(false)}/>}
 
-      <div className="app">
+      <div className={"app"+(page===0?" app-fit":"")}>
         <div className="hdr">
           <div className="hdr-title" style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>angstapp</div>
           <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
@@ -1669,33 +1763,28 @@ function AngstApp() {
 
         {/* ── PLANNER ── */}
         {page===0&&(
-          <><div className="wnav">
+          <div className="semana">
+            <div className="semana-body" ref={semanaBodyRef} data-expandido={hayAbierto?"true":"false"} data-valvula={semanaValvula?"true":"false"}>
+<SemanaDashboard abierto={dashAbierto} onToggle={toggleDash}
+              navegacion={<>
               <button className="nbtn" onClick={()=>updateWeekOffset(weekOffset-1)}>‹</button>
               <div className="wnav-dates">{fmt(weekStart)} — {fmt(addDays(weekStart,6))}</div>
               <button className="calbtn" onClick={()=>setCalOpen(true)}>📅</button>
               <button className="nbtn" onClick={()=>updateWeekOffset(weekOffset+1)}>›</button>
-            </div>
-            {(()=>{
-              const weekDays = Array.from({length:7},(_,i)=>fmtFull(addDays(weekStart,i)));
-              const eventsThisWeek = [
-                ...(meleeMajors.filter(ev=>weekDays.some(dk=>dk>=ev.start&&dk<=ev.end)).map(ev=>({ev,color:"#ff6600",icon:<svg width="13" height="13" viewBox="0 0 24 24" style={{flexShrink:0}}><path fillRule="evenodd" fill="#fff" d="M12,1 A11,11,0,1,0,12,23 A11,11,0,1,0,12,1Z M1,14.5 H23 V16.5 H1Z M7.5,1 V23 H9.5 V1Z M8.5,12.5 A3,3,0,1,0,8.5,18.5 A3,3,0,1,0,8.5,12.5Z"/></svg>, url:"https://www.start.gg/"}))),
-                ...(POKEMON_EVENTS.filter(ev=>weekDays.some(dk=>dk>=ev.start&&dk<=ev.end)).map(ev=>({ev,color:"#ffcc00",icon:<svg width="13" height="13" viewBox="0 0 12 12" style={{flexShrink:0}}><circle cx="6" cy="6" r="5" fill="none" stroke="#111" strokeWidth="1.3"/><line x1="1" y1="6" x2="11" y2="6" stroke="#111" strokeWidth="1.3"/><circle cx="6" cy="6" r="1.8" fill="#111"/></svg>, url:ev.url}))),
-                ...(SC2_EVENTS.filter(ev=>weekDays.some(dk=>dk>=ev.start&&dk<=ev.end)).map(ev=>({ev,color:"#1565c0",icon:<span style={{fontSize:11,flexShrink:0}}>🎮</span>, url:ev.url}))),
-              ];
-              if(!eventsThisWeek.length) return null;
-              return eventsThisWeek.map(({ev,color,icon,url},idx)=>{
-                const isFinals = weekDays.some(dk=>dk===ev.end);
-                const textColor = color==="#ffcc00"?"#111":"#fff";
-                return (
-                  <a key={idx} href={url} target="_blank" rel="noopener" style={{background:color,padding:"5px 20px",display:"flex",alignItems:"center",gap:8,textDecoration:"none"}}>
-                    {icon}
-                    <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:textColor,flex:1}}>{ev.name}</span>
-                    {isFinals&&<span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:textColor,opacity:0.7,letterSpacing:1,textTransform:"uppercase",background:"rgba(0,0,0,0.15)",borderRadius:4,padding:"2px 6px"}}>finals</span>}
-                  </a>
-                );
-              });
-            })()}
-            <div className="grid">
+              </>}
+                  weekKeys={semanaKeys}
+                  todayKey={fmtFull(new Date())}
+                  ahoraMin={new Date().getHours()*60+new Date().getMinutes()}
+                  dayData={dayData}
+                  calMarks={calMarks}
+                  eventos={[...meleeMajors.map(ev=>({...ev,tipo:"melee",url:"https://www.start.gg/"})),...POKEMON_EVENTS.map(ev=>({...ev,tipo:"pokemon"})),...SC2_EVENTS.map(ev=>({...ev,tipo:"sc2"}))]}
+                  stressFor={k=>computeStressScore(k, dayData, calMarks, kidsHealth)}
+                  conNinosEn={k=>isWithKids(k, custody)}
+      ejercicioHoy={Object.values(ejercicioLog[fmtFull(new Date())]||{}).some(v=>v===true||!!(v&&v.done))}
+      kcalHoy={(nutriLog[fmtFull(new Date())]||[]).reduce((t,e)=>t+(e.kcal||0)*(e.qty||0),0)}
+                />
+              <div className="grid semana-days">
+
               {DAY_NAMES.map((dayName,di)=>{
                 const dayDate = addDays(weekStart,di);
                 const dateKey = fmtFull(dayDate);
@@ -1777,7 +1866,7 @@ function AngstApp() {
                           const barColor = ds<=5?"#4caf50":ds<=7?"#ff9800":"#f44336";
                           const label = ds<=5?"tranqui":ds<=7?"meh":"full";
                           return (
-                            <div title={`carga: ${label} (${ds}/10)`} onClick={()=>setMinimized(m=>({...m,[dateKey]:!m[dateKey]}))}
+                            <div title={`carga: ${label} (${ds}/10)`} onClick={()=>toggleDia(dateKey)}
                               style={{display:"flex",alignItems:"center",gap:4,marginRight:2,cursor:"pointer",padding:"4px 4px"}}>
                               <div style={{display:"flex",gap:1.5,alignItems:"center"}}>
                                 {Array.from({length:5}).map((_,i)=>(
@@ -1789,7 +1878,7 @@ function AngstApp() {
                             </div>
                           );
                         })()}
-                        <button className="min-btn" onClick={()=>setMinimized(m=>({...m,[dateKey]:!m[dateKey]}))} style={{color:isWeekend?"#aaa":undefined}} title={isMin?"expandir":"minimizar"}>{isMin?"▾":"▴"}</button>
+                        <button className="min-btn" onClick={()=>toggleDia(dateKey)} style={{color:isWeekend?"#aaa":undefined}} title={isMin?"expandir":"minimizar"}>{isMin?"▾":"▴"}</button>
                       </div>
                       {!isMin&&(fixed.length>0||getRecurringForDay(dateKey).length>0)&&(
                         <>
@@ -2025,7 +2114,8 @@ function AngstApp() {
                 );
               })}
             </div>
-          </>
+            </div>
+          </div>
         )}
 
         {page===1&&<BudgetPage budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
