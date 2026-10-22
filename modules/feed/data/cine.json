@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-22T14:54:36.471Z",
+  "generatedAt": "2026-10-22T21:17:13.068Z",
   "categories": [
     {
       "cat": "Películas",
@@ -586,7 +586,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 7.3
+            "tmdb": 7.4
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -824,7 +824,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 7
+            "tmdb": 6.9
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1109,6 +1109,87 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1514026",
+          "title": "Buddy",
+          "link": "https://www.themoviedb.org/movie/1514026",
+          "summary": "Un mágico unicornio naranja que canta retiene a su elenco como rehén en una dimensión surrealista de programa de televisión, mientras se vuelve cada vez más demente.",
+          "image": "https://image.tmdb.org/t/p/w500/1BdZbNvl1SfrrX8J9X5tQzN6Ivu.jpg",
+          "pubDate": "2026-08-27",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-15T21:01:29.777Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.1,
+            "rt": 88,
+            "metascore": 67,
+            "tmdb": 7.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "Pc9MbCNYn3k",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Keegan-Michael Key",
+              "character": "Buddy / Dark Buddy (voice)",
+              "order": 0
+            },
+            {
+              "name": "Cristin Milioti",
+              "character": "Grace",
+              "order": 1
+            },
+            {
+              "name": "Delaney Quinn",
+              "character": "Freddy",
+              "order": 2
+            },
+            {
+              "name": "Caleb Williams",
+              "character": "Wade",
+              "order": 3
+            },
+            {
+              "name": "Madison Skyy Polan",
+              "character": "Hannah",
+              "order": 4
+            },
+            {
+              "name": "Tristan Borders",
+              "character": "Oliver",
+              "order": 5
+            },
+            {
+              "name": "Patton Oswalt",
+              "character": "Strappy (voice)",
+              "order": 6
+            },
+            {
+              "name": "Jimmica Collins",
+              "character": "Betty Bunny / Scared Flower (voice)",
+              "order": 7
+            },
+            {
+              "name": "Eric Bauza",
+              "character": "Mr. Mailbox / Worry Well / Couchy / Trashy / Pee Flower (voice)",
+              "order": 8
+            },
+            {
+              "name": "Topher Grace",
+              "character": "Ben",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1339713",
           "title": "Obsession",
           "link": "https://www.themoviedb.org/movie/1339713",
@@ -1265,7 +1346,7 @@
               "order": 7
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1765072",
@@ -1500,87 +1581,6 @@
             {
               "name": "Sione Milford",
               "character": "Coconut Farmer",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1514026",
-          "title": "Buddy",
-          "link": "https://www.themoviedb.org/movie/1514026",
-          "summary": "Un mágico unicornio naranja que canta retiene a su elenco como rehén en una dimensión surrealista de programa de televisión, mientras se vuelve cada vez más demente.",
-          "image": "https://image.tmdb.org/t/p/w500/1BdZbNvl1SfrrX8J9X5tQzN6Ivu.jpg",
-          "pubDate": "2026-08-27",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-15T21:01:29.777Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.1,
-            "rt": 88,
-            "metascore": 67,
-            "tmdb": 7.3
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "Pc9MbCNYn3k",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Keegan-Michael Key",
-              "character": "Buddy / Dark Buddy (voice)",
-              "order": 0
-            },
-            {
-              "name": "Cristin Milioti",
-              "character": "Grace",
-              "order": 1
-            },
-            {
-              "name": "Delaney Quinn",
-              "character": "Freddy",
-              "order": 2
-            },
-            {
-              "name": "Caleb Williams",
-              "character": "Wade",
-              "order": 3
-            },
-            {
-              "name": "Madison Skyy Polan",
-              "character": "Hannah",
-              "order": 4
-            },
-            {
-              "name": "Tristan Borders",
-              "character": "Oliver",
-              "order": 5
-            },
-            {
-              "name": "Patton Oswalt",
-              "character": "Strappy (voice)",
-              "order": 6
-            },
-            {
-              "name": "Jimmica Collins",
-              "character": "Betty Bunny / Scared Flower (voice)",
-              "order": 7
-            },
-            {
-              "name": "Eric Bauza",
-              "character": "Mr. Mailbox / Worry Well / Couchy / Trashy / Pee Flower (voice)",
-              "order": 8
-            },
-            {
-              "name": "Topher Grace",
-              "character": "Ben",
               "order": 9
             }
           ],
@@ -4066,92 +4066,6 @@
           ]
         },
         {
-          "guid": "tmdb-tv-213375",
-          "title": "VisionQuest",
-          "link": "https://www.themoviedb.org/tv/213375",
-          "summary": "Tras reiniciarse, Visión ha estado huyendo de quienes pretenden convertirlo en un arma y ahora se encuentra escondido. Buscando un nuevo propósito, pide consejo a las distintas IA que están integradas en su programación, incluidos Friday, Edith, Jarvis y el infame Ultrón. Su discreta existencia llega a su fin cuando una recompensa por su cabeza le obliga a huir junto a Thomas Shepard, un misterioso joven que podría ser la reencarnación de su hijo. Mientras evita ser capturado, Visión tendrá que enfrentarse a su propia naturaleza, resistirse a la influencia de Ultrón y desentrañar el misterio que rodea a su joven compañero si quiere sobrevivir.",
-          "image": "https://image.tmdb.org/t/p/w500/hXlvDq98VMg3WJWTDzwcPeMk39A.jpg",
-          "pubDate": "2026-10-13",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-10-15T07:05:08.534Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.7
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-27",
-          "numberOfSeasons": 1,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 8,
-              "fechaEstreno": "2026-10-13"
-            }
-          ],
-          "currentSeason": 1,
-          "reviews": null,
-          "trailer": {
-            "key": "sXKnmgmbkoE",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Paul Bettany",
-              "character": "Vision",
-              "order": 0
-            },
-            {
-              "name": "James Spader",
-              "character": "Ultron",
-              "order": 1
-            },
-            {
-              "name": "Ruaridh Mollica",
-              "character": "Thomas",
-              "order": 2
-            },
-            {
-              "name": "Todd Stashwick",
-              "character": "Paladin",
-              "order": 3
-            },
-            {
-              "name": "Lauren Morais",
-              "character": "Lisa Molinari",
-              "order": 4
-            },
-            {
-              "name": "Orla Brady",
-              "character": "F.R.I.D.A.Y.",
-              "order": 5
-            },
-            {
-              "name": "Diane Morgan",
-              "character": "Handler",
-              "order": 6
-            },
-            {
-              "name": "Polly Frame",
-              "character": "Fiona Guthrie",
-              "order": 7
-            },
-            {
-              "name": "Henry Lewis",
-              "character": "D.U.M.-E.",
-              "order": 8
-            },
-            {
-              "name": "Jonathan Sayer",
-              "character": "U.",
-              "order": 9
-            }
-          ]
-        },
-        {
           "guid": "tmdb-tv-33238",
           "title": "Running Man",
           "link": "https://www.themoviedb.org/tv/33238",
@@ -4234,6 +4148,92 @@
               "name": "강개리",
               "character": "Self – Former Member",
               "order": 10
+            }
+          ]
+        },
+        {
+          "guid": "tmdb-tv-213375",
+          "title": "VisionQuest",
+          "link": "https://www.themoviedb.org/tv/213375",
+          "summary": "Tras reiniciarse, Visión ha estado huyendo de quienes pretenden convertirlo en un arma y ahora se encuentra escondido. Buscando un nuevo propósito, pide consejo a las distintas IA que están integradas en su programación, incluidos Friday, Edith, Jarvis y el infame Ultrón. Su discreta existencia llega a su fin cuando una recompensa por su cabeza le obliga a huir junto a Thomas Shepard, un misterioso joven que podría ser la reencarnación de su hijo. Mientras evita ser capturado, Visión tendrá que enfrentarse a su propia naturaleza, resistirse a la influencia de Ultrón y desentrañar el misterio que rodea a su joven compañero si quiere sobrevivir.",
+          "image": "https://image.tmdb.org/t/p/w500/hXlvDq98VMg3WJWTDzwcPeMk39A.jpg",
+          "pubDate": "2026-10-13",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-10-15T07:05:08.534Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.7
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-27",
+          "numberOfSeasons": 1,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 8,
+              "fechaEstreno": "2026-10-13"
+            }
+          ],
+          "currentSeason": 1,
+          "reviews": null,
+          "trailer": {
+            "key": "sXKnmgmbkoE",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Paul Bettany",
+              "character": "Vision",
+              "order": 0
+            },
+            {
+              "name": "James Spader",
+              "character": "Ultron",
+              "order": 1
+            },
+            {
+              "name": "Ruaridh Mollica",
+              "character": "Thomas",
+              "order": 2
+            },
+            {
+              "name": "Todd Stashwick",
+              "character": "Paladin",
+              "order": 3
+            },
+            {
+              "name": "Lauren Morais",
+              "character": "Lisa Molinari",
+              "order": 4
+            },
+            {
+              "name": "Orla Brady",
+              "character": "F.R.I.D.A.Y.",
+              "order": 5
+            },
+            {
+              "name": "Diane Morgan",
+              "character": "Handler",
+              "order": 6
+            },
+            {
+              "name": "Polly Frame",
+              "character": "Fiona Guthrie",
+              "order": 7
+            },
+            {
+              "name": "Henry Lewis",
+              "character": "D.U.M.-E.",
+              "order": 8
+            },
+            {
+              "name": "Jonathan Sayer",
+              "character": "U.",
+              "order": 9
             }
           ]
         },
@@ -5194,6 +5194,206 @@
             }
           ],
           "trending": false
+        },
+        {
+          "guid": "tmdb-tv-4656",
+          "title": "Raw",
+          "link": "https://www.themoviedb.org/tv/4656",
+          "summary": "A regularly scheduled, live, year-round program featuring some of the biggest WWE Superstars.",
+          "image": "https://image.tmdb.org/t/p/w500/fstEe6RsyNyPUnMwNcL20iNl0nE.jpg",
+          "pubDate": "1993-01-11",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-10-22T21:17:12.498Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.7,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.8
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-26",
+          "numberOfSeasons": 34,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 45,
+              "fechaEstreno": "1993-01-11"
+            },
+            {
+              "numero": 2,
+              "episodios": 47,
+              "fechaEstreno": "1994-01-03"
+            },
+            {
+              "numero": 3,
+              "episodios": 48,
+              "fechaEstreno": "1995-01-02"
+            },
+            {
+              "numero": 4,
+              "episodios": 51,
+              "fechaEstreno": "1996-01-01"
+            },
+            {
+              "numero": 5,
+              "episodios": 52,
+              "fechaEstreno": "1997-01-06"
+            },
+            {
+              "numero": 6,
+              "episodios": 52,
+              "fechaEstreno": "1998-01-05"
+            },
+            {
+              "numero": 7,
+              "episodios": 52,
+              "fechaEstreno": "1999-01-04"
+            },
+            {
+              "numero": 8,
+              "episodios": 52,
+              "fechaEstreno": "2000-01-03"
+            },
+            {
+              "numero": 9,
+              "episodios": 53,
+              "fechaEstreno": "2001-01-01"
+            },
+            {
+              "numero": 10,
+              "episodios": 52,
+              "fechaEstreno": "2002-01-07"
+            },
+            {
+              "numero": 11,
+              "episodios": 52,
+              "fechaEstreno": "2003-01-06"
+            },
+            {
+              "numero": 12,
+              "episodios": 52,
+              "fechaEstreno": "2004-01-05"
+            },
+            {
+              "numero": 13,
+              "episodios": 52,
+              "fechaEstreno": "2005-01-03"
+            },
+            {
+              "numero": 14,
+              "episodios": 52,
+              "fechaEstreno": "2006-01-02"
+            },
+            {
+              "numero": 15,
+              "episodios": 53,
+              "fechaEstreno": "2007-01-01"
+            },
+            {
+              "numero": 16,
+              "episodios": 52,
+              "fechaEstreno": "2008-01-07"
+            },
+            {
+              "numero": 17,
+              "episodios": 52,
+              "fechaEstreno": "2009-01-05"
+            },
+            {
+              "numero": 18,
+              "episodios": 52,
+              "fechaEstreno": "2010-01-04"
+            },
+            {
+              "numero": 19,
+              "episodios": 52,
+              "fechaEstreno": "2011-01-03"
+            },
+            {
+              "numero": 20,
+              "episodios": 53,
+              "fechaEstreno": "2012-01-02"
+            },
+            {
+              "numero": 21,
+              "episodios": 52,
+              "fechaEstreno": "2013-01-07"
+            },
+            {
+              "numero": 22,
+              "episodios": 52,
+              "fechaEstreno": "2014-01-05"
+            },
+            {
+              "numero": 23,
+              "episodios": 52,
+              "fechaEstreno": "2015-01-04"
+            },
+            {
+              "numero": 24,
+              "episodios": 52,
+              "fechaEstreno": "2016-01-03"
+            },
+            {
+              "numero": 25,
+              "episodios": 52,
+              "fechaEstreno": "2017-01-01"
+            },
+            {
+              "numero": 26,
+              "episodios": 53,
+              "fechaEstreno": "2017-12-31"
+            },
+            {
+              "numero": 27,
+              "episodios": 52,
+              "fechaEstreno": "2019-01-06"
+            },
+            {
+              "numero": 28,
+              "episodios": 52,
+              "fechaEstreno": "2020-01-05"
+            },
+            {
+              "numero": 29,
+              "episodios": 52,
+              "fechaEstreno": "2021-01-03"
+            },
+            {
+              "numero": 30,
+              "episodios": 52,
+              "fechaEstreno": "2022-01-02"
+            },
+            {
+              "numero": 31,
+              "episodios": 52,
+              "fechaEstreno": "2023-01-01"
+            },
+            {
+              "numero": 32,
+              "episodios": 53,
+              "fechaEstreno": "2023-12-29"
+            },
+            {
+              "numero": 33,
+              "episodios": 52,
+              "fechaEstreno": "2024-12-31"
+            },
+            {
+              "numero": 34,
+              "episodios": 52,
+              "fechaEstreno": "2026-01-05"
+            }
+          ],
+          "currentSeason": 34,
+          "reviews": null,
+          "trailer": {
+            "key": "FVO6mUQMon8",
+            "site": "YouTube"
+          },
+          "cast": []
         },
         {
           "guid": "tmdb-tv-2661",
@@ -6778,218 +6978,6 @@
             }
           ],
           "trending": false
-        },
-        {
-          "guid": "tmdb-tv-2221",
-          "title": "The View",
-          "link": "https://www.themoviedb.org/tv/2221",
-          "summary": "ABC Daytime's morning chatfest, currently featuring Whoopi Goldberg, Joy Behar, Sunny Hostin, Sara Haines, Alyssa Farah Griffin, and Ana Navarro discussing the most exciting events of the day. Hot topics in the news, the best experts in their field, celebrity interviews and general entertainment are all part of The View.",
-          "image": "https://image.tmdb.org/t/p/w500/pEUNIxCMh2jFjUj7u09f4O5CcR4.jpg",
-          "pubDate": "1997-08-11",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-09-22T20:58:41.048Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 2.4,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 4.3
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-09-22",
-          "numberOfSeasons": 30,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 311,
-              "fechaEstreno": "1997-08-11"
-            },
-            {
-              "numero": 2,
-              "episodios": 312,
-              "fechaEstreno": "1998-10-21"
-            },
-            {
-              "numero": 3,
-              "episodios": 308,
-              "fechaEstreno": "1999-12-31"
-            },
-            {
-              "numero": 4,
-              "episodios": 200,
-              "fechaEstreno": "2001-03-12"
-            },
-            {
-              "numero": 5,
-              "episodios": 150,
-              "fechaEstreno": "2002-01-02"
-            },
-            {
-              "numero": 6,
-              "episodios": 240,
-              "fechaEstreno": null
-            },
-            {
-              "numero": 7,
-              "episodios": 239,
-              "fechaEstreno": "2003-09-02"
-            },
-            {
-              "numero": 8,
-              "episodios": 312,
-              "fechaEstreno": "2004-08-30"
-            },
-            {
-              "numero": 9,
-              "episodios": 167,
-              "fechaEstreno": null
-            },
-            {
-              "numero": 10,
-              "episodios": 240,
-              "fechaEstreno": "2006-09-04"
-            },
-            {
-              "numero": 11,
-              "episodios": 259,
-              "fechaEstreno": "2007-09-04"
-            },
-            {
-              "numero": 12,
-              "episodios": 233,
-              "fechaEstreno": "2008-09-08"
-            },
-            {
-              "numero": 13,
-              "episodios": 120,
-              "fechaEstreno": "2009-01-05"
-            },
-            {
-              "numero": 14,
-              "episodios": 34,
-              "fechaEstreno": "2010-09-07"
-            },
-            {
-              "numero": 15,
-              "episodios": 0,
-              "fechaEstreno": null
-            },
-            {
-              "numero": 16,
-              "episodios": 0,
-              "fechaEstreno": null
-            },
-            {
-              "numero": 17,
-              "episodios": 167,
-              "fechaEstreno": "2013-09-09"
-            },
-            {
-              "numero": 18,
-              "episodios": 4,
-              "fechaEstreno": "2014-09-15"
-            },
-            {
-              "numero": 19,
-              "episodios": 0,
-              "fechaEstreno": null
-            },
-            {
-              "numero": 20,
-              "episodios": 167,
-              "fechaEstreno": "2016-09-06"
-            },
-            {
-              "numero": 21,
-              "episodios": 22,
-              "fechaEstreno": "2017-09-05"
-            },
-            {
-              "numero": 22,
-              "episodios": 208,
-              "fechaEstreno": "2018-09-04"
-            },
-            {
-              "numero": 23,
-              "episodios": 209,
-              "fechaEstreno": "2019-09-03"
-            },
-            {
-              "numero": 24,
-              "episodios": 213,
-              "fechaEstreno": "2020-09-08"
-            },
-            {
-              "numero": 25,
-              "episodios": 203,
-              "fechaEstreno": "2021-09-07"
-            },
-            {
-              "numero": 26,
-              "episodios": 206,
-              "fechaEstreno": "2022-09-06"
-            },
-            {
-              "numero": 27,
-              "episodios": 213,
-              "fechaEstreno": "2023-09-05"
-            },
-            {
-              "numero": 28,
-              "episodios": 196,
-              "fechaEstreno": "2024-09-03"
-            },
-            {
-              "numero": 29,
-              "episodios": 206,
-              "fechaEstreno": "2025-09-08"
-            },
-            {
-              "numero": 30,
-              "episodios": 14,
-              "fechaEstreno": "2026-09-08"
-            }
-          ],
-          "currentSeason": 30,
-          "reviews": null,
-          "trailer": {
-            "key": "ZSmLGilS5yY",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Joy Behar",
-              "character": "Self - Co-Host",
-              "order": 2
-            },
-            {
-              "name": "Sara Haines",
-              "character": "Self - Co-Host",
-              "order": 8
-            },
-            {
-              "name": "Whoopi Goldberg",
-              "character": "Self - Co-Host",
-              "order": 14
-            },
-            {
-              "name": "Alyssa Farah Griffin",
-              "character": "Self - Co-Host",
-              "order": 27
-            },
-            {
-              "name": "Ana Navarro",
-              "character": "Self - Co-Host",
-              "order": 28
-            },
-            {
-              "name": "Sunny Hostin",
-              "character": "Self - Co Host",
-              "order": 29
-            }
-          ],
-          "trending": false
         }
       ]
     },
@@ -7186,93 +7174,6 @@
               "order": 11
             }
           ]
-        },
-        {
-          "guid": "tmdb-tv-65733",
-          "title": "Doraemon, el gato cósmico",
-          "link": "https://www.themoviedb.org/tv/65733",
-          "summary": "Doraemon es un gato robot cósmico que viene del futuro, es amigo de Novita, un niño muy despistado y algo torpe, al cual ayudara con sus grandiosos inventos futuristas los cuales saca de su bolsillo mágico, de este modo tratara de evitar los problemas que él ha provocado en el futuro.",
-          "image": "https://image.tmdb.org/t/p/w500/9YqdMXlPTQGLIG67vqZdsPdPC4T.jpg",
-          "pubDate": "2005-04-22",
-          "source": "TMDb",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-09-29T16:22:09.475Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.4,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.1
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-03",
-          "numberOfSeasons": 1,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 1464,
-              "fechaEstreno": "2005-04-22"
-            }
-          ],
-          "currentSeason": 1,
-          "reviews": null,
-          "trailer": {
-            "key": "DgmGALXIsgA",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "大原めぐみ",
-              "character": "Nobita Nobi (voice)",
-              "order": 0
-            },
-            {
-              "name": "Wasabi Mizuta",
-              "character": "Doraemon (voice)",
-              "order": 1
-            },
-            {
-              "name": "かかずゆみ",
-              "character": "Shizuka Minamoto (voice)",
-              "order": 2
-            },
-            {
-              "name": "Tomokazu Seki",
-              "character": "Suneo Honekawa (voice)",
-              "order": 3
-            },
-            {
-              "name": "Subaru Kimura",
-              "character": "Takeshi Gouda (voice)",
-              "order": 4
-            },
-            {
-              "name": "千秋",
-              "character": "Dorami (voice)",
-              "order": 5
-            },
-            {
-              "name": "Kotono Mitsuishi",
-              "character": "Tamako Nobi (voice)",
-              "order": 6
-            },
-            {
-              "name": "Yasunori Matsumoto",
-              "character": "Nobisuke Nobi (voice)",
-              "order": 7
-            },
-            {
-              "name": "萩野志保子",
-              "character": "Hidetoshi Dekisugi (voice)",
-              "order": 8
-            },
-            {
-              "name": "Wataru Takagi",
-              "character": "Sensei (voice)",
-              "order": 9
-            }
-          ],
-          "trending": false
         },
         {
           "guid": "tmdb-tv-456",
@@ -7524,6 +7425,93 @@
               "order": 6
             }
           ]
+        },
+        {
+          "guid": "tmdb-tv-65733",
+          "title": "Doraemon, el gato cósmico",
+          "link": "https://www.themoviedb.org/tv/65733",
+          "summary": "Doraemon es un gato robot cósmico que viene del futuro, es amigo de Novita, un niño muy despistado y algo torpe, al cual ayudara con sus grandiosos inventos futuristas los cuales saca de su bolsillo mágico, de este modo tratara de evitar los problemas que él ha provocado en el futuro.",
+          "image": "https://image.tmdb.org/t/p/w500/9YqdMXlPTQGLIG67vqZdsPdPC4T.jpg",
+          "pubDate": "2005-04-22",
+          "source": "TMDb",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-09-29T16:22:09.475Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.4,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.1
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-03",
+          "numberOfSeasons": 1,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 1464,
+              "fechaEstreno": "2005-04-22"
+            }
+          ],
+          "currentSeason": 1,
+          "reviews": null,
+          "trailer": {
+            "key": "DgmGALXIsgA",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "大原めぐみ",
+              "character": "Nobita Nobi (voice)",
+              "order": 0
+            },
+            {
+              "name": "Wasabi Mizuta",
+              "character": "Doraemon (voice)",
+              "order": 1
+            },
+            {
+              "name": "かかずゆみ",
+              "character": "Shizuka Minamoto (voice)",
+              "order": 2
+            },
+            {
+              "name": "Tomokazu Seki",
+              "character": "Suneo Honekawa (voice)",
+              "order": 3
+            },
+            {
+              "name": "Subaru Kimura",
+              "character": "Takeshi Gouda (voice)",
+              "order": 4
+            },
+            {
+              "name": "千秋",
+              "character": "Dorami (voice)",
+              "order": 5
+            },
+            {
+              "name": "Kotono Mitsuishi",
+              "character": "Tamako Nobi (voice)",
+              "order": 6
+            },
+            {
+              "name": "Yasunori Matsumoto",
+              "character": "Nobisuke Nobi (voice)",
+              "order": 7
+            },
+            {
+              "name": "萩野志保子",
+              "character": "Hidetoshi Dekisugi (voice)",
+              "order": 8
+            },
+            {
+              "name": "Wataru Takagi",
+              "character": "Sensei (voice)",
+              "order": 9
+            }
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-tv-57775",
