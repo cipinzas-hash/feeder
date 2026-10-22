@@ -17,6 +17,8 @@ import EjercicioPage from "../modules/ejercicio/EjercicioPage.jsx";
 import NutricionPage from "../modules/nutricion/NutricionPage.jsx";
 import BudgetPage from "../modules/presupuesto/BudgetPage.jsx";
 import GastoModal from "../modules/presupuesto/GastoModal.jsx";
+import CarritoModal from "../modules/presupuesto/CarritoModal.jsx";
+import { carteraCompras, registrarCompra, deshacerCompra, inicioSobres, bolsillosDe, estadoBolsillo, categoriasDe, agregarCategoria, resolverPeriodo, montoCompra, ID_ALIMENTACION } from "./presupuesto-modelo.js";
 import IngestaRapida from "../modules/nutricion/IngestaRapida.jsx";
 import AgregarCartaModal from "../modules/pokecripto/AgregarCartaModal.jsx";
 import EspritPage from "../modules/espiritu/EspritPage.jsx";
@@ -65,6 +67,7 @@ const STOIC_PHRASES = [
 function AngstApp() {
   const [page, setPage] = useState(0);
   const [gastoOpen, setGastoOpen] = useState(false);
+  const [carritoOpen, setCarritoOpen] = useState(false);
   const [menuDatosOpen, setMenuDatosOpen] = useState(false); // 💾 Datos: backup local + Angst-data
   const [menuRegOpen, setMenuRegOpen] = useState(false);     // ➕ Registrar: gasto, ingesta, cartas
   const [ingestaOpen, setIngestaOpen] = useState(false);
@@ -1521,6 +1524,46 @@ function AngstApp() {
   };
   const cerrarMenus = ()=>{ setMenuDatosOpen(false); setMenuRegOpen(false); setPodcastMenuOpen(false); };
 
+  // Compras ↔ presupuesto (issue #25): un ítem comprado se descuenta de la cartera Alimentación (cantidad × precio).
+  // Mientras Alimentación no sea cartera con sobres activos, el ítem solo guarda su precio y no descuenta nada.
+  const comprasInfo = ()=>{
+    const hoy = fmtFull(new Date());
+    const dest = carteraCompras(budgets, hoy);
+    const ini = inicioSobres(budgets);
+    const base = {activo:false, dest, bolsillos:[], saldo:0, categorias:categoriasDe(dest?dest.row:{id:ID_ALIMENTACION}), puedeNuevaCategoria:!!dest};
+    if(!dest||!ini||dest.periodo<ini) return base;
+    const bolsillos = bolsillosDe(dest.sec,dest.row)
+      .map(b=>({...b, saldo:(estadoBolsillo(budgets,dest.periodo,dest.sec,dest.row.id,b.subId)||{saldo:0}).saldo}))
+      .filter(b=>!b.libre||!(dest.row.subs&&dest.row.subs.length)||b.asignado>0||b.saldo!==0);
+    return {...base, activo:true, bolsillos, saldo:bolsillos.reduce((t,b)=>t+b.saldo,0)};
+  };
+  const guardarBudget = (periodo,bud)=>{ budgetRef.current={...budgetRef.current,[periodo]:bud}; updateBudgetForMonth(periodo,bud); };
+  const comprasApi = {
+    info: comprasInfo,
+    comprar: item=>{
+      if(!comprasInfo().activo) return {patch:{}};
+      if(montoCompra(item)===0) return {error:"Falta el precio del ítem."};
+      const r = registrarCompra(budgetRef.current,{fecha:fmtFull(new Date()),item,subId:item.subId??null});
+      if(r.error) return {error:r.error};
+      guardarBudget(r.periodo,r.budget);
+      avisarRegistro("Gasto registrado ✓");
+      return {patch:{gastoId:r.gastoId,gastoPeriodo:r.periodo}};
+    },
+    desmarcar: item=>{
+      if(!item.gastoId) return {patch:{}};
+      const r = deshacerCompra(budgetRef.current,item.gastoPeriodo,item.gastoId);
+      if(r.error) return {error:r.error};
+      if(r.budget) guardarBudget(item.gastoPeriodo,r.budget);
+      return {patch:{gastoId:null,gastoPeriodo:null}};
+    },
+    nuevaCategoria: label=>{
+      const dest = carteraCompras(budgetRef.current,fmtFull(new Date()));
+      if(!dest) return;
+      guardarBudget(dest.periodo,agregarCategoria(resolverPeriodo(budgetRef.current,dest.periodo),dest.sec,dest.row.id,label));
+    },
+  };
+  const carritoPend = Object.values(dayData||{}).reduce((t,d)=>t+((d&&d.compras)||[]).filter(i=>!i.done).length,0);
+
   if(!loaded){
     return (
       <div style={{background:"#f7f6f4",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -1671,6 +1714,7 @@ function AngstApp() {
         items={dayData[comprasOpen]?.compras||[]}
         onSave={items=>updateDay(comprasOpen,{compras:items})}
         onMoveToNext={item=>{const nextDay=fmtFull(new Date(new Date(comprasOpen+"T12:00:00").getTime()+86400000));const ndd={...dayDataRef.current};const nd=ndd[nextDay]||makeEmptyDay();ndd[nextDay]={...nd,compras:[...nd.compras,{...item,origId:item.id,id:Date.now().toString()}]};setDayData(ndd);dayDataRef.current=ndd;saveToStorage({dayData:ndd});}}
+        info={comprasApi.info()} api={comprasApi}
         onClose={()=>setComprasOpen(null)}
       />}
       {notifClockOpen&&<AnalogClock h={notifClockOpen.h} m={notifClockOpen.m} onClose={()=>setNotifClockOpen(null)} onSave={({h,m})=>{
@@ -1710,6 +1754,10 @@ function AngstApp() {
               const itemMenu = {display:"block",width:"100%",textAlign:"left",background:"transparent",border:"none",borderBottom:"1px dashed #333",color:"#fff",padding:"10px 12px",fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"};
               const caja = {position:"absolute",top:"calc(100% + 4px)",right:0,width:230,background:"#222",border:"1px dashed #444",borderRadius:4,zIndex:600};
               return (<>
+                <button className="disk-btn" onClick={()=>{cerrarMenus();setCarritoOpen(true);}} title="Carrito de compras" style={{position:"relative"}}>
+                  🛒
+                  {carritoPend>0&&<span style={{position:"absolute",top:-4,right:-4,minWidth:14,height:14,borderRadius:7,background:"#e91e8c",color:"#fff",fontSize:9,lineHeight:"14px",textAlign:"center",padding:"0 3px",fontFamily:"'DM Sans',sans-serif"}}>{carritoPend}</span>}
+                </button>
                 <div style={{position:"relative"}}>
                   <button className={`disk-btn${exportOk===true?" ok":""}`} onClick={()=>{const o=!menuDatosOpen;cerrarMenus();setMenuDatosOpen(o);}} title="Datos: backup y Angst-data">💾</button>
                   {menuDatosOpen&&(
@@ -2165,6 +2213,7 @@ function AngstApp() {
         )}
 
         {page===1&&<BudgetPage budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
+        {carritoOpen&&<CarritoModal dayData={dayData} hoy={fmtFull(new Date())} api={comprasApi} onItem={updateComprasItem} onClose={()=>setCarritoOpen(false)}/>}
         {gastoOpen&&<GastoModal budgets={budgets} onSaveBudget={(...a)=>{updateBudgetForMonth(...a);avisarRegistro("Gasto registrado ✓");}} onClose={()=>setGastoOpen(false)}/>}
         {ingestaOpen&&<IngestaRapida nutriLog={nutriLog} saveNutriLog={guardarNutriLog} customFoods={customFoods} foodOverrides={foodOverrides}
           nutriDecks={nutriDecks} onClose={()=>setIngestaOpen(false)} onGuardado={avisarRegistro}/>}

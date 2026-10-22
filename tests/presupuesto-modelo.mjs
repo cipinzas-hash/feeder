@@ -6,6 +6,7 @@ import {
   puedeQuitarGasto, resumenDeudas, guiaSobres, capacidadPrestamo, candidatosPrestamo, sugerirFuentes,
   puedeGenerarPeriodo, primerArqueoPendiente, filasArqueo, guardarArqueo, rendicion, progresoMeta,
   proyeccionAnual, ritmoSobre,
+  categoriasDe, agregarCategoria, gastoPorCategoria, carteraCompras, montoCompra, registrarCompra, deshacerCompra, CATEGORIAS_ALIMENTACION,
 } from "../core/presupuesto-modelo.js";
 
 // Períodos 25 → 24
@@ -226,6 +227,68 @@ assert.equal(puedeEliminar({ "2026-09": oct }, "2026-09", "propositos", fila(), 
   assert.equal(ritmoSobre({ gastado: 10, disponible: 100, periodo: "2026-09", hoy: new Date(2026, 8, 1) }).pctPeriodo, 0);    // antes de empezar
   assert.equal(ritmoSobre({ gastado: 10, disponible: 100, periodo: "2026-09", hoy: new Date(2027, 0, 1) }).pctPeriodo, 1);    // período cerrado
   assert.equal(ritmoSobre({ gastado: 0, disponible: 0, periodo: "2026-09", hoy: mitad }), null);
+}
+
+// ── Alimentación como cartera, categorías y compras (issue #25) ─────────────
+{
+  const ali = (extra) => ({ id: "ali", emoji: "🍽️", label: "Alimentación", monto: 300000, ...extra });
+  const base = { ingresos: {}, gastos_base: [ali({ aCartera: true }), { id: "tra", label: "Transporte", monto: 42000 }], personales: [], propositos: [fila()], apertura: {} };
+  // Hasta que pasa el período, sigue siendo gasto base; el período siguiente la trae como cartera, sin la marca
+  const sig = limpiarParaNuevoPeriodo(base);
+  assert.equal(sig.gastos_base.some(r => r.id === "ali"), false);
+  assert.equal(sig.gastos_base.length, 1);
+  const movida = sig.propositos.find(r => r.id === "ali");
+  assert.equal(movida.monto, 300000); assert.equal(movida.aCartera, undefined);
+  assert.equal(limpiarParaNuevoPeriodo({ ...base, gastos_base: [ali()] }).gastos_base.length, 1);   // sin marca no se mueve
+  assert.equal(base.gastos_base[0].aCartera, true);                                                  // no muta el original
+
+  // Alimentación como cartera en el período siguiente (derivado de sep)
+  const B = { "2026-09": base };
+  assert.equal(carteraCompras(B, "2026-10-01"), null);                                  // en sep aún es gasto base
+  const dest = carteraCompras(B, "2026-10-26");                                           // 26-oct = período 2026-10
+  assert.equal(dest.sec, "propositos"); assert.equal(dest.row.id, "ali");
+  assert.equal(estadoBolsillo(B, "2026-10", "propositos", "ali", null).asignado, 300000);
+
+  // Categorías: Alimentación trae las suyas; el resto parte vacío; se puede agregar sin duplicar
+  assert.deepEqual(categoriasDe(ali()), CATEGORIAS_ALIMENTACION);
+  assert.deepEqual(categoriasDe(fila()), []);
+  let bud = resolverPeriodo(B, "2026-10");
+  bud = agregarCategoria(bud, "propositos", "ali", "Mascotas");
+  bud = agregarCategoria(bud, "propositos", "ali", " mascotas ");
+  assert.equal(categoriasDe(bud.propositos.find(r => r.id === "ali")).filter(x => x === "Mascotas").length, 1);
+  assert.equal(categoriasDe(bud.propositos.find(r => r.id === "ali")).length, CATEGORIAS_ALIMENTACION.length + 1);
+
+  // Compras: cantidad × precio, descuenta del bolsillo, guarda nota, categoría y vínculo con el ítem
+  const C = { ...B, "2026-10": bud };
+  assert.equal(montoCompra({ cantidad: 3, precio: 1200 }), 3600);
+  assert.equal(montoCompra({ precio: 990 }), 990);
+  assert.equal(montoCompra({ text: "pan" }), 0);
+  const item = { id: "i1", text: "Tomates", cantidad: 2, precio: 1500, categoria: "Verduras y frutas" };
+  const r1 = registrarCompra(C, { fecha: "2026-10-26", item });
+  assert.ok(!r1.error, r1.error);
+  const g = r1.budget.gastos[0];
+  assert.equal(g.monto, 3000); assert.equal(g.nota, "2× Tomates"); assert.equal(g.categoria, "Verduras y frutas"); assert.equal(g.compraId, "i1");
+  assert.equal(r1.gastoId, g.id); assert.equal(r1.periodo, "2026-10");
+  const C2 = { ...C, "2026-10": r1.budget };
+  assert.equal(estadoBolsillo(C2, "2026-10", "propositos", "ali", null).saldo, 297000);
+  // Sin precio no se registra; sin saldo suficiente tampoco
+  assert.ok(registrarCompra(C2, { fecha: "2026-10-26", item: { id: "i2", text: "Pan" } }).error);
+  assert.ok(registrarCompra(C2, { fecha: "2026-10-26", item: { id: "i3", text: "Asado de tira", cantidad: 1, precio: 400000 } }).error);
+  // Con Alimentación aún como gasto base no hay a quién descontar
+  assert.ok(registrarCompra(B, { fecha: "2026-10-01", item }).error);
+
+  // Gasto por categoría
+  const r2 = registrarCompra(C2, { fecha: "2026-10-27", item: { id: "i4", text: "Arroz", cantidad: 1, precio: 2000, categoria: "Despensa" } });
+  const r3 = registrarCompra({ ...C2, "2026-10": r2.budget }, { fecha: "2026-10-27", item: { id: "i5", text: "Cosa", cantidad: 1, precio: 500 } });
+  const pc = gastoPorCategoria(r3.budget, "propositos", "ali");
+  assert.equal(pc.total, 5500);
+  assert.deepEqual(pc.lista.map(x => [x.categoria, x.monto]), [["Verduras y frutas", 3000], ["Despensa", 2000], ["Sin categoría", 500]]);
+
+  // Desmarcar: devuelve la plata al sobre
+  const d = deshacerCompra(C2, "2026-10", r1.gastoId);
+  assert.equal(d.budget.gastos.length, 0);
+  assert.equal(estadoBolsillo({ ...C2, "2026-10": d.budget }, "2026-10", "propositos", "ali", null).saldo, 300000);
+  assert.equal(deshacerCompra(C2, "2026-10", "no-existe").budget, null);
 }
 
 console.log("presupuesto-modelo: OK");

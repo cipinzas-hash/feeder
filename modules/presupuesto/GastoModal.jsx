@@ -1,5 +1,5 @@
 import { fmtCLP } from "../../core/format.js";
-import { bolsillosDe, estadoBolsillo, inicioSobres, resolverPeriodo, periodoDeFecha, fechaISO, agregarGasto, candidatosPrestamo, sugerirFuentes, claveBolsillo, TOPE_PRESTAMO, TOPE_DEVOLUCION } from "../../core/presupuesto-modelo.js";
+import { bolsillosDe, estadoBolsillo, inicioSobres, resolverPeriodo, periodoDeFecha, fechaISO, agregarGasto, candidatosPrestamo, sugerirFuentes, claveBolsillo, categoriasDe, agregarCategoria, TOPE_PRESTAMO, TOPE_DEVOLUCION } from "../../core/presupuesto-modelo.js";
 import { AmountRow } from "./grilla.jsx";
 const { useState, useMemo } = React;
 
@@ -22,6 +22,8 @@ export default function GastoModal({ budgets, onSaveBudget, onClose, inicial }) 
   });
   const [monto, setMonto] = useState("");
   const [nota, setNota] = useState("");
+  const [categoria, setCategoria] = useState("");      // "" = sin categoría · "__nueva" = escribir una nueva
+  const [nuevaCat, setNuevaCat] = useState("");
   const [error, setError] = useState("");
   const [manual, setManual] = useState(null);   // fuentes editadas a mano; null = usar la sugerencia
 
@@ -68,7 +70,7 @@ export default function GastoModal({ budgets, onSaveBudget, onClose, inicial }) 
   }
 
   function elegirCartera(v) {
-    setCartera(v); setError(""); setManual(null);
+    setCartera(v); setError(""); setManual(null); setCategoria(""); setNuevaCat("");
     const [s, id] = v.split("|");
     const f = (budget[s] || []).find(r => r.id === id);
     setSubId(f && f.subs && f.subs.length ? String(f.subs[0].id) : "null");
@@ -77,9 +79,11 @@ export default function GastoModal({ budgets, onSaveBudget, onClose, inicial }) 
     if (!fila) { setError("Elige la cartera o el fondo personal."); return; }
     if (!elegido) { setError("Elige la sub-partida."); return; }
     const fuentes = falta > 0 ? usadas.filter(f => f.monto > 0) : undefined;
-    const r = agregarGasto(budgets, { fecha, sec, rowId: fila.id, subId: elegido.subId, monto: montoNum, nota, fuentes });
+    const cat = categoria === "__nueva" ? nuevaCat.trim() : categoria;
+    if (categoria === "__nueva" && !cat) { setError("Escribe el nombre de la categoría."); return; }
+    const r = agregarGasto(budgets, { fecha, sec, rowId: fila.id, subId: elegido.subId, monto: montoNum, nota, fuentes, categoria: cat });
     if (r.error) { setError(r.error); return; }
-    onSaveBudget(r.periodo, r.budget);
+    onSaveBudget(r.periodo, cat ? agregarCategoria(r.budget, sec, fila.id, cat) : r.budget);
     onClose();
   }
   const puede = !!fila && montoNum > 0 && (falta === 0 || completo);
@@ -138,6 +142,16 @@ export default function GastoModal({ budgets, onSaveBudget, onClose, inicial }) 
                   <div style={{ fontFamily: F, fontSize: 11, color: "#999", marginTop: 6, lineHeight: 1.4 }}>Se devuelve solo: desde el período siguiente se descuenta hasta el {Math.round(TOPE_DEVOLUCION * 100)}% de la asignación mensual de esta cartera.</div>
                 </div>
               )}
+
+              {fila && <>
+                <div style={rotulo}>Categoría (opcional)</div>
+                <select value={categoria} onChange={e => { setCategoria(e.target.value); setError(""); }} style={campo}>
+                  <option value="">Sin categoría</option>
+                  {categoriasDe(fila).map(c => <option key={c} value={c}>{c}</option>)}
+                  <option value="__nueva">+ nueva categoría…</option>
+                </select>
+                {categoria === "__nueva" && <input value={nuevaCat} onChange={e => { setNuevaCat(e.target.value); setError(""); }} placeholder="nombre de la categoría" style={{ ...campo, marginTop: 6 }}/>}
+              </>}
 
               <div style={rotulo}>Fecha</div>
               <input type="date" value={fecha} onChange={e => { setFecha(e.target.value || fechaISO(new Date())); setError(""); setManual(null); }} style={campo}/>

@@ -2,6 +2,8 @@ import { computeStressScore, DEFAULT_HUMORS } from "./stress.js";
 import { requestNotifPermission } from "./notifications.js";
 import { MONTH_NAMES, getHoliday, addDays, fmtFull } from "./dates.js";
 import { illnessLabel, eventLine, eventMatches } from "../modules/salud/saludModel.js";
+import { montoCompra } from "./presupuesto-modelo.js";
+import { CompraEditor, ChipCompra } from "../modules/presupuesto/CompraEditor.jsx";
 
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
@@ -617,8 +619,10 @@ function ModeMenu({ value, opts, placeholder, accent, onSelect, onAddOpt, compac
     </div>
   );
 }
-function ComprasModal({ items, onSave, onClose, onMoveToNext }) {
+function ComprasModal({ items, onSave, onClose, onMoveToNext, info, api }) {
   const [list, setList] = React.useState(items||[]);
+  const [editId, setEditId] = React.useState(null);
+  const [msg, setMsg] = React.useState("");
   const [newItem, setNewItem] = React.useState("");
   const [heldIdx, setHeldIdx] = React.useState(null);
   const [dragTarget, setDragTarget] = React.useState(null);
@@ -628,7 +632,23 @@ function ComprasModal({ items, onSave, onClose, onMoveToNext }) {
   // Save on every change
   function update(newList) { setList(newList); onSave(newList); }
   function add(){if(!newItem.trim())return;update([...list,{id:Date.now().toString(),text:newItem.trim(),done:false}]);setNewItem("");}
-  function toggle(id){if(heldIdx!==null)return;update(list.map(i=>i.id===id?{...i,done:!i.done}:i));}
+  // Marcar comprado registra el gasto en Alimentación (cantidad × precio); desmarcar lo devuelve al sobre.
+  function toggle(id){
+    if(heldIdx!==null)return;
+    const it=list.find(i=>i.id===id); if(!it)return;
+    setMsg("");
+    if(!api){update(list.map(i=>i.id===id?{...i,done:!i.done}:i));return;}
+    if(it.done){const r=api.desmarcar(it);if(r.error){setMsg(r.error);return;}update(list.map(i=>i.id===id?{...i,done:false,...(r.patch||{})}:i));return;}
+    if(info&&info.activo&&montoCompra(it)===0){setEditId(id);return;}
+    const r=api.comprar(it);if(r.error){setMsg(r.error);return;}
+    update(list.map(i=>i.id===id?{...i,done:true,...(r.patch||{})}:i));
+  }
+  const accionesDe = it => ({
+    guardar:f=>{update(list.map(i=>i.id===it.id?{...i,...f}:i));setEditId(null);},
+    comprar:f=>{const x={...it,...f};const r=api.comprar(x);if(r.error)return r.error;update(list.map(i=>i.id===it.id?{...x,done:true,...(r.patch||{})}:i));setEditId(null);return null;},
+    sinGasto:f=>{update(list.map(i=>i.id===it.id?{...i,...f,done:true}:i));setEditId(null);},
+    nuevaCategoria:api?api.nuevaCategoria:()=>{},
+  });
   function del(id){update(list.filter(i=>i.id!==id));}
   function close(){ onClose(); }
   return (
@@ -642,6 +662,7 @@ function ComprasModal({ items, onSave, onClose, onMoveToNext }) {
           </div>
         </div>
         <div style={{flex:1,overflowY:"auto",padding:"10px 14px"}}>
+          {msg&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#c00",background:"#fff5f5",border:"1px dashed #e0b0b0",borderRadius:6,padding:"8px 10px",margin:"2px 0 8px"}}>{msg}</div>}
           {list.length===0&&<div style={{color:"#ccc",fontFamily:"'DM Sans',sans-serif",fontSize:13,textAlign:"center",padding:"20px 0"}}>lista vacía</div>}
           {list.map((item,idx)=>{
             const isHeld = heldIdx===idx;
@@ -691,9 +712,13 @@ function ComprasModal({ items, onSave, onClose, onMoveToNext }) {
               <div onClick={()=>toggle(item.id)} style={{width:18,height:18,borderRadius:4,border:`1.5px dashed ${item.done?"#111":"#bbb"}`,background:item.done?"#111":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
                 {item.done&&<span style={{color:"#fff",fontSize:12,lineHeight:1}}>✓</span>}
               </div>
-              <div style={{flex:1,fontFamily:"'DM Sans',sans-serif",fontSize:14,color:item.done?"#bbb":"#333",textDecoration:item.done?"line-through":"none"}}>{item.text}</div>
+              <div onClick={()=>{if(!item.done&&api)setEditId(editId===item.id?null:item.id);}} style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,color:item.done?"#bbb":"#333",textDecoration:item.done?"line-through":"none"}}>{item.text}</div>
+                {api&&<ChipCompra item={item}/>}
+              </div>
               <button onClick={e=>{e.stopPropagation();if(!heldIdx)del(item.id);}} style={{background:"transparent",border:"none",color:isHeld?"#555":"#ddd",fontSize:15,cursor:"pointer",padding:"0 2px"}}>×</button>
             </div>
+            {api&&info&&editId===item.id&&!item.done&&<CompraEditor item={item} info={info} acciones={accionesDe(item)} onClose={()=>setEditId(null)}/>}
             </React.Fragment>;
           })}
         </div>

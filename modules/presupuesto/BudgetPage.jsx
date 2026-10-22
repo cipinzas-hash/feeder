@@ -1,6 +1,6 @@
 import { MONTH_NAMES } from "../../core/dates.js";
 import { fmtCLP } from "../../core/format.js";
-import { resolverPeriodo, inicioSobres, sumaSubs, puedeEliminar, quitarGasto, puedeQuitarGasto, puedeGenerarPeriodo, proyeccionAnual } from "../../core/presupuesto-modelo.js";
+import { resolverPeriodo, inicioSobres, sumaSubs, puedeEliminar, quitarGasto, puedeQuitarGasto, puedeGenerarPeriodo, proyeccionAnual, ID_ALIMENTACION } from "../../core/presupuesto-modelo.js";
 import { AmountRow, GRID, COL, GAP, FUENTE, PAD_MONTO, celdaTitulo } from "./grilla.jsx";
 import CarteraVentana from "./CarteraVentana.jsx";
 import GastoModal from "./GastoModal.jsx";
@@ -47,7 +47,7 @@ function MonthSelectorModal({ currentYear, currentMonth, onSelect, onClose }) { 
 
 const celda = (extra) => ({ fontFamily: FUENTE, ...extra });
 
-function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit, onRowSave, onRowAdd, onRowDelete, onRowCheck, onChartOpen, onOpenCartera, anual }) {
+function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit, onRowSave, onRowAdd, onRowDelete, onRowCheck, onChartOpen, onOpenCartera, onToggleCartera, anual }) {
   const T = totalIngreso;
   const pct = T > 0 ? ((subtotal / T) * 100).toFixed(1) : "-";
   const [hover, setHover] = useState(false);
@@ -108,6 +108,13 @@ function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit
                   ? <button onClick={() => onRowDelete(secKey, row.id)} style={{ background: "transparent", border: "none", color: "#e0e0e0", fontSize: 16, cursor: "pointer", lineHeight: 1, padding: 0, textAlign: "center" }} onMouseEnter={e => e.currentTarget.style.color = "#c00"} onMouseLeave={e => e.currentTarget.style.color = "#e0e0e0"}>×</button>
                   : <div/>}
               </div>
+              {onToggleCartera && (row.id === ID_ALIMENTACION || row.aCartera) && (
+                <div style={{ padding: "0 12px 9px 40px" }}>
+                  <button onClick={() => onToggleCartera(row.id)} title="Un sobre propio con saldo, gastos y compras que se descuentan" style={{ background: row.aCartera ? "#fffaf0" : "transparent", border: `1px dashed ${row.aCartera ? "#e0b070" : "#ccc"}`, borderRadius: 6, color: row.aCartera ? "#8a5a00" : "#888", fontFamily: FUENTE, fontSize: 11, padding: "3px 8px", cursor: "pointer" }}>
+                    {row.aCartera ? "🧾 Será cartera desde el período siguiente · deshacer" : "🧾 Pasar a cartera (sobre propio) desde el período siguiente"}
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}
@@ -179,6 +186,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
     save({ ...budget, [sec]: budget[sec].filter(r => r.id !== id) });
   }
   function checkRow(sec, id, checked) { save({ ...budget, [sec]: budget[sec].map(r => r.id === id ? { ...r, checked } : r) }); }
+  function toggleCartera(id) { save({ ...budget, gastos_base: budget.gastos_base.map(r => r.id === id ? { ...r, aCartera: !r.aCartera } : r) }); }
   function patchRow(sec, id, patch) { save({ ...budget, [sec]: budget[sec].map(r => r.id === id ? { ...r, ...patch } : r) }); }
   function delGasto(id) {
     const g = (budget.gastos || []).find(x => x.id === id);
@@ -248,7 +256,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
           ))}
         </div>
       </div>
-      <BudgetSec title="Gastos Base" emoji="🧱" rows={budget.gastos_base} secKey="gastos_base" subtotal={sumBase} canEdit anual={proy.filas.gastos_base} {...secProps}/>
+      <BudgetSec title="Gastos Base" emoji="🧱" rows={budget.gastos_base} secKey="gastos_base" subtotal={sumBase} canEdit onToggleCartera={toggleCartera} anual={proy.filas.gastos_base} {...secProps}/>
       <BudgetSec title="Fondos Personales" emoji="👤" rows={budget.personales} secKey="personales" subtotal={sumPers} canEdit={false} onOpenCartera={abrirCartera} anual={proy.filas.personales} {...secProps}/>
       <BudgetSec title="Fondos por Propósito" emoji="📦" rows={budget.propositos} secKey="propositos" subtotal={sumProp} canEdit onOpenCartera={abrirCartera} anual={proy.filas.propositos} {...secProps}/>
       <div style={{ border: "2px solid #111", borderRadius: 8, overflow: "hidden", marginBottom: 8 }}>

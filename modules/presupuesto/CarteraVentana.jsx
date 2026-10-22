@@ -1,5 +1,5 @@
 import { fmtCLP } from "../../core/format.js";
-import { estadoFila, resumenDeudas, ritmoSobre } from "../../core/presupuesto-modelo.js";
+import { estadoFila, resumenDeudas, ritmoSobre, gastoPorCategoria, claveAnterior, resolverPeriodo } from "../../core/presupuesto-modelo.js";
 import CarteraPanel from "./CarteraPanel.jsx";
 import { FUENTE } from "./grilla.jsx";
 const { useState, useEffect } = React;
@@ -34,6 +34,9 @@ export default function CarteraVentana({ carteras, index, onIndex, onClose, budg
   const ritmo = estado ? ritmoSobre({ gastado: estado.gastado, disponible: estado.debiaHaber + estado.prestamoRecibido - estado.prestamoDado, periodo }) : null;
   const colorRitmo = ritmo ? { bien: "#3a9a3a", atento: "#e0a020", adelantado: "#c33" }[ritmo.estado] : "#ccc";
   const textoRitmo = ritmo ? { bien: "Vas al ritmo del mes o mejor.", atento: "Vas un poco por delante del calendario.", adelantado: "Gastas más rápido que el mes: el sobre puede quedarse corto antes del 24." }[ritmo.estado] : "";
+  // Gasto por categoría del período, frente al período anterior (si existe).
+  const porCat = sobresOn ? gastoPorCategoria(budget, sec, row.id) : { lista: [], total: 0 };
+  const antCat = (() => { const a = claveAnterior(periodo); if (!budgets[a]) return null; const m = {}; gastoPorCategoria(resolverPeriodo(budgets, a), sec, row.id).lista.forEach(x => { m[x.categoria] = x.monto; }); return m; })();
   const dato = (titulo, valor, color) => (
     <div style={{ flex: 1, textAlign: "center" }}>
       <div style={{ fontFamily: FUENTE, fontSize: 9, color: "#aaa", letterSpacing: 1, textTransform: "uppercase" }}>{titulo}</div>
@@ -86,6 +89,20 @@ export default function CarteraVentana({ carteras, index, onIndex, onClose, budg
           )}
           {aviso && <div style={{ fontFamily: FUENTE, fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", margin: "6px 0 10px" }}>{aviso}</div>}
           {!sobresOn && <div style={{ fontFamily: FUENTE, fontSize: 12, color: "#999", padding: "4px 0 10px" }}>Los sobres no están iniciados en este período: toca 🧾 en Presupuesto para activar saldos y gastos.</div>}
+          {porCat.total > 0 && (
+            <div style={{ margin: "4px 0 14px" }}>
+              <div style={{ fontFamily: FUENTE, fontSize: 10, color: "#999", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6, display: "flex", justifyContent: "space-between" }}><span>Gasto por categoría</span>{antCat && <span>período ant.</span>}</div>
+              {porCat.lista.map(x => (
+                <div key={x.categoria} style={{ marginBottom: 6 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontFamily: FUENTE, fontSize: 12, color: x.categoria === "Sin categoría" ? "#aaa" : "#333", gap: 8 }}>
+                    <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{x.categoria}</span>
+                    <span style={{ whiteSpace: "nowrap" }}><b>{fmtCLP(x.monto)}</b> <span style={{ color: "#aaa" }}>{Math.round(x.monto / porCat.total * 100)}%</span>{antCat && <span style={{ color: "#bbb" }}> · {antCat[x.categoria] != null ? fmtCLP(antCat[x.categoria]) : "—"}</span>}</span>
+                  </div>
+                  <div style={{ height: 5, background: "#eee", borderRadius: 3, marginTop: 3 }}><div style={{ width: Math.round(x.monto / porCat.lista[0].monto * 100) + "%", height: "100%", background: "#555", borderRadius: 3 }}/></div>
+                </div>
+              ))}
+            </div>
+          )}
           <CarteraPanel sec={sec} row={row} periodo={periodo} budgets={budgets} budget={budget} estado={estado} sobresOn={sobresOn} esInicio={esInicio} etiquetaSaldo={etiqueta}
             onPatchRow={patch => onPatchRow(sec, row.id, patch)} onDeleteGasto={onDeleteGasto} onApertura={onApertura} onAviso={setAviso}/>
           <button onClick={() => onGasto(sec, row.id)} disabled={!sobresOn} style={{ width: "100%", marginTop: 14, padding: "12px", background: sobresOn ? "#111" : "#ccc", color: "#fff", border: "none", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 19, fontWeight: 700, cursor: sobresOn ? "pointer" : "default" }}>💸 Registrar gasto en esta cartera</button>

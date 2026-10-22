@@ -15,6 +15,9 @@
 //                 conteo físico de cada sobre al cierre del período. Es obligatorio antes de
 //                 generar el período siguiente; una diferencia no bloquea, queda documentada.
 //   fila.subs[].meta {objetivo, fecha:"YYYY-MM-DD"}  meta de ahorro con fecha de una sub-partida.
+//   fila.categorias [string]  categorías de gasto de la cartera (lista fija, editable); Alimentación trae una por defecto.
+//   fila.aCartera true   (solo en gastos_base) pasa a cartera desde el período siguiente (ver limpiarParaNuevoPeriodo).
+//   gasto.categoria / gasto.compraId  categoría del gasto y, si viene de una compra, el id del ítem de compras.
 //
 // Carteras = fondos por propósito y fondos personales. Los gastos base quedan fuera.
 // Un "bolsillo" es una sub-partida o, con subId null, lo no repartido de la cartera
@@ -57,6 +60,12 @@ export function limpiarParaNuevoPeriodo(source) {
   const copia = JSON.parse(JSON.stringify(source));
   CAMPOS_TRANSITORIOS.forEach(k => { delete copia[k]; });
   copia.ingresos = { ...presupuestoVacio().ingresos, ...(copia.ingresos || {}) };
+  // Un gasto base marcado `aCartera` pasa a ser cartera (fondo por propósito) desde este período: conserva id, monto y emoji.
+  const aMover = (copia.gastos_base || []).filter(r => r && r.aCartera);
+  if (aMover.length) {
+    copia.gastos_base = copia.gastos_base.filter(r => !(r && r.aCartera));
+    copia.propositos = [...(copia.propositos || []), ...aMover.map(({ aCartera, ...r }) => r)];
+  }
   SECCIONES.forEach(sec => { copia[sec] = (copia[sec] || []).map(r => ({ ...r, checked: false })); });
   return copia;
 }
@@ -321,14 +330,16 @@ function validarFuentes(budgets, periodo, destino, falta, fuentes) {
 
 // Devuelve {periodo, budget} con el gasto agregado (y el préstamo, si el gasto supera el saldo), o {error}.
 // No modifica budgets. `fuentes` solo se usa cuando falta saldo.
-export function agregarGasto(budgets, { fecha, sec, rowId, subId, monto, nota, fuentes }) {
+export function agregarGasto(budgets, { fecha, sec, rowId, subId, monto, nota, fuentes, categoria, compraId }) {
   const puede = puedeGenerarPeriodo(budgets, periodoDeFecha(fecha));
   if (!puede.ok) return { error: puede.motivo };
   const m = Math.round(monto);
   const v = validarGasto(budgets, { fecha, sec, rowId, subId, monto: m });
   const base0 = resolverPeriodo(budgets, periodoDeFecha(fecha));
   const gasto = { id: `g${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`, fecha: fechaISO(fechaDe(fecha)), sec, rowId, subId: subId ?? null, monto: m, nota: (nota || "").trim() };
-  if (v.ok) return { periodo: v.periodo, budget: { ...base0, gastos: [...(base0.gastos || []), gasto] } };
+  if (categoria && String(categoria).trim()) gasto.categoria = String(categoria).trim();
+  if (compraId) gasto.compraId = compraId;
+  if (v.ok) return { periodo: v.periodo, budget: { ...base0, gastos: [...(base0.gastos || []), gasto] }, gastoId: gasto.id };
   if (!v.falta) return { error: v.motivo, saldo: v.saldo };
   const periodo = periodoDeFecha(fecha);
   const destino = { sec, rowId, subId: subId ?? null };
@@ -337,7 +348,7 @@ export function agregarGasto(budgets, { fecha, sec, rowId, subId, monto, nota, f
   if (err) return { error: err, saldo: v.saldo, falta: v.falta };
   const prestamo = { id: `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`, fecha: gasto.fecha, destino, monto: v.falta, fuentes: lista };
   gasto.prestamoId = prestamo.id;
-  return { periodo, budget: { ...base0, gastos: [...(base0.gastos || []), gasto], prestamos: [...(base0.prestamos || []), prestamo] } };
+  return { periodo, budget: { ...base0, gastos: [...(base0.gastos || []), gasto], prestamos: [...(base0.prestamos || []), prestamo] }, gastoId: gasto.id };
 }
 
 // Quita el gasto y, si pidió fondos, también su préstamo.
@@ -530,4 +541,79 @@ export function puedeEliminar(budgets, periodo, sec, row, subId) {
 export function maxSubMonto(row, subId) {
   const otras = (row.subs || []).filter(s => s.id !== subId).reduce((s, x) => s + (x.monto || 0), 0);
   return Math.max(0, (row.monto || 0) - otras);
+}
+
+// ── Categorías de gasto y compras de Alimentación ───────────────────────────
+export const ID_ALIMENTACION = "ali";
+export const CATEGORIAS_ALIMENTACION = ["Verduras y frutas", "Carnes y pescado", "Lácteos y huevos", "Despensa", "Panadería", "Bebidas", "Snacks y dulces", "Otros"];
+export const SIN_CATEGORIA = "Sin categoría";
+
+// Lista de categorías de una cartera: la propia si existe; Alimentación parte con las suyas; el resto parte vacía.
+export function categoriasDe(row) {
+  if (row && Array.isArray(row.categorias)) return row.categorias;
+  if (row && row.id === ID_ALIMENTACION) return CATEGORIAS_ALIMENTACION.slice();
+  return [];
+}
+
+// Agrega una categoría a la cartera (sin duplicar, sin distinguir mayúsculas). Devuelve el presupuesto nuevo.
+export function agregarCategoria(budget, sec, rowId, label) {
+  const l = String(label || "").trim();
+  if (!l) return budget;
+  return { ...budget, [sec]: (budget[sec] || []).map(r => {
+    if (r.id !== rowId) return r;
+    const lista = categoriasDe(r);
+    if (lista.some(x => x.toLowerCase() === l.toLowerCase())) return r;
+    return { ...r, categorias: [...lista, l] };
+  }) };
+}
+
+// Gasto del período por categoría: [{categoria, monto, n}] de mayor a menor, y el total.
+export function gastoPorCategoria(budget, sec, rowId) {
+  const mapa = {};
+  gastosDe(budget, sec, rowId).forEach(g => {
+    const c = g.categoria || SIN_CATEGORIA;
+    mapa[c] = mapa[c] || { categoria: c, monto: 0, n: 0 };
+    mapa[c].monto += g.monto || 0; mapa[c].n += 1;
+  });
+  const lista = Object.values(mapa).sort((a, b) => b.monto - a.monto);
+  return { lista, total: lista.reduce((s, x) => s + x.monto, 0) };
+}
+
+// Cartera que paga las compras: la fila «ali» en fondos por propósito o personales. null si Alimentación aún es gasto base.
+export function carteraCompras(budgets, fecha) {
+  const periodo = periodoDeFecha(fecha);
+  const b = resolverPeriodo(budgets, periodo);
+  for (const sec of CARTERAS) {
+    const row = (b[sec] || []).find(r => r.id === ID_ALIMENTACION);
+    if (row) return { sec, row, periodo };
+  }
+  return null;
+}
+
+export function montoCompra(item) {
+  const cant = Number(item && item.cantidad) > 0 ? Number(item.cantidad) : 1;
+  const precio = Number(item && item.precio) > 0 ? Number(item.precio) : 0;
+  return Math.round(cant * precio);
+}
+
+// Compra → gasto de Alimentación. {periodo, budget, gastoId} o {error}. No modifica budgets.
+export function registrarCompra(budgets, { fecha, item, subId }) {
+  const dest = carteraCompras(budgets, fecha);
+  if (!dest) return { error: "Alimentación todavía no es una cartera: pásala a cartera en Presupuesto (Gastos Base)." };
+  const monto = montoCompra(item);
+  if (monto <= 0) return { error: "Falta el precio del ítem." };
+  const cant = Number(item.cantidad) > 0 ? Number(item.cantidad) : 1;
+  const r = agregarGasto(budgets, { fecha, sec: dest.sec, rowId: dest.row.id, subId: subId ?? null, monto, nota: `${cant !== 1 ? cant + "× " : ""}${item.text}`, categoria: item.categoria, compraId: item.id });
+  if (r.error) return { error: r.error, saldo: r.saldo };
+  return r;
+}
+
+// Deshace el gasto de una compra (al desmarcarla). {budget} del período, o {error}.
+export function deshacerCompra(budgets, periodo, gastoId) {
+  const b = budgets && budgets[periodo];
+  const g = b && (b.gastos || []).find(x => x.id === gastoId);
+  if (!g) return { budget: null };                       // el gasto ya no existe: nada que deshacer
+  const p = puedeQuitarGasto(budgets, g);
+  if (!p.ok) return { error: p.motivo };
+  return { budget: quitarGasto(b, gastoId) };
 }

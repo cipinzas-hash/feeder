@@ -38,3 +38,13 @@ Especificación acordada con Cristopher el 17-oct-2026 y estado de implementaci�
 - [x] Fase 2: multifinanciamiento y guía mensual
 - [x] Fase 3: arqueo, rendición y metas con fecha
 - [x] Fase 4: proyección anual con montos reales por mes y ritmo del sobre
+
+## Alimentación, compras y categorías (issue #25)
+Especificación acordada con Cristopher el 21-oct-2026.
+
+- **Alimentación como cartera**: hoy es un gasto base. En su fila de Gastos Base, «🧾 Pasar a cartera» la marca (`fila.aCartera`); al generarse el período siguiente (`limpiarParaNuevoPeriodo`) la fila pasa a fondos por propósito con el mismo id (`ali`), monto y emoji, ya con sobre, sub-partidas, arqueo y rendición. El período en curso no cambia.
+- **Compras con precio**: cada ítem de la lista de compras acepta `cantidad`, `precio` (unitario), `categoria` y `subId`. Al marcarlo comprado se registra un gasto en la cartera `ali` por cantidad × precio, con nota «2× Tomates», su categoría y `compraId`; el ítem guarda `gastoId` y `gastoPeriodo`. Desmarcarlo borra ese gasto (si su préstamo no empezó a devolverse). Si el ítem no cabe en el saldo no se registra: el multifinanciamiento sigue siendo por 💸 Gasto. Mientras `ali` no sea cartera con sobres activos, el ítem solo guarda su precio y no descuenta nada.
+- **Categorías**: lista fija por cartera (`fila.categorias`), editable (+ nueva categoría). Alimentación trae ocho por defecto (`CATEGORIAS_ALIMENTACION`); las demás carteras parten vacías. Se elige en 💸 Gasto y por ítem de compra; la ventana de la cartera muestra el gasto por categoría del período junto al anterior.
+- **🛒 Carrito** en el menú superior: todas las compras pendientes de todos los días, con contador; se completa precio/cantidad/categoría y se marca comprado desde ahí. También lista lo comprado hoy para deshacer.
+- Datos nuevos (todos opcionales, sin migración): `fila.categorias`, `fila.aCartera`, `gasto.categoria`, `gasto.compraId`, ítem de compras `{cantidad, precio, categoria, subId, gastoId, gastoPeriodo}`.
+- Código: modelo en `core/presupuesto-modelo.js` (`carteraCompras`, `registrarCompra`, `deshacerCompra`, `categoriasDe`, `agregarCategoria`, `gastoPorCategoria`); UI en `modules/presupuesto/CompraEditor.jsx` y `CarritoModal.jsx`; el cableado vive en `core/App.jsx` (`comprasApi`).
