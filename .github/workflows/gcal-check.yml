@@ -1,0 +1,20 @@
+name: gcal-check
+on: workflow_dispatch
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probar credenciales de Google
+        env:
+          CID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          CSEC: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          RT: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          CAL: family05347867035797041219@group.calendar.google.com
+        run: |
+          tok=$(curl -s -X POST https://oauth2.googleapis.com/token -d client_id="$CID" -d client_secret="$CSEC" -d refresh_token="$RT" -d grant_type=refresh_token)
+          at=$(echo "$tok" | jq -r '.access_token // empty')
+          if [ -z "$at" ]; then echo "::error::token: $(echo "$tok" | jq -r '[.error, .error_description] | map(select(. != null)) | join(" ")')"; exit 1; fi
+          echo "::notice::token OK scope=$(echo "$tok" | jq -r .scope)"
+          code=$(curl -s -o ev.json -w '%{http_code}' -H "Authorization: Bearer $at" "https://www.googleapis.com/calendar/v3/calendars/$CAL/events?maxResults=1&singleEvents=true&timeMin=$(date -u +%Y-%m-%dT%H:%M:%SZ)")
+          echo "::notice::events.list http=$code tz=$(jq -r '.timeZone // empty' ev.json) accessRole=$(jq -r '.accessRole // empty' ev.json)"
+          [ "$code" = 200 ] || { echo "::error::events.list: $(jq -r '.error.message // empty' ev.json)"; exit 1; }
