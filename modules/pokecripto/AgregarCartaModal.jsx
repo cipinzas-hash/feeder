@@ -2,6 +2,7 @@
 // La lógica (búsqueda, armado de la carta, cola para el bot de precios) es la misma de PokecriptoPage: vive en alta.js.
 import { CARPETAS_DEFAULT } from "./PokecriptoPage.jsx";
 import { getPrimaryPrice } from "./lib/pricing.mjs";
+import VentanaArriba, { Hechos } from "../../core/VentanaArriba.jsx";
 import { isDarkCard, buscarCartas, armarCartaNueva, encolarPokecriptoPending } from "./alta.js";
 const { useState, useMemo } = React;
 
@@ -13,7 +14,8 @@ const chip = (activo) => ({ fontFamily: F, fontSize: 11, padding: "5px 12px", bo
 const campo = { width: "100%", border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontSize: 16, fontFamily: C, outline: "none", boxSizing: "border-box", color: "#111" };
 const fmtUSD = (n) => "$" + parseFloat(n || 0).toFixed(2);
 
-function AgregarCartaModal({ inventario, carpetas, priceCache, saveInventario, onClose, onGuardado }) {
+// permanecer: la ventana queda abierta al guardar para registrar varias cartas seguidas (se cierra tocando fuera).
+function AgregarCartaModal({ inventario, carpetas, priceCache, saveInventario, permanecer, onClose, onGuardado }) {
   const inv = inventario || [];
   const cache = priceCache || {};
   const hoy = new Date().toISOString().slice(0, 10);
@@ -26,6 +28,8 @@ function AgregarCartaModal({ inventario, carpetas, priceCache, saveInventario, o
   const [resultados, setResultados] = useState([]);
   const [error, setError] = useState(null);
   const [carta, setCarta] = useState(null);
+  const [hechos, setHechos] = useState([]);
+  const [ultima, setUltima] = useState(null);   // destino/carpeta de la última carta guardada: la siguiente parte desde ahí
   const [form, setForm] = useState({ destino: "inventario", carpeta: carpetasNormales[0] || "MLP", cantidad: 1, costoUSD: "", precioObjetivo: "", condicion: "NM" });
 
   async function buscar() {
@@ -42,7 +46,8 @@ function AgregarCartaModal({ inventario, carpetas, priceCache, saveInventario, o
 
   function elegir(c) {
     setCarta(c);
-    setForm(f => ({ ...f, destino: "inventario", carpeta: isDarkCard(c) && carpetasNormales.includes("Dark Collection") ? "Dark Collection" : (carpetasNormales[0] || "MLP"), cantidad: 1, costoUSD: "", precioObjetivo: "" }));
+    const carpetaBase = isDarkCard(c) && carpetasNormales.includes("Dark Collection") ? "Dark Collection" : (carpetasNormales[0] || "MLP");
+    setForm(f => ({ ...f, destino: ultima ? ultima.destino : "inventario", carpeta: ultima ? ultima.carpeta : carpetaBase, cantidad: 1, costoUSD: "", precioObjetivo: "" }));
   }
   function guardar() {
     const precio = precioDe(carta);
@@ -52,13 +57,18 @@ function AgregarCartaModal({ inventario, carpetas, priceCache, saveInventario, o
     } catch (e) { setError("No se pudo guardar la carta"); return; }
     encolarPokecriptoPending([nueva]);
     if (onGuardado) onGuardado(`Guardado en ${nueva.carpeta} ✓`);
-    onClose();
+    if (permanecer) {
+      setHechos(h => [...h, `${carta.name} · guardado en ${nueva.carpeta}`]);
+      setUltima({ destino: form.destino, carpeta: form.destino === "watch" ? "Price Watch" : form.carpeta });
+      setCarta(null); setResultados([]); setQuery(""); setError(null);
+    } else onClose();
   }
 
   const envoltorio = (hijos) => (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-      <div onClick={e => e.stopPropagation()} style={{ width: "min(96vw,440px)", background: "#fff", borderRadius: "16px 16px 0 0", padding: "20px 20px 34px", maxHeight: "90vh", overflowY: "auto", boxSizing: "border-box" }}>{hijos}</div>
-    </div>
+    <VentanaArriba onClose={onClose} ancho={440}>
+      {permanecer && <Hechos hechos={hechos} />}
+      {hijos}
+    </VentanaArriba>
   );
 
   if (carta) {
@@ -151,7 +161,7 @@ function AgregarCartaModal({ inventario, carpetas, priceCache, saveInventario, o
           </button>
         );
       })}
-      <button onClick={onClose} style={{ width: "100%", background: "transparent", color: "#999", border: "none", padding: "12px 8px 0", fontFamily: F, fontSize: 12, cursor: "pointer" }}>cancelar</button>
+      <button onClick={onClose} style={{ width: "100%", background: "transparent", color: "#999", border: "none", padding: "12px 8px 0", fontFamily: F, fontSize: 12, cursor: "pointer" }}>{permanecer ? "cerrar" : "cancelar"}</button>
     </div>
   );
 }

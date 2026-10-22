@@ -21,6 +21,7 @@ import CarritoModal from "../modules/presupuesto/CarritoModal.jsx";
 import { carteraCompras, registrarCompra, deshacerCompra, inicioSobres, bolsillosDe, estadoBolsillo, categoriasDe, agregarCategoria, resolverPeriodo, montoCompra, ID_ALIMENTACION } from "./presupuesto-modelo.js";
 import IngestaRapida from "../modules/nutricion/IngestaRapida.jsx";
 import AgregarCartaModal from "../modules/pokecripto/AgregarCartaModal.jsx";
+import RegistroRapido from "./RegistroRapido.jsx";
 import EspritPage from "../modules/espiritu/EspritPage.jsx";
 import FeedPage from "../modules/feed/FeedPage.jsx";
 import VitrinaPage from "../modules/vitrina/VitrinaPage.jsx";
@@ -72,6 +73,7 @@ function AngstApp() {
   const [menuRegOpen, setMenuRegOpen] = useState(false);     // ➕ Registrar: gasto, ingesta, cartas
   const [ingestaOpen, setIngestaOpen] = useState(false);
   const [cartaOpen, setCartaOpen] = useState(false);
+  const [registroTipo, setRegistroTipo] = useState(null);   // "nota" | "tarea" | "compra" (ventana de texto de ➕ Registrar)
   const [regMsg, setRegMsg] = useState(null);                // leyenda temporal de los registros rápidos
   const regMsgTimer = useRef(null);
   const cargarInputRef = useRef(null);
@@ -1516,6 +1518,27 @@ function AngstApp() {
     const next = typeof d === 'function' ? d(pokeInventarioRef.current) : d;
     setPokeInventario(next);pokeInventarioRef.current=next;saveToStorage({pokeInventario:next});
   };
+  // Registros de texto de ➕ Registrar. Todos pasan por mutarDia (mismo patrón que updateTask: setDayData + ref + storage).
+  const mutarDia = (dk, fn)=>{
+    setDayData(prev=>{
+      const day = prev[dk] || makeEmptyDay();
+      const next = {...prev, [dk]: fn(day)};
+      dayDataRef.current = next; saveToStorage({dayData: next});
+      return next;
+    });
+  };
+  // Nota rápida: se agrega como línea nueva (con hora) a la "Nota random" del día, sin pisar lo ya escrito.
+  const agregarNotaRapida = texto=>{
+    const ahora = new Date();
+    const hhmm = `${String(ahora.getHours()).padStart(2,"0")}:${String(ahora.getMinutes()).padStart(2,"0")}`;
+    mutarDia(fmtFull(ahora), day=>({...day, randomNote: (day.randomNote ? day.randomNote+"\n" : "") + `${hhmm} · ${texto}`}));
+  };
+  const agregarTareaRapida = ({text, date, urgent})=>{
+    mutarDia(date, day=>({...day, tasks:[...(day.tasks||[]), {id:Date.now(), text, fixed:false, done:false, ...(urgent?{urgent:true}:{})}]}));
+  };
+  const agregarCompraRapida = texto=>{
+    mutarDia(fmtFull(new Date()), day=>({...day, compras:[...(day.compras||[]), {id:Date.now().toString(), text:texto, done:false}]}));
+  };
   // Leyenda temporal en la barra superior (mismo patrón que "descargado ✓" / "guardado ✓").
   const avisarRegistro = txt=>{
     if(regMsgTimer.current) clearTimeout(regMsgTimer.current);
@@ -1773,8 +1796,11 @@ function AngstApp() {
                   <button className="disk-btn" onClick={()=>{const o=!menuRegOpen;cerrarMenus();setMenuRegOpen(o);}} title="Registrar">➕</button>
                   {menuRegOpen&&(
                     <div style={caja}>
-                      <button style={itemMenu} onClick={()=>{cerrarMenus();setGastoOpen(true);}}>💸 Gasto</button>
+                      <button style={itemMenu} onClick={()=>{cerrarMenus();setRegistroTipo("nota");}}>📝 Nota rápida</button>
+                      <button style={itemMenu} onClick={()=>{cerrarMenus();setRegistroTipo("tarea");}}>✅ Tarea</button>
+                      <button style={itemMenu} onClick={()=>{cerrarMenus();setRegistroTipo("compra");}}>🛒 Compra</button>
                       <button style={itemMenu} onClick={()=>{cerrarMenus();setIngestaOpen(true);}}>🍽️ Ingesta</button>
+                      <button style={itemMenu} onClick={()=>{cerrarMenus();setGastoOpen(true);}}>💸 Gasto</button>
                       <button style={{...itemMenu,borderBottom:"none"}} onClick={()=>{cerrarMenus();setCartaOpen(true);}}>🃏 Cartas</button>
                     </div>
                   )}
@@ -2214,11 +2240,12 @@ function AngstApp() {
 
         {page===1&&<BudgetPage budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
         {carritoOpen&&<CarritoModal dayData={dayData} hoy={fmtFull(new Date())} api={comprasApi} onItem={updateComprasItem} onClose={()=>setCarritoOpen(false)}/>}
-        {gastoOpen&&<GastoModal budgets={budgets} onSaveBudget={(...a)=>{updateBudgetForMonth(...a);avisarRegistro("Gasto registrado ✓");}} onClose={()=>setGastoOpen(false)}/>}
+        {gastoOpen&&<GastoModal arriba permanecer budgets={budgets} onSaveBudget={(...a)=>{updateBudgetForMonth(...a);avisarRegistro("Gasto registrado ✓");}} onClose={()=>setGastoOpen(false)}/>}
         {ingestaOpen&&<IngestaRapida nutriLog={nutriLog} saveNutriLog={guardarNutriLog} customFoods={customFoods} foodOverrides={foodOverrides}
-          nutriDecks={nutriDecks} onClose={()=>setIngestaOpen(false)} onGuardado={avisarRegistro}/>}
+          nutriDecks={nutriDecks} permanecer onClose={()=>setIngestaOpen(false)} onGuardado={avisarRegistro}/>}
+        {registroTipo&&<RegistroRapido tipo={registroTipo} onNota={agregarNotaRapida} onTarea={agregarTareaRapida} onCompra={agregarCompraRapida} onGuardado={avisarRegistro} onClose={()=>setRegistroTipo(null)}/>}
         {cartaOpen&&<AgregarCartaModal inventario={pokeInventario} carpetas={pokeCarpetas} priceCache={pokePriceCache}
-          saveInventario={guardarInventario} onClose={()=>setCartaOpen(false)} onGuardado={avisarRegistro}/>}
+          saveInventario={guardarInventario} permanecer onClose={()=>setCartaOpen(false)} onGuardado={avisarRegistro}/>}
         {page===2&&<NutriaPage data={nutria} saveData={updateNutria} budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
         {page===3&&<EspritPage dayData={dayData} calMarks={calMarks} updateDay={updateDay} kidsHealth={kidsHealth}/>}
         {page===4&&<SaludPage kidsHealth={kidsHealth} saveKidsHealth={saveKidsHealth} dayData={dayData} updateDay={updateDay} calMarks={calMarks} saveCalMarks={(nm)=>{setCalMarks(nm);calMarksRef.current=nm;saveToStorage({calMarks:nm});}}/>}

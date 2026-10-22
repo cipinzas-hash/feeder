@@ -1,6 +1,7 @@
 import { fmtCLP } from "../../core/format.js";
 import { bolsillosDe, estadoBolsillo, inicioSobres, resolverPeriodo, periodoDeFecha, fechaISO, agregarGasto, candidatosPrestamo, sugerirFuentes, claveBolsillo, categoriasDe, agregarCategoria, TOPE_PRESTAMO, TOPE_DEVOLUCION } from "../../core/presupuesto-modelo.js";
 import { AmountRow } from "./grilla.jsx";
+import { useAltoVisible } from "../../core/VentanaArriba.jsx";
 const { useState, useMemo } = React;
 
 const F = "'DM Sans',sans-serif";
@@ -11,7 +12,8 @@ const mismo = (x, f) => x.sec === f.sec && x.rowId === f.rowId && (x.subId ?? nu
 // Botón "Gasto": pregunta cartera o fondo personal, sub-partida, monto, fecha y nota.
 // Si el gasto supera el saldo del sobre, deja elegir de qué otras carteras pedir lo que falta
 // (multifinanciamiento: tope 30% del saldo de cada cartera; la devolución es automática).
-export default function GastoModal({ budgets, onSaveBudget, onClose, inicial }) {
+// arriba + permanecer: desde ➕ Registrar la ventana va pegada arriba (el teclado no la tapa) y no se cierra al guardar.
+export default function GastoModal({ budgets, onSaveBudget, onClose, inicial, arriba, permanecer }) {
   const [fecha, setFecha] = useState(fechaISO(new Date()));
   const [cartera, setCartera] = useState(inicial || "");   // "sec|rowId"
   const [subId, setSubId] = useState(() => {
@@ -26,6 +28,8 @@ export default function GastoModal({ budgets, onSaveBudget, onClose, inicial }) 
   const [nuevaCat, setNuevaCat] = useState("");
   const [error, setError] = useState("");
   const [manual, setManual] = useState(null);   // fuentes editadas a mano; null = usar la sugerencia
+  const [hechos, setHechos] = useState([]);
+  const altoVisible = useAltoVisible();
 
   const periodo = periodoDeFecha(fecha);
   const activo = !!inicioSobres(budgets);
@@ -84,18 +88,26 @@ export default function GastoModal({ budgets, onSaveBudget, onClose, inicial }) 
     const r = agregarGasto(budgets, { fecha, sec, rowId: fila.id, subId: elegido.subId, monto: montoNum, nota, fuentes, categoria: cat });
     if (r.error) { setError(r.error); return; }
     onSaveBudget(r.periodo, cat ? agregarCategoria(r.budget, sec, fila.id, cat) : r.budget);
-    onClose();
+    if (permanecer) {
+      setHechos(h => [...h, `Gasto · ${fmtCLP(montoNum)}${nota && nota.trim() ? " · " + nota.trim() : ""}`]);
+      setMonto(""); setNota(""); setManual(null); setCategoria(""); setNuevaCat(""); setError("");   // cartera y fecha se mantienen
+    } else onClose();
   }
   const puede = !!fila && montoNum > 0 && (falta === 0 || completo);
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: "min(94vw,400px)", maxHeight: "92vh", overflowY: "auto" }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: arriba ? "flex-start" : "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", paddingTop: arriba ? "calc(env(safe-area-inset-top, 0px) + 6px)" : 0 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: "min(94vw,400px)", maxHeight: arriba ? Math.round(altoVisible * 0.9) : "92vh", overflowY: "auto" }}>
         <div style={{ background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 }}>💸 Registrar gasto</div>
           <button onClick={onClose} style={{ background: "transparent", border: "none", color: "#777", fontSize: 24, cursor: "pointer", lineHeight: 1 }}>×</button>
         </div>
         <div style={{ padding: "4px 18px 18px" }}>
+          {permanecer && hechos.length > 0 && (
+            <div style={{ background: "#f1f8f2", border: "1px dashed #9ccc9f", borderRadius: 8, padding: "6px 10px", margin: "10px 0 2px" }}>
+              {hechos.slice(-3).map((h, i) => <div key={hechos.length - 3 + i} style={{ fontFamily: F, fontSize: 12, color: "#2e7d32" }}>✓ {h}</div>)}
+            </div>
+          )}
           {!activo
             ? <div style={{ fontFamily: F, fontSize: 14, color: "#555", padding: "18px 0", lineHeight: 1.5 }}>Los sobres todavía no están iniciados. Ve a Presupuesto y toca 🧾 para iniciarlos; después podrás registrar gastos aquí.</div>
             : <>

@@ -3,6 +3,7 @@
 // Siempre AGREGA al registro del día (nunca pisa lo ya registrado). `fecha` por defecto es hoy.
 import { MEALS, getDefaultMeal, fechaKey, buscarAlimentos, todosLosAlimentos, armarEntrada, armarEntradaEstimada, inferirComidaMazo, alimentosRecientes, ultimaComida } from "./ingesta.js";
 import ControlesPorcion from "./ControlesPorcion.jsx";
+import VentanaArriba, { Hechos } from "../../core/VentanaArriba.jsx";
 const { useState, useMemo } = React;
 
 const F = "'DM Sans',sans-serif";
@@ -13,7 +14,8 @@ const btnPrincipal = { width: "100%", background: "#111", color: "#fff", border:
 const btnSecundario = { width: "100%", background: "transparent", color: "#999", border: "none", padding: "8px", fontFamily: F, fontSize: 12, cursor: "pointer" };
 const campo = { width: "100%", border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontSize: 14, fontFamily: F, outline: "none", boxSizing: "border-box", color: "#111" };
 
-function IngestaRapida({ nutriLog, saveNutriLog, customFoods, foodOverrides, nutriDecks, fecha, mazoInicial, onClose, onGuardado }) {
+// permanecer: desde ➕ Registrar la ventana queda abierta al guardar (se cierra tocando fuera). Al cargar un mazo desde Nutrición, cierra.
+function IngestaRapida({ nutriLog, saveNutriLog, customFoods, foodOverrides, nutriDecks, fecha, mazoInicial, permanecer, onClose, onGuardado }) {
   const dk = fecha || fechaKey();
   const [paso, setPaso] = useState(mazoInicial ? "bandeja" : "inicio"); // inicio | porcion | bandeja | estimar
   const [meal, setMeal] = useState(mazoInicial ? (mazoInicial.meal || inferirComidaMazo(mazoInicial.items)) : getDefaultMeal());
@@ -27,6 +29,7 @@ function IngestaRapida({ nutriLog, saveNutriLog, customFoods, foodOverrides, nut
   const [fraction, setFraction] = useState(1);
   const [sizeKey, setSizeKey] = useState("M");
   const [est, setEst] = useState(null);
+  const [hechos, setHechos] = useState([]);
 
   const comida = MEALS.find(m => m.id === meal) || MEALS[0];
   const todos = useMemo(() => todosLosAlimentos(foodOverrides, customFoods), [foodOverrides, customFoods]);
@@ -50,7 +53,11 @@ function IngestaRapida({ nutriLog, saveNutriLog, customFoods, foodOverrides, nut
     const nuevos = items.map(e => ({ ...e, meal, uid: Date.now() + Math.random() }));
     saveNutriLog({ ...nutriLog, [dk]: [...(nutriLog[dk] || []), ...nuevos] });
     if (onGuardado) onGuardado(`${texto} ✓`);
-    onClose();
+    if (permanecer) { setHechos(h => [...h, texto]); reiniciar(); } else onClose();
+  }
+  function reiniciar() {
+    setPaso("inicio"); setQuery(""); setBandeja([]); setTitulo(""); setABandeja(false);
+    setFood(null); setEditIdx(null); setEst(null);
   }
   function confirmarPorcion() {
     const entry = armarEntrada(food, qty, fraction, sizeKey, meal);
@@ -154,7 +161,7 @@ function IngestaRapida({ nutriLog, saveNutriLog, customFoods, foodOverrides, nut
         </div>
         <button onClick={() => guardar(bandeja, `${comida.label} · ${titulo || `${bandeja.length} alimento${bandeja.length === 1 ? "" : "s"}`}`)}
           disabled={!bandeja.length} style={{ ...btnPrincipal, opacity: bandeja.length ? 1 : 0.4 }}>registrar en {comida.label.toLowerCase()}</button>
-        <button onClick={onClose} style={btnSecundario}>cancelar</button>
+        <button onClick={onClose} style={btnSecundario}>{permanecer ? "cerrar" : "cancelar"}</button>
       </div>
     );
   } else {
@@ -212,17 +219,16 @@ function IngestaRapida({ nutriLog, saveNutriLog, customFoods, foodOverrides, nut
         )}
         <button onClick={() => { setEst({ descripcion: query.trim(), certainty: null, kcalMin: "", kcalMax: "", protMin: "", protMax: "" }); setPaso("estimar"); }}
           style={{ ...btnSecundario, textAlign: "left", color: "#777", textDecoration: "underline", paddingLeft: 2 }}>✍️ registrar sin datos exactos</button>
-        <button onClick={() => aBandeja && bandeja.length ? setPaso("bandeja") : onClose()} style={btnSecundario}>{aBandeja && bandeja.length ? "volver a la comida" : "cancelar"}</button>
+        <button onClick={() => aBandeja && bandeja.length ? setPaso("bandeja") : onClose()} style={btnSecundario}>{aBandeja && bandeja.length ? "volver a la comida" : (permanecer ? "cerrar" : "cancelar")}</button>
       </div>
     );
   }
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-      <div onClick={e => e.stopPropagation()} style={{ width: "min(96vw,480px)", background: "#fff", borderRadius: "16px 16px 0 0", padding: "22px 22px 34px", maxHeight: "90vh", overflowY: "auto", boxSizing: "border-box" }}>
-        {contenido}
-      </div>
-    </div>
+    <VentanaArriba onClose={onClose}>
+      {permanecer && <Hechos hechos={hechos} />}
+      {contenido}
+    </VentanaArriba>
   );
 }
 
