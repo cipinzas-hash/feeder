@@ -1,93 +1,10 @@
 import { normalizeSearchText } from "../../core/format.js";
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
-const NUTRI_FOODS = {
-  proteinas:[
-    {id:"carne",    emoji:"🥩", name:"Bolognesa casera",   prep:"carne 7% · 2 cebollas · aceite oliva · salsa Merkat 200g", unit:"preparación completa", kcal:582, prot:58, portionType:"fraction"},
-    {id:"huevo-d",  emoji:"🥚", name:"Huevo duro",         prep:"cocido con sal · calibre XL ~63g",            unit:"unidad XL",      kcal:90,  prot:7.8},
-    {id:"tortilla", emoji:"🍳", name:"Tortilla de huevo",  prep:"1 huevo XL · chorrito aceite · sal",          unit:"unidad",         kcal:112, prot:7.8},
-    {id:"soya-mv",  emoji:"🫘", name:"Hamb. soya Mr. Veggies", prep:"100g · receta actual",                   unit:"unidad 100g",    kcal:147, prot:16},
-    {id:"pollo",    emoji:"🍗", name:"Pollo",              prep:"filetillo o pechuga · horneado o sartén · sin grasa", unit:"100g", kcal:110, prot:23, portionType:"weight100"},
-    {id:"pavo",     emoji:"🍖", name:"Jamón de pavo",      prep:"1 lámina ~20g",                               unit:"lámina",         kcal:22,  prot:3},
-  ],
-  carbos:[
-    {id:"arroz",    emoji:"🍚", name:"Arroz",              prep:"cucharadita aceite · cúrcuma · ajo · sal",    unit:"100g cocido",    kcal:130, prot:2.2, portionType:"weight100"},
-    {id:"fideos",   emoji:"🍝", name:"Fideos Merkat",      prep:"cocidos en agua con sal",                     unit:"100g cocido",    kcal:130, prot:4.2, portionType:"weight100"},
-    {id:"lentejas", emoji:"🫘", name:"Lentejas",           prep:"cocidas con sal y condimentos",               unit:"100g cocida",    kcal:116, prot:9,   portionType:"weight100"},
-  ],
-  panes:[
-    {id:"marraq",   emoji:"🥖", name:"Marraqueta",         prep:"Bredenmaster congelada · 105g",               unit:"unidad",         kcal:265, prot:9},
-    {id:"hallulla", emoji:"🫓", name:"Hallulla La Celeste", prep:"unidad 75g",                                  unit:"unidad",         kcal:207, prot:5.6},
-    {id:"ciabatta", emoji:"🥖", name:"Ciabatta",           prep:"unidad completa",                             unit:"unidad",         kcal:210, prot:7},
-    {id:"bocadama", emoji:"🥐", name:"Bocado de dama",     prep:"unidad pequeña ~40g",                         unit:"unidad",         kcal:125, prot:3.5},
-  ],
-  frutas:[
-    {id:"platano",  emoji:"🍌", name:"Plátano",            prep:"S=100g · M=150g · L=200g",                    unit:"unidad",         kcal:89,  prot:1.1, portionType:"size"},
-    {id:"manzana",  emoji:"🍎", name:"Manzana Pink Lady",  prep:"S=100g · M=150g · L=200g",                    unit:"unidad",         kcal:57,  prot:0.3, portionType:"size"},
-    {id:"frutillas",emoji:"🍓", name:"Frutillas",          prep:"S=100g · M=150g · L=200g",                    unit:"porción",        kcal:33,  prot:0.7, portionType:"size"},
-    {id:"naranja",  emoji:"🍊", name:"Naranja",            prep:"S=100g · M=150g · L=200g",                    unit:"unidad",         kcal:47,  prot:0.9, portionType:"size"},
-  ],
-  lacteos:[
-    {id:"yogurg",   emoji:"🥛", name:"Yogur griego Oikos", prep:"natural · envase 110g",                       unit:"envase",         kcal:100, prot:5.6},
-    {id:"yogurb",   emoji:"🥤", name:"Yogur batido",       prep:"Alerces o Colun · vaso",                      unit:"vaso",           kcal:130, prot:3.7},
-  ],
-  grasas:[
-    {id:"palta",    emoji:"🥑", name:"Palta",              prep:"S=120g · M=175g · L=245g · XL=350g",         unit:"entera",         kcal:192, prot:2.4, portionType:"calibre"},
-  ],
-  bebidas:[
-    {id:"cafe-s",   emoji:"☕", name:"Café negro simple",  prep:"sin azúcar",                                  unit:"taza",           kcal:5,   prot:0},
-    {id:"cafe-d",   emoji:"☕", name:"Café negro doble",   prep:"sin azúcar · 2 shots",                        unit:"taza",           kcal:10,  prot:0},
-    {id:"azucar",   emoji:"🍬", name:"Azúcar",             prep:"1 cucharadita",                               unit:"cdta",           kcal:16,  prot:0},
-    {id:"livean",   emoji:"💧", name:"Livean",             prep:"jugo en polvo · libre de calorías",           unit:"vaso",           kcal:4,   prot:0},
-  ],
-  snacks:[
-    {id:"wild",     emoji:"🍫", name:"Barra Wild",         prep:"Chocolate-Maní · 45g",                        unit:"barra",          kcal:179, prot:15},
-    {id:"mani-jp",  emoji:"🥜", name:"Maní japonés",       prep:"porción 30g",                                 unit:"30g",            kcal:150, prot:5},
-    {id:"quinoa-p", emoji:"🌾", name:"Quinoa pop",         prep:"porción 30g",                                 unit:"30g",            kcal:110, prot:4},
-  ],
-  comfortfood:[
-    {id:"mustang",  emoji:"🍦", name:"Helado Mustang Clásico", prep:"paleta fruta · 110ml",                    unit:"paleta",         kcal:211, prot:3},
-    {id:"sopaip",   emoji:"🍩", name:"Sopaipilla frita",   prep:"unidad ~60g",                                 unit:"unidad",         kcal:239, prot:3},
-    {id:"berlin-manjar-s", emoji:"🍩", name:"Berlín manjar (chico)",    prep:"~90g",  unit:"unidad", kcal:330, prot:5},
-    {id:"berlin-manjar-m", emoji:"🍩", name:"Berlín manjar (mediano)",  prep:"~125g", unit:"unidad", kcal:460, prot:7},
-    {id:"berlin-manjar-l", emoji:"🍩", name:"Berlín manjar (grande)",   prep:"~150g · dato UC del Maule", unit:"unidad", kcal:556, prot:8.5},
-    {id:"berlin-crema-s",  emoji:"🍩", name:"Berlín crema pastelera (chico)",   prep:"~90g",  unit:"unidad", kcal:290, prot:4.5},
-    {id:"berlin-crema-m",  emoji:"🍩", name:"Berlín crema pastelera (mediano)", prep:"~125g", unit:"unidad", kcal:400, prot:5},
-    {id:"berlin-crema-l",  emoji:"🍩", name:"Berlín crema pastelera (grande)",  prep:"~170g", unit:"unidad", kcal:490, prot:6},
-    {id:"calzon-roto-s",   emoji:"🥟", name:"Calzones rotos (chico)",   prep:"~40g, tipo feria",  unit:"unidad", kcal:150, prot:2},
-    {id:"calzon-roto-m",   emoji:"🥟", name:"Calzones rotos (mediano)", prep:"~55g, casero estándar", unit:"unidad", kcal:190, prot:3},
-    {id:"calzon-roto-l",   emoji:"🥟", name:"Calzones rotos (grande)",  prep:"~80g, pastelería",  unit:"unidad", kcal:300, prot:5},
-    {id:"queque",   emoji:"🍰", name:"Queque casero",       prep:"tajada estándar ~70g",             unit:"tajada",         kcal:210, prot:5},
-    {id:"torta-mh", emoji:"🎂", name:"Torta mil hojas",     prep:"trozo estándar ~110g",             unit:"trozo",          kcal:380, prot:6},
-    {id:"papas-fritas", emoji:"🍟", name:"Papas fritas",    prep:"caseras, fritas en aceite",        unit:"100g",           kcal:310, prot:3.5, portionType:"weight100"},
-  ],
-  otros:[],
-};
-const NUTRI_CATS = [
-  {k:"proteinas",   label:"Proteínas"},
-  {k:"carbos",      label:"Carbohidratos"},
-  {k:"panes",       label:"Panes"},
-  {k:"frutas",      label:"Frutas"},
-  {k:"lacteos",     label:"Lácteos"},
-  {k:"grasas",      label:"Grasas"},
-  {k:"snacks",      label:"Snacks"},
-  {k:"bebidas",     label:"Bebidas"},
-  {k:"comfortfood", label:"🍦 Comfort Food"},
-  {k:"otros",       label:"Otros"},
-];
-const MEALS = [
-  {id:"desayuno", emoji:"🌅", label:"Desayuno"},
-  {id:"almuerzo", emoji:"☀️", label:"Almuerzo"},
-  {id:"cena",     emoji:"🌙", label:"Cena"},
-  {id:"snack",    emoji:"🍪", label:"Snack"},
-];
-function getDefaultMeal() {
-  const h = new Date().getHours();
-  if(h>=5 && h<11) return "desayuno";
-  if(h>=11 && h<16) return "almuerzo";
-  if(h>=16 && h<21) return "cena";
-  return "snack";
-}
+import { NUTRI_FOODS, NUTRI_CATS, MEALS, getDefaultMeal, fechaKey, alimentosPorCategoria, todosLosAlimentos, armarEntrada, armarEntradaEstimada, inferirComidaMazo } from "./ingesta.js";
+import ControlesPorcion from "./ControlesPorcion.jsx";
+import IngestaRapida from "./IngestaRapida.jsx";
+
 const META_KCAL = 2050;
 const META_PROT = 135;
 
@@ -249,7 +166,7 @@ function MoveMealButton({ uid, currentMeal, isOpen, onToggle, onMove, compact })
 }
 
 function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, foodOverrides, saveFoodOverrides, nutriDecks, saveNutriDecks, getStressScore }) {
-  const todayKey = (()=>{ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
+  const todayKey = fechaKey();
   const [dateKey, setDateKey] = useState(todayKey);
   const [view, setView] = useState("hoy"); // hoy | ficha | stats | deck
   const [fichaFoodId, setFichaFoodId] = useState(null);
@@ -266,6 +183,7 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
   const [foodView, setFoodView] = useState("grid-lg");
   const savedDecks = nutriDecks||[];
   const [deckMenuOpen, setDeckMenuOpen] = useState(false);
+  const [deckQuick, setDeckQuick] = useState(null); // mazo abierto en la vista previa editable (IngestaRapida)
   const [deckEditor, setDeckEditor] = useState(null); // {id, name, items, isNew}
   const [collapsedMeals, setCollapsedMeals] = useState({});
   const [moveMenuOpen, setMoveMenuOpen] = useState(null); // uid de la entrada con el popover "mover a otra comida" abierto
@@ -292,35 +210,6 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
   const remP = Math.max(0, META_PROT-totalProt);
   const over = totalKcal > metaEfectivaDia+150;
 
-  // size multipliers for frutas y calibre (palta)
-  const SIZE_MULT = {S:1, M:1.5, L:2};
-  const CALIBRE_KCAL = {S:192, M:280, L:392, XL:560};
-  const CALIBRE_PROT = {S:2.4, M:3.5, L:4.9, XL:7.0};
-  const FRUIT_FRACTIONS = [[1,"entera"],[0.5,"½"],[2/3,"⅔"],[0.333,"⅓"],[0.25,"¼"]];
-
-  function computeEffective(food, qty, fraction, sizeKey) {
-    const pt = food.portionType;
-    if(pt === "weight100") {
-      // qty ahora representa pasos de 50g (precisión real sin pesar de a 100)
-      return { kcal: food.kcal * qty * 0.5, prot: food.prot * qty * 0.5, displayQty: `${qty*50}g` };
-    }
-    if(pt === "size") {
-      const m = SIZE_MULT[sizeKey]||1;
-      const ef = fraction||1;
-      const fLabel = ef===1?"":ef===0.5?" ½":ef===2/3?" ⅔":ef===0.333?" ⅓":" ¼";
-      return { kcal: food.kcal * m * ef * qty, prot: food.prot * m * ef * qty, displayQty: `${sizeKey}${fLabel}` };
-    }
-    if(pt === "fraction") {
-      return { kcal: food.kcal * fraction * qty, prot: food.prot * fraction * qty, displayQty: fraction===1?"completa":fraction===0.5?"½":fraction===2/3?"⅔":fraction===0.333?"⅓":"¼" };
-    }
-    if(pt === "calibre") {
-      const kcal = CALIBRE_KCAL[sizeKey] || food.kcal;
-      const prot = CALIBRE_PROT[sizeKey] || food.prot;
-      return { kcal: kcal * fraction * qty, prot: prot * fraction * qty, displayQty: `${sizeKey} ${fraction===1?"entera":fraction===0.5?"½":"¼"}` };
-    }
-    return { kcal: food.kcal * qty, prot: food.prot * qty, displayQty: `×${qty}` };
-  }
-
   function openModal(food) {
     setModal({food});
     setQty(food.portionType==="weight100"?2:1);
@@ -340,15 +229,8 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
   // original) y se filtra por esa, así que un cambio de categoría sí
   // mueve la ficha. Los alimentos personalizados (customFoods) ya
   // filtraban por su propio campo cat en vivo -- no tenían este bug.
-  function getMergedFoods(catKey) {
-    const allBase = NUTRI_CATS.flatMap(c=>(NUTRI_FOODS[c.k]||[]).map(f=>({...f,catKey:c.k,...((foodOverrides||{})[f.id]||{})})));
-    const base = allBase.filter(f=>(f.cat||f.catKey)===catKey);
-    const custom=Object.values(customFoods||{}).filter(f=>f.cat===catKey);
-    return [...base,...custom];
-  }
-  function allFoodsFlat() {
-    return NUTRI_CATS.flatMap(c=>getMergedFoods(c.k).map(f=>({...f, catKey:c.k})));
-  }
+  function getMergedFoods(catKey) { return alimentosPorCategoria(catKey, foodOverrides, customFoods); }
+  function allFoodsFlat() { return todosLosAlimentos(foodOverrides, customFoods); }
   // Fix 26-sep-2026 (issue #19): antes esto siempre seteaba isNew:false,
   // sin importar si la ficha era base o personalizada. saveEdit() decide
   // el destino según ese flag -- resultado: la SEGUNDA edición de un
@@ -372,16 +254,7 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
 
   function addEntry() {
     if(!modal) return;
-    const { kcal, prot, displayQty } = computeEffective(modal.food, qty, fraction, sizeKey);
-    const entry = {
-      ...modal.food,
-      kcal: parseFloat((kcal/qty).toFixed(2)), // store per-unit so ×qty math is preserved
-      prot: parseFloat((prot/qty).toFixed(2)),
-      qty,
-      unit: displayQty,
-      meal: deckEditor ? (deckEditor.meal||"snack") : mealSel, // issue #4 fase 1: item de mazo hereda la unica comida del mazo, no el mealSel global de la pantalla principal
-      uid: Date.now()+Math.random()
-    };
+    const entry = armarEntrada(modal.food, qty, fraction, sizeKey, deckEditor ? (deckEditor.meal||"snack") : mealSel); // issue #4 fase 1: item de mazo hereda la unica comida del mazo, no el mealSel global de la pantalla principal
     if(deckEditor){
       setDeckEditor(de=>({...de, items:[...de.items, entry]}));
     } else {
@@ -392,30 +265,8 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
   }
   function addEstimateEntry() {
     if(!estimateModal) return;
-    const { descripcion, certainty, kcalMin, kcalMax, protMin, protMax } = estimateModal;
-    if(!descripcion?.trim() || !certainty) return;
-
-    // 🔴 desconocido: nunca lleva numeros (issue #5 -- no inventar precision falsa).
-    // 🟡 estimado: rango opcional; si se completa, kcal/prot guardan el punto
-    // medio (para que dTotals/cascada semanal sigan sumando sin tocar esa
-    // logica), y el rango se conserva aparte para mostrarlo tal cual.
-    const kMin = parseFloat(kcalMin), kMax = parseFloat(kcalMax);
-    const pMin = parseFloat(protMin), pMax = parseFloat(protMax);
-    const kcalRange = (certainty==="estimado" && !isNaN(kMin) && !isNaN(kMax)) ? [kMin,kMax] : null;
-    const protRange = (certainty==="estimado" && !isNaN(pMin) && !isNaN(pMax)) ? [pMin,pMax] : null;
-
-    const entry = {
-      uid: Date.now()+Math.random(),
-      meal: mealSel,
-      certainty, // "estimado" | "desconocido" -- ausente en entradas exactas normales
-      name: descripcion.trim(), // se conserva tal cual el texto original del usuario
-      emoji: certainty==="desconocido" ? "🔴" : "🟡",
-      kcal: kcalRange ? (kcalRange[0]+kcalRange[1])/2 : 0,
-      prot: protRange ? (protRange[0]+protRange[1])/2 : 0,
-      kcalRange, protRange,
-      qty: 1,
-      unit: "",
-    };
+    const entry = armarEntradaEstimada(estimateModal, mealSel);
+    if(!entry) return;
     saveNutriLog({...nutriLog, [dateKey]: [...log, entry]});
     setEstimateModal(null);
   }
@@ -452,21 +303,9 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
     : [];
 
 
-  function inferDeckMeal(items){
-    // Mazos guardados antes de Fase 1 (issue #4) tenian meal por item, no
-    // por mazo. Se infiere el mas frecuente entre sus items, sin borrar
-    // nada del mazo original -- se re-persiste como single-meal recien
-    // cuando el usuario guarda de nuevo.
-    const counts = {};
-    (items||[]).forEach(it=>{ const m=it.meal||"snack"; counts[m]=(counts[m]||0)+1; });
-    const entries = Object.entries(counts);
-    if(!entries.length) return "snack";
-    return entries.sort((a,b)=>b[1]-a[1])[0][0];
-  }
-
   function openDeckPlanner(existingDeck){
     if(existingDeck){
-      setDeckEditor({id:existingDeck.id, name:existingDeck.name, items:(existingDeck.items||[]).map(it=>({...it})), isNew:false, meal:existingDeck.meal||inferDeckMeal(existingDeck.items)});
+      setDeckEditor({id:existingDeck.id, name:existingDeck.name, items:(existingDeck.items||[]).map(it=>({...it})), isNew:false, meal:existingDeck.meal||inferirComidaMazo(existingDeck.items)});
     } else {
       setDeckEditor({id:"deck-"+Date.now(), name:"", items:[], isNew:true, meal:mealSel||"snack"});
     }
@@ -506,15 +345,11 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
     saveNutriDecks(savedDecks.filter(d=>d.id!==id));
   }
 
+  // Cargar un mazo ya no lo agrega a ciegas: abre una vista previa donde se puede quitar, cambiar porción o sumar
+  // alimentos antes de registrarlo (el mazo original no se toca). Sigue AGREGANDO a la comida del mazo sin pisar el día.
   function applyDeck(deck){
     if(!deck?.items?.length) return;
-    // issue #4 fase 1: antes esto SOBRESCRIBIA el registro del dia entero
-    // ([dateKey]: mapped) -- si ya habias registrado otras comidas, se
-    // perdian sin aviso. Ahora AGREGA los items del mazo a la comida que
-    // el mazo declara, preservando todo lo demas del dia.
-    const deckMeal = deck.meal || inferDeckMeal(deck.items);
-    const mapped = deck.items.map(e=>({...e, meal:deckMeal, uid: Date.now()+Math.random()}));
-    saveNutriLog({...nutriLog, [dateKey]: [...log, ...mapped]});
+    setDeckQuick(deck);
     setDeckMenuOpen(false);
   }
 
@@ -555,105 +390,8 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
 
   // Render modal controls based on portionType
   function renderModalControls(food) {
-    const pt = food.portionType;
-    const eff = computeEffective(food, qty, fraction, sizeKey);
-    const btnBase = {border:"1px dashed #ddd",borderRadius:8,background:"transparent",fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",padding:"8px 12px",transition:"all 0.15s"};
-    const btnActive = {...btnBase, background:"#111", color:"#fff", border:"1px solid #111"};
-
-    return (
-      <div>
-        {/* Comida del día */}
-        <div style={{marginBottom:18}}>
-          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>comida</div>
-          <div style={{display:"flex",gap:6}}>
-            {MEALS.map(m=>(
-              <button key={m.id} onClick={()=>setMealSel(m.id)}
-                style={{flex:1,padding:"8px 4px",borderRadius:8,border:"1.5px solid",borderColor:mealSel===m.id?"#111":"#eee",background:mealSel===m.id?"#111":"transparent",color:mealSel===m.id?"#fff":"#999",fontFamily:"'Caveat',cursive",fontSize:13,fontWeight:700,cursor:"pointer",transition:"all 0.15s"}}>
-                {m.emoji} {m.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* SIZE selector — frutas */}
-        {pt === "size" && (
-          <div style={{marginBottom:16}}>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>calibre</div>
-            <div style={{display:"flex",gap:8}}>
-              {[["S","~100g"],["M","~150g"],["L","~200g"]].map(([k,sub])=>(
-                <button key={k} onClick={()=>setSizeKey(k)} style={sizeKey===k?btnActive:btnBase}>
-                  <div style={{fontWeight:700}}>{k}</div>
-                  <div style={{fontSize:10,color:sizeKey===k?"rgba(255,255,255,0.5)":"#bbb"}}>{sub}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* CALIBRE selector — palta */}
-        {pt === "calibre" && (
-          <div style={{marginBottom:16}}>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>calibre</div>
-            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-              {[["S","~120g"],["M","~175g"],["L","~245g"],["XL","~350g"]].map(([k,sub])=>(
-                <button key={k} onClick={()=>setSizeKey(k)} style={sizeKey===k?btnActive:btnBase}>
-                  <div style={{fontWeight:700}}>{k}</div>
-                  <div style={{fontSize:10,color:sizeKey===k?"rgba(255,255,255,0.5)":"#bbb"}}>{sub}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* FRACTION selector — bolognesa, palta y frutas grandes */}
-        {(pt === "fraction" || pt === "calibre" || pt === "size") && (
-          <div style={{marginBottom:16}}>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>porción</div>
-            <div style={{display:"flex",gap:8}}>
-              {(pt==="fraction"
-                ? [[1,"completa"],[0.5,"½"],[2/3,"⅔"],[0.333,"⅓"],[0.25,"¼"]]
-                : pt==="calibre"
-                  ? [[1,"entera"],[0.5,"½"],[0.25,"¼"]]
-                  : FRUIT_FRACTIONS
-              ).map(([f,label])=>(
-                <button key={f} onClick={()=>setFraction(f)} style={fraction===f?btnActive:btnBase}>{label}</button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* WEIGHT100 — qty en pasos de 50g, con atajos comunes */}
-        {pt === "weight100" && (
-          <div style={{marginBottom:16}}>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>cantidad</div>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:24}}>
-              <button onClick={()=>setQty(q=>Math.max(1,q-1))} style={{width:44,height:44,borderRadius:8,border:"1px dashed #ddd",background:"transparent",fontSize:22,cursor:"pointer",color:"#555"}}>−</button>
-              <span style={{fontFamily:"'Caveat',cursive",fontSize:44,fontWeight:700,color:"#111",minWidth:90,textAlign:"center"}}>{qty*50}g</span>
-              <button onClick={()=>setQty(q=>Math.min(20,q+1))} style={{width:44,height:44,borderRadius:8,border:"1px dashed #ddd",background:"transparent",fontSize:22,cursor:"pointer",color:"#555"}}>+</button>
-            </div>
-            <div style={{display:"flex",justifyContent:"center",gap:6,marginTop:10,flexWrap:"wrap"}}>
-              {[50,100,150,200,300].map(g=>(
-                <button key={g} onClick={()=>setQty(g/50)}
-                  style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,padding:"4px 11px",borderRadius:14,border:"1px dashed #ddd",background:qty===g/50?"#111":"transparent",color:qty===g/50?"#fff":"#999",cursor:"pointer"}}>{g}g</button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* DEFAULT qty — items sin portionType */}
-        {!pt && (
-          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:24,marginBottom:16}}>
-            <button onClick={()=>setQty(q=>Math.max(1,q-1))} style={{width:44,height:44,borderRadius:8,border:"1px dashed #ddd",background:"transparent",fontSize:22,cursor:"pointer",color:"#555"}}>−</button>
-            <span style={{fontFamily:"'Caveat',cursive",fontSize:44,fontWeight:700,color:"#111",minWidth:48,textAlign:"center"}}>{qty}</span>
-            <button onClick={()=>setQty(q=>Math.min(10,q+1))} style={{width:44,height:44,borderRadius:8,border:"1px dashed #ddd",background:"transparent",fontSize:22,cursor:"pointer",color:"#555"}}>+</button>
-          </div>
-        )}
-
-        <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#888",textAlign:"center",marginBottom:20}}>
-          <span style={{color:"#111",fontWeight:700}}>{Math.round(eff.kcal)} kcal</span> · <span style={{color:"#5c7a99",fontWeight:700}}>{eff.prot.toFixed(1)}g prot</span>
-        </div>
-      </div>
-    );
+    return <ControlesPorcion food={food} qty={qty} setQty={setQty} fraction={fraction} setFraction={setFraction}
+      sizeKey={sizeKey} setSizeKey={setSizeKey} meal={mealSel} setMeal={setMealSel}/>;
   }
 
   // ════════════════════ FICHA DE ALIMENTO ════════════════════
@@ -966,6 +704,9 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
         </div>
       )}
 
+      {deckQuick&&<IngestaRapida nutriLog={nutriLog} saveNutriLog={saveNutriLog} customFoods={customFoods} foodOverrides={foodOverrides}
+        nutriDecks={nutriDecks} fecha={dateKey} mazoInicial={deckQuick} onClose={()=>setDeckQuick(null)}/>}
+
       {/* Date nav */}
       <div style={{display:"grid",gridTemplateColumns:"44px minmax(0,1fr) 44px",alignItems:"center",gap:8,marginBottom:10}}>
         <button onClick={()=>shiftDate(-1)} style={{background:"transparent",border:"1px dashed #ddd",borderRadius:8,padding:"8px 14px",cursor:"pointer",color:"#888",fontSize:20}}>‹</button>
@@ -988,7 +729,7 @@ function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, f
               <div key={deck.id} style={{display:"flex",alignItems:"center",gap:6,width:"100%",background:"linear-gradient(180deg,#f8f8f8 0%,#efefef 100%)",border:"1.5px solid #d8d8d8",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.8)",borderRadius:10,padding:"10px 12px"}}>
                 <button onClick={()=>applyDeck(deck)} style={{flex:1,minWidth:0,background:"transparent",border:"none",cursor:"pointer",textAlign:"left",padding:0}}>
                   <div style={{fontFamily:"'Caveat',cursive",fontSize:18,color:"#111",fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{deck.name}</div>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa"}}>{MEALS.find(m=>m.id===(deck.meal||inferDeckMeal(deck.items)))?.emoji||""} {(deck.items||[]).length} cartas · agregar a hoy</div>
+                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa"}}>{MEALS.find(m=>m.id===(deck.meal||inferirComidaMazo(deck.items)))?.emoji||""} {(deck.items||[]).length} cartas · agregar a hoy</div>
                 </button>
                 <button onClick={()=>openDeckPlanner(deck)} style={{background:"transparent",border:"none",color:"#999",fontSize:14,cursor:"pointer",padding:"4px 6px",flexShrink:0}}>✎</button>
                 <button onClick={()=>{if(window.confirm(`¿Eliminar el mazo "${deck.name}"?`))deleteDeck(deck.id);}} style={{background:"transparent",border:"none",color:"#ccc",fontSize:17,cursor:"pointer",padding:"4px 6px",flexShrink:0,lineHeight:1}}>×</button>

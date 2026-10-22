@@ -4,6 +4,7 @@
 import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPrice, fetchTCGCandidatos, addSnapshot, refreshPrecio as refreshPrecioCompartido, fuenteCompatible } from "./lib/pricing.mjs";
 import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarCandidatos, matchAutomatico, mergeOverrides, claveCandidato, urlsFoto, mismoSet } from "./lib/review.mjs";
 import { marcarEdicionLocal } from "../shared/localedit.js";
+import { isDarkCard, POKECRIPTO_WORKER_URL, POKECRIPTO_AUTH_KEY, getPokecriptoAuth, encolarPokecriptoPending, buscarCartas, armarCartaNueva } from "./alta.js";
 
 // ─── PokeLoader ───────────────────────────────────────────────────────────────
 function PokeLoader({ active }) {
@@ -135,28 +136,6 @@ function precioViejo(c){ if(!c||c.tcgMarket==null||c.estado==="vendida") return 
 function marcaViejo(c,fs){ return precioViejo(c)?<div title="Precio sin actualizar: la fuente del bot no tiene esta carta" style={{fontFamily:"'DM Sans',sans-serif",fontSize:fs||9,color:"#d9a441"}}>⏳ {diasDesde(c.tcgUpdated)==null?"sin fecha":diasDesde(c.tcgUpdated)+"d"}</div>:null; }
 function fmtPokeCLP(n){ return "$"+Math.round((n||0)*USD_CLP).toLocaleString("es-CL"); }
 function fmtDateShort(dk){ if(!dk) return ""; const [,m,d]=dk.split("-"); return `${d}/${m}`; }
-
-function isDarkCard(card){
-  if(!card) return false;
-  if((card.types||[]).includes("Darkness")) return true;
-  if(card.supertype==="Energy" && (card.name||"").toLowerCase().includes("darkness")) return true;
-  const hasDark = t => {
-    if(!t) return false;
-    const l = t.toLowerCase();
-    return (
-      l.includes("darkness energy") || l.includes("darkness pokémon") ||
-      l.includes("darkness pokemon") || l.includes("darkness type") ||
-      l.includes("darkness-type") || l.includes("non-darkness") ||
-      l.includes("basic darkness") || l.includes("{d} energy") ||
-      l.includes("[d] energy") || t.includes("[D]") || t.includes("{D}")
-    );
-  };
-  if((card.attacks||[]).some(a=>(a.cost||[]).includes("Darkness")||hasDark(a.text))) return true;
-  if((card.abilities||[]).some(a=>hasDark(a.text))) return true;
-  if((card.rules||[]).some(r=>hasDark(r))) return true;
-  if(hasDark(card.text)) return true;
-  return false;
-}
 
 // Construye la carta de inv correspondiente a una carta recién descubierta
 // del catálogo Dark (o de una colección de ilustrador, ver abajo) — nace en
@@ -847,48 +826,15 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // 200/día que vivía acá (comparaba solo contra cache local) queda
   // reemplazado por esto: ya no hace falta que el navegador gaste su
   // propia cuota de tcgpricelookup.com en paralelo al bot.
-  const POKECRIPTO_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
-  // Mismo AUTH_SECRET que Simkl/podcasts -- un solo secret de Worker
-  // compartido, no uno por feature.
-  const POKECRIPTO_AUTH_KEY = "angst-simkl-auth-v1";
   const [usdClp, setUsdClp] = React.useState(USD_CLP); // el valor se lee de USD_CLP (módulo); el estado solo fuerza el re-render
   React.useEffect(()=>{ cargarUsdClp().then(v=>setUsdClp(v)); },[]);
   // Persistir Price Watch en las carpetas guardadas (el memo de `cats` solo la agrega en pantalla)
   React.useEffect(()=>{ if(carpetas&&!carpetas.includes("Price Watch")) saveCarpetas([...carpetas,"Price Watch"]); },[carpetas]);
   const [pokecriptoSyncMsg, setPokecriptoSyncMsg] = React.useState(null);
-  function getPokecriptoAuth(){ try{ return localStorage.getItem(POKECRIPTO_AUTH_KEY)||null; }catch(e){ return null; } }
   function pedirPokecriptoAuth(){
     const v = prompt("Pegá el AUTH_SECRET del Worker (el mismo que Simkl/podcasts, una sola vez, queda solo en este dispositivo):");
     if(v && v.trim()){ try{ localStorage.setItem(POKECRIPTO_AUTH_KEY, v.trim()); }catch(e){} }
     return v && v.trim() ? v.trim() : null;
-  }
-  // Encola cartas nuevas para que el bot las precie en su próxima corrida
-  // -- nunca prompt() acá, solo lo llaman flujos donde el usuario ya
-  // conectó el Worker (agregarCarta, resync de Dark Collection, botón
-  // "conectar" de abajo).
-  async function encolarPokecriptoPending(cartas){
-    const auth = getPokecriptoAuth();
-    if(!auth || !cartas.length) return;
-    try{
-      const getResp = await fetch(`${POKECRIPTO_WORKER_URL}?path=pokecripto-pending.json`, {headers:{"X-Angst-Auth":auth}});
-      const remote = getResp.ok ? await getResp.json() : [];
-      const actual = Array.isArray(remote) ? remote : [];
-      // Combina por id (12-oct-2026): un parche de carpeta sobre una carta que ya estaba encolada se funde en ella; una
-      // entrada repetida con otro contenido la reemplaza. Antes todo lo que ya estaba en la cola se descartaba.
-      const porId = new Map(actual.map(c=>[c.id,c]));
-      let cambio = false;
-      for(const c of cartas){
-        const prev = porId.get(c.id);
-        const sig = (c._patch && prev && !prev._patch) ? {...prev,...c._patch} : c;
-        if(!prev || JSON.stringify(prev)!==JSON.stringify(sig)){ porId.set(c.id,sig); cambio = true; }
-      }
-      if(!cambio) return;
-      await fetch(POKECRIPTO_WORKER_URL, {
-        method:"POST",
-        headers:{"X-Angst-Auth":auth,"Content-Type":"application/json"},
-        body: JSON.stringify({path:"pokecripto-pending.json", payload:[...porId.values()]}),
-      });
-    }catch(e){ /* silencioso -- se reintenta la próxima vez que se llame, nada local se rompe */ }
   }
   // Botón "conectar" (mismo patrón que "🔗 conectar Simkl"): pide el
   // AUTH_SECRET si hace falta y empuja TODO el inventario local a pending
@@ -982,27 +928,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
 
   // ── CRUD inventario ──
   function agregarCarta(card){
-    const p=getPrimaryPrice(card);
-    const esWatch=newForm.destino==="watch"; // Price Watch = solo sigo su precio (con objetivo); hunting = la busco para completar una colección
-    const esHunting=newForm.destino==="hunting"||esWatch;
-    const nueva={
-      id:Date.now().toString(),cardId:card.id,name:card.name,
-      set:card.set?.name||"",setCode:card.set?.ptcgoCode||card.set?.id||"",
-      number:card.number||"",rarity:card.rarity||"",
-      image:card.images?.small||"",imageHd:card.images?.large||"",
-      tcgMarket:p?.market||null,tcgLow:p?.low||null,tcgHigh:p?.high||null,
-      tcgUpdated:hoy,
-      priceHistory:p?.market?[{date:hoy,market:p.market,low:p.low||null,high:p.high||null,src:"ptcg"}]:[],
-      costoUSD:esHunting?0:(parseFloat(newForm.costoUSD)||0),
-      precioVentaUSD:parseFloat(newForm.precioVentaUSD)||(p?.market||0),
-      condicion:newForm.condicion||"NM",estado:esHunting?"hunting":"sin_publicar",
-      carpeta:esWatch?"Price Watch":(newForm.carpeta&&newForm.carpeta!=="Price Watch"?newForm.carpeta:(cats.find(c=>c!=="Price Watch")||cats[0])),
-      fechaCompra:esHunting?null:(newForm.fechaCompra||hoy),
-      cantidad:parseInt(newForm.cantidad)||1,
-      fechaVenta:null,precioVendidoUSD:null,
-      notas:newForm.notas||"",isDark:isDarkCard(card),
-      ...(esWatch&&newForm.precioObjetivo?{precioObjetivo:parseFloat(newForm.precioObjetivo)||null}:{}),
-    };
+    const nueva=armarCartaNueva(card,newForm,cats,hoy);
     saveInventario([nueva,...inv]);
     encolarPokecriptoPending([nueva]);
     setAddingCard(null);
@@ -1185,14 +1111,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const q=query.trim(); if(!q) return;
     setLoading(true); setSearchErr(null); setResults([]);
     try{
-      const idFmt=q.match(/^[a-z0-9]+-\d+[a-z]*$/i);
-      const setNum=q.match(/^([a-zA-Z0-9]+)\s+(\d+)(?:\/\d+)?$/);
-      let apiQ="";
-      if(idFmt) apiQ=`id:${q}`;
-      else if(setNum) apiQ=`set.ptcgoCode:${setNum[1].toUpperCase()} number:${setNum[2]}`;
-      else apiQ=q.includes(" ")?`name:"${q}"`:`name:${q}*`;
-      const data=await fetchPoke(`${POKE_BASE}/cards?q=${encodeURIComponent(apiQ)}&select=id,name,number,set,tcgplayer,images,rarity,types,attacks,abilities&orderBy=-set.releaseDate&pageSize=24`);
-      const cards=data.data||[];
+      const cards=await buscarCartas(q);
       setResults(cards);
       if(!cards.length) setSearchErr(`Sin resultados para "${q}"`);
       // 12-oct-2026: antes esto lanzaba una consulta a tcgpricelookup.com POR CADA resultado (hasta 24 por búsqueda),

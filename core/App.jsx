@@ -17,6 +17,8 @@ import EjercicioPage from "../modules/ejercicio/EjercicioPage.jsx";
 import NutricionPage from "../modules/nutricion/NutricionPage.jsx";
 import BudgetPage from "../modules/presupuesto/BudgetPage.jsx";
 import GastoModal from "../modules/presupuesto/GastoModal.jsx";
+import IngestaRapida from "../modules/nutricion/IngestaRapida.jsx";
+import AgregarCartaModal from "../modules/pokecripto/AgregarCartaModal.jsx";
 import EspritPage from "../modules/espiritu/EspritPage.jsx";
 import FeedPage from "../modules/feed/FeedPage.jsx";
 import VitrinaPage from "../modules/vitrina/VitrinaPage.jsx";
@@ -63,6 +65,13 @@ const STOIC_PHRASES = [
 function AngstApp() {
   const [page, setPage] = useState(0);
   const [gastoOpen, setGastoOpen] = useState(false);
+  const [menuDatosOpen, setMenuDatosOpen] = useState(false); // 💾 Datos: backup local + Angst-data
+  const [menuRegOpen, setMenuRegOpen] = useState(false);     // ➕ Registrar: gasto, ingesta, cartas
+  const [ingestaOpen, setIngestaOpen] = useState(false);
+  const [cartaOpen, setCartaOpen] = useState(false);
+  const [regMsg, setRegMsg] = useState(null);                // leyenda temporal de los registros rápidos
+  const regMsgTimer = useRef(null);
+  const cargarInputRef = useRef(null);
   // dayData: flat dict keyed by "YYYY-MM-DD" → individual day object
   // This ensures each calendar date is fully independent
   const [dayData, setDayData] = useState({});
@@ -1498,6 +1507,20 @@ function AngstApp() {
     reader.readAsArrayBuffer(file);
   }
 
+  // Guardado de nutriLog / inventario de cartas: UNA sola definición, usada por las páginas y por ➕ Registrar.
+  const guardarNutriLog = d=>{setNutriLog(d);nutriLogRef.current=d;saveToStorage({nutriLog:d});};
+  const guardarInventario = d=>{
+    const next = typeof d === 'function' ? d(pokeInventarioRef.current) : d;
+    setPokeInventario(next);pokeInventarioRef.current=next;saveToStorage({pokeInventario:next});
+  };
+  // Leyenda temporal en la barra superior (mismo patrón que "descargado ✓" / "guardado ✓").
+  const avisarRegistro = txt=>{
+    if(regMsgTimer.current) clearTimeout(regMsgTimer.current);
+    setRegMsg(txt);
+    regMsgTimer.current = setTimeout(()=>setRegMsg(null), 4000);
+  };
+  const cerrarMenus = ()=>{ setMenuDatosOpen(false); setMenuRegOpen(false); setPodcastMenuOpen(false); };
+
   if(!loaded){
     return (
       <div style={{background:"#f7f6f4",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -1675,21 +1698,44 @@ function AngstApp() {
         <div className="hdr">
           <div className="hdr-title" style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>angstapp</div>
           <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-            {saved&&<span className="saved-msg">guardado ✓</span>}
+            {regMsg&&<span style={{fontFamily:"'Caveat',cursive",color:regMsg.includes("✓")?"#4caf50":"#c00",fontSize:14}}>{regMsg}</span>}
+            {saved&&!regMsg&&<span className="saved-msg">guardado ✓</span>}
             {loadMsg&&<span style={{fontFamily:"'Caveat',cursive",color:loadMsg.startsWith("✓")?"#4caf50":loadMsg.startsWith("⚠")?"#f0a000":"#c00",fontSize:13,maxWidth:220}}>{loadMsg}</span>}
             {exportOk===true&&<span style={{fontFamily:"'Caveat',cursive",color:"#4caf50",fontSize:13}}>descargado ✓</span>}
             {exportOk===false&&<span style={{fontFamily:"'Caveat',cursive",color:"#c00",fontSize:13}}>error al exportar</span>}
             {typeof exportOk==="string"&&<span style={{fontFamily:"'Caveat',cursive",color:"#c00",fontSize:13}}>{exportOk}</span>}
-            <label title="Cargar backup .xlsx o .json" style={{position:"relative",cursor:"pointer",display:"inline-flex",alignItems:"center",justifyContent:"center",background:"transparent",border:"1px dashed #444",borderRadius:4,color:"#888",padding:"5px 10px",fontSize:14,lineHeight:1,overflow:"hidden"}}>
-              📂<input type="file" accept=".xlsx,.xls,.json" onChange={handleLoad} style={{position:"absolute",inset:0,opacity:0,cursor:"pointer",width:"100%",height:"100%",fontSize:0}}/>
-            </label>
-            <button className={`disk-btn${exportOk===true?" ok":""}`} onClick={handleExport} title="Descargar backup .json">💾</button>
-            <button className="disk-btn" onClick={()=>setGastoOpen(true)} title="Registrar un gasto">💸</button>
-            <button className="disk-btn" onClick={pushStateToRepo} title="Guardar el estado completo en Angst-data">📤</button>
-            <button className="disk-btn" onClick={leerDeRepo} title="Leer el estado completo desde Angst-data">📥</button>
+            <input ref={cargarInputRef} type="file" accept=".xlsx,.xls,.json" onChange={handleLoad} style={{display:"none"}}/>
+            {(menuDatosOpen||menuRegOpen)&&<div onClick={cerrarMenus} style={{position:"fixed",inset:0,zIndex:590}}/>}
+            {(()=>{
+              const itemMenu = {display:"block",width:"100%",textAlign:"left",background:"transparent",border:"none",borderBottom:"1px dashed #333",color:"#fff",padding:"10px 12px",fontSize:13,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"};
+              const caja = {position:"absolute",top:"calc(100% + 4px)",right:0,width:230,background:"#222",border:"1px dashed #444",borderRadius:4,zIndex:600};
+              return (<>
+                <div style={{position:"relative"}}>
+                  <button className={`disk-btn${exportOk===true?" ok":""}`} onClick={()=>{const o=!menuDatosOpen;cerrarMenus();setMenuDatosOpen(o);}} title="Datos: backup y Angst-data">💾</button>
+                  {menuDatosOpen&&(
+                    <div style={caja}>
+                      <button style={itemMenu} onClick={()=>{cerrarMenus();handleExport();}}>⬇️ Descargar backup (.json)</button>
+                      <button style={itemMenu} onClick={()=>{cerrarMenus();pushStateToRepo();}}>📤 Subir a Angst-data</button>
+                      <button style={itemMenu} onClick={()=>{cerrarMenus();leerDeRepo();}}>📥 Leer de Angst-data</button>
+                      <button style={{...itemMenu,borderBottom:"none"}} onClick={()=>{cerrarMenus();if(cargarInputRef.current)cargarInputRef.current.click();}}>📂 Cargar backup (.xlsx / .json)</button>
+                    </div>
+                  )}
+                </div>
+                <div style={{position:"relative"}}>
+                  <button className="disk-btn" onClick={()=>{const o=!menuRegOpen;cerrarMenus();setMenuRegOpen(o);}} title="Registrar">➕</button>
+                  {menuRegOpen&&(
+                    <div style={caja}>
+                      <button style={itemMenu} onClick={()=>{cerrarMenus();setGastoOpen(true);}}>💸 Gasto</button>
+                      <button style={itemMenu} onClick={()=>{cerrarMenus();setIngestaOpen(true);}}>🍽️ Ingesta</button>
+                      <button style={{...itemMenu,borderBottom:"none"}} onClick={()=>{cerrarMenus();setCartaOpen(true);}}>🃏 Cartas</button>
+                    </div>
+                  )}
+                </div>
+              </>);
+            })()}
             {stateSyncMsg&&<span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:stateSyncMsg.startsWith("✓")?"#4caf50":"#f0a000",marginLeft:4}}>{stateSyncMsg}</span>}
             <div style={{position:"relative"}}>
-              <button className="disk-btn" onClick={()=>setPodcastMenuOpen(o=>!o)} title="Podcasts" style={{position:"relative"}}>
+              <button className="disk-btn" onClick={()=>{const o=!podcastMenuOpen;cerrarMenus();setPodcastMenuOpen(o);}} title="Podcasts" style={{position:"relative"}}>
                 🎙️
                 {podcastPending.length>0&&<span style={{position:"absolute",top:-3,right:-3,width:8,height:8,borderRadius:"50%",background:"#e91e8c"}}/>}
               </button>
@@ -2119,12 +2165,16 @@ function AngstApp() {
         )}
 
         {page===1&&<BudgetPage budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
-        {gastoOpen&&<GastoModal budgets={budgets} onSaveBudget={updateBudgetForMonth} onClose={()=>setGastoOpen(false)}/>}
+        {gastoOpen&&<GastoModal budgets={budgets} onSaveBudget={(...a)=>{updateBudgetForMonth(...a);avisarRegistro("Gasto registrado ✓");}} onClose={()=>setGastoOpen(false)}/>}
+        {ingestaOpen&&<IngestaRapida nutriLog={nutriLog} saveNutriLog={guardarNutriLog} customFoods={customFoods} foodOverrides={foodOverrides}
+          nutriDecks={nutriDecks} onClose={()=>setIngestaOpen(false)} onGuardado={avisarRegistro}/>}
+        {cartaOpen&&<AgregarCartaModal inventario={pokeInventario} carpetas={pokeCarpetas} priceCache={pokePriceCache}
+          saveInventario={guardarInventario} onClose={()=>setCartaOpen(false)} onGuardado={avisarRegistro}/>}
         {page===2&&<NutriaPage data={nutria} saveData={updateNutria} budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
         {page===3&&<EspritPage dayData={dayData} calMarks={calMarks} updateDay={updateDay} kidsHealth={kidsHealth}/>}
         {page===4&&<SaludPage kidsHealth={kidsHealth} saveKidsHealth={saveKidsHealth} dayData={dayData} updateDay={updateDay} calMarks={calMarks} saveCalMarks={(nm)=>{setCalMarks(nm);calMarksRef.current=nm;saveToStorage({calMarks:nm});}}/>}
         {page===5&&<FadimanPage data={fadimanData} saveData={d=>{setFadimanData(d);fadimanDataRef.current=d;saveToStorage({fadimanData:d});}}/>}
-        {page===6&&<NutricionPage nutriLog={nutriLog} saveNutriLog={d=>{setNutriLog(d);nutriLogRef.current=d;saveToStorage({nutriLog:d});}}
+        {page===6&&<NutricionPage nutriLog={nutriLog} saveNutriLog={guardarNutriLog}
           customFoods={customFoods} saveCustomFoods={d=>{setCustomFoods(d);customFoodsRef.current=d;saveToStorage({customFoods:d});}}
           foodOverrides={foodOverrides} saveFoodOverrides={d=>{setFoodOverrides(d);foodOverridesRef.current=d;saveToStorage({foodOverrides:d});}}
           nutriDecks={nutriDecks} saveNutriDecks={d=>{setNutriDecks(d);nutriDecksRef.current=d;saveToStorage({nutriDecks:d});}}
@@ -2136,10 +2186,7 @@ function AngstApp() {
         />}
         {page===8&&<PokecriptoPage
           inventario={pokeInventario}
-          saveInventario={d=>{
-            const next = typeof d === 'function' ? d(pokeInventarioRef.current) : d;
-            setPokeInventario(next);pokeInventarioRef.current=next;saveToStorage({pokeInventario:next});
-          }}
+          saveInventario={guardarInventario}
           carpetas={pokeCarpetas}
           saveCarpetas={d=>{setPokeCarpetas(d);pokeCarpetasRef.current=d;saveToStorage({pokeCarpetas:d});}}
           darkCatalogo={pokeDarkCatalogo}
