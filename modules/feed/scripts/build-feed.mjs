@@ -46,6 +46,9 @@ const UA = "Mozilla/5.0 (compatible; AngstFeedBot/1.0; +personal use, no scrapin
 // Electrozombies) — se espera afinar después de ver casos reales filtrados/
 // mantenidos, no es exacta. Solo aplica si categoria === MUSIC_CATEGORIA.
 const MUSIC_CATEGORIA = "Dark scene / Música";
+// Módulo de música (oct-2026): esta categoría ya NO se emite en feed.json. Sus noticias
+// se escriben aparte y build-musica.mjs las convierte en lanzamientos + fichas de artista.
+const MUSICA_NOTICIAS_PATH = new URL("../data/musica-noticias.json", import.meta.url);
 const RELEASE_TITLE_RE = /\b(new (single|album|ep|track|song|video)|out now|video premiere|song premiere|premieres?\b|shares? (new )?(song|track|video)|announces? new (album|ep|single)|drops? new|unveils? new (song|track|video))\b/i;
 
 function looksLikeReleaseNews(title) {
@@ -257,6 +260,12 @@ async function main() {
   for (const cat of previous.categories || []) {
     for (const item of cat.items || []) previousByGuid.set(item.guid, item);
   }
+  // Las noticias de música ya no viajan en feed.json (van a musica-noticias.json, que
+  // lee build-musica.mjs): se reusa su texto completo de la corrida anterior igual.
+  try {
+    const prevMusica = JSON.parse(await readFile(MUSICA_NOTICIAS_PATH, "utf-8"));
+    for (const item of prevMusica.items || []) previousByGuid.set(item.guid, item);
+  } catch (e) { /* primera corrida con este archivo */ }
 
   const allSources = feedsConfig.flatMap(g => g.feeds.map(f => ({ ...f, cat: g.cat })));
   console.log(`Bajando ${allSources.length} feeds...`);
@@ -407,17 +416,12 @@ async function main() {
     }
   });
 
-  const musicFiltered = musicResolved.filter(item => {
-    if (item.categoria !== MUSIC_CATEGORIA) return true;
-    if (!looksLikeReleaseNews(item.title)) return true;
-    return (item.tipo === "video" && !!item.videoId) || !!item.bandcampEmbedUrl || !!item.soundcloudEmbedUrl;
-  });
-  const droppedMusicCount = musicResolved.length - musicFiltered.length;
-  if (droppedMusicCount > 0) {
-    console.log(`✓ Dark scene/Música: ${droppedMusicCount} noticia(s) de release sin forma de escucharla (ni YouTube/Bandcamp/SoundCloud), descartadas`);
-  }
-
-  const finalItems = musicFiltered;
+  // Música: todas las noticias de la categoría salen de feed.json y van al módulo de
+  // música, sin el descarte previo de "release sin embed": ahora lo decide build-musica
+  // (una noticia sin reproductor puede resolverse desde la discografía de Bandcamp).
+  const musicItems = musicResolved.filter(item => item.categoria === MUSIC_CATEGORIA);
+  const finalItems = musicResolved.filter(item => item.categoria !== MUSIC_CATEGORIA);
+  console.log(`✓ Música: ${musicItems.length} noticia(s) desviadas a musica-noticias.json (ya no van al feed)`);
 
   const byCat = {};
   finalItems.forEach(item => {
@@ -440,6 +444,10 @@ async function main() {
   };
   await mkdir(new URL("../data/", import.meta.url), { recursive: true });
   await writeFile(OUTPUT_PATH, JSON.stringify(output, null, 2));
+  await writeFile(
+    MUSICA_NOTICIAS_PATH,
+    JSON.stringify({ generatedAt: output.generatedAt, items: musicItems.sort((a, b) => (b.pubDate || "").localeCompare(a.pubDate || "")) }, null, 2),
+  );
   // La Vitrina solo necesita Microdocumentales y Conciertos: archivo aparte, ~1% del
   // peso de feed.json (que ronda los 5 MB y lo baja todo el que abre la Vitrina).
   await writeFile(

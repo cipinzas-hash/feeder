@@ -61,9 +61,12 @@ jobs:
         working-directory: modules/feed
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # Corrida manual: primera carga más ancha que la programada (14 artistas).
+          MUSICA_MAX_ARTISTAS: "40"
+          MUSICA_MAX_MIN: "14"
         run: |
           set -o pipefail
-          timeout -s TERM -k 15 14m node scripts/build-musica.mjs 2>&1 | tee /tmp/musica-build.log
+          timeout -s TERM -k 15 17m node scripts/build-musica.mjs 2>&1 | tee /tmp/musica-build.log
 
       - name: Commitear solo los archivos de música
         if: always()
