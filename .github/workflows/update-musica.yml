@@ -71,7 +71,11 @@ jobs:
           git config user.name "angst-feed-bot"
           git config user.email "actions@users.noreply.github.com"
           git checkout -- modules/feed/data/feed.json modules/feed/data/videoteca.json 2>/dev/null || true
-          git add -f modules/feed/data/musica.json modules/feed/data/musica-noticias.json docs/muestras-bandcamp 2>/dev/null || true
+          # una ruta por vez: `git add a b` falla entero si alguna no existe todavía
+          for f in modules/feed/data/musica.json modules/feed/data/musica-noticias.json docs/muestras-bandcamp; do
+            [ -e "$f" ] && git add -f "$f"
+          done
+          true
           git diff --staged --quiet || git commit -m "Música (${{ github.event.inputs.modo }}) $(date -u +%Y-%m-%dT%H:%MZ)"
           for i in 1 2 3; do
             git push origin "HEAD:${GITHUB_REF_NAME}" && break
