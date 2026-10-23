@@ -1,0 +1,3250 @@
+{
+ "meta": {
+  "inicio": "2026-10-23T01:10:28.314Z",
+  "N": 30,
+  "metodoExtraccion": "gemini (con respaldo heurístico)",
+  "totalMusica": 72,
+  "fin": "2026-10-23T01:21:47.193Z",
+  "parcial": false,
+  "geminiUltimoError": null,
+  "geminiModelo": "gemini-3.1-flash-lite"
+ },
+ "noticias": [
+  {
+   "titulo": "“Shall I Stroke Your Fragile Ego?” — Industrial Darkwave Duo IARA NAGA Take Aim at Scene Power Games in Video for “Big Fish”",
+   "fuente": "Post-Punk.com",
+   "link": "https://post-punk.com/shall-i-stroke-your-fragile-ego-industrial-darkwave-duo-iara-naga-take-aim-at-scene-power-games-in-video-for-big-fish/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "video",
+    "artista": "IARA NAGA",
+    "disco": "Big Fish",
+    "metodo": "gemini"
+   },
+   "artistaClave": "iara naga"
+  },
+  {
+   "titulo": "Irîs signs to Ethereal Projector for ‘Dystopian Ambient Soundscapes’",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/iris-ethereal-projector-signing/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "album",
+    "artista": "Irîs",
+    "disco": "The Earth Looked Up And Cried",
+    "metodo": "gemini"
+   },
+   "artistaClave": "iris"
+  },
+  {
+   "titulo": "Angermund sets ‘Fractions’ album for Tellé Records",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/angermund-fractions-telle-records/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "album",
+    "artista": "Angermund",
+    "disco": "Fractions",
+    "metodo": "gemini"
+   },
+   "artistaClave": "angermund"
+  },
+  {
+   "titulo": "T.A.N.K. releases video for ‘Bloodsucker (R010R Cover)’",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/tank-bloodsucker-r010r-cover-video/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "video",
+    "artista": "T.A.N.K.",
+    "disco": "Bloodsucker (R010R Cover)",
+    "metodo": "gemini"
+   },
+   "artistaClave": "t a n k"
+  },
+  {
+   "titulo": "Sky Problem signs to Géographie, releases self-titled single",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/sky-problem-geographie-single/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "single",
+    "artista": "Sky Problem",
+    "disco": "Sky Problem",
+    "metodo": "gemini"
+   },
+   "artistaClave": "sky problem"
+  },
+  {
+   "titulo": "Ana Palindrome signs to World of Echo, shares ‘A Man A Cure’",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/ana-palindrome-a-man-a-cure/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "single",
+    "artista": "Ana Palindrome",
+    "disco": "A Man A Cure",
+    "metodo": "gemini"
+   },
+   "artistaClave": "ana palindrome"
+  },
+  {
+   "titulo": "Purwien & Kowa release sixth album ‘Sechs’ on October 23",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/purwien-kowa-sechs/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "album",
+    "artista": "Purwien & Kowa",
+    "disco": "Sechs",
+    "metodo": "gemini"
+   },
+   "artistaClave": "purwien kowa"
+  },
+  {
+   "titulo": "Heldautomat sets ‘Zwischen den Lichtern’ album for October 23",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/heldautomat-zwischen-den-lichtern/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "album",
+    "artista": "Heldautomat",
+    "disco": "Zwischen den Lichtern",
+    "metodo": "gemini"
+   },
+   "artistaClave": "heldautomat"
+  },
+  {
+   "titulo": "TOXIK Dementia releases ‘Queen of Darkness’ single",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/toxik-dementia-queen-of-darkness/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "single",
+    "artista": "TOXIK Dementia",
+    "disco": "Queen of Darkness",
+    "metodo": "gemini"
+   },
+   "artistaClave": "toxik dementia"
+  },
+  {
+   "titulo": "Zeromancer confirmed for M’era Luna 2027",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/zeromancer-mera-luna-2027/",
+   "extraccion": {
+    "esLanzamiento": false,
+    "tipo": "festival",
+    "artista": "Zeromancer",
+    "disco": null,
+    "metodo": "gemini"
+   }
+  },
+  {
+   "titulo": "OVRGRWN – Too Far Gone",
+   "fuente": "Electrozombies",
+   "link": "https://electrozombies.com/music/discover/ovrgrwn-too-far-gone/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "single",
+    "artista": "OVRGRWN",
+    "disco": "Too Far Gone",
+    "metodo": "gemini"
+   },
+   "artistaClave": "ovrgrwn"
+  },
+  {
+   "titulo": "Metropolis Records reissues VNV Nation’s ‘Noire’ and ‘Electric Sun’ on vinyl",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/metropolis-records-vinyl-reissues/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "reedicion",
+    "artista": "VNV Nation",
+    "disco": "Noire, Electric Sun",
+    "metodo": "gemini"
+   },
+   "artistaClave": "vnv nation"
+  },
+  {
+   "titulo": "Dark Force Fest unveils 2027 lineup, headlined by IAMX, Powerman 5000 and The Crüxshadows",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/dark-force-fest-2027-lineup/",
+   "extraccion": {
+    "esLanzamiento": false,
+    "tipo": "festival",
+    "artista": "IAMX",
+    "disco": null,
+    "metodo": "gemini"
+   }
+  },
+  {
+   "titulo": "The Sisters of Mercy’s ‘Vision Thing’ turns 36 on 22 October",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/sisters-of-mercy-vision-thing/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "album",
+    "artista": "The Sisters of Mercy",
+    "disco": "Vision Thing",
+    "metodo": "gemini"
+   },
+   "artistaClave": "the sisters of mercy"
+  },
+  {
+   "titulo": "Aetherium Nebula releases second album ‘Ephemeral Port’ via Cryo Chamber",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/aetherium-nebula-ephemeral-port/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "album",
+    "artista": "Aetherium Nebula",
+    "disco": "Ephemeral Port",
+    "metodo": "gemini"
+   },
+   "artistaClave": "aetherium nebula"
+  },
+  {
+   "titulo": "Khadaver sets 13 November release for third album ‘Xaosblack’",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/khadaver-xaosblack-album/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "album",
+    "artista": "Khadaver",
+    "disco": "Xaosblack",
+    "metodo": "gemini"
+   },
+   "artistaClave": "khadaver"
+  },
+  {
+   "titulo": "Korfian – Melodramatic",
+   "fuente": "Electrozombies",
+   "link": "https://electrozombies.com/music/musicvideo/korfian-melodramatic/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "single",
+    "artista": "Korfian",
+    "disco": "Melodramatic",
+    "metodo": "gemini"
+   },
+   "artistaClave": "korfian"
+  },
+  {
+   "titulo": "Combichrist – The Venom In The Mouth Of God (Digital/CD/Vinyl Album – Out Of Line)",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/combichrist-the-venom-in-the-mouth-of-god-review/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "album",
+    "artista": "Combichrist",
+    "disco": "The Venom In The Mouth Of God",
+    "metodo": "gemini"
+   },
+   "artistaClave": "combichrist"
+  },
+  {
+   "titulo": "Dark Force Fest 2027 Announces Full Lineup Including IAMX, ACTORS, TRAITRS, Agonal Gasps, and More",
+   "fuente": "Post-Punk.com",
+   "link": "https://post-punk.com/dark-force-fest-2027-announces-full-lineup-including-iamx-actors-traitrs-agonal-gasps-and-more/",
+   "extraccion": {
+    "esLanzamiento": false,
+    "tipo": "festival",
+    "artista": "IAMX",
+    "disco": null,
+    "metodo": "gemini"
+   }
+  },
+  {
+   "titulo": "Geneva Jacuzzi and Reptile Tile Concoct Confection-Laced Romance in Video for “Candy Boy”",
+   "fuente": "Post-Punk.com",
+   "link": "https://post-punk.com/geneva-jacuzzi-and-reptile-tile-concoct-confection-laced-romance-in-video-for-candy-boy/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "ep",
+    "artista": "Reptile Tile",
+    "disco": "Candy Boy",
+    "metodo": "gemini"
+   },
+   "artistaClave": "reptile tile"
+  },
+  {
+   "titulo": "David Thrussell interview: ‘The deeper I dig, the more I realise the less I know’",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/david-thrussell-interview/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "album",
+    "artista": "David Thrussell",
+    "disco": "The Reign Of Dead Matter",
+    "metodo": "gemini"
+   },
+   "artistaClave": "david thrussell"
+  },
+  {
+   "titulo": "Virgin Birth release video for title track ‘The Dead End’",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/virgin-birth-the-dead-end-video/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "ep",
+    "artista": "Virgin Birth",
+    "disco": "The Dead End",
+    "metodo": "gemini"
+   },
+   "artistaClave": "virgin birth"
+  },
+  {
+   "titulo": "Mesh release video single ‘Fallen Angel’ ahead of November mini-album",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/mesh-fallen-angel-video-single/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "single",
+    "artista": "Mesh",
+    "disco": "Fallen Angel",
+    "metodo": "gemini"
+   },
+   "artistaClave": "mesh"
+  },
+  {
+   "titulo": "Mesh – Fallen Angel",
+   "fuente": "Electrozombies",
+   "link": "https://electrozombies.com/music/musicvideo/mesh-fallen-angel/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "video",
+    "artista": "Mesh",
+    "disco": "Fallen Angel",
+    "metodo": "gemini"
+   },
+   "artistaClave": "mesh"
+  },
+  {
+   "titulo": "MG x CD + JL = – Cross Whisper",
+   "fuente": "Electrozombies",
+   "link": "https://electrozombies.com/music/musicvideo/mg-x-cd-jl-cross-whisper/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "video",
+    "artista": "MG x CD + JL =",
+    "disco": "Cross Whisper",
+    "metodo": "gemini"
+   },
+   "artistaClave": "mg x cd jl"
+  },
+  {
+   "titulo": "Venin Carmin – Vengeance",
+   "fuente": "Electrozombies",
+   "link": "https://electrozombies.com/music/musicvideo/venin-carmin-vengeance/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "video",
+    "artista": "Venin Carmin",
+    "disco": "Vengeance",
+    "metodo": "gemini"
+   },
+   "artistaClave": "venin carmin"
+  },
+  {
+   "titulo": "“I Slipped Right Under That Fence” — A Dog Makes Its Getaway in Post-Punk Outfit SMILE’s Video for “Gotta Run”",
+   "fuente": "Post-Punk.com",
+   "link": "https://post-punk.com/i-slipped-right-under-that-fence-a-dog-makes-its-getaway-in-post-punk-outfit-smiles-video-for-gotta-run/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "single",
+    "artista": "SMILE",
+    "disco": "Gotta Run",
+    "metodo": "gemini"
+   },
+   "artistaClave": "smile"
+  },
+  {
+   "titulo": "Sensitive Content releases debut album ‘Romantic Asthmatic’",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/sensitive-content-romantic-asthmatic/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "album",
+    "artista": "Sensitive Content",
+    "disco": "Romantic Asthmatic",
+    "metodo": "gemini"
+   },
+   "artistaClave": "sensitive content"
+  },
+  {
+   "titulo": "Blood&Ink releases ‘The Pharmacist Pageant’ single",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/blood-ink-the-pharmacist-pageant/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "single",
+    "artista": "Blood Ink",
+    "disco": "The Pharmacist Pageant",
+    "metodo": "gemini"
+   },
+   "artistaClave": "blood ink"
+  },
+  {
+   "titulo": "Red Deviil – Tesoros Infernales (Digital/Vinyl Album – X-IMG)",
+   "fuente": "Side-Line Magazine",
+   "link": "https://www.side-line.com/red-deviil-tesoros-infernales-review/",
+   "extraccion": {
+    "esLanzamiento": true,
+    "tipo": "album",
+    "artista": "Red Deviil",
+    "disco": "Tesoros Infernales",
+    "metodo": "gemini"
+   },
+   "artistaClave": "red deviil"
+  }
+ ],
+ "artistas": [
+  {
+   "artista": "IARA NAGA",
+   "disco": "Big Fish",
+   "mb": {
+    "mbid": null,
+    "match": "sin-resultado",
+    "candidatos": 0
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://iaranaga.bandcamp.com",
+    "releasesEnPagina": 1,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "track",
+     "id": "1048285975"
+    }
+   }
+  },
+  {
+   "artista": "Irîs",
+   "disco": "The Earth Looked Up And Cried",
+   "mb": {
+    "mbid": "749d093d-b2f7-4e59-81bc-a47218914d9a",
+    "match": "ambiguo",
+    "candidatos": 5
+   },
+   "ficha": {
+    "nombre": "IRIS",
+    "tipo": "Group",
+    "pais": "RO",
+    "desde": "1977",
+    "tags": [
+     "romanian",
+     "romanian band"
+    ],
+    "rels": [
+     {
+      "tipo": "discography page",
+      "url": "http://interioare.free.fr/Iris/Iris%20-%20Discografie.html"
+     },
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/1037990"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://open.spotify.com/artist/0nEWi3xFqvXJgG6lLBVDNk"
+     },
+     {
+      "tipo": "purchase for download",
+      "url": "https://itunes.apple.com/us/artist/id4244584"
+     },
+     {
+      "tipo": "wikidata",
+      "url": "https://www.wikidata.org/wiki/Q379377"
+     },
+     {
+      "tipo": "youtube music",
+      "url": "https://music.youtube.com/channel/UCPZuhK011cKW6ULv-mKvUFw"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 27,
+    "primeros": [
+     {
+      "id": "4417a780-0aa1-444f-a53d-c60c04cec3ee",
+      "titulo": "Zodiac",
+      "tipo": "Album",
+      "fecha": "2022-05-23",
+      "caratula": true
+     },
+     {
+      "id": "f2f23f1e-b4a3-42a6-a4e2-492582688e60",
+      "titulo": "Lumea toata e un circ",
+      "tipo": "Album",
+      "fecha": "2018",
+      "caratula": true
+     },
+     {
+      "id": "9c532dae-a005-4e48-8a45-920ea0e46f3f",
+      "titulo": "O lume doar a lor",
+      "tipo": "Album",
+      "fecha": "2012",
+      "caratula": true
+     },
+     {
+      "id": "80417a68-bb29-4ffa-bd18-ff1db58d58ef",
+      "titulo": "12 porți",
+      "tipo": "Album",
+      "fecha": "2010-11-21",
+      "caratula": true
+     },
+     {
+      "id": "40f8af43-01fe-4bad-99bd-c5e8010e784f",
+      "titulo": "Aeterna : Dăruind Vei Dobândi",
+      "tipo": "Album",
+      "fecha": "2010-07-16",
+      "caratula": false
+     },
+     {
+      "id": "1109ec6f-7ec0-33d1-9525-f2c53d29bdef",
+      "titulo": "Legenda merge mai departe",
+      "tipo": "Album",
+      "fecha": "2009",
+      "caratula": false
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 6,
+    "conCaratula": 4
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://etherealprojector.bandcamp.com",
+    "releasesEnPagina": 7,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "album",
+     "id": "2325432830"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": true,
+    "idioma": "en",
+    "tieneEs": false,
+    "extracto": 339,
+    "imagen": true
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "Angermund",
+   "disco": "Fractions",
+   "mb": {
+    "mbid": "38c0d47c-bae3-452d-9835-60f0e650f38e",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "Angermund",
+    "tipo": "Person",
+    "pais": "NO",
+    "desde": "1980-11",
+    "tags": [],
+    "rels": [
+     {
+      "tipo": "bandcamp",
+      "url": "https://angermund.bandcamp.com/"
+     },
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/2397958"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://open.spotify.com/artist/6lEonesLdaKa759afymnJv"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://www.deezer.com/artist/10091338"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 8,
+    "primeros": [
+     {
+      "id": "98b49da7-3234-490b-a7c0-e3596967dd30",
+      "titulo": "Normal",
+      "tipo": "Single",
+      "fecha": "2023-06-02",
+      "caratula": true
+     },
+     {
+      "id": "eb06925a-aee5-4929-b7b6-85446b3f8c6b",
+      "titulo": "Maskinelt uføre (Kahuun maskinel remix)",
+      "tipo": "Single",
+      "fecha": "2023-05-12",
+      "caratula": false
+     },
+     {
+      "id": "981685af-b3d4-4736-9a92-15a73618d205",
+      "titulo": "Perler for svin",
+      "tipo": "Single",
+      "fecha": "2022-10-07",
+      "caratula": true
+     },
+     {
+      "id": "8f1fe767-d505-42e5-9530-6781c409147f",
+      "titulo": "Prinsen av Ulriken",
+      "tipo": "Album",
+      "fecha": "2021-11-05",
+      "caratula": true
+     },
+     {
+      "id": "1ea36465-bf7d-405a-b94d-d16d380deb43",
+      "titulo": "Pass Deg For Trancen",
+      "tipo": "EP",
+      "fecha": "2021-02-26",
+      "caratula": true
+     },
+     {
+      "id": "32ad88a6-9796-4e9a-bfc5-cb41bbcf3cc9",
+      "titulo": "Alt På Stell (Remixes)",
+      "tipo": "EP",
+      "fecha": "2020-09-25",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 6,
+    "conCaratula": 5
+   },
+   "bandcamp": {
+    "fuente": "musicbrainz",
+    "base": "https://angermund.bandcamp.com",
+    "releasesEnPagina": 6,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "album",
+     "id": "2568739534"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": false,
+    "idioma": null,
+    "extracto": 0,
+    "imagen": false
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "T.A.N.K.",
+   "disco": "Bloodsucker (R010R Cover)",
+   "mb": {
+    "mbid": "9e4d93b6-0b22-4914-a3e4-efe8b8cd0378",
+    "match": "dudoso",
+    "candidatos": 3
+   },
+   "ficha": {
+    "nombre": "Tank",
+    "tipo": "Group",
+    "pais": "GB",
+    "desde": "1980",
+    "tags": [
+     "heavy metal",
+     "nwobhm"
+    ],
+    "rels": [
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/262782"
+     },
+     {
+      "tipo": "myspace",
+      "url": "https://myspace.com/officialtank"
+     },
+     {
+      "tipo": "official homepage",
+      "url": "http://www.tankfilthhounds.net/"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.metal-archives.com/bands/Tank/1038"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.metal-archives.com/bands/Tank/3540365428"
+     },
+     {
+      "tipo": "other databases",
+      "url": "http://www.musik-sammler.de/artist/1155"
+     },
+     {
+      "tipo": "wikidata",
+      "url": "https://www.wikidata.org/wiki/Q933207"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 22,
+    "primeros": [
+     {
+      "id": "c1d87afe-672a-430d-9241-a763ffc9ba32",
+      "titulo": "Re-Ignition",
+      "tipo": "Album",
+      "fecha": "2019-04-26",
+      "caratula": true
+     },
+     {
+      "id": "a3088624-e3f3-4648-a8e6-8da073bda56b",
+      "titulo": "Sturmpanzer",
+      "tipo": "Album",
+      "fecha": "2018-10-12",
+      "caratula": true
+     },
+     {
+      "id": "4a8c6e5d-954f-477a-9d45-d482aa608106",
+      "titulo": "Valley of Tears",
+      "tipo": "Album",
+      "fecha": "2015-09-25",
+      "caratula": true
+     },
+     {
+      "id": "a82f8291-3b48-4b17-bdb5-77af32b628ec",
+      "titulo": "Breath of the Pit",
+      "tipo": "Album",
+      "fecha": "2013-06-03",
+      "caratula": true
+     },
+     {
+      "id": "cd6411d6-fcb8-471b-8b0e-23da4c974f14",
+      "titulo": "War Machine Live",
+      "tipo": "Album",
+      "fecha": "2012-11-12",
+      "caratula": true
+     },
+     {
+      "id": "30a17293-0bee-4557-838f-ab1b620e93dc",
+      "titulo": "War Nation",
+      "tipo": "Album",
+      "fecha": "2012-06-05",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 6,
+    "conCaratula": 6
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": null,
+    "releasesEnPagina": 0,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": false,
+    "detalle": {
+     "tipo": "album",
+     "id": "2248007471"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": true,
+    "idioma": "es",
+    "tieneEs": true,
+    "extracto": 255,
+    "imagen": true
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "Sky Problem",
+   "disco": "Sky Problem",
+   "mb": {
+    "mbid": null,
+    "match": "sin-resultado",
+    "candidatos": 0
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://geographie.bandcamp.com",
+    "releasesEnPagina": 20,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "album",
+     "id": "1280525868"
+    }
+   }
+  },
+  {
+   "artista": "Ana Palindrome",
+   "disco": "A Man A Cure",
+   "mb": {
+    "mbid": "d597a095-f94f-420b-b4c5-cc94cde4ce60",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "Ana Palindrome",
+    "tipo": "Group",
+    "pais": "IE",
+    "desde": "2024",
+    "tags": [],
+    "rels": []
+   },
+   "discografia": {
+    "total": 1,
+    "primeros": [
+     {
+      "id": "d4fff991-2c13-49b8-a04e-221f8c9837da",
+      "titulo": "SORRY A MILLION",
+      "tipo": "Single",
+      "fecha": "2024-02-23",
+      "caratula": false
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 1,
+    "conCaratula": 0
+   },
+   "bandcamp": {
+    "fuente": null,
+    "base": null,
+    "releasesEnPagina": 0,
+    "idResuelto": false,
+    "embedOk": false,
+    "imagen": false,
+    "detalle": null
+   },
+   "wikipedia": {
+    "enMusicBrainz": false,
+    "idioma": null,
+    "extracto": 0,
+    "imagen": false
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "Purwien & Kowa",
+   "disco": "Sechs",
+   "mb": {
+    "mbid": "35fb53a6-0810-4a63-94ef-d3d3b742af60",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "Purwien & Kowa",
+    "tipo": "Group",
+    "pais": null,
+    "desde": null,
+    "tags": [],
+    "rels": [
+     {
+      "tipo": "bandcamp",
+      "url": "https://purwienkowa.bandcamp.com/"
+     },
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/6800755"
+     },
+     {
+      "tipo": "official homepage",
+      "url": "https://www.purwienundkowa.com/"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.facebook.com/purwienundkowa"
+     },
+     {
+      "tipo": "youtube",
+      "url": "https://www.youtube.com/@purwienundkowa8244"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 4,
+    "primeros": [
+     {
+      "id": "02701476-82be-41ca-af26-4ecb8ad77bb7",
+      "titulo": "Bandit",
+      "tipo": "Album",
+      "fecha": "2022-02-28",
+      "caratula": true
+     },
+     {
+      "id": "dc42c3e9-b970-4c68-95fa-d82aba27e25d",
+      "titulo": "5=2+3+4x12″",
+      "tipo": "Album",
+      "fecha": "2021-12-24",
+      "caratula": true
+     },
+     {
+      "id": "98817514-173e-4081-a631-d22db6ac4593",
+      "titulo": "Vier",
+      "tipo": "Album",
+      "fecha": "2020-07-31",
+      "caratula": true
+     },
+     {
+      "id": "73580ece-0bb7-4378-9816-8779f0e874b1",
+      "titulo": "Zwei",
+      "tipo": "Album",
+      "fecha": "2017-08-25",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 4,
+    "conCaratula": 4
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://purwienkowa.bandcamp.com",
+    "releasesEnPagina": 14,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "album",
+     "id": "4014586791"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": false,
+    "idioma": null,
+    "extracto": 0,
+    "imagen": false
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "Heldautomat",
+   "disco": "Zwischen den Lichtern",
+   "mb": {
+    "mbid": null,
+    "match": "sin-resultado",
+    "candidatos": 0
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://heldautomat.bandcamp.com",
+    "releasesEnPagina": 4,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "album",
+     "id": "3250694041"
+    }
+   }
+  },
+  {
+   "artista": "TOXIK Dementia",
+   "disco": "Queen of Darkness",
+   "mb": {
+    "mbid": "0e21619d-39ee-4032-a0e8-6a8b8d366f8a",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "Toxik Dementia",
+    "tipo": null,
+    "pais": "AR",
+    "desde": null,
+    "tags": [],
+    "rels": [
+     {
+      "tipo": "bandcamp",
+      "url": "https://toxikdementia.bandcamp.com/"
+     },
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/4840974"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.facebook.com/TOXIKDementia"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 29,
+    "primeros": [
+     {
+      "id": "1428aed9-7251-4c7c-8708-d85610bd774f",
+      "titulo": "Vomiting Infected Blood",
+      "tipo": "EP",
+      "fecha": "2024-07-01",
+      "caratula": true
+     },
+     {
+      "id": "22b97797-9a47-4196-ab9a-8f427635a106",
+      "titulo": "Mememix",
+      "tipo": "Single",
+      "fecha": "2024-07-01",
+      "caratula": true
+     },
+     {
+      "id": "b3295b5e-a5fa-4d21-8663-6ebed838965b",
+      "titulo": "2 n e 1 - R e m i x e s",
+      "tipo": "Single",
+      "fecha": "2024-07-01",
+      "caratula": true
+     },
+     {
+      "id": "b4c350eb-6536-49f2-ae59-89b30e1e7dc8",
+      "titulo": "WTF",
+      "tipo": "Single",
+      "fecha": "2024-05-06",
+      "caratula": false
+     },
+     {
+      "id": "9538c227-9962-4130-9eb3-4b7a9cd1691d",
+      "titulo": "People = Machines",
+      "tipo": "Single",
+      "fecha": "2024-05-05",
+      "caratula": true
+     },
+     {
+      "id": "f99449e5-16cb-475b-be15-65974bb88873",
+      "titulo": "Transcendental Pulse",
+      "tipo": "Single",
+      "fecha": "2024-05-05",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 6,
+    "conCaratula": 5
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://toxikdementia.bandcamp.com",
+    "releasesEnPagina": 16,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "track",
+     "id": "2392144501"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": false,
+    "idioma": null,
+    "extracto": 0,
+    "imagen": false
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "OVRGRWN",
+   "disco": "Too Far Gone",
+   "mb": {
+    "mbid": "6426aa9c-fdef-428b-a318-0bc1ea0189c1",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "OVRGRWN",
+    "tipo": null,
+    "pais": null,
+    "desde": null,
+    "tags": [],
+    "rels": [
+     {
+      "tipo": "bandcamp",
+      "url": "https://ovrgrwn.bandcamp.com/"
+     },
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/8405451"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://tidal.com/artist/17322672"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 11,
+    "primeros": [
+     {
+      "id": "1ffb631c-4973-44ed-9506-12387bef6985",
+      "titulo": "Storm (Vocal Version)",
+      "tipo": "Single",
+      "fecha": "2024-11-01",
+      "caratula": true
+     },
+     {
+      "id": "4ec92e21-0b3f-4942-bd4b-387db6546073",
+      "titulo": "The Riders (Glowline Remix)",
+      "tipo": "Single",
+      "fecha": "2023-01-19",
+      "caratula": true
+     },
+     {
+      "id": "8ba2e694-5614-4160-be9d-92ec9749f71e",
+      "titulo": "Wasteland (Kalax Remix)",
+      "tipo": "Single",
+      "fecha": "2022-06-21",
+      "caratula": true
+     },
+     {
+      "id": "cfd66074-3d0e-404f-af0d-977d6b0a1cdd",
+      "titulo": "Maybe Next Year (Droid Bishop Remix)",
+      "tipo": "Single",
+      "fecha": "2022-05-24",
+      "caratula": true
+     },
+     {
+      "id": "86ce083e-9dc3-4638-82f5-6b5356b04d56",
+      "titulo": "Through The Lights (Donbor Remix)",
+      "tipo": "Single",
+      "fecha": "2022-01-05",
+      "caratula": true
+     },
+     {
+      "id": "8c1af9ef-8f8b-4c8d-86cd-ee0928c4de9f",
+      "titulo": "Momentary High (Instrumentals)",
+      "tipo": "EP",
+      "fecha": "2021-08-25",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 6,
+    "conCaratula": 6
+   },
+   "bandcamp": {
+    "fuente": "musicbrainz",
+    "base": "https://ovrgrwn.bandcamp.com",
+    "releasesEnPagina": 17,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "track",
+     "id": "809307612"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": false,
+    "idioma": null,
+    "extracto": 0,
+    "imagen": false
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "VNV Nation",
+   "disco": "Noire, Electric Sun",
+   "mb": {
+    "mbid": "8385f26a-f374-4a04-9aad-4442ce24db2b",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "VNV Nation",
+    "tipo": "Group",
+    "pais": "DE",
+    "desde": "1990",
+    "tags": [
+     "futurepop",
+     "electronic",
+     "ebm",
+     "synthpop",
+     "synth-pop",
+     "trance"
+    ],
+    "rels": [
+     {
+      "tipo": "allmusic",
+      "url": "https://www.allmusic.com/artist/mn0000308447"
+     },
+     {
+      "tipo": "bandcamp",
+      "url": "https://vnvnation.bandcamp.com/"
+     },
+     {
+      "tipo": "biography",
+      "url": "http://www.vnvnation.com/Webfiles/propaganda.htm"
+     },
+     {
+      "tipo": "discography page",
+      "url": "http://www.vnvnation.com/webfiles/products.htm"
+     },
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/10666"
+     },
+     {
+      "tipo": "fanpage",
+      "url": "http://www.vnvnation.de/"
+     },
+     {
+      "tipo": "fanpage",
+      "url": "http://www.weltfunk.net/"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://open.spotify.com/artist/4KlYg0F5KG9QNDFKaeTNAy"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://www.deezer.com/artist/3821"
+     },
+     {
+      "tipo": "lyrics",
+      "url": "https://genius.com/artists/Vnv-nation"
+     },
+     {
+      "tipo": "myspace",
+      "url": "https://myspace.com/vnvnation"
+     },
+     {
+      "tipo": "official homepage",
+      "url": "http://www.vnvnation.com/"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://rateyourmusic.com/artist/vnv_nation"
+     },
+     {
+      "tipo": "purchase for download",
+      "url": "https://open.qobuz.com/artist/79721"
+     },
+     {
+      "tipo": "setlistfm",
+      "url": "https://www.setlist.fm/setlists/vnv-nation-bd6e536.html"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://twitter.com/VNV_Nation"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.facebook.com/VNVNation"
+     },
+     {
+      "tipo": "soundcloud",
+      "url": "https://soundcloud.com/vnvnation"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://music.apple.com/gb/artist/49251259"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://open.qobuz.com/artist/79721"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://tidal.com/artist/3878113"
+     },
+     {
+      "tipo": "wikidata",
+      "url": "https://www.wikidata.org/wiki/Q727124"
+     },
+     {
+      "tipo": "youtube",
+      "url": "https://www.youtube.com/channel/UCEd8B1sHMMV35f810m4Rakw"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 40,
+    "primeros": [
+     {
+      "id": "ad9b045b-00a5-44df-ba9f-9ecc9720c929",
+      "titulo": "Construct",
+      "tipo": "Album",
+      "fecha": "2025-05-09",
+      "caratula": true
+     },
+     {
+      "id": "d8c21bcf-c27c-4099-ad50-d0a066da51d3",
+      "titulo": "By Your Side",
+      "tipo": "Single",
+      "fecha": "2025-05-02",
+      "caratula": true
+     },
+     {
+      "id": "553ba434-3244-4ecf-8f25-22cfc16d532c",
+      "titulo": "Station 21",
+      "tipo": "Single",
+      "fecha": "2025-04-17",
+      "caratula": true
+     },
+     {
+      "id": "6590a1f0-95b6-4984-aed6-69c26ffe99bc",
+      "titulo": "Silence Speaks",
+      "tipo": "Single",
+      "fecha": "2025-03-21",
+      "caratula": true
+     },
+     {
+      "id": "5595fa0a-c34c-43c9-b7a4-a35d72db8933",
+      "titulo": "Electric Sun",
+      "tipo": "Album",
+      "fecha": "2023-04-28",
+      "caratula": true
+     },
+     {
+      "id": "fce8ef19-5f7e-4ce4-8b5a-3bf4d5284353",
+      "titulo": "Wait",
+      "tipo": "Single",
+      "fecha": "2023-04-14",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 6,
+    "conCaratula": 6
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://vnvnation.bandcamp.com",
+    "releasesEnPagina": 8,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "album",
+     "id": "2659062312"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": true,
+    "idioma": "es",
+    "tieneEs": true,
+    "extracto": 248,
+    "imagen": true
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "The Sisters of Mercy",
+   "disco": "Vision Thing",
+   "mb": {
+    "mbid": "553d8166-27b0-49fe-b8e4-89a984e2c375",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "The Sisters of Mercy",
+    "tipo": "Group",
+    "pais": "GB",
+    "desde": "1980",
+    "tags": [
+     "gothic rock",
+     "post-punk",
+     "goth",
+     "80s",
+     "british",
+     "goth rock"
+    ],
+    "rels": [
+     {
+      "tipo": "allmusic",
+      "url": "https://www.allmusic.com/artist/mn0000012809"
+     },
+     {
+      "tipo": "bandsintown",
+      "url": "https://www.bandsintown.com/a/40004"
+     },
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/83146"
+     },
+     {
+      "tipo": "fanpage",
+      "url": "http://db.tsom.org/index.html"
+     },
+     {
+      "tipo": "fanpage",
+      "url": "http://tours.tsom.org/"
+     },
+     {
+      "tipo": "fanpage",
+      "url": "http://www.sisterswiki.org/"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://open.spotify.com/artist/4HxBVyHaUa60eCSsJWxwWR"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://www.deezer.com/artist/2482"
+     },
+     {
+      "tipo": "last.fm",
+      "url": "https://www.last.fm/music/The+Sisters+of+Mercy"
+     },
+     {
+      "tipo": "lyrics",
+      "url": "http://muzikum.eu/en/122-5252/the-sisters-of-mercy/lyrics.html"
+     },
+     {
+      "tipo": "lyrics",
+      "url": "https://genius.com/artists/The-sisters-of-mercy"
+     },
+     {
+      "tipo": "lyrics",
+      "url": "https://www.musixmatch.com/artist/The-Sisters-of-Mercy"
+     },
+     {
+      "tipo": "official homepage",
+      "url": "http://www.thesistersofmercy.com/"
+     },
+     {
+      "tipo": "other databases",
+      "url": "http://id.loc.gov/authorities/names/n91114588"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://catalogue.bnf.fr/ark:/12148/cb13906528b"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://d-nb.info/gnd/4299068-3"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://imvdb.com/n/the-sisters-of-mercy"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://rateyourmusic.com/artist/the_sisters_of_mercy"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.45cat.com/12single/artist/the-sisters-of-mercy"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.45cat.com/artist/the-sisters-of-mercy"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.45cat.com/cdalbum/artist/the-sisters-of-mercy"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.45cat.com/cdsingle/artist/the-sisters-of-mercy"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.45cat.com/live/artist/sisters-of-mercy"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.45cat.com/live/artist/the-sisters-of-mercy"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.45cat.com/tape/artist/sisters-of-mercy"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.45cat.com/tape/artist/the-sisters-of-mercy"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.45cat.com/vinyl/artist/the-sisters-of-mercy"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.musik-sammler.de/artist/the-sisters-of-mercy/"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.muziekweb.nl/Link/M00000087785/POPULAR/"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.worldcat.org/identities/lccn-n91114588"
+     },
+     {
+      "tipo": "purchase for download",
+      "url": "https://www.qobuz.com/us-en/interpreter/the-sisters-of-mercy/934825"
+     },
+     {
+      "tipo": "setlistfm",
+      "url": "https://www.setlist.fm/setlists/the-sisters-of-mercy-7bd6b234.html"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://twitter.com/tsomofficial"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.facebook.com/The-Sisters-of-Mercy-1416457338674712"
+     },
+     {
+      "tipo": "songkick",
+      "url": "https://www.songkick.com/artists/492456"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://music.apple.com/gb/artist/702929"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://tidal.com/artist/13079"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://www.qobuz.com/us-en/interpreter/the-sisters-of-mercy/934825"
+     },
+     {
+      "tipo": "VIAF",
+      "url": "http://viaf.org/viaf/152057032"
+     },
+     {
+      "tipo": "wikidata",
+      "url": "https://www.wikidata.org/wiki/Q751814"
+     },
+     {
+      "tipo": "youtube",
+      "url": "https://www.youtube.com/channel/UCnkcbmV8EDVJoYu3xoECM8A"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 100,
+    "primeros": [
+     {
+      "id": "39d2bef6-33ac-4899-8a29-8d5aa4a30800",
+      "titulo": "Radio Transmissions",
+      "tipo": "Album",
+      "fecha": "2024-02-23",
+      "caratula": true
+     },
+     {
+      "id": "e9f98c7c-c1c3-49ab-95c6-01b3c3c154e5",
+      "titulo": "BBC Sessions 1982–1984",
+      "tipo": "Album",
+      "fecha": "2021-07-17",
+      "caratula": true
+     },
+     {
+      "id": "a0168763-0036-45ca-8607-50feea0e0128",
+      "titulo": "John Peel Session: 1984",
+      "tipo": "EP",
+      "fecha": "2020-06-19",
+      "caratula": true
+     },
+     {
+      "id": "1601064e-57c0-4cc4-9ec8-482993e17cd2",
+      "titulo": "Complete BBC Radio One Sessions",
+      "tipo": "Album",
+      "fecha": "2020-06-05",
+      "caratula": true
+     },
+     {
+      "id": "1cd8a4ed-5d0d-45ca-a644-d9838399fc77",
+      "titulo": "Crash and Burn",
+      "tipo": "Album",
+      "fecha": "2020-05-29",
+      "caratula": true
+     },
+     {
+      "id": "b5bb9fe8-75a7-4612-baff-815eb5affc91",
+      "titulo": "The Good, the Bad & The Ugly: History of Cover Versions",
+      "tipo": "Album",
+      "fecha": "2020-05-29",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 6,
+    "conCaratula": 6
+   },
+   "bandcamp": {
+    "fuente": null,
+    "base": null,
+    "releasesEnPagina": 0,
+    "idResuelto": false,
+    "embedOk": false,
+    "imagen": false,
+    "detalle": null
+   },
+   "wikipedia": {
+    "enMusicBrainz": true,
+    "idioma": "es",
+    "tieneEs": true,
+    "extracto": 213,
+    "imagen": true
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "Aetherium Nebula",
+   "disco": "Ephemeral Port",
+   "mb": {
+    "mbid": "9ac5e6e4-7dbb-4207-940c-1455ce6c6181",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "Aetherium Nebula",
+    "tipo": "Person",
+    "pais": null,
+    "desde": null,
+    "tags": [],
+    "rels": [
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/12883484"
+     },
+     {
+      "tipo": "official homepage",
+      "url": "https://arcanedirge.com/aetherium-nebula/"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.facebook.com/profile.php?id=100086189423824"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.instagram.com/aetheriumnebula/"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 3,
+    "primeros": [
+     {
+      "id": "ec3d3eaf-0c5c-4483-970b-93fb639b36bd",
+      "titulo": "Ephemeral Port",
+      "tipo": "Album",
+      "fecha": "2026-10-20",
+      "caratula": true
+     },
+     {
+      "id": "7bb99ef1-38a4-4c35-b03c-500d3dcda94c",
+      "titulo": "Arcsec City I",
+      "tipo": "Album",
+      "fecha": "2024-03-01",
+      "caratula": false
+     },
+     {
+      "id": "98eccde2-36f9-4672-93e2-ad4f69e59bbd",
+      "titulo": "Glacialis Mundi",
+      "tipo": "Album",
+      "fecha": "2023-08-25",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 3,
+    "conCaratula": 2
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://cryochamber.bandcamp.com",
+    "releasesEnPagina": 16,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "album",
+     "id": "2896987309"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": false,
+    "idioma": null,
+    "extracto": 0,
+    "imagen": false
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "Khadaver",
+   "disco": "Xaosblack",
+   "mb": {
+    "mbid": "8ea439fb-7765-4f8b-82c2-d54981f1f147",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "Khadaver",
+    "tipo": "Group",
+    "pais": "SK",
+    "desde": "2006",
+    "tags": [
+     "blackened metal",
+     "cyber metal",
+     "electro metal",
+     "industrial metal"
+    ],
+    "rels": [
+     {
+      "tipo": "bandcamp",
+      "url": "https://khadaver.bandcamp.com/"
+     },
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/1739581"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.instagram.com/khadavercybermetal/"
+     },
+     {
+      "tipo": "youtube",
+      "url": "https://www.youtube.com/channel/UCdEBgs8xVAnQA5UhQlGqpng"
+     },
+     {
+      "tipo": "youtube",
+      "url": "https://www.youtube.com/khadavercybermetal"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 7,
+    "primeros": [
+     {
+      "id": "6c2e0e42-377e-4194-856a-eb40b0fca539",
+      "titulo": "Re:Animate",
+      "tipo": "Single",
+      "fecha": "2021-12-10",
+      "caratula": false
+     },
+     {
+      "id": "68ca5d0d-7f79-42b3-92c2-4fd746a0d7e6",
+      "titulo": "Exstinctio Mundi",
+      "tipo": "Album",
+      "fecha": "2015-11-09",
+      "caratula": true
+     },
+     {
+      "id": "8e274ab4-4723-4a9e-af62-59bb13e722e4",
+      "titulo": "O Come All Ye Hateful",
+      "tipo": "Single",
+      "fecha": "2012-12-24",
+      "caratula": true
+     },
+     {
+      "id": "96bde78a-9325-45a4-b332-f223794a42ff",
+      "titulo": "New World Disorder",
+      "tipo": "Album",
+      "fecha": "2012-08-14",
+      "caratula": true
+     },
+     {
+      "id": "67041cd2-3bdc-4fb5-b6df-95a325372ee3",
+      "titulo": "Binary Runners",
+      "tipo": "Single",
+      "fecha": "2012-07-24",
+      "caratula": true
+     },
+     {
+      "id": "a4ff09b9-3cfb-4929-b3d4-fc47a483e86f",
+      "titulo": "GOD-RW",
+      "tipo": "EP",
+      "fecha": "2010-09-20",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 6,
+    "conCaratula": 5
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://khadaver.bandcamp.com",
+    "releasesEnPagina": 10,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "album",
+     "id": "898912932"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": false,
+    "idioma": null,
+    "extracto": 0,
+    "imagen": false
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "Korfian",
+   "disco": "Melodramatic",
+   "mb": {
+    "mbid": "52863f30-d03a-48ea-81c1-21829faee446",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "Korfian",
+    "tipo": null,
+    "pais": "GR",
+    "desde": null,
+    "tags": [],
+    "rels": [
+     {
+      "tipo": "bandcamp",
+      "url": "https://korfian.bandcamp.com/"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://open.spotify.com/artist/6zpjARMvUWpgrHnVP9No3I"
+     },
+     {
+      "tipo": "official homepage",
+      "url": "https://www.korfian.com/"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://twitter.com/korfianofficial"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.facebook.com/korfian"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.instagram.com/korfianofficial/"
+     },
+     {
+      "tipo": "youtube",
+      "url": "https://www.youtube.com/channel/UC3Ox3-GFPYZ8GsSG9vpfMdw/featured?view_as=subscriber"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 1,
+    "primeros": [
+     {
+      "id": "99fa4944-a8dc-4201-9d8d-72dc8f9fae26",
+      "titulo": "Postfire",
+      "tipo": "Album",
+      "fecha": "2019-09-27",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 1,
+    "conCaratula": 1
+   },
+   "bandcamp": {
+    "fuente": "musicbrainz",
+    "base": "https://korfian.bandcamp.com",
+    "releasesEnPagina": 16,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "track",
+     "id": "3734914737"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": false,
+    "idioma": null,
+    "extracto": 0,
+    "imagen": false
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "Combichrist",
+   "disco": "The Venom In The Mouth Of God",
+   "mb": {
+    "mbid": "c29f4522-f710-4bb5-a06b-d436fcc3b2fd",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "Combichrist",
+    "tipo": "Group",
+    "pais": "US",
+    "desde": "2003",
+    "tags": [
+     "aggrotech",
+     "ebm",
+     "harsh ebm",
+     "industrial metal",
+     "electro-industrial",
+     "industrial"
+    ],
+    "rels": [
+     {
+      "tipo": "allmusic",
+      "url": "https://www.allmusic.com/artist/mn0000676088"
+     },
+     {
+      "tipo": "bandcamp",
+      "url": "https://combichrist.bandcamp.com/"
+     },
+     {
+      "tipo": "bandsintown",
+      "url": "https://www.bandsintown.com/a/1200415"
+     },
+     {
+      "tipo": "biography",
+      "url": "http://www.metalstorm.net/bands/band.php?band_id=8708"
+     },
+     {
+      "tipo": "biography",
+      "url": "http://www.metropolis-records.com/artist/combichrist"
+     },
+     {
+      "tipo": "blog",
+      "url": "http://combichristfans.tumblr.com/"
+     },
+     {
+      "tipo": "blog",
+      "url": "http://combichrist.livejournal.com/"
+     },
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/139618"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://open.spotify.com/artist/5556RAgwP70PnXbaUTGNbR"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://www.deezer.com/artist/6130"
+     },
+     {
+      "tipo": "IMDb",
+      "url": "https://www.imdb.com/name/nm4181534/"
+     },
+     {
+      "tipo": "last.fm",
+      "url": "https://www.last.fm/music/Combichrist"
+     },
+     {
+      "tipo": "lyrics",
+      "url": "https://genius.com/artists/Combichrist"
+     },
+     {
+      "tipo": "myspace",
+      "url": "https://myspace.com/combichrist"
+     },
+     {
+      "tipo": "official homepage",
+      "url": "http://www.combichrist.com/"
+     },
+     {
+      "tipo": "online community",
+      "url": "http://combichrist.livejournal.com/"
+     },
+     {
+      "tipo": "other databases",
+      "url": "http://id.loc.gov/authorities/names/no2009046822"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://d-nb.info/gnd/10337380-9"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://imvdb.com/n/combichrist"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://rateyourmusic.com/artist/combichrist"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.musik-sammler.de/artist/combichrist/"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.spirit-of-metal.com/en/band/Combi_christ"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.worldcat.org/identities/lccn-no2009046822/"
+     },
+     {
+      "tipo": "purchase for download",
+      "url": "https://itunes.apple.com/us/artist/id49450697"
+     },
+     {
+      "tipo": "purchase for download",
+      "url": "https://open.qobuz.com/artist/821428"
+     },
+     {
+      "tipo": "setlistfm",
+      "url": "https://www.setlist.fm/setlists/combichrist-3d6e51b.html"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://plus.google.com/116169016276055396588"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://twitter.com/combichristarmy"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://vk.ru/combichrist_official"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.facebook.com/combichrist"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.instagram.com/combichrist/"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.reverbnation.com/combichrist"
+     },
+     {
+      "tipo": "social network",
+      "url": "http://vampirefreaks.com/combichrist"
+     },
+     {
+      "tipo": "social network",
+      "url": "http://www.mixcloud.com/artist/combichrist/"
+     },
+     {
+      "tipo": "songkick",
+      "url": "https://www.songkick.com/artists/499628"
+     },
+     {
+      "tipo": "soundcloud",
+      "url": "https://soundcloud.com/combichrist"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://us.napster.com/artist/combichrist"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://music.amazon.com/artists/B001T2UB4I"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://music.apple.com/gb/artist/49450697"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://music.apple.com/us/artist/49450697"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://open.qobuz.com/artist/821428"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://tidal.com/artist/3733204"
+     },
+     {
+      "tipo": "vgmdb",
+      "url": "https://vgmdb.net/artist/14573"
+     },
+     {
+      "tipo": "VIAF",
+      "url": "http://viaf.org/viaf/125887175"
+     },
+     {
+      "tipo": "VIAF",
+      "url": "http://viaf.org/viaf/159074532"
+     },
+     {
+      "tipo": "VIAF",
+      "url": "http://viaf.org/viaf/167524235"
+     },
+     {
+      "tipo": "wikidata",
+      "url": "https://www.wikidata.org/wiki/Q266782"
+     },
+     {
+      "tipo": "youtube",
+      "url": "https://www.youtube.com/CombichristOfficial"
+     },
+     {
+      "tipo": "youtube",
+      "url": "https://www.youtube.com/channel/UChkRHfQavQPQo2x5JkATA0w"
+     },
+     {
+      "tipo": "youtube music",
+      "url": "https://music.youtube.com/channel/UCC4FxQ1RGHgC95YUh4nwD7w"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 40,
+    "primeros": [
+     {
+      "id": "8844d838-08af-4859-89b5-c9d89bac45f1",
+      "titulo": "Prefab",
+      "tipo": "Single",
+      "fecha": "2026-09-16",
+      "caratula": true
+     },
+     {
+      "id": "194879b0-c23b-488e-a424-0bbbe6dcadbe",
+      "titulo": "The Venom in the Mouth of God",
+      "tipo": "Album",
+      "fecha": "2026-07-24",
+      "caratula": true
+     },
+     {
+      "id": "3c38ddfb-9072-4550-9b53-a8304af1f647",
+      "titulo": "Only Here for a Good Time",
+      "tipo": "EP",
+      "fecha": "2026-05-21",
+      "caratula": true
+     },
+     {
+      "id": "24e0cbbd-f915-4d36-a4f8-7f73069573c2",
+      "titulo": "Demons Wanna Be Summoned",
+      "tipo": "Single",
+      "fecha": "2026-04-23",
+      "caratula": true
+     },
+     {
+      "id": "2338caf2-5fa0-4747-b082-ea813aa238eb",
+      "titulo": "Feraline",
+      "tipo": "Single",
+      "fecha": "2025-11-20",
+      "caratula": true
+     },
+     {
+      "id": "875fff87-74d8-46b9-b245-864d8c98ef69",
+      "titulo": "Rise",
+      "tipo": "Single",
+      "fecha": "2025-08-28",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 6,
+    "conCaratula": 6
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://combichrist.bandcamp.com",
+    "releasesEnPagina": 16,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "track",
+     "id": "700352975"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": true,
+    "idioma": "es",
+    "tieneEs": true,
+    "extracto": 199,
+    "imagen": true
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "Reptile Tile",
+   "disco": "Candy Boy",
+   "mb": {
+    "mbid": "fb1020fa-9d3e-4b9a-842a-c0b0952266db",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "Reptile Tile",
+    "tipo": null,
+    "pais": null,
+    "desde": null,
+    "tags": [],
+    "rels": [
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/5320942"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 2,
+    "primeros": [
+     {
+      "id": "f6bcbc62-1170-4bdb-9d2a-18e78c370b68",
+      "titulo": "Reptile Tile vs. Human Man",
+      "tipo": "Album",
+      "fecha": "2019-01-18",
+      "caratula": false
+     },
+     {
+      "id": "8976749e-13b3-4095-898c-b1b9d2fa81de",
+      "titulo": "Hot Tropic",
+      "tipo": "Album",
+      "fecha": "2016-06-12",
+      "caratula": false
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 2,
+    "conCaratula": 0
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://reptiletile.bandcamp.com",
+    "releasesEnPagina": 16,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "album",
+     "id": "2035180471"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": false,
+    "idioma": null,
+    "extracto": 0,
+    "imagen": false
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "David Thrussell",
+   "disco": "The Reign Of Dead Matter",
+   "mb": {
+    "mbid": "ded493f8-d1d9-4e39-b9b2-a89a8419fe0d",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "David Thrussell",
+    "tipo": "Person",
+    "pais": "AU",
+    "desde": null,
+    "tags": [
+     "electronic"
+    ],
+    "rels": [
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/96194"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://open.spotify.com/artist/645wrvMPgzb3ihXWQaiiZc"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://www.deezer.com/artist/62307"
+     },
+     {
+      "tipo": "official homepage",
+      "url": "http://www.worldwentdown.com/imcc/"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://rateyourmusic.com/artist/david_thrussell"
+     },
+     {
+      "tipo": "purchase for download",
+      "url": "https://open.qobuz.com/artist/826747"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://open.qobuz.com/artist/826747"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://tidal.com/artist/5716531"
+     },
+     {
+      "tipo": "wikidata",
+      "url": "https://www.wikidata.org/wiki/Q17013947"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 8,
+    "primeros": [
+     {
+      "id": "b0ffe562-edfd-468e-9b0c-3720adc5c7fd",
+      "titulo": "David Thrussell & Shinjuku Thief Present: The Call of Cthulhu",
+      "tipo": "Album",
+      "fecha": "2026-06-19",
+      "caratula": true
+     },
+     {
+      "id": "5323151c-924d-45c7-9382-0cef78b3671f",
+      "titulo": "Nyarlathotep and Other Tales of Cosmic Dread by H. P. Lovecraft.",
+      "tipo": "Album",
+      "fecha": "2025-06-18",
+      "caratula": true
+     },
+     {
+      "id": "2913cd85-45a1-3802-9187-2de99a93cee0",
+      "titulo": "The Fetid Fungi",
+      "tipo": "Album",
+      "fecha": "2007-09-11",
+      "caratula": true
+     },
+     {
+      "id": "43ba14d8-e6a8-4222-84b3-4359d9a9eb6f",
+      "titulo": "Thunderstruck (Original Motion Picture Score)",
+      "tipo": "Album",
+      "fecha": "2004",
+      "caratula": true
+     },
+     {
+      "id": "8a0283ea-1641-42c2-8360-c82f0e043a11",
+      "titulo": "Under the Radar",
+      "tipo": "Album",
+      "fecha": "2004",
+      "caratula": true
+     },
+     {
+      "id": "1229a77c-06d8-3566-b5f1-93571e225c40",
+      "titulo": "The Hard Word: Original Motion Picture Soundtrack",
+      "tipo": "Album",
+      "fecha": "2002",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 6,
+    "conCaratula": 6
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://ant-zen.bandcamp.com",
+    "releasesEnPagina": 16,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "album",
+     "id": "1860791012"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": true,
+    "idioma": "en",
+    "tieneEs": false,
+    "extracto": 216,
+    "imagen": true
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "Virgin Birth",
+   "disco": "The Dead End",
+   "mb": {
+    "mbid": "3203c65a-0fc0-4639-810c-4991e1a3047a",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "Virgin Birth",
+    "tipo": "Group",
+    "pais": "US",
+    "desde": null,
+    "tags": [],
+    "rels": [
+     {
+      "tipo": "bandcamp",
+      "url": "https://virginbirth.bandcamp.com/"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 3,
+    "primeros": [
+     {
+      "id": "a6688089-4ffc-41f8-96d8-8f09dd973a68",
+      "titulo": "Total Annihilation",
+      "tipo": "Album",
+      "fecha": "2025-05-02",
+      "caratula": false
+     },
+     {
+      "id": "f3a3b523-b87e-4ace-b381-2d436e9a0a8a",
+      "titulo": "From Behind",
+      "tipo": "EP",
+      "fecha": "2024-04-14",
+      "caratula": true
+     },
+     {
+      "id": "7b16ca76-ecd3-417b-8c1f-1b274d5e3a4e",
+      "titulo": "Waiting on the Bad Time",
+      "tipo": "Single",
+      "fecha": "2022-09-09",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 3,
+    "conCaratula": 2
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://virginbirth.bandcamp.com",
+    "releasesEnPagina": 11,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "album",
+     "id": "3807094814"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": false,
+    "idioma": null,
+    "extracto": 0,
+    "imagen": false
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "Mesh",
+   "disco": "Fallen Angel",
+   "mb": {
+    "mbid": "9aec0d9a-c5b3-45ab-839c-d60f18534437",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "Mesh",
+    "tipo": "Group",
+    "pais": "GB",
+    "desde": "1991",
+    "tags": [
+     "electronic",
+     "synthpop",
+     "2002-05-10 werk ii",
+     "electro",
+     "england",
+     "english"
+    ],
+    "rels": [
+     {
+      "tipo": "bandcamp",
+      "url": "https://mesh-uk.bandcamp.com/"
+     },
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/43391"
+     },
+     {
+      "tipo": "fanpage",
+      "url": "http://www.mesh-fanclub.de/"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://open.spotify.com/artist/1uS4cYRRZRtauASIM9RxBG"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://open.spotify.com/artist/2BtBZMlS2JWLrI78SK2qRr"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://open.spotify.com/artist/7sLHKnXoBXx2u1GTxQdyRZ"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://www.deezer.com/artist/6930"
+     },
+     {
+      "tipo": "myspace",
+      "url": "https://myspace.com/mesh_a_perfect_solution"
+     },
+     {
+      "tipo": "official homepage",
+      "url": "http://www.mesh.co.uk/"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.musik-sammler.de/artist/mesh/"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://plus.google.com/106211306531743492280"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://twitter.com/meshwecollide"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.facebook.com/meshtheband"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://music.apple.com/gb/artist/95768639"
+     },
+     {
+      "tipo": "streaming",
+      "url": "https://tidal.com/artist/3554268"
+     },
+     {
+      "tipo": "wikidata",
+      "url": "https://www.wikidata.org/wiki/Q250009"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 45,
+    "primeros": [
+     {
+      "id": "18290d40-21a2-42e5-95ea-3a3a304a9146",
+      "titulo": "Fallen Angel",
+      "tipo": "Single",
+      "fecha": "2026-10-21",
+      "caratula": true
+     },
+     {
+      "id": "051da500-4cf6-48f0-8773-8fc4f094796b",
+      "titulo": "Trying To Save You",
+      "tipo": "Single",
+      "fecha": "2026-09-24",
+      "caratula": false
+     },
+     {
+      "id": "4a6595b5-75a6-4a70-a880-61b870cbab15",
+      "titulo": "The Truth Doesn't Matter",
+      "tipo": "Album",
+      "fecha": "2026-03-27",
+      "caratula": true
+     },
+     {
+      "id": "4d317a15-b26b-4d71-9256-85653da3194c",
+      "titulo": "This World",
+      "tipo": "EP",
+      "fecha": "2026-03-12",
+      "caratula": false
+     },
+     {
+      "id": "9af816ac-b3cf-4f16-b4b7-c74608f623c9",
+      "titulo": "Hey Stranger",
+      "tipo": "Single",
+      "fecha": "2026-02-12",
+      "caratula": true
+     },
+     {
+      "id": "f02d982f-4edf-409a-a4dc-b0667b5576df",
+      "titulo": "Exile",
+      "tipo": "Single",
+      "fecha": "2026-01-07",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 6,
+    "conCaratula": 4
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://mesh-uk.bandcamp.com",
+    "releasesEnPagina": 16,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "album",
+     "id": "3427997721"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": true,
+    "idioma": "es",
+    "tieneEs": true,
+    "extracto": 164,
+    "imagen": true
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "MG x CD + JL =",
+   "disco": "Cross Whisper",
+   "mb": {
+    "mbid": "c6cf9e16-f656-4495-abe3-84b606d430e4",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "MG X CD + JL =",
+    "tipo": null,
+    "pais": null,
+    "desde": null,
+    "tags": [],
+    "rels": [
+     {
+      "tipo": "purchase for download",
+      "url": "https://music.apple.com/us/artist/6807438775"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 1,
+    "primeros": [
+     {
+      "id": "fbdce52a-95d3-4e97-86aa-b6b44ea641cf",
+      "titulo": "Cross Whisper",
+      "tipo": "Single",
+      "fecha": "2026-10-20",
+      "caratula": false
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 1,
+    "conCaratula": 0
+   },
+   "bandcamp": {
+    "fuente": null,
+    "base": null,
+    "releasesEnPagina": 0,
+    "idResuelto": false,
+    "embedOk": false,
+    "imagen": false,
+    "detalle": null
+   },
+   "wikipedia": {
+    "enMusicBrainz": false,
+    "idioma": null,
+    "extracto": 0,
+    "imagen": false
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "Venin Carmin",
+   "disco": "Vengeance",
+   "mb": {
+    "mbid": "ecaa324b-792a-4c9a-8b5e-1d4cf76bc45e",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "Venin Carmin",
+    "tipo": "Group",
+    "pais": "FR",
+    "desde": "2015",
+    "tags": [
+     "post-punk",
+     "coldwave",
+     "new wave"
+    ],
+    "rels": [
+     {
+      "tipo": "bandcamp",
+      "url": "https://venincarmin.bandcamp.com/"
+     },
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/4400234"
+     },
+     {
+      "tipo": "free streaming",
+      "url": "https://open.spotify.com/artist/6x7qL4Agz9KFNzN7RcsxqP"
+     },
+     {
+      "tipo": "official homepage",
+      "url": "https://venincarmin.com/"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.musik-sammler.de/artist/venin-carmin/"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.facebook.com/venincarmin"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.instagram.com/venincarmin/"
+     },
+     {
+      "tipo": "songkick",
+      "url": "https://www.songkick.com/artists/8782859"
+     },
+     {
+      "tipo": "wikidata",
+      "url": "https://www.wikidata.org/wiki/Q119724567"
+     },
+     {
+      "tipo": "youtube",
+      "url": "https://www.youtube.com/@VENINCARMIN"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 5,
+    "primeros": [
+     {
+      "id": "4a6eb8b7-b9b7-4960-a451-b931c4c5295f",
+      "titulo": "All I See (Revenge)",
+      "tipo": "Single",
+      "fecha": "2025-11-07",
+      "caratula": true
+     },
+     {
+      "id": "fcb9b687-f679-4e4d-aed8-984fa96975cc",
+      "titulo": "Toxic Legends",
+      "tipo": "Album",
+      "fecha": "2023-10-13",
+      "caratula": true
+     },
+     {
+      "id": "898cd4b1-b246-4302-80c4-2b1c03a1efb8",
+      "titulo": "I Can’t Escape Myself",
+      "tipo": "Single",
+      "fecha": "2020-10-31",
+      "caratula": true
+     },
+     {
+      "id": "c621a54b-d713-4228-bdb4-e32c65e82867",
+      "titulo": "Constant Depression",
+      "tipo": "Album",
+      "fecha": "2020-05-20",
+      "caratula": true
+     },
+     {
+      "id": "be3703fe-98a6-4ecc-b544-14384303f085",
+      "titulo": "Glam Is Gone",
+      "tipo": "Album",
+      "fecha": "2015-06-20",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 5,
+    "conCaratula": 5
+   },
+   "bandcamp": {
+    "fuente": "musicbrainz",
+    "base": "https://venincarmin.bandcamp.com",
+    "releasesEnPagina": 10,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "track",
+     "id": "2160261798"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": true,
+    "idioma": null,
+    "extracto": 0,
+    "imagen": false
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "SMILE",
+   "disco": "Gotta Run",
+   "mb": {
+    "mbid": "eda488c0-0581-4342-a3f8-fc76bf753f42",
+    "match": "exacto",
+    "candidatos": 6
+   },
+   "ficha": {
+    "nombre": "SMILE",
+    "tipo": "Group",
+    "pais": "JP",
+    "desde": "2006-11-21",
+    "tags": [
+     "visual kei"
+    ],
+    "rels": [
+     {
+      "tipo": "other databases",
+      "url": "https://vk.gy/artists/smile/"
+     },
+     {
+      "tipo": "other databases",
+      "url": "https://www.vkdb.jp/SMILE.html"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 10,
+    "primeros": [
+     {
+      "id": "7d393551-37e9-4ef0-ac4d-eb44086a51aa",
+      "titulo": "最後のわがまま",
+      "tipo": "Album",
+      "fecha": "2009-03-11",
+      "caratula": true
+     },
+     {
+      "id": "dcaec56b-1ea8-459a-98c6-18136a66c110",
+      "titulo": "Milk Tea",
+      "tipo": "EP",
+      "fecha": "2008-12-10",
+      "caratula": true
+     },
+     {
+      "id": "87d6bf6d-b6aa-4cae-8782-de2680903ed1",
+      "titulo": "Lemonade",
+      "tipo": "EP",
+      "fecha": "2008-12-02",
+      "caratula": true
+     },
+     {
+      "id": "7901f7d4-e2f3-405a-bd82-32d8feabbb03",
+      "titulo": "shandy gaff",
+      "tipo": "EP",
+      "fecha": "2008-11-26",
+      "caratula": true
+     },
+     {
+      "id": "c420127c-bf99-4105-a8c4-719bf25f4817",
+      "titulo": "火炎車~ブーメラン~/夏色",
+      "tipo": "Single",
+      "fecha": "2008-07-23",
+      "caratula": true
+     },
+     {
+      "id": "faeb5f42-bb25-4d61-aa71-246260f7fc7d",
+      "titulo": "darlin'",
+      "tipo": "Album",
+      "fecha": "2008-05-07",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 6,
+    "conCaratula": 6
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://bandofsmiles.bandcamp.com",
+    "releasesEnPagina": 5,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "track",
+     "id": "118853813"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": false,
+    "idioma": null,
+    "extracto": 0,
+    "imagen": false
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "Sensitive Content",
+   "disco": "Romantic Asthmatic",
+   "mb": {
+    "mbid": "5f05bbf2-4dba-43e7-a523-bebc0e4e9e35",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "Sensitive Content",
+    "tipo": "Group",
+    "pais": "GR",
+    "desde": null,
+    "tags": [],
+    "rels": [
+     {
+      "tipo": "bandcamp",
+      "url": "https://sensitivecontent.bandcamp.com/"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 2,
+    "primeros": [
+     {
+      "id": "f8de1597-bd98-45c9-a75e-aa9c62ee352f",
+      "titulo": "Romantic Asthmatic",
+      "tipo": "Album",
+      "fecha": "2026-10-02",
+      "caratula": true
+     },
+     {
+      "id": "02661943-3643-4bb2-b283-c797e42debde",
+      "titulo": "Ténèbres Insondables",
+      "tipo": "EP",
+      "fecha": "2024-06-14",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 2,
+    "conCaratula": 2
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://sensitivecontent.bandcamp.com",
+    "releasesEnPagina": 4,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": true,
+    "detalle": {
+     "tipo": "album",
+     "id": "3254426643"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": false,
+    "idioma": null,
+    "extracto": 0,
+    "imagen": false
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  },
+  {
+   "artista": "Blood Ink",
+   "disco": "The Pharmacist Pageant",
+   "mb": {
+    "mbid": null,
+    "match": "sin-resultado",
+    "candidatos": 0
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": "https://bloodandinkband.bandcamp.com",
+    "releasesEnPagina": 3,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": false,
+    "detalle": {
+     "tipo": "album",
+     "id": "2015528645"
+    }
+   }
+  },
+  {
+   "artista": "Red Deviil",
+   "disco": "Tesoros Infernales",
+   "mb": {
+    "mbid": "f50ee265-3b31-4b57-9193-9726d901c6bd",
+    "match": "exacto",
+    "candidatos": 1
+   },
+   "ficha": {
+    "nombre": "Red Deviil",
+    "tipo": "Group",
+    "pais": "MX",
+    "desde": null,
+    "tags": [],
+    "rels": [
+     {
+      "tipo": "discogs",
+      "url": "https://www.discogs.com/artist/10469566"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.facebook.com/RedDeviilMusic"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.instagram.com/reddeviilmusic/"
+     },
+     {
+      "tipo": "social network",
+      "url": "https://www.mixcloud.com/RedDeviilMusic/"
+     },
+     {
+      "tipo": "soundcloud",
+      "url": "https://soundcloud.com/reddeviilmusic"
+     }
+    ]
+   },
+   "discografia": {
+    "total": 5,
+    "primeros": [
+     {
+      "id": "c5c629d2-032d-4181-9c2f-ec53037a84fd",
+      "titulo": "Overkill",
+      "tipo": "Album",
+      "fecha": "2023-12-15",
+      "caratula": true
+     },
+     {
+      "id": "d71cf2cb-0e14-482e-a431-d0cb37bc63d1",
+      "titulo": "Tendencias Ocultas",
+      "tipo": "Album",
+      "fecha": "2023-11-03",
+      "caratula": false
+     },
+     {
+      "id": "c7f6c266-ac78-4ef2-a806-c18f408daff6",
+      "titulo": "GOD OF KHAOS",
+      "tipo": "EP",
+      "fecha": "2023-03-17",
+      "caratula": true
+     },
+     {
+      "id": "72b72ed9-7264-4211-b0b9-7a864b5f3db6",
+      "titulo": "Inframundo",
+      "tipo": "Album",
+      "fecha": "2021-12-08",
+      "caratula": true
+     },
+     {
+      "id": "3f689100-4271-4558-8f08-d99d3531c439",
+      "titulo": "Akerbeltz",
+      "tipo": "EP",
+      "fecha": "2021-02-22",
+      "caratula": true
+     }
+    ]
+   },
+   "caratulas": {
+    "revisados": 5,
+    "conCaratula": 4
+   },
+   "bandcamp": {
+    "fuente": "embed-en-noticia",
+    "base": null,
+    "releasesEnPagina": 0,
+    "idResuelto": true,
+    "embedOk": true,
+    "imagen": false,
+    "detalle": {
+     "tipo": "track",
+     "id": "2172773998"
+    }
+   },
+   "wikipedia": {
+    "enMusicBrainz": false,
+    "idioma": null,
+    "extracto": 0,
+    "imagen": false
+   },
+   "audiodb": {
+    "encontrado": false,
+    "estado": "error-404"
+   },
+   "fanart": {
+    "omitido": true
+   },
+   "lastfm": {
+    "omitido": true
+   }
+  }
+ ]
+}
