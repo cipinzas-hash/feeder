@@ -1,0 +1,83 @@
+name: Actualizar música (manual)
+
+# Módulo de descubrimiento musical (oct-2026). Esta es la herramienta MANUAL del
+# módulo: sirve para regenerar solo la música sin esperar al cron del feed, y
+# para probar la rama `musica` (corre el código de la rama desde la que se
+# dispara). El refresco programado va dentro de update-feed.yml (comparte la
+# bajada de noticias). Publica ÚNICAMENTE archivos de música: descarta lo que
+# build-feed reescribe (feed.json, videoteca.json) para no pisar al bot del feed.
+#
+#   modo=build     baja noticias, construye modules/feed/data/musica.json
+#   modo=capturar  guarda HTML real de Bandcamp en docs/muestras-bandcamp/
+#                  (para afinar el parser contra el marcado verdadero)
+
+on:
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: "build o capturar"
+        required: false
+        default: "build"
+
+concurrency:
+  group: musica-update
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  musica:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias
+        if: ${{ github.event.inputs.modo != 'capturar' }}
+        working-directory: modules/feed
+        run: npm install
+
+      - name: Capturar muestras de Bandcamp
+        if: ${{ github.event.inputs.modo == 'capturar' }}
+        working-directory: modules/feed
+        run: node scripts/capturar-muestras-bandcamp.mjs
+
+      - name: Bajar noticias (build-feed)
+        if: ${{ github.event.inputs.modo != 'capturar' }}
+        working-directory: modules/feed
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: |
+          set -o pipefail
+          timeout -s TERM -k 15 15m node scripts/build-feed.mjs 2>&1 | tee /tmp/feed-build.log
+
+      - name: Construir módulo de música
+        if: ${{ github.event.inputs.modo != 'capturar' }}
+        working-directory: modules/feed
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -o pipefail
+          timeout -s TERM -k 15 14m node scripts/build-musica.mjs 2>&1 | tee /tmp/musica-build.log
+
+      - name: Commitear solo los archivos de música
+        if: always()
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -- modules/feed/data/feed.json modules/feed/data/videoteca.json 2>/dev/null || true
+          git add -f modules/feed/data/musica.json modules/feed/data/musica-noticias.json docs/muestras-bandcamp 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "Música (${{ github.event.inputs.modo }}) $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git push origin "HEAD:${GITHUB_REF_NAME}" && break
+            echo "push falló, reintentando ($i/3)..."
+            git fetch origin "${GITHUB_REF_NAME}"
+            git reset --soft "origin/${GITHUB_REF_NAME}"
+            git diff --staged --quiet || git commit -m "Música (${{ github.event.inputs.modo }}) $(date -u +%Y-%m-%dT%H:%MZ)"
+            sleep 5
+          done
