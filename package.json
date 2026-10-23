@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node build/assemble.mjs",
     "audit:export": "node tests/export-coverage.mjs && node tests/vitrina-restore.mjs",
-    "test:presupuesto": "node tests/presupuesto-modelo.mjs"
+    "test:presupuesto": "node tests/presupuesto-modelo.mjs",
+    "test:gcal": "node tests/gcal-sync.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"

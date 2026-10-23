@@ -1,0 +1,99 @@
+name: Sincronizar planner con Google Calendar
+
+# Planner (semana) → calendario Familia de Google, y bandeja Familia → Angst. Ver docs/gcal-sync.md (issue #26).
+# MODO SECO por defecto: solo escribe en Google si la variable de repo GCAL_SYNC_LIVE vale 'true'
+# (o en una corrida manual con live=true). En modo seco deja el plan en Angst-data/gcal-sync-plan.json (privado).
+# feeder es público: el script no imprime textos de tareas en el log, solo conteos.
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      live:
+        description: 'Escribir en Google Calendar (si no, modo seco)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: gcal-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout feeder (el script vive acá)
+        uses: actions/checkout@v4
+        with:
+          path: feeder
+
+      - name: Sincronizar feeder con la punta real de main
+        working-directory: feeder
+        run: git fetch origin main && git reset --hard origin/main
+
+      - name: Checkout Angst-data (bandeja y plan viven acá, lectura y escritura)
+        uses: actions/checkout@v4
+        with:
+          repository: cipinzas-hash/Angst-data
+          token: ${{ secrets.WORKER_GITHUB_PAT }}
+          path: angst-data
+
+      - name: Sincronizar Angst-data con la punta real de main
+        working-directory: angst-data
+        run: git fetch origin main && git reset --hard origin/main
+
+      - name: Checkout estado exportado de Angst (rama state-sync, solo lectura)
+        uses: actions/checkout@v4
+        with:
+          repository: cipinzas-hash/Angst-data
+          ref: state-sync
+          token: ${{ secrets.WORKER_GITHUB_PAT }}
+          path: angst-state
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Correr build-gcal-sync.mjs
+        id: sync
+        continue-on-error: true
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          GCAL_CALENDAR_ID: family05347867035797041219@group.calendar.google.com
+          GCAL_LIVE: ${{ ((github.event_name == 'workflow_dispatch' && inputs.live) || vars.GCAL_SYNC_LIVE == 'true') && 'true' || 'false' }}
+          STATE_PATH: ${{ github.workspace }}/angst-state/angst-full-state.json
+          INBOX_PATH: ${{ github.workspace }}/angst-data/google-inbox.json
+          PLAN_PATH: ${{ github.workspace }}/angst-data/gcal-sync-plan.json
+        run: node feeder/modules/feed/scripts/build-gcal-sync.mjs
+
+      - name: Commitear bandeja y plan en Angst-data si cambiaron
+        working-directory: angst-data
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          for f in google-inbox.json gcal-sync-plan.json; do [ -f "$f" ] && git add "$f"; done
+          # un plan de modo seco que ya no corresponde (corrida LIVE) se retira del repo
+          [ -f gcal-sync-plan.json ] || git rm -q --ignore-unmatch gcal-sync-plan.json
+          git diff --staged --quiet && { echo "sin cambios, nada que pushear"; exit 0; }
+          git commit -m "Sync Google Calendar: bandeja/plan $(date -u +%Y-%m-%dT%H:%MZ)"
+          pushed=0
+          for i in 1 2 3; do
+            git push && pushed=1 && break
+            echo "push falló, reintentando ($i/3)..."
+            git fetch origin main
+            git reset --soft origin/main
+            for f in google-inbox.json gcal-sync-plan.json; do [ -f "$f" ] && git add "$f"; done
+            git commit -m "Sync Google Calendar: bandeja/plan $(date -u +%Y-%m-%dT%H:%MZ)"
+            sleep 5
+          done
+          [ "$pushed" -eq 1 ] || { echo "::error::push falló los 3 intentos"; exit 1; }
+
+      - name: Marcar la corrida como fallida si el sync falló
+        if: steps.sync.outcome == 'failure'
+        run: |
+          echo "::error::build-gcal-sync.mjs falló (ver el paso anterior; el log no trae textos privados)"
+          exit 1
