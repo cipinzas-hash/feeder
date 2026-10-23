@@ -2025,6 +2025,7 @@ function AngstApp() {
                                   <div className="ftxt" style={{flex:1}}>{rec.text}</div>
                                   <span style={{fontSize:9,color:"#bbb",background:"#f0f0f0",borderRadius:8,padding:"2px 6px",letterSpacing:0.5,flexShrink:0}}>🔁 {FREQ_LABELS[rec.freq]||rec.freq}</span>
                                   <button onClick={()=>{saveRecurring(recurringRef.current.map(r=>r.id===rec.id?{...r,urgent:!r.urgent}:r));}} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:12,opacity:rec.urgent?1:0.2,padding:"0 1px",lineHeight:1}} title="urgente">🚨</button>
+                                  <button onClick={()=>{saveRecurring(recurringRef.current.map(r=>r.id===rec.id?{...r,privada:!r.privada}:r));}} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:12,opacity:rec.privada?1:0.2,padding:"0 1px",lineHeight:1}} title="privada: no va al calendario de los hijos">🔒</button>
                                   <button onClick={()=>postponeRecurring(rec.id, dateKey)} style={{background:"transparent",border:"none",color:"#bbb",fontSize:11,cursor:"pointer",padding:"0 3px",flexShrink:0}} title="posponer">→</button>
                                   <button onClick={()=>{if(window.confirm("¿Eliminar esta tarea recurrente y todas sus ocurrencias?"))deleteRecurring(rec.id);}} style={{background:"transparent",border:"none",color:"#ccc",fontSize:15,cursor:"pointer",flexShrink:0,lineHeight:1}} className="fdel">×</button>
                                 </div>
@@ -2044,6 +2045,7 @@ function AngstApp() {
                                     :<button onClick={()=>setClockOpen({dateKey,tid:task.id,h:9,m:0})} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:13,opacity:0.25,padding:"0 2px",lineHeight:1,transition:"opacity 0.15s",flexShrink:0}} title="fijar hora">🕐</button>
                                   }
                                   <button onClick={()=>updateTask(dateKey,task.id,{urgent:!task.urgent})} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:12,opacity:task.urgent?1:0.2,padding:"0 1px",lineHeight:1,transition:"opacity 0.15s"}} title="baliza">🚨</button>
+                                  <button onClick={()=>updateTask(dateKey,task.id,{privada:!task.privada})} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:12,opacity:task.privada?1:0.2,padding:"0 1px",lineHeight:1,transition:"opacity 0.15s"}} title="privada: no va al calendario de los hijos">🔒</button>
                                   <FixedFreqBtn menuId={`${dateKey}:${task.id}:freq`} openMenu={openFMenu} setOpenMenu={setOpenFMenu} value={task.recurringId?recurringRef.current.find(r=>r.id===task.recurringId):null}
                                     onSetFreq={freq=>{
                                       // Create or update recurring for this fixed task
@@ -2141,6 +2143,7 @@ function AngstApp() {
                                   :<div className="ttxt" style={task.carried?{borderLeft:"2px dashed #ddd",paddingLeft:6}:{}} onClick={()=>!done&&startEdit(dateKey,task.id,task.text)} style={{textDecoration:done?"line-through":"none",color:done?"#bbb":"#333",cursor:done?"default":"pointer"}}>{task.text}</div>
                                 }
                                 {!done&&<button onClick={()=>updateTask(dateKey,task.id,{urgent:!task.urgent})} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:12,opacity:task.urgent?1:0.15,padding:"0 1px",lineHeight:1,transition:"opacity 0.15s"}} title="urgente">🚨</button>}
+                                {!done&&<button onClick={()=>updateTask(dateKey,task.id,{privada:!task.privada})} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:12,opacity:task.privada?1:0.15,padding:"0 1px",lineHeight:1,transition:"opacity 0.15s"}} title="privada: no va al calendario de los hijos">🔒</button>}
                                 {!done&&dl&&<span style={{fontSize:11,color:"#888",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",padding:"0 2px",cursor:"pointer"}} onClick={()=>setClockOpen({dateKey,tid:task.id,h:dl.h,m:dl.m})}>{"🕐 "+fmtTime(dl)}</span>}
                                 {!done&&!dl&&<button onClick={()=>setClockOpen({dateKey,tid:task.id,h:9,m:0})} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:13,opacity:0.2,padding:"0 2px",lineHeight:1,flexShrink:0}} title="fijar hora">🕐</button>}
                                 {!done&&task.carried&&<button onClick={()=>{
