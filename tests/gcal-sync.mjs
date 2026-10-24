@@ -91,6 +91,11 @@ assert.ok(!des.some(e => /PERSONAL/.test(e.summary)));
 // claves únicas
 assert.equal(new Set(keys).size, keys.length);
 
+// hora 00:00 = día completo; 00:01 sigue siendo con hora
+const medianoche = buildDesired({ dayData: { [from]: { tasks: [{ id: "m", text: "Medianoche", deadline: { h: 0, m: 0 } }, { id: "n", text: "Casi", deadline: { h: 0, m: 1 } }] } } }, { from, to: from });
+assert.equal(medianoche.find(e => e.key === `t:${from}:m`).allDay, true);
+assert.equal(medianoche.find(e => e.key === `t:${from}:n`).allDay, false);
+
 // 3) cuerpo Google: con hora, sin hora y cruce de medianoche
 const b1 = toBody(t1, TZ);
 assert.deepEqual(b1.start, { dateTime: `${from}T09:05:00`, timeZone: TZ });

@@ -100,7 +100,8 @@ export function buildDesired(state, { from, to }) {
       const texto = limpiar(t.text);
       if (!texto) continue;
       const key = `t:${D}:${t.id}`;
-      const dl = t.deadline && Number.isInteger(t.deadline.h) && Number.isInteger(t.deadline.m) ? t.deadline : null;
+      // 00:00 se trata como "sin hora": un evento a medianoche casi nunca es lo que se quiso, y día completo es lo seguro
+      const dl = t.deadline && Number.isInteger(t.deadline.h) && Number.isInteger(t.deadline.m) && (t.deadline.h || t.deadline.m) ? t.deadline : null;
       push(dl
         ? { key, kind: "tarea", summary: texto, allDay: false, date: D, h: dl.h, m: dl.m }
         : { key, kind: "tarea", summary: texto, allDay: true, date: D });

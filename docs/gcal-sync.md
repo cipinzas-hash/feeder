@@ -18,7 +18,7 @@ Ventana: hoy → +42 días (hora de `America/Santiago`; el calendario está en U
 
 | Origen en el estado | Evento |
 |---|---|
-| `dayData[f].tasks[]` con `deadline {h,m}` | con hora (dura 30 min; `deadline` es una hora límite) |
+| `dayData[f].tasks[]` con `deadline {h,m}` | con hora (dura 30 min; `deadline` es una hora límite). Un `deadline` 00:00 se trata como sin hora (día completo) |
 | `dayData[f].tasks[]` sin `deadline` | día completo |
 | `recurring[]` (misma regla que `nextRecurDate` de App.jsx; `every3` = cada 2 días, "c/2d" en la UI) | día completo por ocurrencia; una pospuesta (`postponed` + `recurringId` ese día) se omite |
 | `calMarks[f]` | día completo: social, work, colegio, doctor, medico, gym, compras |
