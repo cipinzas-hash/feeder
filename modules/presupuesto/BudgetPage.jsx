@@ -1,6 +1,6 @@
 import { MONTH_NAMES } from "../../core/dates.js";
 import { fmtCLP } from "../../core/format.js";
-import { resolverPeriodo, inicioSobres, sumaSubs, puedeEliminar, quitarGasto, puedeQuitarGasto, puedeGenerarPeriodo, proyeccionAnual, ID_ALIMENTACION } from "../../core/presupuesto-modelo.js";
+import { resolverPeriodo, inicioSobres, sumaSubs, puedeEliminar, quitarGasto, puedeQuitarGasto, puedeGenerarPeriodo, proyeccionAnual, FILAS_CARTERABLES } from "../../core/presupuesto-modelo.js";
 import { AmountRow, GRID, COL, GAP, FUENTE, PAD_MONTO, celdaTitulo } from "./grilla.jsx";
 import CarteraVentana from "./CarteraVentana.jsx";
 import GastoModal from "./GastoModal.jsx";
@@ -108,7 +108,7 @@ function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit
                   ? <button onClick={() => onRowDelete(secKey, row.id)} style={{ background: "transparent", border: "none", color: "#e0e0e0", fontSize: 16, cursor: "pointer", lineHeight: 1, padding: 0, textAlign: "center" }} onMouseEnter={e => e.currentTarget.style.color = "#c00"} onMouseLeave={e => e.currentTarget.style.color = "#e0e0e0"}>×</button>
                   : <div/>}
               </div>
-              {onToggleCartera && (row.id === ID_ALIMENTACION || row.aCartera) && (
+              {onToggleCartera && (FILAS_CARTERABLES.includes(row.id) || row.aCartera) && (
                 <div style={{ padding: "0 12px 9px 40px" }}>
                   <button onClick={() => onToggleCartera(row.id)} title="Un sobre propio con saldo, gastos y compras que se descuentan" style={{ background: row.aCartera ? "#fffaf0" : "transparent", border: `1px dashed ${row.aCartera ? "#e0b070" : "#ccc"}`, borderRadius: 6, color: row.aCartera ? "#8a5a00" : "#888", fontFamily: FUENTE, fontSize: 11, padding: "3px 8px", cursor: "pointer" }}>
                     {row.aCartera ? "🧾 Será cartera desde el período siguiente · deshacer" : "🧾 Pasar a cartera (sobre propio) desde el período siguiente"}

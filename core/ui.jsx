@@ -2,8 +2,7 @@ import { computeStressScore, DEFAULT_HUMORS } from "./stress.js";
 import { requestNotifPermission } from "./notifications.js";
 import { MONTH_NAMES, getHoliday, addDays, fmtFull } from "./dates.js";
 import { illnessLabel, eventLine, eventMatches } from "../modules/salud/saludModel.js";
-import { montoCompra } from "./presupuesto-modelo.js";
-import { CompraEditor, ChipCompra } from "../modules/presupuesto/CompraEditor.jsx";
+import ListaCompras from "../modules/presupuesto/ListaCompras.jsx";
 
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
@@ -619,115 +618,25 @@ function ModeMenu({ value, opts, placeholder, accent, onSelect, onAddOpt, compac
     </div>
   );
 }
-function ComprasModal({ items, onSave, onClose, onMoveToNext, info, api }) {
+function ComprasModal({ items, onSave, onClose, onMoveToNext, api }) {
+  // Lista de un día: es la misma ListaCompras del Carrito y de ➕ Registrar (agregar con detalles, × por ítem, sin "limpiar").
+  // Aquí además se puede ordenar (mantener pulsado) y pasar un ítem al día siguiente (deslizar →).
   const [list, setList] = React.useState(items||[]);
-  const [editId, setEditId] = React.useState(null);
-  const [msg, setMsg] = React.useState("");
-  const [newItem, setNewItem] = React.useState("");
-  const [heldIdx, setHeldIdx] = React.useState(null);
-  const [dragTarget, setDragTarget] = React.useState(null);
-  const holdTimer = React.useRef(null);
-  const touchStartX = React.useRef(0);
-  const touchStartY = React.useRef(0);
-  // Save on every change
   function update(newList) { setList(newList); onSave(newList); }
-  function add(){if(!newItem.trim())return;update([...list,{id:Date.now().toString(),text:newItem.trim(),done:false}]);setNewItem("");}
-  // Marcar comprado registra el gasto en Alimentación (cantidad × precio); desmarcar lo devuelve al sobre.
-  function toggle(id){
-    if(heldIdx!==null)return;
-    const it=list.find(i=>i.id===id); if(!it)return;
-    setMsg("");
-    if(!api){update(list.map(i=>i.id===id?{...i,done:!i.done}:i));return;}
-    if(it.done){const r=api.desmarcar(it);if(r.error){setMsg(r.error);return;}update(list.map(i=>i.id===id?{...i,done:false,...(r.patch||{})}:i));return;}
-    if(info&&info.activo&&montoCompra(it)===0){setEditId(id);return;}
-    const r=api.comprar(it);if(r.error){setMsg(r.error);return;}
-    update(list.map(i=>i.id===id?{...i,done:true,...(r.patch||{})}:i));
-  }
-  const accionesDe = it => ({
-    guardar:f=>{update(list.map(i=>i.id===it.id?{...i,...f}:i));setEditId(null);},
-    comprar:f=>{const x={...it,...f};const r=api.comprar(x);if(r.error)return r.error;update(list.map(i=>i.id===it.id?{...x,done:true,...(r.patch||{})}:i));setEditId(null);return null;},
-    sinGasto:f=>{update(list.map(i=>i.id===it.id?{...i,...f,done:true}:i));setEditId(null);},
-    nuevaCategoria:api?api.nuevaCategoria:()=>{},
-  });
-  function del(id){update(list.filter(i=>i.id!==id));}
-  function close(){ onClose(); }
   return (
-    <div onClick={close} style={{position:"fixed",inset:0,zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.5)"}}>
+    <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:1001,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.5)"}}>
       <div onClick={e=>e.stopPropagation()} style={{background:"#fff",border:"2px dashed #111",borderRadius:12,width:"min(95vw,400px)",maxHeight:"80vh",display:"flex",flexDirection:"column",overflow:"hidden"}}>
         <div style={{background:"#111",padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div style={{fontFamily:"'Caveat',cursive",fontSize:20,color:"#fff",fontWeight:700}}>🛒 Compras</div>
-          <div style={{display:"flex",gap:8,alignItems:"center"}}>
-            <button onClick={()=>update(list.filter(i=>!i.done))} style={{background:"transparent",border:"1px dashed #555",borderRadius:8,color:"#aaa",fontSize:11,padding:"3px 8px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>limpiar ✓</button>
-            <button onClick={close} style={{background:"transparent",border:"none",color:"#aaa",fontSize:20,cursor:"pointer",lineHeight:1}}>×</button>
-          </div>
+          <button onClick={onClose} style={{background:"transparent",border:"none",color:"#aaa",fontSize:20,cursor:"pointer",lineHeight:1}}>×</button>
         </div>
         <div style={{flex:1,overflowY:"auto",padding:"10px 14px"}}>
-          {msg&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#c00",background:"#fff5f5",border:"1px dashed #e0b0b0",borderRadius:6,padding:"8px 10px",margin:"2px 0 8px"}}>{msg}</div>}
-          {list.length===0&&<div style={{color:"#ccc",fontFamily:"'DM Sans',sans-serif",fontSize:13,textAlign:"center",padding:"20px 0"}}>lista vacía</div>}
-          {list.map((item,idx)=>{
-            const isHeld = heldIdx===idx;
-            const showDropLine = dragTarget===idx && heldIdx!==null && heldIdx!==idx;
-            return <React.Fragment key={item.id}>
-            {showDropLine && <div style={{height:2,background:"#111",borderRadius:1,margin:"2px 0",transition:"opacity 0.1s"}}/>}
-            <div key={item.id+"_row"}
-              onTouchStart={e=>{
-                holdTimer.current=setTimeout(()=>setHeldIdx(idx),350);
-                touchStartX.current=e.touches[0].clientX;
-                touchStartY.current=e.touches[0].clientY;
-              }}
-              onTouchMove={e=>{
-                const dx=e.touches[0].clientX-touchStartX.current;
-                const dy=e.touches[0].clientY-touchStartY.current;
-                if(heldIdx===idx && Math.abs(dy)>10){
-                  // drag vertically - find target by position
-                  const els=[...e.currentTarget.parentNode.children];
-                  const my=e.touches[0].clientY;
-                  let ti=els.findIndex(el=>{const r=el.getBoundingClientRect();return my>=r.top&&my<=r.bottom;});
-                  if(ti>=0&&ti!==idx) setDragTarget(ti);
-                } else if(dx>5){
-                  clearTimeout(holdTimer.current);
-                }
-              }}
-              onTouchEnd={e=>{
-                clearTimeout(holdTimer.current);
-                const dx=e.changedTouches[0].clientX-touchStartX.current;
-                if(heldIdx===idx){
-                  if(dragTarget!==null&&dragTarget!==idx){
-                    const next=[...list];const[m]=next.splice(idx,1);next.splice(dragTarget,0,m);
-                    update(next);
-                  } else if(dx>60){
-                    // swipe right → move to next day's compras
-                    onMoveToNext(item);
-                    update(list.filter(i=>i.id!==item.id));
-                  }
-                }
-                setHeldIdx(null);setDragTarget(null);
-              }}
-              style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",
-                borderBottom:`1px solid ${isHeld?"#111":"#f5f5f5"}`,
-                background:isHeld?"#111":(dragTarget===idx?"#f0f0f0":"transparent"),
-                borderRadius:isHeld?6:0,
-                transition:"background 0.15s",userSelect:"none",touchAction:"pan-x"}}>
-              <span style={{color:isHeld?"#fff":"#ccc",fontSize:12,padding:"0 2px"}}>⠿</span>
-              <div onClick={()=>toggle(item.id)} style={{width:18,height:18,borderRadius:4,border:`1.5px dashed ${item.done?"#111":"#bbb"}`,background:item.done?"#111":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
-                {item.done&&<span style={{color:"#fff",fontSize:12,lineHeight:1}}>✓</span>}
-              </div>
-              <div onClick={()=>{if(!item.done&&api)setEditId(editId===item.id?null:item.id);}} style={{flex:1,minWidth:0}}>
-                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:14,color:item.done?"#bbb":"#333",textDecoration:item.done?"line-through":"none"}}>{item.text}</div>
-                {api&&<ChipCompra item={item}/>}
-              </div>
-              <button onClick={e=>{e.stopPropagation();if(!heldIdx)del(item.id);}} style={{background:"transparent",border:"none",color:isHeld?"#555":"#ddd",fontSize:15,cursor:"pointer",padding:"0 2px"}}>×</button>
-            </div>
-            {api&&info&&editId===item.id&&!item.done&&<CompraEditor item={item} info={info} acciones={accionesDe(item)} onClose={()=>setEditId(null)}/>}
-            </React.Fragment>;
-          })}
-        </div>
-        <div style={{padding:"10px 14px",borderTop:"1px solid #f0f0f0",display:"flex",gap:6}}>
-          <input value={newItem} onChange={e=>setNewItem(e.target.value)}
-            onKeyDown={e=>{if(e.key==="Enter")add();}}
-            placeholder="agregar ítem..."
-            style={{flex:1,border:"1px dashed #ddd",borderRadius:8,padding:"8px 10px",fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none"}}/>
-          <button onClick={add} style={{background:"#111",color:"#fff",border:"none",borderRadius:8,padding:"8px 14px",cursor:"pointer",fontSize:16}}>+</button>
+          <ListaCompras grupos={[{key:"dia",items:list}]} agregarEn="dia" api={api}
+            onPatch={(k,id,f)=>update(list.map(i=>i.id===id?{...i,...f}:i))}
+            onAdd={(k,item)=>update([...list,item])}
+            onDelete={(k,id)=>update(list.filter(i=>i.id!==id))}
+            onReorder={(k,next)=>update(next)}
+            onMoveNext={(k,item)=>{onMoveToNext(item);update(list.filter(i=>i.id!==item.id));}}/>
         </div>
       </div>
     </div>

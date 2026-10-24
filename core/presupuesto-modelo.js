@@ -14,8 +14,10 @@
 //   budget.arqueo {fecha, filas:[{sec,rowId,label,emoji,esperado,contado,diferencia,nota}]}
 //                 conteo físico de cada sobre al cierre del período. Es obligatorio antes de
 //                 generar el período siguiente; una diferencia no bloquea, queda documentada.
+//                 Lo contado es lo que arranca el período siguiente como saldo de arrastre (ver estadoBolsillo).
 //   fila.subs[].meta {objetivo, fecha:"YYYY-MM-DD"}  meta de ahorro con fecha de una sub-partida.
-//   fila.categorias [string]  categorías de gasto de la cartera (lista fija, editable); Alimentación trae una por defecto.
+//   fila.categorias [string]  categorías de gasto de la cartera (lista fija, editable); Alimentación trae las de compras por defecto.
+//   fila.catDestino {categoría: rowId}  (solo en «ali») de qué fila descuentan las compras de una categoría nueva; Aseo descuenta de «aseo».
 //   fila.aCartera true   (solo en gastos_base) pasa a cartera desde el período siguiente (ver limpiarParaNuevoPeriodo).
 //   gasto.categoria / gasto.compraId  categoría del gasto y, si viene de una compra, el id del ítem de compras.
 //
@@ -194,14 +196,53 @@ export function inicioSobres(budgets) {
 const SIN_MOV = { pres: 0, dado: 0, pag: 0, rec: 0 };
 
 // Estado del bolsillo en el período, o null si los sobres no estaban activos:
-//   inicial        arrastre del período anterior (o efectivo declarado al iniciar)
+//   inicial        arrastre del período anterior (o efectivo declarado al iniciar). Si el período anterior
+//                  tiene arqueo, el arrastre es lo CONTADO en el arqueo, no lo que decían los registros.
 //   asignado       lo que le toca este mes
 //   devPagada      devolución de deudas descontada de su asignación
 //   devRecibida    devoluciones que le llegan por préstamos que hizo
 //   debiaHaber     inicial + asignado − devPagada + devRecibida: lo que debe haber en el sobre al empezar el período
 //   prestamoRecibido / prestamoDado   multifinanciamiento del período
-//   gastado, saldo
+//   gastado, saldo (según registros; el ajuste del arqueo de este período solo se ve en el período siguiente)
+const cacheEstado = new WeakMap();
 export function estadoBolsillo(budgets, periodo, sec, rowId, subId) {
+  if (!budgets || typeof budgets !== "object") return calcularEstado(budgets, periodo, sec, rowId, subId);
+  let memo = cacheEstado.get(budgets);
+  if (!memo) { memo = new Map(); cacheEstado.set(budgets, memo); }
+  const key = periodo + "|" + claveBolsillo(sec, rowId, subId);
+  if (memo.has(key)) return memo.get(key);
+  const r = calcularEstado(budgets, periodo, sec, rowId, subId);
+  memo.set(key, r);
+  return r;
+}
+
+// Cuánto suma o resta el arqueo de `k` a cada bolsillo de la cartera para que el total arrastrado sea lo contado.
+// Un sobrante va al bolsillo «libre» (Sin repartir, o la cartera entera); un faltante se descuenta primero del libre
+// y luego de los demás, del más abultado al menor. Devuelve Map(subId → delta) o null si el período no tiene arqueo de esa cartera.
+function ajusteArqueo(budgets, k, sec, rowId) {
+  const b = resolverPeriodo(budgets, k);
+  const f = b.arqueo && Array.isArray(b.arqueo.filas) ? b.arqueo.filas.find(x => x.sec === sec && x.rowId === rowId) : null;
+  const fila = (b[sec] || []).find(r => r.id === rowId);
+  if (!f || !fila || !Number.isFinite(f.contado)) return null;
+  const items = bolsillosDe(sec, fila).map(bo => ({ subId: bo.subId, libre: bo.libre, saldo: (estadoBolsillo(budgets, k, sec, rowId, bo.subId) || { saldo: 0 }).saldo }));
+  const esperado = items.reduce((t, i) => t + i.saldo, 0);
+  const dif = f.contado - esperado;
+  const delta = new Map(items.map(i => [i.subId, 0]));
+  const libre = items.find(i => i.libre);
+  if (dif > 0 && libre) delta.set(libre.subId, dif);
+  else if (dif < 0) {
+    let falta = -dif;
+    [...items].sort((x, y) => (Number(y.libre) - Number(x.libre)) || (y.saldo - x.saldo)).forEach(i => {
+      if (falta <= 0) return;
+      const quita = Math.min(falta, Math.max(0, i.saldo));
+      if (quita > 0) { delta.set(i.subId, -quita); falta -= quita; }
+    });
+    if (falta > 0 && libre) delta.set(libre.subId, (delta.get(libre.subId) || 0) - falta);
+  }
+  return delta;
+}
+
+function calcularEstado(budgets, periodo, sec, rowId, subId) {
   const inicio = inicioSobres(budgets);
   if (!inicio || periodo < inicio) return null;
   const clave = claveBolsillo(sec, rowId, subId);
@@ -215,8 +256,11 @@ export function estadoBolsillo(budgets, periodo, sec, rowId, subId) {
     const gastado = gastadoDe(b, sec, rowId, subId);
     const m = (sim.meses[k] && sim.meses[k][clave]) || SIN_MOV;
     const debiaHaber = inicial + asignado - m.pag + m.rec;
-    previo = debiaHaber + m.pres - m.dado - gastado;
-    estado = { inicial, asignado, devPagada: m.pag, devRecibida: m.rec, debiaHaber, prestamoRecibido: m.pres, prestamoDado: m.dado, gastado, saldo: previo };
+    const saldo = debiaHaber + m.pres - m.dado - gastado;
+    estado = { inicial, asignado, devPagada: m.pag, devRecibida: m.rec, debiaHaber, prestamoRecibido: m.pres, prestamoDado: m.dado, gastado, saldo };
+    // Lo contado en el arqueo es lo que arranca el período siguiente.
+    const aj = k < periodo ? ajusteArqueo(budgets, k, sec, rowId) : null;
+    previo = saldo + (aj ? (aj.get(subId ?? null) || 0) : 0);
   }
   return estado;
 }
@@ -543,27 +587,35 @@ export function maxSubMonto(row, subId) {
   return Math.max(0, (row.monto || 0) - otras);
 }
 
-// ── Categorías de gasto y compras de Alimentación ───────────────────────────
+// ── Categorías de gasto y compras ────────────────────────────────────────────
 export const ID_ALIMENTACION = "ali";
-export const CATEGORIAS_ALIMENTACION = ["Verduras y frutas", "Carnes y pescado", "Lácteos y huevos", "Despensa", "Panadería", "Bebidas", "Snacks y dulces", "Otros"];
+export const ID_ASEO = "aseo";
+export const FILAS_CARTERABLES = [ID_ALIMENTACION, ID_ASEO];   // gastos base que se pueden pasar a cartera (sobre propio)
+export const CATEGORIAS_COMPRAS = ["Lácteos", "Huevos", "Prote", "Snack", "Verdura", "Fruta", "Aseo"];
+// Las compras descuentan de Alimentación, salvo las categorías con otro destino: Aseo descuenta de su propio bolsillo.
+// Una categoría nueva elige su destino al crearse (fila.catDestino de Alimentación); sin elegir, descuenta de Alimentación.
+export const DESTINO_CATEGORIA = { aseo: ID_ASEO };
 export const SIN_CATEGORIA = "Sin categoría";
 
-// Lista de categorías de una cartera: la propia si existe; Alimentación parte con las suyas; el resto parte vacía.
+// Lista de categorías de una cartera: la propia si existe; Alimentación parte con las de compras; el resto parte vacía.
 export function categoriasDe(row) {
   if (row && Array.isArray(row.categorias)) return row.categorias;
-  if (row && row.id === ID_ALIMENTACION) return CATEGORIAS_ALIMENTACION.slice();
+  if (row && row.id === ID_ALIMENTACION) return CATEGORIAS_COMPRAS.slice();
   return [];
 }
 
-// Agrega una categoría a la cartera (sin duplicar, sin distinguir mayúsculas). Devuelve el presupuesto nuevo.
-export function agregarCategoria(budget, sec, rowId, label) {
+// Agrega una categoría a la cartera (sin duplicar, sin distinguir mayúsculas). `destino` (id de fila) solo aplica a
+// la lista de compras de Alimentación: de dónde descuentan las compras de esa categoría. Devuelve el presupuesto nuevo.
+export function agregarCategoria(budget, sec, rowId, label, destino) {
   const l = String(label || "").trim();
   if (!l) return budget;
   return { ...budget, [sec]: (budget[sec] || []).map(r => {
     if (r.id !== rowId) return r;
     const lista = categoriasDe(r);
     if (lista.some(x => x.toLowerCase() === l.toLowerCase())) return r;
-    return { ...r, categorias: [...lista, l] };
+    const sig = { ...r, categorias: [...lista, l] };
+    if (rowId === ID_ALIMENTACION && destino && destino !== ID_ALIMENTACION) sig.catDestino = { ...(r.catDestino || {}), [l]: destino };
+    return sig;
   }) };
 }
 
@@ -579,13 +631,51 @@ export function gastoPorCategoria(budget, sec, rowId) {
   return { lista, total: lista.reduce((s, x) => s + x.monto, 0) };
 }
 
-// Cartera que paga las compras: la fila «ali» en fondos por propósito o personales. null si Alimentación aún es gasto base.
-export function carteraCompras(budgets, fecha) {
+// Fila «ali» (gasto base o cartera): guarda las categorías de compras y a qué fila descuenta cada una.
+export function filaCompras(budgets, fecha) {
   const periodo = periodoDeFecha(fecha);
   const b = resolverPeriodo(budgets, periodo);
-  for (const sec of CARTERAS) {
+  for (const sec of SECCIONES) {
     const row = (b[sec] || []).find(r => r.id === ID_ALIMENTACION);
     if (row) return { sec, row, periodo };
+  }
+  return null;
+}
+
+// Id de la fila de la que descuenta una compra de esa categoría.
+export function destinoCategoria(filaAli, categoria) {
+  const c = String(categoria || "").trim().toLowerCase();
+  if (!c) return ID_ALIMENTACION;
+  const propio = filaAli && filaAli.catDestino ? Object.keys(filaAli.catDestino).find(k => k.toLowerCase() === c) : null;
+  if (propio) return filaAli.catDestino[propio];
+  return DESTINO_CATEGORIA[c] || ID_ALIMENTACION;
+}
+
+// Etiqueta de una fila del presupuesto (en cualquier sección) para mostrarla como destino.
+export function etiquetaFila(budgets, fecha, rowId) {
+  const b = resolverPeriodo(budgets, periodoDeFecha(fecha));
+  for (const sec of SECCIONES) { const r = (b[sec] || []).find(x => x.id === rowId); if (r) return r.label; }
+  return rowId === ID_ASEO ? "Aseo" : "Alimentación";
+}
+
+// Filas que una categoría nueva puede tener como destino: Alimentación, Aseo y las carteras del período.
+export function destinosPosibles(budgets, fecha) {
+  const b = resolverPeriodo(budgets, periodoDeFecha(fecha));
+  const lista = [{ id: ID_ALIMENTACION, label: etiquetaFila(budgets, fecha, ID_ALIMENTACION) }, { id: ID_ASEO, label: etiquetaFila(budgets, fecha, ID_ASEO) }];
+  for (const sec of CARTERAS) (b[sec] || []).forEach(r => { if (!lista.some(x => x.id === r.id)) lista.push({ id: r.id, label: r.label }); });
+  return lista;
+}
+
+// Cartera de la que descuenta una compra de esa categoría (o la fila `destinoForzado`). null si esa fila aún es gasto base:
+// entonces la compra guarda su precio pero no descuenta de ningún sobre.
+export function carteraCompras(budgets, fecha, categoria, destinoForzado) {
+  const periodo = periodoDeFecha(fecha);
+  const b = resolverPeriodo(budgets, periodo);
+  const fa = filaCompras(budgets, fecha);
+  const rowId = destinoForzado || destinoCategoria(fa && fa.row, categoria);
+  for (const sec of CARTERAS) {
+    const row = (b[sec] || []).find(r => r.id === rowId);
+    if (row) return { sec, row, periodo, rowId };
   }
   return null;
 }
@@ -596,14 +686,20 @@ export function montoCompra(item) {
   return Math.round(cant * precio);
 }
 
-// Compra → gasto de Alimentación. {periodo, budget, gastoId} o {error}. No modifica budgets.
+// Compra → gasto de la cartera que le corresponde por categoría (Alimentación; Aseo, el suyo). {periodo, budget, gastoId} o {error}. No modifica budgets.
 export function registrarCompra(budgets, { fecha, item, subId }) {
-  const dest = carteraCompras(budgets, fecha);
-  if (!dest) return { error: "Alimentación todavía no es una cartera: pásala a cartera en Presupuesto (Gastos Base)." };
+  const dest = carteraCompras(budgets, fecha, item && item.categoria);
+  if (!dest) {
+    const fa = filaCompras(budgets, fecha);
+    const nombre = etiquetaFila(budgets, fecha, destinoCategoria(fa && fa.row, item && item.categoria));
+    return { error: `${nombre} todavía no es una cartera: pásala a cartera en Presupuesto (Gastos Base).` };
+  }
   const monto = montoCompra(item);
   if (monto <= 0) return { error: "Falta el precio del ítem." };
   const cant = Number(item.cantidad) > 0 ? Number(item.cantidad) : 1;
-  const r = agregarGasto(budgets, { fecha, sec: dest.sec, rowId: dest.row.id, subId: subId ?? null, monto, nota: `${cant !== 1 ? cant + "× " : ""}${item.text}`, categoria: item.categoria, compraId: item.id });
+  // Una sub-partida de otra cartera (por haber cambiado la categoría) no vale aquí: cae en el bolsillo libre.
+  const sub = bolsillosDe(dest.sec, dest.row).some(bo => (bo.subId ?? null) === (subId ?? null)) ? (subId ?? null) : null;
+  const r = agregarGasto(budgets, { fecha, sec: dest.sec, rowId: dest.row.id, subId: sub, monto, nota: `${cant !== 1 ? cant + "× " : ""}${item.text}`, categoria: item.categoria, compraId: item.id });
   if (r.error) return { error: r.error, saldo: r.saldo };
   return r;
 }

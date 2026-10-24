@@ -69,7 +69,7 @@ export default function ArqueoModal({ budgets, periodo, onSaveBudget, onClose, t
           {!filas && <div style={{ fontFamily: FUENTE, fontSize: 13, color: "#999", padding: "16px 0" }}>Los sobres no están iniciados en este período: toca 🧾 en Presupuesto.</div>}
 
           {filas && tab === "arqueo" && <>
-            <div style={{ fontFamily: FUENTE, fontSize: 12, color: "#777", lineHeight: 1.5, marginBottom: 10 }}>Cuenta el efectivo que hay en cada sobre y escríbelo. Si no cuadra con los registros, el cierre igual se guarda y la diferencia queda documentada.</div>
+            <div style={{ fontFamily: FUENTE, fontSize: 12, color: "#777", lineHeight: 1.5, marginBottom: 10 }}>Cuenta el efectivo que hay en cada sobre y escríbelo: lo que cuentes es lo que arranca el período siguiente como saldo de arrastre. Si no cuadra con los registros, el cierre igual se guarda y la diferencia queda documentada.</div>
             {guardado && <div style={{ fontFamily: FUENTE, fontSize: 12, color: "#070", background: "#f3fbf3", border: "1px dashed #b5deb5", borderRadius: 6, padding: "6px 10px", marginBottom: 10 }}>Arqueo guardado el {fechaCorta(guardado.fecha)}. Puedes rehacerlo.</div>}
             {filas.map(f => {
               const k = f.sec + "|" + f.rowId;

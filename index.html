@@ -390,7 +390,46 @@ var __angst = (() => {
     return claves.find((k) => budgets[k] && typeof budgets[k].apertura === "object" && budgets[k].apertura) || null;
   }
   var SIN_MOV = { pres: 0, dado: 0, pag: 0, rec: 0 };
+  var cacheEstado = /* @__PURE__ */ new WeakMap();
   function estadoBolsillo(budgets, periodo, sec, rowId, subId) {
+    if (!budgets || typeof budgets !== "object") return calcularEstado(budgets, periodo, sec, rowId, subId);
+    let memo = cacheEstado.get(budgets);
+    if (!memo) {
+      memo = /* @__PURE__ */ new Map();
+      cacheEstado.set(budgets, memo);
+    }
+    const key = periodo + "|" + claveBolsillo(sec, rowId, subId);
+    if (memo.has(key)) return memo.get(key);
+    const r = calcularEstado(budgets, periodo, sec, rowId, subId);
+    memo.set(key, r);
+    return r;
+  }
+  function ajusteArqueo(budgets, k, sec, rowId) {
+    const b = resolverPeriodo(budgets, k);
+    const f2 = b.arqueo && Array.isArray(b.arqueo.filas) ? b.arqueo.filas.find((x) => x.sec === sec && x.rowId === rowId) : null;
+    const fila = (b[sec] || []).find((r) => r.id === rowId);
+    if (!f2 || !fila || !Number.isFinite(f2.contado)) return null;
+    const items = bolsillosDe(sec, fila).map((bo) => ({ subId: bo.subId, libre: bo.libre, saldo: (estadoBolsillo(budgets, k, sec, rowId, bo.subId) || { saldo: 0 }).saldo }));
+    const esperado = items.reduce((t, i) => t + i.saldo, 0);
+    const dif = f2.contado - esperado;
+    const delta = new Map(items.map((i) => [i.subId, 0]));
+    const libre = items.find((i) => i.libre);
+    if (dif > 0 && libre) delta.set(libre.subId, dif);
+    else if (dif < 0) {
+      let falta = -dif;
+      [...items].sort((x, y) => Number(y.libre) - Number(x.libre) || y.saldo - x.saldo).forEach((i) => {
+        if (falta <= 0) return;
+        const quita = Math.min(falta, Math.max(0, i.saldo));
+        if (quita > 0) {
+          delta.set(i.subId, -quita);
+          falta -= quita;
+        }
+      });
+      if (falta > 0 && libre) delta.set(libre.subId, (delta.get(libre.subId) || 0) - falta);
+    }
+    return delta;
+  }
+  function calcularEstado(budgets, periodo, sec, rowId, subId) {
     const inicio = inicioSobres(budgets);
     if (!inicio || periodo < inicio) return null;
     const clave = claveBolsillo(sec, rowId, subId);
@@ -404,8 +443,10 @@ var __angst = (() => {
       const gastado = gastadoDe(b, sec, rowId, subId);
       const m = sim.meses[k] && sim.meses[k][clave] || SIN_MOV;
       const debiaHaber = inicial + asignado - m.pag + m.rec;
-      previo = debiaHaber + m.pres - m.dado - gastado;
-      estado = { inicial, asignado, devPagada: m.pag, devRecibida: m.rec, debiaHaber, prestamoRecibido: m.pres, prestamoDado: m.dado, gastado, saldo: previo };
+      const saldo = debiaHaber + m.pres - m.dado - gastado;
+      estado = { inicial, asignado, devPagada: m.pag, devRecibida: m.rec, debiaHaber, prestamoRecibido: m.pres, prestamoDado: m.dado, gastado, saldo };
+      const aj = k < periodo ? ajusteArqueo(budgets, k, sec, rowId) : null;
+      previo = saldo + (aj ? aj.get(subId ?? null) || 0 : 0);
     }
     return estado;
   }
@@ -693,21 +734,26 @@ var __angst = (() => {
     return Math.max(0, (row.monto || 0) - otras);
   }
   var ID_ALIMENTACION = "ali";
-  var CATEGORIAS_ALIMENTACION = ["Verduras y frutas", "Carnes y pescado", "L\xE1cteos y huevos", "Despensa", "Panader\xEDa", "Bebidas", "Snacks y dulces", "Otros"];
+  var ID_ASEO = "aseo";
+  var FILAS_CARTERABLES = [ID_ALIMENTACION, ID_ASEO];
+  var CATEGORIAS_COMPRAS = ["L\xE1cteos", "Huevos", "Prote", "Snack", "Verdura", "Fruta", "Aseo"];
+  var DESTINO_CATEGORIA = { aseo: ID_ASEO };
   var SIN_CATEGORIA = "Sin categor\xEDa";
   function categoriasDe(row) {
     if (row && Array.isArray(row.categorias)) return row.categorias;
-    if (row && row.id === ID_ALIMENTACION) return CATEGORIAS_ALIMENTACION.slice();
+    if (row && row.id === ID_ALIMENTACION) return CATEGORIAS_COMPRAS.slice();
     return [];
   }
-  function agregarCategoria(budget, sec, rowId, label) {
+  function agregarCategoria(budget, sec, rowId, label, destino) {
     const l = String(label || "").trim();
     if (!l) return budget;
     return { ...budget, [sec]: (budget[sec] || []).map((r) => {
       if (r.id !== rowId) return r;
       const lista = categoriasDe(r);
       if (lista.some((x) => x.toLowerCase() === l.toLowerCase())) return r;
-      return { ...r, categorias: [...lista, l] };
+      const sig = { ...r, categorias: [...lista, l] };
+      if (rowId === ID_ALIMENTACION && destino && destino !== ID_ALIMENTACION) sig.catDestino = { ...r.catDestino || {}, [l]: destino };
+      return sig;
     }) };
   }
   function gastoPorCategoria(budget, sec, rowId) {
@@ -721,12 +767,46 @@ var __angst = (() => {
     const lista = Object.values(mapa).sort((a, b) => b.monto - a.monto);
     return { lista, total: lista.reduce((s, x) => s + x.monto, 0) };
   }
-  function carteraCompras(budgets, fecha) {
+  function filaCompras(budgets, fecha) {
     const periodo = periodoDeFecha(fecha);
     const b = resolverPeriodo(budgets, periodo);
-    for (const sec of CARTERAS) {
+    for (const sec of SECCIONES) {
       const row = (b[sec] || []).find((r) => r.id === ID_ALIMENTACION);
       if (row) return { sec, row, periodo };
+    }
+    return null;
+  }
+  function destinoCategoria(filaAli, categoria) {
+    const c = String(categoria || "").trim().toLowerCase();
+    if (!c) return ID_ALIMENTACION;
+    const propio = filaAli && filaAli.catDestino ? Object.keys(filaAli.catDestino).find((k) => k.toLowerCase() === c) : null;
+    if (propio) return filaAli.catDestino[propio];
+    return DESTINO_CATEGORIA[c] || ID_ALIMENTACION;
+  }
+  function etiquetaFila(budgets, fecha, rowId) {
+    const b = resolverPeriodo(budgets, periodoDeFecha(fecha));
+    for (const sec of SECCIONES) {
+      const r = (b[sec] || []).find((x) => x.id === rowId);
+      if (r) return r.label;
+    }
+    return rowId === ID_ASEO ? "Aseo" : "Alimentaci\xF3n";
+  }
+  function destinosPosibles(budgets, fecha) {
+    const b = resolverPeriodo(budgets, periodoDeFecha(fecha));
+    const lista = [{ id: ID_ALIMENTACION, label: etiquetaFila(budgets, fecha, ID_ALIMENTACION) }, { id: ID_ASEO, label: etiquetaFila(budgets, fecha, ID_ASEO) }];
+    for (const sec of CARTERAS) (b[sec] || []).forEach((r) => {
+      if (!lista.some((x) => x.id === r.id)) lista.push({ id: r.id, label: r.label });
+    });
+    return lista;
+  }
+  function carteraCompras(budgets, fecha, categoria, destinoForzado) {
+    const periodo = periodoDeFecha(fecha);
+    const b = resolverPeriodo(budgets, periodo);
+    const fa = filaCompras(budgets, fecha);
+    const rowId = destinoForzado || destinoCategoria(fa && fa.row, categoria);
+    for (const sec of CARTERAS) {
+      const row = (b[sec] || []).find((r) => r.id === rowId);
+      if (row) return { sec, row, periodo, rowId };
     }
     return null;
   }
@@ -736,12 +816,17 @@ var __angst = (() => {
     return Math.round(cant * precio);
   }
   function registrarCompra(budgets, { fecha, item, subId }) {
-    const dest = carteraCompras(budgets, fecha);
-    if (!dest) return { error: "Alimentaci\xF3n todav\xEDa no es una cartera: p\xE1sala a cartera en Presupuesto (Gastos Base)." };
+    const dest = carteraCompras(budgets, fecha, item && item.categoria);
+    if (!dest) {
+      const fa = filaCompras(budgets, fecha);
+      const nombre = etiquetaFila(budgets, fecha, destinoCategoria(fa && fa.row, item && item.categoria));
+      return { error: `${nombre} todav\xEDa no es una cartera: p\xE1sala a cartera en Presupuesto (Gastos Base).` };
+    }
     const monto = montoCompra(item);
     if (monto <= 0) return { error: "Falta el precio del \xEDtem." };
     const cant = Number(item.cantidad) > 0 ? Number(item.cantidad) : 1;
-    const r = agregarGasto(budgets, { fecha, sec: dest.sec, rowId: dest.row.id, subId: subId ?? null, monto, nota: `${cant !== 1 ? cant + "\xD7 " : ""}${item.text}`, categoria: item.categoria, compraId: item.id });
+    const sub2 = bolsillosDe(dest.sec, dest.row).some((bo) => (bo.subId ?? null) === (subId ?? null)) ? subId ?? null : null;
+    const r = agregarGasto(budgets, { fecha, sec: dest.sec, rowId: dest.row.id, subId: sub2, monto, nota: `${cant !== 1 ? cant + "\xD7 " : ""}${item.text}`, categoria: item.categoria, compraId: item.id });
     if (r.error) return { error: r.error, saldo: r.saldo };
     return r;
   }
@@ -1286,33 +1371,47 @@ var __angst = (() => {
     const precio = m ? `${cant !== 1 ? cant + "\xD7 " : ""}${fmtCLP(Number(item.precio))}${cant !== 1 ? " = " + fmtCLP(m) : ""}` : "";
     return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 10, color: "#999", marginTop: 1 } }, precio, precio && item.categoria ? " \xB7 " : "", item.categoria || "");
   }
-  function CompraEditor({ item, info, acciones, onClose }) {
+  function DescuentaDe({ info, total }) {
+    const noAlcanza = info.activo && total > (info.saldo || 0);
+    return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 11, marginTop: 8, color: noAlcanza ? "#c00" : "#888", lineHeight: 1.4 } }, info.activo ? noAlcanza ? `No alcanza: en ${info.destLabel} hay ${fmtCLP(info.saldo)}. Registra con \u{1F4B8} Gasto si necesitas multifinanciamiento.` : `Se descuenta de ${info.destLabel}: saldo ${fmtCLP(info.saldo)}.` : `${info.destLabel} a\xFAn no es cartera con sobres activos: se guarda el precio, pero no se descuenta de ning\xFAn fondo.`);
+  }
+  function SelectorCategoria({ info, cat, setCat, nueva, setNueva, destNueva, setDestNueva, alCambiar }) {
+    const cambia = (fn) => (e) => {
+      fn(e.target.value);
+      if (alCambiar) alCambiar();
+    };
+    return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Categor\xEDa"), /* @__PURE__ */ React.createElement("select", { value: cat, onChange: cambia(setCat), style: campo }, /* @__PURE__ */ React.createElement("option", { value: "" }, "Sin categor\xEDa"), (info.categorias || []).map((c) => /* @__PURE__ */ React.createElement("option", { key: c, value: c }, c)), info.puedeNuevaCategoria && /* @__PURE__ */ React.createElement("option", { value: "__nueva" }, "+ nueva categor\xEDa\u2026")), cat === "__nueva" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("input", { value: nueva, onChange: cambia(setNueva), placeholder: "nombre de la categor\xEDa", style: { ...campo, marginTop: 6 } }), /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Descuenta de"), /* @__PURE__ */ React.createElement("select", { value: destNueva, onChange: cambia(setDestNueva), style: campo }, (info.destinos || []).map((d) => /* @__PURE__ */ React.createElement("option", { key: d.id, value: d.id }, d.label)))));
+  }
+  function CompraEditor({ item, acciones, onClose }) {
     const [cant, setCant] = useState(String(Number(item.cantidad) > 0 ? item.cantidad : 1));
     const [precio, setPrecio] = useState(Number(item.precio) > 0 ? String(item.precio) : "");
     const [cat, setCat] = useState(item.categoria || "");
     const [nueva, setNueva] = useState("");
-    const bolsillos = info.bolsillos || [];
-    const [subSel, setSubSel] = useState(() => {
-      const previo = bolsillos.find((b) => item.subId !== void 0 && String(b.subId) === String(item.subId));
-      return String((previo || bolsillos[0] || { subId: null }).subId);
-    });
+    const [destNueva, setDestNueva] = useState("ali");
+    const [subSel, setSubSel] = useState(item.subId !== void 0 && item.subId !== null ? String(item.subId) : "");
     const [err, setErr] = useState("");
+    const catEf = (cat === "__nueva" ? nueva.trim() : cat) || void 0;
+    const info = acciones.info(catEf, cat === "__nueva" ? destNueva : void 0);
+    const bolsillos = info.bolsillos || [];
+    const bolsillo = bolsillos.find((b) => String(b.subId) === subSel) || bolsillos[0] || null;
     const cantNum = parseFloat(String(cant).replace(",", ".")) > 0 ? parseFloat(String(cant).replace(",", ".")) : 1;
     const precioNum = parseInt(String(precio).replace(/\D/g, "")) || 0;
     const total = Math.round(cantNum * precioNum);
-    const bolsillo = bolsillos.find((b) => String(b.subId) === subSel) || null;
     const saldo = bolsillo ? bolsillo.saldo : info.saldo || 0;
     const noAlcanza = info.activo && total > saldo;
-    const categorias = info.categorias || [];
-    const campos = () => ({ cantidad: cantNum, precio: precioNum, categoria: (cat === "__nueva" ? nueva.trim() : cat) || void 0, subId: bolsillo ? bolsillo.subId : null });
-    const nombre = info.dest ? info.dest.row.label : "Alimentaci\xF3n";
+    const campos = () => ({ cantidad: cantNum, precio: precioNum, categoria: catEf, subId: bolsillo ? bolsillo.subId : null });
+    const limpiar = () => setErr("");
     function prepararCategoria() {
       if (cat === "__nueva") {
         if (!nueva.trim()) {
           setErr("Escribe el nombre de la categor\xEDa.");
           return false;
         }
-        if (info.puedeNuevaCategoria) acciones.nuevaCategoria(nueva.trim());
+        const e = acciones.nuevaCategoria(nueva.trim(), destNueva);
+        if (e) {
+          setErr(e);
+          return false;
+        }
       }
       return true;
     }
@@ -1336,29 +1435,204 @@ var __angst = (() => {
     const boton = (primario) => ({ flex: 1, padding: "9px 6px", background: primario ? "#111" : "#fff", color: primario ? "#fff" : "#444", border: primario ? "none" : "1px dashed #bbb", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 17, fontWeight: 700, cursor: "pointer" });
     return /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fafafa", border: "1px dashed #ccc", borderRadius: 8, padding: "6px 10px 10px", margin: "2px 0 8px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 64 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Cantidad"), /* @__PURE__ */ React.createElement("input", { inputMode: "decimal", value: cant, onChange: (e) => {
       setCant(e.target.value);
-      setErr("");
+      limpiar();
     }, style: { ...campo, textAlign: "center" } })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Precio unitario"), /* @__PURE__ */ React.createElement("input", { inputMode: "numeric", value: precio ? fmtCLP(precioNum) : "", onChange: (e) => {
       setPrecio(e.target.value);
-      setErr("");
-    }, placeholder: "$0", style: { ...campo, textAlign: "right" } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 14, fontWeight: 700, color: noAlcanza ? "#c00" : "#111", paddingBottom: 9, minWidth: 70, textAlign: "right" } }, total ? fmtCLP(total) : "\u2014")), /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Categor\xEDa"), /* @__PURE__ */ React.createElement("select", { value: cat, onChange: (e) => {
-      setCat(e.target.value);
-      setErr("");
-    }, style: campo }, /* @__PURE__ */ React.createElement("option", { value: "" }, "Sin categor\xEDa"), categorias.map((c) => /* @__PURE__ */ React.createElement("option", { key: c, value: c }, c)), info.puedeNuevaCategoria && /* @__PURE__ */ React.createElement("option", { value: "__nueva" }, "+ nueva categor\xEDa\u2026")), cat === "__nueva" && /* @__PURE__ */ React.createElement("input", { value: nueva, onChange: (e) => {
-      setNueva(e.target.value);
-      setErr("");
-    }, placeholder: "nombre de la categor\xEDa", style: { ...campo, marginTop: 6 } }), info.activo && bolsillos.length > 1 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Sub-partida"), /* @__PURE__ */ React.createElement("select", { value: subSel, onChange: (e) => {
+      limpiar();
+    }, placeholder: "$0", style: { ...campo, textAlign: "right" } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 14, fontWeight: 700, color: noAlcanza ? "#c00" : "#111", paddingBottom: 9, minWidth: 70, textAlign: "right" } }, total ? fmtCLP(total) : "\u2014")), /* @__PURE__ */ React.createElement(SelectorCategoria, { info, cat, setCat, nueva, setNueva, destNueva, setDestNueva, alCambiar: limpiar }), info.activo && bolsillos.length > 1 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Sub-partida"), /* @__PURE__ */ React.createElement("select", { value: bolsillo ? String(bolsillo.subId) : "", onChange: (e) => {
       setSubSel(e.target.value);
+      limpiar();
+    }, style: campo }, bolsillos.map((b) => /* @__PURE__ */ React.createElement("option", { key: String(b.subId), value: String(b.subId) }, b.emoji, " ", b.label, " \xB7 saldo ", fmtCLP(b.saldo))))), /* @__PURE__ */ React.createElement(DescuentaDe, { info: { ...info, saldo }, total }), err && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 12, color: "#c00", marginTop: 6 } }, err), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: comprado, disabled: noAlcanza, style: { ...boton(true), background: noAlcanza ? "#ccc" : "#111", cursor: noAlcanza ? "default" : "pointer" } }, "Comprado \u2713"), /* @__PURE__ */ React.createElement("button", { onClick: guardar, style: boton(false) }, "Guardar"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { ...boton(false), flex: "0 0 auto", padding: "9px 12px" } }, "\xD7")), info.activo && /* @__PURE__ */ React.createElement("button", { onClick: sinGasto, style: { background: "transparent", border: "none", color: "#aaa", fontFamily: F, fontSize: 11, cursor: "pointer", marginTop: 6, padding: 0, textDecoration: "underline" } }, "marcar comprado sin descontar"));
+  }
+
+  // modules/presupuesto/ListaCompras.jsx
+  var { useState: useState2, useRef } = React;
+  var F2 = "'DM Sans',sans-serif";
+  var enlace = { background: "transparent", border: "none", color: "#999", fontFamily: F2, fontSize: 11, cursor: "pointer", padding: "6px 0 0", textDecoration: "underline" };
+  var nuevoId = () => Date.now().toString() + Math.random().toString(36).slice(2, 5);
+  function NuevaCompra({ api, onAdd, autoFocus }) {
+    const [texto, setTexto] = useState2("");
+    const [abierto, setAbierto] = useState2(false);
+    const [cant, setCant] = useState2("1");
+    const [precio, setPrecio] = useState2("");
+    const [cat, setCat] = useState2("");
+    const [nueva, setNueva] = useState2("");
+    const [destNueva, setDestNueva] = useState2("ali");
+    const [err, setErr] = useState2("");
+    const catEf = (cat === "__nueva" ? nueva.trim() : cat) || void 0;
+    const info = api.info(catEf, cat === "__nueva" ? destNueva : void 0);
+    const cantNum = parseFloat(String(cant).replace(",", ".")) > 0 ? parseFloat(String(cant).replace(",", ".")) : 1;
+    const precioNum = parseInt(String(precio).replace(/\D/g, "")) || 0;
+    function agregar() {
+      const t = texto.trim();
+      if (!t) return;
+      if (cat === "__nueva") {
+        if (!nueva.trim()) {
+          setErr("Escribe el nombre de la categor\xEDa.");
+          setAbierto(true);
+          return;
+        }
+        const e = api.nuevaCategoria(nueva.trim(), destNueva);
+        if (e) {
+          setErr(e);
+          setAbierto(true);
+          return;
+        }
+      }
+      const item = { id: nuevoId(), text: t, done: false };
+      if (cantNum !== 1) item.cantidad = cantNum;
+      if (precioNum > 0) item.precio = precioNum;
+      if (catEf) item.categoria = catEf;
+      onAdd(item);
+      setTexto("");
+      setCant("1");
+      setPrecio("");
       setErr("");
-    }, style: campo }, bolsillos.map((b) => /* @__PURE__ */ React.createElement("option", { key: String(b.subId), value: String(b.subId) }, b.emoji, " ", b.label, " \xB7 saldo ", fmtCLP(b.saldo))))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 11, marginTop: 8, color: noAlcanza ? "#c00" : "#888", lineHeight: 1.4 } }, info.activo ? noAlcanza ? `No alcanza: en ${nombre} hay ${fmtCLP(saldo)}. Registra con \u{1F4B8} Gasto si necesitas multifinanciamiento.` : `Se descuenta de ${nombre}: saldo ${fmtCLP(saldo)}.` : "Alimentaci\xF3n a\xFAn no es cartera con sobres activos: se guarda el precio, pero no se descuenta de ning\xFAn fondo."), err && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 12, color: "#c00", marginTop: 6 } }, err), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: comprado, disabled: noAlcanza, style: { ...boton(true), background: noAlcanza ? "#ccc" : "#111", cursor: noAlcanza ? "default" : "pointer" } }, "Comprado \u2713"), /* @__PURE__ */ React.createElement("button", { onClick: guardar, style: boton(false) }, "Guardar"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { ...boton(false), flex: "0 0 auto", padding: "9px 12px" } }, "\xD7")), info.activo && /* @__PURE__ */ React.createElement("button", { onClick: sinGasto, style: { background: "transparent", border: "none", color: "#aaa", fontFamily: F, fontSize: 11, cursor: "pointer", marginTop: 6, padding: 0, textDecoration: "underline" } }, "marcar comprado sin descontar"));
+      if (cat === "__nueva") {
+        setCat(nueva.trim());
+        setNueva("");
+      }
+    }
+    const total = Math.round(cantNum * precioNum);
+    return /* @__PURE__ */ React.createElement("div", { style: { paddingBottom: 8, marginBottom: 6, borderBottom: "1px solid #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        value: texto,
+        onChange: (e) => {
+          setTexto(e.target.value);
+          setErr("");
+        },
+        onKeyDown: (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            agregar();
+          }
+        },
+        autoFocus,
+        placeholder: "agregar \xEDtem...",
+        style: { ...campo, flex: 1, border: "1px dashed #ddd", borderRadius: 8, padding: "8px 10px" }
+      }
+    ), /* @__PURE__ */ React.createElement("button", { onClick: agregar, disabled: !texto.trim(), style: { background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 16, opacity: texto.trim() ? 1 : 0.4 } }, "+")), /* @__PURE__ */ React.createElement("button", { onClick: () => setAbierto((a) => !a), style: enlace }, abierto ? "\u2212 ocultar detalles" : "+ detalles (cantidad, precio, categor\xEDa)", !abierto && (precioNum > 0 || catEf) ? " \xB7" + (catEf ? " " + catEf : "") + (total ? " " + fmtCLP(total) : "") : ""), abierto && /* @__PURE__ */ React.createElement("div", { style: { background: "#fafafa", border: "1px dashed #ccc", borderRadius: 8, padding: "2px 10px 10px", marginTop: 6 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 64 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Cantidad"), /* @__PURE__ */ React.createElement("input", { inputMode: "decimal", value: cant, onChange: (e) => setCant(e.target.value), style: { ...campo, textAlign: "center" } })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Precio unitario"), /* @__PURE__ */ React.createElement("input", { inputMode: "numeric", value: precio ? fmtCLP(precioNum) : "", onChange: (e) => setPrecio(e.target.value), placeholder: "$0", style: { ...campo, textAlign: "right" } }))), /* @__PURE__ */ React.createElement(SelectorCategoria, { info, cat, setCat, nueva, setNueva, destNueva, setDestNueva, alCambiar: () => setErr("") }), (catEf || precioNum > 0) && /* @__PURE__ */ React.createElement(DescuentaDe, { info, total })), err && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F2, fontSize: 12, color: "#c00", marginTop: 6 } }, err));
+  }
+  function ListaCompras({ grupos, agregarEn, api, onPatch, onAdd, onDelete, onReorder, onMoveNext, autoFocus, vacio = "lista vac\xEDa" }) {
+    const [editId, setEditId] = useState2(null);
+    const [msg, setMsg] = useState2("");
+    const [held, setHeld] = useState2(null);
+    const [dragTarget, setDragTarget] = useState2(null);
+    const holdTimer = useRef(null);
+    const tx = useRef(0);
+    const ty = useRef(0);
+    const total = grupos.reduce((t, g) => t + g.items.length, 0);
+    function alternar(g, it) {
+      if (held !== null) return;
+      setMsg("");
+      if (it.done) {
+        const r2 = api.desmarcar(it);
+        if (r2.error) {
+          setMsg(r2.error);
+          return;
+        }
+        onPatch(g.key, it.id, { done: false, ...r2.patch || {} });
+        return;
+      }
+      if (api.info(it.categoria).activo && montoCompra(it) === 0) {
+        setEditId(`${g.key}|${it.id}`);
+        return;
+      }
+      const r = api.comprar(it);
+      if (r.error) {
+        setMsg(r.error);
+        return;
+      }
+      onPatch(g.key, it.id, { done: true, ...r.patch || {} });
+    }
+    const accionesDe = (g, it) => ({
+      info: api.info,
+      guardar: (f2) => {
+        onPatch(g.key, it.id, f2);
+        setEditId(null);
+      },
+      comprar: (f2) => {
+        const r = api.comprar({ ...it, ...f2 });
+        if (r.error) return r.error;
+        onPatch(g.key, it.id, { ...f2, done: true, ...r.patch || {} });
+        setEditId(null);
+        return null;
+      },
+      sinGasto: (f2) => {
+        onPatch(g.key, it.id, { ...f2, done: true });
+        setEditId(null);
+      },
+      nuevaCategoria: api.nuevaCategoria
+    });
+    const casilla = (hecho, onClick, oscuro) => /* @__PURE__ */ React.createElement("div", { onClick, style: { width: 20, height: 20, borderRadius: 4, border: `1.5px dashed ${hecho ? "#111" : "#bbb"}`, background: hecho ? "#111" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, ...oscuro ? { borderColor: "#888" } : {} } }, hecho && /* @__PURE__ */ React.createElement("span", { style: { color: "#fff", fontSize: 12, lineHeight: 1 } }, "\u2713"));
+    const ordenable = !!onReorder;
+    function toquesDe(g, idx, item) {
+      if (!ordenable) return {};
+      const id = `${g.key}|${idx}`;
+      return {
+        onTouchStart: (e) => {
+          holdTimer.current = setTimeout(() => setHeld(id), 350);
+          tx.current = e.touches[0].clientX;
+          ty.current = e.touches[0].clientY;
+        },
+        onTouchMove: (e) => {
+          const dx = e.touches[0].clientX - tx.current, dy = e.touches[0].clientY - ty.current;
+          if (held === id && Math.abs(dy) > 10) {
+            const els = [...e.currentTarget.parentNode.children];
+            const my = e.touches[0].clientY;
+            const ti = els.findIndex((el) => {
+              const r = el.getBoundingClientRect();
+              return my >= r.top && my <= r.bottom;
+            });
+            if (ti >= 0 && ti !== idx) setDragTarget(ti);
+          } else if (dx > 5) clearTimeout(holdTimer.current);
+        },
+        onTouchEnd: (e) => {
+          clearTimeout(holdTimer.current);
+          const dx = e.changedTouches[0].clientX - tx.current;
+          if (held === id) {
+            if (dragTarget !== null && dragTarget !== idx) {
+              const next = [...g.items];
+              const [m] = next.splice(idx, 1);
+              next.splice(dragTarget, 0, m);
+              onReorder(g.key, next);
+            } else if (dx > 60 && onMoveNext) onMoveNext(g.key, item);
+          }
+          setHeld(null);
+          setDragTarget(null);
+        }
+      };
+    }
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(NuevaCompra, { api, onAdd: (item) => onAdd(agregarEn, item), autoFocus }), msg && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F2, fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", margin: "2px 0 8px" } }, msg), total === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#ccc", fontFamily: F2, fontSize: 13, textAlign: "center", padding: "20px 0" } }, vacio), grupos.filter((g) => g.items.length > 0).map((g) => /* @__PURE__ */ React.createElement("div", { key: g.key + (g.titulo || ""), style: { marginBottom: 6 } }, g.titulo && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F2, fontSize: 10, color: g.vencido ? "#a60" : "#999", letterSpacing: 2, textTransform: "uppercase", margin: "8px 0 2px" } }, g.titulo), g.items.map((item, idx) => {
+      const k = `${g.key}|${item.id}`;
+      const sostenido = held === `${g.key}|${idx}`;
+      const objetivo = dragTarget === idx && held !== null && held.startsWith(g.key + "|") && !sostenido;
+      return /* @__PURE__ */ React.createElement("div", { key: item.id }, objetivo && /* @__PURE__ */ React.createElement("div", { style: { height: 2, background: "#111", borderRadius: 1, margin: "2px 0" } }), /* @__PURE__ */ React.createElement("div", { ...toquesDe(g, idx, item), style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: `1px solid ${sostenido ? "#111" : "#f5f5f5"}`, background: sostenido ? "#111" : "transparent", borderRadius: sostenido ? 6 : 0, userSelect: "none", ...ordenable ? { touchAction: "pan-x" } : {} } }, ordenable && /* @__PURE__ */ React.createElement("span", { style: { color: sostenido ? "#fff" : "#ccc", fontSize: 12, padding: "0 2px" } }, "\u283F"), casilla(!!item.done, () => alternar(g, item), sostenido), /* @__PURE__ */ React.createElement("div", { onClick: () => {
+        if (!item.done) setEditId(editId === k ? null : k);
+      }, style: { flex: 1, minWidth: 0, cursor: item.done ? "default" : "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F2, fontSize: 14, color: item.done ? "#bbb" : "#333", textDecoration: item.done ? "line-through" : "none" } }, item.text), /* @__PURE__ */ React.createElement(ChipCompra, { item })), /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          onClick: (e) => {
+            e.stopPropagation();
+            if (held === null) onDelete(g.key, item.id);
+          },
+          title: "Quitar de la lista",
+          "aria-label": `Quitar ${item.text}`,
+          style: { background: "transparent", border: "none", color: sostenido ? "#777" : "#bbb", fontSize: 20, lineHeight: 1, cursor: "pointer", padding: "4px 8px" }
+        },
+        "\xD7"
+      )), editId === k && !item.done && /* @__PURE__ */ React.createElement(CompraEditor, { item, acciones: accionesDe(g, item), onClose: () => setEditId(null) }));
+    }))));
   }
 
   // core/ui.jsx
-  var { useState: useState2, useEffect, useRef, useMemo, useCallback } = React;
+  var { useState: useState3, useEffect, useRef: useRef2, useMemo, useCallback } = React;
   function AnalogClock({ h, m, onSave, onClose }) {
-    const svgRef = useRef(null);
-    const [isPM, setIsPM] = useState2(h >= 12);
-    const [time, setTime] = useState2({ h: h % 12, m });
-    const dragging = useRef(null);
+    const svgRef = useRef2(null);
+    const [isPM, setIsPM] = useState3(h >= 12);
+    const [time, setTime] = useState3({ h: h % 12, m });
+    const dragging = useRef2(null);
     const CX = 60, CY = 60;
     function pxy(a, l) {
       const r = a * Math.PI / 180;
@@ -1433,12 +1707,12 @@ var __angst = (() => {
       });
       return Object.values(counts).sort((a, b) => b.n - a.n)[0].d;
     })();
-    const [vm, setVm] = useState2(_initMonth);
-    const [dragY, setDragY] = useState2(0);
-    const [tearing, setTearing] = useState2(false);
-    const [activeMark, setActiveMark] = useState2(null);
-    const [selectedDay, setSelectedDay] = useState2(null);
-    const ds = useRef(null);
+    const [vm, setVm] = useState3(_initMonth);
+    const [dragY, setDragY] = useState3(0);
+    const [tearing, setTearing] = useState3(false);
+    const [activeMark, setActiveMark] = useState3(null);
+    const [selectedDay, setSelectedDay] = useState3(null);
+    const ds = useRef2(null);
     const wd = [...Array(7)].map((_, i) => addDays(weekStart, i));
     function inW(date) {
       return wd.some((d) => d.getDate() === date.getDate() && d.getMonth() === date.getMonth() && d.getFullYear() === date.getFullYear());
@@ -1616,8 +1890,8 @@ var __angst = (() => {
     })()));
   }
   function EF({ value, placeholder, multiline, onSave, dark, small }) {
-    const [ed, setEd] = useState2(false);
-    const [txt, setTxt] = useState2(value);
+    const [ed, setEd] = useState3(false);
+    const [txt, setTxt] = useState3(value);
     function commit() {
       onSave(txt);
       setEd(false);
@@ -1655,9 +1929,9 @@ var __angst = (() => {
   }
   function HumorSelector({ value, custom, onSave }) {
     const vals = Array.isArray(value) ? value : value ? [value] : [];
-    const [editing, setEditing] = useState2(false);
-    const [newEmoji, setNewEmoji] = useState2("\u{1F636}");
-    const [newLabel, setNewLabel] = useState2("");
+    const [editing, setEditing] = useState3(false);
+    const [newEmoji, setNewEmoji] = useState3("\u{1F636}");
+    const [newLabel, setNewLabel] = useState3("");
     const newLabelRef = React.useRef("");
     const all = [...DEFAULT_HUMORS, ...custom || []];
     function toggle(id) {
@@ -1858,159 +2132,28 @@ var __angst = (() => {
       }
     }, style: { background: "#111", color: "#fff", border: "none", borderRadius: 6, padding: "3px 8px", cursor: "pointer", fontSize: 12 } }, "+")) : /* @__PURE__ */ React.createElement("button", { onClick: () => setAdding(true), style: { display: "block", width: "100%", textAlign: "left", padding: "7px 12px", border: "none", background: "transparent", fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#bbb", cursor: "pointer" } }, "+ agregar opci\xF3n")));
   }
-  function ComprasModal({ items, onSave, onClose, onMoveToNext, info, api }) {
+  function ComprasModal({ items, onSave, onClose, onMoveToNext, api }) {
     const [list, setList] = React.useState(items || []);
-    const [editId, setEditId] = React.useState(null);
-    const [msg, setMsg] = React.useState("");
-    const [newItem, setNewItem] = React.useState("");
-    const [heldIdx, setHeldIdx] = React.useState(null);
-    const [dragTarget, setDragTarget] = React.useState(null);
-    const holdTimer = React.useRef(null);
-    const touchStartX = React.useRef(0);
-    const touchStartY = React.useRef(0);
     function update(newList) {
       setList(newList);
       onSave(newList);
     }
-    function add2() {
-      if (!newItem.trim()) return;
-      update([...list, { id: Date.now().toString(), text: newItem.trim(), done: false }]);
-      setNewItem("");
-    }
-    function toggle(id) {
-      if (heldIdx !== null) return;
-      const it = list.find((i) => i.id === id);
-      if (!it) return;
-      setMsg("");
-      if (!api) {
-        update(list.map((i) => i.id === id ? { ...i, done: !i.done } : i));
-        return;
-      }
-      if (it.done) {
-        const r2 = api.desmarcar(it);
-        if (r2.error) {
-          setMsg(r2.error);
-          return;
-        }
-        update(list.map((i) => i.id === id ? { ...i, done: false, ...r2.patch || {} } : i));
-        return;
-      }
-      if (info && info.activo && montoCompra(it) === 0) {
-        setEditId(id);
-        return;
-      }
-      const r = api.comprar(it);
-      if (r.error) {
-        setMsg(r.error);
-        return;
-      }
-      update(list.map((i) => i.id === id ? { ...i, done: true, ...r.patch || {} } : i));
-    }
-    const accionesDe = (it) => ({
-      guardar: (f2) => {
-        update(list.map((i) => i.id === it.id ? { ...i, ...f2 } : i));
-        setEditId(null);
-      },
-      comprar: (f2) => {
-        const x = { ...it, ...f2 };
-        const r = api.comprar(x);
-        if (r.error) return r.error;
-        update(list.map((i) => i.id === it.id ? { ...x, done: true, ...r.patch || {} } : i));
-        setEditId(null);
-        return null;
-      },
-      sinGasto: (f2) => {
-        update(list.map((i) => i.id === it.id ? { ...i, ...f2, done: true } : i));
-        setEditId(null);
-      },
-      nuevaCategoria: api ? api.nuevaCategoria : () => {
-      }
-    });
-    function del(id) {
-      update(list.filter((i) => i.id !== id));
-    }
-    function close() {
-      onClose();
-    }
-    return /* @__PURE__ */ React.createElement("div", { onClick: close, style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 12, width: "min(95vw,400px)", maxHeight: "80vh", display: "flex", flexDirection: "column", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700 } }, "\u{1F6D2} Compras"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => update(list.filter((i) => !i.done)), style: { background: "transparent", border: "1px dashed #555", borderRadius: 8, color: "#aaa", fontSize: 11, padding: "3px 8px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" } }, "limpiar \u2713"), /* @__PURE__ */ React.createElement("button", { onClick: close, style: { background: "transparent", border: "none", color: "#aaa", fontSize: 20, cursor: "pointer", lineHeight: 1 } }, "\xD7"))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "10px 14px" } }, msg && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", margin: "2px 0 8px" } }, msg), list.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#ccc", fontFamily: "'DM Sans',sans-serif", fontSize: 13, textAlign: "center", padding: "20px 0" } }, "lista vac\xEDa"), list.map((item, idx) => {
-      const isHeld = heldIdx === idx;
-      const showDropLine = dragTarget === idx && heldIdx !== null && heldIdx !== idx;
-      return /* @__PURE__ */ React.createElement(React.Fragment, { key: item.id }, showDropLine && /* @__PURE__ */ React.createElement("div", { style: { height: 2, background: "#111", borderRadius: 1, margin: "2px 0", transition: "opacity 0.1s" } }), /* @__PURE__ */ React.createElement(
-        "div",
-        {
-          key: item.id + "_row",
-          onTouchStart: (e) => {
-            holdTimer.current = setTimeout(() => setHeldIdx(idx), 350);
-            touchStartX.current = e.touches[0].clientX;
-            touchStartY.current = e.touches[0].clientY;
-          },
-          onTouchMove: (e) => {
-            const dx = e.touches[0].clientX - touchStartX.current;
-            const dy = e.touches[0].clientY - touchStartY.current;
-            if (heldIdx === idx && Math.abs(dy) > 10) {
-              const els = [...e.currentTarget.parentNode.children];
-              const my = e.touches[0].clientY;
-              let ti = els.findIndex((el) => {
-                const r = el.getBoundingClientRect();
-                return my >= r.top && my <= r.bottom;
-              });
-              if (ti >= 0 && ti !== idx) setDragTarget(ti);
-            } else if (dx > 5) {
-              clearTimeout(holdTimer.current);
-            }
-          },
-          onTouchEnd: (e) => {
-            clearTimeout(holdTimer.current);
-            const dx = e.changedTouches[0].clientX - touchStartX.current;
-            if (heldIdx === idx) {
-              if (dragTarget !== null && dragTarget !== idx) {
-                const next = [...list];
-                const [m] = next.splice(idx, 1);
-                next.splice(dragTarget, 0, m);
-                update(next);
-              } else if (dx > 60) {
-                onMoveToNext(item);
-                update(list.filter((i) => i.id !== item.id));
-              }
-            }
-            setHeldIdx(null);
-            setDragTarget(null);
-          },
-          style: {
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "7px 0",
-            borderBottom: `1px solid ${isHeld ? "#111" : "#f5f5f5"}`,
-            background: isHeld ? "#111" : dragTarget === idx ? "#f0f0f0" : "transparent",
-            borderRadius: isHeld ? 6 : 0,
-            transition: "background 0.15s",
-            userSelect: "none",
-            touchAction: "pan-x"
-          }
-        },
-        /* @__PURE__ */ React.createElement("span", { style: { color: isHeld ? "#fff" : "#ccc", fontSize: 12, padding: "0 2px" } }, "\u283F"),
-        /* @__PURE__ */ React.createElement("div", { onClick: () => toggle(item.id), style: { width: 18, height: 18, borderRadius: 4, border: `1.5px dashed ${item.done ? "#111" : "#bbb"}`, background: item.done ? "#111" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 } }, item.done && /* @__PURE__ */ React.createElement("span", { style: { color: "#fff", fontSize: 12, lineHeight: 1 } }, "\u2713")),
-        /* @__PURE__ */ React.createElement("div", { onClick: () => {
-          if (!item.done && api) setEditId(editId === item.id ? null : item.id);
-        }, style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: item.done ? "#bbb" : "#333", textDecoration: item.done ? "line-through" : "none" } }, item.text), api && /* @__PURE__ */ React.createElement(ChipCompra, { item })),
-        /* @__PURE__ */ React.createElement("button", { onClick: (e) => {
-          e.stopPropagation();
-          if (!heldIdx) del(item.id);
-        }, style: { background: "transparent", border: "none", color: isHeld ? "#555" : "#ddd", fontSize: 15, cursor: "pointer", padding: "0 2px" } }, "\xD7")
-      ), api && info && editId === item.id && !item.done && /* @__PURE__ */ React.createElement(CompraEditor, { item, info, acciones: accionesDe(item), onClose: () => setEditId(null) }));
-    })), /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 14px", borderTop: "1px solid #f0f0f0", display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement(
-      "input",
+    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 12, width: "min(95vw,400px)", maxHeight: "80vh", display: "flex", flexDirection: "column", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700 } }, "\u{1F6D2} Compras"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#aaa", fontSize: 20, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "10px 14px" } }, /* @__PURE__ */ React.createElement(
+      ListaCompras,
       {
-        value: newItem,
-        onChange: (e) => setNewItem(e.target.value),
-        onKeyDown: (e) => {
-          if (e.key === "Enter") add2();
-        },
-        placeholder: "agregar \xEDtem...",
-        style: { flex: 1, border: "1px dashed #ddd", borderRadius: 8, padding: "8px 10px", fontSize: 14, fontFamily: "'DM Sans',sans-serif", outline: "none" }
+        grupos: [{ key: "dia", items: list }],
+        agregarEn: "dia",
+        api,
+        onPatch: (k, id, f2) => update(list.map((i) => i.id === id ? { ...i, ...f2 } : i)),
+        onAdd: (k, item) => update([...list, item]),
+        onDelete: (k, id) => update(list.filter((i) => i.id !== id)),
+        onReorder: (k, next) => update(next),
+        onMoveNext: (k, item) => {
+          onMoveToNext(item);
+          update(list.filter((i) => i.id !== item.id));
+        }
       }
-    ), /* @__PURE__ */ React.createElement("button", { onClick: add2, style: { background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 16 } }, "+"))));
+    ))));
   }
   function SearchModal({ dayData, nutria, kidsHealth, routines, onClose }) {
     const [q, setQ] = React.useState("");
@@ -2574,7 +2717,7 @@ var __angst = (() => {
   }
 
   // modules/vitrina/estado.js
-  var { useState: useState3, useEffect: useEffect2, useRef: useRef2 } = React;
+  var { useState: useState4, useEffect: useEffect2, useRef: useRef3 } = React;
   var STATUS_BADGE = {
     "Returning Series": { label: "EN EMISI\xD3N", color: "#4caf7d" },
     "In Production": { label: "EN PRODUCCI\xD3N", color: "#5c9cff" },
@@ -2630,7 +2773,7 @@ var __angst = (() => {
     saveCineEstado(next);
   }
   function useCineEstadoMap() {
-    const [map, setMap] = useState3(cineEstadoCache);
+    const [map, setMap] = useState4(cineEstadoCache);
     useEffect2(() => {
       cineEstadoListeners.add(setMap);
       return () => cineEstadoListeners.delete(setMap);
@@ -2764,12 +2907,12 @@ var __angst = (() => {
   }
 
   // modules/vitrina/simkl.js
-  var { useState: useState4, useEffect: useEffect3, useRef: useRef3 } = React;
+  var { useState: useState5, useEffect: useEffect3, useRef: useRef4 } = React;
   var simklDiscoveryListeners = /* @__PURE__ */ new Set();
   var simklDiscoveryItems = [];
   var simklDiscoveryFetched = false;
   function useSimklDiscovery() {
-    const [items, setItems] = useState4(simklDiscoveryItems);
+    const [items, setItems] = useState5(simklDiscoveryItems);
     useEffect3(() => {
       simklDiscoveryListeners.add(setItems);
       if (!simklDiscoveryFetched) {
@@ -2804,7 +2947,7 @@ var __angst = (() => {
     simklSyncListeners.forEach((fn) => fn(simklSyncStatus));
   }
   function useSimklSyncStatus() {
-    const [s, setS] = useState4(simklSyncStatus);
+    const [s, setS] = useState5(simklSyncStatus);
     useEffect3(() => {
       simklSyncListeners.add(setS);
       return () => simklSyncListeners.delete(setS);
@@ -2848,7 +2991,7 @@ var __angst = (() => {
     if (!m) return null;
     return { tipo: m[1] === "movie" ? "movie" : "show", tmdbId: Number(m[2]) };
   }
-  function nuevoId() {
+  function nuevoId2() {
     try {
       if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
     } catch (e) {
@@ -2867,7 +3010,7 @@ var __angst = (() => {
     const year = item.pubDate ? new Date(item.pubDate).getFullYear() : void 0;
     const pending = loadSimklPending();
     const filtered = pending.filter((a) => !(a.kind !== "episodios" && a.tmdbId === parsed.tmdbId && a.tipo === parsed.tipo));
-    const accion = { id: nuevoId(), tmdbId: parsed.tmdbId, tipo: parsed.tipo, status, title: item.title, year, creadoEn: (/* @__PURE__ */ new Date()).toISOString() };
+    const accion = { id: nuevoId2(), tmdbId: parsed.tmdbId, tipo: parsed.tipo, status, title: item.title, year, creadoEn: (/* @__PURE__ */ new Date()).toISOString() };
     if (progreso) accion.progreso = progreso;
     filtered.push(accion);
     saveSimklPending(filtered);
@@ -2882,7 +3025,7 @@ var __angst = (() => {
     const fusion = mergeEpisodeOps(previa, ops);
     const resto = pending.filter((a) => !(a.kind === "episodios" && a.tmdbId === parsed.tmdbId));
     if (!opsVacias(fusion)) {
-      resto.push({ id: previa?.id || nuevoId(), kind: "episodios", tipo: "show", tmdbId: parsed.tmdbId, title: item.title, year, marcar: fusion.marcar, desmarcar: fusion.desmarcar, creadoEn: (/* @__PURE__ */ new Date()).toISOString() });
+      resto.push({ id: previa?.id || nuevoId2(), kind: "episodios", tipo: "show", tmdbId: parsed.tmdbId, title: item.title, year, marcar: fusion.marcar, desmarcar: fusion.desmarcar, creadoEn: (/* @__PURE__ */ new Date()).toISOString() });
     }
     saveSimklPending(resto);
     flushSimklQueue();
@@ -2901,7 +3044,7 @@ var __angst = (() => {
       }
       if (a.kind === "episodios") {
         const ops = restarOps(a, enviada);
-        if (!opsVacias(ops)) resto.push({ ...a, id: nuevoId(), marcar: ops.marcar, desmarcar: ops.desmarcar });
+        if (!opsVacias(ops)) resto.push({ ...a, id: nuevoId2(), marcar: ops.marcar, desmarcar: ops.desmarcar });
       }
     }
     saveSimklPending(resto);
@@ -2955,7 +3098,7 @@ var __angst = (() => {
   }
 
   // modules/vitrina/avance.js
-  var { useState: useState5, useEffect: useEffect4 } = React;
+  var { useState: useState6, useEffect: useEffect4 } = React;
   var OVERLAY_KEY = "angst-series-overlay-v1";
   var OVERLAY_TTL_MS = 48 * 3600 * 1e3;
   var REFRESH_MS = 10 * 60 * 1e3;
@@ -3064,7 +3207,7 @@ var __angst = (() => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
   function useAvanceVersion() {
-    const [v, setV] = useState5(version);
+    const [v, setV] = useState6(version);
     useEffect4(() => {
       listeners.add(setV);
       cargarAvance();
@@ -4912,14 +5055,14 @@ var __angst = (() => {
     }
     function renderRevisionModal() {
       if (!revAbierta) return null;
-      const carta = revActual, F8 = "'DM Sans',sans-serif";
+      const carta = revActual, F9 = "'DM Sans',sans-serif";
       const d = carta && revDatos.cartaId === carta.id ? revDatos : { cartaId: null, estado: "cargando", cands: [], pos: 0, planIdx: 1, msg: null, total: null };
-      const btn = (bg, fg, extra) => ({ fontFamily: F8, fontSize: 14, fontWeight: 700, border: "none", borderRadius: 12, padding: "12px 14px", background: bg, color: fg, cursor: "pointer", ...extra || {} });
+      const btn = (bg, fg, extra) => ({ fontFamily: F9, fontSize: 14, fontWeight: 700, border: "none", borderRadius: 12, padding: "12px 14px", background: bg, color: fg, cursor: "pointer", ...extra || {} });
       const c = d.estado === "listo" ? d.cands[d.pos] : null;
       const sinMas = d.estado === "agotado" || d.estado === "listo" && !c;
       const plan = carta ? planBusquedas(carta) : [];
       const proxima = plan[d.planIdx];
-      const chip4 = (ok, txt) => /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F8, fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 10, background: ok ? "#1f3d2b" : "#4a2323", color: ok ? "#8fe0a8" : "#ff9b9b" } }, ok ? "\u2713" : "\u2717", " ", txt);
+      const chip4 = (ok, txt) => /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F9, fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 10, background: ok ? "#1f3d2b" : "#4a2323", color: ok ? "#8fe0a8" : "#ff9b9b" } }, ok ? "\u2713" : "\u2717", " ", txt);
       const numOk = !!(c && carta && normNum(c.number) === normNum(carta.number));
       const setComo = c && carta ? mismoSet(carta, c) : null;
       const setOk = c && carta && (carta.setCode || carta.set) && (c.setId || c.setCode || c.setName) ? !!setComo : null;
@@ -4927,7 +5070,7 @@ var __angst = (() => {
       const totOk = totCand && d.total ? totCand === parseInt(d.total, 10) : null;
       const imgApi = c ? revImgs[claveCandidato(c)] : null;
       const urlsCand = c ? [...imgApi?.url ? [imgApi.url] : [], ...urlsFoto({ image: c.image, setId: c.setId, setCode: c.setCode, number: c.number })] : [];
-      return /* @__PURE__ */ React.createElement("div", { onClick: cerrarRevision, style: { position: "fixed", inset: 0, zIndex: 720, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,460px)", background: "#111", color: "#fff", borderRadius: "16px 16px 0 0", padding: "16px 16px 28px", maxHeight: "92vh", overflowY: "auto", boxSizing: "border-box", fontFamily: F8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, revFocoId ? "\u{1F50D} Revisar precio de esta carta" : `\u{1F9ED} Cartas sin precio \xB7 quedan ${revCola.length}`), /* @__PURE__ */ React.createElement("button", { onClick: cerrarRevision, style: { background: "transparent", border: "none", color: "#999", fontSize: 18, cursor: "pointer" } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 12 } }, "consultas de hoy \u2248 ", revCupo, "/100 \xB7 ", revCont.elegidas, " elegidas \xB7 ", revCont.solas, " calzaron solas", idsAgotadasRecientes.size > 0 ? ` \xB7 ${idsAgotadasRecientes.size} en pausa (sin match, reintenta en unos d\xEDas)` : ""), !carta ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: "#8fe0a8", padding: "20px 0" } }, "No quedan cartas sin precio en la cola \u{1F389}") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center", background: "#1a1a1a", borderRadius: 12, padding: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement(FotoFB, { key: "t" + carta.id, urls: urlsFoto({ image: carta.image, cardId: carta.cardId }), style: { width: 56, borderRadius: 4, flexShrink: 0 }, vacio: /* @__PURE__ */ React.createElement("div", { style: { width: 56, height: 78, borderRadius: 4, background: "#333", flexShrink: 0 } }) }), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "TU CARTA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, carta.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13 } }, "#", carta.number, d.total ? `/${d.total}` : "", " \xB7 ", carta.set), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "c\xF3digo de set: ", carta.setCode || "\u2014"), carta.tcgMarket != null && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#5c9cff", marginTop: 2 } }, "precio actual: ", fmtUSD(carta.tcgMarket)))), d.estado === "cargando" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#aaa", padding: "16px 0" } }, "buscando opciones\u2026"), d.estado === "sincupo" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ffcf70", padding: "12px 0" } }, "Llegaste al l\xEDmite seguro de consultas de hoy (\u2248", revCupo, "/100). Sigue ma\xF1ana: el bot comparte ese cupo."), d.estado === "error" && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ff9b9b", marginBottom: 8 } }, d.msg), /* @__PURE__ */ React.createElement("button", { onClick: () => revCargarCarta(carta), style: btn("#333", "#fff", { marginRight: 8 }) }, "reintentar")), c && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 12, padding: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 6 } }, "OPCI\xD3N ", d.pos + 1, " DE ", d.cands.length), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement(
+      return /* @__PURE__ */ React.createElement("div", { onClick: cerrarRevision, style: { position: "fixed", inset: 0, zIndex: 720, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,460px)", background: "#111", color: "#fff", borderRadius: "16px 16px 0 0", padding: "16px 16px 28px", maxHeight: "92vh", overflowY: "auto", boxSizing: "border-box", fontFamily: F9 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, revFocoId ? "\u{1F50D} Revisar precio de esta carta" : `\u{1F9ED} Cartas sin precio \xB7 quedan ${revCola.length}`), /* @__PURE__ */ React.createElement("button", { onClick: cerrarRevision, style: { background: "transparent", border: "none", color: "#999", fontSize: 18, cursor: "pointer" } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 12 } }, "consultas de hoy \u2248 ", revCupo, "/100 \xB7 ", revCont.elegidas, " elegidas \xB7 ", revCont.solas, " calzaron solas", idsAgotadasRecientes.size > 0 ? ` \xB7 ${idsAgotadasRecientes.size} en pausa (sin match, reintenta en unos d\xEDas)` : ""), !carta ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: "#8fe0a8", padding: "20px 0" } }, "No quedan cartas sin precio en la cola \u{1F389}") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center", background: "#1a1a1a", borderRadius: 12, padding: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement(FotoFB, { key: "t" + carta.id, urls: urlsFoto({ image: carta.image, cardId: carta.cardId }), style: { width: 56, borderRadius: 4, flexShrink: 0 }, vacio: /* @__PURE__ */ React.createElement("div", { style: { width: 56, height: 78, borderRadius: 4, background: "#333", flexShrink: 0 } }) }), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "TU CARTA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, carta.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13 } }, "#", carta.number, d.total ? `/${d.total}` : "", " \xB7 ", carta.set), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "c\xF3digo de set: ", carta.setCode || "\u2014"), carta.tcgMarket != null && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#5c9cff", marginTop: 2 } }, "precio actual: ", fmtUSD(carta.tcgMarket)))), d.estado === "cargando" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#aaa", padding: "16px 0" } }, "buscando opciones\u2026"), d.estado === "sincupo" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ffcf70", padding: "12px 0" } }, "Llegaste al l\xEDmite seguro de consultas de hoy (\u2248", revCupo, "/100). Sigue ma\xF1ana: el bot comparte ese cupo."), d.estado === "error" && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ff9b9b", marginBottom: 8 } }, d.msg), /* @__PURE__ */ React.createElement("button", { onClick: () => revCargarCarta(carta), style: btn("#333", "#fff", { marginRight: 8 }) }, "reintentar")), c && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 12, padding: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 6 } }, "OPCI\xD3N ", d.pos + 1, " DE ", d.cands.length), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement(
         FotoFB,
         {
           key: "c" + urlsCand.join("|"),
@@ -6578,25 +6721,25 @@ var __angst = (() => {
   var FadimanPage_default = FadimanPage;
 
   // modules/rutinas/RoutinesPage.jsx
-  var { useState: useState6, useEffect: useEffect5, useRef: useRef4, useMemo: useMemo2, useCallback: useCallback2 } = React;
+  var { useState: useState7, useEffect: useEffect5, useRef: useRef5, useMemo: useMemo2, useCallback: useCallback2 } = React;
   function fmtTimer(secs) {
     const m = Math.floor(secs / 60), s = secs % 60;
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   }
   function RoutinesPage({ routines, onSave, onAddToDay }) {
-    const [view, setView] = useState6("list");
-    const [activeId, setActiveId] = useState6(null);
-    const [editName, setEditName] = useState6("");
-    const [editSteps, setEditSteps] = useState6([]);
-    const [editEmoji, setEditEmoji] = useState6("\u26A1");
-    const [dragIdx, setDragIdx] = useState6(null);
-    const [overIdx, setOverIdx] = useState6(null);
-    const [runStep, setRunStep] = useState6(0);
-    const [runSecs, setRunSecs] = useState6(0);
-    const [running, setRunning] = useState6(false);
-    const timerRef = useRef4(null);
-    const wakeLockRef = useRef4(null);
-    const swipeRef = useRef4({ x: 0, swiping: false });
+    const [view, setView] = useState7("list");
+    const [activeId, setActiveId] = useState7(null);
+    const [editName, setEditName] = useState7("");
+    const [editSteps, setEditSteps] = useState7([]);
+    const [editEmoji, setEditEmoji] = useState7("\u26A1");
+    const [dragIdx, setDragIdx] = useState7(null);
+    const [overIdx, setOverIdx] = useState7(null);
+    const [runStep, setRunStep] = useState7(0);
+    const [runSecs, setRunSecs] = useState7(0);
+    const [running, setRunning] = useState7(false);
+    const timerRef = useRef5(null);
+    const wakeLockRef = useRef5(null);
+    const swipeRef = useRef5({ x: 0, swiping: false });
     async function acquireWakeLock() {
       try {
         if ("wakeLock" in navigator && wakeLockRef.current === null) {
@@ -6926,20 +7069,20 @@ var __angst = (() => {
   }
 
   // modules/nutria/NutriaPage.jsx
-  var { useState: useState7, useEffect: useEffect6, useRef: useRef5, useMemo: useMemo3, useCallback: useCallback3 } = React;
+  var { useState: useState8, useEffect: useEffect6, useRef: useRef6, useMemo: useMemo3, useCallback: useCallback3 } = React;
   function NutriaPage({ data, saveData, budgets, onSaveBudget }) {
     const now = /* @__PURE__ */ new Date();
-    const [selEmp, setSelEmp] = useState7(data.emprendimientos[0] || "Nutria Papeler\xEDa");
-    const [selYear, setSelYear] = useState7(now.getFullYear());
-    const [selMonth, setSelMonth] = useState7(now.getMonth());
-    const [subPage, setSubPage] = useState7("ventas");
-    const [adding, setAdding] = useState7(false);
+    const [selEmp, setSelEmp] = useState8(data.emprendimientos[0] || "Nutria Papeler\xEDa");
+    const [selYear, setSelYear] = useState8(now.getFullYear());
+    const [selMonth, setSelMonth] = useState8(now.getMonth());
+    const [subPage, setSubPage] = useState8("ventas");
+    const [adding, setAdding] = useState8(false);
     const EMPTY_NS = { producto: "", tamano: "", precio: "", nombre_tapa: "", tipo_agenda: "", diseno: "", tipo_despacho: "entrega", envio: { nombre: "", rut: "", direccion: "", correo: "", telefono: "" }, entrega: { nombre: "", direccion: "", telefono: "" } };
-    const [ns, setNs] = useState7(EMPTY_NS);
-    const [editingEmp, setEditingEmp] = useState7(false);
-    const [newEmpName, setNewEmpName] = useState7("");
-    const [editId, setEditId] = useState7(null);
-    const [editV, setEditV] = useState7({});
+    const [ns, setNs] = useState8(EMPTY_NS);
+    const [editingEmp, setEditingEmp] = useState8(false);
+    const [newEmpName, setNewEmpName] = useState8("");
+    const [editId, setEditId] = useState8(null);
+    const [editV, setEditV] = useState8({});
     const monthV = data.ventas.filter((v) => {
       const d = new Date(v.fecha);
       return v.emprendimiento === selEmp && d.getFullYear() === selYear && d.getMonth() === selMonth;
@@ -7012,12 +7155,12 @@ var __angst = (() => {
     const insumos = costosData.insumos || {};
     const preciosVenta = costosData.precios_venta || {};
     const preciosPop = costosData.precios_pop || {};
-    const [editInsumoId, setEditInsumoId] = useState7(null);
-    const [editInsumoV, setEditInsumoV] = useState7({});
-    const [costosView, setCostosView] = useState7("productos");
-    const [openProducto, setOpenProducto] = useState7(null);
-    const [editPrecioId, setEditPrecioId] = useState7(null);
-    const [editPrecioV, setEditPrecioV] = useState7("");
+    const [editInsumoId, setEditInsumoId] = useState8(null);
+    const [editInsumoV, setEditInsumoV] = useState8({});
+    const [costosView, setCostosView] = useState8("productos");
+    const [openProducto, setOpenProducto] = useState8(null);
+    const [editPrecioId, setEditPrecioId] = useState8(null);
+    const [editPrecioV, setEditPrecioV] = useState8("");
     function getUnitCost(id) {
       const ins = insumos[id] || DEFAULT_INSUMOS[id];
       if (!ins) return 0;
@@ -7739,7 +7882,7 @@ var __angst = (() => {
   };
 
   // modules/ejercicio/EjercicioPage.jsx
-  var { useState: useState8, useEffect: useEffect7, useRef: useRef6, useMemo: useMemo4, useCallback: useCallback4 } = React;
+  var { useState: useState9, useEffect: useEffect7, useRef: useRef7, useMemo: useMemo4, useCallback: useCallback4 } = React;
   var MUSCLE_GROUPS = [
     { k: "pecho", label: "Pecho", emoji: "\u{1F4AA}", side: "front" },
     { k: "espalda", label: "Espalda", emoji: "\u{1F517}", side: "back" },
@@ -8007,20 +8150,20 @@ var __angst = (() => {
       const d = /* @__PURE__ */ new Date();
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     })();
-    const [view, setView] = useState8("session");
-    const [openEx, setOpenEx] = useState8(null);
-    const [varianteElegida, setVarianteElegida] = useState8({});
-    const [timerSecs, setTimerSecs] = useState8(0);
-    const [timerMax, setTimerMax] = useState8(90);
-    const [timerActive, setTimerActive] = useState8(false);
-    const [editEx, setEditEx] = useState8(null);
-    const [histExId, setHistExId] = useState8(null);
-    const [histWeek, setHistWeek] = useState8(null);
-    const [repsInput, setRepsInput] = useState8({});
-    const [pesoUnit, setPesoUnit] = useState8("kg");
-    const [diaManual, setDiaSel] = useState8(null);
-    const [guiaAbierta, setGuiaAbierta] = useState8({});
-    const timerRef = useRef6(null);
+    const [view, setView] = useState9("session");
+    const [openEx, setOpenEx] = useState9(null);
+    const [varianteElegida, setVarianteElegida] = useState9({});
+    const [timerSecs, setTimerSecs] = useState9(0);
+    const [timerMax, setTimerMax] = useState9(90);
+    const [timerActive, setTimerActive] = useState9(false);
+    const [editEx, setEditEx] = useState9(null);
+    const [histExId, setHistExId] = useState9(null);
+    const [histWeek, setHistWeek] = useState9(null);
+    const [repsInput, setRepsInput] = useState9({});
+    const [pesoUnit, setPesoUnit] = useState9("kg");
+    const [diaManual, setDiaSel] = useState9(null);
+    const [guiaAbierta, setGuiaAbierta] = useState9({});
+    const timerRef = useRef7(null);
     const customOverrides = customEjercicios || {};
     const allExercicios = [
       ...EJERCICIOS_DEFAULT.map((e) => customOverrides[e.id] || e),
@@ -8781,18 +8924,18 @@ var __angst = (() => {
   var ControlesPorcion_default = ControlesPorcion;
 
   // core/VentanaArriba.jsx
-  var { useState: useState9, useEffect: useEffect8 } = React;
-  var F2 = "'DM Sans',sans-serif";
+  var { useState: useState10, useEffect: useEffect8 } = React;
+  var F3 = "'DM Sans',sans-serif";
   function altoVisible() {
     const v = typeof window !== "undefined" && window.visualViewport;
     return Math.round(v ? v.height : typeof window !== "undefined" ? window.innerHeight : 700);
   }
   function Hechos({ hechos }) {
     if (!hechos || !hechos.length) return null;
-    return /* @__PURE__ */ React.createElement("div", { style: { background: "#f1f8f2", border: "1px dashed #9ccc9f", borderRadius: 8, padding: "6px 10px", marginBottom: 12 } }, hechos.slice(-3).map((h, i) => /* @__PURE__ */ React.createElement("div", { key: hechos.length - 3 + i, style: { fontFamily: F2, fontSize: 12, color: "#2e7d32", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, "\u2713 ", h)));
+    return /* @__PURE__ */ React.createElement("div", { style: { background: "#f1f8f2", border: "1px dashed #9ccc9f", borderRadius: 8, padding: "6px 10px", marginBottom: 12 } }, hechos.slice(-3).map((h, i) => /* @__PURE__ */ React.createElement("div", { key: hechos.length - 3 + i, style: { fontFamily: F3, fontSize: 12, color: "#2e7d32", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, "\u2713 ", h)));
   }
   function useAltoVisible() {
-    const [alto, setAlto] = useState9(altoVisible);
+    const [alto, setAlto] = useState10(altoVisible);
     useEffect8(() => {
       const v = window.visualViewport;
       if (!v) return void 0;
@@ -8815,29 +8958,29 @@ var __angst = (() => {
   }
 
   // modules/nutricion/IngestaRapida.jsx
-  var { useState: useState10, useMemo: useMemo5 } = React;
-  var F3 = "'DM Sans',sans-serif";
+  var { useState: useState11, useMemo: useMemo5 } = React;
+  var F4 = "'DM Sans',sans-serif";
   var C = "'Caveat',cursive";
-  var rotulo2 = { fontFamily: F3, fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 };
-  var chip = (activo) => ({ fontFamily: F3, fontSize: 12, padding: "6px 12px", borderRadius: 14, border: "1px dashed #ddd", background: activo ? "#111" : "transparent", color: activo ? "#fff" : "#555", cursor: "pointer" });
+  var rotulo2 = { fontFamily: F4, fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 };
+  var chip = (activo) => ({ fontFamily: F4, fontSize: 12, padding: "6px 12px", borderRadius: 14, border: "1px dashed #ddd", background: activo ? "#111" : "transparent", color: activo ? "#fff" : "#555", cursor: "pointer" });
   var btnPrincipal = { width: "100%", background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "14px", fontFamily: C, fontSize: 18, cursor: "pointer", marginBottom: 10 };
-  var btnSecundario = { width: "100%", background: "transparent", color: "#999", border: "none", padding: "8px", fontFamily: F3, fontSize: 12, cursor: "pointer" };
-  var campo2 = { width: "100%", border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontSize: 14, fontFamily: F3, outline: "none", boxSizing: "border-box", color: "#111" };
+  var btnSecundario = { width: "100%", background: "transparent", color: "#999", border: "none", padding: "8px", fontFamily: F4, fontSize: 12, cursor: "pointer" };
+  var campo2 = { width: "100%", border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontSize: 14, fontFamily: F4, outline: "none", boxSizing: "border-box", color: "#111" };
   function IngestaRapida({ nutriLog, saveNutriLog, customFoods, foodOverrides, nutriDecks, fecha, mazoInicial, permanecer, onClose, onGuardado }) {
     const dk = fecha || fechaKey();
-    const [paso, setPaso] = useState10(mazoInicial ? "bandeja" : "inicio");
-    const [meal, setMeal] = useState10(mazoInicial ? mazoInicial.meal || inferirComidaMazo(mazoInicial.items) : getDefaultMeal());
-    const [query, setQuery] = useState10("");
-    const [bandeja, setBandeja] = useState10(() => mazoInicial ? (mazoInicial.items || []).map((e) => ({ ...e })) : []);
-    const [titulo, setTitulo] = useState10(mazoInicial ? mazoInicial.name : "");
-    const [aBandeja, setABandeja] = useState10(!!mazoInicial);
-    const [food, setFood] = useState10(null);
-    const [editIdx, setEditIdx] = useState10(null);
-    const [qty, setQty] = useState10(1);
-    const [fraction, setFraction] = useState10(1);
-    const [sizeKey, setSizeKey] = useState10("M");
-    const [est, setEst] = useState10(null);
-    const [hechos, setHechos] = useState10([]);
+    const [paso, setPaso] = useState11(mazoInicial ? "bandeja" : "inicio");
+    const [meal, setMeal] = useState11(mazoInicial ? mazoInicial.meal || inferirComidaMazo(mazoInicial.items) : getDefaultMeal());
+    const [query, setQuery] = useState11("");
+    const [bandeja, setBandeja] = useState11(() => mazoInicial ? (mazoInicial.items || []).map((e) => ({ ...e })) : []);
+    const [titulo, setTitulo] = useState11(mazoInicial ? mazoInicial.name : "");
+    const [aBandeja, setABandeja] = useState11(!!mazoInicial);
+    const [food, setFood] = useState11(null);
+    const [editIdx, setEditIdx] = useState11(null);
+    const [qty, setQty] = useState11(1);
+    const [fraction, setFraction] = useState11(1);
+    const [sizeKey, setSizeKey] = useState11("M");
+    const [est, setEst] = useState11(null);
+    const [hechos, setHechos] = useState11([]);
     const comida = MEALS.find((m) => m.id === meal) || MEALS[0];
     const todos = useMemo5(() => todosLosAlimentos(foodOverrides, customFoods), [foodOverrides, customFoods]);
     const resultados = useMemo5(() => buscarAlimentos(query, foodOverrides, customFoods, 6), [query, foodOverrides, customFoods]);
@@ -8922,7 +9065,7 @@ var __angst = (() => {
     )));
     let contenido = null;
     if (paso === "porcion" && food) {
-      contenido = /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C, fontSize: 22, fontWeight: 700, color: "#111", marginBottom: 2 } }, food.emoji, " ", food.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F3, fontSize: 12, color: "#aaa", marginBottom: 20 } }, food.prep), /* @__PURE__ */ React.createElement(
+      contenido = /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C, fontSize: 22, fontWeight: 700, color: "#111", marginBottom: 2 } }, food.emoji, " ", food.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 12, color: "#aaa", marginBottom: 20 } }, food.prep), /* @__PURE__ */ React.createElement(
         ControlesPorcion_default,
         {
           food,
@@ -8950,14 +9093,14 @@ var __angst = (() => {
         "button",
         {
           onClick: () => setEst((s) => ({ ...s, certainty: "estimado" })),
-          style: { flex: 1, padding: "10px 4px", borderRadius: 8, border: "1.5px solid", borderColor: est.certainty === "estimado" ? "#c9a227" : "#eee", background: est.certainty === "estimado" ? "#fffbe8" : "transparent", fontFamily: F3, fontSize: 12, cursor: "pointer", color: "#555" }
+          style: { flex: 1, padding: "10px 4px", borderRadius: 8, border: "1.5px solid", borderColor: est.certainty === "estimado" ? "#c9a227" : "#eee", background: est.certainty === "estimado" ? "#fffbe8" : "transparent", fontFamily: F4, fontSize: 12, cursor: "pointer", color: "#555" }
         },
         "\u{1F7E1} estimado"
       ), /* @__PURE__ */ React.createElement(
         "button",
         {
           onClick: () => setEst((s) => ({ ...s, certainty: "desconocido" })),
-          style: { flex: 1, padding: "10px 4px", borderRadius: 8, border: "1.5px solid", borderColor: est.certainty === "desconocido" ? "#e53935" : "#eee", background: est.certainty === "desconocido" ? "#fff0f0" : "transparent", fontFamily: F3, fontSize: 12, cursor: "pointer", color: "#555" }
+          style: { flex: 1, padding: "10px 4px", borderRadius: 8, border: "1.5px solid", borderColor: est.certainty === "desconocido" ? "#e53935" : "#eee", background: est.certainty === "desconocido" ? "#fff0f0" : "transparent", fontFamily: F4, fontSize: 12, cursor: "pointer", color: "#555" }
         },
         "\u{1F534} no s\xE9 / desconocido"
       )), est.certainty === "estimado" && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 } }, [["kcalMin", "kcal m\xEDn"], ["kcalMax", "kcal m\xE1x"], ["protMin", "prot m\xEDn (g)"], ["protMax", "prot m\xE1x (g)"]].map(([k, l]) => /* @__PURE__ */ React.createElement("input", { key: k, type: "number", value: est[k], placeholder: l, onChange: (e) => setEst((s) => ({ ...s, [k]: e.target.value })), style: campo2 }))), /* @__PURE__ */ React.createElement(
@@ -8973,13 +9116,13 @@ var __angst = (() => {
         setPaso(aBandeja && bandeja.length ? "bandeja" : "inicio");
       }, style: btnSecundario }, "volver"));
     } else if (paso === "bandeja") {
-      contenido = /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C, fontSize: 22, fontWeight: 700, color: "#111", marginBottom: 2 } }, titulo || "tu comida"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F3, fontSize: 11, color: "#aaa", marginBottom: 12 } }, "revisa y ajusta antes de registrar \xB7 el mazo original no se toca"), selectorComida, bandeja.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F3, fontSize: 12, color: "#aaa", padding: "10px 0" } }, "no queda ning\xFAn alimento"), bandeja.map((e, i) => {
+      contenido = /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C, fontSize: 22, fontWeight: 700, color: "#111", marginBottom: 2 } }, titulo || "tu comida"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 11, color: "#aaa", marginBottom: 12 } }, "revisa y ajusta antes de registrar \xB7 el mazo original no se toca"), selectorComida, bandeja.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 12, color: "#aaa", padding: "10px 0" } }, "no queda ning\xFAn alimento"), bandeja.map((e, i) => {
         const base = baseDe(e);
-        return /* @__PURE__ */ React.createElement("div", { key: e.uid || i, style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: "1px dashed #eee" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18 } }, e.emoji), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F3, fontSize: 13, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, e.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F3, fontSize: 10, color: e.certainty ? "#c9a227" : "#aaa" } }, e.certainty ? e.certainty === "desconocido" ? "sin datos nutricionales" : "estimado" : `${e.unit || ""} \xB7 ${Math.round((e.kcal || 0) * (e.qty || 0))} kcal`)), base && /* @__PURE__ */ React.createElement("button", { onClick: () => elegir(base, i, e), title: "cambiar porci\xF3n", style: { background: "transparent", border: "none", color: "#999", fontSize: 14, cursor: "pointer", padding: "4px 6px" } }, "\u270E"), /* @__PURE__ */ React.createElement("button", { onClick: () => setBandeja((b) => b.filter((_, j) => j !== i)), title: "quitar", style: { background: "transparent", border: "none", color: "#bbb", fontSize: 18, cursor: "pointer", padding: "4px 6px", lineHeight: 1 } }, "\xD7"));
+        return /* @__PURE__ */ React.createElement("div", { key: e.uid || i, style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: "1px dashed #eee" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18 } }, e.emoji), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 13, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, e.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 10, color: e.certainty ? "#c9a227" : "#aaa" } }, e.certainty ? e.certainty === "desconocido" ? "sin datos nutricionales" : "estimado" : `${e.unit || ""} \xB7 ${Math.round((e.kcal || 0) * (e.qty || 0))} kcal`)), base && /* @__PURE__ */ React.createElement("button", { onClick: () => elegir(base, i, e), title: "cambiar porci\xF3n", style: { background: "transparent", border: "none", color: "#999", fontSize: 14, cursor: "pointer", padding: "4px 6px" } }, "\u270E"), /* @__PURE__ */ React.createElement("button", { onClick: () => setBandeja((b) => b.filter((_, j) => j !== i)), title: "quitar", style: { background: "transparent", border: "none", color: "#bbb", fontSize: 18, cursor: "pointer", padding: "4px 6px", lineHeight: 1 } }, "\xD7"));
       }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", margin: "12px 0 14px" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => {
         setQuery("");
         setPaso("inicio");
-      }, style: { ...chip(false), fontSize: 13 } }, "+ agregar alimento"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F3, fontSize: 13, color: "#111", fontWeight: 700 } }, kcalBandeja, " kcal")), /* @__PURE__ */ React.createElement(
+      }, style: { ...chip(false), fontSize: 13 } }, "+ agregar alimento"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F4, fontSize: 13, color: "#111", fontWeight: 700 } }, kcalBandeja, " kcal")), /* @__PURE__ */ React.createElement(
         "button",
         {
           onClick: () => guardar(bandeja, `${comida.label} \xB7 ${titulo || `${bandeja.length} alimento${bandeja.length === 1 ? "" : "s"}`}`),
@@ -8990,7 +9133,7 @@ var __angst = (() => {
         comida.label.toLowerCase()
       ), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: btnSecundario }, permanecer ? "cerrar" : "cancelar"));
     } else {
-      contenido = /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C, fontSize: 22, fontWeight: 700, color: "#111", marginBottom: 2 } }, aBandeja ? `sumar a ${titulo || "tu comida"}` : "\u{1F37D}\uFE0F registrar ingesta"), dk !== fechaKey() && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F3, fontSize: 11, color: "#c9a227", marginBottom: 6 } }, "se registrar\xE1 en el d\xEDa ", fechaCorta4(dk)), /* @__PURE__ */ React.createElement("div", { style: { height: 8 } }), selectorComida, /* @__PURE__ */ React.createElement(
+      contenido = /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C, fontSize: 22, fontWeight: 700, color: "#111", marginBottom: 2 } }, aBandeja ? `sumar a ${titulo || "tu comida"}` : "\u{1F37D}\uFE0F registrar ingesta"), dk !== fechaKey() && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 11, color: "#c9a227", marginBottom: 6 } }, "se registrar\xE1 en el d\xEDa ", fechaCorta4(dk)), /* @__PURE__ */ React.createElement("div", { style: { height: 8 } }), selectorComida, /* @__PURE__ */ React.createElement(
         "input",
         {
           value: query,
@@ -9007,15 +9150,15 @@ var __angst = (() => {
           style: { display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", background: "transparent", border: "none", borderBottom: "1px dashed #eee", padding: "10px 2px", cursor: "pointer" }
         },
         /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20 } }, f2.emoji),
-        /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F3, fontSize: 13, color: "#222", fontWeight: 600 } }, f2.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F3, fontSize: 10, color: "#bbb", fontStyle: "italic", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f2.prep))
-      )), query.trim() && resultados.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F3, fontSize: 12, color: "#aaa", padding: "6px 0 10px" } }, "sin resultados para \u201C", query.trim(), "\u201D"), !query.trim() && recientes.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo2 }, "recientes"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } }, recientes.map((f2) => /* @__PURE__ */ React.createElement("button", { key: f2.id, onClick: () => elegir(f2), style: chip(false) }, f2.emoji, " ", f2.name)))), !query.trim() && !aBandeja && previa && /* @__PURE__ */ React.createElement(
+        /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 13, color: "#222", fontWeight: 600 } }, f2.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 10, color: "#bbb", fontStyle: "italic", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f2.prep))
+      )), query.trim() && resultados.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 12, color: "#aaa", padding: "6px 0 10px" } }, "sin resultados para \u201C", query.trim(), "\u201D"), !query.trim() && recientes.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo2 }, "recientes"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } }, recientes.map((f2) => /* @__PURE__ */ React.createElement("button", { key: f2.id, onClick: () => elegir(f2), style: chip(false) }, f2.emoji, " ", f2.name)))), !query.trim() && !aBandeja && previa && /* @__PURE__ */ React.createElement(
         "button",
         {
           onClick: () => abrirBandeja(previa.items, `${comida.label} del ${fechaCorta4(previa.fecha)}`),
           style: { width: "100%", textAlign: "left", background: "#fafafa", border: "1px dashed #ddd", borderRadius: 10, padding: "10px 12px", marginBottom: 10, cursor: "pointer" }
         },
         /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C, fontSize: 17, color: "#111", fontWeight: 700 } }, "\u{1F501} repetir \xFAltimo ", comida.label.toLowerCase()),
-        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F3, fontSize: 10, color: "#aaa" } }, fechaCorta4(previa.fecha), " \xB7 ", previa.items.length, " alimento", previa.items.length === 1 ? "" : "s", " \xB7 lo revisas antes de registrar")
+        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 10, color: "#aaa" } }, fechaCorta4(previa.fecha), " \xB7 ", previa.items.length, " alimento", previa.items.length === 1 ? "" : "s", " \xB7 lo revisas antes de registrar")
       ), !query.trim() && !aBandeja && (nutriDecks || []).length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo2 }, "mazos"), (nutriDecks || []).map((d) => {
         const mId = d.meal || inferirComidaMazo(d.items);
         return /* @__PURE__ */ React.createElement(
@@ -9026,7 +9169,7 @@ var __angst = (() => {
             style: { display: "block", width: "100%", textAlign: "left", background: "#fafafa", border: "1px dashed #e5e5e5", borderRadius: 10, padding: "9px 12px", marginBottom: 6, cursor: "pointer" }
           },
           /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C, fontSize: 17, color: "#111", fontWeight: 700 } }, d.name),
-          /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F3, fontSize: 10, color: "#aaa" } }, (MEALS.find((m) => m.id === mId) || {}).emoji, " ", (d.items || []).length, " alimento", (d.items || []).length === 1 ? "" : "s", " \xB7 lo revisas antes de registrar")
+          /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 10, color: "#aaa" } }, (MEALS.find((m) => m.id === mId) || {}).emoji, " ", (d.items || []).length, " alimento", (d.items || []).length === 1 ? "" : "s", " \xB7 lo revisas antes de registrar")
         );
       })), /* @__PURE__ */ React.createElement(
         "button",
@@ -9045,7 +9188,7 @@ var __angst = (() => {
   var IngestaRapida_default = IngestaRapida;
 
   // modules/nutricion/NutricionPage.jsx
-  var { useState: useState11, useEffect: useEffect9, useRef: useRef7, useMemo: useMemo6, useCallback: useCallback5 } = React;
+  var { useState: useState12, useEffect: useEffect9, useRef: useRef8, useMemo: useMemo6, useCallback: useCallback5 } = React;
   var META_KCAL = 2050;
   var META_PROT = 135;
   var MEAL_KCAL_FIJO = 600;
@@ -9139,26 +9282,26 @@ var __angst = (() => {
   }
   function NutricionPage({ nutriLog, saveNutriLog, customFoods, saveCustomFoods, foodOverrides, saveFoodOverrides, nutriDecks, saveNutriDecks, getStressScore }) {
     const todayKey = fechaKey();
-    const [dateKey, setDateKey] = useState11(todayKey);
-    const [view, setView] = useState11("hoy");
-    const [fichaFoodId, setFichaFoodId] = useState11(null);
-    const [modal, setModal] = useState11(null);
-    const [estimateModal, setEstimateModal] = useState11(null);
-    const [qty, setQty] = useState11(1);
-    const [fraction, setFraction] = useState11(1);
-    const [sizeKey, setSizeKey] = useState11("M");
-    const [mealSel, setMealSel] = useState11(getDefaultMeal());
-    const [openCat, setOpenCat] = useState11(null);
-    const [exploreOpen, setExploreOpen] = useState11(false);
-    const [searchQuery, setSearchQuery] = useState11("");
-    const [editModal, setEditModal] = useState11(null);
-    const [foodView, setFoodView] = useState11("grid-lg");
+    const [dateKey, setDateKey] = useState12(todayKey);
+    const [view, setView] = useState12("hoy");
+    const [fichaFoodId, setFichaFoodId] = useState12(null);
+    const [modal, setModal] = useState12(null);
+    const [estimateModal, setEstimateModal] = useState12(null);
+    const [qty, setQty] = useState12(1);
+    const [fraction, setFraction] = useState12(1);
+    const [sizeKey, setSizeKey] = useState12("M");
+    const [mealSel, setMealSel] = useState12(getDefaultMeal());
+    const [openCat, setOpenCat] = useState12(null);
+    const [exploreOpen, setExploreOpen] = useState12(false);
+    const [searchQuery, setSearchQuery] = useState12("");
+    const [editModal, setEditModal] = useState12(null);
+    const [foodView, setFoodView] = useState12("grid-lg");
     const savedDecks = nutriDecks || [];
-    const [deckMenuOpen, setDeckMenuOpen] = useState11(false);
-    const [deckQuick, setDeckQuick] = useState11(null);
-    const [deckEditor, setDeckEditor] = useState11(null);
-    const [collapsedMeals, setCollapsedMeals] = useState11({});
-    const [moveMenuOpen, setMoveMenuOpen] = useState11(null);
+    const [deckMenuOpen, setDeckMenuOpen] = useState12(false);
+    const [deckQuick, setDeckQuick] = useState12(null);
+    const [deckEditor, setDeckEditor] = useState12(null);
+    const [collapsedMeals, setCollapsedMeals] = useState12({});
+    const [moveMenuOpen, setMoveMenuOpen] = useState12(null);
     const log = nutriLog[dateKey] || [];
     const totalKcal = Math.round(log.reduce((a, e) => a + e.kcal * e.qty, 0));
     const totalProt = parseFloat(log.reduce((a, e) => a + e.prot * e.qty, 0).toFixed(1));
@@ -9672,7 +9815,7 @@ var __angst = (() => {
   var NutricionPage_default = NutricionPage;
 
   // modules/presupuesto/grilla.jsx
-  var { useState: useState12 } = React;
+  var { useState: useState13 } = React;
   var FUENTE = "'DM Sans',sans-serif";
   var ARW = 22;
   var AMT_W = 72;
@@ -9702,8 +9845,8 @@ var __angst = (() => {
     transition: "all 0.12s"
   };
   function AmountRow({ value, onSave, min = 0, max }) {
-    const [ed, setEd] = useState12(false);
-    const [txt, setTxt] = useState12(String(value));
+    const [ed, setEd] = useState13(false);
+    const [txt, setTxt] = useState13(String(value));
     const acotar = (v) => {
       let r = Math.max(min, v);
       if (typeof max === "number") r = Math.min(max, r);
@@ -9743,7 +9886,7 @@ var __angst = (() => {
   }
 
   // modules/presupuesto/CarteraPanel.jsx
-  var { useState: useState13 } = React;
+  var { useState: useState14 } = React;
   var fechaCorta2 = (iso) => {
     const d = fechaDe(iso);
     return `${d.getDate()} ${MONTH_NAMES[d.getMonth()].slice(0, 3)}`;
@@ -9772,12 +9915,12 @@ var __angst = (() => {
     return /* @__PURE__ */ React.createElement("div", { style: { ...sub, fontSize: 11, color, padding: "0 0 6px", lineHeight: 1.4 } }, txt);
   }
   function SubFila({ s, row, est, sobresOn, periodo, onPatch, onDelete }) {
-    const [edit, setEdit] = useState13(false);
-    const [txt, setTxt] = useState13(s.label);
-    const [metaAbierta, setMetaAbierta] = useState13(false);
-    const [obj, setObj] = useState13(s.meta ? String(s.meta.objetivo) : "");
-    const [fec, setFec] = useState13(s.meta ? s.meta.fecha : "");
-    const [errMeta, setErrMeta] = useState13("");
+    const [edit, setEdit] = useState14(false);
+    const [txt, setTxt] = useState14(s.label);
+    const [metaAbierta, setMetaAbierta] = useState14(false);
+    const [obj, setObj] = useState14(s.meta ? String(s.meta.objetivo) : "");
+    const [fec, setFec] = useState14(s.meta ? s.meta.fecha : "");
+    const [errMeta, setErrMeta] = useState14("");
     function guardarNombre() {
       if (txt.trim()) onPatch({ subs: row.subs.map((x) => x.id === s.id ? { ...x, label: txt.trim() } : x) });
       setEdit(false);
@@ -9837,13 +9980,13 @@ var __angst = (() => {
     }, style: { border: "1px dashed #bbb", borderRadius: 4, padding: "4px 6px", fontSize: 13, fontFamily: FUENTE, outline: "none", background: "#fff" } }), /* @__PURE__ */ React.createElement("button", { onClick: guardarMeta, style: { background: "#111", color: "#fff", border: "none", borderRadius: 4, padding: "5px 12px", fontSize: 12, cursor: "pointer" } }, "\u2713"), s.meta && /* @__PURE__ */ React.createElement("button", { onClick: quitarMeta, style: { background: "transparent", border: "none", color: "#c00", fontSize: 11, cursor: "pointer", fontFamily: FUENTE } }, "quitar meta")), errMeta && /* @__PURE__ */ React.createElement("div", { style: { ...sub, fontSize: 11, color: "#c00", marginTop: 6 } }, errMeta)));
   }
   function GastoFila({ g, nombre, onDelete }) {
-    const [seguro, setSeguro] = useState13(false);
+    const [seguro, setSeguro] = useState14(false);
     return /* @__PURE__ */ React.createElement("div", { style: { padding: "5px 0", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "baseline" } }, /* @__PURE__ */ React.createElement("span", { style: { ...sub, color: "#999", width: 44, flexShrink: 0 } }, fechaCorta2(g.fecha)), /* @__PURE__ */ React.createElement("span", { style: { ...sub, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, nombre), /* @__PURE__ */ React.createElement("span", { style: { ...sub, fontWeight: 700, color: "#111" } }, fmtCLP(g.monto)), seguro ? /* @__PURE__ */ React.createElement("span", { style: { ...sub, fontSize: 11 } }, /* @__PURE__ */ React.createElement("span", { onClick: onDelete, style: { color: "#c00", cursor: "pointer", marginRight: 6 } }, "borrar"), /* @__PURE__ */ React.createElement("span", { onClick: () => setSeguro(false), style: { color: "#999", cursor: "pointer" } }, "no")) : /* @__PURE__ */ React.createElement("button", { onClick: () => setSeguro(true), style: { background: "transparent", border: "none", color: "#ddd", fontSize: 14, cursor: "pointer", lineHeight: 1, padding: 0 } }, "\xD7")), (g.nota || g.prestamoId) && /* @__PURE__ */ React.createElement("div", { style: { ...sub, fontSize: 11, color: "#888", paddingLeft: 52 } }, g.nota, g.prestamoId && /* @__PURE__ */ React.createElement("span", { style: { color: "#a60", marginLeft: g.nota ? 6 : 0 } }, "\u{1F4B3} con pr\xE9stamo")));
   }
   function CarteraPanel({ sec, row, periodo, budgets, budget, estado, sobresOn, esInicio, etiquetaSaldo, onPatchRow, onDeleteGasto, onApertura, onAviso }) {
-    const [adding, setAdding] = useState13(false);
-    const [emoji, setEmoji] = useState13("");
-    const [nombre, setNombre] = useState13("");
+    const [adding, setAdding] = useState14(false);
+    const [emoji, setEmoji] = useState14("");
+    const [nombre, setNombre] = useState14("");
     const subs = row.subs || [];
     const porId = Object.fromEntries((estado ? estado.items : []).map((i) => [String(i.subId), i.estado]));
     function agregar() {
@@ -9885,10 +10028,10 @@ var __angst = (() => {
   }
 
   // modules/presupuesto/CarteraVentana.jsx
-  var { useState: useState14, useEffect: useEffect10 } = React;
+  var { useState: useState15, useEffect: useEffect10 } = React;
   var flecha = { background: "transparent", border: "1px solid #444", borderRadius: 8, color: "#fff", fontSize: 24, width: 44, height: 40, cursor: "pointer", lineHeight: 1, flexShrink: 0 };
   function CarteraVentana({ carteras, index, onIndex, onClose, budgets, budget, periodo, sobresOn, esInicio, onPatchRow, onDeleteGasto, onApertura, onGasto }) {
-    const [aviso, setAviso] = useState14("");
+    const [aviso, setAviso] = useState15("");
     const n = carteras.length;
     const { sec, row } = carteras[index];
     const ir = (d) => {
@@ -9944,27 +10087,27 @@ var __angst = (() => {
   }
 
   // modules/presupuesto/GastoModal.jsx
-  var { useState: useState15, useMemo: useMemo7 } = React;
-  var F4 = "'DM Sans',sans-serif";
-  var campo3 = { width: "100%", boxSizing: "border-box", border: "1px dashed #bbb", borderRadius: 6, padding: "10px 10px", fontSize: 15, fontFamily: F4, background: "#fff", outline: "none", color: "#111" };
-  var rotulo3 = { fontFamily: F4, fontSize: 10, color: "#999", letterSpacing: 2, textTransform: "uppercase", margin: "12px 0 4px" };
+  var { useState: useState16, useMemo: useMemo7 } = React;
+  var F5 = "'DM Sans',sans-serif";
+  var campo3 = { width: "100%", boxSizing: "border-box", border: "1px dashed #bbb", borderRadius: 6, padding: "10px 10px", fontSize: 15, fontFamily: F5, background: "#fff", outline: "none", color: "#111" };
+  var rotulo3 = { fontFamily: F5, fontSize: 10, color: "#999", letterSpacing: 2, textTransform: "uppercase", margin: "12px 0 4px" };
   var mismo = (x, f2) => x.sec === f2.sec && x.rowId === f2.rowId && (x.subId ?? null) === (f2.subId ?? null);
   function GastoModal({ budgets, onSaveBudget, onClose, inicial, arriba, permanecer }) {
-    const [fecha, setFecha] = useState15(fechaISO(/* @__PURE__ */ new Date()));
-    const [cartera, setCartera] = useState15(inicial || "");
-    const [subId, setSubId] = useState15(() => {
+    const [fecha, setFecha] = useState16(fechaISO(/* @__PURE__ */ new Date()));
+    const [cartera, setCartera] = useState16(inicial || "");
+    const [subId, setSubId] = useState16(() => {
       if (!inicial) return "null";
       const [s0, id0] = inicial.split("|");
       const f0 = (resolverPeriodo(budgets, periodoDeFecha(/* @__PURE__ */ new Date()))[s0] || []).find((r) => r.id === id0);
       return f0 && f0.subs && f0.subs.length ? String(f0.subs[0].id) : "null";
     });
-    const [monto, setMonto] = useState15("");
-    const [nota, setNota] = useState15("");
-    const [categoria, setCategoria] = useState15("");
-    const [nuevaCat, setNuevaCat] = useState15("");
-    const [error, setError] = useState15("");
-    const [manual, setManual] = useState15(null);
-    const [hechos, setHechos] = useState15([]);
+    const [monto, setMonto] = useState16("");
+    const [nota, setNota] = useState16("");
+    const [categoria, setCategoria] = useState16("");
+    const [nuevaCat, setNuevaCat] = useState16("");
+    const [error, setError] = useState16("");
+    const [manual, setManual] = useState16(null);
+    const [hechos, setHechos] = useState16([]);
     const altoVisible2 = useAltoVisible();
     const periodo = periodoDeFecha(fecha);
     const activo = !!inicioSobres(budgets);
@@ -10047,15 +10190,15 @@ var __angst = (() => {
       } else onClose();
     }
     const puede = !!fila && montoNum > 0 && (falta === 0 || completo);
-    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: arriba ? "flex-start" : "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", paddingTop: arriba ? "calc(env(safe-area-inset-top, 0px) + 6px)" : 0 } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: "min(94vw,400px)", maxHeight: arriba ? Math.round(altoVisible2 * 0.9) : "92vh", overflowY: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, "\u{1F4B8} Registrar gasto"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#777", fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 18px 18px" } }, permanecer && hechos.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { background: "#f1f8f2", border: "1px dashed #9ccc9f", borderRadius: 8, padding: "6px 10px", margin: "10px 0 2px" } }, hechos.slice(-3).map((h, i) => /* @__PURE__ */ React.createElement("div", { key: hechos.length - 3 + i, style: { fontFamily: F4, fontSize: 12, color: "#2e7d32" } }, "\u2713 ", h))), !activo ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 14, color: "#555", padding: "18px 0", lineHeight: 1.5 } }, "Los sobres todav\xEDa no est\xE1n iniciados. Ve a Presupuesto y toca \u{1F9FE} para iniciarlos; despu\xE9s podr\xE1s registrar gastos aqu\xED.") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: rotulo3 }, "Cartera o fondo personal"), /* @__PURE__ */ React.createElement("select", { value: cartera, onChange: (e) => elegirCartera(e.target.value), style: campo3 }, /* @__PURE__ */ React.createElement("option", { value: "" }, "Elegir\u2026"), grupos.map(([s, titulo, em]) => (budget[s] || []).length > 0 && /* @__PURE__ */ React.createElement("optgroup", { key: s, label: `${em} ${titulo}` }, budget[s].map((r) => /* @__PURE__ */ React.createElement("option", { key: r.id, value: `${s}|${r.id}` }, r.emoji, " ", r.label))))), fila && bolsillos.length > 1 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: rotulo3 }, "Sub-partida"), /* @__PURE__ */ React.createElement("select", { value: subId, onChange: (e) => {
+    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: arriba ? "flex-start" : "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", paddingTop: arriba ? "calc(env(safe-area-inset-top, 0px) + 6px)" : 0 } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: "min(94vw,400px)", maxHeight: arriba ? Math.round(altoVisible2 * 0.9) : "92vh", overflowY: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, "\u{1F4B8} Registrar gasto"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#777", fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 18px 18px" } }, permanecer && hechos.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { background: "#f1f8f2", border: "1px dashed #9ccc9f", borderRadius: 8, padding: "6px 10px", margin: "10px 0 2px" } }, hechos.slice(-3).map((h, i) => /* @__PURE__ */ React.createElement("div", { key: hechos.length - 3 + i, style: { fontFamily: F5, fontSize: 12, color: "#2e7d32" } }, "\u2713 ", h))), !activo ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F5, fontSize: 14, color: "#555", padding: "18px 0", lineHeight: 1.5 } }, "Los sobres todav\xEDa no est\xE1n iniciados. Ve a Presupuesto y toca \u{1F9FE} para iniciarlos; despu\xE9s podr\xE1s registrar gastos aqu\xED.") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: rotulo3 }, "Cartera o fondo personal"), /* @__PURE__ */ React.createElement("select", { value: cartera, onChange: (e) => elegirCartera(e.target.value), style: campo3 }, /* @__PURE__ */ React.createElement("option", { value: "" }, "Elegir\u2026"), grupos.map(([s, titulo, em]) => (budget[s] || []).length > 0 && /* @__PURE__ */ React.createElement("optgroup", { key: s, label: `${em} ${titulo}` }, budget[s].map((r) => /* @__PURE__ */ React.createElement("option", { key: r.id, value: `${s}|${r.id}` }, r.emoji, " ", r.label))))), fila && bolsillos.length > 1 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: rotulo3 }, "Sub-partida"), /* @__PURE__ */ React.createElement("select", { value: subId, onChange: (e) => {
       setSubId(e.target.value);
       setError("");
       setManual(null);
-    }, style: campo3 }, bolsillos.map((b) => /* @__PURE__ */ React.createElement("option", { key: String(b.subId), value: String(b.subId) }, b.emoji, " ", b.label, b.est ? ` \xB7 saldo ${fmtCLP(b.est.saldo)}` : "")))), elegido && elegido.est && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 12, color: falta ? "#c60" : "#666", marginTop: 8 } }, "Disponible en el sobre: ", /* @__PURE__ */ React.createElement("b", null, fmtCLP(saldo))), /* @__PURE__ */ React.createElement("div", { style: rotulo3 }, "Monto"), /* @__PURE__ */ React.createElement("input", { inputMode: "numeric", value: monto ? fmtCLP(montoNum) : "", onChange: (e) => {
+    }, style: campo3 }, bolsillos.map((b) => /* @__PURE__ */ React.createElement("option", { key: String(b.subId), value: String(b.subId) }, b.emoji, " ", b.label, b.est ? ` \xB7 saldo ${fmtCLP(b.est.saldo)}` : "")))), elegido && elegido.est && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F5, fontSize: 12, color: falta ? "#c60" : "#666", marginTop: 8 } }, "Disponible en el sobre: ", /* @__PURE__ */ React.createElement("b", null, fmtCLP(saldo))), /* @__PURE__ */ React.createElement("div", { style: rotulo3 }, "Monto"), /* @__PURE__ */ React.createElement("input", { inputMode: "numeric", value: monto ? fmtCLP(montoNum) : "", onChange: (e) => {
       setMonto(e.target.value);
       setError("");
       setManual(null);
-    }, placeholder: "$0", style: { ...campo3, textAlign: "right", fontSize: 20, color: falta ? "#c60" : "#111" } }), falta > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12, border: "1px dashed #e0b070", background: "#fffaf0", borderRadius: 8, padding: "10px 12px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 13, color: "#8a5a00" } }, "Faltan ", /* @__PURE__ */ React.createElement("b", null, fmtCLP(falta)), ". P\xEDdelos a otras carteras (m\xE1ximo ", Math.round(TOPE_PRESTAMO * 100), "% del saldo de cada una):"), candidatos.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 12, color: "#c00", marginTop: 8 } }, "Ninguna cartera tiene saldo para prestar."), usadas.map((f2, i) => /* @__PURE__ */ React.createElement("div", { key: claveBolsillo(f2.sec, f2.rowId, f2.subId), style: { display: "flex", alignItems: "center", gap: 6, marginTop: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: F4, fontSize: 12, color: "#444", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, etiquetaFuente(f2), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#aaa" } }, "puede aportar hasta ", fmtCLP(dispDe(f2)))), /* @__PURE__ */ React.createElement(AmountRow, { value: f2.monto, min: 0, max: dispDe(f2), onSave: (v) => editarFuente(i, v) }), /* @__PURE__ */ React.createElement("button", { onClick: () => quitarFuente(i), style: { background: "transparent", border: "none", color: "#bbb", fontSize: 16, cursor: "pointer", padding: 0 } }, "\xD7"))), libres.length > 0 && /* @__PURE__ */ React.createElement("select", { value: "", onChange: (e) => agregarFuente(e.target.value), style: { ...campo3, marginTop: 8, padding: "6px 8px", fontSize: 12 } }, /* @__PURE__ */ React.createElement("option", { value: "" }, "+ pedir tambi\xE9n a\u2026"), libres.map((c) => /* @__PURE__ */ React.createElement("option", { key: claveBolsillo(c.sec, c.rowId, c.subId), value: claveBolsillo(c.sec, c.rowId, c.subId) }, c.emoji, " ", c.cartera, c.libre ? "" : " \xB7 " + c.label, " (hasta ", fmtCLP(c.disp), ")"))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 12, marginTop: 8, color: completo ? "#070" : "#c00" } }, completo ? `Cubierto: ${fmtCLP(cubierto)}` : `Cubierto ${fmtCLP(cubierto)} de ${fmtCLP(falta)}`), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 11, color: "#999", marginTop: 6, lineHeight: 1.4 } }, "Se devuelve solo: desde el per\xEDodo siguiente se descuenta hasta el ", Math.round(TOPE_DEVOLUCION * 100), "% de la asignaci\xF3n mensual de esta cartera.")), fila && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: rotulo3 }, "Categor\xEDa (opcional)"), /* @__PURE__ */ React.createElement("select", { value: categoria, onChange: (e) => {
+    }, placeholder: "$0", style: { ...campo3, textAlign: "right", fontSize: 20, color: falta ? "#c60" : "#111" } }), falta > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12, border: "1px dashed #e0b070", background: "#fffaf0", borderRadius: 8, padding: "10px 12px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F5, fontSize: 13, color: "#8a5a00" } }, "Faltan ", /* @__PURE__ */ React.createElement("b", null, fmtCLP(falta)), ". P\xEDdelos a otras carteras (m\xE1ximo ", Math.round(TOPE_PRESTAMO * 100), "% del saldo de cada una):"), candidatos.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F5, fontSize: 12, color: "#c00", marginTop: 8 } }, "Ninguna cartera tiene saldo para prestar."), usadas.map((f2, i) => /* @__PURE__ */ React.createElement("div", { key: claveBolsillo(f2.sec, f2.rowId, f2.subId), style: { display: "flex", alignItems: "center", gap: 6, marginTop: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: F5, fontSize: 12, color: "#444", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, etiquetaFuente(f2), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#aaa" } }, "puede aportar hasta ", fmtCLP(dispDe(f2)))), /* @__PURE__ */ React.createElement(AmountRow, { value: f2.monto, min: 0, max: dispDe(f2), onSave: (v) => editarFuente(i, v) }), /* @__PURE__ */ React.createElement("button", { onClick: () => quitarFuente(i), style: { background: "transparent", border: "none", color: "#bbb", fontSize: 16, cursor: "pointer", padding: 0 } }, "\xD7"))), libres.length > 0 && /* @__PURE__ */ React.createElement("select", { value: "", onChange: (e) => agregarFuente(e.target.value), style: { ...campo3, marginTop: 8, padding: "6px 8px", fontSize: 12 } }, /* @__PURE__ */ React.createElement("option", { value: "" }, "+ pedir tambi\xE9n a\u2026"), libres.map((c) => /* @__PURE__ */ React.createElement("option", { key: claveBolsillo(c.sec, c.rowId, c.subId), value: claveBolsillo(c.sec, c.rowId, c.subId) }, c.emoji, " ", c.cartera, c.libre ? "" : " \xB7 " + c.label, " (hasta ", fmtCLP(c.disp), ")"))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F5, fontSize: 12, marginTop: 8, color: completo ? "#070" : "#c00" } }, completo ? `Cubierto: ${fmtCLP(cubierto)}` : `Cubierto ${fmtCLP(cubierto)} de ${fmtCLP(falta)}`), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F5, fontSize: 11, color: "#999", marginTop: 6, lineHeight: 1.4 } }, "Se devuelve solo: desde el per\xEDodo siguiente se descuenta hasta el ", Math.round(TOPE_DEVOLUCION * 100), "% de la asignaci\xF3n mensual de esta cartera.")), fila && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: rotulo3 }, "Categor\xEDa (opcional)"), /* @__PURE__ */ React.createElement("select", { value: categoria, onChange: (e) => {
       setCategoria(e.target.value);
       setError("");
     }, style: campo3 }, /* @__PURE__ */ React.createElement("option", { value: "" }, "Sin categor\xEDa"), categoriasDe(fila).map((c) => /* @__PURE__ */ React.createElement("option", { key: c, value: c }, c)), /* @__PURE__ */ React.createElement("option", { value: "__nueva" }, "+ nueva categor\xEDa\u2026")), categoria === "__nueva" && /* @__PURE__ */ React.createElement("input", { value: nuevaCat, onChange: (e) => {
@@ -10065,7 +10208,7 @@ var __angst = (() => {
       setFecha(e.target.value || fechaISO(/* @__PURE__ */ new Date()));
       setError("");
       setManual(null);
-    }, style: campo3 }), /* @__PURE__ */ React.createElement("div", { style: rotulo3 }, "Nota (en qu\xE9 se gast\xF3)"), /* @__PURE__ */ React.createElement("input", { value: nota, onChange: (e) => setNota(e.target.value), placeholder: "ej. zapatillas de Sophia", style: campo3 }), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F4, fontSize: 13, color: "#c00", marginTop: 12 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: registrar, disabled: !puede, style: { width: "100%", marginTop: 16, padding: "13px", background: puede ? "#111" : "#ccc", color: "#fff", border: "none", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, cursor: puede ? "pointer" : "default" } }, falta > 0 ? "Registrar con pr\xE9stamo" : "Registrar")))));
+    }, style: campo3 }), /* @__PURE__ */ React.createElement("div", { style: rotulo3 }, "Nota (en qu\xE9 se gast\xF3)"), /* @__PURE__ */ React.createElement("input", { value: nota, onChange: (e) => setNota(e.target.value), placeholder: "ej. zapatillas de Sophia", style: campo3 }), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F5, fontSize: 13, color: "#c00", marginTop: 12 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: registrar, disabled: !puede, style: { width: "100%", marginTop: 16, padding: "13px", background: puede ? "#111" : "#ccc", color: "#fff", border: "none", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, cursor: puede ? "pointer" : "default" } }, falta > 0 ? "Registrar con pr\xE9stamo" : "Registrar")))));
   }
 
   // modules/presupuesto/GuiaSobres.jsx
@@ -10076,7 +10219,7 @@ var __angst = (() => {
   }
 
   // modules/presupuesto/ArqueoModal.jsx
-  var { useState: useState16, useMemo: useMemo8 } = React;
+  var { useState: useState17, useMemo: useMemo8 } = React;
   var campo4 = { boxSizing: "border-box", border: "1px dashed #bbb", borderRadius: 6, padding: "8px 10px", fontSize: 15, fontFamily: FUENTE, background: "#fff", outline: "none", color: "#111", textAlign: "right", width: 130 };
   var rotulo4 = { fontFamily: FUENTE, fontSize: 9, color: "#aaa", letterSpacing: 2, textTransform: "uppercase" };
   var fechaCorta3 = (iso) => {
@@ -10094,12 +10237,12 @@ var __angst = (() => {
   function ArqueoModal({ budgets, periodo, onSaveBudget, onClose, tabInicial }) {
     const filas = useMemo8(() => filasArqueo(budgets, periodo), [budgets, periodo]);
     const guardado = resolverPeriodo(budgets, periodo).arqueo;
-    const [tab, setTab] = useState16(tabInicial || (guardado ? "rendicion" : "arqueo"));
-    const [fecha, setFecha] = useState16(guardado ? guardado.fecha : fechaISO(/* @__PURE__ */ new Date()));
-    const [conteos, setConteos] = useState16(() => Object.fromEntries((guardado && guardado.filas || []).map((f2) => [f2.sec + "|" + f2.rowId, String(f2.contado)])));
-    const [notas, setNotas] = useState16(() => Object.fromEntries((guardado && guardado.filas || []).filter((f2) => f2.nota).map((f2) => [f2.sec + "|" + f2.rowId, f2.nota])));
-    const [error, setError] = useState16("");
-    const [copiado, setCopiado] = useState16(false);
+    const [tab, setTab] = useState17(tabInicial || (guardado ? "rendicion" : "arqueo"));
+    const [fecha, setFecha] = useState17(guardado ? guardado.fecha : fechaISO(/* @__PURE__ */ new Date()));
+    const [conteos, setConteos] = useState17(() => Object.fromEntries((guardado && guardado.filas || []).map((f2) => [f2.sec + "|" + f2.rowId, String(f2.contado)])));
+    const [notas, setNotas] = useState17(() => Object.fromEntries((guardado && guardado.filas || []).filter((f2) => f2.nota).map((f2) => [f2.sec + "|" + f2.rowId, f2.nota])));
+    const [error, setError] = useState17("");
+    const [copiado, setCopiado] = useState17(false);
     const num = (v) => v === void 0 || v === "" ? null : parseInt(String(v).replace(/\D/g, "")) || 0;
     const rend = useMemo8(() => rendicion(budgets, periodo), [budgets, periodo]);
     const completo = !!filas && filas.every((f2) => num(conteos[f2.sec + "|" + f2.rowId]) !== null);
@@ -10140,7 +10283,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       }
     }
     const tabBtn = (id, txt) => /* @__PURE__ */ React.createElement("button", { onClick: () => setTab(id), style: { flex: 1, padding: "9px 0", background: tab === id ? "#fff" : "transparent", color: tab === id ? "#111" : "#888", border: "none", borderRadius: "8px 8px 0 0", fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, cursor: "pointer" } }, txt);
-    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1e3, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: "min(96vw,540px)", maxHeight: "92vh", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, "\u{1F50D} Cierre del per\xEDodo"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 10, color: "#777", letterSpacing: 1 } }, etiquetaPeriodo(periodo))), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#888", fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 8 } }, tabBtn("arqueo", "Arqueo"), tabBtn("rendicion", "Rendici\xF3n"))), /* @__PURE__ */ React.createElement("div", { style: { overflowY: "auto", padding: "14px 18px 18px" } }, !filas && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#999", padding: "16px 0" } }, "Los sobres no est\xE1n iniciados en este per\xEDodo: toca \u{1F9FE} en Presupuesto."), filas && tab === "arqueo" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#777", lineHeight: 1.5, marginBottom: 10 } }, "Cuenta el efectivo que hay en cada sobre y escr\xEDbelo. Si no cuadra con los registros, el cierre igual se guarda y la diferencia queda documentada."), guardado && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#070", background: "#f3fbf3", border: "1px dashed #b5deb5", borderRadius: 6, padding: "6px 10px", marginBottom: 10 } }, "Arqueo guardado el ", fechaCorta3(guardado.fecha), ". Puedes rehacerlo."), filas.map((f2) => {
+    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1e3, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: "min(96vw,540px)", maxHeight: "92vh", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, "\u{1F50D} Cierre del per\xEDodo"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 10, color: "#777", letterSpacing: 1 } }, etiquetaPeriodo(periodo))), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#888", fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 8 } }, tabBtn("arqueo", "Arqueo"), tabBtn("rendicion", "Rendici\xF3n"))), /* @__PURE__ */ React.createElement("div", { style: { overflowY: "auto", padding: "14px 18px 18px" } }, !filas && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#999", padding: "16px 0" } }, "Los sobres no est\xE1n iniciados en este per\xEDodo: toca \u{1F9FE} en Presupuesto."), filas && tab === "arqueo" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#777", lineHeight: 1.5, marginBottom: 10 } }, "Cuenta el efectivo que hay en cada sobre y escr\xEDbelo: lo que cuentes es lo que arranca el per\xEDodo siguiente como saldo de arrastre. Si no cuadra con los registros, el cierre igual se guarda y la diferencia queda documentada."), guardado && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#070", background: "#f3fbf3", border: "1px dashed #b5deb5", borderRadius: 6, padding: "6px 10px", marginBottom: 10 } }, "Arqueo guardado el ", fechaCorta3(guardado.fecha), ". Puedes rehacerlo."), filas.map((f2) => {
       const k = f2.sec + "|" + f2.rowId;
       const c = num(conteos[k]);
       const dif = c === null ? null : c - f2.esperado;
@@ -10152,7 +10295,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
   }
 
   // modules/presupuesto/BudgetPage.jsx
-  var { useState: useState17, useEffect: useEffect11, useRef: useRef8, useMemo: useMemo9, useCallback: useCallback6 } = React;
+  var { useState: useState18, useEffect: useEffect11, useRef: useRef9, useMemo: useMemo9, useCallback: useCallback6 } = React;
   var getBudgetForPeriod = resolverPeriodo;
   function PieChart({ data, total, annual }) {
     const CX = 100, CY = 100, R = 76;
@@ -10170,7 +10313,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("svg", { width: "200", height: "200", viewBox: "0 0 200 200" }, slices.map((s, i) => /* @__PURE__ */ React.createElement("path", { key: i, d: s.path, fill: s.color, stroke: "#fff", strokeWidth: "1.5" })), slices.map((s, i) => s.big && /* @__PURE__ */ React.createElement("text", { key: `em${i}`, x: s.ex.toFixed(1), y: s.ey.toFixed(1), textAnchor: "middle", dominantBaseline: "middle", fontSize: "12" }, s.emoji)), /* @__PURE__ */ React.createElement("circle", { cx: CX, cy: CY, r: 34, fill: "#fff" }), /* @__PURE__ */ React.createElement("text", { x: CX, y: CY - 5, textAnchor: "middle", dominantBaseline: "middle", fontFamily: "'Caveat',cursive", fontSize: "12", fill: "#111", fontWeight: "700" }, annual ? "anual" : "mensual"), /* @__PURE__ */ React.createElement("text", { x: CX, y: CY + 10, textAnchor: "middle", dominantBaseline: "middle", fontFamily: "'DM Sans',sans-serif", fontSize: "9", fill: "#555" }, fmtCLP(annual ? total * 12 : total))), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", display: "flex", flexDirection: "column", gap: 4, padding: "0 4px" } }, slices.map((s, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 6 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 9, height: 9, borderRadius: 2, background: s.color, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#444" } }, s.emoji, " ", s.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#111", fontWeight: 600 } }, fmtCLP(s.monto)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", width: 32, textAlign: "right" } }, s.pct, "%")))));
   }
   function IngresoChartModal({ budgets, selYear, selMonth, onClose }) {
-    const [view, setView] = useState17(0);
+    const [view, setView] = useState18(0);
     const GRAYS = ["#111", "#333", "#555", "#777", "#aaa", "#ccc"];
     const sources = [{ k: "trabajo", l: "Trabajo", e: "\u{1F3E2}" }, { k: "emprendimiento", l: "Emprend.", e: "\u{1F6E0}\uFE0F" }, { k: "reventa", l: "Reventa", e: "\u{1F504}" }, { k: "otros", l: "Otros", e: "\u2728" }];
     const monthKey = `${selYear}-${String(selMonth + 1).padStart(2, "0")}`;
@@ -10194,11 +10337,11 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     }))))));
   }
   function ChartModal({ title, emoji, rows, total, onClose }) {
-    const [view, setView] = useState17(0);
+    const [view, setView] = useState18(0);
     return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }, onClick: onClose }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: 320, maxHeight: "90vh", overflowY: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700 } }, emoji, " ", title), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#555", fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", borderBottom: "1px solid #eee" } }, ["Mensual", "Anual"].map((lbl, idx) => /* @__PURE__ */ React.createElement("button", { key: idx, onClick: () => setView(idx), style: { flex: 1, padding: "10px", fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, cursor: "pointer", background: view === idx ? "#111" : "#fff", color: view === idx ? "#fff" : "#999", border: "none", transition: "all 0.15s" } }, lbl))), /* @__PURE__ */ React.createElement("div", { style: { padding: "16px" } }, /* @__PURE__ */ React.createElement(PieChart, { data: rows, total, annual: view === 1 }))));
   }
   function MonthSelectorModal({ currentYear, currentMonth, onSelect, onClose }) {
-    const [year, setYear] = useState17(currentYear);
+    const [year, setYear] = useState18(currentYear);
     return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }, onClick: onClose }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: 300 } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setYear((y) => y - 1), style: { background: "transparent", border: "none", color: "#fff", fontSize: 22, cursor: "pointer", fontWeight: 700 } }, "\u2039"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, year), /* @__PURE__ */ React.createElement("button", { onClick: () => setYear((y) => y + 1), style: { background: "transparent", border: "none", color: "#fff", fontSize: 22, cursor: "pointer", fontWeight: 700 } }, "\u203A")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 2, padding: 12 } }, MONTH_NAMES.map((m, i) => {
       const cur = i === currentMonth && year === currentYear;
       const nowDate = /* @__PURE__ */ new Date(), isNow = i === nowDate.getMonth() && year === nowDate.getFullYear() && !cur;
@@ -10212,12 +10355,12 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
   function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit, onRowSave, onRowAdd, onRowDelete, onRowCheck, onChartOpen, onOpenCartera, onToggleCartera, anual }) {
     const T = totalIngreso;
     const pct = T > 0 ? (subtotal / T * 100).toFixed(1) : "-";
-    const [hover, setHover] = useState17(false);
-    const [adding, setAdding] = useState17(false);
-    const [newLabel, setNewLabel] = useState17("");
-    const [newEmoji, setNewEmoji] = useState17("\u{1F4CC}");
-    const [editId, setEditId] = useState17(null);
-    const [editLabel, setEditLabel] = useState17("");
+    const [hover, setHover] = useState18(false);
+    const [adding, setAdding] = useState18(false);
+    const [newLabel, setNewLabel] = useState18("");
+    const [newEmoji, setNewEmoji] = useState18("\u{1F4CC}");
+    const [editId, setEditId] = useState18(null);
+    const [editLabel, setEditLabel] = useState18("");
     function confirmAdd() {
       if (!newLabel.trim()) return;
       onRowAdd(secKey, { id: Date.now().toString(), emoji: newEmoji, label: newLabel.trim(), monto: 0 });
@@ -10258,25 +10401,25 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       ) : /* @__PURE__ */ React.createElement("span", { onClick: () => {
         setEditLabel(row.label);
         setEditId(row.id);
-      }, style: { cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, title: "clic para editar" }, row.label)), /* @__PURE__ */ React.createElement(AmountRow, { value: row.monto, min: sumaSubs(row), onSave: (v) => onRowSave(secKey, row.id, v, row.label) }), /* @__PURE__ */ React.createElement("div", { onClick: onOpenCartera ? () => onOpenCartera(secKey, row.id) : void 0, style: celda({ fontSize: 11, color: "#aaa", textAlign: "right", cursor: onOpenCartera ? "pointer" : "default" }) }, rp, "%"), /* @__PURE__ */ React.createElement("div", { onClick: onOpenCartera ? () => onOpenCartera(secKey, row.id) : void 0, style: celda({ fontSize: 11, color: "#bbb", textAlign: "right", cursor: onOpenCartera ? "pointer" : "default" }) }, fmtCLP(anual && anual[row.id] != null ? anual[row.id] : row.monto * 12)), canEdit ? /* @__PURE__ */ React.createElement("button", { onClick: () => onRowDelete(secKey, row.id), style: { background: "transparent", border: "none", color: "#e0e0e0", fontSize: 16, cursor: "pointer", lineHeight: 1, padding: 0, textAlign: "center" }, onMouseEnter: (e) => e.currentTarget.style.color = "#c00", onMouseLeave: (e) => e.currentTarget.style.color = "#e0e0e0" }, "\xD7") : /* @__PURE__ */ React.createElement("div", null)), onToggleCartera && (row.id === ID_ALIMENTACION || row.aCartera) && /* @__PURE__ */ React.createElement("div", { style: { padding: "0 12px 9px 40px" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onToggleCartera(row.id), title: "Un sobre propio con saldo, gastos y compras que se descuentan", style: { background: row.aCartera ? "#fffaf0" : "transparent", border: `1px dashed ${row.aCartera ? "#e0b070" : "#ccc"}`, borderRadius: 6, color: row.aCartera ? "#8a5a00" : "#888", fontFamily: FUENTE, fontSize: 11, padding: "3px 8px", cursor: "pointer" } }, row.aCartera ? "\u{1F9FE} Ser\xE1 cartera desde el per\xEDodo siguiente \xB7 deshacer" : "\u{1F9FE} Pasar a cartera (sobre propio) desde el per\xEDodo siguiente")));
+      }, style: { cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }, title: "clic para editar" }, row.label)), /* @__PURE__ */ React.createElement(AmountRow, { value: row.monto, min: sumaSubs(row), onSave: (v) => onRowSave(secKey, row.id, v, row.label) }), /* @__PURE__ */ React.createElement("div", { onClick: onOpenCartera ? () => onOpenCartera(secKey, row.id) : void 0, style: celda({ fontSize: 11, color: "#aaa", textAlign: "right", cursor: onOpenCartera ? "pointer" : "default" }) }, rp, "%"), /* @__PURE__ */ React.createElement("div", { onClick: onOpenCartera ? () => onOpenCartera(secKey, row.id) : void 0, style: celda({ fontSize: 11, color: "#bbb", textAlign: "right", cursor: onOpenCartera ? "pointer" : "default" }) }, fmtCLP(anual && anual[row.id] != null ? anual[row.id] : row.monto * 12)), canEdit ? /* @__PURE__ */ React.createElement("button", { onClick: () => onRowDelete(secKey, row.id), style: { background: "transparent", border: "none", color: "#e0e0e0", fontSize: 16, cursor: "pointer", lineHeight: 1, padding: 0, textAlign: "center" }, onMouseEnter: (e) => e.currentTarget.style.color = "#c00", onMouseLeave: (e) => e.currentTarget.style.color = "#e0e0e0" }, "\xD7") : /* @__PURE__ */ React.createElement("div", null)), onToggleCartera && (FILAS_CARTERABLES.includes(row.id) || row.aCartera) && /* @__PURE__ */ React.createElement("div", { style: { padding: "0 12px 9px 40px" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onToggleCartera(row.id), title: "Un sobre propio con saldo, gastos y compras que se descuentan", style: { background: row.aCartera ? "#fffaf0" : "transparent", border: `1px dashed ${row.aCartera ? "#e0b070" : "#ccc"}`, borderRadius: 6, color: row.aCartera ? "#8a5a00" : "#888", fontFamily: FUENTE, fontSize: 11, padding: "3px 8px", cursor: "pointer" } }, row.aCartera ? "\u{1F9FE} Ser\xE1 cartera desde el per\xEDodo siguiente \xB7 deshacer" : "\u{1F9FE} Pasar a cartera (sobre propio) desde el per\xEDodo siguiente")));
     }), adding && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 12px", borderTop: "1px dashed #eee", background: "#fafafa", display: "flex", gap: 6, alignItems: "center" } }, /* @__PURE__ */ React.createElement("input", { value: newEmoji, onChange: (e) => setNewEmoji(e.target.value), style: { width: 34, textAlign: "center", border: "1px dashed #ccc", borderRadius: 4, padding: 3, fontSize: 15, outline: "none" }, placeholder: "\u{1F4CC}" }), /* @__PURE__ */ React.createElement("input", { autoFocus: true, value: newLabel, onChange: (e) => setNewLabel(e.target.value), onKeyDown: (e) => {
       if (e.key === "Enter") confirmAdd();
       if (e.key === "Escape") setAdding(false);
     }, placeholder: "nombre del fondo...", style: { flex: 1, border: "1px dashed #ccc", borderRadius: 4, padding: "4px 8px", fontSize: 13, fontFamily: FUENTE, outline: "none", background: "#fff" } }), /* @__PURE__ */ React.createElement("button", { onClick: confirmAdd, style: { background: "#111", color: "#fff", border: "none", borderRadius: 4, padding: "4px 10px", fontSize: 12, cursor: "pointer" } }, "\u2713"), /* @__PURE__ */ React.createElement("button", { onClick: () => setAdding(false), style: { background: "transparent", border: "none", color: "#bbb", fontSize: 18, cursor: "pointer" } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "10px 12px", background: "#f3f3f3", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#111", fontWeight: 700 }) }, "Subtotal"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 13, color: "#111", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO }) }, fmtCLP(subtotal)), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 11, color: "#666", textAlign: "right", fontWeight: 600 }) }, pct, "%"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 11, color: "#666", textAlign: "right", fontWeight: 600 }) }, fmtCLP(anualSub)), /* @__PURE__ */ React.createElement("div", null))));
   }
   function BudgetPage({ budgets, onSaveBudget }) {
-    const [chartData, setChartData] = useState17(null);
-    const [ingChart, setIngChart] = useState17(false);
-    const [monthModal, setMonthModal] = useState17(false);
-    const [aviso, setAviso] = useState17("");
-    const [ventana, setVentana] = useState17(null);
-    const [gastoDesde, setGastoDesde] = useState17(null);
-    const [guia, setGuia] = useState17(false);
-    const [cierre, setCierre] = useState17(null);
-    const avisoRef = useRef8(null);
+    const [chartData, setChartData] = useState18(null);
+    const [ingChart, setIngChart] = useState18(false);
+    const [monthModal, setMonthModal] = useState18(false);
+    const [aviso, setAviso] = useState18("");
+    const [ventana, setVentana] = useState18(null);
+    const [gastoDesde, setGastoDesde] = useState18(null);
+    const [guia, setGuia] = useState18(false);
+    const [cierre, setCierre] = useState18(null);
+    const avisoRef = useRef9(null);
     const now = /* @__PURE__ */ new Date();
-    const [selYear, setSelYear] = useState17(now.getFullYear());
-    const [selMonth, setSelMonth] = useState17(now.getDate() >= 25 ? now.getMonth() : (now.getMonth() - 1 + 12) % 12);
+    const [selYear, setSelYear] = useState18(now.getFullYear());
+    const [selMonth, setSelMonth] = useState18(now.getDate() >= 25 ? now.getMonth() : (now.getMonth() - 1 + 12) % 12);
     const monthKey = `${selYear}-${String(selMonth + 1).padStart(2, "0")}`;
     const budget = getBudgetForPeriod(budgets, monthKey);
     const periodLabel = `25 ${MONTH_NAMES[selMonth].slice(0, 3)} \u2014 24 ${MONTH_NAMES[(selMonth + 1) % 12].slice(0, 3)} ${selYear}`;
@@ -10388,8 +10531,8 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
   var BudgetPage_default = BudgetPage;
 
   // modules/presupuesto/CarritoModal.jsx
-  var { useState: useState18, useMemo: useMemo10 } = React;
-  var F5 = "'DM Sans',sans-serif";
+  var { useMemo: useMemo10 } = React;
+  var F6 = "'DM Sans',sans-serif";
   function etiquetaDia(key, hoy) {
     if (key === hoy) return "Hoy";
     const m = /* @__PURE__ */ new Date(hoy + "T12:00:00");
@@ -10400,70 +10543,31 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     const dia = ["dom", "lun", "mar", "mi\xE9", "jue", "vie", "s\xE1b"][d.getDay()];
     return `${key < hoy ? "Atrasadas \xB7 " : ""}${dia} ${d.getDate()}/${d.getMonth() + 1}`;
   }
-  function CarritoModal({ dayData, hoy, api, onItem, onClose }) {
-    const [editando, setEditando] = useState18(null);
-    const [msg, setMsg] = useState18("");
-    const info = api.info();
-    const grupos = useMemo10(() => Object.keys(dayData || {}).sort().map((k) => ({ key: k, items: (dayData[k] && dayData[k].compras || []).filter((i) => !i.done) })).filter((g) => g.items.length > 0), [dayData]);
-    const compradosHoy = (dayData && dayData[hoy] && dayData[hoy].compras || []).filter((i) => i.done);
-    const estimado = grupos.reduce((s, g) => s + g.items.reduce((t, i) => t + montoCompra(i), 0), 0);
-    const sinPrecio = grupos.reduce((s, g) => s + g.items.filter((i) => montoCompra(i) === 0).length, 0);
-    const pendientes = grupos.reduce((s, g) => s + g.items.length, 0);
-    function marcar(dateKey, item) {
-      setMsg("");
-      if (info.activo && montoCompra(item) === 0) {
-        setEditando(`${dateKey}|${item.id}`);
-        return;
-      }
-      const r = api.comprar(item);
-      if (r.error) {
-        setMsg(r.error);
-        return;
-      }
-      onItem(dateKey, item.id, { done: true, ...r.patch || {} });
-    }
-    function desmarcar(dateKey, item) {
-      setMsg("");
-      const r = api.desmarcar(item);
-      if (r.error) {
-        setMsg(r.error);
-        return;
-      }
-      onItem(dateKey, item.id, { done: false, ...r.patch || {} });
-    }
-    const accionesDe = (dateKey, item) => ({
-      guardar: (f2) => {
-        onItem(dateKey, item.id, f2);
-        setEditando(null);
-      },
-      comprar: (f2) => {
-        const it = { ...item, ...f2 };
-        const r = api.comprar(it);
-        if (r.error) return r.error;
-        onItem(dateKey, item.id, { ...f2, done: true, ...r.patch || {} });
-        setEditando(null);
-        return null;
-      },
-      sinGasto: (f2) => {
-        onItem(dateKey, item.id, { ...f2, done: true });
-        setEditando(null);
-      },
-      nuevaCategoria: api.nuevaCategoria
-    });
-    const casilla = (hecho, onClick) => /* @__PURE__ */ React.createElement("div", { onClick, style: { width: 20, height: 20, borderRadius: 4, border: `1.5px dashed ${hecho ? "#111" : "#bbb"}`, background: hecho ? "#111" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 } }, hecho && /* @__PURE__ */ React.createElement("span", { style: { color: "#fff", fontSize: 12, lineHeight: 1 } }, "\u2713"));
-    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 12, width: "min(95vw,440px)", maxHeight: "86vh", display: "flex", flexDirection: "column", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, "\u{1F6D2} Carrito ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: "#888" } }, pendientes, " pendiente", pendientes === 1 ? "" : "s")), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#aaa", fontSize: 22, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "8px 14px" } }, msg && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F5, fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", margin: "4px 0 8px" } }, msg), grupos.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#ccc", fontFamily: F5, fontSize: 13, textAlign: "center", padding: "24px 0" } }, "no hay compras pendientes"), grupos.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.key, style: { marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F5, fontSize: 10, color: g.key < hoy ? "#a60" : "#999", letterSpacing: 2, textTransform: "uppercase", margin: "8px 0 2px" } }, etiquetaDia(g.key, hoy)), g.items.map((item) => {
-      const k = `${g.key}|${item.id}`;
-      return /* @__PURE__ */ React.createElement("div", { key: item.id }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: "1px solid #f5f5f5" } }, casilla(false, () => marcar(g.key, item)), /* @__PURE__ */ React.createElement("div", { onClick: () => setEditando(editando === k ? null : k), style: { flex: 1, minWidth: 0, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F5, fontSize: 14, color: "#333" } }, item.text), /* @__PURE__ */ React.createElement(ChipCompra, { item }))), editando === k && /* @__PURE__ */ React.createElement(CompraEditor, { item, info, acciones: accionesDe(g.key, item), onClose: () => setEditando(null) }));
-    }))), compradosHoy.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F5, fontSize: 10, color: "#999", letterSpacing: 2, textTransform: "uppercase", margin: "8px 0 2px" } }, "Comprado hoy \xB7 toca para deshacer"), compradosHoy.map((item) => /* @__PURE__ */ React.createElement("div", { key: item.id, style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: "1px solid #f5f5f5" } }, casilla(true, () => desmarcar(hoy, item)), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F5, fontSize: 14, color: "#bbb", textDecoration: "line-through" } }, item.text), /* @__PURE__ */ React.createElement(ChipCompra, { item })))))), /* @__PURE__ */ React.createElement("div", { style: { borderTop: "1px solid #f0f0f0", padding: "10px 16px", fontFamily: F5, fontSize: 12, color: "#666", lineHeight: 1.5 } }, pendientes > 0 && /* @__PURE__ */ React.createElement("div", null, "Estimado pendiente: ", /* @__PURE__ */ React.createElement("b", { style: { color: "#111" } }, fmtCLP(estimado)), sinPrecio > 0 && /* @__PURE__ */ React.createElement("span", { style: { color: "#aaa" } }, " \xB7 ", sinPrecio, " sin precio")), info.activo ? /* @__PURE__ */ React.createElement("div", { style: { color: estimado > info.saldo ? "#c00" : "#666" } }, info.dest.row.emoji, " ", info.dest.row.label, ": saldo ", /* @__PURE__ */ React.createElement("b", null, fmtCLP(info.saldo)), estimado > info.saldo ? " \xB7 el estimado no alcanza" : "") : /* @__PURE__ */ React.createElement("div", { style: { color: "#aaa" } }, "Alimentaci\xF3n a\xFAn no es cartera con sobres: las compras no descuentan de ning\xFAn fondo."))));
+  function CarritoModal({ dayData, hoy, api, onItem, onAdd, onDelete, onClose }) {
+    const grupos = useMemo10(() => {
+      const dias = Object.keys(dayData || {}).sort().map((k) => ({ key: k, titulo: etiquetaDia(k, hoy), vencido: k < hoy, items: (dayData[k] && dayData[k].compras || []).filter((i) => !i.done) })).filter((g) => g.items.length > 0);
+      const comprados = (dayData && dayData[hoy] && dayData[hoy].compras || []).filter((i) => i.done);
+      return comprados.length ? [...dias, { key: hoy, titulo: "Comprado hoy \xB7 toca la casilla para deshacer", items: comprados }] : dias;
+    }, [dayData, hoy]);
+    const pendientes = grupos.filter((g) => !g.titulo.startsWith("Comprado")).reduce((s, g) => s + g.items.length, 0);
+    const sinPrecio = grupos.filter((g) => !g.titulo.startsWith("Comprado")).reduce((s, g) => s + g.items.filter((i) => montoCompra(i) === 0).length, 0);
+    const destinos = {};
+    grupos.filter((g) => !g.titulo.startsWith("Comprado")).forEach((g) => g.items.forEach((i) => {
+      const inf = api.info(i.categoria);
+      const d = destinos[inf.destId] || (destinos[inf.destId] = { label: inf.destLabel, emoji: inf.dest ? inf.dest.row.emoji : "", activo: inf.activo, saldo: inf.saldo, estimado: 0 });
+      d.estimado += montoCompra(i);
+    }));
+    const estimado = Object.values(destinos).reduce((s, d) => s + d.estimado, 0);
+    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 12, width: "min(95vw,440px)", maxHeight: "86vh", display: "flex", flexDirection: "column", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, "\u{1F6D2} Carrito ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: "#888" } }, pendientes, " pendiente", pendientes === 1 ? "" : "s")), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#aaa", fontSize: 22, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "10px 14px" } }, /* @__PURE__ */ React.createElement(ListaCompras, { grupos, agregarEn: hoy, api, onPatch: onItem, onAdd, onDelete, vacio: "no hay compras pendientes" })), /* @__PURE__ */ React.createElement("div", { style: { borderTop: "1px solid #f0f0f0", padding: "10px 16px", fontFamily: F6, fontSize: 12, color: "#666", lineHeight: 1.5 } }, pendientes > 0 && /* @__PURE__ */ React.createElement("div", null, "Estimado pendiente: ", /* @__PURE__ */ React.createElement("b", { style: { color: "#111" } }, fmtCLP(estimado)), sinPrecio > 0 && /* @__PURE__ */ React.createElement("span", { style: { color: "#aaa" } }, " \xB7 ", sinPrecio, " sin precio")), Object.entries(destinos).map(([id, d]) => d.activo ? /* @__PURE__ */ React.createElement("div", { key: id, style: { color: d.estimado > d.saldo ? "#c00" : "#666" } }, d.emoji, " ", d.label, ": saldo ", /* @__PURE__ */ React.createElement("b", null, fmtCLP(d.saldo)), d.estimado > d.saldo ? " \xB7 el estimado no alcanza" : "") : /* @__PURE__ */ React.createElement("div", { key: id, style: { color: "#aaa" } }, d.label, " a\xFAn no es cartera con sobres: sus compras no descuentan de ning\xFAn fondo.")), pendientes === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#aaa" } }, "Agrega arriba lo que haga falta comprar."))));
   }
 
   // modules/pokecripto/AgregarCartaModal.jsx
   var { useState: useState19, useMemo: useMemo11 } = React;
-  var F6 = "'DM Sans',sans-serif";
+  var F7 = "'DM Sans',sans-serif";
   var C2 = "'Caveat',cursive";
   var CONDICIONES2 = ["NM", "LP", "MP", "HP", "DMG"];
-  var rotulo5 = { fontFamily: F6, fontSize: 10, color: "#aaa", marginBottom: 6 };
-  var chip2 = (activo) => ({ fontFamily: F6, fontSize: 11, padding: "5px 12px", borderRadius: 8, border: "1px dashed #ddd", background: activo ? "#111" : "transparent", color: activo ? "#fff" : "#555", cursor: "pointer" });
+  var rotulo5 = { fontFamily: F7, fontSize: 10, color: "#aaa", marginBottom: 6 };
+  var chip2 = (activo) => ({ fontFamily: F7, fontSize: 11, padding: "5px 12px", borderRadius: 8, border: "1px dashed #ddd", background: activo ? "#111" : "transparent", color: activo ? "#fff" : "#555", cursor: "pointer" });
   var campo5 = { width: "100%", border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontSize: 16, fontFamily: C2, outline: "none", boxSizing: "border-box", color: "#111" };
   var fmtUSD2 = (n) => "$" + parseFloat(n || 0).toFixed(2);
   function AgregarCartaModal({ inventario, carpetas, priceCache, saveInventario, permanecer, onClose, onGuardado }) {
@@ -10528,7 +10632,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     if (carta) {
       const watch = form.destino === "watch";
       return envoltorio(
-        /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 14 } }, carta.images && carta.images.small && /* @__PURE__ */ React.createElement("img", { src: carta.images.small, alt: carta.name, style: { width: 52, borderRadius: 6, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C2, fontSize: 20, fontWeight: 700, color: "#111", lineHeight: 1.2 } }, carta.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F6, fontSize: 11, color: "#888" } }, carta.set && carta.set.name, " \xB7 #", carta.number, carta.rarity ? ` \xB7 ${carta.rarity}` : ""), precioDe(carta) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F6, fontSize: 12, fontWeight: 700, color: "#2e7d52", marginTop: 3 } }, fmtUSD2(precioDe(carta)), " ", /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 400, color: "#bbb", fontSize: 10 } }, "TCGPlayer")))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", marginBottom: 14, border: "1.5px solid #111", borderRadius: 10, overflow: "hidden" } }, [["inventario", "\u{1F4E6} en posesi\xF3n"], ["hunting", "\u{1F5E1}\uFE0F hunting"], ["watch", "\u{1F3AF} price watch"]].map(([k, l]) => /* @__PURE__ */ React.createElement(
+        /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 14 } }, carta.images && carta.images.small && /* @__PURE__ */ React.createElement("img", { src: carta.images.small, alt: carta.name, style: { width: 52, borderRadius: 6, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C2, fontSize: 20, fontWeight: 700, color: "#111", lineHeight: 1.2 } }, carta.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F7, fontSize: 11, color: "#888" } }, carta.set && carta.set.name, " \xB7 #", carta.number, carta.rarity ? ` \xB7 ${carta.rarity}` : ""), precioDe(carta) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F7, fontSize: 12, fontWeight: 700, color: "#2e7d52", marginTop: 3 } }, fmtUSD2(precioDe(carta)), " ", /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 400, color: "#bbb", fontSize: 10 } }, "TCGPlayer")))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", marginBottom: 14, border: "1.5px solid #111", borderRadius: 10, overflow: "hidden" } }, [["inventario", "\u{1F4E6} en posesi\xF3n"], ["hunting", "\u{1F5E1}\uFE0F hunting"], ["watch", "\u{1F3AF} price watch"]].map(([k, l]) => /* @__PURE__ */ React.createElement(
           "button",
           {
             key: k,
@@ -10536,10 +10640,10 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
             style: { flex: 1, padding: "8px 0", background: form.destino === k ? "#111" : "transparent", color: form.destino === k ? "#fff" : "#999", border: "none", cursor: "pointer", fontFamily: C2, fontSize: 14, fontWeight: 700 }
           },
           l
-        ))), !watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Carpeta"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, carpetasNormales.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, carpeta: c })), style: chip2(form.carpeta === c) }, c)))), watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "\u{1F3AF} Me avisa cuando baje a (USD, opcional)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.precioObjetivo, onChange: (e) => setForm((f2) => ({ ...f2, precioObjetivo: e.target.value })), placeholder: "ej: 2.50", style: campo5 })), form.destino === "inventario" && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Lo que pagu\xE9 USD (0 si fue regalo)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.costoUSD, onChange: (e) => setForm((f2) => ({ ...f2, costoUSD: e.target.value })), placeholder: "ej: 8.50", style: campo5 })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: Math.max(1, (f2.cantidad || 1) - 1) })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: C2, fontSize: 24, fontWeight: 700, color: "#111", minWidth: 28, textAlign: "center" } }, form.cantidad || 1), /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: (f2.cantidad || 1) + 1 })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "+")))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Condici\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, CONDICIONES2.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, condicion: c })), style: { ...chip2(form.condicion === c), flex: 1, padding: "6px 4px" } }, c)))), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F6, fontSize: 12, color: "#c00", marginBottom: 10 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: guardar, style: { width: "100%", background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "14px", fontFamily: C2, fontSize: 18, cursor: "pointer", marginBottom: 8 } }, "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+        ))), !watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Carpeta"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, carpetasNormales.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, carpeta: c })), style: chip2(form.carpeta === c) }, c)))), watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "\u{1F3AF} Me avisa cuando baje a (USD, opcional)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.precioObjetivo, onChange: (e) => setForm((f2) => ({ ...f2, precioObjetivo: e.target.value })), placeholder: "ej: 2.50", style: campo5 })), form.destino === "inventario" && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Lo que pagu\xE9 USD (0 si fue regalo)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.costoUSD, onChange: (e) => setForm((f2) => ({ ...f2, costoUSD: e.target.value })), placeholder: "ej: 8.50", style: campo5 })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: Math.max(1, (f2.cantidad || 1) - 1) })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: C2, fontSize: 24, fontWeight: 700, color: "#111", minWidth: 28, textAlign: "center" } }, form.cantidad || 1), /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: (f2.cantidad || 1) + 1 })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "+")))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Condici\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, CONDICIONES2.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, condicion: c })), style: { ...chip2(form.condicion === c), flex: 1, padding: "6px 4px" } }, c)))), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F7, fontSize: 12, color: "#c00", marginBottom: 10 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: guardar, style: { width: "100%", background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "14px", fontFamily: C2, fontSize: 18, cursor: "pointer", marginBottom: 8 } }, "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
           setCarta(null);
           setError(null);
-        }, style: { width: "100%", background: "transparent", color: "#999", border: "none", padding: "8px", fontFamily: F6, fontSize: 12, cursor: "pointer" } }, "volver a la b\xFAsqueda"))
+        }, style: { width: "100%", background: "transparent", color: "#999", border: "none", padding: "8px", fontFamily: F7, fontSize: 12, cursor: "pointer" } }, "volver a la b\xFAsqueda"))
       );
     }
     return envoltorio(
@@ -10553,24 +10657,24 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
           placeholder: "nombre \xB7 sv3-125 \xB7 OBF 125",
           style: { flex: 1, border: "none", borderBottom: "2px solid #111", padding: "8px 4px", fontSize: 18, fontFamily: C2, outline: "none", background: "transparent", color: "#111", minWidth: 0 }
         }
-      ), /* @__PURE__ */ React.createElement("button", { onClick: buscar, style: { background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontFamily: C2, fontSize: 15, cursor: "pointer" } }, "buscar")), cargando2 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: 14, fontFamily: F6, fontSize: 12, color: "#aaa" } }, "buscando\u2026"), !cargando2 && error && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: 12, fontFamily: F6, fontSize: 13, color: "#c00" } }, error), resultados.map((c) => {
+      ), /* @__PURE__ */ React.createElement("button", { onClick: buscar, style: { background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontFamily: C2, fontSize: 15, cursor: "pointer" } }, "buscar")), cargando2 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: 14, fontFamily: F7, fontSize: 12, color: "#aaa" } }, "buscando\u2026"), !cargando2 && error && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: 12, fontFamily: F7, fontSize: 13, color: "#c00" } }, error), resultados.map((c) => {
         const p = precioDe(c);
         const yaInv = inv.some((x) => x.cardId === c.id && x.carpeta !== "Price Watch");
         const yaWatch = inv.some((x) => x.cardId === c.id && x.carpeta === "Price Watch");
-        return /* @__PURE__ */ React.createElement("button", { key: c.id, onClick: () => elegir(c), style: { display: "flex", gap: 10, alignItems: "center", width: "100%", textAlign: "left", background: "transparent", border: "none", borderBottom: "1px solid #f0f0f0", padding: "10px 0", cursor: "pointer" } }, c.images && c.images.small && /* @__PURE__ */ React.createElement("img", { src: c.images.small, alt: c.name, style: { width: 44, borderRadius: 5, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C2, fontSize: 17, fontWeight: 700, color: "#111", lineHeight: 1.2 } }, c.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F6, fontSize: 11, color: "#888" } }, c.set && c.set.name, " \xB7 #", c.number, c.rarity ? ` \xB7 ${c.rarity}` : ""), p && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F6, fontSize: 12, fontWeight: 700, color: "#2e7d52" } }, fmtUSD2(p))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F6, fontSize: 10, color: "#aaa", textAlign: "right", flexShrink: 0 } }, yaInv && /* @__PURE__ */ React.createElement("div", null, "ya en tu pool"), yaWatch && /* @__PURE__ */ React.createElement("div", null, "\u{1F3AF} sigui\xE9ndola")));
-      }), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { width: "100%", background: "transparent", color: "#999", border: "none", padding: "12px 8px 0", fontFamily: F6, fontSize: 12, cursor: "pointer" } }, permanecer ? "cerrar" : "cancelar"))
+        return /* @__PURE__ */ React.createElement("button", { key: c.id, onClick: () => elegir(c), style: { display: "flex", gap: 10, alignItems: "center", width: "100%", textAlign: "left", background: "transparent", border: "none", borderBottom: "1px solid #f0f0f0", padding: "10px 0", cursor: "pointer" } }, c.images && c.images.small && /* @__PURE__ */ React.createElement("img", { src: c.images.small, alt: c.name, style: { width: 44, borderRadius: 5, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C2, fontSize: 17, fontWeight: 700, color: "#111", lineHeight: 1.2 } }, c.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F7, fontSize: 11, color: "#888" } }, c.set && c.set.name, " \xB7 #", c.number, c.rarity ? ` \xB7 ${c.rarity}` : ""), p && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F7, fontSize: 12, fontWeight: 700, color: "#2e7d52" } }, fmtUSD2(p))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F7, fontSize: 10, color: "#aaa", textAlign: "right", flexShrink: 0 } }, yaInv && /* @__PURE__ */ React.createElement("div", null, "ya en tu pool"), yaWatch && /* @__PURE__ */ React.createElement("div", null, "\u{1F3AF} sigui\xE9ndola")));
+      }), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { width: "100%", background: "transparent", color: "#999", border: "none", padding: "12px 8px 0", fontFamily: F7, fontSize: 12, cursor: "pointer" } }, permanecer ? "cerrar" : "cancelar"))
     );
   }
   var AgregarCartaModal_default = AgregarCartaModal;
 
   // core/RegistroRapido.jsx
   var { useState: useState20 } = React;
-  var F7 = "'DM Sans',sans-serif";
+  var F8 = "'DM Sans',sans-serif";
   var C3 = "'Caveat',cursive";
   var campo6 = { width: "100%", border: "none", borderBottom: "2px solid #111", padding: "8px 4px", fontSize: 18, fontFamily: C3, outline: "none", background: "transparent", color: "#111", boxSizing: "border-box" };
-  var chip3 = (activo, color) => ({ fontFamily: F7, fontSize: 12, padding: "6px 12px", borderRadius: 14, border: "1px dashed " + (activo && color ? color : "#ddd"), background: activo ? color || "#111" : "transparent", color: activo ? "#fff" : "#555", cursor: "pointer" });
-  var TITULOS = { nota: "\u{1F4DD} nota r\xE1pida", tarea: "\u2705 nueva tarea", compra: "\u{1F6D2} nueva compra" };
-  function RegistroRapido({ tipo, onNota, onTarea, onCompra, onGuardado, onClose }) {
+  var chip3 = (activo, color) => ({ fontFamily: F8, fontSize: 12, padding: "6px 12px", borderRadius: 14, border: "1px dashed " + (activo && color ? color : "#ddd"), background: activo ? color || "#111" : "transparent", color: activo ? "#fff" : "#555", cursor: "pointer" });
+  var TITULOS = { nota: "\u{1F4DD} nota r\xE1pida", tarea: "\u2705 nueva tarea", compra: "\u{1F6D2} compras de hoy" };
+  function RegistroRapido({ tipo, onNota, onTarea, compras, onGuardado, onClose }) {
     const [texto, setTexto] = useState20("");
     const [urgente, setUrgente] = useState20(false);
     const [dia, setDia] = useState20("hoy");
@@ -10592,10 +10696,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       } else if (tipo === "tarea") {
         onTarea({ text: t, date: diaClave(), urgent: urgente });
         aviso = "Tarea agregada";
-      } else {
-        onCompra(t);
-        aviso = "Compra agregada";
-      }
+      } else return;
       setHechos((h) => [...h, `${aviso} \xB7 ${t.length > 40 ? t.slice(0, 40) + "\u2026" : t}`]);
       if (onGuardado) onGuardado(`${aviso} \u2713`);
       setTexto("");
@@ -10607,6 +10708,23 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
         guardar();
       }
     };
+    if (tipo === "compra") {
+      return /* @__PURE__ */ React.createElement(VentanaArriba, { onClose, ancho: 440 }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C3, fontSize: 22, fontWeight: 700, color: "#111", marginBottom: 10 } }, TITULOS.compra), /* @__PURE__ */ React.createElement(
+        ListaCompras,
+        {
+          grupos: [{ key: compras.hoy, items: compras.items }],
+          agregarEn: compras.hoy,
+          api: compras.api,
+          autoFocus: true,
+          onPatch: (k, id, f2) => compras.onPatch(id, f2),
+          onAdd: (k, item) => {
+            compras.onAdd(item);
+            if (onGuardado) onGuardado("Compra agregada \u2713");
+          },
+          onDelete: (k, id) => compras.onDelete(id)
+        }
+      ), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { width: "100%", background: "transparent", color: "#999", border: "none", padding: "8px", fontFamily: F8, fontSize: 12, cursor: "pointer", marginTop: 8 } }, "cerrar"));
+    }
     return /* @__PURE__ */ React.createElement(VentanaArriba, { onClose, ancho: 440 }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C3, fontSize: 22, fontWeight: 700, color: "#111", marginBottom: 10 } }, TITULOS[tipo]), /* @__PURE__ */ React.createElement(Hechos, { hechos }), tipo === "nota" ? /* @__PURE__ */ React.createElement(
       "textarea",
       {
@@ -10624,18 +10742,18 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
         onChange: (e) => setTexto(e.target.value),
         onKeyDown: enter,
         autoFocus: true,
-        placeholder: tipo === "tarea" ? "tarea\u2026" : "qu\xE9 hay que comprar\u2026",
+        placeholder: "tarea\u2026",
         style: { ...campo6, marginBottom: 12 }
       }
-    ), tipo === "tarea" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setDia("hoy"), style: chip3(dia === "hoy") }, "hoy"), /* @__PURE__ */ React.createElement("button", { onClick: () => setDia("manana"), style: chip3(dia === "manana") }, "ma\xF1ana"), /* @__PURE__ */ React.createElement("button", { onClick: () => setDia("fecha"), style: chip3(dia === "fecha") }, "otro d\xEDa"), /* @__PURE__ */ React.createElement("button", { onClick: () => setUrgente((u) => !u), style: { ...chip3(urgente, "#ff3b30"), marginLeft: "auto" } }, urgente ? "\u{1F534} urgente" : "urgente")), dia === "fecha" && /* @__PURE__ */ React.createElement("input", { type: "date", value: fecha, onChange: (e) => setFecha(e.target.value), style: { marginTop: 10, border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontFamily: F7, fontSize: 14, color: "#111" } })), tipo === "compra" && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F7, fontSize: 11, color: "#aaa", marginBottom: 12 } }, "se suma a la lista de compras de hoy"), /* @__PURE__ */ React.createElement(
+    ), tipo === "tarea" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setDia("hoy"), style: chip3(dia === "hoy") }, "hoy"), /* @__PURE__ */ React.createElement("button", { onClick: () => setDia("manana"), style: chip3(dia === "manana") }, "ma\xF1ana"), /* @__PURE__ */ React.createElement("button", { onClick: () => setDia("fecha"), style: chip3(dia === "fecha") }, "otro d\xEDa"), /* @__PURE__ */ React.createElement("button", { onClick: () => setUrgente((u) => !u), style: { ...chip3(urgente, "#ff3b30"), marginLeft: "auto" } }, urgente ? "\u{1F534} urgente" : "urgente")), dia === "fecha" && /* @__PURE__ */ React.createElement("input", { type: "date", value: fecha, onChange: (e) => setFecha(e.target.value), style: { marginTop: 10, border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontFamily: F8, fontSize: 14, color: "#111" } })), /* @__PURE__ */ React.createElement(
       "button",
       {
         onClick: guardar,
         disabled: !puede,
         style: { width: "100%", background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "13px", fontFamily: C3, fontSize: 18, cursor: "pointer", opacity: puede ? 1 : 0.4, marginBottom: 8 }
       },
-      tipo === "nota" ? "agregar nota" : tipo === "tarea" ? "agregar tarea" : "agregar compra"
-    ), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { width: "100%", background: "transparent", color: "#999", border: "none", padding: "8px", fontFamily: F7, fontSize: 12, cursor: "pointer" } }, "cerrar"));
+      tipo === "nota" ? "agregar nota" : "agregar tarea"
+    ), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { width: "100%", background: "transparent", color: "#999", border: "none", padding: "8px", fontFamily: F8, fontSize: 12, cursor: "pointer" } }, "cerrar"));
   }
   var RegistroRapido_default = RegistroRapido;
 
@@ -11239,7 +11357,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
   var EspritPage_default = EspritPage;
 
   // modules/shared/constants.js
-  var { useState: useState21, useEffect: useEffect12, useRef: useRef9 } = React;
+  var { useState: useState21, useEffect: useEffect12, useRef: useRef10 } = React;
   var FEED_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/feed.json";
   var CINE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/cine.json";
   var MELEE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/melee.json";
@@ -11280,7 +11398,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
   var STORAGE_KEY = "angst-feed-proto-v1";
 
   // modules/shared/ui.jsx
-  var { useState: useState22, useEffect: useEffect13, useLayoutEffect, useRef: useRef10 } = React;
+  var { useState: useState22, useEffect: useEffect13, useLayoutEffect, useRef: useRef11 } = React;
   var btnGhost = { flex: 1, background: "transparent", border: "1px dashed #444", color: "#aaa", borderRadius: 10, padding: "10px 6px", fontFamily: "'DM Sans',sans-serif", fontSize: 10, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 };
   function shareToWhatsApp(item) {
     const text = encodeURIComponent(`${item.title}
@@ -11346,13 +11464,13 @@ ${item.link}`);
     return alto;
   }
   function MarcoAngst({ children, style }) {
-    const ref = useRef10(null);
+    const ref = useRef11(null);
     const alto = useAltoLibre(ref);
     return /* @__PURE__ */ React.createElement("div", { ref, style: { position: "relative", width: "100%", maxWidth: 480, margin: "0 auto", height: alto || "70vh", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box", ...style } }, children);
   }
 
   // modules/shared/catalog.js
-  var { useState: useState23, useEffect: useEffect14, useRef: useRef11 } = React;
+  var { useState: useState23, useEffect: useEffect14, useRef: useRef12 } = React;
   function roundRobinMerge(byCategoryArrays) {
     const queues = byCategoryArrays.map((c) => ({ cat: c.cat, items: [...c.items] }));
     const out = [];
@@ -11417,7 +11535,7 @@ ${item.link}`);
   }
 
   // modules/feed/FeedPage.jsx
-  var { useState: useState24, useEffect: useEffect15, useRef: useRef12 } = React;
+  var { useState: useState24, useEffect: useEffect15, useRef: useRef13 } = React;
   function cardsFor(formato) {
     if (formato === "musica") return { Story: MusicStoryCard, Extended: MusicExtendedView };
     return { Story: StoryCard, Extended: ExtendedView };
@@ -11603,10 +11721,10 @@ ${item.link}`);
     const [toast, setToast] = useState24(null);
     const [buzonOpenItem, setBuzonOpenItem] = useState24(null);
     const [showDiagPanel, setShowDiagPanel] = useState24(false);
-    const queueRef = useRef12([]);
-    const seenRef = useRef12([]);
-    const buzonRef = useRef12([]);
-    const lastRefreshRef = useRef12(null);
+    const queueRef = useRef13([]);
+    const seenRef = useRef13([]);
+    const buzonRef = useRef13([]);
+    const lastRefreshRef = useRef13(null);
     useEffect15(() => {
       queueRef.current = queue;
     }, [queue]);
@@ -11786,7 +11904,7 @@ ${item.link}`);
   var FeedPage_default = FeedPage;
 
   // modules/vitrina/videoteca.jsx
-  var { useState: useState25, useEffect: useEffect16, useRef: useRef13 } = React;
+  var { useState: useState25, useEffect: useEffect16, useRef: useRef14 } = React;
   function loadArchivedVistos(storageKey) {
     try {
       const raw = localStorage.getItem(storageKey);
@@ -11805,7 +11923,7 @@ ${item.link}`);
   var ARCHIVEDFEED_NUEVOS_DIAS = 20;
   var ARCHIVEDFEED_MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
   function LazyEmbed({ videoId, title }) {
-    const ref = useRef13(null);
+    const ref = useRef14(null);
     const [visible, setVisible] = useState25(false);
     useEffect16(() => {
       if (visible || !ref.current) return;
@@ -11942,7 +12060,7 @@ ${item.link}`);
   }
 
   // modules/vitrina/melee.jsx
-  var { useState: useState26, useEffect: useEffect17, useRef: useRef14 } = React;
+  var { useState: useState26, useEffect: useEffect17, useRef: useRef15 } = React;
   var CHARACTER_ICONS = {
     "Fox": { ab: "FOX", bg: "#8a8a8a" },
     "Falco": { ab: "FAL", bg: "#3f6fd1" },
@@ -12237,7 +12355,7 @@ ${item.link}`);
   }
 
   // modules/vitrina/series.jsx
-  var { useState: useState27, useEffect: useEffect18, useRef: useRef15 } = React;
+  var { useState: useState27, useEffect: useEffect18, useRef: useRef16 } = React;
   function SeriesProgreso({ item, progresoActual, onMarcar }) {
     const seasons = item.seasons;
     const [temporada, setTemporada] = useState27(progresoActual?.temporada || seasons?.[0]?.numero || 1);
@@ -12354,7 +12472,7 @@ ${item.link}`);
   }
 
   // modules/vitrina/cine.jsx
-  var { useState: useState28, useEffect: useEffect19, useLayoutEffect: useLayoutEffect2, useRef: useRef16 } = React;
+  var { useState: useState28, useEffect: useEffect19, useLayoutEffect: useLayoutEffect2, useRef: useRef17 } = React;
   function loadImageForCanvas(url) {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -12657,11 +12775,11 @@ ${item.link}`);
     const [k, setK] = useState28(1);
     const ESPACIADO = ITEM_W * (1 + (k - 1) * 0.5);
     const [h0, setH0] = useState28(0);
-    const contRef = useRef16(null);
-    const cardRef = useRef16(null);
-    const posRef = useRef16(0);
-    const dragRef = useRef16(null);
-    const animRef = useRef16(null);
+    const contRef = useRef17(null);
+    const cardRef = useRef17(null);
+    const posRef = useRef17(0);
+    const dragRef = useRef17(null);
+    const animRef = useRef17(null);
     function setPosBoth(v) {
       posRef.current = v;
       setPos(v);
@@ -13090,11 +13208,11 @@ Toco reintentar ahora.`);
   }
 
   // modules/vitrina/VitrinaPage.jsx
-  var { useState: useState29, useEffect: useEffect20, useRef: useRef17 } = React;
+  var { useState: useState29, useEffect: useEffect20, useRef: useRef18 } = React;
   var VITRINA_ICONS = { "Pel\xEDculas": "\u{1F3AC}", "Series": "\u{1F4FA}", "Animaci\xF3n": "\u26E9\uFE0F", "Microdocumentales": "\u{1F3A5}", "Melee": "\u{1F579}\uFE0F", "Conciertos": "\u{1F3AA}" };
   function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, generatedAt, aviso, cargando: cargando2 }) {
     const items = vitrinaData[vitrinaCat] || [];
-    const raiz = useRef17(null);
+    const raiz = useRef18(null);
     const alto = useAltoLibre(raiz, 0);
     const segBtn = (active) => ({
       flex: 1,
@@ -13318,7 +13436,7 @@ Toco reintentar ahora.`);
   var SemanaDashboard_default = SemanaDashboard;
 
   // core/App.jsx
-  var { useState: useState30, useEffect: useEffect21, useRef: useRef18, useMemo: useMemo12, useCallback: useCallback7 } = React;
+  var { useState: useState30, useEffect: useEffect21, useRef: useRef19, useMemo: useMemo12, useCallback: useCallback7 } = React;
   async function localGet(key) {
     const val = localStorage.getItem(key);
     if (val === null) return null;
@@ -13376,26 +13494,26 @@ Toco reintentar ahora.`);
     const [cartaOpen, setCartaOpen] = useState30(false);
     const [registroTipo, setRegistroTipo] = useState30(null);
     const [regMsg, setRegMsg] = useState30(null);
-    const regMsgTimer = useRef18(null);
-    const cargarInputRef = useRef18(null);
+    const regMsgTimer = useRef19(null);
+    const cargarInputRef = useRef19(null);
     const [dayData, setDayData] = useState30({});
     const [weekOffset, setWeekOffset] = useState30(0);
     const [budgets, setBudgets] = useState30({});
     const [nutria, setNutria] = useState30(makeDefaultNutria());
     const [fadimanData, setFadimanData] = useState30({});
-    const fadimanDataRef = useRef18({});
+    const fadimanDataRef = useRef19({});
     const [nutriLog, setNutriLog] = useState30({});
     const [ejercicioLog, setEjercicioLog] = useState30({});
-    const nutriLogRef = useRef18({});
+    const nutriLogRef = useRef19({});
     const [customFoods, setCustomFoods] = useState30({});
-    const customFoodsRef = useRef18({});
+    const customFoodsRef = useRef19({});
     const [foodOverrides, setFoodOverrides] = useState30({});
-    const foodOverridesRef = useRef18({});
+    const foodOverridesRef = useRef19({});
     const [customEjercicios, setCustomEjercicios] = useState30({});
-    const customEjerciciosRef = useRef18({});
-    const ejercicioLogRef = useRef18({});
+    const customEjerciciosRef = useRef19({});
+    const ejercicioLogRef = useRef19({});
     const [ejercicioDecks, setEjercicioDecks] = useState30([]);
-    const ejercicioDecksRef = useRef18([]);
+    const ejercicioDecksRef = useRef19([]);
     const [calMarks, setCalMarks] = useState30({});
     const [meleeMajors, setMeleeMajors] = useState30([]);
     const [custody, setCustody] = useState30({ baseDate: "2026-04-28", withKids: true, overrides: {} });
@@ -13449,8 +13567,8 @@ Toco reintentar ahora.`);
       }
       return null;
     });
-    const dragState = useRef18(null);
-    const podcastAudioRef = useRef18(null);
+    const dragState = useRef19(null);
+    const podcastAudioRef = useRef19(null);
     useEffect21(() => {
       fetch("https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/podcast-latest.json", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((d) => {
         if (!d) return;
@@ -13522,7 +13640,7 @@ Toco reintentar ahora.`);
       const m = Math.floor(s / 60), sec = Math.floor(s % 60);
       return `${m}:${sec < 10 ? "0" : ""}${sec}`;
     }
-    const lastPosSaveRef = useRef18(0);
+    const lastPosSaveRef = useRef19(0);
     function closePodcastPlayer() {
       if (nowPlaying?.guid && podcastAudioRef.current) {
         savePodcastPosition(nowPlaying.guid, podcastAudioRef.current.currentTime);
@@ -13666,14 +13784,14 @@ Toco reintentar ahora.`);
         }
       }
     }
-    const dayDataRef = useRef18({});
-    const weekOffsetRef = useRef18(0);
-    const budgetRef = useRef18({});
-    const nutriaRef = useRef18(makeDefaultNutria());
-    const calMarksRef = useRef18({});
-    const routinesRef = useRef18([]);
-    const recurringRef = useRef18([]);
-    const lastRolloverRef = useRef18(null);
+    const dayDataRef = useRef19({});
+    const weekOffsetRef = useRef19(0);
+    const budgetRef = useRef19({});
+    const nutriaRef = useRef19(makeDefaultNutria());
+    const calMarksRef = useRef19({});
+    const routinesRef = useRef19([]);
+    const recurringRef = useRef19([]);
+    const lastRolloverRef = useRef19(null);
     const [routines, setRoutines] = useState30([]);
     const [recurring, setRecurring] = useState30([]);
     const [lastRollover, setLastRollover] = useState30(null);
@@ -13684,21 +13802,21 @@ Toco reintentar ahora.`);
     const [scheduleOpen, setScheduleOpen] = useState30(null);
     const [liftedTask, setLiftedTask] = useState30(null);
     const [taskDragTarget, setTaskDragTarget] = useState30(null);
-    const holdTimerRef = useRef18(null);
-    const taskTouchX = useRef18(0);
-    const taskTouchY = useRef18(0);
+    const holdTimerRef = useRef19(null);
+    const taskTouchX = useRef19(0);
+    const taskTouchY = useRef19(0);
     const [openFMenu, setOpenFMenu] = useState30(null);
     const [kidsHealth, setKidsHealth] = useState30(emptyKidsHealth);
-    const kidsHealthRef = useRef18(null);
+    const kidsHealthRef = useRef19(null);
     if (kidsHealthRef.current === null) kidsHealthRef.current = emptyKidsHealth();
     const [pokeInventario, setPokeInventario] = useState30([]);
-    const pokeInventarioRef = useRef18([]);
+    const pokeInventarioRef = useRef19([]);
     const [pokeCarpetas, setPokeCarpetas] = useState30([...CARPETAS_DEFAULT]);
-    const pokeCarpetasRef = useRef18([...CARPETAS_DEFAULT]);
+    const pokeCarpetasRef = useRef19([...CARPETAS_DEFAULT]);
     const [pokeDarkCatalogo, setPokeDarkCatalogo] = useState30([]);
-    const pokeDarkCatalogoRef = useRef18([]);
+    const pokeDarkCatalogoRef = useRef19([]);
     const [pokePriceCache, setPokePriceCache] = useState30({});
-    const pokePriceCacheRef = useRef18({});
+    const pokePriceCacheRef = useRef19({});
     const TCG_KEY_STORAGE = "angst-tcg-price-key";
     const [pokeApiKey, setPokeApiKey] = useState30(() => {
       try {
@@ -13715,7 +13833,7 @@ Toco reintentar ahora.`);
       setPokeApiKey(k);
     }
     const [nutriDecks, setNutriDecks] = useState30([]);
-    const nutriDecksRef = useRef18([]);
+    const nutriDecksRef = useRef19([]);
     const ANGST_STATE_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
     const ANGST_STATE_AUTH_KEY = "angst-simkl-auth-v1";
     const ANGST_STATE_PATH = "angst-full-state.json";
@@ -13737,7 +13855,7 @@ Toco reintentar ahora.`);
       if (!payload || !payload.exportedAt) return false;
       return new Date(payload.exportedAt).getTime() > new Date(localTs).getTime();
     }
-    const forceRepoReadRef = useRef18(false);
+    const forceRepoReadRef = useRef19(false);
     function getAngstStateAuth() {
       try {
         return localStorage.getItem(ANGST_STATE_AUTH_KEY) || null;
@@ -13858,7 +13976,7 @@ Toco reintentar ahora.`);
       }
       setTimeout(() => setStateSyncMsg(null), 4e3);
     }
-    const autoLeidoRef = useRef18(false);
+    const autoLeidoRef = useRef19(false);
     useEffect21(() => {
       if (autoLeidoRef.current) return;
       autoLeidoRef.current = true;
@@ -13930,7 +14048,7 @@ Toco reintentar ahora.`);
       return () => clearInterval(iv);
     }, []);
     const weekStart = addDays(BASE_DATE, weekOffset * 7);
-    const semanaBodyRef = useRef18(null);
+    const semanaBodyRef = useRef19(null);
     const semanaKeys = Array.from({ length: 7 }, (_, k) => fmtFull(addDays(weekStart, k)));
     const hayDiaAbierto = semanaKeys.some((k) => !minimized[k]);
     const [semanaValvula, setSemanaValvula] = useState30(false);
@@ -14965,8 +15083,11 @@ Toco reintentar ahora.`);
     const agregarTareaRapida = ({ text, date, urgent }) => {
       mutarDia(date, (day) => ({ ...day, tasks: [...day.tasks || [], { id: Date.now(), text, fixed: false, done: false, ...urgent ? { urgent: true } : {} }] }));
     };
-    const agregarCompraRapida = (texto) => {
-      mutarDia(fmtFull(/* @__PURE__ */ new Date()), (day) => ({ ...day, compras: [...day.compras || [], { id: Date.now().toString(), text: texto, done: false }] }));
+    const agregarCompraEn = (dateKey, item) => {
+      mutarDia(dateKey, (day) => ({ ...day, compras: [...day.compras || [], item] }));
+    };
+    const quitarCompraEn = (dateKey, itemId) => {
+      mutarDia(dateKey, (day) => ({ ...day, compras: (day.compras || []).filter((c) => c.id !== itemId) }));
     };
     const avisarRegistro = (txt) => {
       if (regMsgTimer.current) clearTimeout(regMsgTimer.current);
@@ -14978,11 +15099,13 @@ Toco reintentar ahora.`);
       setMenuRegOpen(false);
       setPodcastMenuOpen(false);
     };
-    const comprasInfo = () => {
+    const comprasInfo = (categoria, destinoForzado) => {
       const hoy = fmtFull(/* @__PURE__ */ new Date());
-      const dest = carteraCompras(budgets, hoy);
+      const fa = filaCompras(budgets, hoy);
+      const destId = destinoForzado || destinoCategoria(fa ? fa.row : null, categoria);
+      const dest = carteraCompras(budgets, hoy, categoria, destinoForzado);
       const ini = inicioSobres(budgets);
-      const base = { activo: false, dest, bolsillos: [], saldo: 0, categorias: categoriasDe(dest ? dest.row : { id: ID_ALIMENTACION }), puedeNuevaCategoria: !!dest };
+      const base = { activo: false, dest, destId, destLabel: etiquetaFila(budgets, hoy, destId), bolsillos: [], saldo: 0, categorias: categoriasDe(fa ? fa.row : { id: ID_ALIMENTACION }), puedeNuevaCategoria: !!fa, destinos: destinosPosibles(budgets, hoy) };
       if (!dest || !ini || dest.periodo < ini) return base;
       const bolsillos = bolsillosDe(dest.sec, dest.row).map((b) => ({ ...b, saldo: (estadoBolsillo(budgets, dest.periodo, dest.sec, dest.row.id, b.subId) || { saldo: 0 }).saldo })).filter((b) => !b.libre || !(dest.row.subs && dest.row.subs.length) || b.asignado > 0 || b.saldo !== 0);
       return { ...base, activo: true, bolsillos, saldo: bolsillos.reduce((t, b) => t + b.saldo, 0) };
@@ -14994,7 +15117,7 @@ Toco reintentar ahora.`);
     const comprasApi = {
       info: comprasInfo,
       comprar: (item) => {
-        if (!comprasInfo().activo) return { patch: {} };
+        if (!comprasInfo(item.categoria).activo) return { patch: {} };
         if (montoCompra(item) === 0) return { error: "Falta el precio del \xEDtem." };
         const r = registrarCompra(budgetRef.current, { fecha: fmtFull(/* @__PURE__ */ new Date()), item, subId: item.subId ?? null });
         if (r.error) return { error: r.error };
@@ -15009,10 +15132,14 @@ Toco reintentar ahora.`);
         if (r.budget) guardarBudget(item.gastoPeriodo, r.budget);
         return { patch: { gastoId: null, gastoPeriodo: null } };
       },
-      nuevaCategoria: (label) => {
-        const dest = carteraCompras(budgetRef.current, fmtFull(/* @__PURE__ */ new Date()));
-        if (!dest) return;
-        guardarBudget(dest.periodo, agregarCategoria(resolverPeriodo(budgetRef.current, dest.periodo), dest.sec, dest.row.id, label));
+      // Agrega la categoría a la lista de compras (fila «ali», sea gasto base o cartera). Devuelve un mensaje si no se puede.
+      nuevaCategoria: (label, destino) => {
+        const fa = filaCompras(budgetRef.current, fmtFull(/* @__PURE__ */ new Date()));
+        if (!fa) return "No encuentro la fila de Alimentaci\xF3n en el presupuesto.";
+        const p = puedeGenerarPeriodo(budgetRef.current, fa.periodo);
+        if (!p.ok) return p.motivo;
+        guardarBudget(fa.periodo, agregarCategoria(resolverPeriodo(budgetRef.current, fa.periodo), fa.sec, fa.row.id, label, destino));
+        return null;
       }
     };
     const carritoPend = Object.values(dayData || {}).reduce((t, d) => t + (d && d.compras || []).filter((i) => !i.done).length, 0);
@@ -15167,7 +15294,6 @@ Toco reintentar ahora.`);
           dayDataRef.current = ndd;
           saveToStorage({ dayData: ndd });
         },
-        info: comprasApi.info(),
         api: comprasApi,
         onClose: () => setComprasOpen(null)
       }
@@ -15604,7 +15730,7 @@ Toco reintentar ahora.`);
           icon
         ))));
       })())));
-    })))), page === 1 && /* @__PURE__ */ React.createElement(BudgetPage_default, { budgets, onSaveBudget: updateBudgetForMonth }), carritoOpen && /* @__PURE__ */ React.createElement(CarritoModal, { dayData, hoy: fmtFull(/* @__PURE__ */ new Date()), api: comprasApi, onItem: updateComprasItem, onClose: () => setCarritoOpen(false) }), gastoOpen && /* @__PURE__ */ React.createElement(GastoModal, { arriba: true, permanecer: true, budgets, onSaveBudget: (...a) => {
+    })))), page === 1 && /* @__PURE__ */ React.createElement(BudgetPage_default, { budgets, onSaveBudget: updateBudgetForMonth }), carritoOpen && /* @__PURE__ */ React.createElement(CarritoModal, { dayData, hoy: fmtFull(/* @__PURE__ */ new Date()), api: comprasApi, onItem: updateComprasItem, onAdd: agregarCompraEn, onDelete: quitarCompraEn, onClose: () => setCarritoOpen(false) }), gastoOpen && /* @__PURE__ */ React.createElement(GastoModal, { arriba: true, permanecer: true, budgets, onSaveBudget: (...a) => {
       updateBudgetForMonth(...a);
       avisarRegistro("Gasto registrado \u2713");
     }, onClose: () => setGastoOpen(false) }), ingestaOpen && /* @__PURE__ */ React.createElement(
@@ -15619,7 +15745,7 @@ Toco reintentar ahora.`);
         onClose: () => setIngestaOpen(false),
         onGuardado: avisarRegistro
       }
-    ), registroTipo && /* @__PURE__ */ React.createElement(RegistroRapido_default, { tipo: registroTipo, onNota: agregarNotaRapida, onTarea: agregarTareaRapida, onCompra: agregarCompraRapida, onGuardado: avisarRegistro, onClose: () => setRegistroTipo(null) }), cartaOpen && /* @__PURE__ */ React.createElement(
+    ), registroTipo && /* @__PURE__ */ React.createElement(RegistroRapido_default, { tipo: registroTipo, onNota: agregarNotaRapida, onTarea: agregarTareaRapida, compras: { hoy: fmtFull(/* @__PURE__ */ new Date()), items: (dayData[fmtFull(/* @__PURE__ */ new Date())] || {}).compras || [], api: comprasApi, onPatch: (id, f2) => updateComprasItem(fmtFull(/* @__PURE__ */ new Date()), id, f2), onAdd: (item) => agregarCompraEn(fmtFull(/* @__PURE__ */ new Date()), item), onDelete: (id) => quitarCompraEn(fmtFull(/* @__PURE__ */ new Date()), id) }, onGuardado: avisarRegistro, onClose: () => setRegistroTipo(null) }), cartaOpen && /* @__PURE__ */ React.createElement(
       AgregarCartaModal_default,
       {
         inventario: pokeInventario,

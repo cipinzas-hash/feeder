@@ -18,7 +18,7 @@ import NutricionPage from "../modules/nutricion/NutricionPage.jsx";
 import BudgetPage from "../modules/presupuesto/BudgetPage.jsx";
 import GastoModal from "../modules/presupuesto/GastoModal.jsx";
 import CarritoModal from "../modules/presupuesto/CarritoModal.jsx";
-import { carteraCompras, registrarCompra, deshacerCompra, inicioSobres, bolsillosDe, estadoBolsillo, categoriasDe, agregarCategoria, resolverPeriodo, montoCompra, ID_ALIMENTACION } from "./presupuesto-modelo.js";
+import { carteraCompras, registrarCompra, deshacerCompra, inicioSobres, bolsillosDe, estadoBolsillo, categoriasDe, agregarCategoria, resolverPeriodo, montoCompra, ID_ALIMENTACION, filaCompras, destinoCategoria, etiquetaFila, destinosPosibles, puedeGenerarPeriodo } from "./presupuesto-modelo.js";
 import IngestaRapida from "../modules/nutricion/IngestaRapida.jsx";
 import AgregarCartaModal from "../modules/pokecripto/AgregarCartaModal.jsx";
 import RegistroRapido from "./RegistroRapido.jsx";
@@ -1536,8 +1536,12 @@ function AngstApp() {
   const agregarTareaRapida = ({text, date, urgent})=>{
     mutarDia(date, day=>({...day, tasks:[...(day.tasks||[]), {id:Date.now(), text, fixed:false, done:false, ...(urgent?{urgent:true}:{})}]}));
   };
-  const agregarCompraRapida = texto=>{
-    mutarDia(fmtFull(new Date()), day=>({...day, compras:[...(day.compras||[]), {id:Date.now().toString(), text:texto, done:false}]}));
+  // Lista de compras única (Carrito, ➕ Registrar y 🛒 de cada día): agregar y quitar ítems de un día.
+  const agregarCompraEn = (dateKey, item)=>{
+    mutarDia(dateKey, day=>({...day, compras:[...(day.compras||[]), item]}));
+  };
+  const quitarCompraEn = (dateKey, itemId)=>{
+    mutarDia(dateKey, day=>({...day, compras:(day.compras||[]).filter(c=>c.id!==itemId)}));
   };
   // Leyenda temporal en la barra superior (mismo patrón que "descargado ✓" / "guardado ✓").
   const avisarRegistro = txt=>{
@@ -1549,11 +1553,14 @@ function AngstApp() {
 
   // Compras ↔ presupuesto (issue #25): un ítem comprado se descuenta de la cartera Alimentación (cantidad × precio).
   // Mientras Alimentación no sea cartera con sobres activos, el ítem solo guarda su precio y no descuenta nada.
-  const comprasInfo = ()=>{
+  // Cada categoría descuenta de un bolsillo: Alimentación por defecto, Aseo del suyo (o el que se eligió al crear la categoría).
+  const comprasInfo = (categoria, destinoForzado)=>{
     const hoy = fmtFull(new Date());
-    const dest = carteraCompras(budgets, hoy);
+    const fa = filaCompras(budgets, hoy);
+    const destId = destinoForzado || destinoCategoria(fa?fa.row:null, categoria);
+    const dest = carteraCompras(budgets, hoy, categoria, destinoForzado);
     const ini = inicioSobres(budgets);
-    const base = {activo:false, dest, bolsillos:[], saldo:0, categorias:categoriasDe(dest?dest.row:{id:ID_ALIMENTACION}), puedeNuevaCategoria:!!dest};
+    const base = {activo:false, dest, destId, destLabel:etiquetaFila(budgets,hoy,destId), bolsillos:[], saldo:0, categorias:categoriasDe(fa?fa.row:{id:ID_ALIMENTACION}), puedeNuevaCategoria:!!fa, destinos:destinosPosibles(budgets,hoy)};
     if(!dest||!ini||dest.periodo<ini) return base;
     const bolsillos = bolsillosDe(dest.sec,dest.row)
       .map(b=>({...b, saldo:(estadoBolsillo(budgets,dest.periodo,dest.sec,dest.row.id,b.subId)||{saldo:0}).saldo}))
@@ -1564,7 +1571,7 @@ function AngstApp() {
   const comprasApi = {
     info: comprasInfo,
     comprar: item=>{
-      if(!comprasInfo().activo) return {patch:{}};
+      if(!comprasInfo(item.categoria).activo) return {patch:{}};
       if(montoCompra(item)===0) return {error:"Falta el precio del ítem."};
       const r = registrarCompra(budgetRef.current,{fecha:fmtFull(new Date()),item,subId:item.subId??null});
       if(r.error) return {error:r.error};
@@ -1579,10 +1586,14 @@ function AngstApp() {
       if(r.budget) guardarBudget(item.gastoPeriodo,r.budget);
       return {patch:{gastoId:null,gastoPeriodo:null}};
     },
-    nuevaCategoria: label=>{
-      const dest = carteraCompras(budgetRef.current,fmtFull(new Date()));
-      if(!dest) return;
-      guardarBudget(dest.periodo,agregarCategoria(resolverPeriodo(budgetRef.current,dest.periodo),dest.sec,dest.row.id,label));
+    // Agrega la categoría a la lista de compras (fila «ali», sea gasto base o cartera). Devuelve un mensaje si no se puede.
+    nuevaCategoria: (label, destino)=>{
+      const fa = filaCompras(budgetRef.current,fmtFull(new Date()));
+      if(!fa) return "No encuentro la fila de Alimentación en el presupuesto.";
+      const p = puedeGenerarPeriodo(budgetRef.current,fa.periodo);
+      if(!p.ok) return p.motivo;
+      guardarBudget(fa.periodo,agregarCategoria(resolverPeriodo(budgetRef.current,fa.periodo),fa.sec,fa.row.id,label,destino));
+      return null;
     },
   };
   const carritoPend = Object.values(dayData||{}).reduce((t,d)=>t+((d&&d.compras)||[]).filter(i=>!i.done).length,0);
@@ -1737,7 +1748,7 @@ function AngstApp() {
         items={dayData[comprasOpen]?.compras||[]}
         onSave={items=>updateDay(comprasOpen,{compras:items})}
         onMoveToNext={item=>{const nextDay=fmtFull(new Date(new Date(comprasOpen+"T12:00:00").getTime()+86400000));const ndd={...dayDataRef.current};const nd=ndd[nextDay]||makeEmptyDay();ndd[nextDay]={...nd,compras:[...nd.compras,{...item,origId:item.id,id:Date.now().toString()}]};setDayData(ndd);dayDataRef.current=ndd;saveToStorage({dayData:ndd});}}
-        info={comprasApi.info()} api={comprasApi}
+        api={comprasApi}
         onClose={()=>setComprasOpen(null)}
       />}
       {notifClockOpen&&<AnalogClock h={notifClockOpen.h} m={notifClockOpen.m} onClose={()=>setNotifClockOpen(null)} onSave={({h,m})=>{
@@ -2242,11 +2253,11 @@ function AngstApp() {
         )}
 
         {page===1&&<BudgetPage budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
-        {carritoOpen&&<CarritoModal dayData={dayData} hoy={fmtFull(new Date())} api={comprasApi} onItem={updateComprasItem} onClose={()=>setCarritoOpen(false)}/>}
+        {carritoOpen&&<CarritoModal dayData={dayData} hoy={fmtFull(new Date())} api={comprasApi} onItem={updateComprasItem} onAdd={agregarCompraEn} onDelete={quitarCompraEn} onClose={()=>setCarritoOpen(false)}/>}
         {gastoOpen&&<GastoModal arriba permanecer budgets={budgets} onSaveBudget={(...a)=>{updateBudgetForMonth(...a);avisarRegistro("Gasto registrado ✓");}} onClose={()=>setGastoOpen(false)}/>}
         {ingestaOpen&&<IngestaRapida nutriLog={nutriLog} saveNutriLog={guardarNutriLog} customFoods={customFoods} foodOverrides={foodOverrides}
           nutriDecks={nutriDecks} permanecer onClose={()=>setIngestaOpen(false)} onGuardado={avisarRegistro}/>}
-        {registroTipo&&<RegistroRapido tipo={registroTipo} onNota={agregarNotaRapida} onTarea={agregarTareaRapida} onCompra={agregarCompraRapida} onGuardado={avisarRegistro} onClose={()=>setRegistroTipo(null)}/>}
+        {registroTipo&&<RegistroRapido tipo={registroTipo} onNota={agregarNotaRapida} onTarea={agregarTareaRapida} compras={{hoy:fmtFull(new Date()), items:((dayData[fmtFull(new Date())]||{}).compras)||[], api:comprasApi, onPatch:(id,f)=>updateComprasItem(fmtFull(new Date()),id,f), onAdd:item=>agregarCompraEn(fmtFull(new Date()),item), onDelete:id=>quitarCompraEn(fmtFull(new Date()),id)}} onGuardado={avisarRegistro} onClose={()=>setRegistroTipo(null)}/>}
         {cartaOpen&&<AgregarCartaModal inventario={pokeInventario} carpetas={pokeCarpetas} priceCache={pokePriceCache}
           saveInventario={guardarInventario} permanecer onClose={()=>setCartaOpen(false)} onGuardado={avisarRegistro}/>}
         {page===2&&<NutriaPage data={nutria} saveData={updateNutria} budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
