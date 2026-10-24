@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-24T17:15:02.877Z",
+  "generatedAt": "2026-10-24T20:23:26.421Z",
   "categories": [
     {
       "cat": "Películas",
@@ -569,7 +569,7 @@
               "order": 10
             }
           ],
-          "trending": false
+          "trending": true
         },
         {
           "guid": "tmdb-movie-1281331",
@@ -891,6 +891,67 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1288069",
+          "title": "Tenzing",
+          "link": "https://www.themoviedb.org/movie/1288069",
+          "summary": "Un hombre se embarca en una arriesgada expedición para, contra todo pronóstico, intentar cumplir el sueño de ser el primero en alcanzar la cima del Everest.",
+          "image": "https://image.tmdb.org/t/p/w500/5i3qw2aDNQP6SWl2hNQaiIoUYHE.jpg",
+          "pubDate": "2026-10-09",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-16T14:36:51.400Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.7,
+            "rt": 95,
+            "metascore": 67,
+            "tmdb": 6.7
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "KkYCY5YR12U",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "更登彭措",
+              "character": "Tenzing Norgay",
+              "order": 0
+            },
+            {
+              "name": "Tom Hiddleston",
+              "character": "Sir Edmund Hillary",
+              "order": 1
+            },
+            {
+              "name": "Willem Dafoe",
+              "character": "Colonel John Hunt",
+              "order": 2
+            },
+            {
+              "name": "Caitríona Balfe",
+              "character": "Jill Henderson",
+              "order": 3
+            },
+            {
+              "name": "Thinley Lhamo",
+              "character": "Dawa Norgay",
+              "order": 4
+            },
+            {
+              "name": "Tenzing Dalha",
+              "character": "Young Tenzing",
+              "order": 5
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1561726",
           "title": "Masterplan",
           "link": "https://www.themoviedb.org/movie/1561726",
@@ -1048,21 +1109,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1422041",
-          "title": "La bola negra",
-          "link": "https://www.themoviedb.org/movie/1422041",
-          "summary": "Las vidas interconectadas de tres hombres en tres épocas distintas, tres existencias íntimamente ligadas por la sexualidad y el deseo, el dolor y la herencia.",
-          "image": "https://image.tmdb.org/t/p/w500/dbpyc3Zo0m4E15XcQ7tTwlLBEtE.jpg",
-          "pubDate": "2026-09-25",
+          "guid": "tmdb-movie-1290418",
+          "title": "The Cycle",
+          "link": "https://www.themoviedb.org/movie/1290418",
+          "summary": "A daughter unravels her father's dark past after his body, missing for 36 years, is found at a horrific crime scene.",
+          "image": "https://image.tmdb.org/t/p/w500/n5gSNf55KWfDc9hqP4H1KCCSutE.jpg",
+          "pubDate": "2026-09-24",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-10-24T00:20:14.242Z",
+          "firstSeenAt": "2026-10-24T20:23:25.600Z",
           "fullText": null,
           "rating": {
-            "imdb": 7,
-            "rt": 92,
-            "metascore": 86,
-            "tmdb": 8.3
+            "imdb": null,
+            "rt": 100,
+            "metascore": null,
+            "tmdb": 8
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1071,120 +1132,59 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "9NNU-vSeOB0",
+            "key": "m8vcBN8uza8",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Miguel Bernardeau",
-              "character": "Rafael",
-              "order": 1
-            },
-            {
-              "name": "Carlos González",
-              "character": "Alberto",
-              "order": 2
-            },
-            {
-              "name": "Milo Quifes",
-              "character": "Carlos",
-              "order": 3
-            },
-            {
-              "name": "Lola Dueñas",
-              "character": "Teresa",
-              "order": 4
-            },
-            {
-              "name": "Penélope Cruz",
-              "character": "Nené Romero",
-              "order": 5
-            },
-            {
-              "name": "Glenn Close",
-              "character": "Isabelle Durand",
-              "order": 6
-            },
-            {
-              "name": "Antonio de la Torre",
-              "character": "Vicente (El padre de Carlos)",
-              "order": 7
-            },
-            {
-              "name": "María Morales",
-              "character": "La madre",
-              "order": 8
-            },
-            {
-              "name": "Natalia de Molina",
-              "character": "Valentina (La hermana)",
-              "order": 9
-            },
-            {
-              "name": "Lorenzo Zurzolo",
-              "character": "Riccardo",
-              "order": 10
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1288069",
-          "title": "Tenzing",
-          "link": "https://www.themoviedb.org/movie/1288069",
-          "summary": "Un hombre se embarca en una arriesgada expedición para, contra todo pronóstico, intentar cumplir el sueño de ser el primero en alcanzar la cima del Everest.",
-          "image": "https://image.tmdb.org/t/p/w500/5i3qw2aDNQP6SWl2hNQaiIoUYHE.jpg",
-          "pubDate": "2026-10-09",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-16T14:36:51.400Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.7,
-            "rt": 95,
-            "metascore": 67,
-            "tmdb": 6.7
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "KkYCY5YR12U",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "更登彭措",
-              "character": "Tenzing Norgay",
+              "name": "Deborah Ann Woll",
+              "character": "Meg",
               "order": 0
             },
             {
-              "name": "Tom Hiddleston",
-              "character": "Sir Edmund Hillary",
+              "name": "Jeffrey Donovan",
+              "character": "Marks",
               "order": 1
             },
             {
-              "name": "Willem Dafoe",
-              "character": "Colonel John Hunt",
+              "name": "Gretchen Corbett",
+              "character": "Joni",
               "order": 2
             },
             {
-              "name": "Caitríona Balfe",
-              "character": "Jill Henderson",
+              "name": "Jack Doolan",
+              "character": "Lenny",
               "order": 3
             },
             {
-              "name": "Thinley Lhamo",
-              "character": "Dawa Norgay",
+              "name": "Will Hochman",
+              "character": "Ian",
               "order": 4
             },
             {
-              "name": "Tenzing Dalha",
-              "character": "Young Tenzing",
+              "name": "Dana Millican",
+              "character": "",
               "order": 5
+            },
+            {
+              "name": "Phillip Andre Botello",
+              "character": "Daniel",
+              "order": 6
+            },
+            {
+              "name": "Don Keith Opper",
+              "character": "Frank",
+              "order": 7
+            },
+            {
+              "name": "Carl W. Crudup",
+              "character": "Lou Bishop",
+              "order": 8
+            },
+            {
+              "name": "Danika Golombek",
+              "character": "Katie",
+              "order": 9
             }
           ],
           "trending": true
@@ -1269,6 +1269,168 @@
             }
           ],
           "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1003596",
+          "title": "Vengadores: Doomsday",
+          "link": "https://www.themoviedb.org/movie/1003596",
+          "summary": "Quinta entrega de la saga 'Vengadores' incluida en el Universo Cinematográfico Marvel (UCM). Sinopsis desconocido.",
+          "image": "https://image.tmdb.org/t/p/w500/7bQczUMnjz8iwxNP9YrmLkfI8od.jpg",
+          "pubDate": "2026-12-16",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-23T14:42:44.135Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Post Production",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "X1aFkAkFASk",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Robert Downey Jr.",
+              "character": "Victor von Doom  / Doctor Doom",
+              "order": 0
+            },
+            {
+              "name": "Chris Evans",
+              "character": "Steve Rogers",
+              "order": 1
+            },
+            {
+              "name": "Chris Hemsworth",
+              "character": "Thor",
+              "order": 2
+            },
+            {
+              "name": "Pedro Pascal",
+              "character": "Reed Richards / Mister Fantastic",
+              "order": 3
+            },
+            {
+              "name": "Paul Rudd",
+              "character": "Scott Lang / Ant-Man",
+              "order": 4
+            },
+            {
+              "name": "Anthony Mackie",
+              "character": "Sam Wilson / Captain America",
+              "order": 5
+            },
+            {
+              "name": "Florence Pugh",
+              "character": "Yelena Belova",
+              "order": 6
+            },
+            {
+              "name": "Vanessa Kirby",
+              "character": "Sue Storm / Invisible Woman",
+              "order": 7
+            },
+            {
+              "name": "Ebon Moss-Bachrach",
+              "character": "Ben Grimm / The Thing",
+              "order": 8
+            },
+            {
+              "name": "Wyatt Russell",
+              "character": "John Walker",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1422041",
+          "title": "La bola negra",
+          "link": "https://www.themoviedb.org/movie/1422041",
+          "summary": "Las vidas interconectadas de tres hombres en tres épocas distintas, tres existencias íntimamente ligadas por la sexualidad y el deseo, el dolor y la herencia.",
+          "image": "https://image.tmdb.org/t/p/w500/dbpyc3Zo0m4E15XcQ7tTwlLBEtE.jpg",
+          "pubDate": "2026-09-25",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-24T00:20:14.242Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7,
+            "rt": 92,
+            "metascore": 86,
+            "tmdb": 8.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "9NNU-vSeOB0",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Miguel Bernardeau",
+              "character": "Rafael",
+              "order": 1
+            },
+            {
+              "name": "Carlos González",
+              "character": "Alberto",
+              "order": 2
+            },
+            {
+              "name": "Milo Quifes",
+              "character": "Carlos",
+              "order": 3
+            },
+            {
+              "name": "Lola Dueñas",
+              "character": "Teresa",
+              "order": 4
+            },
+            {
+              "name": "Penélope Cruz",
+              "character": "Nené Romero",
+              "order": 5
+            },
+            {
+              "name": "Glenn Close",
+              "character": "Isabelle Durand",
+              "order": 6
+            },
+            {
+              "name": "Antonio de la Torre",
+              "character": "Vicente (El padre de Carlos)",
+              "order": 7
+            },
+            {
+              "name": "María Morales",
+              "character": "La madre",
+              "order": 8
+            },
+            {
+              "name": "Natalia de Molina",
+              "character": "Valentina (La hermana)",
+              "order": 9
+            },
+            {
+              "name": "Lorenzo Zurzolo",
+              "character": "Riccardo",
+              "order": 10
+            }
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1339713",
@@ -1356,7 +1518,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1380417",
@@ -1596,87 +1758,6 @@
             {
               "name": "Jemaine Clement",
               "character": "Roger Swindon (voice)",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1003596",
-          "title": "Vengadores: Doomsday",
-          "link": "https://www.themoviedb.org/movie/1003596",
-          "summary": "Quinta entrega de la saga 'Vengadores' incluida en el Universo Cinematográfico Marvel (UCM). Sinopsis desconocido.",
-          "image": "https://image.tmdb.org/t/p/w500/7bQczUMnjz8iwxNP9YrmLkfI8od.jpg",
-          "pubDate": "2026-12-16",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-23T14:42:44.135Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Post Production",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "X1aFkAkFASk",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Robert Downey Jr.",
-              "character": "Victor von Doom  / Doctor Doom",
-              "order": 0
-            },
-            {
-              "name": "Chris Evans",
-              "character": "Steve Rogers",
-              "order": 1
-            },
-            {
-              "name": "Chris Hemsworth",
-              "character": "Thor",
-              "order": 2
-            },
-            {
-              "name": "Pedro Pascal",
-              "character": "Reed Richards / Mister Fantastic",
-              "order": 3
-            },
-            {
-              "name": "Paul Rudd",
-              "character": "Scott Lang / Ant-Man",
-              "order": 4
-            },
-            {
-              "name": "Anthony Mackie",
-              "character": "Sam Wilson / Captain America",
-              "order": 5
-            },
-            {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova",
-              "order": 6
-            },
-            {
-              "name": "Vanessa Kirby",
-              "character": "Sue Storm / Invisible Woman",
-              "order": 7
-            },
-            {
-              "name": "Ebon Moss-Bachrach",
-              "character": "Ben Grimm / The Thing",
-              "order": 8
-            },
-            {
-              "name": "Wyatt Russell",
-              "character": "John Walker",
               "order": 9
             }
           ],
