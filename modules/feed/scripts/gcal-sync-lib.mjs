@@ -3,7 +3,8 @@
 //
 // Reglas de qué pasa y qué no (decididas por Cristopher, 21-22 oct 2026):
 //   pasan   → tareas (con hora si tienen `deadline`), recurrentes (por ocurrencia), calmarks de la lista MARCAS,
-//             y un marcador "Mañana: …" el día anterior para tareas/recurrentes con baliza (`urgent`) o `healthEventId`.
+//             y un marcador "Mañana: …" el día anterior para tareas/recurrentes con baliza (`urgent`), `healthEventId`
+//             y para los calmarks doctor/medico.
 //   NO pasan → `schedule[]` (horario personal), calmarks romantic/melee/pokemon, tareas "preparar:" (prepReminder),
 //             tareas/recurrentes 🔒 `privada`, tareas hechas, marcadores de pospuesta.
 // Los calmarks son ALLOWLIST: un tipo nuevo no se filtra a los hijos hasta que se agregue acá a propósito.
@@ -12,6 +13,7 @@ export const MARCAS = {
   social: "Social", work: "Trabajo", colegio: "Colegio", doctor: "Doctor",
   medico: "Médico", gym: "Gimnasio", compras: "Compras",
 };
+const MARCAS_MEDICAS = new Set(["doctor", "medico"]);
 export const DURACION_MIN = 30; // `deadline` es una hora límite, no un rango: el evento dura esto
 export const MAX_TEXTO = 200;
 
@@ -109,6 +111,9 @@ export function buildDesired(state, { from, to }) {
     for (const k of marks) {
       if (!MARCAS[k]) continue;
       push({ key: `c:${D}:${k}`, kind: "calmark", summary: MARCAS[k], allDay: true, date: D });
+      // "todo lo médico tiene evento previo": el calmark doctor/medico avisa el día anterior, sin heurística de texto
+      // (las citas se anotan como tareas sueltas y "cita" también significa otra cosa).
+      if (MARCAS_MEDICAS.has(k)) marcador(`c:${D}:${k}`, MARCAS[k], D);
     }
 
     for (const r of recurring) {

@@ -22,7 +22,7 @@ Ventana: hoy → +42 días (hora de `America/Santiago`; el calendario está en U
 | `dayData[f].tasks[]` sin `deadline` | día completo |
 | `recurring[]` (misma regla que `nextRecurDate` de App.jsx; `every3` = cada 2 días, "c/2d" en la UI) | día completo por ocurrencia; una pospuesta (`postponed` + `recurringId` ese día) se omite |
 | `calMarks[f]` | día completo: social, work, colegio, doctor, medico, gym, compras |
-| tarea con `urgent` (baliza) o `healthEventId`; recurrente con `urgent` | además "Mañana: …" el día anterior (día completo) |
+| tarea con `urgent` (baliza) o `healthEventId`; recurrente con `urgent`; calmark `doctor`/`medico` | además "Mañana: …" el día anterior (día completo). El calmark doctor cubre las citas anotadas como tareas sueltas: no hay heurística por texto ("cita" también significa otra cosa) |
 
 **No pasan:** `schedule[]` (horario personal), calmarks `romantic`/`melee`/`pokemon` (y cualquier tipo nuevo hasta
 agregarlo a `MARCAS`: es allowlist), tareas "preparar:" (`prepReminder` o texto que empieza así), tareas y recurrentes 🔒

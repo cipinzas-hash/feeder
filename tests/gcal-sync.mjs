@@ -49,7 +49,7 @@ const state = {
     },
     [D1]: { tasks: [{ id: "c", text: "Baliza mañana", urgent: true, deadline: { h: 23, m: 50 } }] },
   },
-  calMarks: { [from]: ["work", "romantic", "melee", "pokemon", "gym", "nuevo", "work", "colegio"] },
+  calMarks: { [from]: ["work", "romantic", "melee", "pokemon", "gym", "nuevo", "work", "colegio"], [D1]: ["doctor"] },
   recurring: [
     { id: "R1", text: "Semanal", freq: "weekly", createdAt: from },
     { id: "R2", text: "Privado", freq: "weekly", createdAt: from, privada: true },
@@ -72,7 +72,12 @@ assert.equal(mc.date, from); assert.equal(mc.summary, "Mañana: Baliza mañana")
 const t1 = des.find(e => e.key === `t:${from}:1`);
 assert.equal(t1.summary, "Llevar libros"); assert.equal(t1.allDay, false); assert.equal(t1.h, 9);
 // calmarks: allowlist, sin duplicados, sin romantic/melee/pokemon/desconocidos
-assert.deepEqual(keys.filter(k => k.startsWith("c:")), [`c:${from}:colegio`, `c:${from}:gym`, `c:${from}:work`]);
+assert.deepEqual(keys.filter(k => k.startsWith(`c:${from}`)), [`c:${from}:colegio`, `c:${from}:gym`, `c:${from}:work`]);
+// doctor: el calmark y su marcador el día anterior (cae en `from`); un calmark común no genera marcador
+assert.deepEqual(keys.filter(k => k.startsWith(`c:${D1}`)), [`c:${D1}:doctor`, `c:${D1}:doctor>m`]);
+const md = des.find(e => e.key === `c:${D1}:doctor>m`);
+assert.equal(md.date, from); assert.equal(md.summary, "Mañana: Doctor");
+assert.ok(!keys.some(k => k.endsWith(">m") && k.startsWith(`c:${from}`)), "work/gym/colegio no tienen marcador");
 // recurrentes: R1 semanal en from (D8 pospuesta, lo demás fuera de ventana de 12 días salvo from+7=D8), R2 privada fuera, R3 diaria desde D1
 const rec = keys.filter(k => k.startsWith("r:"));
 assert.ok(rec.includes(`r:R1:${from}`) && !rec.includes(`r:R1:${D8}`), "pospuesta respeta la excepción");
