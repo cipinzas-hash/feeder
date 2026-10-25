@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   addDays, dayRange, recurrenceOccursOn, buildDesired, toBody, sigOf, planSync,
-  verificarSeguridad, buildInbox, MARCAS,
+  verificarSeguridad, buildInbox, MARCAS, eventosAbsorbidos,
 } from "../modules/feed/scripts/gcal-sync-lib.mjs";
 
 const TZ = "America/Santiago";
@@ -142,5 +142,21 @@ const inbox = buildInbox([
 assert.deepEqual(inbox.map(e => e.id), ["k1", "k2"]);
 assert.equal(inbox[1].allDay, true); assert.equal(inbox[1].creator, "h@x.test");
 assert.ok(Object.keys(MARCAS).length >= 6);
+
+// 7) absorbidos: solo si TODAS las tareas del evento ya están en el estado exportado
+const estAbs = {
+  dayData: { "2026-10-28": { tasks: [{ id: "t1" }, { id: 7 }] }, "2026-10-29": { tasks: [{ id: "t2" }] } },
+  gcalInbox: { imported: {
+    e1: { at: 1, items: [{ date: "2026-10-28", taskId: "t1" }] },
+    e2: { at: 1, items: [{ date: "2026-10-28", taskId: "t1" }, { date: "2026-10-29", taskId: "t2" }] },
+    e3: { at: 1, items: [{ date: "2026-10-30", taskId: "falta" }] },
+    e4: { at: 1, items: [{ date: "2026-10-28", taskId: 7 }] },
+    e5: { at: 1, items: [] },
+  } },
+};
+const ext = ["e1", "e2", "e3", "e4", "e5", "e6"].map(id => ({ id }));
+assert.deepEqual(eventosAbsorbidos(estAbs, ext).map(x => x.id), ["e1", "e2", "e4"], "e3 (tarea no llegó), e5 (sin items) y e6 (sin registro) se quedan");
+assert.deepEqual(eventosAbsorbidos({ dayData: {} }, ext), [], "sin gcalInbox no se borra nada");
+assert.deepEqual(eventosAbsorbidos({ gcalInbox: { imported: { e1: { items: [{ taskId: "t1" }] } } } }, ext), [], "sin dayData no se borra nada");
 
 console.log(`OK gcal-sync: ${comparadas} comparaciones de recurrencia contra App.jsx, reglas, cuerpo, plan, frenos y bandeja`);

@@ -12,7 +12,7 @@
 import { readFileSync, writeFileSync, existsSync, unlinkSync } from "node:fs";
 import {
   addDays, todayIn, buildDesired, planSync, verificarSeguridad, buildInbox,
-  esDeAngst, fechaLocalDe,
+  esDeAngst, fechaLocalDe, eventosAbsorbidos,
 } from "./gcal-sync-lib.mjs";
 
 const env = n => process.env[n];
@@ -108,9 +108,15 @@ const deseados = buildDesired(state, { from, to });
 const plan = planSync(deseados, deAngst, TZ);
 verificarSeguridad(plan, { desiredCount: deseados.length, existingCount: deAngst.length });
 
+// Eventos de los hijos que Cristopher ya pasó a tarea (y la tarea ya llegó al estado exportado): se borran de Google.
+const externos = enVentana.filter(g => !esDeAngst(g) && g.status !== "cancelled");
+const absorbidos = eventosAbsorbidos(state, externos).slice(0, 20); // tope por corrida
+const idsAbsorbidos = new Set(absorbidos.map(a => a.id));
+
 const porTipo = {};
 for (const e of deseados) porTipo[e.kind] = (porTipo[e.kind] || 0) + 1;
 console.log(`ventana ${from} → ${to} · deseados ${deseados.length} ${JSON.stringify(porTipo)}`);
+console.log(`bandeja → tareas: ${absorbidos.length} evento(s) importado(s) por borrar de Google`);
 console.log(`plan: crear ${plan.create.length} · actualizar ${plan.update.length} · borrar ${plan.remove.length} · sin cambios ${plan.keep}`);
 
 let fallos = 0;
@@ -118,6 +124,10 @@ if (LIVE) {
   fallos += await enParalelo(plan.create, 4, c => gcal("POST", `/calendars/${CAL}/events`, { params: { sendUpdates: "none" }, body: c.body }));
   fallos += await enParalelo(plan.update, 4, u => gcal("PUT", `/calendars/${CAL}/events/${encodeURIComponent(u.id)}`, { params: { sendUpdates: "none" }, body: u.body }));
   fallos += await enParalelo(plan.remove, 4, d => gcal("DELETE", `/calendars/${CAL}/events/${encodeURIComponent(d.id)}`, { params: { sendUpdates: "none" } }));
+  fallos += await enParalelo(absorbidos, 4, async a => {
+    try { await gcal("DELETE", `/calendars/${CAL}/events/${encodeURIComponent(a.id)}`, { params: { sendUpdates: "none" } }); }
+    catch (e) { if (!/→ (404|410)/.test(e.message)) throw e; } // ya no estaba: mismo resultado
+  });
   console.log(`aplicado con ${fallos} fallo(s)`);
   if (env("PLAN_PATH") && existsSync(env("PLAN_PATH"))) unlinkSync(env("PLAN_PATH")); // el plan del modo seco quedó obsoleto
 } else if (env("PLAN_PATH")) {
@@ -126,11 +136,12 @@ if (LIVE) {
   writeFileSync(env("PLAN_PATH"), JSON.stringify({
     generatedAt: new Date().toISOString(), window: { from, to }, live: false,
     create: plan.create.map(resumen), update: plan.update.map(resumen), remove: plan.remove, keep: plan.keep,
+    absorber: absorbidos.map(a => a.id),
   }, null, 1) + "\n");
 }
 
 // ── bandeja Familia → Angst ───────────────────────────────────────────────
-const eventos = buildInbox(enVentana);
+const eventos = buildInbox(LIVE ? enVentana.filter(g => !idsAbsorbidos.has(g.id)) : enVentana);
 let previos = null;
 if (existsSync(env("INBOX_PATH"))) { try { previos = JSON.parse(readFileSync(env("INBOX_PATH"), "utf8")).events; } catch { /* archivo ilegible: se reescribe */ } }
 if (JSON.stringify(previos) !== JSON.stringify(eventos)) {

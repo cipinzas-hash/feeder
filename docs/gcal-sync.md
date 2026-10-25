@@ -40,8 +40,20 @@ Frenos: se aborta si el plan borra más de 40 eventos o si el estado no trae eve
 ## Familia → Angst
 Los eventos de otras manos (los de los hijos y los que ya existían) en la misma ventana se escriben en
 `Angst-data/google-inbox.json` (`{generatedAt, window, events:[{id, summary, allDay, start, end, creator, updated}]}`).
-Es un archivo del bot, fuera del estado exportado: no entra al last-write-wins de 📤/📥. **La UI de Angst que lo
-muestre en la semana todavía no existe** (queda para otro cambio).
+Es un archivo del bot, fuera del estado exportado: no entra al last-write-wins de 📤/📥.
+
+**Bandeja en la app (con confirmación, nada se importa ni se borra solo):** `core/familiaInbox.js` (lógica pura),
+`core/FamiliaInbox.jsx` (modal) y el cableado en `App.jsx`. La app lee `google-inbox.json` por el Worker (`?path=`,
+header `X-Angst-Auth`) al abrir y al volver a la pestaña. Un botón 📥N junto al 📅 de Semana abre la bandeja.
+- **Pasar a tarea:** crea una tarea por día del evento (tope 14; con hora si el evento la tiene, 00:00 = sin hora) y
+  anota el evento como importado.
+- **Ignorar:** anota el evento como ignorado; en Google queda tal cual.
+- Lo decidido vive en localStorage `angst-gcal-inbox-v1` y viaja en el export como `gcalInbox`
+  (`LOCAL_KEY_FIELDS`): `{imported:{<eventId>:{at, items:[{date, taskId}]}}, ignored:{<eventId>:ts}}`. Se poda solo
+  cuando el evento ya no está en la bandeja y tiene más de 45 días.
+- **Borrado en Google:** el sync lee `gcalInbox.imported` del estado exportado y borra el evento original SOLO si todas
+  sus tareas ya están en ese estado (o sea, después del 📤). Tope 20 por corrida. La tarea vuelve al calendario como
+  evento de Angst con la regla de siempre.
 
 ## Persistencia / migración
 `privada` es un campo nuevo y aditivo en tareas y recurrentes: ausente = no privada. Sin migración. Las tareas

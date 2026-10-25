@@ -215,3 +215,19 @@ export function buildInbox(todosLosEventos) {
     }))
     .sort((a, b) => String(a.start).localeCompare(String(b.start)) || a.id.localeCompare(b.id));
 }
+
+// Eventos de otras manos que Cristopher ya pasó a tarea en Angst (state.gcalInbox.imported, ver core/familiaInbox.js)
+// Y cuyas tareas ya están en el estado exportado. Solo esos se borran de Google: si la tarea no llegó (todavía no
+// hizo 📤) o la borró, el original se queda. `externos` = eventos de Google sin marca de Angst y no cancelados.
+export function eventosAbsorbidos(state, externos) {
+  const imp = state?.gcalInbox?.imported;
+  if (!imp || typeof imp !== "object") return [];
+  const ids = new Set();
+  for (const d of Object.values(state?.dayData || {})) for (const t of d?.tasks || []) ids.add(String(t?.id));
+  const out = [];
+  for (const g of externos) {
+    const items = imp[g.id]?.items;
+    if (Array.isArray(items) && items.length && items.every(it => ids.has(String(it?.taskId)))) out.push({ id: g.id });
+  }
+  return out;
+}

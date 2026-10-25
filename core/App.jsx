@@ -6,6 +6,8 @@ import { marcarEdicionLocal, LOCAL_EDIT_KEY } from "../modules/shared/localedit.
 import { rehidratarCineEstado } from "../modules/vitrina/estado.js";
 import { rehidratarOverlay } from "../modules/vitrina/avance.js";
 import { fmt, fmtFull, getHoliday, addDays } from "./dates.js";
+import { FamiliaInboxModal } from "./FamiliaInbox.jsx";
+import { leerDecisiones, guardarDecisiones, pendientes as familiaPendientes, fechasDeEvento, tareaDesdeEvento, registrarImportado, registrarIgnorado, podar as podarFamilia } from "./familiaInbox.js";
 import PokecriptoPage, { CARPETAS_DEFAULT } from "../modules/pokecripto/PokecriptoPage.jsx";
 import SaludPage from "../modules/salud/SaludPage.jsx";
 import { migrateKidsHealth, emptyKidsHealth } from "../modules/salud/saludModel.js";
@@ -424,6 +426,60 @@ function AngstApp() {
   // no se pide de nuevo si ya está cargado.
   const ANGST_STATE_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
   const ANGST_STATE_AUTH_KEY = "angst-simkl-auth-v1";
+
+  // ── Bandeja Familia → Angst (issue #26, docs/gcal-sync.md) ────────────────
+  // google-inbox.json (lo escribe el bot cada 30 min) trae los eventos del calendario Familia que no son de Angst.
+  // "Pasar a tarea" crea la tarea y anota el evento como importado (localStorage angst-gcal-inbox-v1, viaja en el export);
+  // el sync borra de Google el original SOLO cuando esa tarea ya está en el estado exportado (📤). "Ignorar" no toca Google.
+  const [familiaData, setFamiliaData] = useState(null);
+  const [familiaOpen, setFamiliaOpen] = useState(false);
+  const [familiaBusy, setFamiliaBusy] = useState(false);
+  const [familiaMsg, setFamiliaMsg] = useState(null);
+  const [familiaVer, setFamiliaVer] = useState(0); // las decisiones viven en localStorage: esto fuerza el re-render
+  const familiaLastRef = useRef(0);
+  async function cargarFamilia(force) {
+    const auth = localStorage.getItem(ANGST_STATE_AUTH_KEY);
+    if(!auth) { if(force) setFamiliaMsg("Falta el AUTH_SECRET (se guarda al usar podcasts o 📤)"); return; }
+    if(!force && Date.now()-familiaLastRef.current < 120000) return;
+    familiaLastRef.current = Date.now();
+    setFamiliaBusy(true);
+    try {
+      const r = await fetch(`${ANGST_STATE_WORKER_URL}?path=google-inbox.json`, { headers: { "X-Angst-Auth": auth } });
+      if(!r.ok) { setFamiliaMsg(`No pude leer la bandeja (${r.status})`); return; }
+      const j = await r.json();
+      const events = Array.isArray(j?.events) ? j.events : [];
+      setFamiliaData({ events, generatedAt: j?.generatedAt||null });
+      setFamiliaMsg(null);
+      if(j && j.found !== false) guardarDecisiones(podarFamilia(leerDecisiones(), events));
+    } catch(e) { setFamiliaMsg("No pude leer la bandeja (sin conexión)"); }
+    finally { setFamiliaBusy(false); }
+  }
+  useEffect(()=>{
+    cargarFamilia(false);
+    const onVis = ()=>{ if(document.visibilityState==="visible") cargarFamilia(false); };
+    document.addEventListener("visibilitychange", onVis);
+    return ()=>document.removeEventListener("visibilitychange", onVis);
+  }, []);
+  const familiaPend = familiaPendientes(familiaData?.events||[], leerDecisiones(), fmtFull(new Date()));
+  function familiaImportar(ev) {
+    const fechas = fechasDeEvento(ev);
+    if(!fechas.length) return null;
+    const nx = { ...(dayDataRef.current||{}) };
+    const items = [];
+    fechas.forEach((f,i)=>{
+      const nid = Date.now().toString()+"-"+i+Math.random().toString(36).slice(2,6);
+      const t = tareaDesdeEvento(ev, nid);
+      const d = nx[f]||makeEmptyDay();
+      nx[f] = { ...d, tasks: t.deadline ? sortTasks([...d.tasks, t]) : [...d.tasks, t] };
+      items.push({ date: f, taskId: nid });
+    });
+    setDayData(nx); dayDataRef.current = nx; saveToStorage({dayData:nx});
+    return items;
+  }
+  function familiaPasar(ev) { const items = familiaImportar(ev); if(!items) return; guardarDecisiones(registrarImportado(leerDecisiones(), ev.id, items)); setFamiliaVer(v=>v+1); }
+  function familiaIgnorar(ev) { guardarDecisiones(registrarIgnorado(leerDecisiones(), ev.id)); setFamiliaVer(v=>v+1); }
+  function familiaPasarTodos() { let dec = leerDecisiones(); for(const {ev} of familiaPend) { const items = familiaImportar(ev); if(items) dec = registrarImportado(dec, ev.id, items); } guardarDecisiones(dec); setFamiliaVer(v=>v+1); }
+  function familiaIgnorarTodos() { let dec = leerDecisiones(); for(const {ev} of familiaPend) dec = registrarIgnorado(dec, ev.id); guardarDecisiones(dec); setFamiliaVer(v=>v+1); }
   const ANGST_STATE_PATH = "angst-full-state.json";
   const ANGST_STATE_BRANCH = "state-sync";
   const [stateSyncMsg, setStateSyncMsg] = useState(null);
@@ -1770,6 +1826,7 @@ function AngstApp() {
           dayDataRef.current=next; saveToStorage({dayData:next}); return next;
         });
       }}/>}
+      {familiaOpen&&<FamiliaInboxModal items={familiaPend} onImport={familiaPasar} onIgnore={familiaIgnorar} onImportAll={familiaPasarTodos} onIgnoreAll={familiaIgnorarTodos} onRefresh={()=>cargarFamilia(true)} onClose={()=>setFamiliaOpen(false)} cargando={familiaBusy} mensaje={familiaMsg} generadoEn={familiaData?.generatedAt}/>}
       {calOpen&&<CalendarModal weekStart={weekStart} marks={calMarks} onMark={handleMark} dayData={dayData} calMarks={calMarks} kidsHealth={kidsHealth} onWeekSelect={date=>{const dow=date.getDay();const mon=addDays(date,-(dow===0?6:dow-1));const diff=Math.round((mon-BASE_DATE)/(7*86400000));updateWeekOffset(diff);}} onClose={()=>setCalOpen(false)}/>}
 
       <div className={"app"+(page===0?" app-fit":"")}>
@@ -1901,6 +1958,7 @@ function AngstApp() {
               <button className="nbtn" onClick={()=>updateWeekOffset(weekOffset-1)}>‹</button>
               <div className="wnav-dates">{fmt(weekStart)} — {fmt(addDays(weekStart,6))}</div>
               <button className="calbtn" onClick={()=>setCalOpen(true)}>📅</button>
+              {familiaPend.length>0&&<button className="calbtn" onClick={()=>setFamiliaOpen(true)} title="Eventos nuevos en el calendario Familia">📥{familiaPend.length}</button>}
               <button className="nbtn" onClick={()=>updateWeekOffset(weekOffset+1)}>›</button>
               </>}
                   weekKeys={semanaKeys}

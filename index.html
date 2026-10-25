@@ -2654,8 +2654,10 @@ var __angst = (() => {
     // {guid: segundos} — retomar un podcast (auditoría 13-oct)
     feedSeriesOverlay: "angst-series-overlay-v1",
     // marcas de episodios aún no reflejadas por Simkl (TTL 48 h)
-    pokeAgotadas: "angst-pokecripto-agotadas-v1"
+    pokeAgotadas: "angst-pokecripto-agotadas-v1",
     // cartas agotadas en la revisión (cooldown 7 días)
+    gcalInbox: "angst-gcal-inbox-v1"
+    // bandeja Familia → Angst: eventos ya pasados a tarea o ignorados (el sync borra de Google los importados)
   };
   var TIPOS_OK = {
     object: (v) => typeof v === "object" && v !== null && !Array.isArray(v),
@@ -2855,7 +2857,7 @@ var __angst = (() => {
       if (o && o.v) vistos.add(k);
       else vistos.delete(k);
     }
-    let total = 0, emitidos = 0, vistosCount = 0, pendientes = 0;
+    let total = 0, emitidos = 0, vistosCount = 0, pendientes2 = 0;
     let siguiente = null, proximo = null;
     const temporadas = [...entry.temporadas || []].sort((a, b) => a.n - b.n).map((t) => {
       const eps = t.eps.map(([e, nombre, fecha]) => {
@@ -2865,7 +2867,7 @@ var __angst = (() => {
         if (emitido) emitidos++;
         if (visto) vistosCount++;
         if (emitido && !visto) {
-          pendientes++;
+          pendientes2++;
           if (!siguiente) siguiente = { t: t.n, e, nombre, fecha };
         }
         if (!emitido && !proximo) proximo = { t: t.n, e, nombre, fecha };
@@ -2879,7 +2881,7 @@ var __angst = (() => {
         pendientes: eps.filter((x) => x.emitido && !x.visto).length
       };
     });
-    return { temporadas, total, emitidos, vistos: vistosCount, pendientes, siguiente, proximo };
+    return { temporadas, total, emitidos, vistos: vistosCount, pendientes: pendientes2, siguiente, proximo };
   }
   function restarOps(actual, enviado) {
     const yaEnviado = /* @__PURE__ */ new Map();
@@ -2892,18 +2894,18 @@ var __angst = (() => {
   function avanceEfectivo(entry, overlayShow) {
     const remotos = epMapToSet(entry.ep);
     let vistos = entry.vistos ?? 0;
-    let pendientes = entry.pendientes ?? 0;
+    let pendientes2 = entry.pendientes ?? 0;
     for (const [k, o] of Object.entries(overlayShow || {})) {
       const estabaVisto = remotos.has(k);
       if (o && o.v && !estabaVisto) {
         vistos++;
-        pendientes = Math.max(pendientes - 1, 0);
+        pendientes2 = Math.max(pendientes2 - 1, 0);
       } else if (o && !o.v && estabaVisto) {
         vistos = Math.max(vistos - 1, 0);
-        pendientes++;
+        pendientes2++;
       }
     }
-    return { vistos, pendientes };
+    return { vistos, pendientes: pendientes2 };
   }
 
   // modules/vitrina/simkl.js
@@ -3276,6 +3278,101 @@ var __angst = (() => {
       }
     }
     if (pares.length) aplicarMarcas(item, { marcar: pares });
+  }
+
+  // core/FamiliaInbox.jsx
+  var DIAS = ["dom", "lun", "mar", "mi\xE9", "jue", "vie", "s\xE1b"];
+  function etiquetaFecha(key) {
+    const [y, m, d] = key.split("-").map(Number);
+    return `${DIAS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]} ${d}/${m}`;
+  }
+  function etiquetaHora(ev) {
+    if (ev.allDay || !ev.start || String(ev.start).length < 16) return "todo el d\xEDa";
+    return String(ev.start).slice(11, 16);
+  }
+  var btn = (extra) => ({ fontFamily: "'DM Sans',sans-serif", fontSize: 12, borderRadius: 8, padding: "4px 10px", cursor: "pointer", ...extra });
+  function FamiliaInboxModal({ items, onImport, onIgnore, onImportAll, onIgnoreAll, onRefresh, onClose, cargando: cargando2, mensaje, generadoEn }) {
+    const grupos = [];
+    for (const it of items) {
+      const f2 = it.fechas[0];
+      const g = grupos.length && grupos[grupos.length - 1].fecha === f2 ? grupos[grupos.length - 1] : (grupos.push({ fecha: f2, items: [] }), grupos[grupos.length - 1]);
+      g.items.push(it);
+    }
+    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 12, width: "min(95vw,420px)", maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700 } }, "\u{1F4E5} Familia \xB7 ", items.length, " nuevo", items.length === 1 ? "" : "s"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center" } }, /* @__PURE__ */ React.createElement("button", { onClick: onRefresh, disabled: cargando2, style: btn({ background: "transparent", border: "1px dashed #555", color: "#aaa" }) }, cargando2 ? "\u2026" : "\u21BB"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#aaa", fontSize: 20, cursor: "pointer", lineHeight: 1 } }, "\xD7"))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "10px 14px" } }, mensaje && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", margin: "2px 0 8px" } }, mensaje), items.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#bbb", fontFamily: "'DM Sans',sans-serif", fontSize: 13, textAlign: "center", padding: "20px 0" } }, "nada pendiente"), grupos.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.fecha, style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, fontWeight: 700, color: "#111", borderBottom: "1px dashed #ccc", marginBottom: 6 } }, etiquetaFecha(g.fecha)), g.items.map(({ ev, fechas }) => /* @__PURE__ */ React.createElement("div", { key: ev.id, style: { marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "#111" } }, ev.summary || "(sin t\xEDtulo)", /* @__PURE__ */ React.createElement("span", { style: { color: "#888", fontSize: 12 } }, " \xB7 ", etiquetaHora(ev), fechas.length > 1 ? ` \xB7 ${fechas.length} d\xEDas (hasta ${etiquetaFecha(fechas[fechas.length - 1])})` : "")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 4 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onImport(ev), style: btn({ background: "#111", color: "#fff", border: "1px solid #111" }) }, "Pasar a tarea"), /* @__PURE__ */ React.createElement("button", { onClick: () => onIgnore(ev), style: btn({ background: "transparent", color: "#666", border: "1px dashed #aaa" }) }, "Ignorar"))))))), items.length > 1 && /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 14px", borderTop: "1px dashed #ccc", display: "flex", gap: 8, justifyContent: "flex-end" } }, /* @__PURE__ */ React.createElement("button", { onClick: onImportAll, style: btn({ background: "#111", color: "#fff", border: "1px solid #111" }) }, "Pasar todos"), /* @__PURE__ */ React.createElement("button", { onClick: onIgnoreAll, style: btn({ background: "transparent", color: "#666", border: "1px dashed #aaa" }) }, "Ignorar todos")), /* @__PURE__ */ React.createElement("div", { style: { padding: "6px 14px 10px", fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#999" } }, "Pasar a tarea la crea en Angst; el evento original se borra de Google despu\xE9s de tu pr\xF3ximo \u{1F4E4}. Ignorar lo deja en Google.", generadoEn ? ` \xB7 bandeja de ${new Date(generadoEn).toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" })}` : "")));
+  }
+
+  // core/familiaInbox.js
+  var FAMILIA_KEY = "angst-gcal-inbox-v1";
+  var MAX_DIAS = 14;
+  function decisionesVacias() {
+    return { imported: {}, ignored: {} };
+  }
+  function normalizarDecisiones(d) {
+    const ok = (x) => x && typeof x === "object" && !Array.isArray(x) ? x : {};
+    return { imported: ok(d?.imported), ignored: ok(d?.ignored) };
+  }
+  function leerDecisiones(storage = globalThis.localStorage) {
+    try {
+      const v = storage.getItem(FAMILIA_KEY);
+      return normalizarDecisiones(v ? JSON.parse(v) : null);
+    } catch (e) {
+      return decisionesVacias();
+    }
+  }
+  function guardarDecisiones(dec, storage = globalThis.localStorage) {
+    try {
+      storage.setItem(FAMILIA_KEY, JSON.stringify(normalizarDecisiones(dec)));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  var pad = (n) => String(n).padStart(2, "0");
+  function sumarDias(key, n) {
+    const [y, m, d] = key.split("-").map(Number);
+    const t = new Date(Date.UTC(y, m - 1, d + n));
+    return `${t.getUTCFullYear()}-${pad(t.getUTCMonth() + 1)}-${pad(t.getUTCDate())}`;
+  }
+  function fechasDeEvento(ev) {
+    if (!ev || !ev.start) return [];
+    const ini = String(ev.start).slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(ini)) return [];
+    if (!ev.allDay || !ev.end) return [ini];
+    const fin = String(ev.end).slice(0, 10);
+    const out = [];
+    for (let d = ini; d < fin && out.length < MAX_DIAS; d = sumarDias(d, 1)) out.push(d);
+    return out.length ? out : [ini];
+  }
+  function horaDeEvento(ev) {
+    if (!ev || ev.allDay || !ev.start || String(ev.start).length < 16) return null;
+    const hhmm2 = String(ev.start).slice(11, 16);
+    if (!/^\d{2}:\d{2}$/.test(hhmm2) || hhmm2 === "00:00") return null;
+    return { h: Number(hhmm2.slice(0, 2)), m: Number(hhmm2.slice(3, 5)) };
+  }
+  function pendientes(events, dec, hoy) {
+    const { imported, ignored } = normalizarDecisiones(dec);
+    return (Array.isArray(events) ? events : []).filter((ev) => ev && ev.id && !(ev.id in imported) && !(ev.id in ignored)).map((ev) => ({ ev, fechas: fechasDeEvento(ev) })).filter((x) => x.fechas.length && x.fechas[x.fechas.length - 1] >= hoy).sort((a, b) => a.fechas[0].localeCompare(b.fechas[0]) || String(a.ev.start).localeCompare(String(b.ev.start)) || a.ev.id.localeCompare(b.ev.id));
+  }
+  function tareaDesdeEvento(ev, nid2) {
+    const t = { id: nid2, text: String(ev.summary || "").replace(/\s+/g, " ").trim() || "(sin t\xEDtulo)", fixed: false, done: false };
+    const hora = horaDeEvento(ev);
+    if (hora) t.deadline = hora;
+    return t;
+  }
+  function registrarImportado(dec, eventId, items, ahora = Date.now()) {
+    const d = normalizarDecisiones(dec);
+    return { ...d, imported: { ...d.imported, [eventId]: { at: ahora, items } } };
+  }
+  function registrarIgnorado(dec, eventId, ahora = Date.now()) {
+    const d = normalizarDecisiones(dec);
+    return { ...d, ignored: { ...d.ignored, [eventId]: ahora } };
+  }
+  function podar(dec, events, ahora = Date.now(), dias = 45) {
+    const d = normalizarDecisiones(dec);
+    const vivos = new Set((Array.isArray(events) ? events : []).map((e) => e.id));
+    const limite = ahora - dias * 864e5;
+    const filtrar = (obj, ts) => Object.fromEntries(Object.entries(obj).filter(([id, v]) => vivos.has(id) || ts(v) > limite));
+    return { imported: filtrar(d.imported, (v) => v?.at || 0), ignored: filtrar(d.ignored, (v) => Number(v) || 0) };
   }
 
   // modules/pokecripto/lib/pricing.mjs
@@ -4417,12 +4514,12 @@ var __angst = (() => {
     React.useEffect(() => {
       if (!allSets.length) return;
       const enCat = new Set(darkCat.filter((d) => d.carpeta).map((d) => d.setId + "::" + d.carpeta));
-      const pendientes = allSets.filter((s) => COLECCIONES_ILUSTRADOR.some((def) => !enCat.has(s.id + "::" + def.carpeta)));
-      if (!pendientes.length) return;
+      const pendientes2 = allSets.filter((s) => COLECCIONES_ILUSTRADOR.some((def) => !enCat.has(s.id + "::" + def.carpeta)));
+      if (!pendientes2.length) return;
       let idx = 0;
       function siguiente() {
-        if (idx >= pendientes.length) return;
-        const s = pendientes[idx++];
+        if (idx >= pendientes2.length) return;
+        const s = pendientes2[idx++];
         fetchPoke(`${POKE_BASE}/cards?q=set.id:${s.id}&select=id,name,number,artist,images&orderBy=number&pageSize=500`).then((data) => {
           const cards = data.data || [];
           COLECCIONES_ILUSTRADOR.forEach((def) => {
@@ -5057,7 +5154,7 @@ var __angst = (() => {
       if (!revAbierta) return null;
       const carta = revActual, F9 = "'DM Sans',sans-serif";
       const d = carta && revDatos.cartaId === carta.id ? revDatos : { cartaId: null, estado: "cargando", cands: [], pos: 0, planIdx: 1, msg: null, total: null };
-      const btn = (bg, fg, extra) => ({ fontFamily: F9, fontSize: 14, fontWeight: 700, border: "none", borderRadius: 12, padding: "12px 14px", background: bg, color: fg, cursor: "pointer", ...extra || {} });
+      const btn2 = (bg, fg, extra) => ({ fontFamily: F9, fontSize: 14, fontWeight: 700, border: "none", borderRadius: 12, padding: "12px 14px", background: bg, color: fg, cursor: "pointer", ...extra || {} });
       const c = d.estado === "listo" ? d.cands[d.pos] : null;
       const sinMas = d.estado === "agotado" || d.estado === "listo" && !c;
       const plan = carta ? planBusquedas(carta) : [];
@@ -5070,7 +5167,7 @@ var __angst = (() => {
       const totOk = totCand && d.total ? totCand === parseInt(d.total, 10) : null;
       const imgApi = c ? revImgs[claveCandidato(c)] : null;
       const urlsCand = c ? [...imgApi?.url ? [imgApi.url] : [], ...urlsFoto({ image: c.image, setId: c.setId, setCode: c.setCode, number: c.number })] : [];
-      return /* @__PURE__ */ React.createElement("div", { onClick: cerrarRevision, style: { position: "fixed", inset: 0, zIndex: 720, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,460px)", background: "#111", color: "#fff", borderRadius: "16px 16px 0 0", padding: "16px 16px 28px", maxHeight: "92vh", overflowY: "auto", boxSizing: "border-box", fontFamily: F9 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, revFocoId ? "\u{1F50D} Revisar precio de esta carta" : `\u{1F9ED} Cartas sin precio \xB7 quedan ${revCola.length}`), /* @__PURE__ */ React.createElement("button", { onClick: cerrarRevision, style: { background: "transparent", border: "none", color: "#999", fontSize: 18, cursor: "pointer" } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 12 } }, "consultas de hoy \u2248 ", revCupo, "/100 \xB7 ", revCont.elegidas, " elegidas \xB7 ", revCont.solas, " calzaron solas", idsAgotadasRecientes.size > 0 ? ` \xB7 ${idsAgotadasRecientes.size} en pausa (sin match, reintenta en unos d\xEDas)` : ""), !carta ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: "#8fe0a8", padding: "20px 0" } }, "No quedan cartas sin precio en la cola \u{1F389}") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center", background: "#1a1a1a", borderRadius: 12, padding: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement(FotoFB, { key: "t" + carta.id, urls: urlsFoto({ image: carta.image, cardId: carta.cardId }), style: { width: 56, borderRadius: 4, flexShrink: 0 }, vacio: /* @__PURE__ */ React.createElement("div", { style: { width: 56, height: 78, borderRadius: 4, background: "#333", flexShrink: 0 } }) }), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "TU CARTA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, carta.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13 } }, "#", carta.number, d.total ? `/${d.total}` : "", " \xB7 ", carta.set), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "c\xF3digo de set: ", carta.setCode || "\u2014"), carta.tcgMarket != null && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#5c9cff", marginTop: 2 } }, "precio actual: ", fmtUSD(carta.tcgMarket)))), d.estado === "cargando" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#aaa", padding: "16px 0" } }, "buscando opciones\u2026"), d.estado === "sincupo" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ffcf70", padding: "12px 0" } }, "Llegaste al l\xEDmite seguro de consultas de hoy (\u2248", revCupo, "/100). Sigue ma\xF1ana: el bot comparte ese cupo."), d.estado === "error" && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ff9b9b", marginBottom: 8 } }, d.msg), /* @__PURE__ */ React.createElement("button", { onClick: () => revCargarCarta(carta), style: btn("#333", "#fff", { marginRight: 8 }) }, "reintentar")), c && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 12, padding: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 6 } }, "OPCI\xD3N ", d.pos + 1, " DE ", d.cands.length), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement(
+      return /* @__PURE__ */ React.createElement("div", { onClick: cerrarRevision, style: { position: "fixed", inset: 0, zIndex: 720, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,460px)", background: "#111", color: "#fff", borderRadius: "16px 16px 0 0", padding: "16px 16px 28px", maxHeight: "92vh", overflowY: "auto", boxSizing: "border-box", fontFamily: F9 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, revFocoId ? "\u{1F50D} Revisar precio de esta carta" : `\u{1F9ED} Cartas sin precio \xB7 quedan ${revCola.length}`), /* @__PURE__ */ React.createElement("button", { onClick: cerrarRevision, style: { background: "transparent", border: "none", color: "#999", fontSize: 18, cursor: "pointer" } }, "\u2715")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 12 } }, "consultas de hoy \u2248 ", revCupo, "/100 \xB7 ", revCont.elegidas, " elegidas \xB7 ", revCont.solas, " calzaron solas", idsAgotadasRecientes.size > 0 ? ` \xB7 ${idsAgotadasRecientes.size} en pausa (sin match, reintenta en unos d\xEDas)` : ""), !carta ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: "#8fe0a8", padding: "20px 0" } }, "No quedan cartas sin precio en la cola \u{1F389}") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center", background: "#1a1a1a", borderRadius: 12, padding: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement(FotoFB, { key: "t" + carta.id, urls: urlsFoto({ image: carta.image, cardId: carta.cardId }), style: { width: 56, borderRadius: 4, flexShrink: 0 }, vacio: /* @__PURE__ */ React.createElement("div", { style: { width: 56, height: 78, borderRadius: 4, background: "#333", flexShrink: 0 } }) }), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "TU CARTA"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, carta.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13 } }, "#", carta.number, d.total ? `/${d.total}` : "", " \xB7 ", carta.set), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, "c\xF3digo de set: ", carta.setCode || "\u2014"), carta.tcgMarket != null && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#5c9cff", marginTop: 2 } }, "precio actual: ", fmtUSD(carta.tcgMarket)))), d.estado === "cargando" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#aaa", padding: "16px 0" } }, "buscando opciones\u2026"), d.estado === "sincupo" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ffcf70", padding: "12px 0" } }, "Llegaste al l\xEDmite seguro de consultas de hoy (\u2248", revCupo, "/100). Sigue ma\xF1ana: el bot comparte ese cupo."), d.estado === "error" && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ff9b9b", marginBottom: 8 } }, d.msg), /* @__PURE__ */ React.createElement("button", { onClick: () => revCargarCarta(carta), style: btn2("#333", "#fff", { marginRight: 8 }) }, "reintentar")), c && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 12, padding: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888", marginBottom: 6 } }, "OPCI\xD3N ", d.pos + 1, " DE ", d.cands.length), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement(
         FotoFB,
         {
           key: "c" + urlsCand.join("|"),
@@ -5078,10 +5175,10 @@ var __angst = (() => {
           style: { width: 84, borderRadius: 4, flexShrink: 0 },
           vacio: /* @__PURE__ */ React.createElement("div", { style: { width: 84, height: 118, borderRadius: 4, background: "#333", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 10, color: "#999", textAlign: "center", padding: 4, boxSizing: "border-box" } }, imgApi?.buscando ? "buscando\u2026" : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", null, imgApi && imgApi.url === null ? imgApi.error ? "fall\xF3: " + imgApi.error : "sin foto" : "sin foto"), /* @__PURE__ */ React.createElement("button", { onClick: () => revBuscarFoto(c), style: { background: "#333", border: "1px solid #555", borderRadius: 6, color: "#ddd", fontSize: 10, padding: "4px 6px", cursor: "pointer" } }, "\u{1F50E} buscar foto")))
         }
-      ), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, c.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 22, fontWeight: 800, margin: "2px 0" } }, "#", c.number), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#bbb" } }, c.setName || "set sin nombre"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, c.setId || c.setCode || "sin c\xF3digo de set"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 700, marginTop: 4, color: c.market != null ? "#8fe0a8" : "#999" } }, c.market != null ? fmtUSD(c.market) : "sin precio NM/LP"), c.market != null && carta.tcgMarket != null && Math.abs(c.market - carta.tcgMarket) < 5e-3 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#5c9cff", marginTop: 2 } }, "= el precio que tiene hoy tu carta"), c.market == null && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#888", marginTop: 2 } }, c.preciosDisponibles && c.preciosDisponibles.length ? `la API trae: ${c.preciosDisponibles.join(", ")}` : "la API no trae ning\xFAn precio para esta opci\xF3n"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 } }, chip4(numOk, "n\xFAmero"), setOk !== null && chip4(setOk, setComo === "nombre" ? "set (mismo nombre)" : "set"), totOk !== null && chip4(totOk, `total ${totCand} vs ${d.total}`))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginTop: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setRevDatos((x) => ({ ...x, pos: x.pos + 1 })), style: btn("#333", "#fff", { flex: 1 }) }, "No es"), /* @__PURE__ */ React.createElement("button", { disabled: c.market == null, onClick: () => revSiEs(carta, c), style: btn("#aac756", "#111", { flex: 1, opacity: c.market == null ? 0.35 : 1 }) }, c.market == null ? "Sin precio" : "S\xED es"))), sinMas && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ddd", marginBottom: 8 } }, d.msg || `Ya viste las ${d.cands.length} opciones.`), proxima && /* @__PURE__ */ React.createElement("button", { onClick: () => revOtraVariante(carta), style: btn("#aac756", "#111", { width: "100%", marginBottom: 8 }) }, "Probar otra variante: \xAB", proxima.q, "\xBB"), !proxima && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#888", marginBottom: 8 } }, "No quedan m\xE1s variantes del nombre por probar.")), d.estado !== "cargando" && /* @__PURE__ */ React.createElement("button", { onClick: () => {
+      ), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, c.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 22, fontWeight: 800, margin: "2px 0" } }, "#", c.number), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#bbb" } }, c.setName || "set sin nombre"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#888" } }, c.setId || c.setCode || "sin c\xF3digo de set"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 700, marginTop: 4, color: c.market != null ? "#8fe0a8" : "#999" } }, c.market != null ? fmtUSD(c.market) : "sin precio NM/LP"), c.market != null && carta.tcgMarket != null && Math.abs(c.market - carta.tcgMarket) < 5e-3 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#5c9cff", marginTop: 2 } }, "= el precio que tiene hoy tu carta"), c.market == null && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#888", marginTop: 2 } }, c.preciosDisponibles && c.preciosDisponibles.length ? `la API trae: ${c.preciosDisponibles.join(", ")}` : "la API no trae ning\xFAn precio para esta opci\xF3n"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 } }, chip4(numOk, "n\xFAmero"), setOk !== null && chip4(setOk, setComo === "nombre" ? "set (mismo nombre)" : "set"), totOk !== null && chip4(totOk, `total ${totCand} vs ${d.total}`))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, marginTop: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setRevDatos((x) => ({ ...x, pos: x.pos + 1 })), style: btn2("#333", "#fff", { flex: 1 }) }, "No es"), /* @__PURE__ */ React.createElement("button", { disabled: c.market == null, onClick: () => revSiEs(carta, c), style: btn2("#aac756", "#111", { flex: 1, opacity: c.market == null ? 0.35 : 1 }) }, c.market == null ? "Sin precio" : "S\xED es"))), sinMas && /* @__PURE__ */ React.createElement("div", { style: { padding: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: "#ddd", marginBottom: 8 } }, d.msg || `Ya viste las ${d.cands.length} opciones.`), proxima && /* @__PURE__ */ React.createElement("button", { onClick: () => revOtraVariante(carta), style: btn2("#aac756", "#111", { width: "100%", marginBottom: 8 }) }, "Probar otra variante: \xAB", proxima.q, "\xBB"), !proxima && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#888", marginBottom: 8 } }, "No quedan m\xE1s variantes del nombre por probar.")), d.estado !== "cargando" && /* @__PURE__ */ React.createElement("button", { onClick: () => {
         if (revFocoId) cerrarRevision();
         else setRevSaltadas((s) => [...s, carta.id]);
-      }, style: btn("transparent", "#bbb", { width: "100%", marginTop: 8, border: "1px solid #333" }) }, revFocoId ? "Cerrar sin cambios" : "Saltar esta carta")), revAviso && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#ffcf70", marginTop: 10 } }, revAviso), revFallidas.length > 0 && /* @__PURE__ */ React.createElement("button", { onClick: () => revFallidas.forEach((x) => guardarOverrideRemoto(x.id, x.ov)), style: btn("#333", "#fff", { marginTop: 8, fontSize: 12, padding: "8px 12px" }) }, "\u21BB reintentar ", revFallidas.length, " elecci\xF3n(es) pendientes de enviar al bot")));
+      }, style: btn2("transparent", "#bbb", { width: "100%", marginTop: 8, border: "1px solid #333" }) }, revFocoId ? "Cerrar sin cambios" : "Saltar esta carta")), revAviso && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#ffcf70", marginTop: 10 } }, revAviso), revFallidas.length > 0 && /* @__PURE__ */ React.createElement("button", { onClick: () => revFallidas.forEach((x) => guardarOverrideRemoto(x.id, x.ov)), style: btn2("#333", "#fff", { marginTop: 8, fontSize: 12, padding: "8px 12px" }) }, "\u21BB reintentar ", revFallidas.length, " elecci\xF3n(es) pendientes de enviar al bot")));
     }
     function renderDarkDetailModal() {
       if (!darkDetailId) return null;
@@ -7729,8 +7826,8 @@ var __angst = (() => {
       const a = brazo(sh, wr, flipArm);
       const knee = add(hip, [0.28, 0.96], LEN.muslo);
       const ankle = [knee[0] - LEN.pierna * 0.98, knee[1] - 1.2];
-      const pad = knee[1] + 1.2;
-      return { pad, svg: maquina(pad) + a.svg + cuerpo(sh, hip, headC) + line(hip[0], hip[1], knee[0], knee[1]) + line(knee[0], knee[1], ankle[0], ankle[1]) + line(ankle[0], ankle[1], ankle[0] - 6.5, ankle[1] + 0.8) };
+      const pad2 = knee[1] + 1.2;
+      return { pad: pad2, svg: maquina(pad2) + a.svg + cuerpo(sh, hip, headC) + line(hip[0], hip[1], knee[0], knee[1]) + line(knee[0], knee[1], ankle[0], ankle[1]) + line(ankle[0], ankle[1], ankle[0] - 6.5, ankle[1] + 0.8) };
     };
     const barra = dot(BAR[0], BAR[1], 2.2, GEAR);
     const ini = (() => {
@@ -7791,8 +7888,8 @@ var __angst = (() => {
       const a = brazo(sh, wr, 1);
       const knee = add(hip, [0.1, 0.99], LEN.muslo);
       const ankle = [knee[0] - LEN.pierna * 0.98, knee[1] - 1.2];
-      const pad = knee[1] + 1.2;
-      return maquina(pad) + barras + a.svg + cuerpo(sh, hip, headC) + line(hip[0], hip[1], knee[0], knee[1]) + line(knee[0], knee[1], ankle[0], ankle[1]) + line(ankle[0], ankle[1], ankle[0] - 6.5, ankle[1] + 0.8) + musculo(add(sh, unit(sh, a.codo), LEN.brazo * 0.5), 3.8);
+      const pad2 = knee[1] + 1.2;
+      return maquina(pad2) + barras + a.svg + cuerpo(sh, hip, headC) + line(hip[0], hip[1], knee[0], knee[1]) + line(knee[0], knee[1], ankle[0], ankle[1]) + line(ankle[0], ankle[1], ankle[0] - 6.5, ankle[1] + 0.8) + musculo(add(sh, unit(sh, a.codo), LEN.brazo * 0.5), 3.8);
     };
     const ini = cuerpoKneel([62, 20.5], [55, 40], [65.2, 12.7], [62.5, 44]);
     const fin = cuerpoKneel([60.5, 30.5], [53.5, 50], [63.7, 22.7], [62.5, 44]) + arrow(34, 26, 34, 40);
@@ -8071,13 +8168,13 @@ var __angst = (() => {
   }
   function ProgresionChart({ history, compact, ex }) {
     if (!history || history.length < 2) return null;
-    const W = compact ? 200 : 290, H2 = compact ? 48 : 72, pad = 8;
+    const W = compact ? 200 : 290, H2 = compact ? 48 : 72, pad2 = 8;
     const hasPeso = history.some((h) => h.peso);
     const vals = history.map((h) => volEfectivo(h.reps, h.peso, ex));
     const minV = Math.min(...vals) * 0.88, maxV = Math.max(...vals) * 1.12;
     const range = maxV - minV || 1;
-    const px = (i) => pad + i / (history.length - 1) * (W - pad * 2);
-    const py = (v) => H2 - pad - (v - minV) / range * (H2 - pad * 2);
+    const px = (i) => pad2 + i / (history.length - 1) * (W - pad2 * 2);
+    const py = (v) => H2 - pad2 - (v - minV) / range * (H2 - pad2 * 2);
     const path = history.map((h, i) => `${i === 0 ? "M" : "L"}${px(i).toFixed(1)},${py(vals[i]).toFixed(1)}`).join(" ");
     const last = vals[vals.length - 1], first = vals[0];
     const up = last >= first;
@@ -8085,7 +8182,7 @@ var __angst = (() => {
     const deltaPct = first !== 0 ? ((last - first) / Math.abs(first) * 100).toFixed(0) : null;
     const lastEntry = history[history.length - 1];
     const label = hasPeso ? `${lastEntry.reps}r\xD7${lastEntry.peso}kg` : `${lastEntry.reps}r`;
-    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("svg", { width: W, height: H2, style: { display: "block", overflow: "visible" } }, /* @__PURE__ */ React.createElement("path", { d: path, fill: "none", stroke: color, strokeWidth: compact ? 1.5 : 2, strokeLinejoin: "round", strokeLinecap: "round" }), history.map((h, i) => /* @__PURE__ */ React.createElement("circle", { key: i, cx: px(i), cy: py(vals[i]), r: compact ? 2 : 3, fill: color })), /* @__PURE__ */ React.createElement("text", { x: W - pad, y: py(last) - 5, textAnchor: "end", fontSize: compact ? 8 : 10, fontFamily: "DM Sans,sans-serif", fill: color, fontWeight: "700" }, label)), !compact && deltaPct && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color, marginTop: 2 } }, up ? "+" : "", deltaPct, "% volumen \xB7 ", history.length, " sesiones"));
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("svg", { width: W, height: H2, style: { display: "block", overflow: "visible" } }, /* @__PURE__ */ React.createElement("path", { d: path, fill: "none", stroke: color, strokeWidth: compact ? 1.5 : 2, strokeLinejoin: "round", strokeLinecap: "round" }), history.map((h, i) => /* @__PURE__ */ React.createElement("circle", { key: i, cx: px(i), cy: py(vals[i]), r: compact ? 2 : 3, fill: color })), /* @__PURE__ */ React.createElement("text", { x: W - pad2, y: py(last) - 5, textAnchor: "end", fontSize: compact ? 8 : 10, fontFamily: "DM Sans,sans-serif", fill: color, fontWeight: "700" }, label)), !compact && deltaPct && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color, marginTop: 2 } }, up ? "+" : "", deltaPct, "% volumen \xB7 ", history.length, " sesiones"));
   }
   function FloatingRestTimer({ secs, maxSecs, onSkip, onAddTime }) {
     return /* @__PURE__ */ React.createElement("div", { onClick: onSkip, style: { position: "fixed", inset: 0, zIndex: 2e3, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 18 } }, "descansando"), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: 220, height: 220, marginBottom: 14 } }, /* @__PURE__ */ React.createElement("svg", { width: "220", height: "220", style: { position: "absolute", top: 0, left: 0, transform: "rotate(-90deg)" } }, /* @__PURE__ */ React.createElement("circle", { cx: "110", cy: "110", r: "96", fill: "none", stroke: "#1a1a1a", strokeWidth: "10" }), /* @__PURE__ */ React.createElement(
@@ -10549,7 +10646,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       const comprados = (dayData && dayData[hoy] && dayData[hoy].compras || []).filter((i) => i.done);
       return comprados.length ? [...dias, { key: hoy, titulo: "Comprado hoy \xB7 toca la casilla para deshacer", items: comprados }] : dias;
     }, [dayData, hoy]);
-    const pendientes = grupos.filter((g) => !g.titulo.startsWith("Comprado")).reduce((s, g) => s + g.items.length, 0);
+    const pendientes2 = grupos.filter((g) => !g.titulo.startsWith("Comprado")).reduce((s, g) => s + g.items.length, 0);
     const sinPrecio = grupos.filter((g) => !g.titulo.startsWith("Comprado")).reduce((s, g) => s + g.items.filter((i) => montoCompra(i) === 0).length, 0);
     const destinos = {};
     grupos.filter((g) => !g.titulo.startsWith("Comprado")).forEach((g) => g.items.forEach((i) => {
@@ -10558,7 +10655,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       d.estimado += montoCompra(i);
     }));
     const estimado = Object.values(destinos).reduce((s, d) => s + d.estimado, 0);
-    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 12, width: "min(95vw,440px)", maxHeight: "86vh", display: "flex", flexDirection: "column", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, "\u{1F6D2} Carrito ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: "#888" } }, pendientes, " pendiente", pendientes === 1 ? "" : "s")), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#aaa", fontSize: 22, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "10px 14px" } }, /* @__PURE__ */ React.createElement(ListaCompras, { grupos, agregarEn: hoy, api, onPatch: onItem, onAdd, onDelete, vacio: "no hay compras pendientes" })), /* @__PURE__ */ React.createElement("div", { style: { borderTop: "1px solid #f0f0f0", padding: "10px 16px", fontFamily: F6, fontSize: 12, color: "#666", lineHeight: 1.5 } }, pendientes > 0 && /* @__PURE__ */ React.createElement("div", null, "Estimado pendiente: ", /* @__PURE__ */ React.createElement("b", { style: { color: "#111" } }, fmtCLP(estimado)), sinPrecio > 0 && /* @__PURE__ */ React.createElement("span", { style: { color: "#aaa" } }, " \xB7 ", sinPrecio, " sin precio")), Object.entries(destinos).map(([id, d]) => d.activo ? /* @__PURE__ */ React.createElement("div", { key: id, style: { color: d.estimado > d.saldo ? "#c00" : "#666" } }, d.emoji, " ", d.label, ": saldo ", /* @__PURE__ */ React.createElement("b", null, fmtCLP(d.saldo)), d.estimado > d.saldo ? " \xB7 el estimado no alcanza" : "") : /* @__PURE__ */ React.createElement("div", { key: id, style: { color: "#aaa" } }, d.label, " a\xFAn no es cartera con sobres: sus compras no descuentan de ning\xFAn fondo.")), pendientes === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#aaa" } }, "Agrega arriba lo que haga falta comprar."))));
+    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 12, width: "min(95vw,440px)", maxHeight: "86vh", display: "flex", flexDirection: "column", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, "\u{1F6D2} Carrito ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: "#888" } }, pendientes2, " pendiente", pendientes2 === 1 ? "" : "s")), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#aaa", fontSize: 22, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "10px 14px" } }, /* @__PURE__ */ React.createElement(ListaCompras, { grupos, agregarEn: hoy, api, onPatch: onItem, onAdd, onDelete, vacio: "no hay compras pendientes" })), /* @__PURE__ */ React.createElement("div", { style: { borderTop: "1px solid #f0f0f0", padding: "10px 16px", fontFamily: F6, fontSize: 12, color: "#666", lineHeight: 1.5 } }, pendientes2 > 0 && /* @__PURE__ */ React.createElement("div", null, "Estimado pendiente: ", /* @__PURE__ */ React.createElement("b", { style: { color: "#111" } }, fmtCLP(estimado)), sinPrecio > 0 && /* @__PURE__ */ React.createElement("span", { style: { color: "#aaa" } }, " \xB7 ", sinPrecio, " sin precio")), Object.entries(destinos).map(([id, d]) => d.activo ? /* @__PURE__ */ React.createElement("div", { key: id, style: { color: d.estimado > d.saldo ? "#c00" : "#666" } }, d.emoji, " ", d.label, ": saldo ", /* @__PURE__ */ React.createElement("b", null, fmtCLP(d.saldo)), d.estimado > d.saldo ? " \xB7 el estimado no alcanza" : "") : /* @__PURE__ */ React.createElement("div", { key: id, style: { color: "#aaa" } }, d.label, " a\xFAn no es cartera con sobres: sus compras no descuentan de ning\xFAn fondo.")), pendientes2 === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#aaa" } }, "Agrega arriba lo que haga falta comprar."))));
   }
 
   // modules/pokecripto/AgregarCartaModal.jsx
@@ -10884,7 +10981,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       const hasSocial = previewMarks.includes("social") || previewMarks.includes("romantic") || previewMarks.includes("colegio");
       const hasWork = previewMarks.includes("work");
       const hasColegio = previewMarks.includes("colegio");
-      const pendientes = (previewDay.tasks || []).filter((t) => !t.done && !t.notDone && !t.fixed).length;
+      const pendientes2 = (previewDay.tasks || []).filter((t) => !t.done && !t.notDone && !t.fixed).length;
       const bloques = (previewDay.schedule || []).length;
       const MARK_ICONS_MAP = {
         work: "\u{1F4BC}",
@@ -10898,7 +10995,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       };
       const label = previewScore <= 2 ? "d\xEDa tranquilo" : previewScore <= 4 ? "d\xEDa moderado" : previewScore <= 6 ? "d\xEDa cargado" : previewScore <= 8 ? "d\xEDa intenso" : "d\xEDa brutal";
       const barColor = previewScore <= 2 ? "rgba(255,255,255,0.3)" : previewScore <= 5 ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.95)";
-      return /* @__PURE__ */ React.createElement("div", { style: { background: "#111", borderRadius: 12, padding: "14px 16px", marginBottom: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: 2, textTransform: "uppercase" } }, view === "registro" ? fmtShort(previewKey) : "hoy"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff" } }, label)), /* @__PURE__ */ React.createElement("div", { style: { background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 7, overflow: "hidden", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${previewScore / 10 * 100}%`, background: barColor, borderRadius: 99, transition: "width 0.3s" } })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6, marginBottom: previewMarks.length > 0 ? 10 : 0 } }, pendientes > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.08)", borderRadius: 6, padding: "3px 8px" } }, pendientes, " pendiente", pendientes !== 1 ? "s" : ""), bloques > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.08)", borderRadius: 6, padding: "3px 8px" } }, bloques, " bloque", bloques !== 1 ? "s" : ""), hasSocial && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.7)", background: "rgba(255,255,255,0.12)", borderRadius: 6, padding: "3px 8px", display: "flex", alignItems: "center", gap: 4 } }, "\u{1F465} exposici\xF3n social")), previewMarks.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, previewMarks.map((m) => /* @__PURE__ */ React.createElement("span", { key: m, style: { fontSize: 13, background: "rgba(255,255,255,0.08)", borderRadius: 6, padding: "3px 7px", display: "flex", alignItems: "center", gap: 3 } }, MARK_ICONS_MAP[m] || "\u{1F4CC}", /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.45)" } }, m)))));
+      return /* @__PURE__ */ React.createElement("div", { style: { background: "#111", borderRadius: 12, padding: "14px 16px", marginBottom: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: 2, textTransform: "uppercase" } }, view === "registro" ? fmtShort(previewKey) : "hoy"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff" } }, label)), /* @__PURE__ */ React.createElement("div", { style: { background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 7, overflow: "hidden", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${previewScore / 10 * 100}%`, background: barColor, borderRadius: 99, transition: "width 0.3s" } })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6, marginBottom: previewMarks.length > 0 ? 10 : 0 } }, pendientes2 > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.08)", borderRadius: 6, padding: "3px 8px" } }, pendientes2, " pendiente", pendientes2 !== 1 ? "s" : ""), bloques > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.08)", borderRadius: 6, padding: "3px 8px" } }, bloques, " bloque", bloques !== 1 ? "s" : ""), hasSocial && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.7)", background: "rgba(255,255,255,0.12)", borderRadius: 6, padding: "3px 8px", display: "flex", alignItems: "center", gap: 4 } }, "\u{1F465} exposici\xF3n social")), previewMarks.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, previewMarks.map((m) => /* @__PURE__ */ React.createElement("span", { key: m, style: { fontSize: 13, background: "rgba(255,255,255,0.08)", borderRadius: 6, padding: "3px 7px", display: "flex", alignItems: "center", gap: 3 } }, MARK_ICONS_MAP[m] || "\u{1F4CC}", /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.45)" } }, m)))));
     })(), view === "registro" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
       "button",
       {
@@ -12245,7 +12342,7 @@ ${item.link}`);
         return secciones.map((sec) => sec.clips.length > 0 && (() => {
           const sectionKey = `${nombre}-${sec.key}`;
           const colapsada = !openSections.has(sectionKey);
-          const pendientes = sec.clips.filter((c) => !vodVistos.has(c.guid)).length;
+          const pendientes2 = sec.clips.filter((c) => !vodVistos.has(c.guid)).length;
           return /* @__PURE__ */ React.createElement("div", { key: sec.key, style: { marginBottom: 16, paddingBottom: colapsada ? 0 : 16, borderBottom: "1px solid rgba(255,255,255,0.08)" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => toggleSection(sectionKey), style: {
             display: "flex",
             alignItems: "center",
@@ -12256,7 +12353,7 @@ ${item.link}`);
             padding: 0,
             marginBottom: colapsada ? 0 : 8,
             cursor: "pointer"
-          } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ff6600", transform: colapsada ? "rotate(-90deg)" : "none", transition: "transform 0.15s", display: "inline-block" } }, "\u25BC"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600" } }, sec.titulo), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#777" } }, "(", sec.clips.length, ")"), pendientes > 0 && /* @__PURE__ */ React.createElement("span", { style: {
+          } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#ff6600", transform: colapsada ? "rotate(-90deg)" : "none", transition: "transform 0.15s", display: "inline-block" } }, "\u25BC"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#ff6600" } }, sec.titulo), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#777" } }, "(", sec.clips.length, ")"), pendientes2 > 0 && /* @__PURE__ */ React.createElement("span", { style: {
             fontFamily: "'DM Sans',sans-serif",
             fontSize: 9,
             fontWeight: 700,
@@ -12265,7 +12362,7 @@ ${item.link}`);
             borderRadius: 10,
             padding: "1px 7px",
             marginLeft: 2
-          } }, pendientes, " sin ver")), !colapsada && sec.clips.map((clip, i) => {
+          } }, pendientes2, " sin ver")), !colapsada && sec.clips.map((clip, i) => {
             const visto = vodVistos.has(clip.guid);
             return /* @__PURE__ */ React.createElement("div", { key: clip.guid, style: {
               padding: "16px 0",
@@ -12633,8 +12730,8 @@ ${item.link}`);
     if (rating.tmdb != null) chips.push({ label: "TMDb", value: rating.tmdb.toFixed(1), bg: "#01b4e4", fg: "#000" });
     if (!chips.length) return null;
     const fontSize = size === "lg" ? 12 : 10;
-    const pad = size === "lg" ? "5px 10px" : "3px 7px";
-    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" } }, chips.map((c, i) => /* @__PURE__ */ React.createElement("span", { key: i, style: { background: c.bg, color: c.fg, borderRadius: 6, padding: pad, fontFamily: "'DM Sans',sans-serif", fontSize, fontWeight: 700, display: "flex", gap: 4, alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", null, c.label), /* @__PURE__ */ React.createElement("span", null, c.value))));
+    const pad2 = size === "lg" ? "5px 10px" : "3px 7px";
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" } }, chips.map((c, i) => /* @__PURE__ */ React.createElement("span", { key: i, style: { background: c.bg, color: c.fg, borderRadius: 6, padding: pad2, fontFamily: "'DM Sans',sans-serif", fontSize, fontWeight: 700, display: "flex", gap: 4, alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", null, c.label), /* @__PURE__ */ React.createElement("span", null, c.value))));
   }
   function ReviewBlock({ label, review, color }) {
     return /* @__PURE__ */ React.createElement("div", { style: { background: "#151515", borderRadius: 10, padding: "10px 12px", marginBottom: 8, borderLeft: `2px solid ${color}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" } }, label), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color, fontWeight: 700 } }, review.rating, "/10")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 } }, review.text), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 6 } }, "\u2014 ", review.author));
@@ -13311,7 +13408,7 @@ Toco reintentar ahora.`);
   function diasEntre(a, b) {
     return Math.round((aFecha(b) - aFecha(a)) / 864e5);
   }
-  function sumarDias(k, n) {
+  function sumarDias2(k, n) {
     const d = aFecha(k);
     d.setDate(d.getDate() + n);
     return fmtFull(d);
@@ -13341,7 +13438,7 @@ Toco reintentar ahora.`);
     const ordenBaliza = (a, b) => (minutosDe(a.deadline) ?? 1e9) - (minutosDe(b.deadline) ?? 1e9);
     let proxima = null;
     for (let i = 0; i <= VENTANA_BALIZA_DIAS && !proxima; i++) {
-      const k = sumarDias(todayKey, i);
+      const k = sumarDias2(todayKey, i);
       const bs = balizasDeDia(dayData[k]);
       if (bs.length) {
         const ord = [...bs].sort(ordenBaliza);
@@ -13836,6 +13933,89 @@ Toco reintentar ahora.`);
     const nutriDecksRef = useRef19([]);
     const ANGST_STATE_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
     const ANGST_STATE_AUTH_KEY = "angst-simkl-auth-v1";
+    const [familiaData, setFamiliaData] = useState30(null);
+    const [familiaOpen, setFamiliaOpen] = useState30(false);
+    const [familiaBusy, setFamiliaBusy] = useState30(false);
+    const [familiaMsg, setFamiliaMsg] = useState30(null);
+    const [familiaVer, setFamiliaVer] = useState30(0);
+    const familiaLastRef = useRef19(0);
+    async function cargarFamilia(force) {
+      const auth = localStorage.getItem(ANGST_STATE_AUTH_KEY);
+      if (!auth) {
+        if (force) setFamiliaMsg("Falta el AUTH_SECRET (se guarda al usar podcasts o \u{1F4E4})");
+        return;
+      }
+      if (!force && Date.now() - familiaLastRef.current < 12e4) return;
+      familiaLastRef.current = Date.now();
+      setFamiliaBusy(true);
+      try {
+        const r = await fetch(`${ANGST_STATE_WORKER_URL}?path=google-inbox.json`, { headers: { "X-Angst-Auth": auth } });
+        if (!r.ok) {
+          setFamiliaMsg(`No pude leer la bandeja (${r.status})`);
+          return;
+        }
+        const j = await r.json();
+        const events = Array.isArray(j?.events) ? j.events : [];
+        setFamiliaData({ events, generatedAt: j?.generatedAt || null });
+        setFamiliaMsg(null);
+        if (j && j.found !== false) guardarDecisiones(podar(leerDecisiones(), events));
+      } catch (e) {
+        setFamiliaMsg("No pude leer la bandeja (sin conexi\xF3n)");
+      } finally {
+        setFamiliaBusy(false);
+      }
+    }
+    useEffect21(() => {
+      cargarFamilia(false);
+      const onVis = () => {
+        if (document.visibilityState === "visible") cargarFamilia(false);
+      };
+      document.addEventListener("visibilitychange", onVis);
+      return () => document.removeEventListener("visibilitychange", onVis);
+    }, []);
+    const familiaPend = pendientes(familiaData?.events || [], leerDecisiones(), fmtFull(/* @__PURE__ */ new Date()));
+    function familiaImportar(ev) {
+      const fechas = fechasDeEvento(ev);
+      if (!fechas.length) return null;
+      const nx = { ...dayDataRef.current || {} };
+      const items = [];
+      fechas.forEach((f2, i) => {
+        const nid2 = Date.now().toString() + "-" + i + Math.random().toString(36).slice(2, 6);
+        const t = tareaDesdeEvento(ev, nid2);
+        const d = nx[f2] || makeEmptyDay();
+        nx[f2] = { ...d, tasks: t.deadline ? sortTasks([...d.tasks, t]) : [...d.tasks, t] };
+        items.push({ date: f2, taskId: nid2 });
+      });
+      setDayData(nx);
+      dayDataRef.current = nx;
+      saveToStorage({ dayData: nx });
+      return items;
+    }
+    function familiaPasar(ev) {
+      const items = familiaImportar(ev);
+      if (!items) return;
+      guardarDecisiones(registrarImportado(leerDecisiones(), ev.id, items));
+      setFamiliaVer((v) => v + 1);
+    }
+    function familiaIgnorar(ev) {
+      guardarDecisiones(registrarIgnorado(leerDecisiones(), ev.id));
+      setFamiliaVer((v) => v + 1);
+    }
+    function familiaPasarTodos() {
+      let dec = leerDecisiones();
+      for (const { ev } of familiaPend) {
+        const items = familiaImportar(ev);
+        if (items) dec = registrarImportado(dec, ev.id, items);
+      }
+      guardarDecisiones(dec);
+      setFamiliaVer((v) => v + 1);
+    }
+    function familiaIgnorarTodos() {
+      let dec = leerDecisiones();
+      for (const { ev } of familiaPend) dec = registrarIgnorado(dec, ev.id);
+      guardarDecisiones(dec);
+      setFamiliaVer((v) => v + 1);
+    }
     const ANGST_STATE_PATH = "angst-full-state.json";
     const ANGST_STATE_BRANCH = "state-sync";
     const [stateSyncMsg, setStateSyncMsg] = useState30(null);
@@ -15317,7 +15497,7 @@ Toco reintentar ahora.`);
         saveToStorage({ dayData: next });
         return next;
       });
-    } }), calOpen && /* @__PURE__ */ React.createElement(CalendarModal, { weekStart, marks: calMarks, onMark: handleMark, dayData, calMarks, kidsHealth, onWeekSelect: (date) => {
+    } }), familiaOpen && /* @__PURE__ */ React.createElement(FamiliaInboxModal, { items: familiaPend, onImport: familiaPasar, onIgnore: familiaIgnorar, onImportAll: familiaPasarTodos, onIgnoreAll: familiaIgnorarTodos, onRefresh: () => cargarFamilia(true), onClose: () => setFamiliaOpen(false), cargando: familiaBusy, mensaje: familiaMsg, generadoEn: familiaData?.generatedAt }), calOpen && /* @__PURE__ */ React.createElement(CalendarModal, { weekStart, marks: calMarks, onMark: handleMark, dayData, calMarks, kidsHealth, onWeekSelect: (date) => {
       const dow = date.getDay();
       const mon = addDays(date, -(dow === 0 ? 6 : dow - 1));
       const diff = Math.round((mon - BASE_DATE) / (7 * 864e5));
@@ -15440,7 +15620,7 @@ Toco reintentar ahora.`);
       {
         abierto: dashAbierto,
         onToggle: toggleDash,
-        navegacion: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "nbtn", onClick: () => updateWeekOffset(weekOffset - 1) }, "\u2039"), /* @__PURE__ */ React.createElement("div", { className: "wnav-dates" }, fmt(weekStart), " \u2014 ", fmt(addDays(weekStart, 6))), /* @__PURE__ */ React.createElement("button", { className: "calbtn", onClick: () => setCalOpen(true) }, "\u{1F4C5}"), /* @__PURE__ */ React.createElement("button", { className: "nbtn", onClick: () => updateWeekOffset(weekOffset + 1) }, "\u203A")),
+        navegacion: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "nbtn", onClick: () => updateWeekOffset(weekOffset - 1) }, "\u2039"), /* @__PURE__ */ React.createElement("div", { className: "wnav-dates" }, fmt(weekStart), " \u2014 ", fmt(addDays(weekStart, 6))), /* @__PURE__ */ React.createElement("button", { className: "calbtn", onClick: () => setCalOpen(true) }, "\u{1F4C5}"), familiaPend.length > 0 && /* @__PURE__ */ React.createElement("button", { className: "calbtn", onClick: () => setFamiliaOpen(true), title: "Eventos nuevos en el calendario Familia" }, "\u{1F4E5}", familiaPend.length), /* @__PURE__ */ React.createElement("button", { className: "nbtn", onClick: () => updateWeekOffset(weekOffset + 1) }, "\u203A")),
         weekKeys: semanaKeys,
         todayKey: fmtFull(/* @__PURE__ */ new Date()),
         ahoraMin: (/* @__PURE__ */ new Date()).getHours() * 60 + (/* @__PURE__ */ new Date()).getMinutes(),
