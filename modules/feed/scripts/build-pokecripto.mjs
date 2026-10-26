@@ -27,9 +27,9 @@
 // corrida queda en pokecripto-estado.json (los logs completos de Actions no son legibles desde fuera).
 
 import { readFileSync, writeFileSync } from "node:fs";
-import { fetchTCGBatch, addSnapshot } from "../../pokecripto/lib/pricing.mjs";
+import { fetchTCGBatch, addSnapshot, compactarHistorial } from "../../pokecripto/lib/pricing.mjs";
 import { aplicarOverrides, normalizarOverridesRemotos, fusionarPending, prioridadCarta } from "../../pokecripto/lib/review.mjs";
-import { fetchTCGPagina, asignarTcgIds, agruparPorSet, paginasNecesarias, debeSaltarse, actualizarEstadoSet, presupuestoDescubrimiento, sumarDias, cupoRestante, diagnosticarSet, POR_PAGINA } from "../../pokecripto/lib/discovery.mjs";
+import { fetchTCGPagina, fetchTCGSets, fetchTCGSetPagina, slugParaSet, paginasDeSet, claveCarta, PAUSA_RAFAGA_MS, asignarTcgIds, agruparPorSet, debeSaltarse, actualizarEstadoSet, presupuestoDescubrimiento, sumarDias, cupoRestante } from "../../pokecripto/lib/discovery.mjs";
 
 const INVENTARIO_PATH = process.env.POKECRIPTO_INVENTARIO_PATH;
 const PENDING_PATH = process.env.POKECRIPTO_PENDING_PATH;
@@ -43,14 +43,16 @@ const TCG_API_KEY = process.env.TCG_API_KEY || null;
 // manual del cliente, que ahora es barato (el buscador ya no consulta 24 cartas por búsqueda).
 const RESERVA_TCG_DIARIA = 85;
 const BATCH_TAMANO = 20;          // máximo de ids por consulta de la API
-const BATCH_MAX_LLAMADAS = 65;    // 65 x 20 = 1300 cartas: todo el inventario actual (1291) en una corrida
-const BATCH_PAUSA_MS = Number(process.env.POKECRIPTO_PAUSA_MS ?? 500);   // las pruebas la bajan a 0
-// Descubrimiento por set DESACTIVADO (0) tras verlo en producción (14-oct-2026): una consulta con el nombre del set
-// ("Unbroken Bonds") devuelve ~37 resultados de 5 sets distintos, ninguno con el número de las cartas buscadas; la
-// búsqueda es difusa por texto, no un listado del set. El código se conserva y se prueba (POKECRIPTO_DESCUBRIMIENTO_TOPE=40);
-// los tcgId llegan por la búsqueda carta por carta con cosecha, que sí rinde (90 -> 249 cartas con tcgId en 2 corridas).
-const DESCUBRIMIENTO_TOPE = Number(process.env.POKECRIPTO_DESCUBRIMIENTO_TOPE ?? 0);
-const DESCUBRIMIENTO_PAGINAS = 4; // páginas máximas por set (4 x 100 = 400 cartas)
+const BATCH_MAX_LLAMADAS = 70;    // 70 x 20 = 1400 tcgId distintos por corrida (issue #27: antes 65 = 1300, el inventario ya pasa de 1300 filas)
+const BATCH_PAUSA_MS = Number(process.env.POKECRIPTO_PAUSA_MS ?? 1500);  // la API limita la ráfaga a 1 consulta a la vez (diag. 26-oct-2026); las pruebas la bajan a 0
+// Descubrimiento por set REACTIVADO (26-oct-2026, issue #27). Estaba apagado porque consultaba `q=<nombre del set>` (texto libre:
+// devolvía productos sellados). El diagnóstico en Actions (docs/diag-tcg.json) confirmó que la API tiene `set=<slug>` +
+// `limit`/`offset` y una lista de sets (/sets); cada carta viene en una fila por variante (Normal/Holofoil/Reverse), que
+// elegirVariante() resuelve. Sin salida directa a la API desde el sandbox, la primera corrida real es la prueba: si 3 sets
+// seguidos no emparejan nada se apaga solo (ver más abajo) y el diagnóstico queda en pokecripto-estado.json.
+const DESCUBRIMIENTO_TOPE = Number(process.env.POKECRIPTO_DESCUBRIMIENTO_TOPE ?? 60);
+const DESCUBRIMIENTO_PAGINAS = 10; // páginas máximas por set (el `count` de la API incluye variantes y sellados: Ascended Heroes ~800)
+const DIAS_CACHE_SETS = 7;         // la lista de sets se vuelve a pedir cada 7 días (aparecen sets nuevos)
 const RESERVA_INDIVIDUAL = 8;     // consultas que se guardan para búsquedas carta por carta
 const GUARDAR_CADA = 25;
 const CUPO_MANUAL = 10;           // si la API dice que quedan <=10 consultas reales, el bot se detiene (son para el uso manual)
@@ -94,6 +96,16 @@ async function main() {
   if (fus.parcheadas) console.log(`✓ ${fus.parcheadas} parche(s) de carpeta aplicado(s)`);
   if (Object.keys(overrides).length) console.log(`✓ ${Object.keys(overrides).length} designación(es) manual(es) aplicada(s)`);
 
+  if (fus.bajas) console.log(`✓ ${fus.bajas} baja(s) aplicada(s) desde pending`);
+  // Compactación del historial (pedido de Cristopher 25-oct-2026): ver compactarHistorial en pricing.mjs. Idempotente.
+  let compactados = 0;
+  for (const c of base) {
+    const h = c.priceHistory;
+    if (Array.isArray(h) && h.length > 1) { const n = compactarHistorial(h, hoy); if (n.length !== h.length) { compactados += h.length - n.length; c.priceHistory = n; } }
+  }
+  if (compactados) console.log(`✓ Historial compactado: ${compactados} snapshot(s) menos`);
+  const tomados = new Map(); // tcgId -> cardId que lo tiene (guarda: un tcgId es una carta de un set)
+  for (const c of base) if (c.tcgId) tomados.set(c.tcgId, claveCarta(c));
   const actualizadas = new Map(); // id -> campos de precio / intento de HOY
   const parches = new Map();      // id -> { tcgId } descubierto (puede no traer precio)
   const porId = new Map(base.map(c => [c.id, c]));
@@ -137,10 +149,10 @@ async function main() {
 
   const snapshotDe = (carta, m, src) => ({
     tcgMarket: m.market, tcgLow: m.low ?? null, tcgHigh: m.high ?? null, tcgUpdated: hoy,
-    priceHistory: addSnapshot(carta.priceHistory, m.market, m.low ?? null, m.high ?? null, hoy, src),
+    priceHistory: compactarHistorial(addSnapshot(carta.priceHistory, m.market, m.low ?? null, m.high ?? null, hoy, src), hoy),
   });
 
-  // ── 1. DESCUBRIMIENTO de tcgId por set ────────────────────────────────
+  // ── 1. DESCUBRIMIENTO de tcgId por set (set=<slug>) ───────────────────
   const sinTcgId = activas.filter(c => !tcgIdDe(c));
   const presupuestoDesc = TCG_API_KEY ? presupuestoDescubrimiento({
     reserva: Math.max(0, RESERVA_TCG_DIARIA - tcgUsadas), cartasConTcgId: activas.length - sinTcgId.length, batchTam: BATCH_TAMANO,
@@ -151,38 +163,59 @@ async function main() {
     console.log(`ℹ Descubrimiento por set apagado hasta ${estado.descubrimientoSetApagadoHasta} (no emparejó nada la última vez); la búsqueda carta por carta cosecha ids igual`);
     descActivo = false;
   }
-  const grupos = agruparPorSet(sinTcgId).filter(g => !debeSaltarse(estado.sets[g.clave], hoy));
-  console.log(`Descubrimiento: ${sinTcgId.length} carta(s) sin tcgId en ${grupos.length} set(s) elegibles; presupuesto ${presupuestoDesc} consulta(s)`);
-  for (const g of grupos) {
-    if (!descActivo || descLlamadas >= presupuestoDesc || !hayCupo()) break;
-    const vistos = new Set();
-    let encontradasSet = 0;
-    const maxPag = paginasNecesarias(g, DESCUBRIMIENTO_PAGINAS);
-    for (let page = 1; page <= maxPag && descLlamadas < presupuestoDesc; page++) {
-      const r = await fetchTCGPagina(g.set, TCG_API_KEY, page);
+  let setsApi = estado.setsApi?.fecha && estado.setsApi.lista?.length && sumarDias(estado.setsApi.fecha, DIAS_CACHE_SETS) > hoy ? estado.setsApi.lista : null;
+  if (descActivo && !setsApi) {
+    const rs = await fetchTCGSets(TCG_API_KEY);
+    descLlamadas += rs.llamadas; tcgUsadas += rs.llamadas; registrarCupo(rs.rate);
+    if (rs.ok && rs.sets.length) { setsApi = rs.sets; estado.setsApi = { fecha: hoy, lista: rs.sets }; console.log(`✓ Lista de sets de la API: ${rs.sets.length} set(s) en ${rs.llamadas} consulta(s)`); }
+    else { console.log(`✗ No se pudo leer la lista de sets (${rs.error || "vacía"}); sin descubrimiento hoy`); descActivo = false; }
+  }
+  const sinSlug = [];
+  const trabajo = [];
+  let diagListo = false;
+  if (descActivo && setsApi) {
+    for (const g of agruparPorSet(sinTcgId).filter(g => !debeSaltarse(estado.sets[g.clave], hoy))) {
+      const api = slugParaSet(g.set, setsApi);
+      if (!api) { sinSlug.push(g.set); continue; }
+      trabajo.push({ g, api, pags: Math.min(DESCUBRIMIENTO_PAGINAS, paginasDeSet(api)) });
+    }
+    const urg = t => t.g.cartas.some(c => c.carpeta === "Price Watch") ? 1 : 0;
+    trabajo.sort((a, b) => urg(b) - urg(a) || (b.g.cartas.length / b.pags) - (a.g.cartas.length / a.pags)); // más cartas por consulta primero
+  }
+  estado.setsSinSlug = sinSlug;
+  console.log(`Descubrimiento: ${sinTcgId.length} carta(s) sin tcgId; ${trabajo.length} set(s) con slug${sinSlug.length ? `, ${sinSlug.length} sin slug (${sinSlug.slice(0, 5).join(" | ")}${sinSlug.length > 5 ? "…" : ""})` : ""}; presupuesto ${presupuestoDesc} consulta(s)`);
+  for (const t of trabajo) {
+    if (!descActivo || !hayCupo()) break;
+    if (descLlamadas + t.pags > presupuestoDesc) continue; // no entra entero en lo que queda: se prueba con un set más chico
+    const { g, api } = t;
+    const filas = []; let completo = true, totalApi = null;
+    for (let off = 0, pag = 0; pag < t.pags; pag++, off += 100) {
+      await sleep(PAUSA_RAFAGA_MS);
+      const r = await fetchTCGSetPagina(api.slug, TCG_API_KEY, off);
       descLlamadas++; tcgUsadas++; registrarCupo(r.rate);
-      if (descLlamadas === 1) estado.diagnosticoDescubrimiento = { fecha: hoy, ...diagnosticarSet(g, r) };
+      if (!diagListo) { diagListo = true; estado.diagnosticoDescubrimiento = { fecha: hoy, set: api.slug, ok: r.ok, status: r.status ?? null, error: r.error || null, filas: r.cards?.length ?? 0, total: r.total ?? null }; }
       if (!r.ok) {
-        console.log(`✗ Descubrimiento "${g.set}" p${page}: ${r.error}`);
-        if ([401, 402, 403].includes(r.status)) descActivo = false; // credencial o plan: no seguir gastando
-        break;
+        console.log(`✗ Descubrimiento "${g.set}" (${api.slug}) offset ${off}: ${r.error}`);
+        if ([401, 402, 403].includes(r.status)) descActivo = false;
+        if (r.status === 429) restanteReal = restanteReal ?? 0;
+        completo = false; break;
       }
-      if (descLlamadas === 1) console.log(`ℹ Primera consulta de descubrimiento ("${g.set}"): ${r.cards.length} resultado(s), set(s) en la respuesta: ${[...new Set(r.cards.map(c => c.setName))].slice(0, 5).join(" | ")}`);
-      const nuevos = r.cards.filter(c => !vistos.has(c.tcgId));
-      r.cards.forEach(c => vistos.add(c.tcgId));
-      if (page > 1 && !nuevos.length) break; // la API ignora `page`: no hay más que sacar
-      const vivas = activas.filter(c => !tcgIdDe(c)); // se empareja con TODAS las que faltan, no solo las del set
-      for (const [id, m] of asignarTcgIds(vivas, r.cards)) {
-        const carta = porId.get(id);
-        parches.set(id, { tcgId: m.tcgId });
-        descEncontradas++;
-        if (g.cartas.some(c => c.id === id)) encontradasSet++;
-        if (m.market && !actualizadas.has(id)) { actualizadas.set(id, snapshotDe(carta, m, "tpl")); descConPrecio++; okCount++; }
-      }
-      if (r.cards.length < POR_PAGINA) break; // última página del set
-      await sleep(BATCH_PAUSA_MS);
+      totalApi = r.total;
+      const nuevos = r.cards.filter(c => !filas.some(f => f.tcgId === c.tcgId));
+      filas.push(...nuevos);
+      if (!nuevos.length || r.cards.length < 100) break; // última página (o la API ignoró offset)
+    }
+    if (!completo) continue; // sin todas las variantes a la vista no se asigna (una carta podría quedar con solo la Reverse)
+    let encontradasSet = 0;
+    const vivas = g.cartas.filter(c => !tcgIdDe(c));
+    for (const [id, m] of asignarTcgIds(vivas, filas, { setSeguro: true, tomados })) {
+      const carta = porId.get(id);
+      parches.set(id, { tcgId: m.tcgId });
+      descEncontradas++; encontradasSet++;
+      if (m.market && !actualizadas.has(id)) { actualizadas.set(id, snapshotDe(carta, m, "tpl")); descConPrecio++; okCount++; }
     }
     const restantes = g.cartas.filter(c => !tcgIdDe(c)).length;
+    console.log(`  ${g.set} (${api.slug}): ${encontradasSet}/${g.cartas.length} emparejada(s), ${filas.length} fila(s) de la API${totalApi != null ? ` de ${totalApi}` : ""}`);
     estado.sets[g.clave] = actualizarEstadoSet(estado.sets[g.clave], { set: g.set, hoy, encontradas: encontradasSet, restantes });
     setsProbados++;
     setsSinMatchSeguidos = encontradasSet === 0 ? setsSinMatchSeguidos + 1 : 0;
@@ -191,30 +224,39 @@ async function main() {
       estado.descubrimientoSetApagadoHasta = sumarDias(hoy, 7);
       descActivo = false;
     }
+    if (setsProbados % 5 === 0) guardar("descubrimiento");
   }
   if (descEncontradas > 0) delete estado.descubrimientoSetApagadoHasta;
   console.log(`✓ Descubrimiento: ${descEncontradas} tcgId nuevo(s) (${descConPrecio} con precio) en ${descLlamadas} consulta(s), ${setsProbados} set(s)`);
-  resumen.descubrimiento = { llamadas: descLlamadas, tcgIdNuevos: descEncontradas, conPrecio: descConPrecio, sets: setsProbados };
+  resumen.descubrimiento = { llamadas: descLlamadas, tcgIdNuevos: descEncontradas, conPrecio: descConPrecio, sets: setsProbados, setsSinSlug: sinSlug.length };
+  resumen.compactados = compactados; resumen.bajas = fus.bajas || 0;
   guardar("descubrimiento");
 
   // ── 2. LOTES: todas las cartas con tcgId, de 20 en 20 ──────────────────
   const conTcgId = activas.filter(c => tcgIdDe(c) && !actualizadas.has(c.id)).sort(porPrioridadYEdad);
-  let batchLlamadas = 0, batchOk = 0, batchSinPrecio = 0, batchActivo = !!TCG_API_KEY && conTcgId.length > 0;
-  console.log(`Por lote: ${conTcgId.length} carta(s) con tcgId (${Math.ceil(conTcgId.length / BATCH_TAMANO)} consulta(s) para todas, tope ${BATCH_MAX_LLAMADAS})`);
-  for (let i = 0; batchActivo && i < conTcgId.length && batchLlamadas < BATCH_MAX_LLAMADAS && hayCupo(); i += BATCH_TAMANO) {
-    const grupo = conTcgId.slice(i, i + BATCH_TAMANO);
-    const r = await fetchTCGBatch(grupo.map(tcgIdDe), TCG_API_KEY);
+  // Una consulta por tcgId DISTINTO (issue #27): la misma carta en varias colecciones comparte tcgId y antes ocupaba un lugar de lote
+  // por fila. Se conserva el orden de prioridad (Price Watch / más viejas) y el resultado se aplica a todas las filas del tcgId.
+  const filasPorTcg = new Map();
+  for (const c of conTcgId) { const t = tcgIdDe(c); if (!filasPorTcg.has(t)) filasPorTcg.set(t, []); filasPorTcg.get(t).push(c); }
+  const idsUnicos = [...filasPorTcg.keys()];
+  let batchLlamadas = 0, batchOk = 0, batchSinPrecio = 0, batchActivo = !!TCG_API_KEY && idsUnicos.length > 0;
+  console.log(`Por lote: ${conTcgId.length} fila(s) con tcgId, ${idsUnicos.length} tcgId distinto(s) (${Math.ceil(idsUnicos.length / BATCH_TAMANO)} consulta(s) para todos, tope ${BATCH_MAX_LLAMADAS})`);
+  for (let i = 0; batchActivo && i < idsUnicos.length && batchLlamadas < BATCH_MAX_LLAMADAS && hayCupo(); i += BATCH_TAMANO) {
+    const grupoIds = idsUnicos.slice(i, i + BATCH_TAMANO);
+    const r = await fetchTCGBatch(grupoIds, TCG_API_KEY);
     batchLlamadas++; tcgUsadas++; registrarCupo(r.rate);
     if (batchLlamadas === 1) console.log(`ℹ Primera consulta por lote: HTTP ${r.status}${r.ok ? "" : " " + r.error} | cabeceras de cupo: ${JSON.stringify(r.rate || {})}`);
     if (!r.ok) { console.log(`✗ Por lote falló (${r.error}); se sigue carta por carta`); batchActivo = false; break; }
-    for (const carta of grupo) {
-      const p = r.porId.get(tcgIdDe(carta));
-      if (!p || !p.market) { batchSinPrecio++; continue; }
-      actualizadas.set(carta.id, snapshotDe(carta, p, "tpl"));
-      batchOk++; okCount++;
+    for (const t of grupoIds) {
+      const p = r.porId.get(t);
+      for (const carta of filasPorTcg.get(t)) {
+        if (!p || !p.market) { batchSinPrecio++; continue; }
+        actualizadas.set(carta.id, snapshotDe(carta, p, "tpl"));
+        batchOk++; okCount++;
+      }
     }
     if (batchLlamadas % 10 === 0) guardar("lotes");
-    if (i + BATCH_TAMANO < conTcgId.length) await sleep(BATCH_PAUSA_MS);
+    if (i + BATCH_TAMANO < idsUnicos.length) await sleep(BATCH_PAUSA_MS);
   }
   console.log(`✓ Por lote: ${batchOk} snapshot(s) con ${batchLlamadas} consulta(s)${batchSinPrecio ? `, ${batchSinPrecio} sin precio en la API (pasan a la rotación)` : ""}`);
   resumen.lotes = { llamadas: batchLlamadas, snapshots: batchOk, sinPrecio: batchSinPrecio, pendientesPorTope: Math.max(0, conTcgId.length - batchOk - batchSinPrecio) };
@@ -242,7 +284,7 @@ async function main() {
         if (r.status === 429) { restanteReal = 0; break; } // cupo agotado de verdad: nada más por hoy
         failCount++; continue;
       }
-      for (const [id, m] of asignarTcgIds(activas.filter(c => !tcgIdDe(c)), r.cards)) {
+      for (const [id, m] of asignarTcgIds(activas.filter(c => !tcgIdDe(c)), r.cards, { tomados })) {
         parches.set(id, { tcgId: m.tcgId });
         if (id !== carta.id) cosechadas++;
         if (m.market && !actualizadas.has(id)) { actualizadas.set(id, snapshotDe(porId.get(id), m, "tpl")); okCount++; }

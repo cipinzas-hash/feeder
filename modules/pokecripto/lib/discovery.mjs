@@ -23,6 +23,7 @@ export function normalizarResultado(c) {
     name: c?.name, number: c?.number,
     setId: c?.set?.id || null, setCode: c?.set?.ptcgoCode || null, setName: c?.set?.name || null,
     market: best?.market || null, low: best?.low || null, high: best?.high || null,
+    variant: c?.variant || null, rarity: c?.rarity || null,
   };
 }
 
@@ -54,7 +55,26 @@ export async function fetchTCGPagina(q, apiKey, page = 1) {
 // set coincidiera por nombre/código, pero tcgpricelookup.com nombra los sets distinto que pokemontcg.io y no
 // emparejó NINGUNA carta en producción. Con designación manual (tcgOverride) se usa el nombre/número de la
 // designación, que ya es tal como los devuelve esa API, y su id de set si lo tiene.
-export function emparejarTcgId(carta, resultados) {
+// La API devuelve UNA fila por variante de impresión (misma carta, mismo tcgplayer_id, `variant`: Normal / Holofoil /
+// Reverse Holofoil...; diagnóstico del 26-oct-2026: Chaos Rising tiene 122 cartas pero 284 filas). Antes, dos filas con
+// el mismo nombre+número dejaban la carta "ambigua" y sin tcgId: causa principal de que la búsqueda individual
+// resolviera 3 de 66. La carta del inventario no distingue variantes, así que se toma la impresión base: Normal, si no
+// Holofoil; si solo queda una que no sea Reverse Holofoil, esa; si no se puede decidir, no se empareja.
+export function elegirVariante(cands) {
+  const lista = cands || [];
+  if (lista.length === 1) return lista[0];
+  for (const v of ["normal", "holofoil"]) {
+    const m = lista.filter(c => String(c.variant || "").toLowerCase() === v);
+    if (m.length === 1) return m[0];
+    if (m.length > 1) return null;
+  }
+  const noRev = lista.filter(c => !/reverse/i.test(String(c.variant || "")));
+  return noRev.length === 1 ? noRev[0] : null;
+}
+
+// opts.setSeguro: los resultados vienen de una consulta filtrada por el set de la carta (`set=<slug>`), así que no hay
+// que contrastar el set por nombre/código (cada API los nombra distinto).
+export function emparejarTcgId(carta, resultados, opts = {}) {
   const lista = resultados || [];
   const ov = carta?.tcgOverride;
   const nn = normName(ov ? ov.name : carta?.name), num = normNum(ov ? ov.number : carta?.number);
@@ -63,24 +83,101 @@ export function emparejarTcgId(carta, resultados) {
   if (!base.length) return null;
   if (ov) {
     const ids = [ov.setId, ov.setCode].filter(Boolean).map(x => String(x).toLowerCase());
-    if (!ids.length) return base.length === 1 ? base[0] : null;
+    if (!ids.length) return elegirVariante(base);
     const ok = base.filter(c => [c.setId, c.setCode].filter(Boolean).some(x => ids.includes(String(x).toLowerCase())));
-    return ok.length === 1 ? ok[0] : null;
+    return elegirVariante(ok);
   }
+  if (opts.setSeguro) return elegirVariante(base);
   if (base.length === 1) return base[0];
   const porSet = base.filter(c => mismoSet(carta, c));
-  return porSet.length === 1 ? porSet[0] : null;
+  if (!porSet.length && new Set(base.map(c => c.setId || c.setName)).size === 1) return elegirVariante(base); // solo variantes de UN set
+  return elegirVariante(porSet);
 }
 
 // Asigna a cada carta sin tcgId su resultado, si lo hay. Devuelve Map(idCarta -> resultado).
-export function asignarTcgIds(cartas, resultados) {
+// Guarda (issue #27): un tcgId es UNA carta de UN set. Si ya lo tiene otra carta distinta (otro cardId) no se asigna;
+// dos filas de inventario con el mismo cardId (misma carta en varias colecciones) sí comparten tcgId.
+// opts.tomados: Map(tcgId -> cardId) con lo ya asignado en el inventario; se actualiza al asignar.
+export function claveCarta(c) { return String(c?.cardId || c?.id || ""); }
+export function asignarTcgIds(cartas, resultados, opts = {}) {
   const out = new Map();
+  const tomados = opts.tomados || new Map();
   for (const c of cartas || []) {
-    const m = emparejarTcgId(c, resultados);
-    if (m) out.set(c.id, m);
+    const m = emparejarTcgId(c, resultados, opts);
+    if (!m) continue;
+    const dueno = tomados.get(m.tcgId);
+    if (dueno && dueno !== claveCarta(c)) continue;
+    tomados.set(m.tcgId, claveCarta(c));
+    out.set(c.id, m);
   }
   return out;
 }
+
+// ── Descubrimiento por `set` REAL (issue #27, verificado el 26-oct-2026 con diagnostico-tcg.mjs) ──────────────────────
+// GET /sets?game=pokemon&limit=100&offset=N -> {data:[{id,slug,name,count}], total, limit, offset}; 225 sets, `slug` tipo
+// "pokemon--me04-chaos-rising". GET /cards/search?set=<slug>&game=pokemon&limit=100&offset=N lista ESE set (no el texto
+// libre `q`, que devolvía productos sellados). `count` incluye variantes y productos sellados. La API tiene un límite de
+// ráfaga de 1 consulta a la vez (429 sin cabecera de cupo): pausa de PAUSA_RAFAGA_MS entre consultas y reintento por 429.
+export const PAUSA_RAFAGA_MS = Number((typeof process !== "undefined" && process.env?.POKECRIPTO_PAUSA_RAFAGA_MS) ?? 2500);
+const dormir = ms => new Promise(r => setTimeout(r, ms));
+async function getTCG(path, apiKey) {
+  let r, intento = 0;
+  while (true) {
+    r = await fetch(`${TCG_BASE}${path}`, { headers: { "X-API-Key": apiKey }, signal: AbortSignal.timeout(20000) });
+    if (r.status !== 429 || intento >= 3) break;
+    const ra = parseInt(r.headers.get("retry-after") || "", 10);
+    await dormir(Number.isFinite(ra) ? ra * 1000 : PAUSA_RAFAGA_MS * (intento + 1));
+    intento++;
+  }
+  const rate = {};
+  try { r.headers.forEach((v, k) => { if (/rate|limit|quota|remaining|reset/i.test(k)) rate[k] = v; }); } catch (e) { /* sin cabeceras */ }
+  if (!r.ok) return { ok: false, status: r.status, error: `HTTP ${r.status}`, rate };
+  return { ok: true, status: r.status, rate, json: await r.json() };
+}
+// Lista completa de sets (pagina de a 100). Devuelve también cuántas consultas gastó.
+export async function fetchTCGSets(apiKey) {
+  if (!apiKey) return { ok: false, error: "sin API key", sets: [], llamadas: 0 };
+  const sets = []; let llamadas = 0, offset = 0, total = Infinity, rate = {};
+  try {
+    while (offset < total && llamadas < 6) {
+      const r = await getTCG(`/sets?game=pokemon&limit=100&offset=${offset}`, apiKey);
+      llamadas++; rate = r.rate || rate;
+      if (!r.ok) return { ok: false, status: r.status, error: r.error, sets, llamadas, rate };
+      const lote = r.json?.data || [];
+      sets.push(...lote.map(s => ({ id: s.id, slug: s.slug, name: s.name, count: s.count ?? null })));
+      total = r.json?.total ?? sets.length;
+      if (!lote.length) break;
+      offset += lote.length;
+      await dormir(PAUSA_RAFAGA_MS);
+    }
+    return { ok: true, sets, llamadas, rate };
+  } catch (e) { return { ok: false, error: e.message, sets, llamadas, rate }; }
+}
+// Una página de un set (hasta 100 filas, cada una una variante de impresión).
+export async function fetchTCGSetPagina(slug, apiKey, offset = 0) {
+  if (!apiKey || !slug) return { ok: false, status: 0, error: "sin API key o slug", cards: [] };
+  try {
+    const r = await getTCG(`/cards/search?set=${encodeURIComponent(slug)}&game=pokemon&limit=${POR_PAGINA}&offset=${offset}`, apiKey);
+    if (!r.ok) return { ok: false, status: r.status, error: r.error, cards: [], rate: r.rate };
+    const data = r.json || {};
+    return { ok: true, status: r.status, rate: r.rate, total: data.total ?? null, cards: (data.data || []).map(normalizarResultado).filter(c => c.tcgId) };
+  } catch (e) { return { ok: false, status: 0, error: e.message, cards: [] }; }
+}
+// Nombre del set en la API ("ME04: Chaos Rising", "EX Delta Species") -> nombre del inventario (pokemontcg.io: "Chaos Rising").
+function plano(s) { return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
+const sinCodigo = n => String(n || "").replace(/^[A-Za-z]{1,5}\d{0,3}(?:pt\d+)?\s*:\s*/, "");
+export function slugParaSet(nombreSet, sets) {
+  const objetivo = plano(nombreSet);
+  if (!objetivo) return null;
+  const lista = sets || [];
+  const exactos = lista.filter(s => plano(sinCodigo(s.name)) === objetivo || plano(s.name) === objetivo);
+  if (exactos.length === 1) return exactos[0];
+  if (exactos.length > 1) return null; // ambiguo (dos sets con el mismo nombre): no se adivina
+  const termina = lista.filter(s => plano(s.name).endsWith(objetivo) && objetivo.length >= 6);
+  return termina.length === 1 ? termina[0] : null;
+}
+// Consultas que cuesta cubrir un set entero (cada página son hasta 100 filas, `count` incluye variantes y sellados).
+export function paginasDeSet(set) { return Math.max(1, Math.ceil((set?.count || POR_PAGINA) / POR_PAGINA)); }
 
 // ── Grupos por set y orden de trabajo ───────────────────────────────────────
 // Un grupo = las cartas SIN tcgId de un mismo set. Orden: primero los que tienen cartas de Price Watch o sin

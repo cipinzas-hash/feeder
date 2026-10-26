@@ -105,4 +105,56 @@ t("prioridadCarta: Price Watch primero", () => { assert.ok(prioridadCarta({ carp
     assert.ok(!soloTcg.includes("api.pokemontcg.io")); assert.ok(hosts.includes("api.pokemontcg.io"));
   });
 }
+// ── issue #27 ──
+import { compactarHistorial } from "../modules/pokecripto/lib/pricing.mjs";
+import { elegirVariante, slugParaSet, paginasDeSet } from "../modules/pokecripto/lib/discovery.mjs";
+t("elegirVariante: Normal > Holofoil > la única que no es Reverse; ambiguo = null", () => {
+  assert.equal(elegirVariante([{ tcgId: "r", variant: "Reverse Holofoil" }, { tcgId: "n", variant: "Normal" }]).tcgId, "n");
+  assert.equal(elegirVariante([{ tcgId: "r", variant: "Reverse Holofoil" }, { tcgId: "h", variant: "Holofoil" }]).tcgId, "h");
+  assert.equal(elegirVariante([{ tcgId: "r", variant: "Reverse Holofoil" }, { tcgId: "x", variant: "Poke Ball Pattern" }]).tcgId, "x");
+  assert.equal(elegirVariante([{ tcgId: "a", variant: "Foo" }, { tcgId: "b", variant: "Bar" }]), null);
+  assert.equal(elegirVariante([{ tcgId: "n1", variant: "Normal" }, { tcgId: "n2", variant: "Normal" }]), null);
+  assert.equal(elegirVariante([]), null);
+});
+t("emparejarTcgId: filas de variantes de un solo set se resuelven aunque el nombre del set no coincida", () => {
+  const carta = { id: "1", name: "AZ's Tranquility", number: "76", set: "Chaos Rising", setCode: "me4" };
+  const res = [{ tcgId: "r", name: "AZ's Tranquility - 076/086", number: "076/086", variant: "Reverse Holofoil", setId: "S", setName: "ME04: Chaos Rising" }, { tcgId: "n", name: "AZ's Tranquility - 076/086", number: "076/086", variant: "Normal", setId: "S", setName: "ME04: Chaos Rising" }];
+  assert.equal(emparejarTcgId(carta, res).tcgId, "n");
+  const dosSets = [{ ...res[1], setId: "S" }, { ...res[1], tcgId: "otro", setId: "T", setName: "Otro" }];
+  assert.equal(emparejarTcgId(carta, dosSets), null); // dos sets distintos y ninguno calza por nombre/código: no se adivina
+});
+t("asignarTcgIds: un tcgId ya tomado por otro cardId no se reasigna; mismo cardId sí comparte", () => {
+  const res = [{ tcgId: "T", name: "Foo", number: "1", variant: "Normal" }];
+  const tomados = new Map([["T", "a-1"]]);
+  const a = asignarTcgIds([{ id: "x", cardId: "b-1", name: "Foo", number: "1" }], res, { setSeguro: true, tomados });
+  assert.equal(a.size, 0);
+  const b = asignarTcgIds([{ id: "y", cardId: "a-1", name: "Foo", number: "1" }], res, { setSeguro: true, tomados });
+  assert.equal(b.get("y").tcgId, "T");
+});
+t("slugParaSet: quita el código de serie, no adivina si hay dos sets con el mismo nombre", () => {
+  const sets = [{ name: "ME04: Chaos Rising", slug: "a" }, { name: "EX Delta Species", slug: "b" }, { name: "SV: Dup", slug: "c" }, { name: "SWSH: Dup", slug: "d" }];
+  assert.equal(slugParaSet("Chaos Rising", sets).slug, "a"); assert.equal(slugParaSet("Delta Species", sets).slug, "b");
+  assert.equal(slugParaSet("Dup", sets), null); assert.equal(slugParaSet("No existe", sets), null);
+  assert.equal(paginasDeSet({ count: 284 }), 3); assert.equal(paginasDeSet({ count: 100 }), 1); assert.equal(paginasDeSet({}), 1);
+});
+t("compactarHistorial: mes viejo = 1 punto (promedio, low mín, high máx, n), idempotente, el último punto queda crudo", () => {
+  const h = [
+    { date: "2026-07-03", market: 1, low: 0.5, high: 2, src: "tpl" }, { date: "2026-07-20", market: 3, low: 0.4, high: 4, src: "tpl" },
+    { date: "2026-08-10", market: 5, low: 4, high: 6, src: "tpl" }, { date: "2026-10-20", market: 7, low: 6, high: 9, src: "tpl" }, { date: "2026-10-25", market: 8, low: 7, high: 9, src: "tpl" },
+  ];
+  const c = compactarHistorial(h, "2026-10-26");
+  assert.equal(c.length, 4);
+  assert.deepEqual(c[0], { date: "2026-07-20", market: 2, low: 0.4, high: 4, n: 2, agg: true, src: "tpl" });
+  assert.equal(c[1].agg, true); assert.equal(c[1].n, 1);
+  assert.deepEqual(c.slice(2).map(x => x.date), ["2026-10-20", "2026-10-25"]);
+  assert.deepEqual(compactarHistorial(c, "2026-10-26"), c);
+  // el último punto, aunque tenga más de 30 días, no se agrega
+  const viejo = compactarHistorial([{ date: "2026-05-01", market: 1 }, { date: "2026-05-20", market: 3 }], "2026-10-26");
+  assert.equal(viejo.length, 2); assert.equal(viejo.at(-1).market, 3);
+  // el mes sigue abierto en la frontera: lo que entra a la ventana se suma al mensual con su peso
+  const a = compactarHistorial([{ date: "2026-10-20", market: 2, low: 1, high: 3 }, { date: "2026-10-27", market: 4, low: 2, high: 6 }, { date: "2026-11-30", market: 9, low: 9, high: 9 }], "2026-11-30");
+  assert.equal(a.length, 2); assert.deepEqual(a[0], { date: "2026-10-27", market: 3, low: 1, high: 6, n: 2, agg: true });
+  const b = compactarHistorial([...a, { date: "2026-12-05", market: 1, low: 1, high: 1 }, { date: "2026-12-30", market: 2, low: 2, high: 2 }], "2026-12-31");
+  assert.equal(b.filter(x => x.agg).length, 2); assert.equal(b.find(x => x.date === "2026-11-30")?.n, 1); // nov (1 punto) y oct (n=2) quedan separados
+});
 console.log(`\n${n} pruebas en verde`);
