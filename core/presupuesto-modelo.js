@@ -595,6 +595,16 @@ export const CATEGORIAS_COMPRAS = ["Lácteos", "Huevos", "Prote", "Snack", "Verd
 // Las compras descuentan de Alimentación, salvo las categorías con otro destino: Aseo descuenta de su propio bolsillo.
 // Una categoría nueva elige su destino al crearse (fila.catDestino de Alimentación); sin elegir, descuenta de Alimentación.
 export const DESTINO_CATEGORIA = { aseo: ID_ASEO };
+const ETIQUETA_DESTINO = { [ID_ALIMENTACION]: "Alimentación", [ID_ASEO]: "Aseo" };
+const normNombre = t => String(t || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+// Fila de destino de una compra: por id; si ese id no existe (p. ej. Aseo se creó a mano como cartera con otro id),
+// la que se llama igual que el destino ("Aseo", "Alimentación").
+function buscarFila(b, rowId, secciones) {
+  for (const sec of secciones) { const r = (b[sec] || []).find(x => x.id === rowId); if (r) return { sec, row: r }; }
+  const nombre = ETIQUETA_DESTINO[rowId];
+  if (nombre) for (const sec of secciones) { const r = (b[sec] || []).find(x => normNombre(x.label) === normNombre(nombre)); if (r) return { sec, row: r }; }
+  return null;
+}
 export const SIN_CATEGORIA = "Sin categoría";
 
 // Lista de categorías de una cartera: la propia si existe; Alimentación parte con las de compras; el resto parte vacía.
@@ -654,14 +664,19 @@ export function destinoCategoria(filaAli, categoria) {
 // Etiqueta de una fila del presupuesto (en cualquier sección) para mostrarla como destino.
 export function etiquetaFila(budgets, fecha, rowId) {
   const b = resolverPeriodo(budgets, periodoDeFecha(fecha));
-  for (const sec of SECCIONES) { const r = (b[sec] || []).find(x => x.id === rowId); if (r) return r.label; }
-  return rowId === ID_ASEO ? "Aseo" : "Alimentación";
+  const f = buscarFila(b, rowId, SECCIONES);
+  return f ? f.row.label : (ETIQUETA_DESTINO[rowId] || rowId);
 }
 
-// Filas que una categoría nueva puede tener como destino: Alimentación, Aseo y las carteras del período.
+// Filas que una categoría nueva puede tener como destino: Alimentación, Aseo y las carteras del período
+// (con el id de la fila real, aunque Aseo se haya creado a mano con otro id).
 export function destinosPosibles(budgets, fecha) {
   const b = resolverPeriodo(budgets, periodoDeFecha(fecha));
-  const lista = [{ id: ID_ALIMENTACION, label: etiquetaFila(budgets, fecha, ID_ALIMENTACION) }, { id: ID_ASEO, label: etiquetaFila(budgets, fecha, ID_ASEO) }];
+  const lista = [];
+  for (const id of [ID_ALIMENTACION, ID_ASEO]) {
+    const f = buscarFila(b, id, SECCIONES);
+    lista.push({ id: f ? f.row.id : id, label: f ? f.row.label : ETIQUETA_DESTINO[id] });
+  }
   for (const sec of CARTERAS) (b[sec] || []).forEach(r => { if (!lista.some(x => x.id === r.id)) lista.push({ id: r.id, label: r.label }); });
   return lista;
 }
@@ -673,11 +688,8 @@ export function carteraCompras(budgets, fecha, categoria, destinoForzado) {
   const b = resolverPeriodo(budgets, periodo);
   const fa = filaCompras(budgets, fecha);
   const rowId = destinoForzado || destinoCategoria(fa && fa.row, categoria);
-  for (const sec of CARTERAS) {
-    const row = (b[sec] || []).find(r => r.id === rowId);
-    if (row) return { sec, row, periodo, rowId };
-  }
-  return null;
+  const f = buscarFila(b, rowId, CARTERAS);
+  return f ? { sec: f.sec, row: f.row, periodo, rowId: f.row.id } : null;
 }
 
 export function montoCompra(item) {

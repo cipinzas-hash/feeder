@@ -357,4 +357,19 @@ assert.equal(puedeEliminar({ "2026-09": oct }, "2026-09", "propositos", fila(), 
   assert.deepEqual(destinosPosibles(B, "2026-10-26").map(x => x.id), ["ali", "aseo"]);
 }
 
+// ── Aseo creado a mano como cartera con otro id (caso real): se encuentra por nombre ─────────────
+{
+  const ali = { id: "ali", emoji: "🍽️", label: "Alimentación", monto: 300000 };
+  const aseoMano = { id: "1792841832166", emoji: "🧼", label: "Aseo", monto: 20000 };
+  const sep1 = { ingresos: {}, gastos_base: [], personales: [], propositos: [ali, aseoMano], apertura: {}, arqueo: { fecha: "2026-10-24", filas: [] } };
+  const J = { "2026-10": sep1 };
+  assert.equal(carteraCompras(J, "2026-10-26", "Aseo").row.id, "1792841832166");
+  assert.equal(carteraCompras(J, "2026-10-26", "Fruta").row.id, "ali");
+  const r = registrarCompra(J, { fecha: "2026-10-26", item: { id: "z1", text: "Cloro", precio: 2500, categoria: "Aseo" } });
+  assert.ok(!r.error, r.error);
+  assert.deepEqual([r.budget.gastos[0].rowId, r.budget.gastos[0].monto], ["1792841832166", 2500]);
+  assert.equal(estadoBolsillo({ "2026-10": r.budget }, "2026-10", "propositos", "1792841832166", null).gastado, 2500);
+  assert.equal(destinosPosibles(J, "2026-10-26").filter(d => d.label === "Aseo").length, 1);
+}
+
 console.log("presupuesto-modelo: OK");

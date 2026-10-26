@@ -1613,8 +1613,8 @@ function AngstApp() {
   const comprasInfo = (categoria, destinoForzado)=>{
     const hoy = fmtFull(new Date());
     const fa = filaCompras(budgets, hoy);
-    const destId = destinoForzado || destinoCategoria(fa?fa.row:null, categoria);
     const dest = carteraCompras(budgets, hoy, categoria, destinoForzado);
+    const destId = dest ? dest.row.id : (destinoForzado || destinoCategoria(fa?fa.row:null, categoria));
     const ini = inicioSobres(budgets);
     const base = {activo:false, dest, destId, destLabel:etiquetaFila(budgets,hoy,destId), bolsillos:[], saldo:0, categorias:categoriasDe(fa?fa.row:{id:ID_ALIMENTACION}), puedeNuevaCategoria:!!fa, destinos:destinosPosibles(budgets,hoy)};
     if(!dest||!ini||dest.periodo<ini) return base;
