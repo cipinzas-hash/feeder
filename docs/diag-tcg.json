@@ -1,26 +1,87 @@
 {
-  "fecha": "2026-10-26T09:59:18.295Z",
-  "version": 3,
-  "sets": {
-    "ok": false,
-    "error": "The operation was aborted due to timeout",
-    "status": null,
-    "llamadas": 0,
-    "n": 0,
-    "rate": {}
-  },
-  "slugChaosRising": null,
-  "mapeo": {
-    "151": null,
-    "Delta Species": null,
-    "Ascended Heroes": null,
-    "Unbroken Bonds": null,
-    "Brilliant Stars": null,
-    "Cosmic Eclipse": null,
-    "Scarlet & Violet Black Star Promos": null,
-    "HS—Triumphant": null,
-    "Mega Evolution": null,
-    "Sword & Shield": null,
-    "Expedition Base Set": null
-  }
+  "fecha": "2026-10-26T10:00:19.597Z",
+  "version": 4,
+  "pasos": [
+    {
+      "nombre": "sets sin offset",
+      "path": "/sets?game=pokemon&limit=100",
+      "error": "The operation was aborted due to timeout",
+      "ms": 30002
+    },
+    {
+      "nombre": "sets offset=100",
+      "path": "/sets?game=pokemon&limit=100&offset=100",
+      "status": 200,
+      "ms": 23338,
+      "rate": {
+        "x-ratelimit-limit": "100",
+        "x-ratelimit-remaining": "7",
+        "x-ratelimit-reset": "1793059200"
+      },
+      "claves": [
+        "data",
+        "total",
+        "limit",
+        "offset"
+      ],
+      "total": 225,
+      "limit": 100,
+      "offset": 100,
+      "filas": 100,
+      "primeros": [
+        "pokemon--mcdonalds-promos-2023",
+        "pokemon--mcdonalds-promos-2024"
+      ]
+    },
+    {
+      "nombre": "cards set sin offset",
+      "path": "/cards/search?set=pokemon--me04-chaos-rising&game=pokemon&limit=100",
+      "status": 200,
+      "ms": 224,
+      "rate": {
+        "x-ratelimit-limit": "100",
+        "x-ratelimit-remaining": "6",
+        "x-ratelimit-reset": "1793059200"
+      },
+      "claves": [
+        "data",
+        "total",
+        "limit",
+        "offset"
+      ],
+      "total": 284,
+      "limit": 100,
+      "offset": 0,
+      "filas": 100,
+      "primeros": [
+        "019e197f-9545-7990-86a1-7541f2fda3a5 AZ's Tranquility - 076/086",
+        "019e6a9c-ce97-731e-a490-aaafc9802ede AZ's Tranquility - 076/086"
+      ]
+    },
+    {
+      "nombre": "cards set offset=100",
+      "path": "/cards/search?set=pokemon--me04-chaos-rising&game=pokemon&limit=100&offset=100",
+      "status": 200,
+      "ms": 312,
+      "rate": {
+        "x-ratelimit-limit": "100",
+        "x-ratelimit-remaining": "5",
+        "x-ratelimit-reset": "1793059200"
+      },
+      "claves": [
+        "data",
+        "total",
+        "limit",
+        "offset"
+      ],
+      "total": 284,
+      "limit": 100,
+      "offset": 100,
+      "filas": 100,
+      "primeros": [
+        "019e2cd1-a0bb-7d6d-a568-b7a4120e0409 Deoxys - 034/086",
+        "019e197f-959a-778b-83ab-512d614b1b11 Donphan"
+      ]
+    }
+  ]
 }
