@@ -1,0 +1,268 @@
+{
+  "fecha": "2026-10-26T01:58:22.535Z",
+  "pasos": [
+    {
+      "nombre": "sets",
+      "url": "https://api.tcgpricelookup.com/v1/sets?game=pokemon&limit=100",
+      "status": 200,
+      "rate": {
+        "x-ratelimit-limit": "100",
+        "x-ratelimit-remaining": "99",
+        "x-ratelimit-reset": "1793059200"
+      },
+      "resumen": {
+        "claves": [
+          "data",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "n": 100,
+        "muestra": [
+          {
+            "id": "019c978b-9d64-74d2-ac20-58d6ac3b6e26",
+            "slug": "pokemon--alternate-art-promos",
+            "name": "Alternate Art Promos",
+            "game": "pokemon",
+            "count": 59,
+            "released_at": null
+          },
+          {
+            "id": "019c9733-ba96-74e9-9884-583811a93810",
+            "slug": "pokemon--aquapolis",
+            "name": "Aquapolis",
+            "game": "pokemon",
+            "count": 339,
+            "released_at": null
+          },
+          {
+            "id": "019c9733-b9f7-733e-b916-a2516c5c7b4e",
+            "slug": "pokemon--arceus",
+            "name": "Arceus",
+            "game": "pokemon",
+            "count": 216,
+            "released_at": null
+          }
+        ],
+        "total": 225
+      }
+    },
+    {
+      "nombre": "set=pokemon--me04-chaos-rising offset=0",
+      "url": "https://api.tcgpricelookup.com/v1/cards/search?set=pokemon--me04-chaos-rising&game=pokemon&limit=5",
+      "status": 200,
+      "rate": {
+        "x-ratelimit-limit": "100",
+        "x-ratelimit-remaining": "98",
+        "x-ratelimit-reset": "1793059200"
+      },
+      "cartas": [
+        {
+          "id": "019e197f-9545-7990-86a1-7541f2fda3a5",
+          "name": "AZ's Tranquility - 076/086",
+          "number": "076/086",
+          "set": {
+            "id": "019cfe3e-0b83-7139-b784-9566b6aa6169",
+            "slug": "pokemon--me04-chaos-rising",
+            "name": "ME04: Chaos Rising"
+          }
+        },
+        {
+          "id": "019e6a9c-ce97-731e-a490-aaafc9802ede",
+          "name": "AZ's Tranquility - 076/086",
+          "number": "076/086",
+          "set": {
+            "id": "019cfe3e-0b83-7139-b784-9566b6aa6169",
+            "slug": "pokemon--me04-chaos-rising",
+            "name": "ME04: Chaos Rising"
+          }
+        },
+        {
+          "id": "019e197f-9548-7c6d-8de6-37185f8fc121",
+          "name": "AZ's Tranquility - 106/086",
+          "number": "106/086",
+          "set": {
+            "id": "019cfe3e-0b83-7139-b784-9566b6aa6169",
+            "slug": "pokemon--me04-chaos-rising",
+            "name": "ME04: Chaos Rising"
+          }
+        },
+        {
+          "id": "019e6a9c-cea3-7f14-b773-6bbd294efc64",
+          "name": "AZ's Tranquility - 106/086",
+          "number": "106/086",
+          "set": {
+            "id": "019cfe3e-0b83-7139-b784-9566b6aa6169",
+            "slug": "pokemon--me04-chaos-rising",
+            "name": "ME04: Chaos Rising"
+          }
+        },
+        {
+          "id": "019e197f-954c-7acc-8539-48ea93108baa",
+          "name": "AZ's Tranquility - 120/086",
+          "number": "120/086",
+          "set": {
+            "id": "019cfe3e-0b83-7139-b784-9566b6aa6169",
+            "slug": "pokemon--me04-chaos-rising",
+            "name": "ME04: Chaos Rising"
+          }
+        }
+      ],
+      "total": 284
+    },
+    {
+      "nombre": "set=pokemon--me04-chaos-rising offset=5",
+      "url": "https://api.tcgpricelookup.com/v1/cards/search?set=pokemon--me04-chaos-rising&game=pokemon&limit=5&offset=5",
+      "status": 429,
+      "rate": {
+        "x-ratelimit-burst-limit": "1",
+        "x-ratelimit-burst-remaining": "0"
+      },
+      "cartas": []
+    },
+    {
+      "nombre": "set=019cfe3e-0b83-7139-b784-9566b6aa6169 offset=0",
+      "url": "https://api.tcgpricelookup.com/v1/cards/search?set=019cfe3e-0b83-7139-b784-9566b6aa6169&game=pokemon&limit=5",
+      "status": 429,
+      "rate": {
+        "x-ratelimit-burst-limit": "1",
+        "x-ratelimit-burst-remaining": "0"
+      },
+      "cartas": [],
+      "total": null
+    },
+    {
+      "nombre": "set=019cfe3e-0b83-7139-b784-9566b6aa6169 offset=5",
+      "url": "https://api.tcgpricelookup.com/v1/cards/search?set=019cfe3e-0b83-7139-b784-9566b6aa6169&game=pokemon&limit=5&offset=5",
+      "status": 429,
+      "rate": {
+        "x-ratelimit-burst-limit": "1",
+        "x-ratelimit-burst-remaining": "0"
+      },
+      "cartas": []
+    },
+    {
+      "nombre": "q=Delta Reign",
+      "url": "https://api.tcgpricelookup.com/v1/cards/search?q=Delta%20Reign&game=pokemon&limit=10",
+      "status": 429,
+      "rate": {
+        "x-ratelimit-burst-limit": "1",
+        "x-ratelimit-burst-remaining": "0"
+      },
+      "cartas": []
+    },
+    {
+      "nombre": "q=Mega Rayquaza ex",
+      "url": "https://api.tcgpricelookup.com/v1/cards/search?q=Mega%20Rayquaza%20ex&game=pokemon&limit=10",
+      "status": 429,
+      "rate": {
+        "x-ratelimit-burst-limit": "1",
+        "x-ratelimit-burst-remaining": "0"
+      },
+      "cartas": []
+    },
+    {
+      "nombre": "pokemontcg.io sets Delta Reign",
+      "url": "https://api.pokemontcg.io/v2/sets?q=name%3A%22Delta%20Reign%22",
+      "status": 500,
+      "rate": {},
+      "texto": "",
+      "resumen": []
+    },
+    {
+      "nombre": "pokemontcg.io últimos sets",
+      "url": "https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&pageSize=6&select=id,name,releaseDate,total",
+      "status": 200,
+      "rate": {},
+      "resumen": [
+        {
+          "id": "me55",
+          "name": "30th Celebration",
+          "total": 161,
+          "releaseDate": "2026/09/16"
+        },
+        {
+          "id": "me55c",
+          "name": "30th Celebration: Classic Collection",
+          "total": 30,
+          "releaseDate": "2026/09/16"
+        },
+        {
+          "id": "me5",
+          "name": "Pitch Black",
+          "total": 120,
+          "releaseDate": "2026/07/17"
+        },
+        {
+          "id": "me4",
+          "name": "Chaos Rising",
+          "total": 122,
+          "releaseDate": "2026/05/22"
+        },
+        {
+          "id": "me3",
+          "name": "Perfect Order",
+          "total": 124,
+          "releaseDate": "2026/03/27"
+        },
+        {
+          "id": "me2pt5",
+          "name": "Ascended Heroes",
+          "total": 295,
+          "releaseDate": "2026/01/30"
+        }
+      ]
+    }
+  ],
+  "setsRelevantes": [
+    {
+      "id": "019fbe7b-b977-7b26-893e-deef3d86b8a5",
+      "slug": "pokemon--ex-delta-species",
+      "name": "EX Delta Species",
+      "game": "pokemon",
+      "count": 225,
+      "released_at": null
+    },
+    {
+      "id": "019cfe3e-0b83-7139-b784-9566b6aa6169",
+      "slug": "pokemon--me04-chaos-rising",
+      "name": "ME04: Chaos Rising",
+      "game": "pokemon",
+      "count": 284,
+      "released_at": null
+    },
+    {
+      "id": "01a02aa1-501e-7d21-ac6e-ed8dd076faff",
+      "slug": "pokemon--me06-delta-reign",
+      "name": "ME06: Delta Reign",
+      "game": "pokemon",
+      "count": 21,
+      "released_at": null
+    },
+    {
+      "id": "019ed2e8-c658-7194-b8ee-98c9edcf8760",
+      "slug": "pokemon--me-30th-celebration",
+      "name": "ME: 30th Celebration",
+      "game": "pokemon",
+      "count": 260,
+      "released_at": null
+    },
+    {
+      "id": "01a07e50-a5f4-7b10-ae4b-e0cd221e0759",
+      "slug": "pokemon--me-30th-celebration-classic-collection",
+      "name": "ME: 30th Celebration Classic Collection",
+      "game": "pokemon",
+      "count": 33,
+      "released_at": null
+    },
+    {
+      "id": "019c9734-427c-75e7-8f4a-3334012742b8",
+      "slug": "pokemon--me-ascended-heroes",
+      "name": "ME: Ascended Heroes",
+      "game": "pokemon",
+      "count": 798,
+      "released_at": null
+    }
+  ],
+  "totalSets": 100
+}
