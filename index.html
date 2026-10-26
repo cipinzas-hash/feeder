@@ -738,6 +738,20 @@ var __angst = (() => {
   var FILAS_CARTERABLES = [ID_ALIMENTACION, ID_ASEO];
   var CATEGORIAS_COMPRAS = ["L\xE1cteos", "Huevos", "Prote", "Snack", "Verdura", "Fruta", "Aseo"];
   var DESTINO_CATEGORIA = { aseo: ID_ASEO };
+  var ETIQUETA_DESTINO = { [ID_ALIMENTACION]: "Alimentaci\xF3n", [ID_ASEO]: "Aseo" };
+  var normNombre = (t) => String(t || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  function buscarFila(b, rowId, secciones) {
+    for (const sec of secciones) {
+      const r = (b[sec] || []).find((x) => x.id === rowId);
+      if (r) return { sec, row: r };
+    }
+    const nombre = ETIQUETA_DESTINO[rowId];
+    if (nombre) for (const sec of secciones) {
+      const r = (b[sec] || []).find((x) => normNombre(x.label) === normNombre(nombre));
+      if (r) return { sec, row: r };
+    }
+    return null;
+  }
   var SIN_CATEGORIA = "Sin categor\xEDa";
   function categoriasDe(row) {
     if (row && Array.isArray(row.categorias)) return row.categorias;
@@ -785,15 +799,16 @@ var __angst = (() => {
   }
   function etiquetaFila(budgets, fecha, rowId) {
     const b = resolverPeriodo(budgets, periodoDeFecha(fecha));
-    for (const sec of SECCIONES) {
-      const r = (b[sec] || []).find((x) => x.id === rowId);
-      if (r) return r.label;
-    }
-    return rowId === ID_ASEO ? "Aseo" : "Alimentaci\xF3n";
+    const f2 = buscarFila(b, rowId, SECCIONES);
+    return f2 ? f2.row.label : ETIQUETA_DESTINO[rowId] || rowId;
   }
   function destinosPosibles(budgets, fecha) {
     const b = resolverPeriodo(budgets, periodoDeFecha(fecha));
-    const lista = [{ id: ID_ALIMENTACION, label: etiquetaFila(budgets, fecha, ID_ALIMENTACION) }, { id: ID_ASEO, label: etiquetaFila(budgets, fecha, ID_ASEO) }];
+    const lista = [];
+    for (const id of [ID_ALIMENTACION, ID_ASEO]) {
+      const f2 = buscarFila(b, id, SECCIONES);
+      lista.push({ id: f2 ? f2.row.id : id, label: f2 ? f2.row.label : ETIQUETA_DESTINO[id] });
+    }
     for (const sec of CARTERAS) (b[sec] || []).forEach((r) => {
       if (!lista.some((x) => x.id === r.id)) lista.push({ id: r.id, label: r.label });
     });
@@ -804,11 +819,8 @@ var __angst = (() => {
     const b = resolverPeriodo(budgets, periodo);
     const fa = filaCompras(budgets, fecha);
     const rowId = destinoForzado || destinoCategoria(fa && fa.row, categoria);
-    for (const sec of CARTERAS) {
-      const row = (b[sec] || []).find((r) => r.id === rowId);
-      if (row) return { sec, row, periodo, rowId };
-    }
-    return null;
+    const f2 = buscarFila(b, rowId, CARTERAS);
+    return f2 ? { sec: f2.sec, row: f2.row, periodo, rowId: f2.row.id } : null;
   }
   function montoCompra(item) {
     const cant = Number(item && item.cantidad) > 0 ? Number(item.cantidad) : 1;
@@ -15311,8 +15323,8 @@ Toco reintentar ahora.`);
     const comprasInfo = (categoria, destinoForzado) => {
       const hoy = fmtFull(/* @__PURE__ */ new Date());
       const fa = filaCompras(budgets, hoy);
-      const destId = destinoForzado || destinoCategoria(fa ? fa.row : null, categoria);
       const dest = carteraCompras(budgets, hoy, categoria, destinoForzado);
+      const destId = dest ? dest.row.id : destinoForzado || destinoCategoria(fa ? fa.row : null, categoria);
       const ini = inicioSobres(budgets);
       const base = { activo: false, dest, destId, destLabel: etiquetaFila(budgets, hoy, destId), bolsillos: [], saldo: 0, categorias: categoriasDe(fa ? fa.row : { id: ID_ALIMENTACION }), puedeNuevaCategoria: !!fa, destinos: destinosPosibles(budgets, hoy) };
       if (!dest || !ini || dest.periodo < ini) return base;
