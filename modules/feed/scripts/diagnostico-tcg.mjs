@@ -1,31 +1,25 @@
-// diagnostico-tcg.mjs v3 (26-oct-2026, issue #27)
-// Corre el MISMO código que usa el bot (discovery.mjs) contra la API real, desde Actions: lista de sets (fetchTCGSets),
-// slug de un set, y dos páginas de ese set (fetchTCGSetPagina). Escribe docs/diag-tcg.json (solo datos públicos de cartas).
-// Gasta ~5 consultas.
+// diagnostico-tcg.mjs v4 (26-oct-2026, issue #27): v3 mostró que /sets?...&offset=0 se cuelga (timeout de 20 s) mientras
+// /sets?game=pokemon&limit=100 (sin offset) respondía en v1. Prueba, con tiempos, qué combinaciones de offset funcionan.
 import { writeFileSync } from "node:fs";
-import { fetchTCGSets, fetchTCGSetPagina, slugParaSet, elegirVariante } from "../../pokecripto/lib/discovery.mjs";
-const KEY = process.env.TCG_API_KEY;
-const out = { fecha: new Date().toISOString(), version: 3 };
-try {
-  const rs = await fetchTCGSets(KEY);
-  out.sets = { ok: rs.ok, error: rs.error || null, status: rs.status ?? null, llamadas: rs.llamadas, n: rs.sets?.length ?? 0, rate: rs.rate };
-  const api = slugParaSet("Chaos Rising", rs.sets || []);
-  out.slugChaosRising = api ? { slug: api.slug, count: api.count } : null;
-  out.mapeo = {};
-  for (const n of ["Delta Species", "Ascended Heroes", "Unbroken Bonds", "Brilliant Stars", "Cosmic Eclipse", "Scarlet & Violet Black Star Promos", "HS—Triumphant", "151", "Mega Evolution", "Sword & Shield", "Expedition Base Set"]) {
-    const m = slugParaSet(n, rs.sets || []); out.mapeo[n] = m ? m.slug : null;
-  }
-  if (api) {
-    out.paginas = [];
-    const vistos = new Set();
-    for (const off of [0, 100]) {
-      await new Promise(r => setTimeout(r, 2500));
-      const p = await fetchTCGSetPagina(api.slug, KEY, off);
-      out.paginas.push({ offset: off, ok: p.ok, status: p.status ?? null, error: p.error || null, filas: p.cards?.length ?? 0, total: p.total ?? null, rate: p.rate,
-        nuevos: (p.cards || []).filter(c => !vistos.has(c.tcgId)).length, muestra: (p.cards || []).slice(0, 3).map(c => ({ name: c.name, number: c.number, variant: c.variant, market: c.market })) });
-      (p.cards || []).forEach(c => vistos.add(c.tcgId));
-    }
-  }
-} catch (e) { out.excepcion = String(e && e.stack || e).slice(0, 800); }
+const KEY = process.env.TCG_API_KEY, BASE = "https://api.tcgpricelookup.com/v1";
+const out = { fecha: new Date().toISOString(), version: 4, pasos: [] };
+const dormir = ms => new Promise(r => setTimeout(r, ms));
+async function paso(nombre, path) {
+  await dormir(2600);
+  const t0 = Date.now(), p = { nombre, path };
+  try {
+    const r = await fetch(BASE + path, { headers: { "X-API-Key": KEY }, signal: AbortSignal.timeout(30000) });
+    p.status = r.status; p.ms = Date.now() - t0;
+    const rate = {}; r.headers.forEach((v, k) => { if (/rate|limit|quota|remaining|reset/i.test(k)) rate[k] = v; }); p.rate = rate;
+    const j = await r.json().catch(() => null);
+    p.claves = j ? Object.keys(j) : null; p.total = j?.total ?? null; p.limit = j?.limit ?? null; p.offset = j?.offset ?? null;
+    p.filas = j?.data?.length ?? null; p.primeros = (j?.data || []).slice(0, 2).map(x => x.slug || x.id + " " + x.name);
+  } catch (e) { p.error = e.message; p.ms = Date.now() - t0; }
+  out.pasos.push(p); return p;
+}
+await paso("sets sin offset", "/sets?game=pokemon&limit=100");
+await paso("sets offset=100", "/sets?game=pokemon&limit=100&offset=100");
+await paso("cards set sin offset", "/cards/search?set=pokemon--me04-chaos-rising&game=pokemon&limit=100");
+await paso("cards set offset=100", "/cards/search?set=pokemon--me04-chaos-rising&game=pokemon&limit=100&offset=100");
 writeFileSync(new URL("../../../docs/diag-tcg.json", import.meta.url), JSON.stringify(out, null, 2));
-console.log("✓ diagnóstico v3 escrito en docs/diag-tcg.json");
+console.log("✓ diagnóstico v4 escrito");
