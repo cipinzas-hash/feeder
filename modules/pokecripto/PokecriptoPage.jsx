@@ -170,17 +170,33 @@ function huntingEntryFromCard(c, s, carpeta="Dark Collection"){
 // cortos, alto riesgo de falso positivo si un `artist` compuesto los
 // contuviera); el resto con "contiene" por si el campo trae variantes
 // (con/sin punto final, varios ilustradores en el mismo campo).
+// 26-oct-2026 (issue #27): Shibuzoh, Eri Yamaki y sui se retiraron a pedido de Cristopher (ver CARPETAS_RETIRADAS) y se
+// sumaron tres colecciones POR REGLA de carta en vez de por ilustrador: Mega, Tera y Pikachu 30 (aniversario). Comparten
+// el mismo escaneo por set (un fetch sirve para todas), por eso el select pide también `supertype` y `subtypes`.
 const COLECCIONES_ILUSTRADOR = [
   {carpeta:"tayu",             artist:"tayu",              exact:true},
   {carpeta:"Sachiko Adachi",   artist:"sachiko adachi"},
-  {carpeta:"Shibuzoh",         artist:"shibuzoh"},
   {carpeta:"Tomokazu Komiya",  artist:"tomokazu komiya"},
   {carpeta:"Yuka Morii",       artist:"yuka morii"},
-  {carpeta:"Eri Yamaki",       artist:"eri yamaki"},
   {carpeta:"Asako Ito",        artist:"asako ito"},
-  {carpeta:"sui",              artist:"sui",               exact:true},
+  {carpeta:"Mega",             regla:"mega"},
+  {carpeta:"Tera",             regla:"tera"},
+  {carpeta:"Pikachu 30",       regla:"pikachu30"},
 ];
-function matchIlustrador(card, def){
+const CARPETAS_RETIRADAS = ["Shibuzoh","Eri Yamaki","sui"];
+const CAMPOS_COLECCION = "id,name,number,artist,images,supertype,subtypes";
+const esPokemonCarta = c => String(c.supertype||"").toLowerCase().startsWith("pok");
+const REGLAS_COLECCION = {
+  // Todos los Pokémon Mega: era XY ("M Venusaur-EX") y era Mega Evolution ("Mega Dragalge ex"). Solo supertype Pokémon: sin
+  // esto entrarían entrenadores como "Mega Signal".
+  mega:(c)=>esPokemonCarta(c)&&((c.subtypes||[]).some(t=>String(t).toLowerCase()==="mega")||/^Mega\s/i.test(c.name||"")||/^M\s.+-EX$/i.test(c.name||"")),
+  // Cartas Tera de Scarlet & Violet: subtipo "Tera" de pokemontcg.io.
+  tera:(c)=>esPokemonCarta(c)&&(c.subtypes||[]).some(t=>String(t).toLowerCase()==="tera"),
+  // Pikachu del set 30th Celebration (me55): las 30 ilustraciones de Pikachu.
+  pikachu30:(c,s)=>s?.id==="me55"&&/^Pikachu\b/i.test(c.name||""),
+};
+function matchIlustrador(card, def, set){
+  if(def.regla) return !!REGLAS_COLECCION[def.regla]?.(card,set);
   const a=(card.artist||"").trim().toLowerCase();
   if(!a) return false;
   return def.exact ? a===def.artist : a.includes(def.artist);
@@ -736,12 +752,12 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     function siguiente(){
       if(idx>=pendientes.length) return;
       const s=pendientes[idx++];
-      fetchPoke(`${POKE_BASE}/cards?q=set.id:${s.id}&select=id,name,number,artist,images&orderBy=number&pageSize=500`)
+      fetchPoke(`${POKE_BASE}/cards?q=set.id:${s.id}&select=${CAMPOS_COLECCION}&orderBy=number&pageSize=500`)
         .then(data=>{
           const cards=data.data||[];
           COLECCIONES_ILUSTRADOR.forEach(def=>{
             if(enCat.has(s.id+"::"+def.carpeta)) return;
-            const match=cards.filter(c=>matchIlustrador(c,def));
+            const match=cards.filter(c=>matchIlustrador(c,def,s));
             if(!match.length) return;
             const nuevas=match.map(c=>({
               cardId:c.id,name:c.name,image:c.images?.small||"",
@@ -786,11 +802,11 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         return;
       }
       const s=sets[idx++];
-      fetchPoke(`${POKE_BASE}/cards?q=set.id:${s.id}&select=id,name,number,artist,images&orderBy=number&pageSize=500`)
+      fetchPoke(`${POKE_BASE}/cards?q=set.id:${s.id}&select=${CAMPOS_COLECCION}&orderBy=number&pageSize=500`)
         .then(data=>{
           const cards=data.data||[];
           COLECCIONES_ILUSTRADOR.forEach(def=>{
-            const match=cards.filter(c=>matchIlustrador(c,def));
+            const match=cards.filter(c=>matchIlustrador(c,def,s));
             if(!match.length) return;
             saveDarkCatalogo(prev=>{
               const cur=prev||[];
@@ -830,6 +846,27 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   React.useEffect(()=>{ cargarUsdClp().then(v=>setUsdClp(v)); },[]);
   // Persistir Price Watch en las carpetas guardadas (el memo de `cats` solo la agrega en pantalla)
   React.useEffect(()=>{ if(carpetas&&!carpetas.includes("Price Watch")) saveCarpetas([...carpetas,"Price Watch"]); },[carpetas]);
+  // ── Baja de colecciones retiradas (26-oct-2026, issue #27) ──
+  // Shibuzoh / Eri Yamaki / sui: se quitan del catálogo y de las carpetas, y se borran sus cartas `hunting` sin notas ni costo.
+  // Lo que Cristopher marcó de otra forma (estado distinto, notas o costo) NO se toca: queda en su carpeta. Cada baja se
+  // encola como {id,_baja:true} para que el bot la quite también del canónico (antes solo sumaba y dejaba cartas huérfanas).
+  React.useEffect(()=>{
+    if(!carpetas||!inventario||!darkCatalogo) return;
+    const esRetirada=c=>CARPETAS_RETIRADAS.includes(c.carpeta);
+    const quitar=inventario.filter(c=>esRetirada(c)&&c.estado==="hunting"&&!(c.notas||"").trim()&&!(Number(c.costoUSD)>0));
+    const hayCat=darkCatalogo.some(d=>CARPETAS_RETIRADAS.includes(d.carpeta));
+    const idsQuitar=new Set(quitar.map(c=>c.id));
+    const sigueUsada=n=>inventario.some(c=>c.carpeta===n&&!idsQuitar.has(c.id));
+    const carpetasSobran=carpetas.filter(n=>CARPETAS_RETIRADAS.includes(n)&&!sigueUsada(n));
+    if(!quitar.length&&!hayCat&&!carpetasSobran.length) return;
+    if(hayCat) saveDarkCatalogo(prev=>(prev||[]).filter(d=>!CARPETAS_RETIRADAS.includes(d.carpeta)));
+    if(quitar.length){
+      saveInventario(prev=>(prev||[]).filter(c=>!idsQuitar.has(c.id)));
+      encolarPokecriptoPending(quitar.map(c=>({id:c.id,_baja:true})));
+    }
+    if(carpetasSobran.length) saveCarpetas(carpetas.filter(n=>!carpetasSobran.includes(n)));
+  },[carpetas,inventario,darkCatalogo]);
+
   const [pokecriptoSyncMsg, setPokecriptoSyncMsg] = React.useState(null);
   function pedirPokecriptoAuth(){
     const v = prompt("Pegá el AUTH_SECRET del Worker (el mismo que Simkl/podcasts, una sola vez, queda solo en este dispositivo):");
@@ -2123,7 +2160,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   }
 
   // ── MENÚ DE COLECCIONES ("Colecciones", antes tile de Dark) ────────────────────
-  // Lista las 9 colecciones automáticas (Dark + 8 ilustrador) con su avance
+  // Lista las colecciones automáticas (Dark + ilustradores + reglas Mega/Tera/Pikachu 30) con su avance
   // -- reemplaza el acceso directo que antes tenía Dark en el dashboard.
   if(view==="colecciones_menu"){
     const nombres=["Dark Collection",...COLECCIONES_ILUSTRADOR.map(d=>d.carpeta)];
