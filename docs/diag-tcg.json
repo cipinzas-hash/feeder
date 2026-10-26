@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-10-26T01:58:22.535Z",
+  "fecha": "2026-10-26T01:59:53.516Z",
   "pasos": [
     {
       "nombre": "sets",
@@ -7,7 +7,7 @@
       "status": 200,
       "rate": {
         "x-ratelimit-limit": "100",
-        "x-ratelimit-remaining": "99",
+        "x-ratelimit-remaining": "97",
         "x-ratelimit-reset": "1793059200"
       },
       "resumen": {
@@ -50,65 +50,13 @@
     {
       "nombre": "set=pokemon--me04-chaos-rising offset=0",
       "url": "https://api.tcgpricelookup.com/v1/cards/search?set=pokemon--me04-chaos-rising&game=pokemon&limit=5",
-      "status": 200,
+      "status": 429,
       "rate": {
-        "x-ratelimit-limit": "100",
-        "x-ratelimit-remaining": "98",
-        "x-ratelimit-reset": "1793059200"
+        "x-ratelimit-burst-limit": "1",
+        "x-ratelimit-burst-remaining": "0"
       },
-      "cartas": [
-        {
-          "id": "019e197f-9545-7990-86a1-7541f2fda3a5",
-          "name": "AZ's Tranquility - 076/086",
-          "number": "076/086",
-          "set": {
-            "id": "019cfe3e-0b83-7139-b784-9566b6aa6169",
-            "slug": "pokemon--me04-chaos-rising",
-            "name": "ME04: Chaos Rising"
-          }
-        },
-        {
-          "id": "019e6a9c-ce97-731e-a490-aaafc9802ede",
-          "name": "AZ's Tranquility - 076/086",
-          "number": "076/086",
-          "set": {
-            "id": "019cfe3e-0b83-7139-b784-9566b6aa6169",
-            "slug": "pokemon--me04-chaos-rising",
-            "name": "ME04: Chaos Rising"
-          }
-        },
-        {
-          "id": "019e197f-9548-7c6d-8de6-37185f8fc121",
-          "name": "AZ's Tranquility - 106/086",
-          "number": "106/086",
-          "set": {
-            "id": "019cfe3e-0b83-7139-b784-9566b6aa6169",
-            "slug": "pokemon--me04-chaos-rising",
-            "name": "ME04: Chaos Rising"
-          }
-        },
-        {
-          "id": "019e6a9c-cea3-7f14-b773-6bbd294efc64",
-          "name": "AZ's Tranquility - 106/086",
-          "number": "106/086",
-          "set": {
-            "id": "019cfe3e-0b83-7139-b784-9566b6aa6169",
-            "slug": "pokemon--me04-chaos-rising",
-            "name": "ME04: Chaos Rising"
-          }
-        },
-        {
-          "id": "019e197f-954c-7acc-8539-48ea93108baa",
-          "name": "AZ's Tranquility - 120/086",
-          "number": "120/086",
-          "set": {
-            "id": "019cfe3e-0b83-7139-b784-9566b6aa6169",
-            "slug": "pokemon--me04-chaos-rising",
-            "name": "ME04: Chaos Rising"
-          }
-        }
-      ],
-      "total": 284
+      "cartas": [],
+      "total": null
     },
     {
       "nombre": "set=pokemon--me04-chaos-rising offset=5",
@@ -164,54 +112,17 @@
     {
       "nombre": "pokemontcg.io sets Delta Reign",
       "url": "https://api.pokemontcg.io/v2/sets?q=name%3A%22Delta%20Reign%22",
-      "status": 500,
+      "status": 200,
       "rate": {},
-      "texto": "",
       "resumen": []
     },
     {
       "nombre": "pokemontcg.io últimos sets",
       "url": "https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&pageSize=6&select=id,name,releaseDate,total",
-      "status": 200,
+      "status": 500,
       "rate": {},
-      "resumen": [
-        {
-          "id": "me55",
-          "name": "30th Celebration",
-          "total": 161,
-          "releaseDate": "2026/09/16"
-        },
-        {
-          "id": "me55c",
-          "name": "30th Celebration: Classic Collection",
-          "total": 30,
-          "releaseDate": "2026/09/16"
-        },
-        {
-          "id": "me5",
-          "name": "Pitch Black",
-          "total": 120,
-          "releaseDate": "2026/07/17"
-        },
-        {
-          "id": "me4",
-          "name": "Chaos Rising",
-          "total": 122,
-          "releaseDate": "2026/05/22"
-        },
-        {
-          "id": "me3",
-          "name": "Perfect Order",
-          "total": 124,
-          "releaseDate": "2026/03/27"
-        },
-        {
-          "id": "me2pt5",
-          "name": "Ascended Heroes",
-          "total": 295,
-          "releaseDate": "2026/01/30"
-        }
-      ]
+      "texto": "",
+      "resumen": null
     }
   ],
   "setsRelevantes": [
