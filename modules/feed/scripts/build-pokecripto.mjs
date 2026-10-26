@@ -167,6 +167,7 @@ async function main() {
   if (descActivo && !setsApi) {
     const rs = await fetchTCGSets(TCG_API_KEY);
     descLlamadas += rs.llamadas; tcgUsadas += rs.llamadas; registrarCupo(rs.rate);
+    estado.diagnosticoSets = { fecha: hoy, ok: !!rs.ok, error: rs.error || null, llamadas: rs.llamadas, n: rs.sets?.length ?? 0 }; // queda legible aunque los logs de Actions no lo sean
     if (rs.ok && rs.sets.length) { setsApi = rs.sets; estado.setsApi = { fecha: hoy, lista: rs.sets }; console.log(`✓ Lista de sets de la API: ${rs.sets.length} set(s) en ${rs.llamadas} consulta(s)`); }
     else { console.log(`✗ No se pudo leer la lista de sets (${rs.error || "vacía"}); sin descubrimiento hoy`); descActivo = false; }
   }

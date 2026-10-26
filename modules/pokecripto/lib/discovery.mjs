@@ -120,10 +120,10 @@ export function asignarTcgIds(cartas, resultados, opts = {}) {
 // ráfaga de 1 consulta a la vez (429 sin cabecera de cupo): pausa de PAUSA_RAFAGA_MS entre consultas y reintento por 429.
 export const PAUSA_RAFAGA_MS = Number((typeof process !== "undefined" && process.env?.POKECRIPTO_PAUSA_RAFAGA_MS) ?? 2500);
 const dormir = ms => new Promise(r => setTimeout(r, ms));
-async function getTCG(path, apiKey) {
+async function getTCG(path, apiKey, timeoutMs = 20000) {
   let r, intento = 0;
   while (true) {
-    r = await fetch(`${TCG_BASE}${path}`, { headers: { "X-API-Key": apiKey }, signal: AbortSignal.timeout(20000) });
+    r = await fetch(`${TCG_BASE}${path}`, { headers: { "X-API-Key": apiKey }, signal: AbortSignal.timeout(timeoutMs) });
     if (r.status !== 429 || intento >= 3) break;
     const ra = parseInt(r.headers.get("retry-after") || "", 10);
     await dormir(Number.isFinite(ra) ? ra * 1000 : PAUSA_RAFAGA_MS * (intento + 1));
@@ -134,15 +134,22 @@ async function getTCG(path, apiKey) {
   if (!r.ok) return { ok: false, status: r.status, error: `HTTP ${r.status}`, rate };
   return { ok: true, status: r.status, rate, json: await r.json() };
 }
-// Lista completa de sets (pagina de a 100). Devuelve también cuántas consultas gastó.
+// Lista completa de sets (pagina de a 100). OJO (diagnóstico v4, 26-oct-2026): /sets es LENTO (20-30+ s por página, a veces
+// agota 20-30 s) mientras /cards/search?set= responde en ~0,3 s. Por eso 75 s de espera y un reintento por página; si alguna
+// página falla la lista NO se devuelve como buena (una lista parcial dejaría sets sin slug). Se pide 1 vez cada 7 días.
 export async function fetchTCGSets(apiKey) {
   if (!apiKey) return { ok: false, error: "sin API key", sets: [], llamadas: 0 };
   const sets = []; let llamadas = 0, offset = 0, total = Infinity, rate = {};
   try {
-    while (offset < total && llamadas < 6) {
-      const r = await getTCG(`/sets?game=pokemon&limit=100&offset=${offset}`, apiKey);
-      llamadas++; rate = r.rate || rate;
-      if (!r.ok) return { ok: false, status: r.status, error: r.error, sets, llamadas, rate };
+    while (offset < total && llamadas < 8) {
+      let r = null;
+      for (let intento = 0; intento < 2 && !(r && r.ok); intento++) {
+        try { r = await getTCG(`/sets?game=pokemon&limit=100${offset ? `&offset=${offset}` : ""}`, apiKey, 75000); }
+        catch (e) { r = { ok: false, status: 0, error: e.message, rate: {} }; }
+        llamadas++; rate = r.rate && Object.keys(r.rate).length ? r.rate : rate;
+        if (!r.ok) await dormir(PAUSA_RAFAGA_MS);
+      }
+      if (!r.ok) return { ok: false, status: r.status, error: r.error, sets: [], llamadas, rate };
       const lote = r.json?.data || [];
       sets.push(...lote.map(s => ({ id: s.id, slug: s.slug, name: s.name, count: s.count ?? null })));
       total = r.json?.total ?? sets.length;
@@ -151,13 +158,13 @@ export async function fetchTCGSets(apiKey) {
       await dormir(PAUSA_RAFAGA_MS);
     }
     return { ok: true, sets, llamadas, rate };
-  } catch (e) { return { ok: false, error: e.message, sets, llamadas, rate }; }
+  } catch (e) { return { ok: false, error: e.message, sets: [], llamadas, rate }; }
 }
 // Una página de un set (hasta 100 filas, cada una una variante de impresión).
 export async function fetchTCGSetPagina(slug, apiKey, offset = 0) {
   if (!apiKey || !slug) return { ok: false, status: 0, error: "sin API key o slug", cards: [] };
   try {
-    const r = await getTCG(`/cards/search?set=${encodeURIComponent(slug)}&game=pokemon&limit=${POR_PAGINA}&offset=${offset}`, apiKey);
+    const r = await getTCG(`/cards/search?set=${encodeURIComponent(slug)}&game=pokemon&limit=${POR_PAGINA}${offset ? `&offset=${offset}` : ""}`, apiKey);
     if (!r.ok) return { ok: false, status: r.status, error: r.error, cards: [], rate: r.rate };
     const data = r.json || {};
     return { ok: true, status: r.status, rate: r.rate, total: data.total ?? null, cards: (data.data || []).map(normalizarResultado).filter(c => c.tcgId) };
