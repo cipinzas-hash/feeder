@@ -4645,12 +4645,10 @@ var __angst = (() => {
     }, [carpetas]);
     React.useEffect(() => {
       if (!carpetas || !inventario || !darkCatalogo) return;
-      const esRetirada = (c) => CARPETAS_RETIRADAS.includes(c.carpeta);
-      const quitar = inventario.filter((c) => esRetirada(c) && c.estado === "hunting" && !(c.notas || "").trim() && !(Number(c.costoUSD) > 0));
+      const quitar = inventario.filter((c) => CARPETAS_RETIRADAS.includes(c.carpeta));
       const hayCat = darkCatalogo.some((d) => CARPETAS_RETIRADAS.includes(d.carpeta));
       const idsQuitar = new Set(quitar.map((c) => c.id));
-      const sigueUsada = (n) => inventario.some((c) => c.carpeta === n && !idsQuitar.has(c.id));
-      const carpetasSobran = carpetas.filter((n) => CARPETAS_RETIRADAS.includes(n) && !sigueUsada(n));
+      const carpetasSobran = carpetas.filter((n) => CARPETAS_RETIRADAS.includes(n));
       if (!quitar.length && !hayCat && !carpetasSobran.length) return;
       if (hayCat) saveDarkCatalogo((prev) => (prev || []).filter((d) => !CARPETAS_RETIRADAS.includes(d.carpeta)));
       if (quitar.length) {

@@ -847,17 +847,15 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // Persistir Price Watch en las carpetas guardadas (el memo de `cats` solo la agrega en pantalla)
   React.useEffect(()=>{ if(carpetas&&!carpetas.includes("Price Watch")) saveCarpetas([...carpetas,"Price Watch"]); },[carpetas]);
   // ── Baja de colecciones retiradas (26-oct-2026, issue #27) ──
-  // Shibuzoh / Eri Yamaki / sui: se quitan del catálogo y de las carpetas, y se borran sus cartas `hunting` sin notas ni costo.
-  // Lo que Cristopher marcó de otra forma (estado distinto, notas o costo) NO se toca: queda en su carpeta. Cada baja se
-  // encola como {id,_baja:true} para que el bot la quite también del canónico (antes solo sumaba y dejaba cartas huérfanas).
+  // Shibuzoh / Eri Yamaki / sui: se quitan del catálogo y de las carpetas y se borran TODAS sus cartas, sin excepciones
+  // (Cristopher, 26-oct-2026: "las cartas sueltas se eliminan, sin miedo"; antes se conservaban las con estado distinto o notas).
+  // Cada baja se encola como {id,_baja:true} para que el bot la quite también del canónico.
   React.useEffect(()=>{
     if(!carpetas||!inventario||!darkCatalogo) return;
-    const esRetirada=c=>CARPETAS_RETIRADAS.includes(c.carpeta);
-    const quitar=inventario.filter(c=>esRetirada(c)&&c.estado==="hunting"&&!(c.notas||"").trim()&&!(Number(c.costoUSD)>0));
+    const quitar=inventario.filter(c=>CARPETAS_RETIRADAS.includes(c.carpeta));
     const hayCat=darkCatalogo.some(d=>CARPETAS_RETIRADAS.includes(d.carpeta));
     const idsQuitar=new Set(quitar.map(c=>c.id));
-    const sigueUsada=n=>inventario.some(c=>c.carpeta===n&&!idsQuitar.has(c.id));
-    const carpetasSobran=carpetas.filter(n=>CARPETAS_RETIRADAS.includes(n)&&!sigueUsada(n));
+    const carpetasSobran=carpetas.filter(n=>CARPETAS_RETIRADAS.includes(n));
     if(!quitar.length&&!hayCat&&!carpetasSobran.length) return;
     if(hayCat) saveDarkCatalogo(prev=>(prev||[]).filter(d=>!CARPETAS_RETIRADAS.includes(d.carpeta)));
     if(quitar.length){
