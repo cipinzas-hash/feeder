@@ -135,6 +135,10 @@ t("slugParaSet: quita el código de serie, no adivina si hay dos sets con el mis
   const sets = [{ name: "ME04: Chaos Rising", slug: "a" }, { name: "EX Delta Species", slug: "b" }, { name: "SV: Dup", slug: "c" }, { name: "SWSH: Dup", slug: "d" }];
   assert.equal(slugParaSet("Chaos Rising", sets).slug, "a"); assert.equal(slugParaSet("Delta Species", sets).slug, "b");
   assert.equal(slugParaSet("Dup", sets), null); assert.equal(slugParaSet("No existe", sets), null);
+  const reales = [{ name: "Undaunted", slug: "pokemon--undaunted" }, { name: "Expedition", slug: "pokemon--expedition" }, { name: "SV: Scarlet & Violet 151", slug: "pokemon--sv-scarlet-and-violet-151" }, { name: "SWSH01: Sword & Shield Base Set", slug: "pokemon--swsh01-sword-and-shield-base-set" }, { name: "XY Base Set", slug: "pokemon--xy-base-set" }];
+  assert.equal(slugParaSet("HS—Undaunted", reales).slug, "pokemon--undaunted"); assert.equal(slugParaSet("Expedition Base Set", reales).slug, "pokemon--expedition");
+  assert.equal(slugParaSet("151", reales).slug, "pokemon--sv-scarlet-and-violet-151"); assert.equal(slugParaSet("Sword & Shield", reales).slug, "pokemon--swsh01-sword-and-shield-base-set");
+  assert.equal(slugParaSet("XY", reales).slug, "pokemon--xy-base-set"); assert.equal(slugParaSet("Sun & Moon", reales), null); // alias cuyo slug no está en la lista: no se inventa
   assert.equal(paginasDeSet({ count: 284 }), 3); assert.equal(paginasDeSet({ count: 100 }), 1); assert.equal(paginasDeSet({}), 1);
 });
 t("compactarHistorial: mes viejo = 1 punto (promedio, low mín, high máx, n), idempotente, el último punto queda crudo", () => {

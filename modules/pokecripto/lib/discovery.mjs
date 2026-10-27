@@ -173,10 +173,25 @@ export async function fetchTCGSetPagina(slug, apiKey, offset = 0) {
 // Nombre del set en la API ("ME04: Chaos Rising", "EX Delta Species") -> nombre del inventario (pokemontcg.io: "Chaos Rising").
 function plano(s) { return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
 const sinCodigo = n => String(n || "").replace(/^[A-Za-z]{1,5}\d{0,3}(?:pt\d+)?\s*:\s*/, "");
+// Sets cuyo nombre en pokemontcg.io no se parece al de la API (primera corrida real, 27-oct-2026: 11 sets sin slug).
+// Clave = nombre del inventario en forma plana; valor = slug exacto de la API (se ignora si ese slug no está en la lista).
+const ALIAS_SETS = {
+  expeditionbaseset: "pokemon--expedition",
+  "151": "pokemon--sv-scarlet-and-violet-151",
+  sunmoon: "pokemon--sm-base-set",
+  xy: "pokemon--xy-base-set",
+  scarletviolet: "pokemon--sv01-scarlet-and-violet-base-set",
+  swordshield: "pokemon--swsh01-sword-and-shield-base-set",
+  scarletvioletblackstarpromos: "pokemon--sv-scarlet-and-violet-promo-cards",
+  bwblackstarpromos: "pokemon--black-and-white-promos",
+};
+const sinSerieInv = n => String(n || "").replace(/^[A-Za-z]{1,5}\d{0,3}\s*[—–]\s*/, ""); // "HS—Undaunted" -> "Undaunted"
 export function slugParaSet(nombreSet, sets) {
-  const objetivo = plano(nombreSet);
-  if (!objetivo) return null;
   const lista = sets || [];
+  const objetivo = plano(sinSerieInv(nombreSet));
+  if (!objetivo) return null;
+  const alias = ALIAS_SETS[plano(nombreSet)];
+  if (alias) return lista.find(s => s.slug === alias) || null;
   const exactos = lista.filter(s => plano(sinCodigo(s.name)) === objetivo || plano(s.name) === objetivo);
   if (exactos.length === 1) return exactos[0];
   if (exactos.length > 1) return null; // ambiguo (dos sets con el mismo nombre): no se adivina
