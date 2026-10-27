@@ -1829,7 +1829,7 @@ function AngstApp() {
       {familiaOpen&&<FamiliaInboxModal items={familiaPend} onImport={familiaPasar} onIgnore={familiaIgnorar} onImportAll={familiaPasarTodos} onIgnoreAll={familiaIgnorarTodos} onRefresh={()=>cargarFamilia(true)} onClose={()=>setFamiliaOpen(false)} cargando={familiaBusy} mensaje={familiaMsg} generadoEn={familiaData?.generatedAt}/>}
       {calOpen&&<CalendarModal weekStart={weekStart} marks={calMarks} onMark={handleMark} dayData={dayData} calMarks={calMarks} kidsHealth={kidsHealth} onWeekSelect={date=>{const dow=date.getDay();const mon=addDays(date,-(dow===0?6:dow-1));const diff=Math.round((mon-BASE_DATE)/(7*86400000));updateWeekOffset(diff);}} onClose={()=>setCalOpen(false)}/>}
 
-      <div className={"app"+(page===0?" app-fit":"")}>
+      <div className={"app"+((page===0||page===1)?" app-fit":"")}>
         <div className="hdr">
           <div className="hdr-title" style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>angstapp</div>
           <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>

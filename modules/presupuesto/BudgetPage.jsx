@@ -220,7 +220,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
   const navBtn = { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "6px 11px", cursor: "pointer", color: "#888", fontSize: 16, lineHeight: 1 };
 
   return (
-    <div style={{ padding: "16px", maxWidth: 720, margin: "0 auto" }}>
+    <div style={{ flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column", overflowY: vista === "asignar" ? "auto" : "hidden" }}>
       {ingChart && <IngresoChartModal budgets={budgets} selYear={selYear} selMonth={selMonth} onClose={() => setIngChart(false)}/>}
       {chartData && <ChartModal title={chartData.title} emoji={chartData.emoji} rows={chartData.rows} total={chartData.total} onClose={() => setChartData(null)}/>}
       {idxVentana >= 0 && <CarteraVentana carteras={carteras} index={idxVentana} onIndex={i => setVentana({ sec: carteras[i].sec, rowId: carteras[i].row.id })} onClose={() => setVentana(null)}
@@ -237,7 +237,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
         onAsignar={() => setVista("asignar")} onCierre={() => setCierre({ periodo: compuerta.ok ? monthKey : compuerta.requiere, tab: undefined })}
         onGuia={() => setGuia(true)} onIniciarSobres={iniciarSobres}
         onAbrir={abrirCartera} onRegistrar={(sec, id) => setGastoDesde(`${sec}|${id}`)} onTodos={() => setMovsOpen(true)}/>}
-      {vista === "asignar" && <>
+      {vista === "asignar" && <div style={{ padding: "16px", maxWidth: 720, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
       <div style={{ marginBottom: 12 }}><button onClick={() => setVista("rueda")} style={{ background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "7px 14px", fontFamily: "'Caveat',cursive", fontSize: 17, fontWeight: 700, cursor: "pointer" }}>‹ Presupuesto</button></div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 8, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -294,7 +294,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
       </div>
       <div style={celda({ fontSize: 10, color: "#aaa", lineHeight: 1.5, padding: "4px 4px 0" })}>Proy. anual: los próximos 12 períodos con el monto asignado en cada mes. Los meses que aún no existen usan el promedio de {proy.mesesPromedio > 0 ? `los últimos ${proy.mesesPromedio} mes${proy.mesesPromedio > 1 ? "es" : ""} en registro` : "este mes (aún no hay registro)"}, contando como cero los meses sin presupuesto.</div>
       <div style={{ height: 32 }}/>
-      </>}
+      </div>}
     </div>
   );
 }

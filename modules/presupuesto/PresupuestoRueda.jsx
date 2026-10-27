@@ -1,6 +1,8 @@
 // Pantalla principal de Presupuesto: «cómo voy». Los sobres (carteras) van en una rueda tipo iPod: se gira con el dedo,
 // el de arriba es el seleccionado y sus datos se ven al centro; tocar el centro abre el detalle completo del sobre.
 // La asignación (ingresos, gastos base, fondos) queda detrás de «Asignar».
+// Va DENTRO del marco de la app (lineamiento «módulo colapsado, sin scroll»): sin ventana flotante, sin título propio (la pestaña ya
+// dice el módulo) y llena el área libre; la rueda se escala al alto que sobra para que el estado colapsado nunca necesite scroll.
 import { fmtCLP } from "../../core/format.js";
 import { geometriaRueda, TAM } from "./ruedaGeometria.js";
 const { useState, useRef, useEffect } = React;
@@ -52,6 +54,19 @@ export default function PresupuestoRueda({ datos, periodLabel, sobresOn, hayInic
   const setRot = v => { rotRef.current = v; setRotS(v); };
   const [arrastrando, setArrastrando] = useState(false);
   const caja = useRef(null);
+  const zona = useRef(null);
+  const [dim, setDim] = useState({ w: TAM, h: TAM + 20 });
+  useEffect(() => {
+    const el = zona.current;
+    if (!el) return undefined;
+    const medir = () => setDim({ w: el.clientWidth, h: el.clientHeight });
+    medir();
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [filas.length]);
+  const k = Math.max(0.5, Math.min(1.15, (dim.h - 14) / TAM, dim.w / TAM));   // escala de la rueda según el alto libre
   const down = useRef(null);
   const sel = mod(Math.round(-rot / g.paso), N);
   const fila = filas[sel];
@@ -104,57 +119,55 @@ export default function PresupuestoRueda({ datos, periodLabel, sobresOn, hayInic
       linea = `promedio ${fmtCLP(fila.anual / 12)} al mes`;
     }
   }
-  const btnCab = { background: "#111", color: "#fff", border: "1px dashed #888", borderRadius: 8, padding: "5px 10px", fontSize: 13, fontFamily: F, cursor: "pointer" };
+  const pill = { flex: 1, background: "#fff", color: "#111", border: "1px dashed #111", borderRadius: 8, padding: "6px 4px", fontSize: 12, fontFamily: F, cursor: "pointer", whiteSpace: "nowrap" };
+  const flecha = { background: "#fff", color: "#111", border: "1px dashed #999", borderRadius: 6, padding: "3px 9px", fontSize: 14, cursor: "pointer" };
 
   return (
-    <div style={{ position: "relative", maxWidth: 380, margin: "0 auto", padding: "0 14px 16px 0" }}>
-      <div style={{ position: "absolute", left: 6, top: 6, right: 8, bottom: 10, background: "#111", borderRadius: 14 }}/>
-      <div style={{ position: "relative", zIndex: 1, background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", fontFamily: F, color: "#111" }}>
-        <div style={{ background: "#111", padding: "11px 14px", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <div style={{ fontFamily: C, fontSize: 23, color: "#fff", fontWeight: 700, flex: 1, minWidth: 110 }}>Presupuesto</div>
-          <button onClick={onAsignar} style={btnCab}>Asignar</button>
-          {sobresOn && <button onClick={onCierre} style={{ ...btnCab, borderColor: cierreVence ? "#e0b070" : "#888", color: cierreVence ? "#ffd59a" : "#fff" }}>Cierre</button>}
-          {hayInicio ? <button onClick={onGuia} style={btnCab}>Guía</button> : <button onClick={onIniciarSobres} style={btnCab}>Iniciar sobres</button>}
+    <div style={{ flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column", gap: 8, padding: "10px 12px 6px", boxSizing: "border-box", overflowY: "auto", fontFamily: F, color: "#111" }}>
+      {bloqueo && <div style={{ flex: "none", fontSize: 12, color: "#8a5a00", background: "#fffaf0", border: "1px dashed #e0b070", borderRadius: 6, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><span style={{ flex: 1 }}>🔒 {bloqueo.motivo}</span>{bloqueo.accion && <button onClick={bloqueo.accion} style={{ ...pill, flex: "none", padding: "5px 10px" }}>{bloqueo.etiqueta}</button>}</div>}
+      {aviso && <div style={{ flex: "none", fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px" }}>{aviso}</div>}
+      <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <Interruptor modo={modo} onChange={onModo}/>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 2, fontSize: 12, color: "#555" }}>
+          {!anual && <button onClick={onPrev} aria-label="Período anterior" style={flecha}>‹</button>}
+          <span style={{ minWidth: 96, textAlign: "center" }}>{anual ? "últimos 12 meses" : periodLabel}</span>
+          {!anual && <button onClick={onNext} aria-label="Período siguiente" style={flecha}>›</button>}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", background: "#f5f5f5", borderBottom: "1px dashed #bbb", flexWrap: "wrap" }}>
-          <Interruptor modo={modo} onChange={onModo}/>
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 2, fontSize: 12, color: "#555" }}>
-            {!anual && <button onClick={onPrev} aria-label="Período anterior" style={{ background: "#fff", color: "#111", border: "1px dashed #999", borderRadius: 6, padding: "3px 9px", fontSize: 14, cursor: "pointer" }}>‹</button>}
-            <span style={{ minWidth: 96, textAlign: "center" }}>{anual ? "últimos 12 meses" : periodLabel}</span>
-            {!anual && <button onClick={onNext} aria-label="Período siguiente" style={{ background: "#fff", color: "#111", border: "1px dashed #999", borderRadius: 6, padding: "3px 9px", fontSize: 14, cursor: "pointer" }}>›</button>}
-          </div>
+      </div>
+      <div style={{ flex: "none", display: "flex", gap: 6 }}>
+        <button onClick={onAsignar} style={pill}>⚙️ Asignar</button>
+        {sobresOn && <button onClick={onCierre} style={{ ...pill, ...(cierreVence ? { color: "#b71c1c", borderColor: "#b71c1c" } : {}) }}>🔍 Cierre</button>}
+        {hayInicio ? <button onClick={onGuia} style={pill}>🧾 Guía</button> : <button onClick={onIniciarSobres} style={pill}>🧾 Iniciar sobres</button>}
+      </div>
+      <div style={{ flex: "none", display: "flex", gap: 8, alignItems: "stretch" }}>
+        <div style={{ flex: 1, minWidth: 0, background: "#fff", border: "1px dashed #111", borderRadius: 10, padding: "8px 12px" }}>
+          <div style={{ fontSize: 12, color: "#777" }}>{anual ? "Gastado en 12 meses" : "Gastado en el período"}</div>
+          <div style={{ fontFamily: C, fontSize: 28, fontWeight: 700, lineHeight: 1.1 }}>{fmtCLP(totalGastado)}</div>
+          <div style={{ fontSize: 12, color: "#777" }}>{movsVista.length} movimiento{movsVista.length === 1 ? "" : "s"}</div>
         </div>
-        <div style={{ padding: "12px 14px 14px" }}>
-          {bloqueo && <div style={{ fontSize: 12, color: "#8a5a00", background: "#fffaf0", border: "1px dashed #e0b070", borderRadius: 6, padding: "8px 10px", marginBottom: 10, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><span style={{ flex: 1 }}>🔒 {bloqueo.motivo}</span>{bloqueo.accion && <button onClick={bloqueo.accion} style={{ ...btnCab, background: "#fff", color: "#111", border: "1px dashed #999" }}>{bloqueo.etiqueta}</button>}</div>}
-          {aviso && <div style={{ fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", marginBottom: 10 }}>{aviso}</div>}
-          <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
-            <div style={{ flex: 1, minWidth: 0, background: "#fff", border: "1px dashed #111", borderRadius: 10, padding: "9px 12px" }}>
-              <div style={{ fontSize: 12, color: "#777" }}>{anual ? "Gastado en 12 meses" : "Gastado en el período"}</div>
-              <div style={{ fontFamily: C, fontSize: 28, fontWeight: 700, lineHeight: 1.1 }}>{fmtCLP(totalGastado)}</div>
-              <div style={{ fontSize: 12, color: "#777", marginTop: 2 }}>{movsVista.length} movimiento{movsVista.length === 1 ? "" : "s"}</div>
-            </div>
-            <div role="button" tabIndex={0} aria-label="Registrar gasto" onClick={() => fila && onRegistrar(fila.sec, fila.row.id)}
-              onKeyDown={e => { if ((e.key === "Enter" || e.key === " ") && fila) { e.preventDefault(); onRegistrar(fila.sec, fila.row.id); } }}
-              style={{ width: 92, flexShrink: 0, background: "#111", color: "#fff", borderRadius: 10, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, cursor: "pointer", userSelect: "none", WebkitUserSelect: "none", fontFamily: C, fontSize: 19, fontWeight: 700, lineHeight: 1.05, textAlign: "center", boxShadow: "3px 3px 0 #9a9a9a" }}>
-              <span style={{ fontSize: 26, lineHeight: 1 }}>+</span><span>Registrar<br/>gasto</span>
-            </div>
+        <div role="button" tabIndex={0} aria-label="Registrar gasto" onClick={() => fila && onRegistrar(fila.sec, fila.row.id)}
+          onKeyDown={e => { if ((e.key === "Enter" || e.key === " ") && fila) { e.preventDefault(); onRegistrar(fila.sec, fila.row.id); } }}
+          style={{ width: 92, flexShrink: 0, background: "#111", color: "#fff", borderRadius: 10, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, cursor: "pointer", userSelect: "none", WebkitUserSelect: "none", fontFamily: C, fontSize: 19, fontWeight: 700, lineHeight: 1.05, textAlign: "center", boxShadow: "3px 3px 0 #9a9a9a" }}>
+          <span style={{ fontSize: 26, lineHeight: 1 }}>+</span><span>Registrar<br/>gasto</span>
+        </div>
+      </div>
+      <div style={{ flex: "none" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "0 2px 2px" }}>
+          <span style={{ fontFamily: C, fontSize: 19, fontWeight: 700 }}>Últimos movimientos</span>
+          <span onClick={onTodos} role="button" style={{ fontSize: 12, color: "#777", cursor: "pointer", textDecoration: "underline dotted" }}>ver todos ›</span>
+        </div>
+        {movsVista.length === 0 && <div style={{ fontSize: 13, color: "#aaa", padding: "6px 0" }}>Aún no hay gastos registrados {anual ? "en los últimos 12 meses" : "en este período"}.</div>}
+        {movsVista.slice(0, 2).map((m, i, a) => (
+          <div key={m.id} style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13, padding: "5px 0", borderBottom: i < a.length - 1 ? "1px dashed #ddd" : "none" }}>
+            <span>{m.nota || "(sin nota)"} <span style={{ fontSize: 12, color: "#777" }}>· {nombreDe(m)}</span></span><span>{fmtCLP(m.monto)}</span>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "14px 2px 2px" }}>
-            <span style={{ fontFamily: C, fontSize: 19, fontWeight: 700 }}>Últimos movimientos</span>
-            <span onClick={onTodos} role="button" style={{ fontSize: 12, color: "#777", cursor: "pointer", textDecoration: "underline dotted" }}>ver todos ›</span>
-          </div>
-          {movsVista.length === 0 && <div style={{ fontSize: 13, color: "#aaa", padding: "8px 0" }}>Aún no hay gastos registrados {anual ? "en los últimos 12 meses" : "en este período"}.</div>}
-          {movsVista.slice(0, 3).map((m, i, a) => (
-            <div key={m.id} style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13, padding: "7px 0", borderBottom: i < a.length - 1 ? "1px dashed #ddd" : "none" }}>
-              <span>{m.nota || "(sin nota)"} <span style={{ fontSize: 12, color: "#777" }}>· {nombreDe(m)}</span></span><span>{fmtCLP(m.monto)}</span>
-            </div>
-          ))}
-          <div style={{ borderTop: "1px dashed #999", margin: "14px 0 10px", position: "relative" }}>
-            <span style={{ position: "absolute", top: -9, left: "50%", transform: "translateX(-50%)", background: "#fff", padding: "0 8px", whiteSpace: "nowrap", fontSize: 12, color: "#777" }}>gira la rueda · toca el centro</span>
-          </div>
-          {filas.length === 0 ? <div style={{ fontSize: 13, color: "#aaa", textAlign: "center", padding: "30px 0" }}>Aún no hay sobres: créalos en Asignar.</div> : (
+        ))}
+      </div>
+      <div ref={zona} style={{ flex: "1 1 0", minHeight: 150, display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 12 }}>
+        {filas.length === 0 ? <div style={{ fontSize: 13, color: "#aaa", textAlign: "center" }}>Aún no hay sobres: créalos en Asignar.</div> : (
+          <div style={{ position: "relative", width: TAM * k, height: TAM * k, flexShrink: 0 }}>
             <div ref={caja} onPointerDown={alBajar} onPointerMove={alMover} onPointerUp={alSoltar} onPointerCancel={alSoltar}
-              style={{ position: "relative", width: TAM, height: TAM, margin: "10px auto 0", touchAction: "none", userSelect: "none", WebkitUserSelect: "none", cursor: "grab" }}>
+              style={{ position: "absolute", left: 0, top: 0, width: TAM, height: TAM, transform: `scale(${k})`, transformOrigin: "top left", touchAction: "none", userSelect: "none", WebkitUserSelect: "none", cursor: "grab" }}>
               <div style={{ position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", fontSize: 14, color: "#b71c1c", zIndex: 2, lineHeight: 1 }}>▼</div>
               <div style={{ position: "absolute", left: g.pista.left, top: g.pista.top, width: g.pista.size, height: g.pista.size, border: "1px dashed #999", borderRadius: "50%", boxSizing: "border-box" }}/>
               <div style={{ position: "absolute", inset: 0, transform: `rotate(${rot}deg)`, transition: arrastrando ? "none" : "transform .25s ease" }}>
@@ -173,8 +186,8 @@ export default function PresupuestoRueda({ datos, periodLabel, sobresOn, hayInic
                 <div data-centro="1" style={{ fontSize: 12, color: "#777" }}>{linea}</div>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
