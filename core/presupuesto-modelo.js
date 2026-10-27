@@ -273,6 +273,34 @@ export function estadoFila(budgets, periodo, sec, row) {
   return { items, saldo: suma("saldo"), gastado: suma("gastado"), debiaHaber: suma("debiaHaber"), inicial: suma("inicial"), asignado: suma("asignado"), devPagada: suma("devPagada"), devRecibida: suma("devRecibida"), prestamoRecibido: suma("prestamoRecibido"), prestamoDado: suma("prestamoDado") };
 }
 
+// Datos de la pantalla principal (rueda): por cartera lo asignado, gastado en el período, gastado en los últimos 12 períodos
+// y el saldo (null si los sobres aún no están activos); y los gastos registrados, del más reciente al más antiguo.
+export function datosRueda(budgets, periodo) {
+  const b = resolverPeriodo(budgets, periodo);
+  const claves = [periodo];
+  for (let i = 0; i < 11; i++) claves.push(claveAnterior(claves[claves.length - 1]));
+  const anual = {};
+  const movs = [];
+  claves.forEach((k, i) => {
+    const bk = budgets && budgets[k];
+    ((bk && bk.gastos) || []).forEach(g => {
+      const c = `${g.sec}|${g.rowId}`;
+      anual[c] = (anual[c] || 0) + (g.monto || 0);
+      movs.push({ ...g, periodo: k, enPeriodo: i === 0 });
+    });
+  });
+  movs.sort((x, y) => String(y.fecha || "").localeCompare(String(x.fecha || "")) || String(y.id).localeCompare(String(x.id)));
+  const filas = [];
+  for (const sec of ["personales", "propositos"]) {
+    (b[sec] || []).forEach(row => {
+      const e = estadoFila(budgets, periodo, sec, row);
+      const gastado = (b.gastos || []).filter(g => g.sec === sec && g.rowId === row.id).reduce((t, g) => t + (g.monto || 0), 0);
+      filas.push({ sec, row, asignado: row.monto || 0, gastado, anual: anual[`${sec}|${row.id}`] || 0, saldo: e ? e.saldo : null, debiaHaber: e ? e.debiaHaber : null });
+    });
+  }
+  return { filas, movs };
+}
+
 // Deudas de una cartera al cierre del período: lo que debe y lo que le deben.
 export function resumenDeudas(budgets, periodo, sec, rowId) {
   const sim = simular(budgets, periodo);

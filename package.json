@@ -8,7 +8,8 @@
     "audit:export": "node tests/export-coverage.mjs && node tests/vitrina-restore.mjs",
     "test:presupuesto": "node tests/presupuesto-modelo.mjs",
     "test:gcal": "node tests/gcal-sync.mjs",
-    "test:familia": "node tests/familia-inbox.mjs"
+    "test:familia": "node tests/familia-inbox.mjs",
+    "test:rueda": "node tests/rueda-geometria.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"

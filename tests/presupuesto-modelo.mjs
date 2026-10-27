@@ -6,7 +6,7 @@ import {
   puedeQuitarGasto, resumenDeudas, guiaSobres, capacidadPrestamo, candidatosPrestamo, sugerirFuentes,
   puedeGenerarPeriodo, primerArqueoPendiente, filasArqueo, guardarArqueo, rendicion, progresoMeta,
   proyeccionAnual, ritmoSobre,
-  categoriasDe, agregarCategoria, gastoPorCategoria, carteraCompras, montoCompra, registrarCompra, deshacerCompra, CATEGORIAS_COMPRAS, destinoCategoria, filaCompras, destinosPosibles,
+  categoriasDe, agregarCategoria, gastoPorCategoria, carteraCompras, montoCompra, registrarCompra, deshacerCompra, CATEGORIAS_COMPRAS, datosRueda, destinoCategoria, filaCompras, destinosPosibles,
 } from "../core/presupuesto-modelo.js";
 
 // Períodos 25 → 24
@@ -370,6 +370,19 @@ assert.equal(puedeEliminar({ "2026-09": oct }, "2026-09", "propositos", fila(), 
   assert.deepEqual([r.budget.gastos[0].rowId, r.budget.gastos[0].monto], ["1792841832166", 2500]);
   assert.equal(estadoBolsillo({ "2026-10": r.budget }, "2026-10", "propositos", "1792841832166", null).gastado, 2500);
   assert.equal(destinosPosibles(J, "2026-10-26").filter(d => d.label === "Aseo").length, 1);
+}
+
+// ── Datos de la rueda: gastado del período, de los últimos 12 períodos y movimientos ordenados ──
+{
+  const r1 = { id: "r1", emoji: "👕", label: "Ropa", monto: 100000 }, r2 = { id: "r2", emoji: "🏠", label: "Hogar", monto: 40000 };
+  const mk = (gastos, extra = {}) => ({ ingresos: {}, gastos_base: [], personales: [], propositos: [r1, r2], apertura: {}, gastos, ...extra });
+  const g = (id, fecha, rowId, monto, nota) => ({ id, fecha, sec: "propositos", rowId, subId: null, monto, nota });
+  const B = { "2026-08": mk([g("a", "2026-08-30", "r1", 10000, "Zapatillas")]), "2026-09": mk([g("b", "2026-09-26", "r1", 5000, "Polera"), g("c", "2026-10-02", "r2", 2000, "Ampolleta")]) };
+  const d = datosRueda(B, "2026-09");
+  assert.deepEqual(d.filas.map(f => [f.row.id, f.asignado, f.gastado, f.anual]), [["r1", 100000, 5000, 15000], ["r2", 40000, 2000, 2000]]);
+  assert.deepEqual(d.movs.map(m => [m.id, m.enPeriodo]), [["c", true], ["b", true], ["a", false]]);          // del más reciente al más antiguo
+  assert.deepEqual(datosRueda(B, "2026-08").movs.map(m => m.id), ["a"]);                                     // mira solo hacia atrás
+  assert.deepEqual(datosRueda({ "2026-09": mk([]) }, "2026-09").movs, []);
 }
 
 console.log("presupuesto-modelo: OK");
