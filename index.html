@@ -1032,6 +1032,29 @@ var __angst = (() => {
     if (t.getMonth() < b.getMonth() || t.getMonth() === b.getMonth() && t.getDate() < b.getDate()) a--;
     return a;
   }
+  function personIdFor(name, family) {
+    const base = String(name || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "") || "persona";
+    let id = base, n = 2;
+    while ((family || []).some((p) => p.id === id)) id = base + n++;
+    return id;
+  }
+  function addPerson(kh, data) {
+    const id = personIdFor(data.name, kh.family);
+    const person = { id, name: data.name.trim(), dob: data.dob, icon: data.icon || "\u{1F642}", sex: data.sex || "m" };
+    return { kh: { ...kh, family: [...kh.family || [], person] }, id };
+  }
+  function updatePerson(kh, id, data) {
+    return { ...kh, family: (kh.family || []).map((p) => p.id === id ? { ...p, name: data.name.trim(), dob: data.dob, icon: data.icon || "\u{1F642}", sex: data.sex || "m" } : p) };
+  }
+  function personEventCount(kh, id) {
+    return (kh.events || []).filter((e) => e.personId === id).length;
+  }
+  function removePerson(kh, id) {
+    if (personEventCount(kh, id) > 0) return null;
+    const profiles = { ...kh.profiles || {} };
+    delete profiles[id];
+    return { ...kh, family: (kh.family || []).filter((p) => p.id !== id), profiles };
+  }
   function tempScore(temps) {
     const vals = (temps || []).map((t) => parseFloat(t.v)).filter((v2) => !isNaN(v2));
     if (!vals.length) return 0;
@@ -6535,7 +6558,7 @@ var __angst = (() => {
     { key: "medicacionHabitual", label: "Medicaci\xF3n habitual", icon: "\u{1F48A}", placeholder: "ej: salbutamol seg\xFAn necesidad" },
     { key: "vacunas", label: "Vacunas", icon: "\u{1F489}", placeholder: "ej: triple viral, hepatitis A" }
   ];
-  function PerfilView({ persona, perfil, onBack, onGrowth }) {
+  function PerfilView({ persona, perfil, onBack, onGrowth, onEditPerson }) {
     const [draft, setDraft] = React.useState({ condicionesCronicas: [], alergias: [], medicacionHabitual: [], vacunas: [], ...perfil });
     const [adding, setAdding] = React.useState(null);
     const [item, setItem] = React.useState("");
@@ -6546,7 +6569,7 @@ var __angst = (() => {
       setAdding(null);
     }
     const rm = (key, i) => setDraft((d) => ({ ...d, [key]: (d[key] || []).filter((_, j) => j !== i) }));
-    return /* @__PURE__ */ React.createElement("div", { style: PAGE }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onBack(draft), style: { background: "transparent", border: "none", fontSize: 20, color: "#bbb", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22 } }, persona.icon), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 22, fontWeight: 700, color: "#111" } }, persona.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 11, color: "#aaa" } }, "ficha \xB7 ", persona.dob ? calcAge(persona.dob) + " a\xF1os" : "")), /* @__PURE__ */ React.createElement("button", { onClick: () => onGrowth(draft), style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: F_SANS, fontSize: 11, color: "#888" } }, "\u{1F4CF} crecimiento")), PERFIL_SECCIONES.map(({ key, label, icon, placeholder }) => /* @__PURE__ */ React.createElement("div", { key, style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 17, fontWeight: 700, color: "#111", marginBottom: 8 } }, icon, " ", label), (draft[key] || []).map((it, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 5, height: 5, borderRadius: "50%", background: "#111", flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: F_SANS, fontSize: 13, color: "#333" } }, it), /* @__PURE__ */ React.createElement("button", { onClick: () => rm(key, i), style: { background: "transparent", border: "none", color: "#ccc", fontSize: 16, cursor: "pointer", lineHeight: 1 } }, "\xD7"))), adding === key ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 6 } }, /* @__PURE__ */ React.createElement("input", { autoFocus: true, value: item, onChange: (e) => setItem(e.target.value), onKeyDown: (e) => {
+    return /* @__PURE__ */ React.createElement("div", { style: PAGE }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => onBack(draft), style: { background: "transparent", border: "none", fontSize: 20, color: "#bbb", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22 } }, persona.icon), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 22, fontWeight: 700, color: "#111" } }, persona.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 11, color: "#aaa" } }, "ficha \xB7 ", persona.dob ? calcAge(persona.dob) + " a\xF1os" : "")), /* @__PURE__ */ React.createElement("button", { onClick: () => onEditPerson(draft), style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: F_SANS, fontSize: 11, color: "#888" } }, "\u270F\uFE0F datos"), /* @__PURE__ */ React.createElement("button", { onClick: () => onGrowth(draft), style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: F_SANS, fontSize: 11, color: "#888" } }, "\u{1F4CF} crecimiento")), PERFIL_SECCIONES.map(({ key, label, icon, placeholder }) => /* @__PURE__ */ React.createElement("div", { key, style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 17, fontWeight: 700, color: "#111", marginBottom: 8 } }, icon, " ", label), (draft[key] || []).map((it, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: "1px dashed #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 5, height: 5, borderRadius: "50%", background: "#111", flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: F_SANS, fontSize: 13, color: "#333" } }, it), /* @__PURE__ */ React.createElement("button", { onClick: () => rm(key, i), style: { background: "transparent", border: "none", color: "#ccc", fontSize: 16, cursor: "pointer", lineHeight: 1 } }, "\xD7"))), adding === key ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 6 } }, /* @__PURE__ */ React.createElement("input", { autoFocus: true, value: item, onChange: (e) => setItem(e.target.value), onKeyDown: (e) => {
       if (e.key === "Enter") add2(key);
       if (e.key === "Escape") setAdding(null);
     }, placeholder, style: INP }), /* @__PURE__ */ React.createElement("button", { onClick: () => add2(key), style: { background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontFamily: F_SANS } }, "+")) : /* @__PURE__ */ React.createElement("button", { onClick: () => {
@@ -6585,16 +6608,30 @@ var __angst = (() => {
     return /* @__PURE__ */ React.createElement("div", { style: PAGE }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 16 } }, /* @__PURE__ */ React.createElement("button", { onClick: onBack, style: { background: "transparent", border: "none", fontSize: 20, color: "#bbb", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 22, fontWeight: 700, color: "#111" } }, "Resumen para compartir")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 } }, family.map((p) => /* @__PURE__ */ React.createElement("button", { key: p.id, onClick: () => setPid(p.id), style: { fontFamily: F_SANS, fontSize: 12, padding: "6px 12px", borderRadius: 16, cursor: "pointer", border: "1px solid " + (pid === p.id ? "#111" : "#ddd"), background: pid === p.id ? "#111" : "transparent", color: pid === p.id ? "#fff" : "#666" } }, p.icon, " ", p.name))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("input", { type: "date", value: from, max: to, onChange: (e) => setFrom(e.target.value), style: INP }), /* @__PURE__ */ React.createElement("span", { style: { color: "#aaa" } }, "\u2192"), /* @__PURE__ */ React.createElement("input", { type: "date", value: to, min: from, onChange: (e) => setTo(e.target.value), style: INP })), /* @__PURE__ */ React.createElement("pre", { style: { whiteSpace: "pre-wrap", wordBreak: "break-word", fontFamily: F_SANS, fontSize: 12, lineHeight: 1.55, color: "#222", background: "#fafafa", border: "1px solid #eee", borderRadius: 10, padding: "12px 14px", margin: "0 0 12px" } }, text), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: copy, style: { flex: 1, background: copied ? "#2e7d52" : "#111", border: "none", borderRadius: 10, padding: "12px", fontFamily: F_HAND, fontSize: 17, color: "#fff", cursor: "pointer" } }, copied ? "copiado \u2713" : "copiar texto"), typeof navigator !== "undefined" && navigator.share && /* @__PURE__ */ React.createElement("button", { onClick: () => navigator.share({ text }).catch(() => {
     }), style: { background: "transparent", border: "1px dashed #ccc", borderRadius: 10, padding: "12px 16px", fontFamily: F_SANS, fontSize: 12, color: "#666", cursor: "pointer" } }, "compartir")), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
   }
+  var PERSON_ICONS = ["\u{1F476}", "\u{1F9D2}", "\u{1F467}", "\u{1F466}", "\u{1F9D1}", "\u{1F469}", "\u{1F468}", "\u{1F9D4}", "\u{1F642}"];
+  function PersonForm({ init, submitLabel, onSubmit }) {
+    const [d, setD] = React.useState({ name: "", dob: "", icon: "\u{1F642}", sex: "m", ...init || {} });
+    const ok = !!d.name.trim() && !!d.dob;
+    const box = { border: "1px solid #ddd", borderRadius: 8, padding: "10px 12px", fontFamily: F_SANS, fontSize: 14, background: "#fff", color: "#111", boxSizing: "border-box", width: "100%" };
+    const pick = (active) => ({ fontFamily: F_SANS, fontSize: 12, padding: "8px 14px", borderRadius: 8, cursor: "pointer", border: "1px solid " + (active ? "#111" : "#ddd"), background: active ? "#111" : "transparent", color: active ? "#fff" : "#666", flex: 1 });
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, /* @__PURE__ */ React.createElement("input", { value: d.name, onChange: (e) => setD({ ...d, name: e.target.value }), placeholder: "Nombre", style: box }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, color: "#aaa", marginBottom: 4 } }, "fecha de nacimiento"), /* @__PURE__ */ React.createElement("input", { type: "date", value: d.dob, max: localDateKey(), onChange: (e) => setD({ ...d, dob: e.target.value }), style: box })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setD({ ...d, sex: "m" }), style: pick(d.sex === "m") }, "masculino"), /* @__PURE__ */ React.createElement("button", { onClick: () => setD({ ...d, sex: "f" }), style: pick(d.sex === "f") }, "femenino")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, PERSON_ICONS.map((ic) => /* @__PURE__ */ React.createElement("button", { key: ic, onClick: () => setD({ ...d, icon: ic }), style: { fontSize: 20, width: 40, height: 40, borderRadius: 8, cursor: "pointer", border: "1px solid " + (d.icon === ic ? "#111" : "#ddd"), background: d.icon === ic ? "#f0f0f0" : "transparent" } }, ic))), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        disabled: !ok,
+        onClick: () => onSubmit({ name: d.name.trim(), dob: d.dob, icon: d.icon || "\u{1F642}", sex: d.sex }),
+        style: { background: ok ? "#111" : "#ddd", border: "none", borderRadius: 10, padding: "12px", fontFamily: F_HAND, fontSize: 17, color: ok ? "#fff" : "#999", cursor: ok ? "pointer" : "default" }
+      },
+      submitLabel
+    ));
+  }
+  function PersonView({ kh, persona, onBack, onSave, onDelete }) {
+    const count = persona ? personEventCount(kh, persona.id) : 0;
+    return /* @__PURE__ */ React.createElement("div", { style: PAGE }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 } }, /* @__PURE__ */ React.createElement("button", { onClick: onBack, style: { background: "transparent", border: "none", fontSize: 20, color: "#bbb", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 22, fontWeight: 700, color: "#111" } }, persona ? `Datos de ${persona.name}` : "Nueva persona")), /* @__PURE__ */ React.createElement(PersonForm, { key: persona ? persona.id : "new", init: persona || null, submitLabel: persona ? "guardar datos" : "agregar", onSubmit: onSave }), persona && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 28, paddingTop: 16, borderTop: "1px dashed #e5e5e5" } }, count > 0 ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 12, color: "#999", lineHeight: 1.5 } }, "No se puede eliminar a ", persona.name, " porque tiene ", count, " ", count === 1 ? "registro" : "registros", " de salud. Elimina primero esos registros desde la l\xEDnea de tiempo.") : /* @__PURE__ */ React.createElement("button", { onClick: () => {
+      if (window.confirm(`\xBFEliminar a ${persona.name} de la familia?`)) onDelete(persona);
+    }, style: { background: "transparent", border: "1px dashed #e0b4b4", borderRadius: 8, padding: "8px 14px", fontFamily: F_SANS, fontSize: 12, color: "#c0392b", cursor: "pointer" } }, "eliminar persona")), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
+  }
   function Onboarding({ kh, save }) {
-    const [d, setD] = React.useState({ name: "", dob: "", icon: "\u{1F642}", sex: "m" });
-    function add2() {
-      if (!d.name.trim() || !d.dob) return;
-      const id = d.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "") || "p" + Date.now();
-      save({ ...kh, family: [...kh.family || [], { id, name: d.name.trim(), dob: d.dob, icon: d.icon || "\u{1F642}", sex: d.sex || "m" }] });
-      setD({ name: "", dob: "", icon: "\u{1F642}", sex: "m" });
-    }
-    const box = { border: "1px solid #ddd", borderRadius: 8, padding: "10px 12px", fontFamily: F_SANS, fontSize: 14 };
-    return /* @__PURE__ */ React.createElement("div", { style: PAGE }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 22, color: "#555", marginBottom: 4 } }, "Familia"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 12, color: "#999", marginBottom: 16 } }, "Todav\xEDa no hay nadie cargado. Agreg\xE1 cada persona una vez \u2014 queda guardado en tus datos, no en el c\xF3digo."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { value: d.name, onChange: (e) => setD({ ...d, name: e.target.value }), placeholder: "Nombre", style: box }), /* @__PURE__ */ React.createElement("input", { type: "date", value: d.dob, onChange: (e) => setD({ ...d, dob: e.target.value }), style: box }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { value: d.icon, onChange: (e) => setD({ ...d, icon: e.target.value }), placeholder: "\xCDcono", style: { ...box, width: 70, textAlign: "center" } }), /* @__PURE__ */ React.createElement("select", { value: d.sex, onChange: (e) => setD({ ...d, sex: e.target.value }), style: { ...box, flex: 1 } }, /* @__PURE__ */ React.createElement("option", { value: "m" }, "m"), /* @__PURE__ */ React.createElement("option", { value: "f" }, "f"))), /* @__PURE__ */ React.createElement("button", { onClick: add2, style: { background: "#aac756", border: "none", borderRadius: 8, padding: "10px 12px", fontFamily: F_SANS, fontSize: 14, fontWeight: 700, color: "#111" } }, "Agregar")));
+    return /* @__PURE__ */ React.createElement("div", { style: PAGE }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 22, color: "#555", marginBottom: 4 } }, "Familia"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 12, color: "#999", marginBottom: 16 } }, "Todav\xEDa no hay nadie cargado. Agrega a cada persona una vez \u2014 queda guardado en tus datos, no en el c\xF3digo. Despu\xE9s puedes sumar m\xE1s desde la l\xEDnea de tiempo."), /* @__PURE__ */ React.createElement(PersonForm, { submitLabel: "agregar", onSubmit: (d) => save(addPerson(kh, d).kh) }));
   }
   function SaludPage({ kidsHealth, saveKidsHealth, dayData, updateDay, calMarks, saveCalMarks }) {
     const today = localDateKey();
@@ -6685,7 +6722,27 @@ var __angst = (() => {
         markDoctor(nextStr);
       }
     }
+    function savePerson(data) {
+      if (selPerson) {
+        persist(updatePerson(kh, selPerson.id, data));
+        setView("perfil");
+      } else {
+        persist(addPerson(kh, data).kh);
+        setView("timeline");
+      }
+    }
+    function deletePerson(p) {
+      const next = removePerson(kh, p.id);
+      if (!next) return;
+      persist(next);
+      setFilterId(null);
+      setSelId(null);
+      setView("timeline");
+    }
     const selPerson = family.find((f2) => f2.id === selId);
+    if (view === "persona") {
+      return /* @__PURE__ */ React.createElement(PersonView, { kh, persona: selPerson || null, onBack: () => setView(selPerson ? "perfil" : "timeline"), onSave: savePerson, onDelete: deletePerson });
+    }
     if (view === "perfil" && selPerson) {
       return /* @__PURE__ */ React.createElement(
         PerfilView,
@@ -6700,6 +6757,10 @@ var __angst = (() => {
           onGrowth: (d) => {
             saveProfile(selId, d);
             setView("crecimiento");
+          },
+          onEditPerson: (d) => {
+            saveProfile(selId, d);
+            setView("persona");
           }
         }
       );
@@ -6730,7 +6791,10 @@ var __angst = (() => {
     }, style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: F_SANS, fontSize: 11, color: "#888" } }, "\u267E\uFE0F ficha"), /* @__PURE__ */ React.createElement("button", { onClick: () => setView("resumen"), style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: F_SANS, fontSize: 11, color: "#888" } }, "\u{1F4C4} resumen")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, overflowX: "auto", paddingBottom: 6, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setFilterId(null), style: chip4(!filterId) }, "Familia"), family.map((p) => {
       const ill = activeIllness(events, p.id);
       return /* @__PURE__ */ React.createElement("button", { key: p.id, onClick: () => setFilterId(p.id), style: chip4(filterId === p.id) }, p.icon, " ", p.name, ill ? " " + (HAZARD_CONFIG[ill.hazardLevel || "CLEAR"] || HAZARD_CONFIG.CLEAR).emoji : "");
-    })), /* @__PURE__ */ React.createElement("button", { onClick: () => setSheet({ personId: filterId }), style: { width: "100%", background: "#111", border: "none", borderRadius: 10, padding: "12px", fontFamily: F_HAND, fontSize: 18, color: "#fff", cursor: "pointer", marginBottom: 16 } }, "+ agregar"), tl.upcoming.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 9, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "pr\xF3ximas citas"), tl.upcoming.map((ev) => /* @__PURE__ */ React.createElement(UpcomingRow, { key: ev.id, ev, family, showPerson, onOpen: open }))), tl.items.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 9, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "historial"), tl.items.map((it) => it.kind === "illness" ? /* @__PURE__ */ React.createElement(
+    }), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+      setSelId(null);
+      setView("persona");
+    }, style: { ...chip4(false), borderStyle: "dashed" } }, "+ persona")), /* @__PURE__ */ React.createElement("button", { onClick: () => setSheet({ personId: filterId }), style: { width: "100%", background: "#111", border: "none", borderRadius: 10, padding: "12px", fontFamily: F_HAND, fontSize: 18, color: "#fff", cursor: "pointer", marginBottom: 16 } }, "+ agregar"), tl.upcoming.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 9, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "pr\xF3ximas citas"), tl.upcoming.map((ev) => /* @__PURE__ */ React.createElement(UpcomingRow, { key: ev.id, ev, family, showPerson, onOpen: open }))), tl.items.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 9, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "historial"), tl.items.map((it) => it.kind === "illness" ? /* @__PURE__ */ React.createElement(
       IllnessCard,
       {
         key: it.ev.id,

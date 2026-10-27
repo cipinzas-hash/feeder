@@ -6,6 +6,7 @@ import GrowthView from "./GrowthView.jsx";
 import {
   SYMPTOM_ZONES, FEVER_IDS, symptomLabel, calcHazard, calcAge, localDateKey, localTimeKey, addDaysKey, daysInclusive,
   migrateKidsHealth, activeIllness, addSymptomEntry, upsertEvent, deleteEvent, closeIllness, planCita,
+  addPerson, updatePerson, removePerson, personEventCount,
   buildTimeline, illnessLabel, buildSummary,
 } from "./saludModel.js";
 
@@ -348,7 +349,7 @@ const PERFIL_SECCIONES = [
   {key:"medicacionHabitual",label:"Medicación habitual",icon:"💊",placeholder:"ej: salbutamol según necesidad"},
   {key:"vacunas",label:"Vacunas",icon:"💉",placeholder:"ej: triple viral, hepatitis A"},
 ];
-function PerfilView({persona,perfil,onBack,onGrowth}){
+function PerfilView({persona,perfil,onBack,onGrowth,onEditPerson}){
   const [draft,setDraft] = React.useState({condicionesCronicas:[],alergias:[],medicacionHabitual:[],vacunas:[],...perfil});
   const [adding,setAdding] = React.useState(null);
   const [item,setItem] = React.useState("");
@@ -367,6 +368,7 @@ function PerfilView({persona,perfil,onBack,onGrowth}){
           <div style={{fontFamily:F_HAND,fontSize:22,fontWeight:700,color:"#111"}}>{persona.name}</div>
           <div style={{fontFamily:F_SANS,fontSize:11,color:"#aaa"}}>ficha · {persona.dob?calcAge(persona.dob)+" años":""}</div>
         </div>
+        <button onClick={()=>onEditPerson(draft)} style={{background:"transparent",border:"1px dashed #ddd",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontFamily:F_SANS,fontSize:11,color:"#888"}}>✏️ datos</button>
         <button onClick={()=>onGrowth(draft)} style={{background:"transparent",border:"1px dashed #ddd",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontFamily:F_SANS,fontSize:11,color:"#888"}}>📏 crecimiento</button>
       </div>
       {PERFIL_SECCIONES.map(({key,label,icon,placeholder})=>(
@@ -438,29 +440,64 @@ function ResumenView({kh,family,initialPersonId,today,onBack}){
   );
 }
 
+// ── Formulario de persona (alta y edición) ──
+const PERSON_ICONS = ["👶","🧒","👧","👦","🧑","👩","👨","🧔","🙂"];
+function PersonForm({init,submitLabel,onSubmit}){
+  const [d,setD] = React.useState({name:"",dob:"",icon:"🙂",sex:"m",...(init||{})});
+  const ok = !!d.name.trim()&&!!d.dob;
+  const box = {border:"1px solid #ddd",borderRadius:8,padding:"10px 12px",fontFamily:F_SANS,fontSize:14,background:"#fff",color:"#111",boxSizing:"border-box",width:"100%"};
+  const pick = (active)=>({fontFamily:F_SANS,fontSize:12,padding:"8px 14px",borderRadius:8,cursor:"pointer",border:"1px solid "+(active?"#111":"#ddd"),background:active?"#111":"transparent",color:active?"#fff":"#666",flex:1});
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      <input value={d.name} onChange={e=>setD({...d,name:e.target.value})} placeholder="Nombre" style={box}/>
+      <div>
+        <div style={{fontFamily:F_SANS,fontSize:10,color:"#aaa",marginBottom:4}}>fecha de nacimiento</div>
+        <input type="date" value={d.dob} max={localDateKey()} onChange={e=>setD({...d,dob:e.target.value})} style={box}/>
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={()=>setD({...d,sex:"m"})} style={pick(d.sex==="m")}>masculino</button>
+        <button onClick={()=>setD({...d,sex:"f"})} style={pick(d.sex==="f")}>femenino</button>
+      </div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+        {PERSON_ICONS.map(ic=>(
+          <button key={ic} onClick={()=>setD({...d,icon:ic})} style={{fontSize:20,width:40,height:40,borderRadius:8,cursor:"pointer",border:"1px solid "+(d.icon===ic?"#111":"#ddd"),background:d.icon===ic?"#f0f0f0":"transparent"}}>{ic}</button>
+        ))}
+      </div>
+      <button disabled={!ok} onClick={()=>onSubmit({name:d.name.trim(),dob:d.dob,icon:d.icon||"🙂",sex:d.sex})}
+        style={{background:ok?"#111":"#ddd",border:"none",borderRadius:10,padding:"12px",fontFamily:F_HAND,fontSize:17,color:ok?"#fff":"#999",cursor:ok?"pointer":"default"}}>{submitLabel}</button>
+    </div>
+  );
+}
+
+// ── Alta / edición / baja de una persona ──
+function PersonView({kh,persona,onBack,onSave,onDelete}){
+  const count = persona?personEventCount(kh,persona.id):0;
+  return (
+    <div style={PAGE}>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
+        <button onClick={onBack} style={{background:"transparent",border:"none",fontSize:20,color:"#bbb",cursor:"pointer",padding:0}}>←</button>
+        <div style={{fontFamily:F_HAND,fontSize:22,fontWeight:700,color:"#111"}}>{persona?`Datos de ${persona.name}`:"Nueva persona"}</div>
+      </div>
+      <PersonForm key={persona?persona.id:"new"} init={persona||null} submitLabel={persona?"guardar datos":"agregar"} onSubmit={onSave}/>
+      {persona&&(
+        <div style={{marginTop:28,paddingTop:16,borderTop:"1px dashed #e5e5e5"}}>
+          {count>0
+            ?<div style={{fontFamily:F_SANS,fontSize:12,color:"#999",lineHeight:1.5}}>No se puede eliminar a {persona.name} porque tiene {count} {count===1?"registro":"registros"} de salud. Elimina primero esos registros desde la línea de tiempo.</div>
+            :<button onClick={()=>{if(window.confirm(`¿Eliminar a ${persona.name} de la familia?`))onDelete(persona);}} style={{background:"transparent",border:"1px dashed #e0b4b4",borderRadius:8,padding:"8px 14px",fontFamily:F_SANS,fontSize:12,color:"#c0392b",cursor:"pointer"}}>eliminar persona</button>}
+        </div>
+      )}
+      <div style={{height:32}}/>
+    </div>
+  );
+}
+
 // ── Onboarding: primera vez sin familia cargada ──
 function Onboarding({kh,save}){
-  const [d,setD] = React.useState({name:"",dob:"",icon:"🙂",sex:"m"});
-  function add(){
-    if(!d.name.trim()||!d.dob) return;
-    const id = d.name.trim().toLowerCase().replace(/[^a-z0-9]+/g,"") || ("p"+Date.now());
-    save({...kh, family:[...(kh.family||[]), {id,name:d.name.trim(),dob:d.dob,icon:d.icon||"🙂",sex:d.sex||"m"}]});
-    setD({name:"",dob:"",icon:"🙂",sex:"m"});
-  }
-  const box = {border:"1px solid #ddd",borderRadius:8,padding:"10px 12px",fontFamily:F_SANS,fontSize:14};
   return (
     <div style={PAGE}>
       <div style={{fontFamily:F_HAND,fontSize:22,color:"#555",marginBottom:4}}>Familia</div>
-      <div style={{fontFamily:F_SANS,fontSize:12,color:"#999",marginBottom:16}}>Todavía no hay nadie cargado. Agregá cada persona una vez — queda guardado en tus datos, no en el código.</div>
-      <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        <input value={d.name} onChange={e=>setD({...d,name:e.target.value})} placeholder="Nombre" style={box}/>
-        <input type="date" value={d.dob} onChange={e=>setD({...d,dob:e.target.value})} style={box}/>
-        <div style={{display:"flex",gap:8}}>
-          <input value={d.icon} onChange={e=>setD({...d,icon:e.target.value})} placeholder="Ícono" style={{...box,width:70,textAlign:"center"}}/>
-          <select value={d.sex} onChange={e=>setD({...d,sex:e.target.value})} style={{...box,flex:1}}><option value="m">m</option><option value="f">f</option></select>
-        </div>
-        <button onClick={add} style={{background:"#aac756",border:"none",borderRadius:8,padding:"10px 12px",fontFamily:F_SANS,fontSize:14,fontWeight:700,color:"#111"}}>Agregar</button>
-      </div>
+      <div style={{fontFamily:F_SANS,fontSize:12,color:"#999",marginBottom:16}}>Todavía no hay nadie cargado. Agrega a cada persona una vez — queda guardado en tus datos, no en el código. Después puedes sumar más desde la línea de tiempo.</div>
+      <PersonForm submitLabel="agregar" onSubmit={d=>save(addPerson(kh,d).kh)}/>
     </div>
   );
 }
@@ -542,11 +579,25 @@ function SaludPage({kidsHealth, saveKidsHealth, dayData, updateDay, calMarks, sa
     }
   }
 
+  function savePerson(data){
+    if(selPerson){ persist(updatePerson(kh,selPerson.id,data)); setView("perfil"); }
+    else { persist(addPerson(kh,data).kh); setView("timeline"); }
+  }
+  function deletePerson(p){
+    const next = removePerson(kh,p.id);
+    if(!next) return;
+    persist(next); setFilterId(null); setSelId(null); setView("timeline");
+  }
+
   // ── Vistas secundarias ──
   const selPerson = family.find(f=>f.id===selId);
+  if(view==="persona"){
+    return <PersonView kh={kh} persona={selPerson||null} onBack={()=>setView(selPerson?"perfil":"timeline")} onSave={savePerson} onDelete={deletePerson}/>;
+  }
   if(view==="perfil"&&selPerson){
     return <PerfilView key={selId} persona={selPerson} perfil={(kh.profiles||{})[selId]||{}}
-      onBack={d=>{saveProfile(selId,d);setView("timeline");}} onGrowth={d=>{saveProfile(selId,d);setView("crecimiento");}}/>;
+      onBack={d=>{saveProfile(selId,d);setView("timeline");}} onGrowth={d=>{saveProfile(selId,d);setView("crecimiento");}}
+      onEditPerson={d=>{saveProfile(selId,d);setView("persona");}}/>;
   }
   if(view==="crecimiento"&&selPerson){
     return <GrowthView key={selId} persona={selPerson} perfil={(kh.profiles||{})[selId]||{}} today={today}
@@ -576,6 +627,7 @@ function SaludPage({kidsHealth, saveKidsHealth, dayData, updateDay, calMarks, sa
           const ill = activeIllness(events,p.id);
           return <button key={p.id} onClick={()=>setFilterId(p.id)} style={chip(filterId===p.id)}>{p.icon} {p.name}{ill?" "+(HAZARD_CONFIG[ill.hazardLevel||"CLEAR"]||HAZARD_CONFIG.CLEAR).emoji:""}</button>;
         })}
+        <button onClick={()=>{setSelId(null);setView("persona");}} style={{...chip(false),borderStyle:"dashed"}}>+ persona</button>
       </div>
 
       <button onClick={()=>setSheet({personId:filterId})} style={{width:"100%",background:"#111",border:"none",borderRadius:10,padding:"12px",fontFamily:F_HAND,fontSize:18,color:"#fff",cursor:"pointer",marginBottom:16}}>+ agregar</button>

@@ -3,6 +3,7 @@ import {
   calcHazard, addSymptomEntry, deleteEvent, closeIllness, upsertEvent, activeIllness,
   migrateKidsHealth, planCita, citaDates, buildTimeline, buildSummary, illnessLabel,
   addMonthsKey, addDaysKey, daysInclusive, emptyKidsHealth, eventMatches,
+  personIdFor, addPerson, updatePerson, removePerson, personEventCount,
 } from "../modules/salud/saludModel.js";
 import { computeStressScore } from "../core/stress.js";
 
@@ -142,6 +143,25 @@ assert.equal(eventMatches(mTemp, "inicio"), true);
 assert.equal(eventMatches(mTemp, "38.1"), true);
 assert.equal(eventMatches(mTemp, "nada"), false);
 
+
+// ── personas ──
+assert.equal(personIdFor("Sofía Pérez", []), "sofiaprez".replace("prez","perez"), "slug sin acentos");
+assert.equal(personIdFor("", []), "persona");
+let fam = emptyKidsHealth();
+let a1 = addPerson(fam, {name:" Cristopher ", dob:"1990-01-01", icon:"🧔", sex:"m"});
+assert.equal(a1.id, "cristopher", "se conserva el id que usa core/stress.js");
+let a2 = addPerson(a1.kh, {name:"Ana", dob:"2019-05-01", icon:"👧", sex:"f"});
+let a3 = addPerson(a2.kh, {name:"ana", dob:"2021-02-02"});
+assert.deepEqual(a3.kh.family.map(p=>p.id), ["cristopher","ana","ana2"], "ids únicos para nombres repetidos");
+assert.equal(a3.kh.family[2].icon, "🙂"); assert.equal(a3.kh.family[2].sex, "m");
+const upd = updatePerson(a3.kh, "ana", {name:"Ana María", dob:"2019-05-02", icon:"👧", sex:"f"});
+assert.equal(upd.family[1].name, "Ana María"); assert.equal(upd.family[1].id, "ana", "editar no cambia el id");
+const withEv = {...a3.kh, profiles:{ana:{alergias:["x"]}, ana2:{}}, events:[{id:"e1", personId:"ana", type:"medicamento", title:"x", start:"2026-10-01"}]};
+assert.equal(personEventCount(withEv,"ana"), 1);
+assert.equal(removePerson(withEv,"ana"), null, "con registros no se borra");
+const rem = removePerson(withEv,"ana2");
+assert.deepEqual(rem.family.map(p=>p.id), ["cristopher","ana"]);
+assert.equal(rem.profiles.ana2, undefined); assert.ok(rem.profiles.ana);
 
 // ── carga de estrés (core/stress.js lee los eventos nuevos) ──
 const dd = {"2026-10-02":{tasks:[]}};

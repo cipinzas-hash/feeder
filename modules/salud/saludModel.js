@@ -112,6 +112,32 @@ export function calcAge(dob){
   return a;
 }
 
+// ── Personas (kidsHealth.family) ──
+// id estable por persona: slug del nombre sin acentos, único dentro de la familia.
+// "cristopher" se conserva tal cual porque core/stress.js lo usa para distinguir
+// al propio usuario de los hijos.
+export function personIdFor(name, family){
+  const base = String(name||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"") || "persona";
+  let id = base, n = 2;
+  while((family||[]).some(p=>p.id===id)) id = base+(n++);
+  return id;
+}
+export function addPerson(kh, data){
+  const id = personIdFor(data.name, kh.family);
+  const person = {id, name:data.name.trim(), dob:data.dob, icon:data.icon||"🙂", sex:data.sex||"m"};
+  return {kh:{...kh, family:[...(kh.family||[]), person]}, id};
+}
+export function updatePerson(kh, id, data){
+  return {...kh, family:(kh.family||[]).map(p=>p.id===id?{...p, name:data.name.trim(), dob:data.dob, icon:data.icon||"🙂", sex:data.sex||"m"}:p)};
+}
+export function personEventCount(kh, id){ return (kh.events||[]).filter(e=>e.personId===id).length; }
+// Solo se puede quitar a alguien sin registros; devuelve null si los tiene.
+export function removePerson(kh, id){
+  if(personEventCount(kh,id)>0) return null;
+  const profiles = {...(kh.profiles||{})}; delete profiles[id];
+  return {...kh, family:(kh.family||[]).filter(p=>p.id!==id), profiles};
+}
+
 // ── Hazard ──
 function tempScore(temps){
   const vals=(temps||[]).map(t=>parseFloat(t.v)).filter(v=>!isNaN(v));
