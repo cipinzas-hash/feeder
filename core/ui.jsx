@@ -1,7 +1,7 @@
 import { computeStressScore, DEFAULT_HUMORS } from "./stress.js";
 import { requestNotifPermission } from "./notifications.js";
 import { MONTH_NAMES, getHoliday, addDays, fmtFull } from "./dates.js";
-import { illnessLabel, eventLine, eventMatches } from "../modules/salud/saludModel.js";
+import { illnessLabel, eventLine, eventMatches, citasOnDay, citaLine } from "../modules/salud/saludModel.js";
 import ListaCompras from "../modules/presupuesto/ListaCompras.jsx";
 
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
@@ -256,6 +256,15 @@ function CalendarModal({ weekStart, marks, onMark, onWeekSelect, onClose, dayDat
                   </div>
                 ))}
               </div>}
+              {/* Citas de Salud del día: paciente · especialidad · hora */}
+              {(()=>{
+                const cs = citasOnDay(kidsHealth?.events||[], selectedDay);
+                if(!cs.length) return null;
+                const nm = id => ((kidsHealth?.family||[]).find(f=>f.id===id)||{}).name||id;
+                return <div style={{display:"flex",flexDirection:"column",gap:4,marginBottom:10}}>
+                  {cs.map(c=><div key={c.id} style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#ff8a80",background:"rgba(229,57,53,0.12)",borderRadius:6,padding:"5px 8px"}}>🏥 {citaLine(c,nm(c.personId),true)}</div>)}
+                </div>;
+              })()}
               {/* Carga */}
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
                 <div style={{flex:1,background:"rgba(255,255,255,0.08)",borderRadius:99,height:5,overflow:"hidden"}}>

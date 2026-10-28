@@ -1,14 +1,18 @@
 // Salud — línea de tiempo familiar/individual de eventos de salud (schema v2).
+// Pantalla colapsada según el lineamiento (docs/angst-lineamiento-y-handoff.md §4): sin título
+// propio, sin scroll colapsada, expansión exclusiva inline, formularios y fichas como emergentes.
 // Datos y reglas en saludModel.js; curva de crecimiento en GrowthView.jsx.
 // El roster (nombres/fechas de nacimiento) vive en kidsHealth.family, editable
 // desde la UI (onboarding) — nunca en el repo.
 import GrowthView from "./GrowthView.jsx";
+import { esTareaMedica } from "../../core/stress.js";
 import {
   SYMPTOM_ZONES, FEVER_IDS, symptomLabel, calcHazard, calcAge, localDateKey, localTimeKey, addDaysKey, daysInclusive,
-  migrateKidsHealth, activeIllness, addSymptomEntry, upsertEvent, deleteEvent, closeIllness, planCita,
+  migrateKidsHealth, activeIllness, upsertEvent, deleteEvent, closeIllness,
   addPerson, updatePerson, removePerson, personEventCount,
-  buildTimeline, illnessLabel, buildSummary,
+  buildSections, illnessLabel, buildSummary, citaLine,
 } from "./saludModel.js";
+import { makeSaludActions } from "./saludActions.js";
 
 const F_HAND = "'Caveat',cursive";
 const F_SANS = "'DM Sans',sans-serif";
@@ -23,9 +27,10 @@ const HAZARD_CONFIG = {
 };
 const TYPE_META = {
   enfermedad:{icon:"🤒",label:"Enfermedad"}, sintoma:{icon:"🩺",label:"Síntomas / fiebre"},
+  diagnostico:{icon:"🩻",label:"Diagnóstico"},
   medicamento:{icon:"💊",label:"Medicamento"}, tratamiento:{icon:"🧴",label:"Tratamiento"}, cita:{icon:"🗓️",label:"Cita médica"},
 };
-const ADD_TYPES = ["sintoma","medicamento","tratamiento","cita"];
+const ADD_TYPES = ["sintoma","diagnostico","medicamento","tratamiento","cita"];
 const REPEAT_OPTS = [{v:0,l:"no repite"},{v:1,l:"mensual"},{v:3,l:"c/3 meses"},{v:6,l:"semestral"},{v:12,l:"anual"},{v:24,l:"c/2 años"}];
 const PAGE = {padding:"16px",maxWidth:480,margin:"0 auto"};
 const INP = {border:"1px dashed #ddd",borderRadius:8,padding:"8px 10px",fontSize:14,fontFamily:F_SANS,outline:"none",background:"#fafafa",color:"#111",width:"100%",boxSizing:"border-box"};
@@ -63,6 +68,8 @@ function ChildRow({ev,ill,today,onOpen}){
     const mt=maxTemp(ev.temps); if(mt!==null)parts.push(mt+" °C");
     if(ev.note)parts.push(ev.note);
     text = parts.join(" · ")||"registro";
+  } else if(ev.type==="diagnostico"){
+    text = `${ev.title}${ev.medico?" — "+ev.medico:""}`;
   } else {
     text = `${ev.title}${ev.dosis?" · "+ev.dosis:""}${ev.freq?" · "+ev.freq:""}`;
   }
@@ -144,11 +151,11 @@ function LooseRow({ev,family,showPerson,onOpen}){
   );
 }
 
-function UpcomingRow({ev,family,showPerson,onOpen}){
+function UpcomingRow({ev,dk,family,showPerson,onOpen}){
   return (
     <div onClick={()=>onOpen(ev)} style={{background:"#f4f8ec",border:"1px solid #dfe9c6",borderRadius:10,padding:"10px 12px",marginBottom:8,cursor:"pointer",display:"flex",alignItems:"center",gap:10}}>
       <div style={{textAlign:"center",minWidth:48}}>
-        <div style={{fontFamily:F_HAND,fontSize:17,fontWeight:700,color:"#111",lineHeight:1}}>{fmtDay(ev.start)}</div>
+        <div style={{fontFamily:F_HAND,fontSize:17,fontWeight:700,color:"#111",lineHeight:1}}>{fmtDay(dk||ev.start)}</div>
         <div style={{fontFamily:F_SANS,fontSize:10,color:"#789"}}>{ev.startTime||""}</div>
       </div>
       <div style={{flex:1,minWidth:0}}>
@@ -164,8 +171,10 @@ function UpcomingRow({ev,family,showPerson,onOpen}){
 function initForm(init, today){
   const now = localTimeKey();
   const ev = init.ev;
-  const base = {date:today,time:now,sintomas:[],temps:[{t:now,v:""}],note:"",title:"",dosis:"",freq:"",start:today,startTime:now,end:"",medico:"",repeatMonths:0,missedDays:0};
+  const day = init.date||today;
+  const base = {date:today,time:now,sintomas:[],temps:[{t:now,v:""}],note:"",title:"",dosis:"",freq:"",start:day,startTime:(init.type==="cita"?"09:00":now),end:"",medico:"",repeatMonths:0,missedDays:0};
   if(!ev) return base;
+  if(ev.type==="diagnostico") return {...base,title:ev.title||"",medico:ev.medico||"",start:ev.start,note:ev.note||""};
   if(ev.type==="sintoma") return {...base,date:ev.start,time:ev.startTime||"",sintomas:ev.sintomas||[],temps:(ev.temps||[]).map(t=>({t:t.t||"",v:String(t.v)})),note:ev.note||""};
   if(ev.type==="enfermedad") return {...base,title:ev.title||"",start:ev.start,end:ev.end||"",note:ev.note||"",missedDays:ev.missedDays||0};
   if(ev.type==="cita") return {...base,title:ev.title||"",medico:ev.medico||"",start:ev.start,startTime:ev.startTime||"09:00",repeatMonths:ev.repeatMonths||0};
@@ -176,7 +185,7 @@ function Field({label,children}){
   return <div style={{marginBottom:14}}><div style={LABEL_DARK}>{label}</div>{children}</div>;
 }
 
-function EntrySheet({init,family,kh,today,onSave,onDelete,onClose}){
+function EntrySheet({init,family,kh,today,onSave,onDelete,onClose,types,z}){
   const editing = init.ev||null;
   const [type,setType] = React.useState(editing?editing.type:(init.type||null));
   const [personId,setPersonId] = React.useState(editing?editing.personId:(init.personId||null));
@@ -184,7 +193,9 @@ function EntrySheet({init,family,kh,today,onSave,onDelete,onClose}){
   const [openZone,setOpenZone] = React.useState(null);
   const set = (k,v)=>setF(x=>({...x,[k]:v}));
   // una cita nueva parte a las 09:00 (hora usual de control), no a la hora actual
-  const chooseType = t => { setType(t); if(t==="cita") set("startTime","09:00"); };
+  const chooseType = t => { setType(t); if(t==="cita") set("startTime",(init&&init.type==="cita"&&init.ev)?f.startTime:"09:00"); };
+  // si viene tipo y una sola persona posible, no hace falta elegirla
+  React.useEffect(()=>{ if(!personId&&family.length===1) setPersonId(family[0].id); },[]);
   const perfil = (kh.profiles||{})[personId]||{};
   const hasTemp = f.temps.some(t=>!isNaN(parseFloat(t.v)));
   const hz = calcHazard(f.sintomas, f.temps.map(t=>({v:t.v})));
@@ -193,6 +204,7 @@ function EntrySheet({init,family,kh,today,onSave,onDelete,onClose}){
   if(type==="sintoma") ok = ok&&(f.sintomas.length>0||hasTemp||!!f.note.trim());
   else if(type==="medicamento"||type==="tratamiento") ok = ok&&!!f.title.trim()&&!!f.start;
   else if(type==="cita") ok = ok&&!!f.title.trim()&&!!f.start&&!!f.startTime;
+  else if(type==="diagnostico") ok = ok&&!!f.title.trim()&&!!f.start;
   else if(type==="enfermedad") ok = ok&&!!f.start;
   const alergia = type==="medicamento"&&f.title.trim()
     ? (perfil.alergias||[]).find(a=>{const x=String(a).toLowerCase(),y=f.title.trim().toLowerCase();return x&&(x.includes(y)||y.includes(x));})
@@ -201,7 +213,7 @@ function EntrySheet({init,family,kh,today,onSave,onDelete,onClose}){
   const title = editing ? (TYPE_META[editing.type]||{}).label : (type?TYPE_META[type].label:"Agregar");
 
   return (
-    <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:500,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+    <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:z||500,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
       <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,480px)",background:"#0d0d0d",borderRadius:"16px 16px 0 0",maxHeight:"92vh",display:"flex",flexDirection:"column"}}>
         <div style={{padding:"16px 20px 12px",borderBottom:"1px solid rgba(255,255,255,0.08)",flexShrink:0,display:"flex",alignItems:"center",gap:10}}>
           {!editing&&type&&<button onClick={()=>setType(null)} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.5)",fontSize:18,cursor:"pointer",padding:0}}>←</button>}
@@ -212,7 +224,7 @@ function EntrySheet({init,family,kh,today,onSave,onDelete,onClose}){
 
         {!type&&(
           <div style={{padding:"16px 20px 32px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            {ADD_TYPES.map(t=>(
+            {(types||ADD_TYPES).map(t=>(
               <button key={t} onClick={()=>chooseType(t)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"18px 8px",cursor:"pointer",color:"#fff"}}>
                 <div style={{fontSize:26}}>{TYPE_META[t].icon}</div>
                 <div style={{fontFamily:F_SANS,fontSize:12,marginTop:6}}>{TYPE_META[t].label}</div>
@@ -304,8 +316,8 @@ function EntrySheet({init,family,kh,today,onSave,onDelete,onClose}){
             </>)}
 
             {type==="cita"&&(<>
-              <Field label="tipo de cita"><input value={f.title} onChange={e=>set("title",e.target.value)} placeholder="ej: control pediátrico" style={INP_DARK}/></Field>
-              <Field label="médico / especialista"><input value={f.medico} onChange={e=>set("medico",e.target.value)} style={INP_DARK}/></Field>
+              <Field label="especialidad"><input value={f.title} onChange={e=>set("title",e.target.value)} placeholder="ej: pediatría" style={INP_DARK}/></Field>
+              <Field label="médico (opcional)"><input value={f.medico} onChange={e=>set("medico",e.target.value)} placeholder="ej: Dra. Rojas" style={INP_DARK}/></Field>
               <Field label="fecha y hora"><div style={{display:"flex",gap:8}}><input type="date" value={f.start} onChange={e=>set("start",e.target.value)} style={INP_DARK}/><input type="time" value={f.startTime} onChange={e=>set("startTime",e.target.value)} style={{...INP_DARK,width:120}}/></div></Field>
               <Field label="repetir">
                 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -315,9 +327,16 @@ function EntrySheet({init,family,kh,today,onSave,onDelete,onClose}){
                 </div>
               </Field>
               <div style={{fontFamily:F_SANS,fontSize:11,color:"rgba(255,255,255,0.4)",lineHeight:1.5,marginBottom:14}}>
-                Se agrega al planner el día de la cita y una tarea de preparación el día anterior a las 21:30{f.repeatMonths?" (próximas 4 ocurrencias)":""}. Si editas o eliminas la cita, esas tareas se actualizan.
+                Se agrega al planner el día de la cita (paciente, especialidad y hora), se marca 🏥 en el calendario y se crea una tarea de preparación el día anterior a las 21:30{f.repeatMonths?" (próximas 4 ocurrencias)":""}. Si editas o eliminas la cita, todo eso se actualiza.
                 {editing&&editing.legacy&&" Esta cita viene de la versión anterior: sus tareas ya agendadas no están ligadas; al guardar se crean nuevas."}
               </div>
+            </>)}
+
+            {type==="diagnostico"&&(<>
+              <Field label="diagnóstico"><input value={f.title} onChange={e=>set("title",e.target.value)} placeholder="ej: bronquitis aguda" style={INP_DARK}/></Field>
+              <Field label="quién lo dio (médico / especialidad)"><input value={f.medico} onChange={e=>set("medico",e.target.value)} placeholder="ej: Dra. Rojas, pediatría" style={INP_DARK}/></Field>
+              <Field label="fecha"><input type="date" value={f.start} max={today} onChange={e=>set("start",e.target.value)} style={INP_DARK}/></Field>
+              <Field label="nota"><textarea value={f.note} rows={3} onChange={e=>set("note",e.target.value)} placeholder="indicaciones, tratamiento indicado..." style={{...INP_DARK,resize:"none"}}/></Field>
             </>)}
 
             {type==="enfermedad"&&(<>
@@ -502,67 +521,90 @@ function Onboarding({kh,save}){
   );
 }
 
+// ── Ventana emergente (ficha, crecimiento, resumen, datos de persona) ──
+function ModalShell({children,onClose,z}){
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:z||600,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"center",justifyContent:"center",padding:12}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:14,width:"min(96vw,480px)",maxHeight:"92vh",overflowY:"auto",boxShadow:"5px 5px 0 #111",border:"2px dashed #111",position:"relative"}}>
+        <div style={{display:"flex",justifyContent:"flex-end",padding:"6px 10px 0"}}>
+          <button onClick={onClose} aria-label="cerrar" style={{background:"transparent",border:"none",fontSize:22,color:"#aaa",cursor:"pointer",lineHeight:1,padding:0}}>×</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+const SECTIONS = [
+  {id:"episodios", icon:"🤒", label:"Episodios"},
+  {id:"citas", icon:"🗓️", label:"Citas"},
+  {id:"medicacion", icon:"💊", label:"Medicación y tratamientos"},
+  {id:"historial", icon:"📚", label:"Historial"},
+];
+const MONTH_LONG = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+function SectionRow({sec,summary,open,onToggle}){
+  return (
+    <button onClick={onToggle} aria-expanded={open}
+      style={{width:"100%",display:"flex",alignItems:"center",gap:10,minHeight:44,padding:"6px 12px",marginBottom:4,borderRadius:10,cursor:"pointer",textAlign:"left",
+        background:open?"#111":"#fff",color:open?"#fff":"#111",border:"1px dashed "+(open?"#111":"#ddd"),flex:"none",boxSizing:"border-box"}}>
+      <span style={{fontSize:16}}>{sec.icon}</span>
+      <span style={{fontFamily:F_HAND,fontSize:17,fontWeight:700,whiteSpace:"nowrap"}}>{sec.label}</span>
+      <span style={{flex:1,minWidth:0,fontFamily:F_SANS,fontSize:11,color:open?"rgba(255,255,255,0.55)":"#999",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textAlign:"right"}}>{summary}</span>
+      <span style={{fontSize:12,color:open?"rgba(255,255,255,0.6)":"#bbb",transform:open?"rotate(90deg)":"none",transition:"transform .15s"}}>›</span>
+    </button>
+  );
+}
+
+function HistoryRow({it,label,family,showPerson,onOpen}){
+  const ev = it.ev;
+  const meta = TYPE_META[ev.type]||{icon:"•",label:ev.type};
+  return (
+    <div onClick={()=>onOpen(ev)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 4px",borderBottom:"1px dashed #eee",cursor:"pointer"}}>
+      <span style={{fontFamily:F_SANS,fontSize:10,color:"#aaa",minWidth:42}}>{ev.start.slice(8)}/{ev.start.slice(5,7)}</span>
+      <span style={{fontSize:13}}>{meta.icon}</span>
+      <span style={{flex:1,minWidth:0,fontFamily:F_SANS,fontSize:12,color:"#333",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+        {showPerson&&<span style={{color:"#999"}}>{nameOf(family,ev.personId)} · </span>}{label}
+      </span>
+      <span style={{fontSize:11,color:"#ccc"}}>›</span>
+    </div>
+  );
+}
+
 // ── Página ──
 function SaludPage({kidsHealth, saveKidsHealth, dayData, updateDay, calMarks, saveCalMarks}) {
   const today = localDateKey();
   const kh = React.useMemo(()=>migrateKidsHealth(kidsHealth, today),[kidsHealth]);
   const family = kh.family||[];
-  const [view,setView] = React.useState("timeline"); // timeline | perfil | crecimiento | resumen
-  const [filterId,setFilterId] = React.useState(null); // null = familia
-  const [selId,setSelId] = React.useState(null);       // persona de ficha / crecimiento
-  const [sheet,setSheet] = React.useState(null);       // {ev?, type?, personId?}
+  const [modal,setModal] = React.useState(null);        // null | perfil | crecimiento | resumen | persona
+  const [filterId,setFilterId] = React.useState(null);  // null = familia
+  const [selId,setSelId] = React.useState(null);        // persona de ficha / crecimiento / datos
+  const [sheet,setSheet] = React.useState(null);        // {ev?, type?, personId?}
+  const [open,setOpen] = React.useState(null);          // sección expandida (exclusiva)
+  const [suggest,setSuggest] = React.useState(null);    // {personId} → aviso "agendar cita"
+  const bodyRef = React.useRef(null);
+
+  // Válvula (lineamiento §4.3): si colapsado desborda, avisar en consola para ajustar.
+  React.useEffect(()=>{
+    const el = bodyRef.current;
+    if(!el||open) return;
+    const over = el.scrollHeight-el.clientHeight;
+    if(over>1) console.warn(`[salud] desborda colapsado: ${over}px — revisar alturas (R2)`);
+  });
 
   // Todos los hooks de arriba ya corrieron: el early return es seguro.
   if(family.length===0) return <Onboarding kh={kh} save={saveKidsHealth}/>;
 
   const events = kh.events||[];
   const persist = next => saveKidsHealth(next);
+  const actions = makeSaludActions({kh,persist,dayData,updateDay,calMarks,saveCalMarks,isMedicalTask:esTareaMedica});
 
-  function applyPlan(plan){
-    if(updateDay) Object.entries(plan.dayPatches).forEach(([dk,tasks])=>updateDay(dk,{tasks}));
-    if(plan.marks&&saveCalMarks) saveCalMarks(plan.marks);
-  }
-  function markDoctor(dk){
-    if(!saveCalMarks) return;
-    const cur = Array.isArray(calMarks&&calMarks[dk])?calMarks[dk]:((calMarks&&calMarks[dk])?[calMarks[dk]]:[]);
-    if(!cur.includes("doctor")) saveCalMarks({...(calMarks||{}), [dk]:[...cur,"doctor"]});
-  }
-
-  function handleSave({type,personId,f,editing}){
-    if(type==="sintoma"){
-      if(editing){
-        const temps = f.temps.filter(t=>!isNaN(parseFloat(t.v))).map(t=>({t:t.t||null,v:parseFloat(t.v)}));
-        persist(upsertEvent(kh,{...editing,start:f.date,startTime:f.time||null,sintomas:f.sintomas,temps,hazardLevel:calcHazard(f.sintomas,temps),note:f.note}));
-      } else {
-        const r = addSymptomEntry(kh,{personId,date:f.date,time:f.time,sintomas:f.sintomas,temps:f.temps,note:f.note},{illness:nid("ep_"),entry:nid("sx_")});
-        persist(r.kh);
-        if(r.doctorMarkDate) markDoctor(r.doctorMarkDate);
-      }
-    } else if(type==="medicamento"||type==="tratamiento"){
-      const ill = editing?null:activeIllness(events,personId);
-      const parentId = editing?editing.parentId:(ill&&f.start>=ill.start?ill.id:undefined);
-      persist(upsertEvent(kh,{...(editing||{}),id:editing?editing.id:nid(type==="medicamento"?"md_":"tr_"),personId,type,parentId,
-        title:f.title.trim(),dosis:f.dosis.trim(),freq:f.freq.trim(),start:f.start,startTime:f.startTime||null,end:f.end||null,note:f.note.trim()}));
-    } else if(type==="cita"){
-      const ev = {id:editing?editing.id:nid("ct_"),personId,type:"cita",title:f.title.trim(),medico:f.medico.trim(),
-        start:f.start,startTime:f.startTime,repeatMonths:f.repeatMonths||null,markedDates:(editing&&editing.markedDates)||[]};
-      const plan = planCita({events:events.filter(e=>e.id!==ev.id),dayData,marks:calMarks,prevEv:editing,nextEv:ev,personName:nameOf(family,personId)});
-      persist(upsertEvent(kh,plan.ev));
-      applyPlan(plan);
-    } else if(type==="enfermedad"){
-      persist(upsertEvent(kh,{...editing,title:f.title.trim(),start:f.start,end:f.end||null,note:f.note.trim()}));
-    }
+  function handleSave(args){
+    const r = actions.save(args);
+    if(r.suggest) setSuggest(r.suggest);
     setSheet(null);
   }
-
-  function handleDelete(ev){
-    if(ev.type==="cita"){
-      const plan = planCita({events:events.filter(e=>e.id!==ev.id),dayData,marks:calMarks,prevEv:ev,nextEv:null,personName:""});
-      persist(deleteEvent(kh,ev.id));
-      applyPlan(plan);
-    } else persist(deleteEvent(kh,ev.id));
-    setSheet(null);
-  }
+  function handleDelete(ev){ actions.remove(ev); setSheet(null); }
   const closeEpisode = id => persist(closeIllness(kh,id,today));
   const setMissed = (id,n) => persist({...kh,events:events.map(e=>e.id===id?{...e,missedDays:Math.max(0,(e.missedDays||0)+n)}:e)});
   const saveProfile = (pid,data) => persist({...kh,profiles:{...(kh.profiles||{}),[pid]:data}});
@@ -572,88 +614,154 @@ function SaludPage({kidsHealth, saveKidsHealth, dayData, updateDay, calMarks, sa
     const log = [...(perfil.growthLog||[]).filter(g=>g.date!==entry.date),entry].sort((a,b)=>a.date.localeCompare(b.date));
     saveProfile(pid,{...perfil,growthLog:log});
     if(updateDay){
+      // recordatorio anual de medir: solo la tarea (ya no marca 🏥 — esa marca sale de las citas)
       const nextStr = (entry.date.slice(0,4)*1+1)+entry.date.slice(4);
-      const rid = nid("gr_");
+      const rid = "gr_"+Date.now().toString(36);
       updateDay(nextStr,{tasks:[...((dayData&&dayData[nextStr]&&dayData[nextStr].tasks)||[]),{id:rid,text:`medir a ${nameOf(family,pid)}`,fixed:false,done:false}]});
-      markDoctor(nextStr);
     }
   }
-
   function savePerson(data){
-    if(selPerson){ persist(updatePerson(kh,selPerson.id,data)); setView("perfil"); }
-    else { persist(addPerson(kh,data).kh); setView("timeline"); }
+    if(selPerson){ persist(updatePerson(kh,selPerson.id,data)); setModal("perfil"); }
+    else { persist(addPerson(kh,data).kh); setModal(null); }
   }
   function deletePerson(p){
     const next = removePerson(kh,p.id);
     if(!next) return;
-    persist(next); setFilterId(null); setSelId(null); setView("timeline");
+    persist(next); setFilterId(null); setSelId(null); setModal(null);
   }
 
-  // ── Vistas secundarias ──
   const selPerson = family.find(f=>f.id===selId);
-  if(view==="persona"){
-    return <PersonView kh={kh} persona={selPerson||null} onBack={()=>setView(selPerson?"perfil":"timeline")} onSave={savePerson} onDelete={deletePerson}/>;
-  }
-  if(view==="perfil"&&selPerson){
-    return <PerfilView key={selId} persona={selPerson} perfil={(kh.profiles||{})[selId]||{}}
-      onBack={d=>{saveProfile(selId,d);setView("timeline");}} onGrowth={d=>{saveProfile(selId,d);setView("crecimiento");}}
-      onEditPerson={d=>{saveProfile(selId,d);setView("persona");}}/>;
-  }
-  if(view==="crecimiento"&&selPerson){
-    return <GrowthView key={selId} persona={selPerson} perfil={(kh.profiles||{})[selId]||{}} today={today}
-      onBack={()=>setView("perfil")} onSave={e=>saveGrowth(selId,e)}/>;
-  }
-  if(view==="resumen"){
-    return <ResumenView kh={kh} family={family} initialPersonId={filterId} today={today} onBack={()=>setView("timeline")}/>;
-  }
-
-  // ── Línea de tiempo ──
-  const tl = buildTimeline(events,{personId:filterId,today});
+  const sec = buildSections(events,{personId:filterId,today});
   const showPerson = !filterId;
-  const open = ev => setSheet({ev,personId:ev.personId});
-  const chip = (active)=>({fontFamily:F_SANS,fontSize:12,padding:"6px 12px",borderRadius:16,cursor:"pointer",whiteSpace:"nowrap",border:"1px solid "+(active?"#111":"#ddd"),background:active?"#111":"transparent",color:active?"#fff":"#666"});
+  const openEv = ev => setSheet({ev,personId:ev.personId});
+  const chip = (active)=>({fontFamily:F_SANS,fontSize:12,padding:"6px 12px",borderRadius:16,cursor:"pointer",whiteSpace:"nowrap",flex:"none",border:"1px solid "+(active?"#111":"#ddd"),background:active?"#111":"transparent",color:active?"#fff":"#666"});
+  const toggle = id => setOpen(o=>o===id?null:id);
+
+  // resúmenes de las filas
+  const n = (k,one,many)=>`${k} ${k===1?one:many}`;
+  const summaries = {
+    episodios: sec.illnesses.length===0?"sin episodios":(sec.active.length?`${n(sec.active.length,"activo","activos")} · ${sec.illnesses.length} en total`:`${sec.illnesses.length} en total`),
+    citas: sec.upcoming.length===0?"sin citas agendadas":`próxima ${fmtDay(sec.upcoming[0].dk)}${sec.upcoming[0].ev.startTime?" "+sec.upcoming[0].ev.startTime:""}${sec.upcoming.length>1?` · ${sec.upcoming.length} agendadas`:""}`,
+    medicacion: sec.vigentes.length?n(sec.vigentes.length,"vigente","vigentes"):(sec.meds[0]?`última: ${sec.meds[0].title} ${sec.meds[0].start.slice(8)}/${sec.meds[0].start.slice(5,7)}`:"sin registros"),
+    historial: sec.historyCount?n(sec.historyCount,"evento","eventos"):"sin registros",
+  };
+
+  // franja de estado: episodios activos + próxima cita (+ aviso de cita sugerida)
+  const nextCita = sec.upcoming[0];
+  const activeLines = sec.active.slice(0,2);
+  const suggestName = suggest?nameOf(family,suggest.personId):null;
 
   return (
-    <div style={PAGE}>
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
-        <div style={{flex:1,fontFamily:F_HAND,fontSize:24,color:"#555"}}>Salud</div>
-        {filterId&&<button onClick={()=>{setSelId(filterId);setView("perfil");}} style={{background:"transparent",border:"1px dashed #ddd",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontFamily:F_SANS,fontSize:11,color:"#888"}}>♾️ ficha</button>}
-        <button onClick={()=>setView("resumen")} style={{background:"transparent",border:"1px dashed #ddd",borderRadius:8,padding:"5px 10px",cursor:"pointer",fontFamily:F_SANS,fontSize:11,color:"#888"}}>📄 resumen</button>
-      </div>
-
-      <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:6,marginBottom:10}}>
+    <div style={{flex:"1 1 0",minHeight:0,display:"flex",flexDirection:"column",overflow:"hidden",padding:"10px 12px 8px",maxWidth:520,width:"100%",margin:"0 auto",boxSizing:"border-box"}}>
+      <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:4,marginBottom:6,flex:"none",scrollbarWidth:"none"}}>
         <button onClick={()=>setFilterId(null)} style={chip(!filterId)}>Familia</button>
         {family.map(p=>{
           const ill = activeIllness(events,p.id);
           return <button key={p.id} onClick={()=>setFilterId(p.id)} style={chip(filterId===p.id)}>{p.icon} {p.name}{ill?" "+(HAZARD_CONFIG[ill.hazardLevel||"CLEAR"]||HAZARD_CONFIG.CLEAR).emoji:""}</button>;
         })}
-        <button onClick={()=>{setSelId(null);setView("persona");}} style={{...chip(false),borderStyle:"dashed"}}>+ persona</button>
+        <button onClick={()=>{setSelId(null);setModal("persona");}} style={{...chip(false),borderStyle:"dashed"}}>+ persona</button>
       </div>
 
-      <button onClick={()=>setSheet({personId:filterId})} style={{width:"100%",background:"#111",border:"none",borderRadius:10,padding:"12px",fontFamily:F_HAND,fontSize:18,color:"#fff",cursor:"pointer",marginBottom:16}}>+ agregar</button>
-
-      {tl.upcoming.length>0&&(
-        <div style={{marginBottom:16}}>
-          <div style={{fontFamily:F_SANS,fontSize:9,color:"#aaa",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>próximas citas</div>
-          {tl.upcoming.map(ev=><UpcomingRow key={ev.id} ev={ev} family={family} showPerson={showPerson} onOpen={open}/>)}
+      <div style={{background:"#1a1a1a",borderRadius:12,padding:"8px 12px",marginBottom:6,flex:"none",display:"flex",gap:8,alignItems:"flex-start"}}>
+        <div style={{flex:1,minWidth:0}}>
+          {activeLines.length>0
+            ?activeLines.map(ill=>{
+              const cfg = HAZARD_CONFIG[ill.hazardLevel||"CLEAR"]||HAZARD_CONFIG.CLEAR;
+              return <div key={ill.id} style={{fontFamily:F_SANS,fontSize:12,lineHeight:"18px",color:cfg.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                {cfg.emoji} {showPerson?nameOf(family,ill.personId)+" · ":""}{illnessLabel(kh,ill)} · día {daysInclusive(ill.start,today)}
+              </div>;
+            })
+            :<div style={{fontFamily:F_SANS,fontSize:12,lineHeight:"18px",color:"rgba(255,255,255,0.45)"}}>🟢 sin episodios activos</div>}
+          {sec.active.length>2&&<div style={{fontFamily:F_SANS,fontSize:10,lineHeight:"14px",color:"rgba(255,255,255,0.4)"}}>+{sec.active.length-2} más</div>}
+          <div style={{fontFamily:F_SANS,fontSize:12,lineHeight:"18px",color:"rgba(255,255,255,0.7)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+            {nextCita
+              ?`🗓️ ${fmtDay(nextCita.dk)}${nextCita.ev.startTime?" "+nextCita.ev.startTime:""} · ${showPerson?nameOf(family,nextCita.ev.personId)+" · ":""}${nextCita.ev.title}`
+              :<span style={{color:"rgba(255,255,255,0.4)"}}>🗓️ sin citas próximas</span>}
+          </div>
+          {suggest&&(
+            <div style={{display:"flex",alignItems:"center",gap:8,marginTop:4}}>
+              <span style={{flex:1,minWidth:0,fontFamily:F_SANS,fontSize:11,color:"#ffb74d"}}>⚠️ Nivel alto para {suggestName}: conviene ver a un médico</span>
+              <button onClick={()=>{setSheet({type:"cita",personId:suggest.personId,date:today});setSuggest(null);}} style={{flex:"none",fontFamily:F_SANS,fontSize:10,background:"#ffb74d",border:"none",borderRadius:6,padding:"4px 8px",color:"#111",cursor:"pointer"}}>agendar cita</button>
+              <button onClick={()=>setSuggest(null)} aria-label="descartar" style={{flex:"none",background:"transparent",border:"none",color:"rgba(255,255,255,0.4)",fontSize:16,cursor:"pointer",lineHeight:1,padding:0}}>×</button>
+            </div>
+          )}
         </div>
-      )}
+        <div style={{display:"flex",flexDirection:"column",gap:4,flex:"none"}}>
+          {filterId&&<button onClick={()=>{setSelId(filterId);setModal("perfil");}} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:6,padding:"3px 8px",fontFamily:F_SANS,fontSize:11,color:"rgba(255,255,255,0.8)",cursor:"pointer"}}>♾️ ficha</button>}
+          <button onClick={()=>setModal("resumen")} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:6,padding:"3px 8px",fontFamily:F_SANS,fontSize:11,color:"rgba(255,255,255,0.8)",cursor:"pointer"}}>📄 resumen</button>
+        </div>
+      </div>
 
-      {tl.items.length>0&&<div style={{fontFamily:F_SANS,fontSize:9,color:"#aaa",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>historial</div>}
-      {tl.items.map(it=>it.kind==="illness"
-        ?<IllnessCard key={it.ev.id} kh={kh} family={family} item={it} today={today} showPerson={showPerson}
-            onOpen={open} onClose={closeEpisode} onMissed={setMissed} onDelete={ill=>persist(deleteEvent(kh,ill.id))}/>
-        :<LooseRow key={it.ev.id} ev={it.ev} family={family} showPerson={showPerson} onOpen={open}/>)}
+      <div ref={bodyRef} data-expandido={open?"true":"false"} style={{flex:"1 1 0",minHeight:0,overflowY:open?"auto":"hidden",overflowX:"hidden"}}>
+        {SECTIONS.map(sc=>(
+          <div key={sc.id}>
+            <SectionRow sec={sc} summary={summaries[sc.id]} open={open===sc.id} onToggle={()=>toggle(sc.id)}/>
+            {open===sc.id&&(
+              <div style={{padding:"4px 2px 10px"}}>
+                {sc.id==="episodios"&&(sec.illnesses.length
+                  ?sec.illnesses.map(ill=><IllnessCard key={ill.id} kh={kh} family={family} item={sec.items.find(x=>x.ev.id===ill.id)||{ev:ill,children:[]}} today={today} showPerson={showPerson}
+                      onOpen={openEv} onClose={closeEpisode} onMissed={setMissed} onDelete={x=>persist(deleteEvent(kh,x.id))}/>)
+                  :<div style={{padding:"14px 0",textAlign:"center",fontFamily:F_HAND,fontSize:16,color:"#ccc"}}>sin episodios</div>)}
+                {sc.id==="citas"&&(sec.upcoming.length
+                  ?sec.upcoming.map(x=><UpcomingRow key={x.ev.id} ev={x.ev} dk={x.dk} family={family} showPerson={showPerson} onOpen={openEv}/>)
+                  :<div style={{padding:"14px 0",textAlign:"center",fontFamily:F_HAND,fontSize:16,color:"#ccc"}}>sin citas agendadas</div>)}
+                {sc.id==="medicacion"&&(sec.meds.length
+                  ?sec.meds.map(m=><LooseRow key={m.id} ev={m} family={family} showPerson={showPerson} onOpen={openEv}/>)
+                  :<div style={{padding:"14px 0",textAlign:"center",fontFamily:F_HAND,fontSize:16,color:"#ccc"}}>sin registros</div>)}
+                {sc.id==="historial"&&(sec.months.length
+                  ?sec.months.map(g=>(
+                    <div key={g.month} style={{marginBottom:8}}>
+                      <div style={{fontFamily:F_SANS,fontSize:9,color:"#aaa",letterSpacing:2,textTransform:"uppercase",margin:"4px 0"}}>{MONTH_LONG[parseInt(g.month.slice(5),10)-1]} {g.month.slice(0,4)}</div>
+                      {g.items.map(it=><HistoryRow key={it.ev.id} it={it} label={it.kind==="illness"?`enfermedad · ${illnessLabel(kh,it.ev)}`:`${(TYPE_META[it.ev.type]||{label:it.ev.type}).label.toLowerCase()}${it.ev.title?" · "+it.ev.title:""}`} family={family} showPerson={showPerson} onOpen={openEv}/>)}
+                    </div>))
+                  :<div style={{padding:"14px 0",textAlign:"center",fontFamily:F_HAND,fontSize:16,color:"#ccc"}}>sin registros todavía</div>)}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
 
-      {tl.items.length===0&&tl.upcoming.length===0&&(
-        <div style={{padding:"40px 0",textAlign:"center",fontFamily:F_HAND,fontSize:17,color:"#ccc"}}>sin registros todavía</div>
-      )}
-      <div style={{height:32}}/>
+      <button onClick={()=>setSheet({personId:filterId})} style={{flex:"none",width:"100%",background:"#111",border:"none",borderRadius:10,padding:"11px",fontFamily:F_HAND,fontSize:18,color:"#fff",cursor:"pointer",marginTop:6}}>+ agregar</button>
 
       {sheet&&<EntrySheet key={sheet.ev?sheet.ev.id:"new"} init={sheet} family={family} kh={kh} today={today}
         onSave={handleSave} onDelete={handleDelete} onClose={()=>setSheet(null)}/>}
+
+      {modal==="persona"&&<ModalShell onClose={()=>setModal(selPerson?"perfil":null)}>
+        <PersonView kh={kh} persona={selPerson||null} onBack={()=>setModal(selPerson?"perfil":null)} onSave={savePerson} onDelete={deletePerson}/>
+      </ModalShell>}
+      {modal==="perfil"&&selPerson&&<ModalShell onClose={()=>setModal(null)}>
+        <PerfilView key={selId} persona={selPerson} perfil={(kh.profiles||{})[selId]||{}}
+          onBack={d=>{saveProfile(selId,d);setModal(null);}} onGrowth={d=>{saveProfile(selId,d);setModal("crecimiento");}}
+          onEditPerson={d=>{saveProfile(selId,d);setModal("persona");}}/>
+      </ModalShell>}
+      {modal==="crecimiento"&&selPerson&&<ModalShell onClose={()=>setModal("perfil")}>
+        <GrowthView key={selId} persona={selPerson} perfil={(kh.profiles||{})[selId]||{}} today={today}
+          onBack={()=>setModal("perfil")} onSave={e=>saveGrowth(selId,e)}/>
+      </ModalShell>}
+      {modal==="resumen"&&<ModalShell onClose={()=>setModal(null)}>
+        <ResumenView kh={kh} family={family} initialPersonId={filterId} today={today} onBack={()=>setModal(null)}/>
+      </ModalShell>}
     </div>
   );
+}
+
+// ── Ventana de ➕ Registrar y del pincel "Doctor" del calendario ──
+// Misma hoja y mismas acciones que la pestaña, pero abierta desde fuera de ella.
+export function SaludRegistro({kidsHealth, saveKidsHealth, dayData, updateDay, calMarks, saveCalMarks, initial, onClose, onGuardado}){
+  const today = localDateKey();
+  const kh = React.useMemo(()=>migrateKidsHealth(kidsHealth, today),[kidsHealth]);
+  const family = kh.family||[];
+  if(family.length===0){
+    return (
+      <ModalShell onClose={onClose} z={1100}>
+        <div style={{padding:"28px 22px",fontFamily:F_SANS,fontSize:13,color:"#555",lineHeight:1.5}}>Primero agrega a la familia desde la pestaña <b>Salud</b> (chip "+ persona").</div>
+      </ModalShell>
+    );
+  }
+  const actions = makeSaludActions({kh,persist:saveKidsHealth,dayData,updateDay,calMarks,saveCalMarks,isMedicalTask:esTareaMedica});
+  return <EntrySheet z={1100} types={["cita","diagnostico","sintoma"]} init={initial||{}} family={family} kh={kh} today={today}
+    onSave={args=>{actions.save(args); if(onGuardado) onGuardado("Salud registrada ✓"); onClose();}}
+    onDelete={()=>{}} onClose={onClose}/>;
 }
 
 export default SaludPage;

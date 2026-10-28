@@ -9,8 +9,8 @@ import { fmt, fmtFull, getHoliday, addDays } from "./dates.js";
 import { FamiliaInboxModal } from "./FamiliaInbox.jsx";
 import { leerDecisiones, guardarDecisiones, pendientes as familiaPendientes, fechasDeEvento, tareaDesdeEvento, registrarImportado, registrarIgnorado, podar as podarFamilia } from "./familiaInbox.js";
 import PokecriptoPage, { CARPETAS_DEFAULT } from "../modules/pokecripto/PokecriptoPage.jsx";
-import SaludPage from "../modules/salud/SaludPage.jsx";
-import { migrateKidsHealth, emptyKidsHealth } from "../modules/salud/saludModel.js";
+import SaludPage, { SaludRegistro } from "../modules/salud/SaludPage.jsx";
+import { migrateKidsHealth, emptyKidsHealth, effectiveMarks, citasOnDay, citaLine } from "../modules/salud/saludModel.js";
 import FadimanPage from "../modules/fadiman/FadimanPage.jsx";
 import RoutinesPage from "../modules/rutinas/RoutinesPage.jsx";
 import NutriaPage from "../modules/nutria/NutriaPage.jsx";
@@ -75,6 +75,7 @@ function AngstApp() {
   const [menuRegOpen, setMenuRegOpen] = useState(false);     // ➕ Registrar: gasto, ingesta, cartas
   const [ingestaOpen, setIngestaOpen] = useState(false);
   const [cartaOpen, setCartaOpen] = useState(false);
+  const [saludReg, setSaludReg] = useState(null);         // {type?, date?} → ventana de Salud (➕ Registrar / pincel Doctor)
   const [registroTipo, setRegistroTipo] = useState(null);   // "nota" | "tarea" | "compra" (ventana de texto de ➕ Registrar)
   const [regMsg, setRegMsg] = useState(null);                // leyenda temporal de los registros rápidos
   const regMsgTimer = useRef(null);
@@ -394,6 +395,9 @@ function AngstApp() {
   const [kidsHealth, setKidsHealth] = useState(emptyKidsHealth);
   const kidsHealthRef = useRef(null);
   if(kidsHealthRef.current===null) kidsHealthRef.current = emptyKidsHealth();
+  // Marcas para LEER: guardadas + 🏥 derivado de las citas de Salud (una sola fuente: la cita).
+  // Las escrituras (handleMark, autoMarkDoctor) siguen yendo al calMarks guardado.
+  const calMarksView = useMemo(()=>effectiveMarks(calMarks, kidsHealth.events), [calMarks, kidsHealth]);
   const [pokeInventario, setPokeInventario] = useState([]);
   const pokeInventarioRef = useRef([]);
   const [pokeCarpetas, setPokeCarpetas] = useState([...CARPETAS_DEFAULT]);
@@ -1276,6 +1280,14 @@ function AngstApp() {
   }
 
   function handleMark(key,val){
+    // Pincel "Doctor": un día sin marca guardada abre el formulario de cita (paciente, especialidad,
+    // hora) en vez de dejar una marca sin datos. Si el día ya tiene una marca guardada (de antes
+    // de las citas), tocar de nuevo la quita, como siempre.
+    if(val==="doctor"){
+      const raw = calMarksRef.current[key];
+      const arr = Array.isArray(raw)?raw:(raw?[raw]:[]);
+      if(!arr.includes("doctor")){ setSaludReg({type:"cita", date:key}); return; }
+    }
     setCalMarks(prev => {
       const cur = Array.isArray(prev[key]) ? prev[key] : (prev[key] ? [prev[key]] : []);
       let next;
@@ -1827,9 +1839,9 @@ function AngstApp() {
         });
       }}/>}
       {familiaOpen&&<FamiliaInboxModal items={familiaPend} onImport={familiaPasar} onIgnore={familiaIgnorar} onImportAll={familiaPasarTodos} onIgnoreAll={familiaIgnorarTodos} onRefresh={()=>cargarFamilia(true)} onClose={()=>setFamiliaOpen(false)} cargando={familiaBusy} mensaje={familiaMsg} generadoEn={familiaData?.generatedAt}/>}
-      {calOpen&&<CalendarModal weekStart={weekStart} marks={calMarks} onMark={handleMark} dayData={dayData} calMarks={calMarks} kidsHealth={kidsHealth} onWeekSelect={date=>{const dow=date.getDay();const mon=addDays(date,-(dow===0?6:dow-1));const diff=Math.round((mon-BASE_DATE)/(7*86400000));updateWeekOffset(diff);}} onClose={()=>setCalOpen(false)}/>}
+      {calOpen&&<CalendarModal weekStart={weekStart} marks={calMarksView} onMark={handleMark} dayData={dayData} calMarks={calMarksView} kidsHealth={kidsHealth} onWeekSelect={date=>{const dow=date.getDay();const mon=addDays(date,-(dow===0?6:dow-1));const diff=Math.round((mon-BASE_DATE)/(7*86400000));updateWeekOffset(diff);}} onClose={()=>setCalOpen(false)}/>}
 
-      <div className={"app"+((page===0||page===1)?" app-fit":"")}>
+      <div className={"app"+((page===0||page===1||page===4)?" app-fit":"")}>
         <div className="hdr">
           <div className="hdr-title" style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>angstapp</div>
           <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
@@ -1869,7 +1881,8 @@ function AngstApp() {
                       <button style={itemMenu} onClick={()=>{cerrarMenus();setRegistroTipo("compra");}}>🛒 Compra</button>
                       <button style={itemMenu} onClick={()=>{cerrarMenus();setIngestaOpen(true);}}>🍽️ Ingesta</button>
                       <button style={itemMenu} onClick={()=>{cerrarMenus();setGastoOpen(true);}}>💸 Gasto</button>
-                      <button style={{...itemMenu,borderBottom:"none"}} onClick={()=>{cerrarMenus();setCartaOpen(true);}}>🃏 Cartas</button>
+                      <button style={itemMenu} onClick={()=>{cerrarMenus();setCartaOpen(true);}}>🃏 Cartas</button>
+                      <button style={{...itemMenu,borderBottom:"none"}} onClick={()=>{cerrarMenus();setSaludReg({});}}>🩺 Salud</button>
                     </div>
                   )}
                 </div>
@@ -1965,7 +1978,7 @@ function AngstApp() {
                   todayKey={fmtFull(new Date())}
                   ahoraMin={new Date().getHours()*60+new Date().getMinutes()}
                   dayData={dayData}
-                  calMarks={calMarks}
+                  calMarks={calMarksView}
                   eventos={[...meleeMajors.map(ev=>({...ev,tipo:"melee",url:"https://www.start.gg/"})),...POKEMON_EVENTS.map(ev=>({...ev,tipo:"pokemon"})),...SC2_EVENTS.map(ev=>({...ev,tipo:"sc2"}))]}
                   stressFor={k=>computeStressScore(k, dayData, calMarks, kidsHealth)}
                   conNinosEn={k=>isWithKids(k, custody)}
@@ -1984,7 +1997,7 @@ function AngstApp() {
                 const flex  = day.tasks.filter(t=>!t.fixed);
                 const hol = getHoliday(dayDate);
                 const isMin = !!minimized[dateKey];
-                const dayMarkArr = Array.isArray(calMarks[dateKey])?calMarks[dateKey]:(calMarks[dateKey]?[calMarks[dateKey]]:[]);
+                const dayMarkArr = Array.isArray(calMarksView[dateKey])?calMarksView[dateKey]:(calMarksView[dateKey]?[calMarksView[dateKey]]:[]);
                 const MARK_COLORS = {social:"#4caf50",romantic:"#e91e8c",work:"#5c7a99",colegio:"#7b4fd4",doctor:"#e53935"};
                 const dowDay = new Date(dateKey+"T12:00:00").getDay();
                 const isWeekend = dowDay===0||dowDay===6;
@@ -2040,7 +2053,13 @@ function AngstApp() {
                           if(m==="romantic")return <span key={m} style={{fontSize:12}}>🌸</span>;
                           if(m==="work")return <span key={m} style={{fontSize:12}}>💼</span>;
                           if(m==="colegio")return <span key={m} style={{fontSize:12}}>🎒</span>;
-                          if(m==="doctor")return <span key={m} style={{fontSize:12}}>🏥</span>;
+                          if(m==="doctor"){
+                            // 🏥 + paciente · especialidad · hora de la(s) cita(s) de Salud (la cita es la fuente)
+                            const cs = citasOnDay(kidsHealth.events, dateKey);
+                            if(!cs.length) return <span key={m} style={{fontSize:12}}>🏥</span>;
+                            const nm = id => ((kidsHealth.family||[]).find(f=>f.id===id)||{}).name||id;
+                            return <span key={m} title={cs.map(c=>citaLine(c,nm(c.personId),true)).join("\n")} style={{fontSize:10,color:"#e53935",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:170}}>🏥 {citaLine(cs[0],nm(cs[0].personId))}{cs.length>1?` +${cs.length-1}`:""}</span>;
+                          }
                           if(m==="gym")return <svg key={m} width="13" height="13" viewBox="0 0 24 24" style={{display:"inline-block",verticalAlign:"middle"}}><rect x="1" y="9" width="3" height="6" rx="1" fill="#26a69a"/><rect x="4" y="7" width="2.5" height="10" rx="1" fill="#26a69a"/><rect x="6.5" y="10.5" width="11" height="3" rx="1" fill="#26a69a"/><rect x="17.5" y="7" width="2.5" height="10" rx="1" fill="#26a69a"/><rect x="20" y="9" width="3" height="6" rx="1" fill="#26a69a"/></svg>;
                           if(m==="melee")return <svg key={m} width="13" height="13" viewBox="0 0 24 24" style={{display:"inline-block",verticalAlign:"middle"}}><path fillRule="evenodd" fill="#ff6600" d="M12,1 A11,11,0,1,0,12,23 A11,11,0,1,0,12,1Z M1,14.5 H23 V16.5 H1Z M7.5,1 V23 H9.5 V1Z M8.5,12.5 A3,3,0,1,0,8.5,18.5 A3,3,0,1,0,8.5,12.5Z"/></svg>;
                           if(m==="pokemon")return <svg key={m} width="13" height="13" viewBox="0 0 12 12" style={{display:"inline-block"}}><circle cx="6" cy="6" r="5" fill="none" stroke="#ffcc00" strokeWidth="1.3"/><line x1="1" y1="6" x2="11" y2="6" stroke="#ffcc00" strokeWidth="1.3"/><circle cx="6" cy="6" r="1.8" fill="#ffcc00"/></svg>;
@@ -2315,6 +2334,9 @@ function AngstApp() {
         {gastoOpen&&<GastoModal arriba permanecer budgets={budgets} onSaveBudget={(...a)=>{updateBudgetForMonth(...a);avisarRegistro("Gasto registrado ✓");}} onClose={()=>setGastoOpen(false)}/>}
         {ingestaOpen&&<IngestaRapida nutriLog={nutriLog} saveNutriLog={guardarNutriLog} customFoods={customFoods} foodOverrides={foodOverrides}
           nutriDecks={nutriDecks} permanecer onClose={()=>setIngestaOpen(false)} onGuardado={avisarRegistro}/>}
+        {saludReg&&<SaludRegistro kidsHealth={kidsHealth} saveKidsHealth={saveKidsHealth} dayData={dayData} updateDay={updateDay} calMarks={calMarks}
+          saveCalMarks={(nm)=>{setCalMarks(nm);calMarksRef.current=nm;saveToStorage({calMarks:nm});}}
+          initial={saludReg} onClose={()=>setSaludReg(null)} onGuardado={avisarRegistro}/>}
         {registroTipo&&<RegistroRapido tipo={registroTipo} onNota={agregarNotaRapida} onTarea={agregarTareaRapida} compras={{hoy:fmtFull(new Date()), items:((dayData[fmtFull(new Date())]||{}).compras)||[], api:comprasApi, onPatch:(id,f)=>updateComprasItem(fmtFull(new Date()),id,f), onAdd:item=>agregarCompraEn(fmtFull(new Date()),item), onDelete:id=>quitarCompraEn(fmtFull(new Date()),id)}} onGuardado={avisarRegistro} onClose={()=>setRegistroTipo(null)}/>}
         {cartaOpen&&<AgregarCartaModal inventario={pokeInventario} carpetas={pokeCarpetas} priceCache={pokePriceCache}
           saveInventario={guardarInventario} permanecer onClose={()=>setCartaOpen(false)} onGuardado={avisarRegistro}/>}

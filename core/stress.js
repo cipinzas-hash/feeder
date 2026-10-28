@@ -1,3 +1,4 @@
+import { citasOnDay } from "../modules/salud/saludModel.js";
 const DOCTOR_KEYWORDS = ["pediatra","dentista","oftalmólogo","oftalmologo","psicólogo","psicologo","doctor","médico","medico","consulta","control médico","control medico","examen médico","examen medico","urgencia","vacuna","fonoaudiólogo","otorrino","dermatólogo","cardiólogo","neurólogo"];
 function esTareaMedica(text) {
   const txt = (text||"").toLowerCase();
@@ -20,7 +21,10 @@ function illnessEvents(kh) { return (kh.events||[]).filter(e=>e.type==="enfermed
 function computeStressScore(dk, dayData, calMarks, kidsHealth) {
   const d = dayData[dk];
   if(!d) return 0;
-  const marks = Array.isArray(calMarks[dk])?calMarks[dk]:(calMarks[dk]?[calMarks[dk]]:[]);
+  const storedMarks = Array.isArray(calMarks[dk])?calMarks[dk]:(calMarks[dk]?[calMarks[dk]]:[]);
+  // la marca "doctor" también se deriva de las citas de Salud (una sola vez, sin doble conteo)
+  const marks = (!storedMarks.includes("doctor") && citasOnDay((kidsHealth&&kidsHealth.events)||[], dk).length)
+    ? [...storedMarks,"doctor"] : storedMarks;
   const kh = kidsHealth||{};
 
   // Modelo viejo — días anteriores al 2026-04-28

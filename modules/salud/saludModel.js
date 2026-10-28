@@ -8,11 +8,13 @@
 //   sintoma     : sintomas[], temps[{t,v}], hazardLevel, note  (registro; parentId = enfermedad)
 //   medicamento : title, dosis?, freq?, end?, note?            (una toma, o un curso si trae end)
 //   tratamiento : title, dosis?, end?, note?
-//   cita        : title, medico?, repeatMonths?, markedDates[] (se proyecta al planner con healthEventId)
+//   diagnostico : title (el diagnóstico), medico? (quién lo dio), note?   (parentId = enfermedad, opcional)
+//   cita        : title (= especialidad), medico?, repeatMonths?   (se proyecta al planner con healthEventId;
+//                 la marca 🏥 del calendario se DERIVA de las citas — ver effectiveMarks)
 // La clave del estado sigue siendo `kidsHealth` (export/import y resto de App.jsx no cambian).
 
 export const SCHEMA_VERSION = 2;
-export const EVENT_TYPES = ["enfermedad","sintoma","medicamento","tratamiento","cita"];
+export const EVENT_TYPES = ["enfermedad","sintoma","diagnostico","medicamento","tratamiento","cita"];
 
 export const SYMPTOM_ZONES = [
   { id:"temp", label:"Temperatura", symptoms:[
@@ -257,44 +259,65 @@ function citaTasks(ev, personName){
 }
 // Sincroniza una cita con el planner. prevEv = versión anterior (o null si es nueva),
 // nextEv = versión nueva (o null si se elimina). `events` = el resto de los eventos
-// (sin esta cita), para no quitar un marcador "doctor" que otra cita sigue usando.
+// (sin esta cita). La marca 🏥 ya no se escribe: se deriva de las citas (effectiveMarks).
+// Solo se limpian marcas guardadas que esta cita dejó antes (markedDates de la versión
+// anterior de Salud, o la que autoMarkDoctor puso por el texto de su tarea) cuando ya
+// nada las justifica. isMedicalTask(texto) = esTareaMedica de core/stress.js.
 // Devuelve {ev, dayPatches:{dk:tasks[]}, marks}; marks=null si no cambian.
-export function planCita({events, dayData, marks, prevEv, nextEv, personName}){
+export function planCita({events, dayData, marks, prevEv, nextEv, personName, isMedicalTask}){
+  const isMed = isMedicalTask || (()=>false);
   const patches = {};
   const tasksOf = dk => patches[dk] || ((dayData&&dayData[dk]&&dayData[dk].tasks)||[]);
-  // 1) quitar tareas ligadas a la versión anterior
   if(prevEv){
     Object.keys(dayData||{}).forEach(dk=>{
       const t = (dayData[dk].tasks||[]);
       if(t.some(x=>x.healthEventId===prevEv.id)) patches[dk] = t.filter(x=>x.healthEventId!==prevEv.id);
     });
   }
-  // 2) agregar las nuevas
+  if(nextEv) citaTasks(nextEv, personName).forEach(({dk,task})=>{ patches[dk] = [...tasksOf(dk), task]; });
   let marksNext = {...(marks||{})};
   let marksChanged = false;
-  let markedDates = [];
-  if(nextEv){
-    citaTasks(nextEv, personName).forEach(({dk,task})=>{ patches[dk] = [...tasksOf(dk), task]; });
-    citaDates(nextEv).forEach(dk=>{
-      const cur = norm(marksNext[dk]);
-      if(!cur.includes("doctor")){ marksNext[dk]=[...cur,"doctor"]; marksChanged=true; markedDates.push(dk); }
-      else if((prevEv&&prevEv.markedDates||[]).includes(dk)) markedDates.push(dk);
-    });
-  }
-  // 3) soltar marcadores que esta cita puso y nadie más usa
   if(prevEv){
-    const keep = new Set(markedDates);
-    (prevEv.markedDates||[]).forEach(dk=>{
-      if(keep.has(dk)) return;
-      const usedByOther = (events||[]).some(e=>e.type==="cita"&&e.id!==prevEv.id&&citaDates(e).includes(dk));
-      if(usedByOther) return;
+    const keepDates = new Set(nextEv?citaDates(nextEv):[]);
+    const prevText = citaTasks(prevEv, personName).map(x=>x.task.text);
+    const autoLikely = prevText.some(isMed);
+    const cand = new Set([...(prevEv.markedDates||[]), ...(autoLikely?citaDates(prevEv):[])]);
+    cand.forEach(dk=>{
+      if(keepDates.has(dk)) return;
+      if((events||[]).some(e=>e.type==="cita"&&e.id!==prevEv.id&&citaDates(e).includes(dk))) return;
+      if(!norm(marksNext[dk]).includes("doctor")) return;
+      if(tasksOf(dk).some(t=>isMed(t.text))) return;
       const cur = norm(marksNext[dk]).filter(x=>x!=="doctor");
       if(cur.length) marksNext[dk]=cur; else delete marksNext[dk];
       marksChanged = true;
     });
   }
-  return {ev: nextEv?{...nextEv, markedDates}:null, dayPatches:patches, marks:marksChanged?marksNext:null};
+  return {ev: nextEv?{...nextEv, markedDates:[]}:null, dayPatches:patches, marks:marksChanged?marksNext:null};
 }
+
+// ── Marca 🏥 derivada de las citas ──
+export function citasOnDay(events, dk){
+  return (events||[]).filter(e=>e.type==="cita"&&citaDates(e).includes(dk))
+    .sort((a,b)=>(a.startTime||"").localeCompare(b.startTime||""));
+}
+// calMarks guardado ∪ días con cita. Para LEER (calendario, semana, dashboard, estrés);
+// las escrituras siguen yendo al calMarks guardado.
+export function effectiveMarks(calMarks, events){
+  const out = {...(calMarks||{})};
+  (events||[]).forEach(e=>{
+    if(e.type!=="cita") return;
+    citaDates(e).forEach(dk=>{
+      const cur = norm(out[dk]);
+      if(!cur.includes("doctor")) out[dk]=[...cur,"doctor"];
+    });
+  });
+  return out;
+}
+export function citaLine(ev, personName, withMedico){
+  return [personName, ev.title, ev.startTime, withMedico&&ev.medico?("— "+ev.medico):null].filter(Boolean).join(" · ").replace(" · — "," — ");
+}
+// Próxima fecha de una cita (>= hoy), considerando su repetición; null si ya pasó entera.
+export function nextCitaDate(ev, today){ return citaDates(ev).find(d=>d>=today)||null; }
 
 // ── Migración schema v1 → v2 (explícita y no destructiva) ──
 // v1 guardaba kidsHealth.episodes[] (con days[]), dailyLog{} y profiles[p].citasRegulares[].
@@ -369,6 +392,8 @@ export function buildTimeline(events, {personId, today}){
 
 export function illnessLabel(kh, ill){
   if(ill.title) return ill.title;
+  const dx = childrenOf(kh.events||[], ill.id).filter(e=>e.type==="diagnostico"&&e.title).pop();
+  if(dx) return dx.title;
   const logs = childrenOf(kh.events||[], ill.id).filter(e=>e.type==="sintoma");
   const ids = [...new Set(logs.flatMap(l=>l.sintomas||[]))].filter(id=>!FEVER_IDS.includes(id));
   if(ids.length) return ids.slice(0,2).map(symptomLabel).join(", ");
@@ -377,7 +402,7 @@ export function illnessLabel(kh, ill){
 
 // Línea corta de un evento (búsqueda global, listados)
 export function eventLine(ev){
-  const bits = {enfermedad:"enfermedad", sintoma:"síntomas", medicamento:"medicamento", tratamiento:"tratamiento", cita:"cita"};
+  const bits = {enfermedad:"enfermedad", sintoma:"síntomas", diagnostico:"diagnóstico", medicamento:"medicamento", tratamiento:"tratamiento", cita:"cita"};
   return `${bits[ev.type]||ev.type}${ev.title?" "+ev.title:""} · ${ev.start||""}`;
 }
 export function eventMatches(ev, q){
@@ -426,6 +451,7 @@ export function buildSummary({person, profile, events, from, to, today}){
         L.push(`  - ${shortDate(l.start)}${l.startTime?" "+l.startTime:""}: ${parts.join(" · ")||"sin detalle"}`);
       });
     }
+    logs.filter(l=>l.type==="diagnostico").forEach(d=>L.push(`  Diagnóstico (${shortDate(d.start)}): ${d.title}${d.medico?" — "+d.medico:""}${d.note?" · "+d.note:""}`));
     const meds = logs.filter(l=>l.type==="medicamento"||l.type==="tratamiento");
     if(meds.length){
       L.push("  Medicación y tratamientos:");
@@ -438,11 +464,36 @@ export function buildSummary({person, profile, events, from, to, today}){
   const ids = new Set(ills.map(i=>i.id));
   const loose = evs.filter(e=>e.type!=="enfermedad"&&e.type!=="sintoma"&&!(e.parentId&&ids.has(e.parentId))&&e.start>=from&&e.start<=to).sort(byStartAsc);
   const meds = loose.filter(e=>e.type==="medicamento"||e.type==="tratamiento");
+  const dxs = loose.filter(e=>e.type==="diagnostico");
   const citas = loose.filter(e=>e.type==="cita");
   if(meds.length){ L.push("", "MEDICACIÓN Y TRATAMIENTOS (fuera de episodios)");
     meds.forEach(m=>L.push(`- ${m.title}${m.dosis?" "+m.dosis:""}${m.freq?" ("+m.freq+")":""}: ${m.start}${m.end?" → "+m.end:""}${m.note?" · "+m.note:""}`)); }
+  if(dxs.length){ L.push("", "DIAGNÓSTICOS (fuera de episodios)");
+    dxs.forEach(d=>L.push(`- ${d.start}: ${d.title}${d.medico?" — "+d.medico:""}${d.note?" · "+d.note:""}`)); }
   if(citas.length){ L.push("", "CITAS");
     citas.forEach(c=>L.push(`- ${c.start}${c.startTime?" "+c.startTime:""} · ${c.title}${c.medico?" — "+c.medico:""}`)); }
   if(!ills.length&&!loose.length) L.push("", "Sin registros en el período.");
   return L.join("\n");
+}
+
+// ── Secciones de la pantalla principal (colapsada) ──
+// summary de cada fila-encabezado + contenido para cuando se expande.
+export function buildSections(events, {personId, today}){
+  const evs = (events||[]).filter(e=>!personId||e.personId===personId);
+  const illnesses = evs.filter(e=>e.type==="enfermedad").sort(byStartDesc);
+  const active = illnesses.filter(e=>!e.end);
+  const citas = evs.filter(e=>e.type==="cita");
+  const upcoming = citas.map(ev=>({ev, dk:nextCitaDate(ev,today)})).filter(x=>x.dk)
+    .sort((a,b)=>(a.dk+" "+(a.ev.startTime||"")).localeCompare(b.dk+" "+(b.ev.startTime||"")));
+  const meds = evs.filter(e=>e.type==="medicamento"||e.type==="tratamiento").sort(byStartDesc);
+  const vigentes = meds.filter(m=>m.end&&m.end>=today);
+  const tl = buildTimeline(events,{personId,today});
+  const months = [];
+  tl.items.forEach(it=>{
+    const mk = it.ev.start.slice(0,7);
+    let g = months[months.length-1];
+    if(!g||g.month!==mk){ g={month:mk,items:[]}; months.push(g); }
+    g.items.push(it);
+  });
+  return {illnesses, active, upcoming, meds, vigentes, months, historyCount:tl.items.length, items:tl.items};
 }

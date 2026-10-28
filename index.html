@@ -54,6 +54,536 @@ var __angst = (() => {
     default: () => App_default
   });
 
+  // modules/salud/saludModel.js
+  var SCHEMA_VERSION = 2;
+  var SYMPTOM_ZONES = [
+    { id: "temp", label: "Temperatura", symptoms: [
+      { id: "temp_sub38", label: "Fiebre leve <38\xB0", peso: 1, flag: null },
+      { id: "temp_38_39", label: "Fiebre 38\u201339\xB0", peso: 2, flag: null },
+      { id: "temp_39_40", label: "Fiebre 39\u201340\xB0", peso: 3, flag: null },
+      { id: "temp_sobre40", label: "Fiebre >40\xB0", peso: 0, flag: "WARNING" },
+      { id: "escalofrios", label: "Escalofr\xEDos", peso: 1, flag: null }
+    ] },
+    { id: "resp", label: "Respiratorio", symptoms: [
+      { id: "tos_seca", label: "Tos seca", peso: 1, flag: null },
+      { id: "tos_flema", label: "Tos con flema", peso: 3, flag: null },
+      { id: "congestion", label: "Congesti\xF3n nasal", peso: 1, flag: null },
+      { id: "goteo", label: "Goteo nasal", peso: 1, flag: null },
+      { id: "dif_resp_leve", label: "Dificultad respiratoria leve", peso: 2, flag: null },
+      { id: "dif_resp_grave", label: "Dificultad respiratoria grave", peso: 0, flag: "CRITICAL" },
+      { id: "sibilancias", label: "Sibilancias/silbidos", peso: 2, flag: null }
+    ] },
+    { id: "garganta", label: "Garganta y boca", symptoms: [
+      { id: "garg_leve", label: "Dolor de garganta leve", peso: 1, flag: null },
+      { id: "garg_intensa", label: "Dolor de garganta intenso", peso: 2, flag: null },
+      { id: "ronquera", label: "Ronquera", peso: 1, flag: null },
+      { id: "dif_tragar", label: "Dificultad para tragar", peso: 2, flag: null },
+      { id: "aftas", label: "Aftas / llagas", peso: 1, flag: null }
+    ] },
+    { id: "digest", label: "Digestivo", symptoms: [
+      { id: "nauseas", label: "N\xE1useas", peso: 1, flag: null },
+      { id: "vomito", label: "V\xF3mito aislado", peso: 2, flag: null },
+      { id: "vomito_rep", label: "V\xF3mito repetido (3+)", peso: 3, flag: null },
+      { id: "diarrea", label: "Diarrea", peso: 2, flag: null },
+      { id: "diarrea_sangre", label: "Diarrea con sangre", peso: 3, flag: null },
+      { id: "dolor_abd_leve", label: "Dolor abdominal leve", peso: 1, flag: null },
+      { id: "dolor_abd_intenso", label: "Dolor abdominal intenso", peso: 3, flag: null },
+      { id: "inapetencia", label: "Inapetencia", peso: 1, flag: null }
+    ] },
+    { id: "oido_ojos", label: "O\xEDdo y ojos", symptoms: [
+      { id: "dolor_oido", label: "Dolor de o\xEDdo", peso: 2, flag: null },
+      { id: "sec_oido", label: "Secreci\xF3n de o\xEDdo", peso: 2, flag: null },
+      { id: "ojo_rojo", label: "Ojo rojo", peso: 1, flag: null },
+      { id: "conjuntivitis", label: "Conjuntivitis", peso: 2, flag: null }
+    ] },
+    { id: "piel", label: "Piel", symptoms: [
+      { id: "erupcion", label: "Erupci\xF3n", peso: 1, flag: null },
+      { id: "erupcion_fiebre", label: "Erupci\xF3n + fiebre", peso: 0, flag: "WARNING" },
+      { id: "urticaria", label: "Urticaria", peso: 1, flag: null },
+      { id: "manchas", label: "Manchas", peso: 1, flag: null },
+      { id: "palidez", label: "Palidez marcada", peso: 2, flag: null }
+    ] },
+    { id: "general", label: "General", symptoms: [
+      { id: "cansancio", label: "Cansancio", peso: 1, flag: null },
+      { id: "irritabilidad", label: "Irritabilidad marcada", peso: 1, flag: null },
+      { id: "decaimiento", label: "Decaimiento general", peso: 2, flag: null },
+      { id: "sangrado_anormal", label: "Sangrado anormal", peso: 0, flag: "WARNING" }
+    ] },
+    { id: "dolor", label: "Dolor", symptoms: [
+      { id: "dolor_muscular", label: "Dolor muscular", peso: 1, flag: null },
+      { id: "dolor_articular", label: "Dolor articular", peso: 2, flag: null },
+      { id: "dolor_espalda", label: "Dolor de espalda", peso: 1, flag: null },
+      { id: "dolor_cabeza", label: "Dolor de cabeza", peso: 2, flag: null },
+      { id: "dolor_orinar", label: "Dolor al orinar", peso: 2, flag: null }
+    ] },
+    { id: "neuro_grave", label: "Neurol\xF3gico grave", symptoms: [
+      { id: "convulsion", label: "Convulsi\xF3n", peso: 0, flag: "CRITICAL" },
+      { id: "rigidez_nuca", label: "Rigidez de nuca", peso: 0, flag: "CRITICAL" },
+      { id: "perdida_conc", label: "P\xE9rdida de consciencia", peso: 0, flag: "CRITICAL" },
+      { id: "dif_despertar", label: "Dificultad para despertar", peso: 0, flag: "CRITICAL" }
+    ] }
+  ];
+  var ALL_SYMPTOMS = SYMPTOM_ZONES.flatMap((z) => z.symptoms);
+  function symptomLabel(id) {
+    const s = ALL_SYMPTOMS.find((x) => x.id === id);
+    return s ? s.label : id;
+  }
+  var FEVER_IDS = ["temp_sub38", "temp_38_39", "temp_39_40", "temp_sobre40"];
+  function localDateKey(d) {
+    d = d || /* @__PURE__ */ new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function localTimeKey(d) {
+    d = d || /* @__PURE__ */ new Date();
+    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+  function parseKey(dk) {
+    const [y, m, d] = dk.split("-").map(Number);
+    return new Date(y, m - 1, d, 12, 0, 0);
+  }
+  function addDaysKey(dk, n) {
+    const d = parseKey(dk);
+    d.setDate(d.getDate() + n);
+    return localDateKey(d);
+  }
+  function addMonthsKey(dk, n) {
+    const [y, m, day] = dk.split("-").map(Number);
+    const t = new Date(y, m - 1 + n, 1, 12, 0, 0);
+    const last = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
+    t.setDate(Math.min(day, last));
+    return localDateKey(t);
+  }
+  function daysInclusive(a, b) {
+    return Math.round((parseKey(b) - parseKey(a)) / 864e5) + 1;
+  }
+  function calcAge(dob) {
+    const b = parseKey(dob), t = /* @__PURE__ */ new Date();
+    let a = t.getFullYear() - b.getFullYear();
+    if (t.getMonth() < b.getMonth() || t.getMonth() === b.getMonth() && t.getDate() < b.getDate()) a--;
+    return a;
+  }
+  function personIdFor(name, family) {
+    const base = String(name || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "") || "persona";
+    let id = base, n = 2;
+    while ((family || []).some((p) => p.id === id)) id = base + n++;
+    return id;
+  }
+  function addPerson(kh, data) {
+    const id = personIdFor(data.name, kh.family);
+    const person = { id, name: data.name.trim(), dob: data.dob, icon: data.icon || "\u{1F642}", sex: data.sex || "m" };
+    return { kh: { ...kh, family: [...kh.family || [], person] }, id };
+  }
+  function updatePerson(kh, id, data) {
+    return { ...kh, family: (kh.family || []).map((p) => p.id === id ? { ...p, name: data.name.trim(), dob: data.dob, icon: data.icon || "\u{1F642}", sex: data.sex || "m" } : p) };
+  }
+  function personEventCount(kh, id) {
+    return (kh.events || []).filter((e) => e.personId === id).length;
+  }
+  function removePerson(kh, id) {
+    if (personEventCount(kh, id) > 0) return null;
+    const profiles = { ...kh.profiles || {} };
+    delete profiles[id];
+    return { ...kh, family: (kh.family || []).filter((p) => p.id !== id), profiles };
+  }
+  function tempScore(temps) {
+    const vals = (temps || []).map((t) => parseFloat(t.v)).filter((v2) => !isNaN(v2));
+    if (!vals.length) return 0;
+    const v = Math.max(...vals);
+    if (v >= 40) return 6;
+    if (v >= 39) return 3;
+    if (v >= 38) return 2;
+    if (v >= 37.5) return 1;
+    return 0;
+  }
+  function calcHazard(sintomas, temps) {
+    let score = 0;
+    for (const sId of sintomas || []) {
+      const s = ALL_SYMPTOMS.find((x) => x.id === sId);
+      if (!s) continue;
+      if (s.flag === "CRITICAL") return "CRITICAL";
+      if (s.flag === "WARNING") {
+        score = Math.max(score, 6);
+        continue;
+      }
+      score += s.peso;
+    }
+    if (!(sintomas || []).some((id) => FEVER_IDS.includes(id))) score += tempScore(temps);
+    if (score <= 0) return "CLEAR";
+    if (score <= 2) return "WATCH";
+    if (score <= 5) return "ADVISORY";
+    return "WARNING";
+  }
+  function emptyKidsHealth() {
+    return { schemaVersion: SCHEMA_VERSION, family: [], profiles: {}, events: [] };
+  }
+  function sortKey(ev) {
+    return (ev.start || "") + " " + (ev.startTime || "00:00");
+  }
+  var byStartAsc = (a, b) => sortKey(a).localeCompare(sortKey(b));
+  var byStartDesc = (a, b) => sortKey(b).localeCompare(sortKey(a));
+  function activeIllness(events, personId) {
+    return (events || []).filter((e) => e.type === "enfermedad" && e.personId === personId && !e.end).sort(byStartDesc)[0] || null;
+  }
+  function childrenOf(events, parentId) {
+    return (events || []).filter((e) => e.parentId === parentId && e.type !== "enfermedad").sort(byStartAsc);
+  }
+  function recomputeIllness(events, illId) {
+    const logs = events.filter((e) => e.parentId === illId && e.type === "sintoma").sort(byStartAsc);
+    if (!logs.length) return events;
+    const last = logs[logs.length - 1];
+    return events.map((e) => e.id === illId ? { ...e, hazardLevel: last.hazardLevel || "CLEAR" } : e);
+  }
+  function upsertEvent(kh, ev) {
+    const events = kh.events || [];
+    const exists = events.some((e) => e.id === ev.id);
+    let next = exists ? events.map((e) => e.id === ev.id ? ev : e) : [...events, ev];
+    if (ev.type === "sintoma" && ev.parentId) next = recomputeIllness(next, ev.parentId);
+    return { ...kh, events: next };
+  }
+  function deleteEvent(kh, id) {
+    const events = kh.events || [];
+    const ev = events.find((e) => e.id === id);
+    if (!ev) return kh;
+    let next = events.filter((e) => e.id !== id && e.parentId !== id);
+    if (ev.parentId && ev.type === "sintoma") next = recomputeIllness(next, ev.parentId);
+    return { ...kh, events: next };
+  }
+  function closeIllness(kh, id, endDate) {
+    return { ...kh, events: (kh.events || []).map((e) => e.id === id ? { ...e, end: endDate } : e) };
+  }
+  function addSymptomEntry(kh, form, ids) {
+    const events = kh.events || [];
+    const temps = (form.temps || []).filter((t) => !isNaN(parseFloat(t.v))).map((t) => ({ t: t.t || null, v: parseFloat(t.v) }));
+    const hazard = calcHazard(form.sintomas, temps);
+    let ill = activeIllness(events, form.personId);
+    let created = false;
+    let next = [...events];
+    if (!ill) {
+      ill = {
+        id: ids.illness,
+        personId: form.personId,
+        type: "enfermedad",
+        start: form.date,
+        end: null,
+        title: "",
+        hazardLevel: hazard,
+        missedDays: 0
+      };
+      next = [...next, ill];
+      created = true;
+    } else if (form.date < ill.start) {
+      next = next.map((e) => e.id === ill.id ? { ...e, start: form.date } : e);
+      ill = { ...ill, start: form.date };
+    }
+    const log = {
+      id: ids.entry,
+      personId: form.personId,
+      type: "sintoma",
+      parentId: ill.id,
+      start: form.date,
+      startTime: form.time || null,
+      sintomas: form.sintomas || [],
+      temps,
+      hazardLevel: hazard,
+      note: form.note || ""
+    };
+    next = [...next, log];
+    next = recomputeIllness(next, ill.id);
+    return {
+      kh: { ...kh, events: next },
+      illnessId: ill.id,
+      doctorMarkDate: created && (hazard === "WARNING" || hazard === "CRITICAL") ? form.date : null
+    };
+  }
+  var norm = (m) => Array.isArray(m) ? m : m ? [m] : [];
+  function citaDates(ev, count) {
+    const n = ev.repeatMonths ? count || 4 : 1;
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(i === 0 ? ev.start : addMonthsKey(ev.start, (ev.repeatMonths || 0) * i));
+    return out;
+  }
+  function citaTasks(ev, personName) {
+    const [h, m] = (ev.startTime || "09:00").split(":").map(Number);
+    const text = `${ev.title || "cita"} ${personName || ""} \u2014 ${ev.medico || ""}`.replace(/\s+/g, " ").replace(/ — $/, "").trim();
+    const out = [];
+    citaDates(ev).forEach((dk, i) => {
+      out.push({ dk, task: { id: `${ev.id}_${i}`, text, fixed: true, done: false, deadline: { h, m }, healthEventId: ev.id } });
+      out.push({ dk: addDaysKey(dk, -1), task: { id: `${ev.id}_${i}p`, text: `preparar: ${text}`, fixed: false, done: false, deadline: { h: 21, m: 30 }, healthEventId: ev.id } });
+    });
+    return out;
+  }
+  function planCita({ events, dayData, marks, prevEv, nextEv, personName, isMedicalTask }) {
+    const isMed = isMedicalTask || (() => false);
+    const patches = {};
+    const tasksOf = (dk) => patches[dk] || (dayData && dayData[dk] && dayData[dk].tasks || []);
+    if (prevEv) {
+      Object.keys(dayData || {}).forEach((dk) => {
+        const t = dayData[dk].tasks || [];
+        if (t.some((x) => x.healthEventId === prevEv.id)) patches[dk] = t.filter((x) => x.healthEventId !== prevEv.id);
+      });
+    }
+    if (nextEv) citaTasks(nextEv, personName).forEach(({ dk, task }) => {
+      patches[dk] = [...tasksOf(dk), task];
+    });
+    let marksNext = { ...marks || {} };
+    let marksChanged = false;
+    if (prevEv) {
+      const keepDates = new Set(nextEv ? citaDates(nextEv) : []);
+      const prevText = citaTasks(prevEv, personName).map((x) => x.task.text);
+      const autoLikely = prevText.some(isMed);
+      const cand = /* @__PURE__ */ new Set([...prevEv.markedDates || [], ...autoLikely ? citaDates(prevEv) : []]);
+      cand.forEach((dk) => {
+        if (keepDates.has(dk)) return;
+        if ((events || []).some((e) => e.type === "cita" && e.id !== prevEv.id && citaDates(e).includes(dk))) return;
+        if (!norm(marksNext[dk]).includes("doctor")) return;
+        if (tasksOf(dk).some((t) => isMed(t.text))) return;
+        const cur = norm(marksNext[dk]).filter((x) => x !== "doctor");
+        if (cur.length) marksNext[dk] = cur;
+        else delete marksNext[dk];
+        marksChanged = true;
+      });
+    }
+    return { ev: nextEv ? { ...nextEv, markedDates: [] } : null, dayPatches: patches, marks: marksChanged ? marksNext : null };
+  }
+  function citasOnDay(events, dk) {
+    return (events || []).filter((e) => e.type === "cita" && citaDates(e).includes(dk)).sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""));
+  }
+  function effectiveMarks(calMarks, events) {
+    const out = { ...calMarks || {} };
+    (events || []).forEach((e) => {
+      if (e.type !== "cita") return;
+      citaDates(e).forEach((dk) => {
+        const cur = norm(out[dk]);
+        if (!cur.includes("doctor")) out[dk] = [...cur, "doctor"];
+      });
+    });
+    return out;
+  }
+  function citaLine(ev, personName, withMedico) {
+    return [personName, ev.title, ev.startTime, withMedico && ev.medico ? "\u2014 " + ev.medico : null].filter(Boolean).join(" \xB7 ").replace(" \xB7 \u2014 ", " \u2014 ");
+  }
+  function nextCitaDate(ev, today) {
+    return citaDates(ev).find((d) => d >= today) || null;
+  }
+  function migrateKidsHealth(kh, today) {
+    if (kh && kh.schemaVersion >= SCHEMA_VERSION) return kh;
+    kh = kh || {};
+    today = today || localDateKey();
+    const events = [];
+    (kh.episodes || []).forEach((ep) => {
+      if (!ep || !ep.id || !ep.startDate) return;
+      const illId = "ep_" + ep.id;
+      events.push({
+        id: illId,
+        personId: ep.kidId,
+        type: "enfermedad",
+        start: ep.startDate,
+        end: ep.endDate || null,
+        title: "",
+        hazardLevel: ep.hazardLevel || "CLEAR",
+        missedDays: ep.missedDays || 0,
+        note: ep.notas || ""
+      });
+      const days = ep.days || [];
+      days.forEach((d) => {
+        const v = parseFloat(d.temperatura);
+        events.push({
+          id: `sx_${ep.id}_${d.date}`,
+          personId: ep.kidId,
+          type: "sintoma",
+          parentId: illId,
+          start: d.date,
+          startTime: null,
+          sintomas: d.sintomas || [],
+          temps: isNaN(v) ? [] : [{ t: null, v }],
+          hazardLevel: d.hazardLevel || calcHazard(d.sintomas),
+          note: d.nota || ""
+        });
+      });
+      if (!days.length && (ep.lastSintomas || []).length) {
+        events.push({
+          id: `sx_${ep.id}_${ep.startDate}`,
+          personId: ep.kidId,
+          type: "sintoma",
+          parentId: illId,
+          start: ep.startDate,
+          startTime: null,
+          sintomas: ep.lastSintomas,
+          temps: [],
+          hazardLevel: ep.hazardLevel || calcHazard(ep.lastSintomas),
+          note: ""
+        });
+      }
+    });
+    const profiles = {};
+    const legacyCitas = {};
+    Object.entries(kh.profiles || {}).forEach(([pid, p]) => {
+      const { citasRegulares, ...rest } = p || {};
+      profiles[pid] = rest;
+      if ((citasRegulares || []).length) {
+        legacyCitas[pid] = citasRegulares;
+        citasRegulares.forEach((c, i) => {
+          const freq = c.frecMeses || 6;
+          const created = new Date(parseInt(c.id, 10) || Date.now());
+          let dk = localDateKey(created);
+          let guard = 0;
+          while (dk < today && guard++ < 400) dk = addMonthsKey(dk, freq);
+          events.push({
+            id: `ct_${pid}_${c.id || i}`,
+            personId: pid,
+            type: "cita",
+            title: c.tipo || "cita",
+            medico: c.medico || "",
+            start: dk,
+            startTime: c.hora || "09:00",
+            repeatMonths: freq,
+            markedDates: [],
+            legacy: true
+          });
+        });
+      }
+    });
+    const hadLegacy = (kh.episodes || []).length || Object.keys(kh.dailyLog || {}).length || Object.keys(legacyCitas).length;
+    const out = { schemaVersion: SCHEMA_VERSION, family: kh.family || [], profiles, events };
+    if (hadLegacy) out.legacy = { episodes: kh.episodes || [], dailyLog: kh.dailyLog || {}, citasRegulares: legacyCitas, migratedAt: today };
+    return out;
+  }
+  function buildTimeline(events, { personId, today }) {
+    const evs = (events || []).filter((e) => !personId || e.personId === personId);
+    const ids = new Set(evs.filter((e) => e.type === "enfermedad").map((e) => e.id));
+    const upcoming = evs.filter((e) => e.type === "cita" && e.start >= today).sort(byStartAsc);
+    const items = [];
+    evs.forEach((e) => {
+      if (e.type === "enfermedad") items.push({ kind: "illness", ev: e, children: childrenOf(evs, e.id) });
+      else if (e.parentId && ids.has(e.parentId)) return;
+      else if (e.type === "cita" && e.start >= today) return;
+      else items.push({ kind: "event", ev: e });
+    });
+    items.sort((a, b) => byStartDesc(a.ev, b.ev));
+    return { upcoming, items };
+  }
+  function illnessLabel(kh, ill) {
+    if (ill.title) return ill.title;
+    const dx = childrenOf(kh.events || [], ill.id).filter((e) => e.type === "diagnostico" && e.title).pop();
+    if (dx) return dx.title;
+    const logs = childrenOf(kh.events || [], ill.id).filter((e) => e.type === "sintoma");
+    const ids = [...new Set(logs.flatMap((l) => l.sintomas || []))].filter((id) => !FEVER_IDS.includes(id));
+    if (ids.length) return ids.slice(0, 2).map(symptomLabel).join(", ");
+    return "enfermedad";
+  }
+  function eventLine(ev) {
+    const bits = { enfermedad: "enfermedad", sintoma: "s\xEDntomas", diagnostico: "diagn\xF3stico", medicamento: "medicamento", tratamiento: "tratamiento", cita: "cita" };
+    return `${bits[ev.type] || ev.type}${ev.title ? " " + ev.title : ""} \xB7 ${ev.start || ""}`;
+  }
+  function eventMatches(ev, q) {
+    const hay = [
+      ev.title,
+      ev.note,
+      ev.medico,
+      ev.dosis,
+      ev.freq,
+      ev.hazardLevel,
+      ...(ev.sintomas || []).map(symptomLabel),
+      ...(ev.temps || []).map((t) => String(t.v))
+    ];
+    return hay.some((x) => x && String(x).toLowerCase().includes(q));
+  }
+  var shortDate = (dk) => dk.slice(8) + "/" + dk.slice(5, 7);
+  function buildSummary({ person, profile, events, from, to, today }) {
+    profile = profile || {};
+    const L = [];
+    const evs = (events || []).filter((e) => e.personId === person.id);
+    const edad = person.dob ? ` (${calcAge(person.dob)} a\xF1os)` : "";
+    L.push(`Resumen de salud \u2014 ${person.name}${edad}`);
+    L.push(`Per\xEDodo: ${from} a ${to}`);
+    const list = (k, t) => {
+      if ((profile[k] || []).length) L.push(`${t}: ${profile[k].join(", ")}`);
+    };
+    list("alergias", "Alergias");
+    list("condicionesCronicas", "Condiciones cr\xF3nicas");
+    list("medicacionHabitual", "Medicaci\xF3n habitual");
+    const gl = (profile.growthLog || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+    if (gl.length) {
+      const g = gl[gl.length - 1];
+      L.push(`\xDAltima medici\xF3n (${g.date}): ${[g.peso ? g.peso + " kg" : null, g.talla ? g.talla + " cm" : null].filter(Boolean).join(" \xB7 ")}`);
+    }
+    const ills = evs.filter((e) => e.type === "enfermedad" && e.start <= to && (e.end || today) >= from).sort(byStartAsc);
+    if (ills.length) L.push("", "EPISODIOS");
+    ills.forEach((ill) => {
+      const logs = childrenOf(evs, ill.id);
+      const sx = logs.filter((l) => l.type === "sintoma");
+      const dur = daysInclusive(ill.start, ill.end || today);
+      L.push(`\u2022 ${ill.start} \u2192 ${ill.end || "en curso"} (${dur} ${dur === 1 ? "d\xEDa" : "d\xEDas"}${ill.end ? "" : ", a\xFAn activo"})${ill.title ? " \u2014 " + ill.title : ""}`);
+      const readings = sx.flatMap((l) => (l.temps || []).map((t) => ({ v: t.v, dk: l.start, t: t.t || l.startTime })));
+      if (readings.length) {
+        const max = readings.reduce((a, b) => b.v > a.v ? b : a);
+        const feverDays = new Set(readings.filter((r) => r.v >= 38).map((r) => r.dk)).size;
+        L.push(`  Temperatura m\xE1xima: ${max.v} \xB0C (${max.dk}${max.t ? " " + max.t : ""}); d\xEDas con \u226538 \xB0C: ${feverDays}`);
+      }
+      const all = [...new Set(sx.flatMap((l) => l.sintomas || []))].filter((id) => !FEVER_IDS.includes(id)).map(symptomLabel);
+      if (all.length) L.push(`  S\xEDntomas: ${all.join(", ")}`);
+      if (sx.length) {
+        L.push("  Evoluci\xF3n:");
+        sx.forEach((l) => {
+          const parts = [];
+          const sl = (l.sintomas || []).filter((id) => !FEVER_IDS.includes(id)).map(symptomLabel);
+          if (sl.length) parts.push(sl.join(", "));
+          if ((l.temps || []).length) parts.push(l.temps.map((t) => t.v + " \xB0C" + (t.t ? " (" + t.t + ")" : "")).join(", "));
+          if (l.note) parts.push(l.note);
+          L.push(`  - ${shortDate(l.start)}${l.startTime ? " " + l.startTime : ""}: ${parts.join(" \xB7 ") || "sin detalle"}`);
+        });
+      }
+      logs.filter((l) => l.type === "diagnostico").forEach((d) => L.push(`  Diagn\xF3stico (${shortDate(d.start)}): ${d.title}${d.medico ? " \u2014 " + d.medico : ""}${d.note ? " \xB7 " + d.note : ""}`));
+      const meds2 = logs.filter((l) => l.type === "medicamento" || l.type === "tratamiento");
+      if (meds2.length) {
+        L.push("  Medicaci\xF3n y tratamientos:");
+        meds2.forEach((m) => L.push(`  - ${m.title}${m.dosis ? " " + m.dosis : ""}${m.freq ? " (" + m.freq + ")" : ""}: ${shortDate(m.start)}${m.startTime ? " " + m.startTime : ""}${m.end ? " \u2192 " + shortDate(m.end) : ""}${m.note ? " \xB7 " + m.note : ""}`));
+      }
+      if (ill.missedDays) L.push(`  D\xEDas sin colegio: ${ill.missedDays}`);
+      if (ill.note) L.push(`  Nota: ${ill.note}`);
+    });
+    const ids = new Set(ills.map((i) => i.id));
+    const loose = evs.filter((e) => e.type !== "enfermedad" && e.type !== "sintoma" && !(e.parentId && ids.has(e.parentId)) && e.start >= from && e.start <= to).sort(byStartAsc);
+    const meds = loose.filter((e) => e.type === "medicamento" || e.type === "tratamiento");
+    const dxs = loose.filter((e) => e.type === "diagnostico");
+    const citas = loose.filter((e) => e.type === "cita");
+    if (meds.length) {
+      L.push("", "MEDICACI\xD3N Y TRATAMIENTOS (fuera de episodios)");
+      meds.forEach((m) => L.push(`- ${m.title}${m.dosis ? " " + m.dosis : ""}${m.freq ? " (" + m.freq + ")" : ""}: ${m.start}${m.end ? " \u2192 " + m.end : ""}${m.note ? " \xB7 " + m.note : ""}`));
+    }
+    if (dxs.length) {
+      L.push("", "DIAGN\xD3STICOS (fuera de episodios)");
+      dxs.forEach((d) => L.push(`- ${d.start}: ${d.title}${d.medico ? " \u2014 " + d.medico : ""}${d.note ? " \xB7 " + d.note : ""}`));
+    }
+    if (citas.length) {
+      L.push("", "CITAS");
+      citas.forEach((c) => L.push(`- ${c.start}${c.startTime ? " " + c.startTime : ""} \xB7 ${c.title}${c.medico ? " \u2014 " + c.medico : ""}`));
+    }
+    if (!ills.length && !loose.length) L.push("", "Sin registros en el per\xEDodo.");
+    return L.join("\n");
+  }
+  function buildSections(events, { personId, today }) {
+    const evs = (events || []).filter((e) => !personId || e.personId === personId);
+    const illnesses = evs.filter((e) => e.type === "enfermedad").sort(byStartDesc);
+    const active = illnesses.filter((e) => !e.end);
+    const citas = evs.filter((e) => e.type === "cita");
+    const upcoming = citas.map((ev) => ({ ev, dk: nextCitaDate(ev, today) })).filter((x) => x.dk).sort((a, b) => (a.dk + " " + (a.ev.startTime || "")).localeCompare(b.dk + " " + (b.ev.startTime || "")));
+    const meds = evs.filter((e) => e.type === "medicamento" || e.type === "tratamiento").sort(byStartDesc);
+    const vigentes = meds.filter((m) => m.end && m.end >= today);
+    const tl = buildTimeline(events, { personId, today });
+    const months = [];
+    tl.items.forEach((it) => {
+      const mk = it.ev.start.slice(0, 7);
+      let g = months[months.length - 1];
+      if (!g || g.month !== mk) {
+        g = { month: mk, items: [] };
+        months.push(g);
+      }
+      g.items.push(it);
+    });
+    return { illnesses, active, upcoming, meds, vigentes, months, historyCount: tl.items.length, items: tl.items };
+  }
+
   // core/stress.js
   var DOCTOR_KEYWORDS = ["pediatra", "dentista", "oftalm\xF3logo", "oftalmologo", "psic\xF3logo", "psicologo", "doctor", "m\xE9dico", "medico", "consulta", "control m\xE9dico", "control medico", "examen m\xE9dico", "examen medico", "urgencia", "vacuna", "fonoaudi\xF3logo", "otorrino", "dermat\xF3logo", "cardi\xF3logo", "neur\xF3logo"];
   function esTareaMedica(text) {
@@ -78,7 +608,8 @@ var __angst = (() => {
   function computeStressScore(dk, dayData, calMarks, kidsHealth) {
     const d = dayData[dk];
     if (!d) return 0;
-    const marks = Array.isArray(calMarks[dk]) ? calMarks[dk] : calMarks[dk] ? [calMarks[dk]] : [];
+    const storedMarks = Array.isArray(calMarks[dk]) ? calMarks[dk] : calMarks[dk] ? [calMarks[dk]] : [];
+    const marks = !storedMarks.includes("doctor") && citasOnDay(kidsHealth && kidsHealth.events || [], dk).length ? [...storedMarks, "doctor"] : storedMarks;
     const kh = kidsHealth || {};
     if (dk < "2026-04-28") {
       const postponed = (d.tasks || []).filter((t) => t.notDone).length;
@@ -946,493 +1477,6 @@ var __angst = (() => {
     return null;
   }
 
-  // modules/salud/saludModel.js
-  var SCHEMA_VERSION = 2;
-  var SYMPTOM_ZONES = [
-    { id: "temp", label: "Temperatura", symptoms: [
-      { id: "temp_sub38", label: "Fiebre leve <38\xB0", peso: 1, flag: null },
-      { id: "temp_38_39", label: "Fiebre 38\u201339\xB0", peso: 2, flag: null },
-      { id: "temp_39_40", label: "Fiebre 39\u201340\xB0", peso: 3, flag: null },
-      { id: "temp_sobre40", label: "Fiebre >40\xB0", peso: 0, flag: "WARNING" },
-      { id: "escalofrios", label: "Escalofr\xEDos", peso: 1, flag: null }
-    ] },
-    { id: "resp", label: "Respiratorio", symptoms: [
-      { id: "tos_seca", label: "Tos seca", peso: 1, flag: null },
-      { id: "tos_flema", label: "Tos con flema", peso: 3, flag: null },
-      { id: "congestion", label: "Congesti\xF3n nasal", peso: 1, flag: null },
-      { id: "goteo", label: "Goteo nasal", peso: 1, flag: null },
-      { id: "dif_resp_leve", label: "Dificultad respiratoria leve", peso: 2, flag: null },
-      { id: "dif_resp_grave", label: "Dificultad respiratoria grave", peso: 0, flag: "CRITICAL" },
-      { id: "sibilancias", label: "Sibilancias/silbidos", peso: 2, flag: null }
-    ] },
-    { id: "garganta", label: "Garganta y boca", symptoms: [
-      { id: "garg_leve", label: "Dolor de garganta leve", peso: 1, flag: null },
-      { id: "garg_intensa", label: "Dolor de garganta intenso", peso: 2, flag: null },
-      { id: "ronquera", label: "Ronquera", peso: 1, flag: null },
-      { id: "dif_tragar", label: "Dificultad para tragar", peso: 2, flag: null },
-      { id: "aftas", label: "Aftas / llagas", peso: 1, flag: null }
-    ] },
-    { id: "digest", label: "Digestivo", symptoms: [
-      { id: "nauseas", label: "N\xE1useas", peso: 1, flag: null },
-      { id: "vomito", label: "V\xF3mito aislado", peso: 2, flag: null },
-      { id: "vomito_rep", label: "V\xF3mito repetido (3+)", peso: 3, flag: null },
-      { id: "diarrea", label: "Diarrea", peso: 2, flag: null },
-      { id: "diarrea_sangre", label: "Diarrea con sangre", peso: 3, flag: null },
-      { id: "dolor_abd_leve", label: "Dolor abdominal leve", peso: 1, flag: null },
-      { id: "dolor_abd_intenso", label: "Dolor abdominal intenso", peso: 3, flag: null },
-      { id: "inapetencia", label: "Inapetencia", peso: 1, flag: null }
-    ] },
-    { id: "oido_ojos", label: "O\xEDdo y ojos", symptoms: [
-      { id: "dolor_oido", label: "Dolor de o\xEDdo", peso: 2, flag: null },
-      { id: "sec_oido", label: "Secreci\xF3n de o\xEDdo", peso: 2, flag: null },
-      { id: "ojo_rojo", label: "Ojo rojo", peso: 1, flag: null },
-      { id: "conjuntivitis", label: "Conjuntivitis", peso: 2, flag: null }
-    ] },
-    { id: "piel", label: "Piel", symptoms: [
-      { id: "erupcion", label: "Erupci\xF3n", peso: 1, flag: null },
-      { id: "erupcion_fiebre", label: "Erupci\xF3n + fiebre", peso: 0, flag: "WARNING" },
-      { id: "urticaria", label: "Urticaria", peso: 1, flag: null },
-      { id: "manchas", label: "Manchas", peso: 1, flag: null },
-      { id: "palidez", label: "Palidez marcada", peso: 2, flag: null }
-    ] },
-    { id: "general", label: "General", symptoms: [
-      { id: "cansancio", label: "Cansancio", peso: 1, flag: null },
-      { id: "irritabilidad", label: "Irritabilidad marcada", peso: 1, flag: null },
-      { id: "decaimiento", label: "Decaimiento general", peso: 2, flag: null },
-      { id: "sangrado_anormal", label: "Sangrado anormal", peso: 0, flag: "WARNING" }
-    ] },
-    { id: "dolor", label: "Dolor", symptoms: [
-      { id: "dolor_muscular", label: "Dolor muscular", peso: 1, flag: null },
-      { id: "dolor_articular", label: "Dolor articular", peso: 2, flag: null },
-      { id: "dolor_espalda", label: "Dolor de espalda", peso: 1, flag: null },
-      { id: "dolor_cabeza", label: "Dolor de cabeza", peso: 2, flag: null },
-      { id: "dolor_orinar", label: "Dolor al orinar", peso: 2, flag: null }
-    ] },
-    { id: "neuro_grave", label: "Neurol\xF3gico grave", symptoms: [
-      { id: "convulsion", label: "Convulsi\xF3n", peso: 0, flag: "CRITICAL" },
-      { id: "rigidez_nuca", label: "Rigidez de nuca", peso: 0, flag: "CRITICAL" },
-      { id: "perdida_conc", label: "P\xE9rdida de consciencia", peso: 0, flag: "CRITICAL" },
-      { id: "dif_despertar", label: "Dificultad para despertar", peso: 0, flag: "CRITICAL" }
-    ] }
-  ];
-  var ALL_SYMPTOMS = SYMPTOM_ZONES.flatMap((z) => z.symptoms);
-  function symptomLabel(id) {
-    const s = ALL_SYMPTOMS.find((x) => x.id === id);
-    return s ? s.label : id;
-  }
-  var FEVER_IDS = ["temp_sub38", "temp_38_39", "temp_39_40", "temp_sobre40"];
-  function localDateKey(d) {
-    d = d || /* @__PURE__ */ new Date();
-    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-  }
-  function localTimeKey(d) {
-    d = d || /* @__PURE__ */ new Date();
-    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
-  }
-  function parseKey(dk) {
-    const [y, m, d] = dk.split("-").map(Number);
-    return new Date(y, m - 1, d, 12, 0, 0);
-  }
-  function addDaysKey(dk, n) {
-    const d = parseKey(dk);
-    d.setDate(d.getDate() + n);
-    return localDateKey(d);
-  }
-  function addMonthsKey(dk, n) {
-    const [y, m, day] = dk.split("-").map(Number);
-    const t = new Date(y, m - 1 + n, 1, 12, 0, 0);
-    const last = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
-    t.setDate(Math.min(day, last));
-    return localDateKey(t);
-  }
-  function daysInclusive(a, b) {
-    return Math.round((parseKey(b) - parseKey(a)) / 864e5) + 1;
-  }
-  function calcAge(dob) {
-    const b = parseKey(dob), t = /* @__PURE__ */ new Date();
-    let a = t.getFullYear() - b.getFullYear();
-    if (t.getMonth() < b.getMonth() || t.getMonth() === b.getMonth() && t.getDate() < b.getDate()) a--;
-    return a;
-  }
-  function personIdFor(name, family) {
-    const base = String(name || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "") || "persona";
-    let id = base, n = 2;
-    while ((family || []).some((p) => p.id === id)) id = base + n++;
-    return id;
-  }
-  function addPerson(kh, data) {
-    const id = personIdFor(data.name, kh.family);
-    const person = { id, name: data.name.trim(), dob: data.dob, icon: data.icon || "\u{1F642}", sex: data.sex || "m" };
-    return { kh: { ...kh, family: [...kh.family || [], person] }, id };
-  }
-  function updatePerson(kh, id, data) {
-    return { ...kh, family: (kh.family || []).map((p) => p.id === id ? { ...p, name: data.name.trim(), dob: data.dob, icon: data.icon || "\u{1F642}", sex: data.sex || "m" } : p) };
-  }
-  function personEventCount(kh, id) {
-    return (kh.events || []).filter((e) => e.personId === id).length;
-  }
-  function removePerson(kh, id) {
-    if (personEventCount(kh, id) > 0) return null;
-    const profiles = { ...kh.profiles || {} };
-    delete profiles[id];
-    return { ...kh, family: (kh.family || []).filter((p) => p.id !== id), profiles };
-  }
-  function tempScore(temps) {
-    const vals = (temps || []).map((t) => parseFloat(t.v)).filter((v2) => !isNaN(v2));
-    if (!vals.length) return 0;
-    const v = Math.max(...vals);
-    if (v >= 40) return 6;
-    if (v >= 39) return 3;
-    if (v >= 38) return 2;
-    if (v >= 37.5) return 1;
-    return 0;
-  }
-  function calcHazard(sintomas, temps) {
-    let score = 0;
-    for (const sId of sintomas || []) {
-      const s = ALL_SYMPTOMS.find((x) => x.id === sId);
-      if (!s) continue;
-      if (s.flag === "CRITICAL") return "CRITICAL";
-      if (s.flag === "WARNING") {
-        score = Math.max(score, 6);
-        continue;
-      }
-      score += s.peso;
-    }
-    if (!(sintomas || []).some((id) => FEVER_IDS.includes(id))) score += tempScore(temps);
-    if (score <= 0) return "CLEAR";
-    if (score <= 2) return "WATCH";
-    if (score <= 5) return "ADVISORY";
-    return "WARNING";
-  }
-  function emptyKidsHealth() {
-    return { schemaVersion: SCHEMA_VERSION, family: [], profiles: {}, events: [] };
-  }
-  function sortKey(ev) {
-    return (ev.start || "") + " " + (ev.startTime || "00:00");
-  }
-  var byStartAsc = (a, b) => sortKey(a).localeCompare(sortKey(b));
-  var byStartDesc = (a, b) => sortKey(b).localeCompare(sortKey(a));
-  function activeIllness(events, personId) {
-    return (events || []).filter((e) => e.type === "enfermedad" && e.personId === personId && !e.end).sort(byStartDesc)[0] || null;
-  }
-  function childrenOf(events, parentId) {
-    return (events || []).filter((e) => e.parentId === parentId && e.type !== "enfermedad").sort(byStartAsc);
-  }
-  function recomputeIllness(events, illId) {
-    const logs = events.filter((e) => e.parentId === illId && e.type === "sintoma").sort(byStartAsc);
-    if (!logs.length) return events;
-    const last = logs[logs.length - 1];
-    return events.map((e) => e.id === illId ? { ...e, hazardLevel: last.hazardLevel || "CLEAR" } : e);
-  }
-  function upsertEvent(kh, ev) {
-    const events = kh.events || [];
-    const exists = events.some((e) => e.id === ev.id);
-    let next = exists ? events.map((e) => e.id === ev.id ? ev : e) : [...events, ev];
-    if (ev.type === "sintoma" && ev.parentId) next = recomputeIllness(next, ev.parentId);
-    return { ...kh, events: next };
-  }
-  function deleteEvent(kh, id) {
-    const events = kh.events || [];
-    const ev = events.find((e) => e.id === id);
-    if (!ev) return kh;
-    let next = events.filter((e) => e.id !== id && e.parentId !== id);
-    if (ev.parentId && ev.type === "sintoma") next = recomputeIllness(next, ev.parentId);
-    return { ...kh, events: next };
-  }
-  function closeIllness(kh, id, endDate) {
-    return { ...kh, events: (kh.events || []).map((e) => e.id === id ? { ...e, end: endDate } : e) };
-  }
-  function addSymptomEntry(kh, form, ids) {
-    const events = kh.events || [];
-    const temps = (form.temps || []).filter((t) => !isNaN(parseFloat(t.v))).map((t) => ({ t: t.t || null, v: parseFloat(t.v) }));
-    const hazard = calcHazard(form.sintomas, temps);
-    let ill = activeIllness(events, form.personId);
-    let created = false;
-    let next = [...events];
-    if (!ill) {
-      ill = {
-        id: ids.illness,
-        personId: form.personId,
-        type: "enfermedad",
-        start: form.date,
-        end: null,
-        title: "",
-        hazardLevel: hazard,
-        missedDays: 0
-      };
-      next = [...next, ill];
-      created = true;
-    } else if (form.date < ill.start) {
-      next = next.map((e) => e.id === ill.id ? { ...e, start: form.date } : e);
-      ill = { ...ill, start: form.date };
-    }
-    const log = {
-      id: ids.entry,
-      personId: form.personId,
-      type: "sintoma",
-      parentId: ill.id,
-      start: form.date,
-      startTime: form.time || null,
-      sintomas: form.sintomas || [],
-      temps,
-      hazardLevel: hazard,
-      note: form.note || ""
-    };
-    next = [...next, log];
-    next = recomputeIllness(next, ill.id);
-    return {
-      kh: { ...kh, events: next },
-      illnessId: ill.id,
-      doctorMarkDate: created && (hazard === "WARNING" || hazard === "CRITICAL") ? form.date : null
-    };
-  }
-  var norm = (m) => Array.isArray(m) ? m : m ? [m] : [];
-  function citaDates(ev, count) {
-    const n = ev.repeatMonths ? count || 4 : 1;
-    const out = [];
-    for (let i = 0; i < n; i++) out.push(i === 0 ? ev.start : addMonthsKey(ev.start, (ev.repeatMonths || 0) * i));
-    return out;
-  }
-  function citaTasks(ev, personName) {
-    const [h, m] = (ev.startTime || "09:00").split(":").map(Number);
-    const text = `${ev.title || "cita"} ${personName || ""} \u2014 ${ev.medico || ""}`.replace(/\s+/g, " ").replace(/ — $/, "").trim();
-    const out = [];
-    citaDates(ev).forEach((dk, i) => {
-      out.push({ dk, task: { id: `${ev.id}_${i}`, text, fixed: true, done: false, deadline: { h, m }, healthEventId: ev.id } });
-      out.push({ dk: addDaysKey(dk, -1), task: { id: `${ev.id}_${i}p`, text: `preparar: ${text}`, fixed: false, done: false, deadline: { h: 21, m: 30 }, healthEventId: ev.id } });
-    });
-    return out;
-  }
-  function planCita({ events, dayData, marks, prevEv, nextEv, personName }) {
-    const patches = {};
-    const tasksOf = (dk) => patches[dk] || (dayData && dayData[dk] && dayData[dk].tasks || []);
-    if (prevEv) {
-      Object.keys(dayData || {}).forEach((dk) => {
-        const t = dayData[dk].tasks || [];
-        if (t.some((x) => x.healthEventId === prevEv.id)) patches[dk] = t.filter((x) => x.healthEventId !== prevEv.id);
-      });
-    }
-    let marksNext = { ...marks || {} };
-    let marksChanged = false;
-    let markedDates = [];
-    if (nextEv) {
-      citaTasks(nextEv, personName).forEach(({ dk, task }) => {
-        patches[dk] = [...tasksOf(dk), task];
-      });
-      citaDates(nextEv).forEach((dk) => {
-        const cur = norm(marksNext[dk]);
-        if (!cur.includes("doctor")) {
-          marksNext[dk] = [...cur, "doctor"];
-          marksChanged = true;
-          markedDates.push(dk);
-        } else if ((prevEv && prevEv.markedDates || []).includes(dk)) markedDates.push(dk);
-      });
-    }
-    if (prevEv) {
-      const keep = new Set(markedDates);
-      (prevEv.markedDates || []).forEach((dk) => {
-        if (keep.has(dk)) return;
-        const usedByOther = (events || []).some((e) => e.type === "cita" && e.id !== prevEv.id && citaDates(e).includes(dk));
-        if (usedByOther) return;
-        const cur = norm(marksNext[dk]).filter((x) => x !== "doctor");
-        if (cur.length) marksNext[dk] = cur;
-        else delete marksNext[dk];
-        marksChanged = true;
-      });
-    }
-    return { ev: nextEv ? { ...nextEv, markedDates } : null, dayPatches: patches, marks: marksChanged ? marksNext : null };
-  }
-  function migrateKidsHealth(kh, today) {
-    if (kh && kh.schemaVersion >= SCHEMA_VERSION) return kh;
-    kh = kh || {};
-    today = today || localDateKey();
-    const events = [];
-    (kh.episodes || []).forEach((ep) => {
-      if (!ep || !ep.id || !ep.startDate) return;
-      const illId = "ep_" + ep.id;
-      events.push({
-        id: illId,
-        personId: ep.kidId,
-        type: "enfermedad",
-        start: ep.startDate,
-        end: ep.endDate || null,
-        title: "",
-        hazardLevel: ep.hazardLevel || "CLEAR",
-        missedDays: ep.missedDays || 0,
-        note: ep.notas || ""
-      });
-      const days = ep.days || [];
-      days.forEach((d) => {
-        const v = parseFloat(d.temperatura);
-        events.push({
-          id: `sx_${ep.id}_${d.date}`,
-          personId: ep.kidId,
-          type: "sintoma",
-          parentId: illId,
-          start: d.date,
-          startTime: null,
-          sintomas: d.sintomas || [],
-          temps: isNaN(v) ? [] : [{ t: null, v }],
-          hazardLevel: d.hazardLevel || calcHazard(d.sintomas),
-          note: d.nota || ""
-        });
-      });
-      if (!days.length && (ep.lastSintomas || []).length) {
-        events.push({
-          id: `sx_${ep.id}_${ep.startDate}`,
-          personId: ep.kidId,
-          type: "sintoma",
-          parentId: illId,
-          start: ep.startDate,
-          startTime: null,
-          sintomas: ep.lastSintomas,
-          temps: [],
-          hazardLevel: ep.hazardLevel || calcHazard(ep.lastSintomas),
-          note: ""
-        });
-      }
-    });
-    const profiles = {};
-    const legacyCitas = {};
-    Object.entries(kh.profiles || {}).forEach(([pid, p]) => {
-      const { citasRegulares, ...rest } = p || {};
-      profiles[pid] = rest;
-      if ((citasRegulares || []).length) {
-        legacyCitas[pid] = citasRegulares;
-        citasRegulares.forEach((c, i) => {
-          const freq = c.frecMeses || 6;
-          const created = new Date(parseInt(c.id, 10) || Date.now());
-          let dk = localDateKey(created);
-          let guard = 0;
-          while (dk < today && guard++ < 400) dk = addMonthsKey(dk, freq);
-          events.push({
-            id: `ct_${pid}_${c.id || i}`,
-            personId: pid,
-            type: "cita",
-            title: c.tipo || "cita",
-            medico: c.medico || "",
-            start: dk,
-            startTime: c.hora || "09:00",
-            repeatMonths: freq,
-            markedDates: [],
-            legacy: true
-          });
-        });
-      }
-    });
-    const hadLegacy = (kh.episodes || []).length || Object.keys(kh.dailyLog || {}).length || Object.keys(legacyCitas).length;
-    const out = { schemaVersion: SCHEMA_VERSION, family: kh.family || [], profiles, events };
-    if (hadLegacy) out.legacy = { episodes: kh.episodes || [], dailyLog: kh.dailyLog || {}, citasRegulares: legacyCitas, migratedAt: today };
-    return out;
-  }
-  function buildTimeline(events, { personId, today }) {
-    const evs = (events || []).filter((e) => !personId || e.personId === personId);
-    const ids = new Set(evs.filter((e) => e.type === "enfermedad").map((e) => e.id));
-    const upcoming = evs.filter((e) => e.type === "cita" && e.start >= today).sort(byStartAsc);
-    const items = [];
-    evs.forEach((e) => {
-      if (e.type === "enfermedad") items.push({ kind: "illness", ev: e, children: childrenOf(evs, e.id) });
-      else if (e.parentId && ids.has(e.parentId)) return;
-      else if (e.type === "cita" && e.start >= today) return;
-      else items.push({ kind: "event", ev: e });
-    });
-    items.sort((a, b) => byStartDesc(a.ev, b.ev));
-    return { upcoming, items };
-  }
-  function illnessLabel(kh, ill) {
-    if (ill.title) return ill.title;
-    const logs = childrenOf(kh.events || [], ill.id).filter((e) => e.type === "sintoma");
-    const ids = [...new Set(logs.flatMap((l) => l.sintomas || []))].filter((id) => !FEVER_IDS.includes(id));
-    if (ids.length) return ids.slice(0, 2).map(symptomLabel).join(", ");
-    return "enfermedad";
-  }
-  function eventLine(ev) {
-    const bits = { enfermedad: "enfermedad", sintoma: "s\xEDntomas", medicamento: "medicamento", tratamiento: "tratamiento", cita: "cita" };
-    return `${bits[ev.type] || ev.type}${ev.title ? " " + ev.title : ""} \xB7 ${ev.start || ""}`;
-  }
-  function eventMatches(ev, q) {
-    const hay = [
-      ev.title,
-      ev.note,
-      ev.medico,
-      ev.dosis,
-      ev.freq,
-      ev.hazardLevel,
-      ...(ev.sintomas || []).map(symptomLabel),
-      ...(ev.temps || []).map((t) => String(t.v))
-    ];
-    return hay.some((x) => x && String(x).toLowerCase().includes(q));
-  }
-  var shortDate = (dk) => dk.slice(8) + "/" + dk.slice(5, 7);
-  function buildSummary({ person, profile, events, from, to, today }) {
-    profile = profile || {};
-    const L = [];
-    const evs = (events || []).filter((e) => e.personId === person.id);
-    const edad = person.dob ? ` (${calcAge(person.dob)} a\xF1os)` : "";
-    L.push(`Resumen de salud \u2014 ${person.name}${edad}`);
-    L.push(`Per\xEDodo: ${from} a ${to}`);
-    const list = (k, t) => {
-      if ((profile[k] || []).length) L.push(`${t}: ${profile[k].join(", ")}`);
-    };
-    list("alergias", "Alergias");
-    list("condicionesCronicas", "Condiciones cr\xF3nicas");
-    list("medicacionHabitual", "Medicaci\xF3n habitual");
-    const gl = (profile.growthLog || []).slice().sort((a, b) => a.date.localeCompare(b.date));
-    if (gl.length) {
-      const g = gl[gl.length - 1];
-      L.push(`\xDAltima medici\xF3n (${g.date}): ${[g.peso ? g.peso + " kg" : null, g.talla ? g.talla + " cm" : null].filter(Boolean).join(" \xB7 ")}`);
-    }
-    const ills = evs.filter((e) => e.type === "enfermedad" && e.start <= to && (e.end || today) >= from).sort(byStartAsc);
-    if (ills.length) L.push("", "EPISODIOS");
-    ills.forEach((ill) => {
-      const logs = childrenOf(evs, ill.id);
-      const sx = logs.filter((l) => l.type === "sintoma");
-      const dur = daysInclusive(ill.start, ill.end || today);
-      L.push(`\u2022 ${ill.start} \u2192 ${ill.end || "en curso"} (${dur} ${dur === 1 ? "d\xEDa" : "d\xEDas"}${ill.end ? "" : ", a\xFAn activo"})${ill.title ? " \u2014 " + ill.title : ""}`);
-      const readings = sx.flatMap((l) => (l.temps || []).map((t) => ({ v: t.v, dk: l.start, t: t.t || l.startTime })));
-      if (readings.length) {
-        const max = readings.reduce((a, b) => b.v > a.v ? b : a);
-        const feverDays = new Set(readings.filter((r) => r.v >= 38).map((r) => r.dk)).size;
-        L.push(`  Temperatura m\xE1xima: ${max.v} \xB0C (${max.dk}${max.t ? " " + max.t : ""}); d\xEDas con \u226538 \xB0C: ${feverDays}`);
-      }
-      const all = [...new Set(sx.flatMap((l) => l.sintomas || []))].filter((id) => !FEVER_IDS.includes(id)).map(symptomLabel);
-      if (all.length) L.push(`  S\xEDntomas: ${all.join(", ")}`);
-      if (sx.length) {
-        L.push("  Evoluci\xF3n:");
-        sx.forEach((l) => {
-          const parts = [];
-          const sl = (l.sintomas || []).filter((id) => !FEVER_IDS.includes(id)).map(symptomLabel);
-          if (sl.length) parts.push(sl.join(", "));
-          if ((l.temps || []).length) parts.push(l.temps.map((t) => t.v + " \xB0C" + (t.t ? " (" + t.t + ")" : "")).join(", "));
-          if (l.note) parts.push(l.note);
-          L.push(`  - ${shortDate(l.start)}${l.startTime ? " " + l.startTime : ""}: ${parts.join(" \xB7 ") || "sin detalle"}`);
-        });
-      }
-      const meds2 = logs.filter((l) => l.type === "medicamento" || l.type === "tratamiento");
-      if (meds2.length) {
-        L.push("  Medicaci\xF3n y tratamientos:");
-        meds2.forEach((m) => L.push(`  - ${m.title}${m.dosis ? " " + m.dosis : ""}${m.freq ? " (" + m.freq + ")" : ""}: ${shortDate(m.start)}${m.startTime ? " " + m.startTime : ""}${m.end ? " \u2192 " + shortDate(m.end) : ""}${m.note ? " \xB7 " + m.note : ""}`));
-      }
-      if (ill.missedDays) L.push(`  D\xEDas sin colegio: ${ill.missedDays}`);
-      if (ill.note) L.push(`  Nota: ${ill.note}`);
-    });
-    const ids = new Set(ills.map((i) => i.id));
-    const loose = evs.filter((e) => e.type !== "enfermedad" && e.type !== "sintoma" && !(e.parentId && ids.has(e.parentId)) && e.start >= from && e.start <= to).sort(byStartAsc);
-    const meds = loose.filter((e) => e.type === "medicamento" || e.type === "tratamiento");
-    const citas = loose.filter((e) => e.type === "cita");
-    if (meds.length) {
-      L.push("", "MEDICACI\xD3N Y TRATAMIENTOS (fuera de episodios)");
-      meds.forEach((m) => L.push(`- ${m.title}${m.dosis ? " " + m.dosis : ""}${m.freq ? " (" + m.freq + ")" : ""}: ${m.start}${m.end ? " \u2192 " + m.end : ""}${m.note ? " \xB7 " + m.note : ""}`));
-    }
-    if (citas.length) {
-      L.push("", "CITAS");
-      citas.forEach((c) => L.push(`- ${c.start}${c.startTime ? " " + c.startTime : ""} \xB7 ${c.title}${c.medico ? " \u2014 " + c.medico : ""}`));
-    }
-    if (!ills.length && !loose.length) L.push("", "Sin registros en el per\xEDodo.");
-    return L.join("\n");
-  }
-
   // core/format.js
   function fmtCLP(n) {
     return "$" + Math.round(n).toLocaleString("es-CL");
@@ -1972,7 +2016,12 @@ var __angst = (() => {
           style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 6, padding: "4px 10px", color: "rgba(255,255,255,0.6)", cursor: "pointer", letterSpacing: 1 }
         },
         "ir al d\xEDa \u2192"
-      )), sdMarks.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 } }, sdMarks.map((mk) => /* @__PURE__ */ React.createElement("div", { key: mk, style: { display: "flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.1)", borderRadius: 6, padding: "3px 8px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, display: "flex", alignItems: "center" } }, MARK_ICONS_CAL[mk] || "\u{1F4CC}"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.55)" } }, mk)))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 5, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${sdLoad / 10 * 100}%`, background: sdLoad <= 2 ? "rgba(255,255,255,0.3)" : sdLoad <= 5 ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.9)", borderRadius: 99 } })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 14, color: "rgba(255,255,255,0.5)", minWidth: 36 } }, "carga ", sdLoad)), sdTasks.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, fixedTasks > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.45)", background: "rgba(255,255,255,0.06)", borderRadius: 5, padding: "2px 7px" } }, fixedTasks, " fija", fixedTasks !== 1 ? "s" : ""), doneTasks > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.45)", background: "rgba(255,255,255,0.06)", borderRadius: 5, padding: "2px 7px" } }, "\u2713 ", doneTasks, " hecha", doneTasks !== 1 ? "s" : ""), pendTasks > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,100,100,0.7)", background: "rgba(255,100,100,0.08)", borderRadius: 5, padding: "2px 7px" } }, "\u23F3 ", pendTasks, " pendiente", pendTasks !== 1 ? "s" : ""))), activeKidEps.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, activeKidEps.map((ep) => /* @__PURE__ */ React.createElement("span", { key: ep.id, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,150,150,0.8)", background: "rgba(255,100,100,0.1)", borderRadius: 5, padding: "2px 7px" } }, "\u{1F912} ", ((kidsHealth?.family || []).find((f2) => f2.id === ep.personId) || {}).name || ep.personId, " \xB7 ", illnessLabel(kidsHealth, ep)))), sd.summary && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 14, color: "rgba(255,255,255,0.4)", marginTop: 8, lineHeight: 1.5, fontStyle: "italic" } }, '"', sd.summary, '"'));
+      )), sdMarks.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 } }, sdMarks.map((mk) => /* @__PURE__ */ React.createElement("div", { key: mk, style: { display: "flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.1)", borderRadius: 6, padding: "3px 8px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, display: "flex", alignItems: "center" } }, MARK_ICONS_CAL[mk] || "\u{1F4CC}"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.55)" } }, mk)))), (() => {
+        const cs = citasOnDay(kidsHealth?.events || [], selectedDay);
+        if (!cs.length) return null;
+        const nm = (id) => ((kidsHealth?.family || []).find((f2) => f2.id === id) || {}).name || id;
+        return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 } }, cs.map((c) => /* @__PURE__ */ React.createElement("div", { key: c.id, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#ff8a80", background: "rgba(229,57,53,0.12)", borderRadius: 6, padding: "5px 8px" } }, "\u{1F3E5} ", citaLine(c, nm(c.personId), true))));
+      })(), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 5, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${sdLoad / 10 * 100}%`, background: sdLoad <= 2 ? "rgba(255,255,255,0.3)" : sdLoad <= 5 ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.9)", borderRadius: 99 } })), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 14, color: "rgba(255,255,255,0.5)", minWidth: 36 } }, "carga ", sdLoad)), sdTasks.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, fixedTasks > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.45)", background: "rgba(255,255,255,0.06)", borderRadius: 5, padding: "2px 7px" } }, fixedTasks, " fija", fixedTasks !== 1 ? "s" : ""), doneTasks > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.45)", background: "rgba(255,255,255,0.06)", borderRadius: 5, padding: "2px 7px" } }, "\u2713 ", doneTasks, " hecha", doneTasks !== 1 ? "s" : ""), pendTasks > 0 && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,100,100,0.7)", background: "rgba(255,100,100,0.08)", borderRadius: 5, padding: "2px 7px" } }, "\u23F3 ", pendTasks, " pendiente", pendTasks !== 1 ? "s" : ""))), activeKidEps.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, activeKidEps.map((ep) => /* @__PURE__ */ React.createElement("span", { key: ep.id, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,150,150,0.8)", background: "rgba(255,100,100,0.1)", borderRadius: 5, padding: "2px 7px" } }, "\u{1F912} ", ((kidsHealth?.family || []).find((f2) => f2.id === ep.personId) || {}).name || ep.personId, " \xB7 ", illnessLabel(kidsHealth, ep)))), sd.summary && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 14, color: "rgba(255,255,255,0.4)", marginTop: 8, lineHeight: 1.5, fontStyle: "italic" } }, '"', sd.summary, '"'));
     })()));
   }
   function EF({ value, placeholder, multiline, onSave, dark, small }) {
@@ -6394,6 +6443,88 @@ var __angst = (() => {
   }
   var GrowthView_default = GrowthView;
 
+  // modules/salud/saludActions.js
+  var nid = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  var nameOf = (family, id) => (family.find((f2) => f2.id === id) || {}).name || id;
+  function makeSaludActions({ kh, persist, dayData, updateDay, calMarks, saveCalMarks, isMedicalTask }) {
+    const family = kh.family || [];
+    const events = kh.events || [];
+    function applyPlan(plan) {
+      if (updateDay) Object.entries(plan.dayPatches).forEach(([dk, tasks]) => updateDay(dk, { tasks }));
+      if (plan.marks && saveCalMarks) saveCalMarks(plan.marks);
+    }
+    function save({ type, personId, f: f2, editing }) {
+      let suggest = null;
+      if (type === "sintoma") {
+        if (editing) {
+          const temps = f2.temps.filter((t) => !isNaN(parseFloat(t.v))).map((t) => ({ t: t.t || null, v: parseFloat(t.v) }));
+          persist(upsertEvent(kh, { ...editing, start: f2.date, startTime: f2.time || null, sintomas: f2.sintomas, temps, hazardLevel: calcHazard(f2.sintomas, temps), note: f2.note }));
+        } else {
+          const r = addSymptomEntry(kh, { personId, date: f2.date, time: f2.time, sintomas: f2.sintomas, temps: f2.temps, note: f2.note }, { illness: nid("ep_"), entry: nid("sx_") });
+          persist(r.kh);
+          if (r.doctorMarkDate) suggest = { personId, date: r.doctorMarkDate };
+        }
+      } else if (type === "medicamento" || type === "tratamiento") {
+        const ill = editing ? null : activeIllness(events, personId);
+        const parentId = editing ? editing.parentId : ill && f2.start >= ill.start ? ill.id : void 0;
+        persist(upsertEvent(kh, {
+          ...editing || {},
+          id: editing ? editing.id : nid(type === "medicamento" ? "md_" : "tr_"),
+          personId,
+          type,
+          parentId,
+          title: f2.title.trim(),
+          dosis: f2.dosis.trim(),
+          freq: f2.freq.trim(),
+          start: f2.start,
+          startTime: f2.startTime || null,
+          end: f2.end || null,
+          note: f2.note.trim()
+        }));
+      } else if (type === "diagnostico") {
+        const ill = editing ? null : activeIllness(events, personId);
+        const parentId = editing ? editing.parentId : ill && f2.start >= ill.start ? ill.id : void 0;
+        persist(upsertEvent(kh, {
+          ...editing || {},
+          id: editing ? editing.id : nid("dx_"),
+          personId,
+          type: "diagnostico",
+          parentId,
+          title: f2.title.trim(),
+          medico: f2.medico.trim(),
+          start: f2.start,
+          note: f2.note.trim()
+        }));
+      } else if (type === "cita") {
+        const ev = {
+          id: editing ? editing.id : nid("ct_"),
+          personId,
+          type: "cita",
+          title: f2.title.trim(),
+          medico: f2.medico.trim(),
+          start: f2.start,
+          startTime: f2.startTime,
+          repeatMonths: f2.repeatMonths || null,
+          markedDates: editing && editing.markedDates || []
+        };
+        const plan = planCita({ events: events.filter((e) => e.id !== ev.id), dayData, marks: calMarks, prevEv: editing, nextEv: ev, personName: nameOf(family, personId), isMedicalTask });
+        persist(upsertEvent(kh, plan.ev));
+        applyPlan(plan);
+      } else if (type === "enfermedad") {
+        persist(upsertEvent(kh, { ...editing, title: f2.title.trim(), start: f2.start, end: f2.end || null, note: f2.note.trim() }));
+      }
+      return { suggest };
+    }
+    function remove(ev) {
+      if (ev.type === "cita") {
+        const plan = planCita({ events: events.filter((e) => e.id !== ev.id), dayData, marks: calMarks, prevEv: ev, nextEv: null, personName: nameOf(family, ev.personId), isMedicalTask });
+        persist(deleteEvent(kh, ev.id));
+        applyPlan(plan);
+      } else persist(deleteEvent(kh, ev.id));
+    }
+    return { save, remove };
+  }
+
   // modules/salud/SaludPage.jsx
   var F_HAND = "'Caveat',cursive";
   var F_SANS = "'DM Sans',sans-serif";
@@ -6409,22 +6540,22 @@ var __angst = (() => {
   var TYPE_META = {
     enfermedad: { icon: "\u{1F912}", label: "Enfermedad" },
     sintoma: { icon: "\u{1FA7A}", label: "S\xEDntomas / fiebre" },
+    diagnostico: { icon: "\u{1FA7B}", label: "Diagn\xF3stico" },
     medicamento: { icon: "\u{1F48A}", label: "Medicamento" },
     tratamiento: { icon: "\u{1F9F4}", label: "Tratamiento" },
     cita: { icon: "\u{1F5D3}\uFE0F", label: "Cita m\xE9dica" }
   };
-  var ADD_TYPES = ["sintoma", "medicamento", "tratamiento", "cita"];
+  var ADD_TYPES = ["sintoma", "diagnostico", "medicamento", "tratamiento", "cita"];
   var REPEAT_OPTS = [{ v: 0, l: "no repite" }, { v: 1, l: "mensual" }, { v: 3, l: "c/3 meses" }, { v: 6, l: "semestral" }, { v: 12, l: "anual" }, { v: 24, l: "c/2 a\xF1os" }];
   var PAGE = { padding: "16px", maxWidth: 480, margin: "0 auto" };
   var INP = { border: "1px dashed #ddd", borderRadius: 8, padding: "8px 10px", fontSize: 14, fontFamily: F_SANS, outline: "none", background: "#fafafa", color: "#111", width: "100%", boxSizing: "border-box" };
   var INP_DARK = { background: "rgba(255,255,255,0.08)", border: "none", borderRadius: 8, padding: "10px 12px", fontFamily: F_SANS, fontSize: 14, color: "#fff", outline: "none", width: "100%", boxSizing: "border-box", colorScheme: "dark" };
   var LABEL_DARK = { fontFamily: F_SANS, fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 };
-  var nid = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   function fmtDay(dk) {
     const d = /* @__PURE__ */ new Date(dk + "T12:00:00");
     return `${DOW_ES[d.getDay()]} ${d.getDate()} ${MONTHS_ES[d.getMonth()]}`;
   }
-  function nameOf(family, id) {
+  function nameOf2(family, id) {
     return (family.find((f2) => f2.id === id) || {}).name || id;
   }
   function iconOf(family, id) {
@@ -6455,6 +6586,8 @@ var __angst = (() => {
       if (mt !== null) parts.push(mt + " \xB0C");
       if (ev.note) parts.push(ev.note);
       text = parts.join(" \xB7 ") || "registro";
+    } else if (ev.type === "diagnostico") {
+      text = `${ev.title}${ev.medico ? " \u2014 " + ev.medico : ""}`;
     } else {
       text = `${ev.title}${ev.dosis ? " \xB7 " + ev.dosis : ""}${ev.freq ? " \xB7 " + ev.freq : ""}`;
     }
@@ -6469,7 +6602,7 @@ var __angst = (() => {
     const dur = daysInclusive(ill.start, ill.end || today);
     const kids = [...item.children].reverse();
     const shown = all ? kids : kids.slice(0, 5);
-    return /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 12, padding: "14px 16px", marginBottom: 12, border: `1px solid ${cfg.color}55` } }, /* @__PURE__ */ React.createElement("div", { onClick: () => onOpen(ill), style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, cfg.emoji), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 17, fontWeight: 700, color: cfg.text, lineHeight: 1.1 } }, showPerson && /* @__PURE__ */ React.createElement("span", { style: { marginRight: 6 } }, iconOf(family, ill.personId), " ", nameOf(family, ill.personId), " \xB7"), illnessLabel(kh, ill)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 } }, ill.start, ill.end ? ` \u2192 ${ill.end} \xB7 ${dur}d` : ` \xB7 activo \xB7 d\xEDa ${dur}`)), !ill.end && /* @__PURE__ */ React.createElement("button", { onClick: (e) => {
+    return /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 12, padding: "14px 16px", marginBottom: 12, border: `1px solid ${cfg.color}55` } }, /* @__PURE__ */ React.createElement("div", { onClick: () => onOpen(ill), style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, cfg.emoji), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 17, fontWeight: 700, color: cfg.text, lineHeight: 1.1 } }, showPerson && /* @__PURE__ */ React.createElement("span", { style: { marginRight: 6 } }, iconOf(family, ill.personId), " ", nameOf2(family, ill.personId), " \xB7"), illnessLabel(kh, ill)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 } }, ill.start, ill.end ? ` \u2192 ${ill.end} \xB7 ${dur}d` : ` \xB7 activo \xB7 d\xEDa ${dur}`)), !ill.end && /* @__PURE__ */ React.createElement("button", { onClick: (e) => {
       e.stopPropagation();
       onClose(ill.id);
     }, style: { fontFamily: F_SANS, fontSize: 10, background: "#e53935", border: "none", borderRadius: 6, padding: "4px 10px", color: "#fff", cursor: "pointer" } }, "cerrar")), ill.personId !== "cristopher" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, margin: "6px 0" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 10, color: "rgba(255,255,255,0.35)" } }, "d\xEDas sin colegio"), /* @__PURE__ */ React.createElement("button", { onClick: () => onMissed(ill.id, -1), style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 5, width: 24, height: 24, color: "#fff", cursor: "pointer", fontSize: 13 } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_HAND, fontSize: 18, fontWeight: 700, color: "#fff", minWidth: 20, textAlign: "center" } }, ill.missedDays || 0), /* @__PURE__ */ React.createElement("button", { onClick: () => onMissed(ill.id, 1), style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 5, width: 24, height: 24, color: "#fff", cursor: "pointer", fontSize: 13 } }, "+")), shown.map((ev) => /* @__PURE__ */ React.createElement(ChildRow, { key: ev.id, ev, ill, today, onOpen })), kids.length > 5 && /* @__PURE__ */ React.createElement("button", { onClick: () => setAll((a) => !a), style: { marginTop: 6, background: "transparent", border: "none", fontFamily: F_SANS, fontSize: 10, color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: 0 } }, all ? "ver menos" : `ver todo (${kids.length})`), kids.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, color: "rgba(255,255,255,0.3)" } }, "sin registros"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", marginTop: 8 } }, /* @__PURE__ */ React.createElement(
@@ -6485,16 +6618,18 @@ var __angst = (() => {
   }
   function LooseRow({ ev, family, showPerson, onOpen }) {
     const meta = TYPE_META[ev.type] || { icon: "\u2022", label: ev.type };
-    return /* @__PURE__ */ React.createElement("div", { onClick: () => onOpen(ev), style: { border: "1px dashed #e0e0e0", borderRadius: 10, padding: "10px 12px", marginBottom: 8, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, meta.icon), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 13, fontWeight: 600, color: "#222" } }, showPerson && /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 400, color: "#888" } }, nameOf(family, ev.personId), " \xB7 "), ev.title || meta.label, ev.dosis ? ` \xB7 ${ev.dosis}` : ""), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, color: "#aaa", marginTop: 2 } }, ev.start, ev.startTime ? " " + ev.startTime : "", ev.end ? ` \u2192 ${ev.end}` : "", ev.medico ? ` \xB7 ${ev.medico}` : "", ev.freq ? ` \xB7 ${ev.freq}` : ""))), ev.end && /* @__PURE__ */ React.createElement(SpanBar, { start: ev.start, end: ev.end, spanStart: ev.start, spanEnd: ev.end }));
+    return /* @__PURE__ */ React.createElement("div", { onClick: () => onOpen(ev), style: { border: "1px dashed #e0e0e0", borderRadius: 10, padding: "10px 12px", marginBottom: 8, cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, meta.icon), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 13, fontWeight: 600, color: "#222" } }, showPerson && /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 400, color: "#888" } }, nameOf2(family, ev.personId), " \xB7 "), ev.title || meta.label, ev.dosis ? ` \xB7 ${ev.dosis}` : ""), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, color: "#aaa", marginTop: 2 } }, ev.start, ev.startTime ? " " + ev.startTime : "", ev.end ? ` \u2192 ${ev.end}` : "", ev.medico ? ` \xB7 ${ev.medico}` : "", ev.freq ? ` \xB7 ${ev.freq}` : ""))), ev.end && /* @__PURE__ */ React.createElement(SpanBar, { start: ev.start, end: ev.end, spanStart: ev.start, spanEnd: ev.end }));
   }
-  function UpcomingRow({ ev, family, showPerson, onOpen }) {
-    return /* @__PURE__ */ React.createElement("div", { onClick: () => onOpen(ev), style: { background: "#f4f8ec", border: "1px solid #dfe9c6", borderRadius: 10, padding: "10px 12px", marginBottom: 8, cursor: "pointer", display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", minWidth: 48 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 17, fontWeight: 700, color: "#111", lineHeight: 1 } }, fmtDay(ev.start)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, color: "#789" } }, ev.startTime || "")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 13, fontWeight: 600, color: "#222" } }, ev.title), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, color: "#888" } }, showPerson ? nameOf(family, ev.personId) : "", ev.medico ? `${showPerson ? " \xB7 " : ""}${ev.medico}` : "", ev.repeatMonths ? ` \xB7 cada ${ev.repeatMonths} m` : "")), /* @__PURE__ */ React.createElement("span", { style: { color: "#999", fontSize: 13 } }, "\u203A"));
+  function UpcomingRow({ ev, dk, family, showPerson, onOpen }) {
+    return /* @__PURE__ */ React.createElement("div", { onClick: () => onOpen(ev), style: { background: "#f4f8ec", border: "1px solid #dfe9c6", borderRadius: 10, padding: "10px 12px", marginBottom: 8, cursor: "pointer", display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", minWidth: 48 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 17, fontWeight: 700, color: "#111", lineHeight: 1 } }, fmtDay(dk || ev.start)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, color: "#789" } }, ev.startTime || "")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 13, fontWeight: 600, color: "#222" } }, ev.title), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, color: "#888" } }, showPerson ? nameOf2(family, ev.personId) : "", ev.medico ? `${showPerson ? " \xB7 " : ""}${ev.medico}` : "", ev.repeatMonths ? ` \xB7 cada ${ev.repeatMonths} m` : "")), /* @__PURE__ */ React.createElement("span", { style: { color: "#999", fontSize: 13 } }, "\u203A"));
   }
   function initForm(init, today) {
     const now = localTimeKey();
     const ev = init.ev;
-    const base = { date: today, time: now, sintomas: [], temps: [{ t: now, v: "" }], note: "", title: "", dosis: "", freq: "", start: today, startTime: now, end: "", medico: "", repeatMonths: 0, missedDays: 0 };
+    const day = init.date || today;
+    const base = { date: today, time: now, sintomas: [], temps: [{ t: now, v: "" }], note: "", title: "", dosis: "", freq: "", start: day, startTime: init.type === "cita" ? "09:00" : now, end: "", medico: "", repeatMonths: 0, missedDays: 0 };
     if (!ev) return base;
+    if (ev.type === "diagnostico") return { ...base, title: ev.title || "", medico: ev.medico || "", start: ev.start, note: ev.note || "" };
     if (ev.type === "sintoma") return { ...base, date: ev.start, time: ev.startTime || "", sintomas: ev.sintomas || [], temps: (ev.temps || []).map((t) => ({ t: t.t || "", v: String(t.v) })), note: ev.note || "" };
     if (ev.type === "enfermedad") return { ...base, title: ev.title || "", start: ev.start, end: ev.end || "", note: ev.note || "", missedDays: ev.missedDays || 0 };
     if (ev.type === "cita") return { ...base, title: ev.title || "", medico: ev.medico || "", start: ev.start, startTime: ev.startTime || "09:00", repeatMonths: ev.repeatMonths || 0 };
@@ -6503,7 +6638,7 @@ var __angst = (() => {
   function Field({ label, children }) {
     return /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: LABEL_DARK }, label), children);
   }
-  function EntrySheet({ init, family, kh, today, onSave, onDelete, onClose }) {
+  function EntrySheet({ init, family, kh, today, onSave, onDelete, onClose, types, z }) {
     const editing = init.ev || null;
     const [type, setType] = React.useState(editing ? editing.type : init.type || null);
     const [personId, setPersonId] = React.useState(editing ? editing.personId : init.personId || null);
@@ -6512,8 +6647,11 @@ var __angst = (() => {
     const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
     const chooseType = (t) => {
       setType(t);
-      if (t === "cita") set("startTime", "09:00");
+      if (t === "cita") set("startTime", init && init.type === "cita" && init.ev ? f2.startTime : "09:00");
     };
+    React.useEffect(() => {
+      if (!personId && family.length === 1) setPersonId(family[0].id);
+    }, []);
     const perfil = (kh.profiles || {})[personId] || {};
     const hasTemp = f2.temps.some((t) => !isNaN(parseFloat(t.v)));
     const hz = calcHazard(f2.sintomas, f2.temps.map((t) => ({ v: t.v })));
@@ -6522,14 +6660,15 @@ var __angst = (() => {
     if (type === "sintoma") ok = ok && (f2.sintomas.length > 0 || hasTemp || !!f2.note.trim());
     else if (type === "medicamento" || type === "tratamiento") ok = ok && !!f2.title.trim() && !!f2.start;
     else if (type === "cita") ok = ok && !!f2.title.trim() && !!f2.start && !!f2.startTime;
+    else if (type === "diagnostico") ok = ok && !!f2.title.trim() && !!f2.start;
     else if (type === "enfermedad") ok = ok && !!f2.start;
     const alergia = type === "medicamento" && f2.title.trim() ? (perfil.alergias || []).find((a) => {
       const x = String(a).toLowerCase(), y = f2.title.trim().toLowerCase();
       return x && (x.includes(y) || y.includes(x));
     }) : null;
-    const zones = SYMPTOM_ZONES.map((z) => ({ ...z, symptoms: z.symptoms.filter((s) => !FEVER_IDS.includes(s.id) || f2.sintomas.includes(s.id)) })).filter((z) => z.symptoms.length);
+    const zones = SYMPTOM_ZONES.map((z2) => ({ ...z2, symptoms: z2.symptoms.filter((s) => !FEVER_IDS.includes(s.id) || f2.sintomas.includes(s.id)) })).filter((z2) => z2.symptoms.length);
     const title = editing ? (TYPE_META[editing.type] || {}).label : type ? TYPE_META[type].label : "Agregar";
-    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 500, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,480px)", background: "#0d0d0d", borderRadius: "16px 16px 0 0", maxHeight: "92vh", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 20px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, display: "flex", alignItems: "center", gap: 10 } }, !editing && type && /* @__PURE__ */ React.createElement("button", { onClick: () => setType(null), style: { background: "transparent", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 18, cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: F_HAND, fontSize: 20, fontWeight: 700, color: "#fff" } }, title), type === "sintoma" && /* @__PURE__ */ React.createElement("div", { style: { background: hcfg.bg, border: `1px solid ${hcfg.color}`, borderRadius: 8, padding: "4px 10px", fontFamily: F_SANS, fontSize: 9, color: hcfg.text, letterSpacing: 1, textTransform: "uppercase" } }, hcfg.emoji, " ", hcfg.label), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 22, cursor: "pointer", padding: 0, lineHeight: 1 } }, "\xD7")), !type && /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 20px 32px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } }, ADD_TYPES.map((t) => /* @__PURE__ */ React.createElement("button", { key: t, onClick: () => chooseType(t), style: { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "18px 8px", cursor: "pointer", color: "#fff" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 26 } }, TYPE_META[t].icon), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 12, marginTop: 6 } }, TYPE_META[t].label)))), type && /* @__PURE__ */ React.createElement("div", { style: { overflowY: "auto", flex: 1, padding: "14px 20px" } }, !editing && /* @__PURE__ */ React.createElement(Field, { label: "para" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, family.map((p) => /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: z || 500, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,480px)", background: "#0d0d0d", borderRadius: "16px 16px 0 0", maxHeight: "92vh", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 20px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, display: "flex", alignItems: "center", gap: 10 } }, !editing && type && /* @__PURE__ */ React.createElement("button", { onClick: () => setType(null), style: { background: "transparent", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 18, cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: F_HAND, fontSize: 20, fontWeight: 700, color: "#fff" } }, title), type === "sintoma" && /* @__PURE__ */ React.createElement("div", { style: { background: hcfg.bg, border: `1px solid ${hcfg.color}`, borderRadius: 8, padding: "4px 10px", fontFamily: F_SANS, fontSize: 9, color: hcfg.text, letterSpacing: 1, textTransform: "uppercase" } }, hcfg.emoji, " ", hcfg.label), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 22, cursor: "pointer", padding: 0, lineHeight: 1 } }, "\xD7")), !type && /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 20px 32px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } }, (types || ADD_TYPES).map((t) => /* @__PURE__ */ React.createElement("button", { key: t, onClick: () => chooseType(t), style: { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "18px 8px", cursor: "pointer", color: "#fff" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 26 } }, TYPE_META[t].icon), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 12, marginTop: 6 } }, TYPE_META[t].label)))), type && /* @__PURE__ */ React.createElement("div", { style: { overflowY: "auto", flex: 1, padding: "14px 20px" } }, !editing && /* @__PURE__ */ React.createElement(Field, { label: "para" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, family.map((p) => /* @__PURE__ */ React.createElement(
       "button",
       {
         key: p.id,
@@ -6539,10 +6678,10 @@ var __angst = (() => {
       p.icon,
       " ",
       p.name
-    )))), (perfil.alergias || []).length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 14 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 9, color: "#e53935", letterSpacing: 1 } }, "ALERGIAS:"), perfil.alergias.map((a, i) => /* @__PURE__ */ React.createElement("span", { key: i, style: { fontFamily: F_SANS, fontSize: 9, color: "rgba(255,100,100,0.85)", background: "rgba(255,100,100,0.1)", borderRadius: 5, padding: "1px 6px" } }, a))), type === "sintoma" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Field, { label: "cu\xE1ndo" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.date, max: today, onChange: (e) => set("date", e.target.value), style: INP_DARK }), /* @__PURE__ */ React.createElement("input", { type: "time", value: f2.time, onChange: (e) => set("time", e.target.value), style: { ...INP_DARK, width: 120 } }))), /* @__PURE__ */ React.createElement(Field, { label: "temperatura" }, f2.temps.map((t, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", gap: 8, alignItems: "center", marginBottom: 6 } }, /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.1", value: t.v, placeholder: "ej: 38.5", onChange: (e) => set("temps", f2.temps.map((x, j) => j === i ? { ...x, v: e.target.value } : x)), style: INP_DARK }), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 13, color: "rgba(255,255,255,0.4)" } }, "\xB0C"), /* @__PURE__ */ React.createElement("input", { type: "time", value: t.t, onChange: (e) => set("temps", f2.temps.map((x, j) => j === i ? { ...x, t: e.target.value } : x)), style: { ...INP_DARK, width: 110 } }), parseFloat(t.v) >= 38 && /* @__PURE__ */ React.createElement("span", null, "\u26A0\uFE0F"), /* @__PURE__ */ React.createElement("button", { onClick: () => set("temps", f2.temps.filter((_, j) => j !== i)), style: { background: "transparent", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 18, cursor: "pointer" } }, "\xD7"))), /* @__PURE__ */ React.createElement("button", { onClick: () => set("temps", [...f2.temps, { t: localTimeKey(), v: "" }]), style: { background: "transparent", border: "1px dashed rgba(255,255,255,0.2)", borderRadius: 8, padding: "6px 12px", fontFamily: F_SANS, fontSize: 11, color: "rgba(255,255,255,0.5)", cursor: "pointer" } }, "+ otra lectura")), /* @__PURE__ */ React.createElement(Field, { label: `s\xEDntomas${f2.sintomas.length ? ` \xB7 ${f2.sintomas.length}` : " (opcional)"}` }, zones.map((z) => {
-      const n = z.symptoms.filter((s) => f2.sintomas.includes(s.id)).length;
-      const open = openZone === z.id || n > 0;
-      return /* @__PURE__ */ React.createElement("div", { key: z.id, style: { marginBottom: 6 } }, /* @__PURE__ */ React.createElement("div", { onClick: () => setOpenZone(openZone === z.id ? null : z.id), style: { display: "flex", justifyContent: "space-between", padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.04)", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 12, color: "rgba(255,255,255,0.7)" } }, z.label), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 11, color: n ? "#aac756" : "rgba(255,255,255,0.3)" } }, n ? `${n} \u2713` : open ? "\u2212" : "+")), open && z.symptoms.map((s) => {
+    )))), (perfil.alergias || []).length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 14 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 9, color: "#e53935", letterSpacing: 1 } }, "ALERGIAS:"), perfil.alergias.map((a, i) => /* @__PURE__ */ React.createElement("span", { key: i, style: { fontFamily: F_SANS, fontSize: 9, color: "rgba(255,100,100,0.85)", background: "rgba(255,100,100,0.1)", borderRadius: 5, padding: "1px 6px" } }, a))), type === "sintoma" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Field, { label: "cu\xE1ndo" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.date, max: today, onChange: (e) => set("date", e.target.value), style: INP_DARK }), /* @__PURE__ */ React.createElement("input", { type: "time", value: f2.time, onChange: (e) => set("time", e.target.value), style: { ...INP_DARK, width: 120 } }))), /* @__PURE__ */ React.createElement(Field, { label: "temperatura" }, f2.temps.map((t, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", gap: 8, alignItems: "center", marginBottom: 6 } }, /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.1", value: t.v, placeholder: "ej: 38.5", onChange: (e) => set("temps", f2.temps.map((x, j) => j === i ? { ...x, v: e.target.value } : x)), style: INP_DARK }), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 13, color: "rgba(255,255,255,0.4)" } }, "\xB0C"), /* @__PURE__ */ React.createElement("input", { type: "time", value: t.t, onChange: (e) => set("temps", f2.temps.map((x, j) => j === i ? { ...x, t: e.target.value } : x)), style: { ...INP_DARK, width: 110 } }), parseFloat(t.v) >= 38 && /* @__PURE__ */ React.createElement("span", null, "\u26A0\uFE0F"), /* @__PURE__ */ React.createElement("button", { onClick: () => set("temps", f2.temps.filter((_, j) => j !== i)), style: { background: "transparent", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 18, cursor: "pointer" } }, "\xD7"))), /* @__PURE__ */ React.createElement("button", { onClick: () => set("temps", [...f2.temps, { t: localTimeKey(), v: "" }]), style: { background: "transparent", border: "1px dashed rgba(255,255,255,0.2)", borderRadius: 8, padding: "6px 12px", fontFamily: F_SANS, fontSize: 11, color: "rgba(255,255,255,0.5)", cursor: "pointer" } }, "+ otra lectura")), /* @__PURE__ */ React.createElement(Field, { label: `s\xEDntomas${f2.sintomas.length ? ` \xB7 ${f2.sintomas.length}` : " (opcional)"}` }, zones.map((z2) => {
+      const n = z2.symptoms.filter((s) => f2.sintomas.includes(s.id)).length;
+      const open = openZone === z2.id || n > 0;
+      return /* @__PURE__ */ React.createElement("div", { key: z2.id, style: { marginBottom: 6 } }, /* @__PURE__ */ React.createElement("div", { onClick: () => setOpenZone(openZone === z2.id ? null : z2.id), style: { display: "flex", justifyContent: "space-between", padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.04)", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 12, color: "rgba(255,255,255,0.7)" } }, z2.label), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 11, color: n ? "#aac756" : "rgba(255,255,255,0.3)" } }, n ? `${n} \u2713` : open ? "\u2212" : "+")), open && z2.symptoms.map((s) => {
         const sel = f2.sintomas.includes(s.id);
         const crit = s.flag === "CRITICAL", warn = s.flag === "WARNING";
         return /* @__PURE__ */ React.createElement(
@@ -6566,7 +6705,7 @@ var __angst = (() => {
           /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 13, color: sel ? "#fff" : "rgba(255,255,255,0.6)" } }, s.label, crit && " \u26AB CR\xCDTICO", warn && " \u{1F534} ALERTA")
         );
       }));
-    })), /* @__PURE__ */ React.createElement(Field, { label: "nota" }, /* @__PURE__ */ React.createElement("textarea", { value: f2.note, rows: 3, onChange: (e) => set("note", e.target.value), placeholder: "observaciones, contexto, evoluci\xF3n...", style: { ...INP_DARK, resize: "none" } }))), (type === "medicamento" || type === "tratamiento") && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Field, { label: type === "medicamento" ? "medicamento" : "tratamiento" }, /* @__PURE__ */ React.createElement("input", { value: f2.title, onChange: (e) => set("title", e.target.value), placeholder: type === "medicamento" ? "ej: ibuprofeno" : "ej: nebulizaciones, kinesiolog\xEDa", style: INP_DARK })), alergia && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 12, color: "#ff6b6b", background: "rgba(255,100,100,0.1)", borderRadius: 8, padding: "8px 10px", marginBottom: 14 } }, "\u26A0\uFE0F Coincide con una alergia registrada: ", alergia), /* @__PURE__ */ React.createElement(Field, { label: "dosis" }, /* @__PURE__ */ React.createElement("input", { value: f2.dosis, onChange: (e) => set("dosis", e.target.value), placeholder: "ej: 5 ml", style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "frecuencia" }, /* @__PURE__ */ React.createElement("input", { value: f2.freq, onChange: (e) => set("freq", e.target.value), placeholder: "ej: cada 8 h", style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "inicio" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.start, onChange: (e) => set("start", e.target.value), style: INP_DARK }), /* @__PURE__ */ React.createElement("input", { type: "time", value: f2.startTime, onChange: (e) => set("startTime", e.target.value), style: { ...INP_DARK, width: 120 } }))), /* @__PURE__ */ React.createElement(Field, { label: "fin (si es un curso)" }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.end, min: f2.start, onChange: (e) => set("end", e.target.value), style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "nota" }, /* @__PURE__ */ React.createElement("input", { value: f2.note, onChange: (e) => set("note", e.target.value), style: INP_DARK }))), type === "cita" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Field, { label: "tipo de cita" }, /* @__PURE__ */ React.createElement("input", { value: f2.title, onChange: (e) => set("title", e.target.value), placeholder: "ej: control pedi\xE1trico", style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "m\xE9dico / especialista" }, /* @__PURE__ */ React.createElement("input", { value: f2.medico, onChange: (e) => set("medico", e.target.value), style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "fecha y hora" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.start, onChange: (e) => set("start", e.target.value), style: INP_DARK }), /* @__PURE__ */ React.createElement("input", { type: "time", value: f2.startTime, onChange: (e) => set("startTime", e.target.value), style: { ...INP_DARK, width: 120 } }))), /* @__PURE__ */ React.createElement(Field, { label: "repetir" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, REPEAT_OPTS.map((o) => /* @__PURE__ */ React.createElement("button", { key: o.v, onClick: () => set("repeatMonths", o.v), style: { fontFamily: F_SANS, fontSize: 11, padding: "5px 10px", borderRadius: 8, cursor: "pointer", border: "1px dashed rgba(255,255,255,0.2)", background: f2.repeatMonths === o.v ? "#fff" : "transparent", color: f2.repeatMonths === o.v ? "#111" : "rgba(255,255,255,0.6)" } }, o.l)))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.5, marginBottom: 14 } }, "Se agrega al planner el d\xEDa de la cita y una tarea de preparaci\xF3n el d\xEDa anterior a las 21:30", f2.repeatMonths ? " (pr\xF3ximas 4 ocurrencias)" : "", ". Si editas o eliminas la cita, esas tareas se actualizan.", editing && editing.legacy && " Esta cita viene de la versi\xF3n anterior: sus tareas ya agendadas no est\xE1n ligadas; al guardar se crean nuevas.")), type === "enfermedad" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Field, { label: "nombre del episodio (opcional)" }, /* @__PURE__ */ React.createElement("input", { value: f2.title, onChange: (e) => set("title", e.target.value), placeholder: "ej: bronquitis", style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "inicio / fin" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.start, onChange: (e) => set("start", e.target.value), style: INP_DARK }), /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.end, min: f2.start, onChange: (e) => set("end", e.target.value), style: INP_DARK }))), /* @__PURE__ */ React.createElement(Field, { label: "nota" }, /* @__PURE__ */ React.createElement("textarea", { value: f2.note, rows: 3, onChange: (e) => set("note", e.target.value), style: { ...INP_DARK, resize: "none" } })))), type && /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 20px 28px", borderTop: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, display: "flex", gap: 8 } }, editing && type !== "enfermedad" && /* @__PURE__ */ React.createElement("button", { onClick: () => {
+    })), /* @__PURE__ */ React.createElement(Field, { label: "nota" }, /* @__PURE__ */ React.createElement("textarea", { value: f2.note, rows: 3, onChange: (e) => set("note", e.target.value), placeholder: "observaciones, contexto, evoluci\xF3n...", style: { ...INP_DARK, resize: "none" } }))), (type === "medicamento" || type === "tratamiento") && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Field, { label: type === "medicamento" ? "medicamento" : "tratamiento" }, /* @__PURE__ */ React.createElement("input", { value: f2.title, onChange: (e) => set("title", e.target.value), placeholder: type === "medicamento" ? "ej: ibuprofeno" : "ej: nebulizaciones, kinesiolog\xEDa", style: INP_DARK })), alergia && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 12, color: "#ff6b6b", background: "rgba(255,100,100,0.1)", borderRadius: 8, padding: "8px 10px", marginBottom: 14 } }, "\u26A0\uFE0F Coincide con una alergia registrada: ", alergia), /* @__PURE__ */ React.createElement(Field, { label: "dosis" }, /* @__PURE__ */ React.createElement("input", { value: f2.dosis, onChange: (e) => set("dosis", e.target.value), placeholder: "ej: 5 ml", style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "frecuencia" }, /* @__PURE__ */ React.createElement("input", { value: f2.freq, onChange: (e) => set("freq", e.target.value), placeholder: "ej: cada 8 h", style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "inicio" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.start, onChange: (e) => set("start", e.target.value), style: INP_DARK }), /* @__PURE__ */ React.createElement("input", { type: "time", value: f2.startTime, onChange: (e) => set("startTime", e.target.value), style: { ...INP_DARK, width: 120 } }))), /* @__PURE__ */ React.createElement(Field, { label: "fin (si es un curso)" }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.end, min: f2.start, onChange: (e) => set("end", e.target.value), style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "nota" }, /* @__PURE__ */ React.createElement("input", { value: f2.note, onChange: (e) => set("note", e.target.value), style: INP_DARK }))), type === "cita" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Field, { label: "especialidad" }, /* @__PURE__ */ React.createElement("input", { value: f2.title, onChange: (e) => set("title", e.target.value), placeholder: "ej: pediatr\xEDa", style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "m\xE9dico (opcional)" }, /* @__PURE__ */ React.createElement("input", { value: f2.medico, onChange: (e) => set("medico", e.target.value), placeholder: "ej: Dra. Rojas", style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "fecha y hora" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.start, onChange: (e) => set("start", e.target.value), style: INP_DARK }), /* @__PURE__ */ React.createElement("input", { type: "time", value: f2.startTime, onChange: (e) => set("startTime", e.target.value), style: { ...INP_DARK, width: 120 } }))), /* @__PURE__ */ React.createElement(Field, { label: "repetir" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, REPEAT_OPTS.map((o) => /* @__PURE__ */ React.createElement("button", { key: o.v, onClick: () => set("repeatMonths", o.v), style: { fontFamily: F_SANS, fontSize: 11, padding: "5px 10px", borderRadius: 8, cursor: "pointer", border: "1px dashed rgba(255,255,255,0.2)", background: f2.repeatMonths === o.v ? "#fff" : "transparent", color: f2.repeatMonths === o.v ? "#111" : "rgba(255,255,255,0.6)" } }, o.l)))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.5, marginBottom: 14 } }, "Se agrega al planner el d\xEDa de la cita (paciente, especialidad y hora), se marca \u{1F3E5} en el calendario y se crea una tarea de preparaci\xF3n el d\xEDa anterior a las 21:30", f2.repeatMonths ? " (pr\xF3ximas 4 ocurrencias)" : "", ". Si editas o eliminas la cita, todo eso se actualiza.", editing && editing.legacy && " Esta cita viene de la versi\xF3n anterior: sus tareas ya agendadas no est\xE1n ligadas; al guardar se crean nuevas.")), type === "diagnostico" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Field, { label: "diagn\xF3stico" }, /* @__PURE__ */ React.createElement("input", { value: f2.title, onChange: (e) => set("title", e.target.value), placeholder: "ej: bronquitis aguda", style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "qui\xE9n lo dio (m\xE9dico / especialidad)" }, /* @__PURE__ */ React.createElement("input", { value: f2.medico, onChange: (e) => set("medico", e.target.value), placeholder: "ej: Dra. Rojas, pediatr\xEDa", style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "fecha" }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.start, max: today, onChange: (e) => set("start", e.target.value), style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "nota" }, /* @__PURE__ */ React.createElement("textarea", { value: f2.note, rows: 3, onChange: (e) => set("note", e.target.value), placeholder: "indicaciones, tratamiento indicado...", style: { ...INP_DARK, resize: "none" } }))), type === "enfermedad" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Field, { label: "nombre del episodio (opcional)" }, /* @__PURE__ */ React.createElement("input", { value: f2.title, onChange: (e) => set("title", e.target.value), placeholder: "ej: bronquitis", style: INP_DARK })), /* @__PURE__ */ React.createElement(Field, { label: "inicio / fin" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.start, onChange: (e) => set("start", e.target.value), style: INP_DARK }), /* @__PURE__ */ React.createElement("input", { type: "date", value: f2.end, min: f2.start, onChange: (e) => set("end", e.target.value), style: INP_DARK }))), /* @__PURE__ */ React.createElement(Field, { label: "nota" }, /* @__PURE__ */ React.createElement("textarea", { value: f2.note, rows: 3, onChange: (e) => set("note", e.target.value), style: { ...INP_DARK, resize: "none" } })))), type && /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 20px 28px", borderTop: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, display: "flex", gap: 8 } }, editing && type !== "enfermedad" && /* @__PURE__ */ React.createElement("button", { onClick: () => {
       if (window.confirm("\xBFEliminar este registro?")) onDelete(editing);
     }, style: { background: "transparent", border: "1px dashed rgba(255,255,255,0.2)", borderRadius: 10, padding: "12px 16px", fontFamily: F_SANS, fontSize: 12, color: "rgba(255,255,255,0.5)", cursor: "pointer" } }, "eliminar"), /* @__PURE__ */ React.createElement(
       "button",
@@ -6659,83 +6798,83 @@ var __angst = (() => {
   function Onboarding({ kh, save }) {
     return /* @__PURE__ */ React.createElement("div", { style: PAGE }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND, fontSize: 22, color: "#555", marginBottom: 4 } }, "Familia"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 12, color: "#999", marginBottom: 16 } }, "Todav\xEDa no hay nadie cargado. Agrega a cada persona una vez \u2014 queda guardado en tus datos, no en el c\xF3digo. Despu\xE9s puedes sumar m\xE1s desde la l\xEDnea de tiempo."), /* @__PURE__ */ React.createElement(PersonForm, { submitLabel: "agregar", onSubmit: (d) => save(addPerson(kh, d).kh) }));
   }
+  function ModalShell({ children, onClose, z }) {
+    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: z || 600, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 12 } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", borderRadius: 14, width: "min(96vw,480px)", maxHeight: "92vh", overflowY: "auto", boxShadow: "5px 5px 0 #111", border: "2px dashed #111", position: "relative" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", padding: "6px 10px 0" } }, /* @__PURE__ */ React.createElement("button", { onClick: onClose, "aria-label": "cerrar", style: { background: "transparent", border: "none", fontSize: 22, color: "#aaa", cursor: "pointer", lineHeight: 1, padding: 0 } }, "\xD7")), children));
+  }
+  var SECTIONS = [
+    { id: "episodios", icon: "\u{1F912}", label: "Episodios" },
+    { id: "citas", icon: "\u{1F5D3}\uFE0F", label: "Citas" },
+    { id: "medicacion", icon: "\u{1F48A}", label: "Medicaci\xF3n y tratamientos" },
+    { id: "historial", icon: "\u{1F4DA}", label: "Historial" }
+  ];
+  var MONTH_LONG = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  function SectionRow({ sec, summary, open, onToggle }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        onClick: onToggle,
+        "aria-expanded": open,
+        style: {
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          minHeight: 44,
+          padding: "6px 12px",
+          marginBottom: 4,
+          borderRadius: 10,
+          cursor: "pointer",
+          textAlign: "left",
+          background: open ? "#111" : "#fff",
+          color: open ? "#fff" : "#111",
+          border: "1px dashed " + (open ? "#111" : "#ddd"),
+          flex: "none",
+          boxSizing: "border-box"
+        }
+      },
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, sec.icon),
+      /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_HAND, fontSize: 17, fontWeight: 700, whiteSpace: "nowrap" } }, sec.label),
+      /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, fontFamily: F_SANS, fontSize: 11, color: open ? "rgba(255,255,255,0.55)" : "#999", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" } }, summary),
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: open ? "rgba(255,255,255,0.6)" : "#bbb", transform: open ? "rotate(90deg)" : "none", transition: "transform .15s" } }, "\u203A")
+    );
+  }
+  function HistoryRow({ it, label, family, showPerson, onOpen }) {
+    const ev = it.ev;
+    const meta = TYPE_META[ev.type] || { icon: "\u2022", label: ev.type };
+    return /* @__PURE__ */ React.createElement("div", { onClick: () => onOpen(ev), style: { display: "flex", alignItems: "center", gap: 8, padding: "7px 4px", borderBottom: "1px dashed #eee", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F_SANS, fontSize: 10, color: "#aaa", minWidth: 42 } }, ev.start.slice(8), "/", ev.start.slice(5, 7)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13 } }, meta.icon), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, fontFamily: F_SANS, fontSize: 12, color: "#333", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, showPerson && /* @__PURE__ */ React.createElement("span", { style: { color: "#999" } }, nameOf2(family, ev.personId), " \xB7 "), label), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#ccc" } }, "\u203A"));
+  }
   function SaludPage({ kidsHealth, saveKidsHealth, dayData, updateDay, calMarks, saveCalMarks }) {
     const today = localDateKey();
     const kh = React.useMemo(() => migrateKidsHealth(kidsHealth, today), [kidsHealth]);
     const family = kh.family || [];
-    const [view, setView] = React.useState("timeline");
+    const [modal, setModal] = React.useState(null);
     const [filterId, setFilterId] = React.useState(null);
     const [selId, setSelId] = React.useState(null);
     const [sheet, setSheet] = React.useState(null);
+    const [open, setOpen] = React.useState(null);
+    const [suggest, setSuggest] = React.useState(null);
+    const bodyRef = React.useRef(null);
+    React.useEffect(() => {
+      const el = bodyRef.current;
+      if (!el || open) return;
+      const over = el.scrollHeight - el.clientHeight;
+      if (over > 1) console.warn(`[salud] desborda colapsado: ${over}px \u2014 revisar alturas (R2)`);
+    });
     if (family.length === 0) return /* @__PURE__ */ React.createElement(Onboarding, { kh, save: saveKidsHealth });
     const events = kh.events || [];
     const persist = (next) => saveKidsHealth(next);
-    function applyPlan(plan) {
-      if (updateDay) Object.entries(plan.dayPatches).forEach(([dk, tasks]) => updateDay(dk, { tasks }));
-      if (plan.marks && saveCalMarks) saveCalMarks(plan.marks);
-    }
-    function markDoctor(dk) {
-      if (!saveCalMarks) return;
-      const cur = Array.isArray(calMarks && calMarks[dk]) ? calMarks[dk] : calMarks && calMarks[dk] ? [calMarks[dk]] : [];
-      if (!cur.includes("doctor")) saveCalMarks({ ...calMarks || {}, [dk]: [...cur, "doctor"] });
-    }
-    function handleSave({ type, personId, f: f2, editing }) {
-      if (type === "sintoma") {
-        if (editing) {
-          const temps = f2.temps.filter((t) => !isNaN(parseFloat(t.v))).map((t) => ({ t: t.t || null, v: parseFloat(t.v) }));
-          persist(upsertEvent(kh, { ...editing, start: f2.date, startTime: f2.time || null, sintomas: f2.sintomas, temps, hazardLevel: calcHazard(f2.sintomas, temps), note: f2.note }));
-        } else {
-          const r = addSymptomEntry(kh, { personId, date: f2.date, time: f2.time, sintomas: f2.sintomas, temps: f2.temps, note: f2.note }, { illness: nid("ep_"), entry: nid("sx_") });
-          persist(r.kh);
-          if (r.doctorMarkDate) markDoctor(r.doctorMarkDate);
-        }
-      } else if (type === "medicamento" || type === "tratamiento") {
-        const ill = editing ? null : activeIllness(events, personId);
-        const parentId = editing ? editing.parentId : ill && f2.start >= ill.start ? ill.id : void 0;
-        persist(upsertEvent(kh, {
-          ...editing || {},
-          id: editing ? editing.id : nid(type === "medicamento" ? "md_" : "tr_"),
-          personId,
-          type,
-          parentId,
-          title: f2.title.trim(),
-          dosis: f2.dosis.trim(),
-          freq: f2.freq.trim(),
-          start: f2.start,
-          startTime: f2.startTime || null,
-          end: f2.end || null,
-          note: f2.note.trim()
-        }));
-      } else if (type === "cita") {
-        const ev = {
-          id: editing ? editing.id : nid("ct_"),
-          personId,
-          type: "cita",
-          title: f2.title.trim(),
-          medico: f2.medico.trim(),
-          start: f2.start,
-          startTime: f2.startTime,
-          repeatMonths: f2.repeatMonths || null,
-          markedDates: editing && editing.markedDates || []
-        };
-        const plan = planCita({ events: events.filter((e) => e.id !== ev.id), dayData, marks: calMarks, prevEv: editing, nextEv: ev, personName: nameOf(family, personId) });
-        persist(upsertEvent(kh, plan.ev));
-        applyPlan(plan);
-      } else if (type === "enfermedad") {
-        persist(upsertEvent(kh, { ...editing, title: f2.title.trim(), start: f2.start, end: f2.end || null, note: f2.note.trim() }));
-      }
+    const actions = makeSaludActions({ kh, persist, dayData, updateDay, calMarks, saveCalMarks, isMedicalTask: esTareaMedica });
+    function handleSave(args) {
+      const r = actions.save(args);
+      if (r.suggest) setSuggest(r.suggest);
       setSheet(null);
     }
     function handleDelete(ev) {
-      if (ev.type === "cita") {
-        const plan = planCita({ events: events.filter((e) => e.id !== ev.id), dayData, marks: calMarks, prevEv: ev, nextEv: null, personName: "" });
-        persist(deleteEvent(kh, ev.id));
-        applyPlan(plan);
-      } else persist(deleteEvent(kh, ev.id));
+      actions.remove(ev);
       setSheet(null);
     }
     const closeEpisode = (id) => persist(closeIllness(kh, id, today));
-    const setMissed = (id, n) => persist({ ...kh, events: events.map((e) => e.id === id ? { ...e, missedDays: Math.max(0, (e.missedDays || 0) + n) } : e) });
+    const setMissed = (id, n2) => persist({ ...kh, events: events.map((e) => e.id === id ? { ...e, missedDays: Math.max(0, (e.missedDays || 0) + n2) } : e) });
     const saveProfile = (pid, data) => persist({ ...kh, profiles: { ...kh.profiles || {}, [pid]: data } });
     function saveGrowth(pid, entry) {
       const perfil = (kh.profiles || {})[pid] || {};
@@ -6743,18 +6882,17 @@ var __angst = (() => {
       saveProfile(pid, { ...perfil, growthLog: log });
       if (updateDay) {
         const nextStr = entry.date.slice(0, 4) * 1 + 1 + entry.date.slice(4);
-        const rid = nid("gr_");
-        updateDay(nextStr, { tasks: [...dayData && dayData[nextStr] && dayData[nextStr].tasks || [], { id: rid, text: `medir a ${nameOf(family, pid)}`, fixed: false, done: false }] });
-        markDoctor(nextStr);
+        const rid = "gr_" + Date.now().toString(36);
+        updateDay(nextStr, { tasks: [...dayData && dayData[nextStr] && dayData[nextStr].tasks || [], { id: rid, text: `medir a ${nameOf2(family, pid)}`, fixed: false, done: false }] });
       }
     }
     function savePerson(data) {
       if (selPerson) {
         persist(updatePerson(kh, selPerson.id, data));
-        setView("perfil");
+        setModal("perfil");
       } else {
         persist(addPerson(kh, data).kh);
-        setView("timeline");
+        setModal(null);
       }
     }
     function deletePerson(p) {
@@ -6763,78 +6901,54 @@ var __angst = (() => {
       persist(next);
       setFilterId(null);
       setSelId(null);
-      setView("timeline");
+      setModal(null);
     }
     const selPerson = family.find((f2) => f2.id === selId);
-    if (view === "persona") {
-      return /* @__PURE__ */ React.createElement(PersonView, { kh, persona: selPerson || null, onBack: () => setView(selPerson ? "perfil" : "timeline"), onSave: savePerson, onDelete: deletePerson });
-    }
-    if (view === "perfil" && selPerson) {
-      return /* @__PURE__ */ React.createElement(
-        PerfilView,
-        {
-          key: selId,
-          persona: selPerson,
-          perfil: (kh.profiles || {})[selId] || {},
-          onBack: (d) => {
-            saveProfile(selId, d);
-            setView("timeline");
-          },
-          onGrowth: (d) => {
-            saveProfile(selId, d);
-            setView("crecimiento");
-          },
-          onEditPerson: (d) => {
-            saveProfile(selId, d);
-            setView("persona");
-          }
-        }
-      );
-    }
-    if (view === "crecimiento" && selPerson) {
-      return /* @__PURE__ */ React.createElement(
-        GrowthView_default,
-        {
-          key: selId,
-          persona: selPerson,
-          perfil: (kh.profiles || {})[selId] || {},
-          today,
-          onBack: () => setView("perfil"),
-          onSave: (e) => saveGrowth(selId, e)
-        }
-      );
-    }
-    if (view === "resumen") {
-      return /* @__PURE__ */ React.createElement(ResumenView, { kh, family, initialPersonId: filterId, today, onBack: () => setView("timeline") });
-    }
-    const tl = buildTimeline(events, { personId: filterId, today });
+    const sec = buildSections(events, { personId: filterId, today });
     const showPerson = !filterId;
-    const open = (ev) => setSheet({ ev, personId: ev.personId });
-    const chip4 = (active) => ({ fontFamily: F_SANS, fontSize: 12, padding: "6px 12px", borderRadius: 16, cursor: "pointer", whiteSpace: "nowrap", border: "1px solid " + (active ? "#111" : "#ddd"), background: active ? "#111" : "transparent", color: active ? "#fff" : "#666" });
-    return /* @__PURE__ */ React.createElement("div", { style: PAGE }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: F_HAND, fontSize: 24, color: "#555" } }, "Salud"), filterId && /* @__PURE__ */ React.createElement("button", { onClick: () => {
-      setSelId(filterId);
-      setView("perfil");
-    }, style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: F_SANS, fontSize: 11, color: "#888" } }, "\u267E\uFE0F ficha"), /* @__PURE__ */ React.createElement("button", { onClick: () => setView("resumen"), style: { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontFamily: F_SANS, fontSize: 11, color: "#888" } }, "\u{1F4C4} resumen")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, overflowX: "auto", paddingBottom: 6, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setFilterId(null), style: chip4(!filterId) }, "Familia"), family.map((p) => {
+    const openEv = (ev) => setSheet({ ev, personId: ev.personId });
+    const chip4 = (active) => ({ fontFamily: F_SANS, fontSize: 12, padding: "6px 12px", borderRadius: 16, cursor: "pointer", whiteSpace: "nowrap", flex: "none", border: "1px solid " + (active ? "#111" : "#ddd"), background: active ? "#111" : "transparent", color: active ? "#fff" : "#666" });
+    const toggle = (id) => setOpen((o) => o === id ? null : id);
+    const n = (k, one, many) => `${k} ${k === 1 ? one : many}`;
+    const summaries = {
+      episodios: sec.illnesses.length === 0 ? "sin episodios" : sec.active.length ? `${n(sec.active.length, "activo", "activos")} \xB7 ${sec.illnesses.length} en total` : `${sec.illnesses.length} en total`,
+      citas: sec.upcoming.length === 0 ? "sin citas agendadas" : `pr\xF3xima ${fmtDay(sec.upcoming[0].dk)}${sec.upcoming[0].ev.startTime ? " " + sec.upcoming[0].ev.startTime : ""}${sec.upcoming.length > 1 ? ` \xB7 ${sec.upcoming.length} agendadas` : ""}`,
+      medicacion: sec.vigentes.length ? n(sec.vigentes.length, "vigente", "vigentes") : sec.meds[0] ? `\xFAltima: ${sec.meds[0].title} ${sec.meds[0].start.slice(8)}/${sec.meds[0].start.slice(5, 7)}` : "sin registros",
+      historial: sec.historyCount ? n(sec.historyCount, "evento", "eventos") : "sin registros"
+    };
+    const nextCita = sec.upcoming[0];
+    const activeLines = sec.active.slice(0, 2);
+    const suggestName = suggest ? nameOf2(family, suggest.personId) : null;
+    return /* @__PURE__ */ React.createElement("div", { style: { flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", padding: "10px 12px 8px", maxWidth: 520, width: "100%", margin: "0 auto", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, marginBottom: 6, flex: "none", scrollbarWidth: "none" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setFilterId(null), style: chip4(!filterId) }, "Familia"), family.map((p) => {
       const ill = activeIllness(events, p.id);
       return /* @__PURE__ */ React.createElement("button", { key: p.id, onClick: () => setFilterId(p.id), style: chip4(filterId === p.id) }, p.icon, " ", p.name, ill ? " " + (HAZARD_CONFIG[ill.hazardLevel || "CLEAR"] || HAZARD_CONFIG.CLEAR).emoji : "");
     }), /* @__PURE__ */ React.createElement("button", { onClick: () => {
       setSelId(null);
-      setView("persona");
-    }, style: { ...chip4(false), borderStyle: "dashed" } }, "+ persona")), /* @__PURE__ */ React.createElement("button", { onClick: () => setSheet({ personId: filterId }), style: { width: "100%", background: "#111", border: "none", borderRadius: 10, padding: "12px", fontFamily: F_HAND, fontSize: 18, color: "#fff", cursor: "pointer", marginBottom: 16 } }, "+ agregar"), tl.upcoming.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 9, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "pr\xF3ximas citas"), tl.upcoming.map((ev) => /* @__PURE__ */ React.createElement(UpcomingRow, { key: ev.id, ev, family, showPerson, onOpen: open }))), tl.items.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 9, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 } }, "historial"), tl.items.map((it) => it.kind === "illness" ? /* @__PURE__ */ React.createElement(
+      setModal("persona");
+    }, style: { ...chip4(false), borderStyle: "dashed" } }, "+ persona")), /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 12, padding: "8px 12px", marginBottom: 6, flex: "none", display: "flex", gap: 8, alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, activeLines.length > 0 ? activeLines.map((ill) => {
+      const cfg = HAZARD_CONFIG[ill.hazardLevel || "CLEAR"] || HAZARD_CONFIG.CLEAR;
+      return /* @__PURE__ */ React.createElement("div", { key: ill.id, style: { fontFamily: F_SANS, fontSize: 12, lineHeight: "18px", color: cfg.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, cfg.emoji, " ", showPerson ? nameOf2(family, ill.personId) + " \xB7 " : "", illnessLabel(kh, ill), " \xB7 d\xEDa ", daysInclusive(ill.start, today));
+    }) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 12, lineHeight: "18px", color: "rgba(255,255,255,0.45)" } }, "\u{1F7E2} sin episodios activos"), sec.active.length > 2 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 10, lineHeight: "14px", color: "rgba(255,255,255,0.4)" } }, "+", sec.active.length - 2, " m\xE1s"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 12, lineHeight: "18px", color: "rgba(255,255,255,0.7)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, nextCita ? `\u{1F5D3}\uFE0F ${fmtDay(nextCita.dk)}${nextCita.ev.startTime ? " " + nextCita.ev.startTime : ""} \xB7 ${showPerson ? nameOf2(family, nextCita.ev.personId) + " \xB7 " : ""}${nextCita.ev.title}` : /* @__PURE__ */ React.createElement("span", { style: { color: "rgba(255,255,255,0.4)" } }, "\u{1F5D3}\uFE0F sin citas pr\xF3ximas")), suggest && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginTop: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, fontFamily: F_SANS, fontSize: 11, color: "#ffb74d" } }, "\u26A0\uFE0F Nivel alto para ", suggestName, ": conviene ver a un m\xE9dico"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+      setSheet({ type: "cita", personId: suggest.personId, date: today });
+      setSuggest(null);
+    }, style: { flex: "none", fontFamily: F_SANS, fontSize: 10, background: "#ffb74d", border: "none", borderRadius: 6, padding: "4px 8px", color: "#111", cursor: "pointer" } }, "agendar cita"), /* @__PURE__ */ React.createElement("button", { onClick: () => setSuggest(null), "aria-label": "descartar", style: { flex: "none", background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 16, cursor: "pointer", lineHeight: 1, padding: 0 } }, "\xD7"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4, flex: "none" } }, filterId && /* @__PURE__ */ React.createElement("button", { onClick: () => {
+      setSelId(filterId);
+      setModal("perfil");
+    }, style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 6, padding: "3px 8px", fontFamily: F_SANS, fontSize: 11, color: "rgba(255,255,255,0.8)", cursor: "pointer" } }, "\u267E\uFE0F ficha"), /* @__PURE__ */ React.createElement("button", { onClick: () => setModal("resumen"), style: { background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 6, padding: "3px 8px", fontFamily: F_SANS, fontSize: 11, color: "rgba(255,255,255,0.8)", cursor: "pointer" } }, "\u{1F4C4} resumen"))), /* @__PURE__ */ React.createElement("div", { ref: bodyRef, "data-expandido": open ? "true" : "false", style: { flex: "1 1 0", minHeight: 0, overflowY: open ? "auto" : "hidden", overflowX: "hidden" } }, SECTIONS.map((sc) => /* @__PURE__ */ React.createElement("div", { key: sc.id }, /* @__PURE__ */ React.createElement(SectionRow, { sec: sc, summary: summaries[sc.id], open: open === sc.id, onToggle: () => toggle(sc.id) }), open === sc.id && /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 2px 10px" } }, sc.id === "episodios" && (sec.illnesses.length ? sec.illnesses.map((ill) => /* @__PURE__ */ React.createElement(
       IllnessCard,
       {
-        key: it.ev.id,
+        key: ill.id,
         kh,
         family,
-        item: it,
+        item: sec.items.find((x) => x.ev.id === ill.id) || { ev: ill, children: [] },
         today,
         showPerson,
-        onOpen: open,
+        onOpen: openEv,
         onClose: closeEpisode,
         onMissed: setMissed,
-        onDelete: (ill) => persist(deleteEvent(kh, ill.id))
+        onDelete: (x) => persist(deleteEvent(kh, x.id))
       }
-    ) : /* @__PURE__ */ React.createElement(LooseRow, { key: it.ev.id, ev: it.ev, family, showPerson, onOpen: open })), tl.items.length === 0 && tl.upcoming.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: "40px 0", textAlign: "center", fontFamily: F_HAND, fontSize: 17, color: "#ccc" } }, "sin registros todav\xEDa"), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }), sheet && /* @__PURE__ */ React.createElement(
+    )) : /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 0", textAlign: "center", fontFamily: F_HAND, fontSize: 16, color: "#ccc" } }, "sin episodios")), sc.id === "citas" && (sec.upcoming.length ? sec.upcoming.map((x) => /* @__PURE__ */ React.createElement(UpcomingRow, { key: x.ev.id, ev: x.ev, dk: x.dk, family, showPerson, onOpen: openEv })) : /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 0", textAlign: "center", fontFamily: F_HAND, fontSize: 16, color: "#ccc" } }, "sin citas agendadas")), sc.id === "medicacion" && (sec.meds.length ? sec.meds.map((m) => /* @__PURE__ */ React.createElement(LooseRow, { key: m.id, ev: m, family, showPerson, onOpen: openEv })) : /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 0", textAlign: "center", fontFamily: F_HAND, fontSize: 16, color: "#ccc" } }, "sin registros")), sc.id === "historial" && (sec.months.length ? sec.months.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.month, style: { marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS, fontSize: 9, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", margin: "4px 0" } }, MONTH_LONG[parseInt(g.month.slice(5), 10) - 1], " ", g.month.slice(0, 4)), g.items.map((it) => /* @__PURE__ */ React.createElement(HistoryRow, { key: it.ev.id, it, label: it.kind === "illness" ? `enfermedad \xB7 ${illnessLabel(kh, it.ev)}` : `${(TYPE_META[it.ev.type] || { label: it.ev.type }).label.toLowerCase()}${it.ev.title ? " \xB7 " + it.ev.title : ""}`, family, showPerson, onOpen: openEv })))) : /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 0", textAlign: "center", fontFamily: F_HAND, fontSize: 16, color: "#ccc" } }, "sin registros todav\xEDa")))))), /* @__PURE__ */ React.createElement("button", { onClick: () => setSheet({ personId: filterId }), style: { flex: "none", width: "100%", background: "#111", border: "none", borderRadius: 10, padding: "11px", fontFamily: F_HAND, fontSize: 18, color: "#fff", cursor: "pointer", marginTop: 6 } }, "+ agregar"), sheet && /* @__PURE__ */ React.createElement(
       EntrySheet,
       {
         key: sheet.ev ? sheet.ev.id : "new",
@@ -6846,7 +6960,64 @@ var __angst = (() => {
         onDelete: handleDelete,
         onClose: () => setSheet(null)
       }
-    ));
+    ), modal === "persona" && /* @__PURE__ */ React.createElement(ModalShell, { onClose: () => setModal(selPerson ? "perfil" : null) }, /* @__PURE__ */ React.createElement(PersonView, { kh, persona: selPerson || null, onBack: () => setModal(selPerson ? "perfil" : null), onSave: savePerson, onDelete: deletePerson })), modal === "perfil" && selPerson && /* @__PURE__ */ React.createElement(ModalShell, { onClose: () => setModal(null) }, /* @__PURE__ */ React.createElement(
+      PerfilView,
+      {
+        key: selId,
+        persona: selPerson,
+        perfil: (kh.profiles || {})[selId] || {},
+        onBack: (d) => {
+          saveProfile(selId, d);
+          setModal(null);
+        },
+        onGrowth: (d) => {
+          saveProfile(selId, d);
+          setModal("crecimiento");
+        },
+        onEditPerson: (d) => {
+          saveProfile(selId, d);
+          setModal("persona");
+        }
+      }
+    )), modal === "crecimiento" && selPerson && /* @__PURE__ */ React.createElement(ModalShell, { onClose: () => setModal("perfil") }, /* @__PURE__ */ React.createElement(
+      GrowthView_default,
+      {
+        key: selId,
+        persona: selPerson,
+        perfil: (kh.profiles || {})[selId] || {},
+        today,
+        onBack: () => setModal("perfil"),
+        onSave: (e) => saveGrowth(selId, e)
+      }
+    )), modal === "resumen" && /* @__PURE__ */ React.createElement(ModalShell, { onClose: () => setModal(null) }, /* @__PURE__ */ React.createElement(ResumenView, { kh, family, initialPersonId: filterId, today, onBack: () => setModal(null) })));
+  }
+  function SaludRegistro({ kidsHealth, saveKidsHealth, dayData, updateDay, calMarks, saveCalMarks, initial, onClose, onGuardado }) {
+    const today = localDateKey();
+    const kh = React.useMemo(() => migrateKidsHealth(kidsHealth, today), [kidsHealth]);
+    const family = kh.family || [];
+    if (family.length === 0) {
+      return /* @__PURE__ */ React.createElement(ModalShell, { onClose, z: 1100 }, /* @__PURE__ */ React.createElement("div", { style: { padding: "28px 22px", fontFamily: F_SANS, fontSize: 13, color: "#555", lineHeight: 1.5 } }, "Primero agrega a la familia desde la pesta\xF1a ", /* @__PURE__ */ React.createElement("b", null, "Salud"), ' (chip "+ persona").'));
+    }
+    const actions = makeSaludActions({ kh, persist: saveKidsHealth, dayData, updateDay, calMarks, saveCalMarks, isMedicalTask: esTareaMedica });
+    return /* @__PURE__ */ React.createElement(
+      EntrySheet,
+      {
+        z: 1100,
+        types: ["cita", "diagnostico", "sintoma"],
+        init: initial || {},
+        family,
+        kh,
+        today,
+        onSave: (args) => {
+          actions.save(args);
+          if (onGuardado) onGuardado("Salud registrada \u2713");
+          onClose();
+        },
+        onDelete: () => {
+        },
+        onClose
+      }
+    );
   }
   var SaludPage_default = SaludPage;
 
@@ -14447,6 +14618,7 @@ Toco reintentar ahora.`);
     const [menuRegOpen, setMenuRegOpen] = useState34(false);
     const [ingestaOpen, setIngestaOpen] = useState34(false);
     const [cartaOpen, setCartaOpen] = useState34(false);
+    const [saludReg, setSaludReg] = useState34(null);
     const [registroTipo, setRegistroTipo] = useState34(null);
     const [regMsg, setRegMsg] = useState34(null);
     const regMsgTimer = useRef20(null);
@@ -14764,6 +14936,7 @@ Toco reintentar ahora.`);
     const [kidsHealth, setKidsHealth] = useState34(emptyKidsHealth);
     const kidsHealthRef = useRef20(null);
     if (kidsHealthRef.current === null) kidsHealthRef.current = emptyKidsHealth();
+    const calMarksView = useMemo12(() => effectiveMarks(calMarks, kidsHealth.events), [calMarks, kidsHealth]);
     const [pokeInventario, setPokeInventario] = useState34([]);
     const pokeInventarioRef = useRef20([]);
     const [pokeCarpetas, setPokeCarpetas] = useState34([...CARPETAS_DEFAULT]);
@@ -15735,6 +15908,14 @@ Toco reintentar ahora.`);
       saveToStorage({ nutria: nut });
     }
     function handleMark(key, val) {
+      if (val === "doctor") {
+        const raw = calMarksRef.current[key];
+        const arr = Array.isArray(raw) ? raw : raw ? [raw] : [];
+        if (!arr.includes("doctor")) {
+          setSaludReg({ type: "cita", date: key });
+          return;
+        }
+      }
       setCalMarks((prev) => {
         const cur = Array.isArray(prev[key]) ? prev[key] : prev[key] ? [prev[key]] : [];
         let next;
@@ -16355,12 +16536,12 @@ Toco reintentar ahora.`);
         saveToStorage({ dayData: next });
         return next;
       });
-    } }), familiaOpen && /* @__PURE__ */ React.createElement(FamiliaInboxModal, { items: familiaPend, onImport: familiaPasar, onIgnore: familiaIgnorar, onImportAll: familiaPasarTodos, onIgnoreAll: familiaIgnorarTodos, onRefresh: () => cargarFamilia(true), onClose: () => setFamiliaOpen(false), cargando: familiaBusy, mensaje: familiaMsg, generadoEn: familiaData?.generatedAt }), calOpen && /* @__PURE__ */ React.createElement(CalendarModal, { weekStart, marks: calMarks, onMark: handleMark, dayData, calMarks, kidsHealth, onWeekSelect: (date) => {
+    } }), familiaOpen && /* @__PURE__ */ React.createElement(FamiliaInboxModal, { items: familiaPend, onImport: familiaPasar, onIgnore: familiaIgnorar, onImportAll: familiaPasarTodos, onIgnoreAll: familiaIgnorarTodos, onRefresh: () => cargarFamilia(true), onClose: () => setFamiliaOpen(false), cargando: familiaBusy, mensaje: familiaMsg, generadoEn: familiaData?.generatedAt }), calOpen && /* @__PURE__ */ React.createElement(CalendarModal, { weekStart, marks: calMarksView, onMark: handleMark, dayData, calMarks: calMarksView, kidsHealth, onWeekSelect: (date) => {
       const dow = date.getDay();
       const mon = addDays(date, -(dow === 0 ? 6 : dow - 1));
       const diff = Math.round((mon - BASE_DATE) / (7 * 864e5));
       updateWeekOffset(diff);
-    }, onClose: () => setCalOpen(false) }), /* @__PURE__ */ React.createElement("div", { className: "app" + (page === 0 || page === 1 ? " app-fit" : "") }, /* @__PURE__ */ React.createElement("div", { className: "hdr" }, /* @__PURE__ */ React.createElement("div", { className: "hdr-title", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, "angstapp"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexShrink: 0 } }, regMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: regMsg.includes("\u2713") ? "#4caf50" : "#c00", fontSize: 14 } }, regMsg), saved && !regMsg && /* @__PURE__ */ React.createElement("span", { className: "saved-msg" }, "guardado \u2713"), loadMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: loadMsg.startsWith("\u2713") ? "#4caf50" : loadMsg.startsWith("\u26A0") ? "#f0a000" : "#c00", fontSize: 13, maxWidth: 220 } }, loadMsg), exportOk === true && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#4caf50", fontSize: 13 } }, "descargado \u2713"), exportOk === false && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, "error al exportar"), typeof exportOk === "string" && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, exportOk), /* @__PURE__ */ React.createElement("input", { ref: cargarInputRef, type: "file", accept: ".xlsx,.xls,.json", onChange: handleLoad, style: { display: "none" } }), (menuDatosOpen || menuRegOpen) && /* @__PURE__ */ React.createElement("div", { onClick: cerrarMenus, style: { position: "fixed", inset: 0, zIndex: 590 } }), (() => {
+    }, onClose: () => setCalOpen(false) }), /* @__PURE__ */ React.createElement("div", { className: "app" + (page === 0 || page === 1 || page === 4 ? " app-fit" : "") }, /* @__PURE__ */ React.createElement("div", { className: "hdr" }, /* @__PURE__ */ React.createElement("div", { className: "hdr-title", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, "angstapp"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexShrink: 0 } }, regMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: regMsg.includes("\u2713") ? "#4caf50" : "#c00", fontSize: 14 } }, regMsg), saved && !regMsg && /* @__PURE__ */ React.createElement("span", { className: "saved-msg" }, "guardado \u2713"), loadMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: loadMsg.startsWith("\u2713") ? "#4caf50" : loadMsg.startsWith("\u26A0") ? "#f0a000" : "#c00", fontSize: 13, maxWidth: 220 } }, loadMsg), exportOk === true && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#4caf50", fontSize: 13 } }, "descargado \u2713"), exportOk === false && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, "error al exportar"), typeof exportOk === "string" && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, exportOk), /* @__PURE__ */ React.createElement("input", { ref: cargarInputRef, type: "file", accept: ".xlsx,.xls,.json", onChange: handleLoad, style: { display: "none" } }), (menuDatosOpen || menuRegOpen) && /* @__PURE__ */ React.createElement("div", { onClick: cerrarMenus, style: { position: "fixed", inset: 0, zIndex: 590 } }), (() => {
       const itemMenu = { display: "block", width: "100%", textAlign: "left", background: "transparent", border: "none", borderBottom: "1px dashed #333", color: "#fff", padding: "10px 12px", fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" };
       const caja = { position: "absolute", top: "calc(100% + 4px)", right: 0, width: 230, background: "#222", border: "1px dashed #444", borderRadius: 4, zIndex: 600 };
       return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "disk-btn", onClick: () => {
@@ -16401,10 +16582,13 @@ Toco reintentar ahora.`);
       } }, "\u{1F37D}\uFE0F Ingesta"), /* @__PURE__ */ React.createElement("button", { style: itemMenu, onClick: () => {
         cerrarMenus();
         setGastoOpen(true);
-      } }, "\u{1F4B8} Gasto"), /* @__PURE__ */ React.createElement("button", { style: { ...itemMenu, borderBottom: "none" }, onClick: () => {
+      } }, "\u{1F4B8} Gasto"), /* @__PURE__ */ React.createElement("button", { style: itemMenu, onClick: () => {
         cerrarMenus();
         setCartaOpen(true);
-      } }, "\u{1F0CF} Cartas"))));
+      } }, "\u{1F0CF} Cartas"), /* @__PURE__ */ React.createElement("button", { style: { ...itemMenu, borderBottom: "none" }, onClick: () => {
+        cerrarMenus();
+        setSaludReg({});
+      } }, "\u{1FA7A} Salud"))));
     })(), stateSyncMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: stateSyncMsg.startsWith("\u2713") ? "#4caf50" : "#f0a000", marginLeft: 4 } }, stateSyncMsg), /* @__PURE__ */ React.createElement("div", { style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { className: "disk-btn", onClick: () => {
       const o = !podcastMenuOpen;
       cerrarMenus();
@@ -16483,7 +16667,7 @@ Toco reintentar ahora.`);
         todayKey: fmtFull(/* @__PURE__ */ new Date()),
         ahoraMin: (/* @__PURE__ */ new Date()).getHours() * 60 + (/* @__PURE__ */ new Date()).getMinutes(),
         dayData,
-        calMarks,
+        calMarks: calMarksView,
         eventos: [...meleeMajors.map((ev) => ({ ...ev, tipo: "melee", url: "https://www.start.gg/" })), ...POKEMON_EVENTS.map((ev) => ({ ...ev, tipo: "pokemon" })), ...SC2_EVENTS.map((ev) => ({ ...ev, tipo: "sc2" }))],
         stressFor: (k) => computeStressScore(k, dayData, calMarks, kidsHealth),
         conNinosEn: (k) => isWithKids(k, custody),
@@ -16500,7 +16684,7 @@ Toco reintentar ahora.`);
       const flex = day.tasks.filter((t) => !t.fixed);
       const hol = getHoliday(dayDate);
       const isMin = !!minimized[dateKey];
-      const dayMarkArr = Array.isArray(calMarks[dateKey]) ? calMarks[dateKey] : calMarks[dateKey] ? [calMarks[dateKey]] : [];
+      const dayMarkArr = Array.isArray(calMarksView[dateKey]) ? calMarksView[dateKey] : calMarksView[dateKey] ? [calMarksView[dateKey]] : [];
       const MARK_COLORS = { social: "#4caf50", romantic: "#e91e8c", work: "#5c7a99", colegio: "#7b4fd4", doctor: "#e53935" };
       const dowDay = (/* @__PURE__ */ new Date(dateKey + "T12:00:00")).getDay();
       const isWeekend = dowDay === 0 || dowDay === 6;
@@ -16543,7 +16727,12 @@ Toco reintentar ahora.`);
         if (m === "romantic") return /* @__PURE__ */ React.createElement("span", { key: m, style: { fontSize: 12 } }, "\u{1F338}");
         if (m === "work") return /* @__PURE__ */ React.createElement("span", { key: m, style: { fontSize: 12 } }, "\u{1F4BC}");
         if (m === "colegio") return /* @__PURE__ */ React.createElement("span", { key: m, style: { fontSize: 12 } }, "\u{1F392}");
-        if (m === "doctor") return /* @__PURE__ */ React.createElement("span", { key: m, style: { fontSize: 12 } }, "\u{1F3E5}");
+        if (m === "doctor") {
+          const cs = citasOnDay(kidsHealth.events, dateKey);
+          if (!cs.length) return /* @__PURE__ */ React.createElement("span", { key: m, style: { fontSize: 12 } }, "\u{1F3E5}");
+          const nm = (id) => ((kidsHealth.family || []).find((f2) => f2.id === id) || {}).name || id;
+          return /* @__PURE__ */ React.createElement("span", { key: m, title: cs.map((c) => citaLine(c, nm(c.personId), true)).join("\n"), style: { fontSize: 10, color: "#e53935", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 170 } }, "\u{1F3E5} ", citaLine(cs[0], nm(cs[0].personId)), cs.length > 1 ? ` +${cs.length - 1}` : "");
+        }
         if (m === "gym") return /* @__PURE__ */ React.createElement("svg", { key: m, width: "13", height: "13", viewBox: "0 0 24 24", style: { display: "inline-block", verticalAlign: "middle" } }, /* @__PURE__ */ React.createElement("rect", { x: "1", y: "9", width: "3", height: "6", rx: "1", fill: "#26a69a" }), /* @__PURE__ */ React.createElement("rect", { x: "4", y: "7", width: "2.5", height: "10", rx: "1", fill: "#26a69a" }), /* @__PURE__ */ React.createElement("rect", { x: "6.5", y: "10.5", width: "11", height: "3", rx: "1", fill: "#26a69a" }), /* @__PURE__ */ React.createElement("rect", { x: "17.5", y: "7", width: "2.5", height: "10", rx: "1", fill: "#26a69a" }), /* @__PURE__ */ React.createElement("rect", { x: "20", y: "9", width: "3", height: "6", rx: "1", fill: "#26a69a" }));
         if (m === "melee") return /* @__PURE__ */ React.createElement("svg", { key: m, width: "13", height: "13", viewBox: "0 0 24 24", style: { display: "inline-block", verticalAlign: "middle" } }, /* @__PURE__ */ React.createElement("path", { fillRule: "evenodd", fill: "#ff6600", d: "M12,1 A11,11,0,1,0,12,23 A11,11,0,1,0,12,1Z M1,14.5 H23 V16.5 H1Z M7.5,1 V23 H9.5 V1Z M8.5,12.5 A3,3,0,1,0,8.5,18.5 A3,3,0,1,0,8.5,12.5Z" }));
         if (m === "pokemon") return /* @__PURE__ */ React.createElement("svg", { key: m, width: "13", height: "13", viewBox: "0 0 12 12", style: { display: "inline-block" } }, /* @__PURE__ */ React.createElement("circle", { cx: "6", cy: "6", r: "5", fill: "none", stroke: "#ffcc00", strokeWidth: "1.3" }), /* @__PURE__ */ React.createElement("line", { x1: "1", y1: "6", x2: "11", y2: "6", stroke: "#ffcc00", strokeWidth: "1.3" }), /* @__PURE__ */ React.createElement("circle", { cx: "6", cy: "6", r: "1.8", fill: "#ffcc00" }));
@@ -16781,6 +16970,23 @@ Toco reintentar ahora.`);
         nutriDecks,
         permanecer: true,
         onClose: () => setIngestaOpen(false),
+        onGuardado: avisarRegistro
+      }
+    ), saludReg && /* @__PURE__ */ React.createElement(
+      SaludRegistro,
+      {
+        kidsHealth,
+        saveKidsHealth,
+        dayData,
+        updateDay,
+        calMarks,
+        saveCalMarks: (nm) => {
+          setCalMarks(nm);
+          calMarksRef.current = nm;
+          saveToStorage({ calMarks: nm });
+        },
+        initial: saludReg,
+        onClose: () => setSaludReg(null),
         onGuardado: avisarRegistro
       }
     ), registroTipo && /* @__PURE__ */ React.createElement(RegistroRapido_default, { tipo: registroTipo, onNota: agregarNotaRapida, onTarea: agregarTareaRapida, compras: { hoy: fmtFull(/* @__PURE__ */ new Date()), items: (dayData[fmtFull(/* @__PURE__ */ new Date())] || {}).compras || [], api: comprasApi, onPatch: (id, f2) => updateComprasItem(fmtFull(/* @__PURE__ */ new Date()), id, f2), onAdd: (item) => agregarCompraEn(fmtFull(/* @__PURE__ */ new Date()), item), onDelete: (id) => quitarCompraEn(fmtFull(/* @__PURE__ */ new Date()), id) }, onGuardado: avisarRegistro, onClose: () => setRegistroTipo(null) }), cartaOpen && /* @__PURE__ */ React.createElement(
