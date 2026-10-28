@@ -1,6 +1,6 @@
 import { MONTH_NAMES } from "../../core/dates.js";
 import { fmtCLP } from "../../core/format.js";
-import { resolverPeriodo, inicioSobres, sumaSubs, puedeEliminar, quitarGasto, puedeQuitarGasto, puedeGenerarPeriodo, proyeccionAnual, FILAS_CARTERABLES, datosRueda } from "../../core/presupuesto-modelo.js";
+import { resolverPeriodo, inicioSobres, sumaSubs, puedeEliminar, quitarGasto, puedeQuitarGasto, puedeGenerarPeriodo, proyeccionAnual, FILAS_CARTERABLES, datosRueda, gastosSinCategoria } from "../../core/presupuesto-modelo.js";
 import { AmountRow, GRID, COL, GAP, FUENTE, PAD_MONTO, celdaTitulo } from "./grilla.jsx";
 import CarteraVentana from "./CarteraVentana.jsx";
 import GastoModal from "./GastoModal.jsx";
@@ -9,6 +9,7 @@ import ArqueoModal from "./ArqueoModal.jsx";
 import PresupuestoRueda from "./PresupuestoRueda.jsx";
 import MovimientosModal from "./MovimientosModal.jsx";
 import TortaModal from "./TortaModal.jsx";
+import PorCategorizarModal from "./PorCategorizarModal.jsx";
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
 // La lógica de períodos, sub-partidas, saldos y gastos vive en core/presupuesto-modelo.js (issue #24).
@@ -154,6 +155,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
   const [vista, setVista] = useState("rueda");   // «rueda» (cómo voy) o «asignar» (ingresos, gastos base y fondos)
   const [modo, setModo] = useState("m");          // interruptor global: m = mensual, a = anual
   const [movsOpen, setMovsOpen] = useState(false);
+  const [porCat, setPorCat] = useState(false);
   const [torta, setTorta] = useState(null);       // null o la vista de la torta abierta: s (por sobre), c (por categoría), p (por compra)
   const avisoRef = useRef(null);
   const now = new Date();
@@ -217,6 +219,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
   const idxVentana = ventana ? carteras.findIndex(c => c.sec === ventana.sec && c.row.id === ventana.rowId) : -1;
   const abrirCartera = (sec, rowId) => setVentana({ sec, rowId });
   const datos = useMemo(() => datosRueda(budgets, monthKey), [budgets, monthKey]);
+  const nSinCat = useMemo(() => gastosSinCategoria(budgets).length, [budgets]);
   const irPeriodo = d => { const m = selMonth + d; setSelYear(selYear + Math.floor(m / 12)); setSelMonth(((m % 12) + 12) % 12); };
   const secProps = { totalIngreso: T, onRowSave: updRow, onRowAdd: addRow, onRowDelete: delRow, onRowCheck: checkRow, onChartOpen: setChartData };
   const navBtn = { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "6px 11px", cursor: "pointer", color: "#888", fontSize: 16, lineHeight: 1 };
@@ -231,6 +234,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
       {cierre && <ArqueoModal budgets={budgets} periodo={cierre.periodo} tabInicial={cierre.tab} onSaveBudget={onSaveBudget} onClose={() => setCierre(null)}/>}
       {guia && <GuiaSobres budgets={budgets} periodo={monthKey} etiquetaPeriodo={periodLabel} onClose={() => setGuia(false)}/>}
       {gastoDesde && <GastoModal budgets={budgets} inicial={gastoDesde} onSaveBudget={onSaveBudget} onClose={() => setGastoDesde(null)}/>}
+      {porCat && <PorCategorizarModal budgets={budgets} onSaveBudget={onSaveBudget} onClose={() => setPorCat(false)}/>}
       {torta && <TortaModal datos={datos} modo={modo} onModo={setModo} periodLabel={periodLabel} onPrev={() => irPeriodo(-1)} onNext={() => irPeriodo(1)} tabInicial={torta} onClose={() => setTorta(null)}/>}
       {movsOpen && <MovimientosModal movs={datos.movs} filas={datos.filas} anual={modo === "a"} periodLabel={periodLabel} onClose={() => setMovsOpen(false)}/>}
       {monthModal && <MonthSelectorModal currentYear={selYear} currentMonth={selMonth} onSelect={(y, m) => { setSelYear(y); setSelMonth(m); }} onClose={() => setMonthModal(false)}/>}
@@ -239,7 +243,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
         bloqueo={compuerta.ok ? null : { motivo: compuerta.motivo, etiqueta: "🔍 cierre", accion: () => setCierre({ periodo: compuerta.requiere, tab: undefined }) }}
         onAsignar={() => setVista("asignar")} onCierre={() => setCierre({ periodo: compuerta.ok ? monthKey : compuerta.requiere, tab: undefined })}
         onGuia={() => setGuia(true)} onIniciarSobres={iniciarSobres}
-        onAbrir={abrirCartera} onRegistrar={(sec, id) => setGastoDesde(`${sec}|${id}`)} onTodos={() => setMovsOpen(true)} onTorta={setTorta}/>}
+        onAbrir={abrirCartera} onRegistrar={(sec, id) => setGastoDesde(`${sec}|${id}`)} onTodos={() => setMovsOpen(true)} onTorta={setTorta} sinCategoria={nSinCat} onPorCategorizar={() => setPorCat(true)}/>}
       {vista === "asignar" && <div style={{ padding: "16px", maxWidth: 720, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
       <div style={{ marginBottom: 12 }}><button onClick={() => setVista("rueda")} style={{ background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "7px 14px", fontFamily: "'Caveat',cursive", fontSize: 17, fontWeight: 700, cursor: "pointer" }}>‹ Presupuesto</button></div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 8, flexWrap: "wrap" }}>

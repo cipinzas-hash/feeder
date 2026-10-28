@@ -45,7 +45,7 @@ export function Interruptor({ modo, onChange }) {
 
 // datos {filas:[{sec,row,asignado,gastado,anual,saldo,debiaHaber}], movs:[{id,fecha,nota,categoria,monto,sec,rowId,enPeriodo}]}
 export default function PresupuestoRueda({ datos, periodLabel, sobresOn, hayInicio, modo, onModo, onPrev, onNext, bloqueo, aviso,
-  onAsignar, onCierre, onGuia, onIniciarSobres, cierreVence, onAbrir, onRegistrar, onTodos, onTorta }) {
+  onAsignar, onCierre, onGuia, onIniciarSobres, cierreVence, onAbrir, onRegistrar, onTodos, onTorta, sinCategoria, onPorCategorizar }) {
   const filas = datos.filas;
   const N = Math.max(1, filas.length);
   const g = geometriaRueda(N);
@@ -127,6 +127,8 @@ export default function PresupuestoRueda({ datos, periodLabel, sobresOn, hayInic
     <div style={{ flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column", gap: 8, padding: "10px 12px 6px", boxSizing: "border-box", overflowY: "auto", fontFamily: F, color: "#111" }}>
       {bloqueo && <div style={{ flex: "none", fontSize: 12, color: "#8a5a00", background: "#fffaf0", border: "1px dashed #e0b070", borderRadius: 6, padding: "8px 10px", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><span style={{ flex: 1 }}>🔒 {bloqueo.motivo}</span>{bloqueo.accion && <button onClick={bloqueo.accion} style={{ ...pill, flex: "none", padding: "5px 10px" }}>{bloqueo.etiqueta}</button>}</div>}
       {aviso && <div style={{ flex: "none", fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px" }}>{aviso}</div>}
+      {sinCategoria > 0 && <div role="button" tabIndex={0} onClick={onPorCategorizar} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onPorCategorizar(); } }}
+        style={{ flex: "none", border: "1px dashed #b71c1c", color: "#b71c1c", borderRadius: 8, padding: "6px 10px", fontSize: 12, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}><span>🏷️ Por categorizar: {sinCategoria} gasto{sinCategoria === 1 ? "" : "s"} sin categoría</span><span>›</span></div>}
       <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <Interruptor modo={modo} onChange={onModo}/>
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 2, fontSize: 12, color: "#555" }}>

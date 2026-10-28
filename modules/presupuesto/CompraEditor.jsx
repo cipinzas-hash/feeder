@@ -85,6 +85,7 @@ export function CompraEditor({ item, acciones, onClose }) {
   function guardar() { if (!prepararCategoria()) return; acciones.guardar(campos()); }
   function comprado() {
     if (info.activo && precioNum <= 0) { setErr("Pon el precio para descontarlo del fondo."); return; }
+    if (info.activo && !catEf) { setErr("Elige la categoría: todo gasto lleva una."); return; }
     if (!prepararCategoria()) return;
     const e = acciones.comprar(campos());
     if (e) setErr(e);

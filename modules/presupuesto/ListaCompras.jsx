@@ -97,7 +97,7 @@ export default function ListaCompras({ grupos, agregarEn, api, onPatch, onAdd, o
       onPatch(g.key, it.id, { done: false, ...(r.patch || {}) });
       return;
     }
-    if (api.info(it.categoria).activo && montoCompra(it) === 0) { setEditId(`${g.key}|${it.id}`); return; }
+    if (api.info(it.categoria).activo && (montoCompra(it) === 0 || !(it.categoria && String(it.categoria).trim()))) { setEditId(`${g.key}|${it.id}`); return; }   // sin precio o sin categoría no se descuenta: se completa en el editor
     const r = api.comprar(it);
     if (r.error) { setMsg(r.error); return; }
     onPatch(g.key, it.id, { done: true, ...(r.patch || {}) });

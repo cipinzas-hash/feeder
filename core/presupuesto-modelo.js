@@ -301,6 +301,28 @@ export function datosRueda(budgets, periodo) {
   return { filas, movs };
 }
 
+// Gastos registrados sin categoría, de todos los períodos (más recientes primero): lo que aparece como «Por categorizar».
+export function gastosSinCategoria(budgets) {
+  const out = [];
+  Object.keys(budgets || {}).sort().reverse().forEach(periodo => {
+    const b = budgets[periodo];
+    ((b && b.gastos) || []).forEach(gasto => { if (!(gasto.categoria && String(gasto.categoria).trim())) out.push({ periodo, gasto }); });
+  });
+  out.sort((x, y) => String(y.gasto.fecha || "").localeCompare(String(x.gasto.fecha || "")));
+  return out;
+}
+
+// Le pone categoría a un gasto ya registrado (y la agrega a la lista de su sobre). Devuelve {budget} del período o {error}.
+export function categorizarGasto(budgets, periodo, gastoId, categoria) {
+  const cat = String(categoria || "").trim();
+  if (!cat) return { error: "Elige o escribe la categoría." };
+  const b = budgets && budgets[periodo];
+  const g = b && (b.gastos || []).find(x => x.id === gastoId);
+  if (!g) return { error: "No encuentro ese gasto." };
+  const sig = { ...b, gastos: b.gastos.map(x => (x.id === gastoId ? { ...x, categoria: cat } : x)) };
+  return { budget: agregarCategoria(sig, g.sec, g.rowId, cat) };
+}
+
 // Deudas de una cartera al cierre del período: lo que debe y lo que le deben.
 export function resumenDeudas(budgets, periodo, sec, rowId) {
   const sim = simular(budgets, periodo);
@@ -402,9 +424,11 @@ function validarFuentes(budgets, periodo, destino, falta, fuentes) {
 
 // Devuelve {periodo, budget} con el gasto agregado (y el préstamo, si el gasto supera el saldo), o {error}.
 // No modifica budgets. `fuentes` solo se usa cuando falta saldo.
-export function agregarGasto(budgets, { fecha, sec, rowId, subId, monto, nota, fuentes, categoria, compraId }) {
+export function agregarGasto(budgets, { fecha, sec, rowId, subId, monto, nota, fuentes, categoria, compraId, exigirCategoria }) {
   const puede = puedeGenerarPeriodo(budgets, periodoDeFecha(fecha));
   if (!puede.ok) return { error: puede.motivo };
+  // Los gastos no pueden quedar sin categoría: la pantalla de gastos y las compras la exigen.
+  if (exigirCategoria && !(categoria && String(categoria).trim())) return { error: "Elige la categoría del gasto." };
   const m = Math.round(monto);
   const v = validarGasto(budgets, { fecha, sec, rowId, subId, monto: m });
   const base0 = resolverPeriodo(budgets, periodoDeFecha(fecha));
@@ -736,12 +760,13 @@ export function registrarCompra(budgets, { fecha, item, subId }) {
   }
   const monto = montoCompra(item);
   if (monto <= 0) return { error: "Falta el precio del ítem." };
+  if (!(item.categoria && String(item.categoria).trim())) return { error: "Falta la categoría del ítem." };
   const cant = Number(item.cantidad) > 0 ? Number(item.cantidad) : 1;
   // Una sub-partida de otra cartera (por haber cambiado la categoría) no vale aquí: cae en el bolsillo libre.
   const sub = bolsillosDe(dest.sec, dest.row).some(bo => (bo.subId ?? null) === (subId ?? null)) ? (subId ?? null) : null;
-  const r = agregarGasto(budgets, { fecha, sec: dest.sec, rowId: dest.row.id, subId: sub, monto, nota: `${cant !== 1 ? cant + "× " : ""}${item.text}`, categoria: item.categoria, compraId: item.id });
+  const r = agregarGasto(budgets, { fecha, sec: dest.sec, rowId: dest.row.id, subId: sub, monto, nota: `${cant !== 1 ? cant + "× " : ""}${item.text}`, categoria: item.categoria, compraId: item.id, exigirCategoria: true });
   if (r.error) return { error: r.error, saldo: r.saldo };
-  return r;
+  return { ...r, budget: agregarCategoria(r.budget, dest.sec, dest.row.id, item.categoria) };   // la categoría queda en la lista del sobre
 }
 
 // Deshace el gasto de una compra (al desmarcarla). {budget} del período, o {error}.
