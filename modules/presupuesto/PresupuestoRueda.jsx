@@ -4,7 +4,7 @@
 // Va DENTRO del marco de la app (lineamiento «módulo colapsado, sin scroll»): sin ventana flotante, sin título propio (la pestaña ya
 // dice el módulo) y llena el área libre; la rueda se escala al alto que sobra para que el estado colapsado nunca necesite scroll.
 import { fmtCLP } from "../../core/format.js";
-import { geometriaRueda, TAM } from "./ruedaGeometria.js";
+import { geometriaRueda, TAM, BOTONES, LADO_BTN, EXT_BTN } from "./ruedaGeometria.js";
 const { useState, useRef, useEffect } = React;
 
 const F = "'DM Sans',sans-serif", C = "'Caveat',cursive";
@@ -12,7 +12,7 @@ const mod = (a, n) => ((a % n) + n) % n;
 const norm = a => { while (a > 180) a -= 360; while (a <= -180) a += 360; return a; };
 
 // Interruptor Mensual / Anual: dibujo propio (la «sombra» negra se queda fija sobre el modo en vista).
-function Interruptor({ modo, onChange }) {
+export function Interruptor({ modo, onChange }) {
   const [x, setX] = useState(modo === "a" ? 84 : 0);
   const xr = useRef(x);
   useEffect(() => {
@@ -45,7 +45,7 @@ function Interruptor({ modo, onChange }) {
 
 // datos {filas:[{sec,row,asignado,gastado,anual,saldo,debiaHaber}], movs:[{id,fecha,nota,categoria,monto,sec,rowId,enPeriodo}]}
 export default function PresupuestoRueda({ datos, periodLabel, sobresOn, hayInicio, modo, onModo, onPrev, onNext, bloqueo, aviso,
-  onAsignar, onCierre, onGuia, onIniciarSobres, cierreVence, onAbrir, onRegistrar, onTodos }) {
+  onAsignar, onCierre, onGuia, onIniciarSobres, cierreVence, onAbrir, onRegistrar, onTodos, onTorta }) {
   const filas = datos.filas;
   const N = Math.max(1, filas.length);
   const g = geometriaRueda(N);
@@ -78,6 +78,7 @@ export default function PresupuestoRueda({ datos, periodLabel, sobresOn, hayInic
 
   const angulo = e => { const r = caja.current.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI; };
   function alBajar(e) {
+    if (e.target.closest && e.target.closest("[data-btn]")) return;
     const t = e.target.closest ? e.target.closest("[data-i]") : null;
     down.current = { x: e.clientX, y: e.clientY, i: t ? Number(t.getAttribute("data-i")) : null, centro: !!(e.target.closest && e.target.closest("[data-centro]")), movido: false, ult: angulo(e) };
     setArrastrando(true);
@@ -163,11 +164,22 @@ export default function PresupuestoRueda({ datos, periodLabel, sobresOn, hayInic
           </div>
         ))}
       </div>
-      <div ref={zona} style={{ flex: "1 1 0", minHeight: 150, display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 12 }}>
+      <div ref={zona} style={{ flex: "1 1 0", minHeight: 150, display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 16 }}>
         {filas.length === 0 ? <div style={{ fontSize: 13, color: "#aaa", textAlign: "center" }}>Aún no hay sobres: créalos en Asignar.</div> : (
           <div style={{ position: "relative", width: TAM * k, height: TAM * k, flexShrink: 0 }}>
             <div ref={caja} onPointerDown={alBajar} onPointerMove={alMover} onPointerUp={alSoltar} onPointerCancel={alSoltar}
               style={{ position: "absolute", left: 0, top: 0, width: TAM, height: TAM, transform: `scale(${k})`, transformOrigin: "top left", touchAction: "none", userSelect: "none", WebkitUserSelect: "none", cursor: "grab" }}>
+              {BOTONES.map(({ k, em, nom, x, y }) => {
+                const izq = x < TAM / 2, arr = y < TAM / 2, ex = izq ? EXT_BTN : 0, ey = arr ? EXT_BTN : 0;
+                const accion = () => (k === "m" ? onTodos() : onTorta(k));
+                return (
+                  <div key={k} data-btn={k} role="button" tabIndex={0} aria-label={nom} title={nom}
+                    onPointerDown={e => e.stopPropagation()} onClick={accion} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); accion(); } }}
+                    style={{ position: "absolute", left: x - ex, top: y - ey, width: LADO_BTN + EXT_BTN, height: LADO_BTN + EXT_BTN, cursor: "pointer", zIndex: 3 }}>
+                    <div style={{ position: "absolute", left: ex, top: ey, width: LADO_BTN, height: LADO_BTN, borderRadius: 12, background: "#111", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, boxShadow: "2px 2px 0 #9a9a9a", userSelect: "none", WebkitUserSelect: "none" }}>{em}</div>
+                  </div>
+                );
+              })}
               <div style={{ position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", fontSize: 14, color: "#b71c1c", zIndex: 2, lineHeight: 1 }}>▼</div>
               <div style={{ position: "absolute", left: g.pista.left, top: g.pista.top, width: g.pista.size, height: g.pista.size, border: "1px dashed #999", borderRadius: "50%", boxSizing: "border-box" }}/>
               <div style={{ position: "absolute", inset: 0, transform: `rotate(${rot}deg)`, transition: arrastrando ? "none" : "transform .25s ease" }}>

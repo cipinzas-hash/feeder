@@ -9,7 +9,8 @@
     "test:presupuesto": "node tests/presupuesto-modelo.mjs",
     "test:gcal": "node tests/gcal-sync.mjs",
     "test:familia": "node tests/familia-inbox.mjs",
-    "test:rueda": "node tests/rueda-geometria.mjs"
+    "test:rueda": "node tests/rueda-geometria.mjs",
+    "test:torta": "node tests/torta-datos.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"
