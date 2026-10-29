@@ -1476,6 +1476,11 @@ var __angst = (() => {
     if (US_HOLIDAYS[key]) return { label: US_HOLIDAYS[key], type: "us" };
     return null;
   }
+  function weekOffsetFor(dateKey) {
+    const [y, m, d] = dateKey.split("-").map(Number);
+    const dias = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(2026, 1, 21)) / 864e5);
+    return Math.floor(dias / 7);
+  }
 
   // core/format.js
   function fmtCLP(n) {
@@ -3562,6 +3567,23 @@ var __angst = (() => {
       }
     }
     if (pares.length) aplicarMarcas(item, { marcar: pares });
+  }
+
+  // core/registro.js
+  function nivelRegistro(day, { esTrabajo = false, tieneNutri = false } = {}) {
+    const d = day || {};
+    const fields = [d.menu, d.aseoMode, d.cookingMode, d.summary, d.energy, d.concentration, d.intensity || d.mood];
+    if (esTrabajo) fields.push(d.workLevel);
+    fields.push(d.sleep);
+    fields.push(tieneNutri ? "ok" : void 0);
+    const filled = fields.filter((f2) => f2 !== void 0 && f2 !== null && f2 !== "").length;
+    return { filled, total: fields.length, pct: Math.round(filled / fields.length * 100) };
+  }
+  function colorRegistro(pct) {
+    return pct <= 30 ? "#e53935" : pct <= 60 ? "#ff9800" : pct <= 90 ? "#ffcc00" : "#4caf50";
+  }
+  function barrasRegistro(pct) {
+    return Math.min(5, Math.ceil(pct / 20));
   }
 
   // core/FamiliaInbox.jsx
@@ -14702,12 +14724,27 @@ Toco reintentar ahora.`);
   function HoyLinea({ hoy }) {
     return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("b", null, "HOY"), " ", hoy.total === 0 ? "sin tareas" : hoy.proxima ? `${hoy.proxima.hora} ${hoy.proxima.texto}` : "sin horas pendientes", hoy.total > 0 && /* @__PURE__ */ React.createElement("span", { className: "dash-dim" }, " \xB7 ", hoy.hechas, "/", hoy.total, " \u2713"), hoy.ejercicio && /* @__PURE__ */ React.createElement("span", { className: "dash-dim" }, " \xB7 \u{1F3CB}\uFE0F \u2713"), hoy.kcal > 0 && /* @__PURE__ */ React.createElement("span", { className: "dash-dim" }, " \xB7 ", hoy.kcal.toLocaleString("es-CL"), " kcal"));
   }
-  function SemanaDashboard({ abierto, onToggle, navegacion, ...args }) {
+  function SemanaDashboard({ abierto, onToggle, onAbrirDia, navegacion, ...args }) {
+    const abrir = (k) => {
+      if (onAbrirDia) onAbrirDia(k);
+    };
     const r = buildResumen(args);
-    return /* @__PURE__ */ React.createElement("div", { className: "dashpanel" + (abierto ? " abierto" : "") }, /* @__PURE__ */ React.createElement("div", { className: "dp-nav" }, navegacion), /* @__PURE__ */ React.createElement("div", { className: "dw-grid" }, r.semana.map((c) => /* @__PURE__ */ React.createElement("div", { key: c.k, className: "dw-col" + (c.hoy ? " hoy" : "") + (c.pasado ? " pasado" : "") }, /* @__PURE__ */ React.createElement("span", { className: "dw-dow" }, DIA_LARGO[c.dow]), /* @__PURE__ */ React.createElement(Aro, { score: c.score }, c.num), /* @__PURE__ */ React.createElement("span", { className: "dw-ic" }, iconosDia(c, 3)), /* @__PURE__ */ React.createElement("i", { className: "dw-kid" + (c.conNinos ? " on" : ""), title: c.conNinos ? "con los ni\xF1os" : "sin los ni\xF1os" })))), /* @__PURE__ */ React.createElement("div", { className: "dp-info", onClick: onToggle }, /* @__PURE__ */ React.createElement("div", { className: "dp-lineas" }, /* @__PURE__ */ React.createElement("div", { className: "dp-l1" }, r.proxima ? /* @__PURE__ */ React.createElement(React.Fragment, null, "\u{1F6A8} ", cuando(r.proxima.dias), " \xB7 ", DIA_LARGO[r.proxima.dow], " ", r.proxima.hora ? r.proxima.hora + " " : "", r.proxima.texto, r.proxima.extra > 0 ? ` +${r.proxima.extra}` : "") : r.hoy ? /* @__PURE__ */ React.createElement(HoyLinea, { hoy: r.hoy }) : /* @__PURE__ */ React.createElement("span", { className: "dash-dim" }, "sin balizas")), r.proxima && r.hoy && /* @__PURE__ */ React.createElement("div", { className: "dp-l2" }, /* @__PURE__ */ React.createElement(HoyLinea, { hoy: r.hoy }))), /* @__PURE__ */ React.createElement("button", { className: "min-btn", onClick: (e) => {
+    return /* @__PURE__ */ React.createElement("div", { className: "dashpanel" + (abierto ? " abierto" : "") }, /* @__PURE__ */ React.createElement("div", { className: "dp-nav" }, navegacion), /* @__PURE__ */ React.createElement("div", { className: "dw-grid" }, r.semana.map((c) => /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        key: c.k,
+        className: "dw-col" + (c.hoy ? " hoy" : "") + (c.pasado ? " pasado" : ""),
+        onClick: () => abrir(c.k),
+        style: { cursor: "pointer" }
+      },
+      /* @__PURE__ */ React.createElement("span", { className: "dw-dow" }, DIA_LARGO[c.dow]),
+      /* @__PURE__ */ React.createElement(Aro, { score: c.score }, c.num),
+      /* @__PURE__ */ React.createElement("span", { className: "dw-ic" }, iconosDia(c, 3)),
+      /* @__PURE__ */ React.createElement("i", { className: "dw-kid" + (c.conNinos ? " on" : ""), title: c.conNinos ? "con los ni\xF1os" : "sin los ni\xF1os" })
+    ))), /* @__PURE__ */ React.createElement("div", { className: "dp-info" }, /* @__PURE__ */ React.createElement("div", { className: "dp-lineas" }, /* @__PURE__ */ React.createElement("div", { className: "dp-l1", onClick: r.proxima ? () => abrir(r.proxima.dateKey) : void 0, style: r.proxima ? { cursor: "pointer" } : void 0 }, r.proxima ? /* @__PURE__ */ React.createElement(React.Fragment, null, "\u{1F6A8} ", cuando(r.proxima.dias), " \xB7 ", DIA_LARGO[r.proxima.dow], " ", r.proxima.hora ? r.proxima.hora + " " : "", r.proxima.texto, r.proxima.extra > 0 ? ` +${r.proxima.extra}` : "") : r.hoy ? /* @__PURE__ */ React.createElement(HoyLinea, { hoy: r.hoy }) : /* @__PURE__ */ React.createElement("span", { className: "dash-dim" }, "sin balizas")), r.proxima && r.hoy && /* @__PURE__ */ React.createElement("div", { className: "dp-l2" }, /* @__PURE__ */ React.createElement(HoyLinea, { hoy: r.hoy }))), /* @__PURE__ */ React.createElement("button", { className: "min-btn", onClick: (e) => {
       e.stopPropagation();
       onToggle();
-    } }, abierto ? "\u25B4" : "\u25BE")), abierto && /* @__PURE__ */ React.createElement("div", { className: "dash-det" }, r.hoy && /* @__PURE__ */ React.createElement("div", { className: "dash-hoy" }, /* @__PURE__ */ React.createElement(HoyLinea, { hoy: r.hoy })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "dash-sec" }, "balizas", r.balizasSemana > 0 ? ` \xB7 ${r.balizasSemana} esta semana` : ""), r.agenda.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "dash-dim" }, r.proxima ? `la pr\xF3xima es ${cuando(r.proxima.dias)}` : "sin balizas por delante") : r.agenda.map((d) => /* @__PURE__ */ React.createElement("div", { key: d.k, className: "dq-row" + (d.hoy ? " hoy" : "") }, /* @__PURE__ */ React.createElement("span", { className: "dq-d" }, DIA_LARGO[d.dow], " ", d.num), /* @__PURE__ */ React.createElement("span", { className: "dq-t" }, d.balizas.map((b, i) => /* @__PURE__ */ React.createElement("span", { key: i }, "\u{1F6A8} ", b.hora ? /* @__PURE__ */ React.createElement("span", { className: "dq-h" }, b.hora, " ") : null, b.texto)))))), r.eventos.length > 0 && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "dash-sec" }, "eventos"), r.eventos.slice(0, 3).map((ev, i) => /* @__PURE__ */ React.createElement("a", { key: i, className: "dash-ev", href: ev.url, target: "_blank", rel: "noopener", style: { opacity: ev.terminado ? 0.5 : 1 } }, /* @__PURE__ */ React.createElement("b", { style: { background: EVENTO_COLOR[ev.tipo] || "#888" } }), /* @__PURE__ */ React.createElement("span", { className: "dash-ev-n" }, ev.name), /* @__PURE__ */ React.createElement("span", { className: "dash-dim" }, ev.estado, ev.finals && !ev.terminado ? ` \xB7 finals ${ev.finals}` : ""))), r.eventos.length > 3 && /* @__PURE__ */ React.createElement("div", { className: "dash-dim" }, "+", r.eventos.length - 3, " m\xE1s")), r.feriados.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "dash-dim" }, "feriado: ", r.feriados.map((f2) => DIA_LARGO[f2.dow]).join(", "))));
+    }, "aria-label": abierto ? "cerrar resumen" : "abrir resumen" }, abierto ? "\u25B4" : "\u25BE")), abierto && /* @__PURE__ */ React.createElement("div", { className: "dash-det" }, r.hoy && /* @__PURE__ */ React.createElement("div", { className: "dash-hoy" }, /* @__PURE__ */ React.createElement(HoyLinea, { hoy: r.hoy })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "dash-sec" }, "balizas", r.balizasSemana > 0 ? ` \xB7 ${r.balizasSemana} esta semana` : ""), r.agenda.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "dash-dim" }, r.proxima ? `la pr\xF3xima es ${cuando(r.proxima.dias)}` : "sin balizas por delante") : r.agenda.map((d) => /* @__PURE__ */ React.createElement("div", { key: d.k, className: "dq-row" + (d.hoy ? " hoy" : ""), onClick: () => abrir(d.k), style: { cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { className: "dq-d" }, DIA_LARGO[d.dow], " ", d.num), /* @__PURE__ */ React.createElement("span", { className: "dq-t" }, d.balizas.map((b, i) => /* @__PURE__ */ React.createElement("span", { key: i }, "\u{1F6A8} ", b.hora ? /* @__PURE__ */ React.createElement("span", { className: "dq-h" }, b.hora, " ") : null, b.texto)))))), r.eventos.length > 0 && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "dash-sec" }, "eventos"), r.eventos.slice(0, 3).map((ev, i) => /* @__PURE__ */ React.createElement("a", { key: i, className: "dash-ev", href: ev.url, target: "_blank", rel: "noopener", style: { opacity: ev.terminado ? 0.5 : 1 } }, /* @__PURE__ */ React.createElement("b", { style: { background: EVENTO_COLOR[ev.tipo] || "#888" } }), /* @__PURE__ */ React.createElement("span", { className: "dash-ev-n" }, ev.name), /* @__PURE__ */ React.createElement("span", { className: "dash-dim" }, ev.estado, ev.finals && !ev.terminado ? ` \xB7 finals ${ev.finals}` : ""))), r.eventos.length > 3 && /* @__PURE__ */ React.createElement("div", { className: "dash-dim" }, "+", r.eventos.length - 3, " m\xE1s")), r.feriados.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "dash-dim" }, "feriado: ", r.feriados.map((f2) => DIA_LARGO[f2.dow]).join(", "))));
   }
   var SemanaDashboard_default = SemanaDashboard;
 
@@ -15438,6 +15475,22 @@ Toco reintentar ahora.`);
           next[k] = true;
         });
         if (abrir) next[dateKey] = false;
+        return next;
+      });
+    }
+    function abrirDia(dateKey) {
+      const off = weekOffsetFor(dateKey);
+      if (off !== weekOffsetRef.current) updateWeekOffset(off);
+      setDashAbierto(false);
+      const inicio = addDays(BASE_DATE, off * 7);
+      setMinimized((m) => {
+        const next = { ...m };
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(inicio);
+          d.setDate(d.getDate() + i);
+          next[fmtFull(d)] = true;
+        }
+        next[dateKey] = false;
         return next;
       });
     }
@@ -16838,6 +16891,7 @@ Toco reintentar ahora.`);
       {
         abierto: dashAbierto,
         onToggle: toggleDash,
+        onAbrirDia: abrirDia,
         navegacion: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "nbtn", onClick: () => updateWeekOffset(weekOffset - 1) }, "\u2039"), /* @__PURE__ */ React.createElement("div", { className: "wnav-dates" }, fmt(weekStart), " \u2014 ", fmt(addDays(weekStart, 6))), /* @__PURE__ */ React.createElement("button", { className: "calbtn", onClick: () => setCalOpen(true) }, "\u{1F4C5}"), familiaPend.length > 0 && /* @__PURE__ */ React.createElement("button", { className: "calbtn", onClick: () => setFamiliaOpen(true), title: "Eventos nuevos en el calendario Familia" }, "\u{1F4E5}", familiaPend.length), /* @__PURE__ */ React.createElement("button", { className: "nbtn", onClick: () => updateWeekOffset(weekOffset + 1) }, "\u203A")),
         weekKeys: semanaKeys,
         todayKey: fmtFull(/* @__PURE__ */ new Date()),
@@ -16879,17 +16933,6 @@ Toco reintentar ahora.`);
         outline: isToday ? "2px dashed #111" : isWeekend && !withKidsToday ? "2px dashed #111" : isWeekend ? "1px solid #111" : "none",
         outlineOffset: "-5px"
       } }, /* @__PURE__ */ React.createElement("div", { className: "dhdr" }, /* @__PURE__ */ React.createElement("div", { className: "dname", onClick: () => setScheduleOpen(dateKey), style: { cursor: "pointer", color: isWeekend ? "#111" : isSlippiFree ? "#aac756" : "#fff" } }, dayName, isToday && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, background: isWeekend ? "#111" : "#fff", color: isWeekend ? "#fff" : "#111", borderRadius: 4, padding: "1px 6px", marginLeft: 6, fontFamily: "'DM Sans',sans-serif", fontWeight: 700, letterSpacing: 1, verticalAlign: "middle" } }, "HOY"), majorToday && /* @__PURE__ */ React.createElement("a", { href: "https://www.start.gg/", target: "_blank", rel: "noopener", onClick: (e) => e.stopPropagation(), style: { fontSize: 9, background: isMajorFinals ? "#ff6600" : "rgba(255,102,0,0.35)", color: isMajorFinals ? "#fff" : "#ff6600", borderRadius: 6, padding: "1px 5px", marginLeft: 5, fontFamily: "'DM Sans',sans-serif", fontWeight: 700, letterSpacing: 0.5, verticalAlign: "middle", textDecoration: "none" } }, isMajorFinals ? "FINALS" : "MAJOR"), pokemonToday && /* @__PURE__ */ React.createElement("a", { href: pokemonToday.url, target: "_blank", rel: "noopener", onClick: (e) => e.stopPropagation(), style: { fontSize: 9, background: isPokemonFinals ? "#ffcc00" : "rgba(255,204,0,0.3)", color: isPokemonFinals ? "#111" : "#997700", borderRadius: 6, padding: "1px 5px", marginLeft: 3, fontFamily: "'DM Sans',sans-serif", fontWeight: 700, letterSpacing: 0.5, verticalAlign: "middle", textDecoration: "none" } }, isPokemonFinals ? "FINALS" : "PKM"), sc2Today && /* @__PURE__ */ React.createElement("a", { href: sc2Today.url, target: "_blank", rel: "noopener", onClick: (e) => e.stopPropagation(), style: { fontSize: 9, background: isSc2Finals ? "#1565c0" : "rgba(21,101,192,0.3)", color: isSc2Finals ? "#fff" : "#1565c0", borderRadius: 6, padding: "1px 5px", marginLeft: 3, fontFamily: "'DM Sans',sans-serif", fontWeight: 700, letterSpacing: 0.5, verticalAlign: "middle", textDecoration: "none" } }, isSc2Finals ? "FINALS" : "SC2")), /* @__PURE__ */ React.createElement("div", { className: "ddate" }, fmt(dayDate)), (() => {
-        const isWorkDay2 = dayMarkArr.includes("work");
-        const fields = [day.menu, day.aseoMode, day.cookingMode, day.summary, day.energy, day.concentration, day.intensity || day.mood];
-        if (isWorkDay2) fields.push(day.workLevel);
-        fields.push(day.sleep);
-        const hasNutri = (nutriLog[dateKey] || []).length > 0;
-        fields.push(hasNutri ? "ok" : void 0);
-        const filled = fields.filter((f2) => f2 !== void 0 && f2 !== null && f2 !== "").length;
-        const pct = Math.round(filled / fields.length * 100);
-        const batColor = pct <= 30 ? "#e53935" : pct <= 60 ? "#ff9800" : pct <= 90 ? "#ffcc00" : "#4caf50";
-        return /* @__PURE__ */ React.createElement("div", { title: `registro: ${pct}%`, style: { display: "flex", alignItems: "center", gap: 2, marginLeft: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 12, height: 18, border: `1.5px solid ${isWeekend ? "#555" : "rgba(255,255,255,0.3)"}`, borderRadius: 2, padding: 1, position: "relative", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: "-3px", left: "50%", transform: "translateX(-50%)", width: 4, height: 2, background: isWeekend ? "#555" : "rgba(255,255,255,0.3)", borderRadius: "1px 1px 0 0" } }), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", height: `${pct}%`, background: batColor, borderRadius: 1, position: "absolute", bottom: 1, left: 1, right: 1, width: "calc(100% - 2px)", transition: "height 0.3s" } })));
-      })(), (() => {
         const hids = Array.isArray(day.humors) && day.humors.length > 0 ? day.humors : day.humor ? [day.humor] : [];
         return hids.length > 0 ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 1, marginLeft: 4 } }, hids.map((hid) => {
           const hobj = [...DEFAULT_HUMORS, ...day.humorCustom || []].find((h) => h.id === hid);
@@ -16898,37 +16941,50 @@ Toco reintentar ahora.`);
       })(), (() => {
         const hasUrgent = (day.tasks || []).some((t) => t.urgent && !t.done);
         return hasUrgent ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, filter: "drop-shadow(0 0 3px #ff3b30)", marginRight: 2 }, title: "tarea urgente" }, "\u{1F6A8}") : null;
-      })(), dayMarkArr.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 2, alignItems: "center" } }, dayMarkArr.map((m) => {
+      })(), dayMarkArr.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 2, alignItems: "center", minWidth: 0, flex: "0 1 auto", overflow: "hidden" } }, dayMarkArr.map((m) => {
         if (m === "social") return /* @__PURE__ */ React.createElement("span", { key: m, style: { fontSize: 12 } }, "\u{1F7E2}");
         if (m === "romantic") return /* @__PURE__ */ React.createElement("span", { key: m, style: { fontSize: 12 } }, "\u{1F338}");
         if (m === "work") return /* @__PURE__ */ React.createElement("span", { key: m, style: { fontSize: 12 } }, "\u{1F4BC}");
         if (m === "colegio") return /* @__PURE__ */ React.createElement("span", { key: m, style: { fontSize: 12 } }, "\u{1F392}");
         if (m === "doctor") {
           const cs = citasOnDay(kidsHealth.events, dateKey);
-          if (!cs.length) return /* @__PURE__ */ React.createElement("span", { key: m, style: { fontSize: 12 } }, "\u{1F3E5}");
+          if (!cs.length) return /* @__PURE__ */ React.createElement("span", { key: m, onClick: () => toggleDia(dateKey), style: { fontSize: 12, cursor: "pointer" } }, "\u{1F3E5}");
           const nm = (id) => ((kidsHealth.family || []).find((f2) => f2.id === id) || {}).name || id;
-          return /* @__PURE__ */ React.createElement("span", { key: m, title: cs.map((c) => citaLine(c, nm(c.personId), true)).join("\n"), style: { fontSize: 10, color: "#e53935", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 170 } }, "\u{1F3E5} ", citaLine(cs[0], nm(cs[0].personId)), cs.length > 1 ? ` +${cs.length - 1}` : "");
+          const c0 = cs[0];
+          const txt = [c0.startTime, nm(c0.personId), c0.title].filter(Boolean).join(" \xB7 ");
+          return /* @__PURE__ */ React.createElement(
+            "span",
+            {
+              key: m,
+              onClick: () => toggleDia(dateKey),
+              title: cs.map((c) => citaLine(c, nm(c.personId), true)).join("\n"),
+              style: { display: "flex", alignItems: "center", gap: 3, minWidth: 0, flex: "0 1 auto", fontSize: 10, color: "#e53935", cursor: "pointer", whiteSpace: "nowrap" }
+            },
+            /* @__PURE__ */ React.createElement("span", { style: { flex: "none" } }, "\u{1F3E5}"),
+            /* @__PURE__ */ React.createElement("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" } }, txt),
+            cs.length > 1 && /* @__PURE__ */ React.createElement("span", { style: { flex: "none" } }, "+", cs.length - 1)
+          );
         }
         if (m === "gym") return /* @__PURE__ */ React.createElement("svg", { key: m, width: "13", height: "13", viewBox: "0 0 24 24", style: { display: "inline-block", verticalAlign: "middle" } }, /* @__PURE__ */ React.createElement("rect", { x: "1", y: "9", width: "3", height: "6", rx: "1", fill: "#26a69a" }), /* @__PURE__ */ React.createElement("rect", { x: "4", y: "7", width: "2.5", height: "10", rx: "1", fill: "#26a69a" }), /* @__PURE__ */ React.createElement("rect", { x: "6.5", y: "10.5", width: "11", height: "3", rx: "1", fill: "#26a69a" }), /* @__PURE__ */ React.createElement("rect", { x: "17.5", y: "7", width: "2.5", height: "10", rx: "1", fill: "#26a69a" }), /* @__PURE__ */ React.createElement("rect", { x: "20", y: "9", width: "3", height: "6", rx: "1", fill: "#26a69a" }));
         if (m === "melee") return /* @__PURE__ */ React.createElement("svg", { key: m, width: "13", height: "13", viewBox: "0 0 24 24", style: { display: "inline-block", verticalAlign: "middle" } }, /* @__PURE__ */ React.createElement("path", { fillRule: "evenodd", fill: "#ff6600", d: "M12,1 A11,11,0,1,0,12,23 A11,11,0,1,0,12,1Z M1,14.5 H23 V16.5 H1Z M7.5,1 V23 H9.5 V1Z M8.5,12.5 A3,3,0,1,0,8.5,18.5 A3,3,0,1,0,8.5,12.5Z" }));
         if (m === "pokemon") return /* @__PURE__ */ React.createElement("svg", { key: m, width: "13", height: "13", viewBox: "0 0 12 12", style: { display: "inline-block" } }, /* @__PURE__ */ React.createElement("circle", { cx: "6", cy: "6", r: "5", fill: "none", stroke: "#ffcc00", strokeWidth: "1.3" }), /* @__PURE__ */ React.createElement("line", { x1: "1", y1: "6", x2: "11", y2: "6", stroke: "#ffcc00", strokeWidth: "1.3" }), /* @__PURE__ */ React.createElement("circle", { cx: "6", cy: "6", r: "1.8", fill: "#ffcc00" }));
         return null;
       })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", justifyContent: "flex-end", alignItems: "center", minWidth: 0 } }, hol && hol.type !== "weekend" && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, color: "#555", fontFamily: "'DM Sans',sans-serif", textAlign: "right", lineHeight: 1.3, fontWeight: 600, maxWidth: 90, overflow: "hidden" } }, hol.type === "cl" && "\u{1F1E8}\u{1F1F1} ", hol.type === "us" && "\u{1F1FA}\u{1F1F8} ", hol.type === "both" && "\u{1F1E8}\u{1F1F1}\u{1F1FA}\u{1F1F8} ", hol.label)), (() => {
-        const ds = computeStressScore(dateKey, dayData, calMarks, kidsHealth);
-        const barColor = ds <= 5 ? "#4caf50" : ds <= 7 ? "#ff9800" : "#f44336";
-        const label = ds <= 5 ? "tranqui" : ds <= 7 ? "meh" : "full";
+        const reg = nivelRegistro(day, { esTrabajo: dayMarkArr.includes("work"), tieneNutri: (nutriLog[dateKey] || []).length > 0 });
+        const barColor = colorRegistro(reg.pct);
+        const llenas = barrasRegistro(reg.pct);
         return /* @__PURE__ */ React.createElement(
           "div",
           {
-            title: `carga: ${label} (${ds}/10)`,
+            title: `registro: ${reg.pct}%`,
             onClick: () => toggleDia(dateKey),
-            style: { display: "flex", alignItems: "center", gap: 4, marginRight: 2, cursor: "pointer", padding: "4px 4px" }
+            style: { display: "flex", alignItems: "center", gap: 4, marginRight: 2, cursor: "pointer", padding: "4px 4px", flexShrink: 0 }
           },
           /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 1.5, alignItems: "center" } }, Array.from({ length: 5 }).map((_, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: {
             width: 3,
-            height: i < Math.ceil(ds / 2) ? 8 : 4,
+            height: i < llenas ? 8 : 4,
             borderRadius: 1.5,
-            background: i < Math.ceil(ds / 2) ? barColor : "rgba(255,255,255,0.12)",
+            background: i < llenas ? barColor : "rgba(255,255,255,0.12)",
             transition: "all 0.2s"
           } })))
         );

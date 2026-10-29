@@ -16,7 +16,7 @@ Evento: `{id, personId, type, start, startTime?, end?, parentId?, ...}`
 - `cita`: `title` = especialidad, `medico` opcional, fecha y hora reales, repetición en meses opcional (4 ocurrencias). Cada ocurrencia crea en el planner una tarea fija (`healthEventId`, texto "especialidad paciente — médico") y una tarea "preparar:" el día anterior a las 21:30. Editar o eliminar la cita actualiza o borra esas tareas.
 
 ## La cita es la fuente de la marca 🏥
-La marca `doctor` del calendario **no se guarda** para las citas: se deriva. `effectiveMarks(calMarks, events)` = marcas guardadas ∪ días con cita, y es lo que leen el calendario, la semana (que muestra "🏥 paciente · especialidad · hora"), el dashboard y `computeStressScore` (que deriva por su cuenta, sin contar doble). Las escrituras siguen yendo al `calMarks` guardado. Consecuencias:
+La marca `doctor` del calendario **no se guarda** para las citas: se deriva. `effectiveMarks(calMarks, events)` = marcas guardadas ∪ días con cita, y es lo que leen el calendario, la semana (que muestra "🏥 hora · paciente · especialidad", elástico y con la hora primero), el dashboard y `computeStressScore` (que deriva por su cuenta, sin contar doble). Las escrituras siguen yendo al `calMarks` guardado. Consecuencias:
 - El pincel "Doctor" del calendario abre el formulario de cita del día (en un día con marca guardada de antes, tocar de nuevo la quita, como siempre).
 - Las marcas 🏥 guardadas antes de las citas quedan intactas y se siguen viendo, sin datos.
 - `autoMarkDoctor` (por palabras clave en el texto de una tarea) puede quitar la marca guardada, pero ya no afecta a las citas porque su marca es derivada. Al borrar o mover una cita se limpia solo la marca guardada que ella dejó (`planCita`).

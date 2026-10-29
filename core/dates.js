@@ -46,4 +46,13 @@ function getHoliday(date) {
   return null;
 }
 
-export { MONTH_NAMES, addDays, fmt, fmtFull, getHoliday, CL_HOLIDAYS, US_HOLIDAYS };
+// Semana (offset respecto de la base de Semana: 21-feb-2026) a la que pertenece una fecha
+// "YYYY-MM-DD". Cuenta días calendario (UTC), no milisegundos locales: así el cambio de hora
+// no corre la semana un día.
+function weekOffsetFor(dateKey) {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  const dias = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(2026, 1, 21)) / 86400000);
+  return Math.floor(dias / 7);
+}
+
+export { MONTH_NAMES, addDays, fmt, fmtFull, getHoliday, CL_HOLIDAYS, US_HOLIDAYS, weekOffsetFor };

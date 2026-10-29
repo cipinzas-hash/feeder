@@ -6,7 +6,8 @@ import { memoriaDesdeHistorial, tieneMemoria, buscarSugerencias, recordarCompra,
 import { marcarEdicionLocal, LOCAL_EDIT_KEY } from "../modules/shared/localedit.js";
 import { rehidratarCineEstado } from "../modules/vitrina/estado.js";
 import { rehidratarOverlay } from "../modules/vitrina/avance.js";
-import { fmt, fmtFull, getHoliday, addDays } from "./dates.js";
+import { fmt, fmtFull, getHoliday, addDays, weekOffsetFor } from "./dates.js";
+import { nivelRegistro, colorRegistro, barrasRegistro } from "./registro.js";
 import { FamiliaInboxModal } from "./FamiliaInbox.jsx";
 import { leerDecisiones, guardarDecisiones, pendientes as familiaPendientes, fechasDeEvento, tareaDesdeEvento, registrarImportado, registrarIgnorado, podar as podarFamilia } from "./familiaInbox.js";
 import PokecriptoPage, { CARPETAS_DEFAULT } from "../modules/pokecripto/PokecriptoPage.jsx";
@@ -693,6 +694,20 @@ function AngstApp() {
       const next = {...m};
       semanaKeys.forEach(k=>{ next[k] = true; });
       if(abrir) next[dateKey] = false;
+      return next;
+    });
+  }
+  // Abrir una fecha concreta desde el dashboard (tira de días, balizas): cambia a su semana si
+  // hace falta y deja abierto solo ese día (acordeón exclusivo, como toggleDia).
+  function abrirDia(dateKey){
+    const off = weekOffsetFor(dateKey);
+    if(off !== weekOffsetRef.current) updateWeekOffset(off);
+    setDashAbierto(false);
+    const inicio = addDays(BASE_DATE, off*7);
+    setMinimized(m=>{
+      const next = {...m};
+      for(let i=0;i<7;i++){ const d = new Date(inicio); d.setDate(d.getDate()+i); next[fmtFull(d)] = true; }
+      next[dateKey] = false;
       return next;
     });
   }
@@ -1980,7 +1995,7 @@ function AngstApp() {
         {page===0&&(
           <div className="semana">
             <div className="semana-body" ref={semanaBodyRef} data-expandido={hayAbierto?"true":"false"} data-valvula={semanaValvula?"true":"false"}>
-<SemanaDashboard abierto={dashAbierto} onToggle={toggleDash}
+<SemanaDashboard abierto={dashAbierto} onToggle={toggleDash} onAbrirDia={abrirDia}
               navegacion={<>
               <button className="nbtn" onClick={()=>updateWeekOffset(weekOffset-1)}>‹</button>
               <div className="wnav-dates">{fmt(weekStart)} — {fmt(addDays(weekStart,6))}</div>
@@ -2041,38 +2056,28 @@ function AngstApp() {
                           {sc2Today&&<a href={sc2Today.url} target="_blank" rel="noopener" onClick={e=>e.stopPropagation()} style={{fontSize:9,background:isSc2Finals?"#1565c0":"rgba(21,101,192,0.3)",color:isSc2Finals?"#fff":"#1565c0",borderRadius:6,padding:"1px 5px",marginLeft:3,fontFamily:"'DM Sans',sans-serif",fontWeight:700,letterSpacing:0.5,verticalAlign:"middle",textDecoration:"none"}}>{isSc2Finals?"FINALS":"SC2"}</a>}
                         </div>
                         <div className="ddate">{fmt(dayDate)}</div>
-                        {(()=>{
-                          const isWorkDay2 = dayMarkArr.includes("work");
-                          const fields = [day.menu, day.aseoMode, day.cookingMode, day.summary, day.energy, day.concentration, day.intensity||day.mood];
-                          if(isWorkDay2) fields.push(day.workLevel);
-                          fields.push(day.sleep);
-                          const hasNutri = (nutriLog[dateKey]||[]).length > 0;
-                          fields.push(hasNutri ? "ok" : undefined);
-                          const filled = fields.filter(f=>f!==undefined&&f!==null&&f!=="").length;
-                          const pct = Math.round((filled/fields.length)*100);
-                          const batColor = pct<=30?"#e53935":pct<=60?"#ff9800":pct<=90?"#ffcc00":"#4caf50";
-                          return (
-                            <div title={`registro: ${pct}%`} style={{display:"flex",alignItems:"center",gap:2,marginLeft:2}}>
-                              <div style={{width:12,height:18,border:`1.5px solid ${isWeekend?"#555":"rgba(255,255,255,0.3)"}`,borderRadius:2,padding:1,position:"relative",flexShrink:0}}>
-                                <div style={{position:"absolute",top:"-3px",left:"50%",transform:"translateX(-50%)",width:4,height:2,background:isWeekend?"#555":"rgba(255,255,255,0.3)",borderRadius:"1px 1px 0 0"}}/>
-                                <div style={{width:"100%",height:`${pct}%`,background:batColor,borderRadius:1,position:"absolute",bottom:1,left:1,right:1,width:"calc(100% - 2px)",transition:"height 0.3s"}}/>
-                              </div>
-                            </div>
-                          );
-                        })()}
                         {(()=>{const hids=Array.isArray(day.humors)&&day.humors.length>0?day.humors:(day.humor?[day.humor]:[]);return hids.length>0?<div style={{display:"flex",gap:1,marginLeft:4}}>{hids.map(hid=>{const hobj=[...DEFAULT_HUMORS,...(day.humorCustom||[])].find(h=>h.id===hid);return hobj?<span key={hid} style={{fontSize:13}}>{hobj.emoji}</span>:null;})}</div>:null;})()}
                         {(()=>{const hasUrgent=(day.tasks||[]).some(t=>t.urgent&&!t.done);return hasUrgent?<span style={{fontSize:11,filter:"drop-shadow(0 0 3px #ff3b30)",marginRight:2}} title="tarea urgente">🚨</span>:null;})()}
-                        {dayMarkArr.length>0&&<div style={{display:"flex",gap:2,alignItems:"center"}}>{dayMarkArr.map(m=>{
+                        {dayMarkArr.length>0&&<div style={{display:"flex",gap:2,alignItems:"center",minWidth:0,flex:"0 1 auto",overflow:"hidden"}}>{dayMarkArr.map(m=>{
                           if(m==="social")return <span key={m} style={{fontSize:12}}>🟢</span>;
                           if(m==="romantic")return <span key={m} style={{fontSize:12}}>🌸</span>;
                           if(m==="work")return <span key={m} style={{fontSize:12}}>💼</span>;
                           if(m==="colegio")return <span key={m} style={{fontSize:12}}>🎒</span>;
                           if(m==="doctor"){
-                            // 🏥 + paciente · especialidad · hora de la(s) cita(s) de Salud (la cita es la fuente)
+                            // 🏥 + hora · paciente · especialidad de la(s) cita(s) de Salud (la cita es la fuente).
+                            // Elástico (se acorta con …) para no empujar fuera de la tarjeta lo que va a la derecha,
+                            // y tocarlo abre/cierra el día como el resto del encabezado.
                             const cs = citasOnDay(kidsHealth.events, dateKey);
-                            if(!cs.length) return <span key={m} style={{fontSize:12}}>🏥</span>;
+                            if(!cs.length) return <span key={m} onClick={()=>toggleDia(dateKey)} style={{fontSize:12,cursor:"pointer"}}>🏥</span>;
                             const nm = id => ((kidsHealth.family||[]).find(f=>f.id===id)||{}).name||id;
-                            return <span key={m} title={cs.map(c=>citaLine(c,nm(c.personId),true)).join("\n")} style={{fontSize:10,color:"#e53935",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:170}}>🏥 {citaLine(cs[0],nm(cs[0].personId))}{cs.length>1?` +${cs.length-1}`:""}</span>;
+                            const c0 = cs[0];
+                            const txt = [c0.startTime, nm(c0.personId), c0.title].filter(Boolean).join(" · ");
+                            return <span key={m} onClick={()=>toggleDia(dateKey)} title={cs.map(c=>citaLine(c,nm(c.personId),true)).join("\n")}
+                              style={{display:"flex",alignItems:"center",gap:3,minWidth:0,flex:"0 1 auto",fontSize:10,color:"#e53935",cursor:"pointer",whiteSpace:"nowrap"}}>
+                              <span style={{flex:"none"}}>🏥</span>
+                              <span style={{minWidth:0,overflow:"hidden",textOverflow:"ellipsis"}}>{txt}</span>
+                              {cs.length>1&&<span style={{flex:"none"}}>+{cs.length-1}</span>}
+                            </span>;
                           }
                           if(m==="gym")return <svg key={m} width="13" height="13" viewBox="0 0 24 24" style={{display:"inline-block",verticalAlign:"middle"}}><rect x="1" y="9" width="3" height="6" rx="1" fill="#26a69a"/><rect x="4" y="7" width="2.5" height="10" rx="1" fill="#26a69a"/><rect x="6.5" y="10.5" width="11" height="3" rx="1" fill="#26a69a"/><rect x="17.5" y="7" width="2.5" height="10" rx="1" fill="#26a69a"/><rect x="20" y="9" width="3" height="6" rx="1" fill="#26a69a"/></svg>;
                           if(m==="melee")return <svg key={m} width="13" height="13" viewBox="0 0 24 24" style={{display:"inline-block",verticalAlign:"middle"}}><path fillRule="evenodd" fill="#ff6600" d="M12,1 A11,11,0,1,0,12,23 A11,11,0,1,0,12,1Z M1,14.5 H23 V16.5 H1Z M7.5,1 V23 H9.5 V1Z M8.5,12.5 A3,3,0,1,0,8.5,18.5 A3,3,0,1,0,8.5,12.5Z"/></svg>;
@@ -2084,16 +2089,17 @@ function AngstApp() {
                           {hol&&hol.type!=="weekend"&&<div style={{fontSize:9,color:"#555",fontFamily:"'DM Sans',sans-serif",textAlign:"right",lineHeight:1.3,fontWeight:600,maxWidth:90,overflow:"hidden"}}>{hol.type==="cl"&&"🇨🇱 "}{hol.type==="us"&&"🇺🇸 "}{hol.type==="both"&&"🇨🇱🇺🇸 "}{hol.label}</div>}
                         </div>
                         {(()=>{
-                          const ds = computeStressScore(dateKey, dayData, calMarks, kidsHealth);
-                          const barColor = ds<=5?"#4caf50":ds<=7?"#ff9800":"#f44336";
-                          const label = ds<=5?"tranqui":ds<=7?"meh":"full";
+                          // Nivel de registro del día (antes: pilita junto a la fecha). El estrés queda en el dashboard.
+                          const reg = nivelRegistro(day, {esTrabajo:dayMarkArr.includes("work"), tieneNutri:(nutriLog[dateKey]||[]).length>0});
+                          const barColor = colorRegistro(reg.pct);
+                          const llenas = barrasRegistro(reg.pct);
                           return (
-                            <div title={`carga: ${label} (${ds}/10)`} onClick={()=>toggleDia(dateKey)}
-                              style={{display:"flex",alignItems:"center",gap:4,marginRight:2,cursor:"pointer",padding:"4px 4px"}}>
+                            <div title={`registro: ${reg.pct}%`} onClick={()=>toggleDia(dateKey)}
+                              style={{display:"flex",alignItems:"center",gap:4,marginRight:2,cursor:"pointer",padding:"4px 4px",flexShrink:0}}>
                               <div style={{display:"flex",gap:1.5,alignItems:"center"}}>
                                 {Array.from({length:5}).map((_,i)=>(
-                                  <div key={i} style={{width:3,height:i<Math.ceil(ds/2)?8:4,borderRadius:1.5,
-                                    background:i<Math.ceil(ds/2)?barColor:"rgba(255,255,255,0.12)",
+                                  <div key={i} style={{width:3,height:i<llenas?8:4,borderRadius:1.5,
+                                    background:i<llenas?barColor:"rgba(255,255,255,0.12)",
                                     transition:"all 0.2s"}}/>
                                 ))}
                               </div>
