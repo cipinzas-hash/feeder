@@ -1485,6 +1485,91 @@ var __angst = (() => {
     return (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
   }
 
+  // core/comprasMemoria.js
+  var sinTildes = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  function singular(w) {
+    if (w.length <= 3) return w;
+    if (w.length > 4 && /es$/.test(w) && /[lnrdzj]$/.test(w.slice(0, -2))) return w.slice(0, -2);
+    return /s$/.test(w) ? w.slice(0, -1) : w;
+  }
+  function claveNombre(nombre) {
+    return sinTildes(nombre).replace(/[^a-z0-9 ]/g, "").split(/\s+/).filter(Boolean).map(singular).join(" ");
+  }
+  var memoriaVacia = () => ({ v: 1, items: {} });
+  var tieneMemoria = (m) => !!(m && typeof m === "object" && m.items && typeof m.items === "object");
+  function lev(a, b) {
+    const m = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+    for (let j = 1; j <= b.length; j++) m[0][j] = j;
+    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) m[i][j] = Math.min(m[i - 1][j] + 1, m[i][j - 1] + 1, m[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return m[a.length][b.length];
+  }
+  function memoriaDesdeHistorial(dayData) {
+    const grupos = /* @__PURE__ */ new Map();
+    Object.keys(dayData || {}).sort().forEach((dia) => {
+      (dayData[dia] && dayData[dia].compras || []).forEach((it) => {
+        if (!it || !it.done) return;
+        const nombre = String(it.text || "").trim();
+        const k = claveNombre(nombre);
+        if (!k) return;
+        let g = grupos.get(k);
+        if (!g) {
+          g = { nombres: /* @__PURE__ */ new Map(), veces: 0, ult: "", cat: "", precios: [] };
+          grupos.set(k, g);
+        }
+        g.nombres.set(nombre, (g.nombres.get(nombre) || 0) + 1);
+        g.veces++;
+        g.ult = dia;
+        if (it.categoria) g.cat = it.categoria;
+        if (Number(it.precio) > 0) g.precios.push(Number(it.precio));
+      });
+    });
+    const items = {};
+    grupos.forEach((g, k) => {
+      const nombres = [...g.nombres.entries()].sort((a, b) => b[1] - a[1] || b[0].length - a[0].length);
+      items[k] = { n: nombres[0][0], cat: g.cat, p: g.precios.length ? g.precios[g.precios.length - 1] : 0, pp: g.precios.slice(-8), veces: g.veces, ult: g.ult, alias: nombres.slice(1).map((x) => x[0]).slice(0, 8) };
+    });
+    return { v: 1, items };
+  }
+  function buscarSugerencias(mem, texto, limite = 4) {
+    const q = claveNombre(texto);
+    if (!q || !tieneMemoria(mem)) return [];
+    const r = [];
+    for (const [k, m] of Object.entries(mem.items)) {
+      let sc = 0, parecido = true;
+      for (const c of [m.n, ...m.alias || []].map(claveNombre)) {
+        if (c === q) {
+          sc = Math.max(sc, 3);
+          parecido = false;
+        } else if (c.startsWith(q)) {
+          sc = Math.max(sc, 2);
+          parecido = false;
+        } else if (c.includes(q)) {
+          sc = Math.max(sc, 1);
+          parecido = false;
+        } else if (q.length >= 4 && lev(c, q) <= 1) sc = Math.max(sc, 2.5);
+      }
+      if (sc) r.push({ k, m, score: sc, similar: parecido });
+    }
+    return r.sort((a, b) => b.score - a.score || b.m.veces - a.m.veces).slice(0, limite);
+  }
+  function recordarCompra(mem, { text, categoria, precio, fecha }) {
+    const nombre = String(text || "").trim(), k = claveNombre(nombre);
+    if (!k) return mem;
+    const base = tieneMemoria(mem) ? mem : memoriaVacia();
+    const prev = base.items[k] || { n: nombre, cat: "", p: 0, pp: [], veces: 0, ult: "", alias: [] };
+    const sig = { ...prev, veces: prev.veces + 1, ult: fecha || prev.ult, cat: categoria && String(categoria).trim() || prev.cat };
+    if (Number(precio) > 0) {
+      sig.p = Number(precio);
+      sig.pp = [...prev.pp, Number(precio)].slice(-8);
+    }
+    if (nombre !== prev.n && !(prev.alias || []).includes(nombre)) sig.alias = [...prev.alias || [], nombre].slice(-8);
+    return { ...base, items: { ...base.items, [k]: sig } };
+  }
+  function rangoPrecios(m) {
+    const pp = (m && m.pp || []).slice(-5).filter((v) => v > 0);
+    return pp.length ? { min: Math.min(...pp), max: Math.max(...pp), n: pp.length } : null;
+  }
+
   // modules/presupuesto/CompraEditor.jsx
   var { useState } = React;
   var F = "'DM Sans',sans-serif";
@@ -1494,7 +1579,8 @@ var __angst = (() => {
     const m = montoCompra(item);
     if (!m && !item.categoria) return null;
     const cant = Number(item.cantidad) > 0 ? Number(item.cantidad) : 1;
-    const precio = m ? `${cant !== 1 ? cant + "\xD7 " : ""}${fmtCLP(Number(item.precio))}${cant !== 1 ? " = " + fmtCLP(m) : ""}` : "";
+    const est = !!item.estimado;
+    const precio = m ? `${est ? "~" : ""}${cant !== 1 ? cant + "\xD7 " : ""}${fmtCLP(Number(item.precio))}${cant !== 1 ? " = " + fmtCLP(m) : ""}${est ? " \xB7 estimado" : ""}` : "";
     return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 10, color: "#999", marginTop: 1 } }, precio, precio && item.categoria ? " \xB7 " : "", item.categoria || "");
   }
   function DescuentaDe({ info, total }) {
@@ -1563,7 +1649,10 @@ var __angst = (() => {
       acciones.sinGasto(campos());
     }
     const boton = (primario) => ({ flex: 1, padding: "9px 6px", background: primario ? "#111" : "#fff", color: primario ? "#fff" : "#444", border: primario ? "none" : "1px dashed #bbb", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 17, fontWeight: 700, cursor: "pointer" });
-    return /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fafafa", border: "1px dashed #ccc", borderRadius: 8, padding: "6px 10px 10px", margin: "2px 0 8px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 64 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Cantidad"), /* @__PURE__ */ React.createElement("input", { inputMode: "decimal", value: cant, onChange: (e) => {
+    return /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fafafa", border: "1px dashed #ccc", borderRadius: 8, padding: "6px 10px 10px", margin: "2px 0 8px" } }, (item.estimado || acciones.referencia && acciones.referencia(item.text)) && (() => {
+      const ref = acciones.referencia ? acciones.referencia(item.text) : null, rg = ref && ref.rango;
+      return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 12, color: "#555", background: "#fff", border: "1px dashed #999", borderRadius: 6, padding: "6px 8px", margin: "6px 0 2px", lineHeight: 1.4 } }, item.estimado && /* @__PURE__ */ React.createElement("b", { style: { color: "#111" } }, "Confirma el precio de hoy. "), ref && ref.p > 0 ? `La \xFAltima vez fue ${fmtCLP(ref.p)}` : "A\xFAn no hay precio de referencia", rg && rg.n > 1 ? `; las \xFAltimas ${rg.n} veces, entre ${fmtCLP(rg.min)} y ${fmtCLP(rg.max)}.` : ".");
+    })(), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 64 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Cantidad"), /* @__PURE__ */ React.createElement("input", { inputMode: "decimal", value: cant, onChange: (e) => {
       setCant(e.target.value);
       limpiar();
     }, style: { ...campo, textAlign: "center" } })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Precio unitario"), /* @__PURE__ */ React.createElement("input", { inputMode: "numeric", value: precio ? fmtCLP(precioNum) : "", onChange: (e) => {
@@ -1580,7 +1669,7 @@ var __angst = (() => {
   var F2 = "'DM Sans',sans-serif";
   var enlace = { background: "transparent", border: "none", color: "#999", fontFamily: F2, fontSize: 11, cursor: "pointer", padding: "6px 0 0", textDecoration: "underline" };
   var nuevoId = () => Date.now().toString() + Math.random().toString(36).slice(2, 5);
-  function NuevaCompra({ api, onAdd, autoFocus }) {
+  function NuevaCompra({ api, onAdd, autoFocus, pendientes: pendientes2 }) {
     const [texto, setTexto] = useState2("");
     const [abierto, setAbierto] = useState2(false);
     const [cant, setCant] = useState2("1");
@@ -1593,9 +1682,18 @@ var __angst = (() => {
     const info = api.info(catEf, cat === "__nueva" ? destNueva : void 0);
     const cantNum = parseFloat(String(cant).replace(",", ".")) > 0 ? parseFloat(String(cant).replace(",", ".")) : 1;
     const precioNum = parseInt(String(precio).replace(/\D/g, "")) || 0;
+    const q = texto.trim();
+    const sugs = q && api.sugerir ? api.sugerir(q) : [];
+    const exacto = sugs.length && sugs[0].score >= 3 ? sugs[0].m : null;
+    const dup = q ? (pendientes2 || []).find((x) => !x.done && claveNombre(x.text) === claveNombre(q)) : null;
+    const limpiar = () => {
+      setTexto("");
+      setCant("1");
+      setPrecio("");
+      setErr("");
+    };
     function agregar() {
-      const t = texto.trim();
-      if (!t) return;
+      if (!q || dup) return;
       if (cat === "__nueva") {
         if (!nueva.trim()) {
           setErr("Escribe el nombre de la categor\xEDa.");
@@ -1609,21 +1707,41 @@ var __angst = (() => {
           return;
         }
       }
-      const item = { id: nuevoId(), text: t, done: false };
+      const item = { id: nuevoId(), text: exacto ? exacto.n : q, done: false };
       if (cantNum !== 1) item.cantidad = cantNum;
       if (precioNum > 0) item.precio = precioNum;
-      if (catEf) item.categoria = catEf;
+      else if (exacto && exacto.p > 0) {
+        item.precio = exacto.p;
+        item.estimado = true;
+      }
+      const categoria = catEf || exacto && exacto.cat || void 0;
+      if (categoria) item.categoria = categoria;
       onAdd(item);
-      setTexto("");
-      setCant("1");
-      setPrecio("");
-      setErr("");
+      limpiar();
       if (cat === "__nueva") {
         setCat(nueva.trim());
         setNueva("");
       }
     }
+    function usar(m) {
+      if ((pendientes2 || []).some((x) => !x.done && claveNombre(x.text) === claveNombre(m.n))) {
+        setErr(`\xAB${m.n}\xBB ya est\xE1 en la lista.`);
+        return;
+      }
+      const item = { id: nuevoId(), text: m.n, done: false };
+      if (m.cat) item.categoria = m.cat;
+      if (m.p > 0) {
+        item.precio = m.p;
+        item.estimado = true;
+      }
+      onAdd(item);
+      limpiar();
+    }
     const total = Math.round(cantNum * precioNum);
+    const fechaCorta7 = (iso) => {
+      const p = String(iso || "").split("-");
+      return p.length === 3 ? `${p[2]}/${p[1]}` : "";
+    };
     return /* @__PURE__ */ React.createElement("div", { style: { paddingBottom: 8, marginBottom: 6, borderBottom: "1px solid #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement(
       "input",
       {
@@ -1642,7 +1760,29 @@ var __angst = (() => {
         placeholder: "agregar \xEDtem...",
         style: { ...campo, flex: 1, border: "1px dashed #ddd", borderRadius: 8, padding: "8px 10px" }
       }
-    ), /* @__PURE__ */ React.createElement("button", { onClick: agregar, disabled: !texto.trim(), style: { background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 16, opacity: texto.trim() ? 1 : 0.4 } }, "+")), /* @__PURE__ */ React.createElement("button", { onClick: () => setAbierto((a) => !a), style: enlace }, abierto ? "\u2212 ocultar detalles" : "+ detalles (cantidad, precio, categor\xEDa)", !abierto && (precioNum > 0 || catEf) ? " \xB7" + (catEf ? " " + catEf : "") + (total ? " " + fmtCLP(total) : "") : ""), abierto && /* @__PURE__ */ React.createElement("div", { style: { background: "#fafafa", border: "1px dashed #ccc", borderRadius: 8, padding: "2px 10px 10px", marginTop: 6 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 64 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Cantidad"), /* @__PURE__ */ React.createElement("input", { inputMode: "decimal", value: cant, onChange: (e) => setCant(e.target.value), style: { ...campo, textAlign: "center" } })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Precio unitario"), /* @__PURE__ */ React.createElement("input", { inputMode: "numeric", value: precio ? fmtCLP(precioNum) : "", onChange: (e) => setPrecio(e.target.value), placeholder: "$0", style: { ...campo, textAlign: "right" } }))), /* @__PURE__ */ React.createElement(SelectorCategoria, { info, cat, setCat, nueva, setNueva, destNueva, setDestNueva, alCambiar: () => setErr("") }), (catEf || precioNum > 0) && /* @__PURE__ */ React.createElement(DescuentaDe, { info, total })), err && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F2, fontSize: 12, color: "#c00", marginTop: 6 } }, err));
+    ), /* @__PURE__ */ React.createElement("button", { onClick: agregar, disabled: !q || !!dup, style: { background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", cursor: "pointer", fontSize: 16, opacity: q && !dup ? 1 : 0.4 } }, "+")), q && /* @__PURE__ */ React.createElement("div", null, dup && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F2, fontSize: 12, border: "1px dashed #b71c1c", color: "#b71c1c", borderRadius: 6, padding: "6px 8px", marginTop: 6 } }, "Ya est\xE1 en tu lista como \xAB", dup.text, "\xBB. No hace falta agregarlo de nuevo."), !dup && exacto && claveNombre(exacto.n) === claveNombre(q) && exacto.n !== q && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F2, fontSize: 12, color: "#777", marginTop: 6 } }, "\xAB", q, "\xBB es lo mismo que \xAB", exacto.n, "\xBB: se usa ese nombre."), !dup && !exacto && sugs.length > 0 && sugs[0].similar && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F2, fontSize: 12, color: "#777", marginTop: 6 } }, "\xBFQuisiste decir \xAB", sugs[0].m.n, "\xBB?"), (sugs.length > 0 || !exacto) && /* @__PURE__ */ React.createElement("div", { style: { border: "1px dashed #111", borderRadius: 8, marginTop: 6, overflow: "hidden" } }, sugs.map((x, i) => /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        key: x.k,
+        role: "button",
+        tabIndex: 0,
+        onClick: () => usar(x.m),
+        onKeyDown: (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            usar(x.m);
+          }
+        },
+        style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", fontFamily: F2, fontSize: 13, cursor: "pointer", borderBottom: "1px dashed #ddd", background: i === 0 && !dup ? "#111" : "#fff", color: i === 0 && !dup ? "#fff" : "#111" }
+      },
+      /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0 } }, x.m.n, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: i === 0 && !dup ? "#bbb" : "#777" } }, x.m.cat ? x.m.cat + " \xB7 " : "", x.m.p > 0 ? `\xFAltima vez ${fmtCLP(x.m.p)}` : "sin precio a\xFAn", " \xB7 ", x.m.veces, " veces", x.m.ult ? ` \xB7 ${fechaCorta7(x.m.ult)}` : "")),
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: i === 0 && !dup ? "#bbb" : "#777" } }, "usar")
+    )), !exacto && !dup && /* @__PURE__ */ React.createElement("div", { role: "button", tabIndex: 0, onClick: agregar, onKeyDown: (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        agregar();
+      }
+    }, style: { padding: "8px 10px", fontFamily: F2, fontSize: 13, cursor: "pointer", background: "#fff", color: "#111" } }, "\u2795 Agregar \xAB", q, "\xBB como nuevo", /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#777" } }, "se recuerda cuando lo marques comprado")))), /* @__PURE__ */ React.createElement("button", { onClick: () => setAbierto((a) => !a), style: enlace }, abierto ? "\u2212 ocultar detalles" : "+ detalles (cantidad, precio, categor\xEDa)", !abierto && (precioNum > 0 || catEf) ? " \xB7" + (catEf ? " " + catEf : "") + (total ? " " + fmtCLP(total) : "") : ""), abierto && /* @__PURE__ */ React.createElement("div", { style: { background: "#fafafa", border: "1px dashed #ccc", borderRadius: 8, padding: "2px 10px 10px", marginTop: 6 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 64 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Cantidad"), /* @__PURE__ */ React.createElement("input", { inputMode: "decimal", value: cant, onChange: (e) => setCant(e.target.value), style: { ...campo, textAlign: "center" } })), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Precio unitario"), /* @__PURE__ */ React.createElement("input", { inputMode: "numeric", value: precio ? fmtCLP(precioNum) : "", onChange: (e) => setPrecio(e.target.value), placeholder: "$0", style: { ...campo, textAlign: "right" } }))), /* @__PURE__ */ React.createElement(SelectorCategoria, { info, cat, setCat, nueva, setNueva, destNueva, setDestNueva, alCambiar: () => setErr("") }), (catEf || precioNum > 0) && /* @__PURE__ */ React.createElement(DescuentaDe, { info, total })), err && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F2, fontSize: 12, color: "#c00", marginTop: 6 } }, err));
   }
   function ListaCompras({ grupos, agregarEn, api, onPatch, onAdd, onDelete, onReorder, onMoveNext, autoFocus, vacio = "lista vac\xEDa" }) {
     const [editId, setEditId] = useState2(null);
@@ -1665,7 +1805,7 @@ var __angst = (() => {
         onPatch(g.key, it.id, { done: false, ...r2.patch || {} });
         return;
       }
-      if (api.info(it.categoria).activo && (montoCompra(it) === 0 || !(it.categoria && String(it.categoria).trim()))) {
+      if (api.info(it.categoria).activo && (montoCompra(it) === 0 || it.estimado || !(it.categoria && String(it.categoria).trim()))) {
         setEditId(`${g.key}|${it.id}`);
         return;
       }
@@ -1675,26 +1815,34 @@ var __angst = (() => {
         return;
       }
       onPatch(g.key, it.id, { done: true, ...r.patch || {} });
+      if (api.recordar) api.recordar(it);
     }
-    const accionesDe = (g, it) => ({
-      info: api.info,
-      guardar: (f2) => {
-        onPatch(g.key, it.id, f2);
-        setEditId(null);
-      },
-      comprar: (f2) => {
-        const r = api.comprar({ ...it, ...f2 });
-        if (r.error) return r.error;
-        onPatch(g.key, it.id, { ...f2, done: true, ...r.patch || {} });
-        setEditId(null);
-        return null;
-      },
-      sinGasto: (f2) => {
-        onPatch(g.key, it.id, { ...f2, done: true });
-        setEditId(null);
-      },
-      nuevaCategoria: api.nuevaCategoria
-    });
+    const accionesDe = (g, it) => {
+      const confirma = (f2) => f2.precio !== it.precio || !it.estimado;
+      return {
+        info: api.info,
+        referencia: api.referencia,
+        guardar: (f2) => {
+          onPatch(g.key, it.id, { ...f2, estimado: it.estimado ? !confirma(f2) : false });
+          setEditId(null);
+        },
+        comprar: (f2) => {
+          const r = api.comprar({ ...it, ...f2, estimado: false });
+          if (r.error) return r.error;
+          onPatch(g.key, it.id, { ...f2, estimado: false, done: true, ...r.patch || {} });
+          if (api.recordar) api.recordar({ ...it, ...f2, estimado: false });
+          setEditId(null);
+          return null;
+        },
+        sinGasto: (f2) => {
+          const est = it.estimado ? !confirma(f2) : false;
+          onPatch(g.key, it.id, { ...f2, estimado: est, done: true });
+          if (api.recordar) api.recordar({ ...it, ...f2, estimado: est });
+          setEditId(null);
+        },
+        nuevaCategoria: api.nuevaCategoria
+      };
+    };
     const casilla = (hecho, onClick, oscuro) => /* @__PURE__ */ React.createElement("div", { onClick, style: { width: 20, height: 20, borderRadius: 4, border: `1.5px dashed ${hecho ? "#111" : "#bbb"}`, background: hecho ? "#111" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, ...oscuro ? { borderColor: "#888" } : {} } }, hecho && /* @__PURE__ */ React.createElement("span", { style: { color: "#fff", fontSize: 12, lineHeight: 1 } }, "\u2713"));
     const ordenable = !!onReorder;
     function toquesDe(g, idx, item) {
@@ -1734,7 +1882,7 @@ var __angst = (() => {
         }
       };
     }
-    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(NuevaCompra, { api, onAdd: (item) => onAdd(agregarEn, item), autoFocus }), msg && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F2, fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", margin: "2px 0 8px" } }, msg), total === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#ccc", fontFamily: F2, fontSize: 13, textAlign: "center", padding: "20px 0" } }, vacio), grupos.filter((g) => g.items.length > 0).map((g) => /* @__PURE__ */ React.createElement("div", { key: g.key + (g.titulo || ""), style: { marginBottom: 6 } }, g.titulo && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F2, fontSize: 10, color: g.vencido ? "#a60" : "#999", letterSpacing: 2, textTransform: "uppercase", margin: "8px 0 2px" } }, g.titulo), g.items.map((item, idx) => {
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(NuevaCompra, { api, onAdd: (item) => onAdd(agregarEn, item), autoFocus, pendientes: grupos.flatMap((g) => g.items) }), msg && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F2, fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", margin: "2px 0 8px" } }, msg), total === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#ccc", fontFamily: F2, fontSize: 13, textAlign: "center", padding: "20px 0" } }, vacio), grupos.filter((g) => g.items.length > 0).map((g) => /* @__PURE__ */ React.createElement("div", { key: g.key + (g.titulo || ""), style: { marginBottom: 6 } }, g.titulo && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F2, fontSize: 10, color: g.vencido ? "#a60" : "#999", letterSpacing: 2, textTransform: "uppercase", margin: "8px 0 2px" } }, g.titulo), g.items.map((item, idx) => {
       const k = `${g.key}|${item.id}`;
       const sostenido = held === `${g.key}|${idx}`;
       const objetivo = dragTarget === idx && held !== null && held.startsWith(g.key + "|") && !sostenido;
@@ -2773,7 +2921,8 @@ var __angst = (() => {
     pokeInventario: "array",
     pokeCarpetas: "array",
     pokeDarkCatalogo: "array",
-    pokePriceCache: "object"
+    pokePriceCache: "object",
+    comprasMemoria: "object"
   };
   var LOCAL_KEY_FIELDS = {
     feedState: "angst-feed-proto-v1",
@@ -11045,10 +11194,10 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
 
   // modules/presupuesto/tortaDatos.js
   var SIN_CAT = "Sin categor\xEDa";
-  var sinTildes = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  var sinTildes2 = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   var EMO_CAT = { lacteos: "\u{1F95B}", huevos: "\u{1F95A}", prote: "\u{1F357}", snack: "\u{1F37F}", verdura: "\u{1F96C}", fruta: "\u{1F34E}", aseo: "\u{1F9FC}", limpieza: "\u{1F9F4}", papel: "\u{1F9FB}" };
   function emojiCategoria(cat) {
-    return EMO_CAT[sinTildes(cat).trim()] || "\u{1F3F7}\uFE0F";
+    return EMO_CAT[sinTildes2(cat).trim()] || "\u{1F3F7}\uFE0F";
   }
   var EMO_PROD = [
     ["manzana", "\u{1F34E}"],
@@ -11103,7 +11252,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     ["papel", "\u{1F9FB}"]
   ];
   function emojiProducto(nombre, cat) {
-    const toks = sinTildes(nombre).split(/[^a-z]+/).filter(Boolean);
+    const toks = sinTildes2(nombre).split(/[^a-z]+/).filter(Boolean);
     for (const [s, e] of EMO_PROD) {
       if (s.length >= 4 ? toks.some((t) => t.startsWith(s)) : toks.some((t) => t === s || t === s + "s" || t === s + "es")) return e;
     }
@@ -11114,7 +11263,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     return String(nota || "").replace(/^\s*[\d.,]+\s*[×x]\s*/i, "").trim() || "(sin nota)";
   }
   function claveProducto(nota) {
-    return sinTildes(nombreProducto(nota)).replace(/[^a-z0-9 ]/g, "").split(/\s+/).filter(Boolean).map((w) => w.length > 3 ? w.replace(/(es|s)$/, "") : w).join(" ");
+    return claveNombre(nombreProducto(nota));
   }
   var fechaCorta5 = (iso) => {
     const p = String(iso || "").split("-");
@@ -11684,7 +11833,8 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       d.estimado += montoCompra(i);
     }));
     const estimado = Object.values(destinos).reduce((s, d) => s + d.estimado, 0);
-    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 12, width: "min(95vw,440px)", maxHeight: "86vh", display: "flex", flexDirection: "column", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, "\u{1F6D2} Carrito ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: "#888" } }, pendientes2, " pendiente", pendientes2 === 1 ? "" : "s")), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#aaa", fontSize: 22, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "10px 14px" } }, /* @__PURE__ */ React.createElement(ListaCompras, { grupos, agregarEn: hoy, api, onPatch: onItem, onAdd, onDelete, vacio: "no hay compras pendientes" })), /* @__PURE__ */ React.createElement("div", { style: { borderTop: "1px solid #f0f0f0", padding: "10px 16px", fontFamily: F10, fontSize: 12, color: "#666", lineHeight: 1.5 } }, pendientes2 > 0 && /* @__PURE__ */ React.createElement("div", null, "Estimado pendiente: ", /* @__PURE__ */ React.createElement("b", { style: { color: "#111" } }, fmtCLP(estimado)), sinPrecio > 0 && /* @__PURE__ */ React.createElement("span", { style: { color: "#aaa" } }, " \xB7 ", sinPrecio, " sin precio")), Object.entries(destinos).map(([id, d]) => d.activo ? /* @__PURE__ */ React.createElement("div", { key: id, style: { color: d.estimado > d.saldo ? "#c00" : "#666" } }, d.emoji, " ", d.label, ": saldo ", /* @__PURE__ */ React.createElement("b", null, fmtCLP(d.saldo)), d.estimado > d.saldo ? " \xB7 el estimado no alcanza" : "") : /* @__PURE__ */ React.createElement("div", { key: id, style: { color: "#aaa" } }, d.label, " a\xFAn no es cartera con sobres: sus compras no descuentan de ning\xFAn fondo.")), pendientes2 === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#aaa" } }, "Agrega arriba lo que haga falta comprar."))));
+    const porConfirmar = grupos.filter((g) => !g.titulo.startsWith("Comprado")).reduce((s, g) => s + g.items.filter((i) => i.estimado).length, 0);
+    return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 12, width: "min(95vw,440px)", maxHeight: "86vh", display: "flex", flexDirection: "column", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, "\u{1F6D2} Carrito ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: "#888" } }, pendientes2, " pendiente", pendientes2 === 1 ? "" : "s")), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#aaa", fontSize: 22, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "10px 14px" } }, /* @__PURE__ */ React.createElement(ListaCompras, { grupos, agregarEn: hoy, api, onPatch: onItem, onAdd, onDelete, vacio: "no hay compras pendientes" })), /* @__PURE__ */ React.createElement("div", { style: { borderTop: "1px solid #f0f0f0", padding: "10px 16px", fontFamily: F10, fontSize: 12, color: "#666", lineHeight: 1.5 } }, pendientes2 > 0 && /* @__PURE__ */ React.createElement("div", null, "Estimado pendiente: ", /* @__PURE__ */ React.createElement("b", { style: { color: "#111" } }, fmtCLP(estimado)), sinPrecio > 0 && /* @__PURE__ */ React.createElement("span", { style: { color: "#aaa" } }, " \xB7 ", sinPrecio, " sin precio"), porConfirmar > 0 && /* @__PURE__ */ React.createElement("span", { style: { color: "#aaa" } }, " \xB7 ", porConfirmar, " por confirmar")), Object.entries(destinos).map(([id, d]) => d.activo ? /* @__PURE__ */ React.createElement("div", { key: id, style: { color: d.estimado > d.saldo ? "#c00" : "#666" } }, d.emoji, " ", d.label, ": saldo ", /* @__PURE__ */ React.createElement("b", null, fmtCLP(d.saldo)), d.estimado > d.saldo ? " \xB7 el estimado no alcanza" : "") : /* @__PURE__ */ React.createElement("div", { key: id, style: { color: "#aaa" } }, d.label, " a\xFAn no es cartera con sobres: sus compras no descuentan de ning\xFAn fondo.")), pendientes2 === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#aaa" } }, "Agrega arriba lo que haga falta comprar."))));
   }
 
   // modules/pokecripto/AgregarCartaModal.jsx
@@ -14914,6 +15064,8 @@ Toco reintentar ahora.`);
     const dayDataRef = useRef20({});
     const weekOffsetRef = useRef20(0);
     const budgetRef = useRef20({});
+    const memoriaRef = useRef20({});
+    const [comprasMemoria, setComprasMemoria] = useState34({});
     const nutriaRef = useRef20(makeDefaultNutria());
     const calMarksRef = useRef20({});
     const routinesRef = useRef20([]);
@@ -15484,6 +15636,11 @@ Toco reintentar ahora.`);
               setNutria(d.nutria);
               nutriaRef.current = d.nutria;
             }
+            {
+              const mem = tieneMemoria(d.comprasMemoria) ? d.comprasMemoria : memoriaDesdeHistorial(d.dayData);
+              setComprasMemoria(mem);
+              memoriaRef.current = mem;
+            }
             if (d.cookingOpts) setCookingOpts(d.cookingOpts);
             if (d.aseoOpts) {
               const merged = [...d.aseoOpts];
@@ -15634,6 +15791,7 @@ Toco reintentar ahora.`);
         calMarks: overrides.calMarks ?? calMarksRef.current,
         cookingOpts: overrides.cookingOpts ?? cookingOpts,
         aseoOpts: overrides.aseoOpts ?? aseoOpts,
+        comprasMemoria: overrides.comprasMemoria ?? memoriaRef.current,
         routines: overrides.routines ?? routinesRef.current,
         recurring: overrides.recurring ?? recurringRef.current,
         lastRollover: overrides.lastRollover ?? lastRolloverRef.current,
@@ -16012,6 +16170,7 @@ Toco reintentar ahora.`);
         calMarks: clone(calMarksRef.current),
         cookingOpts: clone(cookingOpts),
         aseoOpts: clone(aseoOpts),
+        comprasMemoria: clone(memoriaRef.current),
         routines: clone(routinesRef.current),
         recurring: clone(recurringRef.current),
         lastRollover: lastRolloverRef.current,
@@ -16072,6 +16231,11 @@ Toco reintentar ahora.`);
       }
       if (d.aseoOpts) {
         setAseoOpts(d.aseoOpts);
+      }
+      {
+        const mem = tieneMemoria(d.comprasMemoria) ? d.comprasMemoria : memoriaDesdeHistorial(d.dayData);
+        setComprasMemoria(mem);
+        memoriaRef.current = mem;
       }
       if (d.routines) {
         setRoutines(d.routines);
@@ -16350,6 +16514,18 @@ Toco reintentar ahora.`);
         if (r.error) return { error: r.error };
         if (r.budget) guardarBudget(item.gastoPeriodo, r.budget);
         return { patch: { gastoId: null, gastoPeriodo: null } };
+      },
+      // Memoria de compras: sugerencias al escribir, referencia del último precio (solo referencia: se confirma el de hoy) y aprendizaje al comprar.
+      sugerir: (texto) => buscarSugerencias(comprasMemoria, texto),
+      referencia: (texto) => {
+        const m = comprasMemoria.items && comprasMemoria.items[claveNombre(texto)];
+        return m ? { ...m, rango: rangoPrecios(m) } : null;
+      },
+      recordar: (item) => {
+        const m = recordarCompra(memoriaRef.current, { text: item.text, categoria: item.categoria, precio: item.estimado ? 0 : item.precio, fecha: fmtFull(/* @__PURE__ */ new Date()) });
+        memoriaRef.current = m;
+        setComprasMemoria(m);
+        saveToStorage({ comprasMemoria: m });
       },
       // Agrega la categoría a la lista de compras (fila «ali», sea gasto base o cartera). Devuelve un mensaje si no se puede.
       nuevaCategoria: (label, destino) => {
