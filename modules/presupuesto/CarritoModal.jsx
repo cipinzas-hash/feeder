@@ -39,6 +39,7 @@ export default function CarritoModal({ dayData, hoy, api, onItem, onAdd, onDelet
     d.estimado += montoCompra(i);
   }));
   const estimado = Object.values(destinos).reduce((s, d) => s + d.estimado, 0);
+  const porConfirmar = grupos.filter(g => !g.titulo.startsWith("Comprado")).reduce((s, g) => s + g.items.filter(i => i.estimado).length, 0);
 
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}>
@@ -51,7 +52,7 @@ export default function CarritoModal({ dayData, hoy, api, onItem, onAdd, onDelet
           <ListaCompras grupos={grupos} agregarEn={hoy} api={api} onPatch={onItem} onAdd={onAdd} onDelete={onDelete} vacio="no hay compras pendientes"/>
         </div>
         <div style={{ borderTop: "1px solid #f0f0f0", padding: "10px 16px", fontFamily: F, fontSize: 12, color: "#666", lineHeight: 1.5 }}>
-          {pendientes > 0 && <div>Estimado pendiente: <b style={{ color: "#111" }}>{fmtCLP(estimado)}</b>{sinPrecio > 0 && <span style={{ color: "#aaa" }}> · {sinPrecio} sin precio</span>}</div>}
+          {pendientes > 0 && <div>Estimado pendiente: <b style={{ color: "#111" }}>{fmtCLP(estimado)}</b>{sinPrecio > 0 && <span style={{ color: "#aaa" }}> · {sinPrecio} sin precio</span>}{porConfirmar > 0 && <span style={{ color: "#aaa" }}> · {porConfirmar} por confirmar</span>}</div>}
           {Object.entries(destinos).map(([id, d]) => d.activo
             ? <div key={id} style={{ color: d.estimado > d.saldo ? "#c00" : "#666" }}>{d.emoji} {d.label}: saldo <b>{fmtCLP(d.saldo)}</b>{d.estimado > d.saldo ? " · el estimado no alcanza" : ""}</div>
             : <div key={id} style={{ color: "#aaa" }}>{d.label} aún no es cartera con sobres: sus compras no descuentan de ningún fondo.</div>)}

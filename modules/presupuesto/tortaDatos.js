@@ -3,6 +3,7 @@
 //   por categoría: categorías (de todos los sobres) → compras de esa categoría
 //   por compra:    compras (individuales en mensual, juntas por producto en anual) → ficha de la compra
 // Cada porción trae p (lo gastado en el período), y (lo gastado en los últimos 12 períodos) y d (el que corresponde al modo en vista).
+import { claveNombre } from "../../core/comprasMemoria.js";
 export const SIN_CAT = "Sin categoría";
 const sinTildes = t => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
@@ -25,10 +26,8 @@ export function emojiProducto(nombre, cat) {
 }
 // «2× Manzana» → «Manzana»
 export function nombreProducto(nota) { return String(nota || "").replace(/^\s*[\d.,]+\s*[×x]\s*/i, "").trim() || "(sin nota)"; }
-// Mismo producto aunque cambien mayúsculas, tildes o plural.
-export function claveProducto(nota) {
-  return sinTildes(nombreProducto(nota)).replace(/[^a-z0-9 ]/g, "").split(/\s+/).filter(Boolean).map(w => (w.length > 3 ? w.replace(/(es|s)$/, "") : w)).join(" ");
-}
+// Mismo producto aunque cambien mayúsculas, tildes o plural (la misma regla de la memoria del carro).
+export function claveProducto(nota) { return claveNombre(nombreProducto(nota)); }
 const fechaCorta = iso => { const p = String(iso || "").split("-"); return p.length === 3 ? `${p[2]}/${p[1]}` : ""; };
 
 function agrupar(lista, keyFn, mk) {

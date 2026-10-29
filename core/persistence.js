@@ -120,6 +120,7 @@ export const CORE_EXPORT_FIELDS = {
   fadimanData: "object", nutriLog: "object", ejercicioLog: "object", ejercicioDecks: "array",
   customFoods: "object", foodOverrides: "object", customEjercicios: "object", nutriDecks: "array",
   pokeInventario: "array", pokeCarpetas: "array", pokeDarkCatalogo: "array", pokePriceCache: "object",
+  comprasMemoria: "object",
 };
 
 // Campos que NO pasan por React state de AngstApp: cada uno vive en su propia

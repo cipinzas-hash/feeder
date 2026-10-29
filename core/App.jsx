@@ -2,6 +2,7 @@ import { EF, AnalogClock, CalendarModal, ModeMenu, ComprasModal, HumorSelector, 
 import { computeStressScore, esTareaMedica, DOCTOR_KEYWORDS, DEFAULT_HUMORS } from "./stress.js";
 import { requestNotifPermission, scheduleTaskNotifs } from "./notifications.js";
 import { downloadBackupJSON, validarPayloadExport, leerCamposLocales, escribirCamposLocales } from "./persistence.js";
+import { memoriaDesdeHistorial, tieneMemoria, buscarSugerencias, recordarCompra, rangoPrecios, claveNombre } from "./comprasMemoria.js";
 import { marcarEdicionLocal, LOCAL_EDIT_KEY } from "../modules/shared/localedit.js";
 import { rehidratarCineEstado } from "../modules/vitrina/estado.js";
 import { rehidratarOverlay } from "../modules/vitrina/avance.js";
@@ -373,6 +374,8 @@ function AngstApp() {
   const dayDataRef  = useRef({});
   const weekOffsetRef = useRef(0);
   const budgetRef   = useRef({});
+  const memoriaRef  = useRef({});                       // memoria de compras (lo comprado de verdad); ver core/comprasMemoria.js
+  const [comprasMemoria, setComprasMemoria] = useState({});
   const nutriaRef   = useRef(makeDefaultNutria());
   const calMarksRef = useRef({});
   const routinesRef  = useRef([]);
@@ -896,6 +899,7 @@ function AngstApp() {
             setBudgets(migrated); budgetRef.current=migrated;
           }
           if(d.nutria){ setNutria(d.nutria); nutriaRef.current=d.nutria; }
+          { const mem = tieneMemoria(d.comprasMemoria) ? d.comprasMemoria : memoriaDesdeHistorial(d.dayData); setComprasMemoria(mem); memoriaRef.current=mem; }   // sin memoria aún: se arma con lo ya comprado
           if(d.cookingOpts) setCookingOpts(d.cookingOpts);
           if(d.aseoOpts){ const merged=[...d.aseoOpts];DEFAULT_ASEO_OPTS.forEach(o=>{if(!merged.includes(o))merged.splice(merged.length-1,0,o);});setAseoOpts(merged); }
           if(d.custody) setCustody(d.custody);
@@ -986,6 +990,7 @@ function AngstApp() {
       calMarks:   overrides.calMarks   ?? calMarksRef.current,
       cookingOpts: overrides.cookingOpts ?? cookingOpts,
       aseoOpts: overrides.aseoOpts ?? aseoOpts,
+      comprasMemoria: overrides.comprasMemoria ?? memoriaRef.current,
       routines:   overrides.routines   ?? routinesRef.current,
       recurring:  overrides.recurring  ?? recurringRef.current,
       lastRollover: overrides.lastRollover ?? lastRolloverRef.current,
@@ -1384,6 +1389,7 @@ function AngstApp() {
       calMarks: clone(calMarksRef.current),
       cookingOpts: clone(cookingOpts),
       aseoOpts: clone(aseoOpts),
+      comprasMemoria: clone(memoriaRef.current),
       routines: clone(routinesRef.current),
       recurring: clone(recurringRef.current),
       lastRollover: lastRolloverRef.current,
@@ -1433,6 +1439,7 @@ function AngstApp() {
     if(d.calMarks){ setCalMarks(d.calMarks); calMarksRef.current=d.calMarks; }
     if(d.cookingOpts){ setCookingOpts(d.cookingOpts); }
     if(d.aseoOpts){ setAseoOpts(d.aseoOpts); }
+    { const mem = tieneMemoria(d.comprasMemoria) ? d.comprasMemoria : memoriaDesdeHistorial(d.dayData); setComprasMemoria(mem); memoriaRef.current=mem; }   // un respaldo antiguo sin memoria: se rearma con su historial
     if(d.routines){ setRoutines(d.routines); routinesRef.current=d.routines; }
     if(d.recurring){ setRecurring(d.recurring); recurringRef.current=d.recurring; }
     if(d.lastRollover){ setLastRollover(d.lastRollover); lastRolloverRef.current=d.lastRollover; }
@@ -1653,6 +1660,13 @@ function AngstApp() {
       if(r.error) return {error:r.error};
       if(r.budget) guardarBudget(item.gastoPeriodo,r.budget);
       return {patch:{gastoId:null,gastoPeriodo:null}};
+    },
+    // Memoria de compras: sugerencias al escribir, referencia del último precio (solo referencia: se confirma el de hoy) y aprendizaje al comprar.
+    sugerir: texto=>buscarSugerencias(comprasMemoria, texto),
+    referencia: texto=>{ const m=comprasMemoria.items&&comprasMemoria.items[claveNombre(texto)]; return m?{...m, rango:rangoPrecios(m)}:null; },
+    recordar: item=>{
+      const m=recordarCompra(memoriaRef.current,{ text:item.text, categoria:item.categoria, precio:item.estimado?0:item.precio, fecha:fmtFull(new Date()) });
+      memoriaRef.current=m; setComprasMemoria(m); saveToStorage({ comprasMemoria:m });
     },
     // Agrega la categoría a la lista de compras (fila «ali», sea gasto base o cartera). Devuelve un mensaje si no se puede.
     nuevaCategoria: (label, destino)=>{

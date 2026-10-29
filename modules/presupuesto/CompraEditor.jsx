@@ -11,7 +11,8 @@ export function ChipCompra({ item }) {
   const m = montoCompra(item);
   if (!m && !item.categoria) return null;
   const cant = Number(item.cantidad) > 0 ? Number(item.cantidad) : 1;
-  const precio = m ? `${cant !== 1 ? cant + "× " : ""}${fmtCLP(Number(item.precio))}${cant !== 1 ? " = " + fmtCLP(m) : ""}` : "";
+  const est = !!item.estimado;      // precio que viene de la memoria: referencia, aún sin confirmar
+  const precio = m ? `${est ? "~" : ""}${cant !== 1 ? cant + "× " : ""}${fmtCLP(Number(item.precio))}${cant !== 1 ? " = " + fmtCLP(m) : ""}${est ? " · estimado" : ""}` : "";
   return <div style={{ fontFamily: F, fontSize: 10, color: "#999", marginTop: 1 }}>{precio}{precio && item.categoria ? " · " : ""}{item.categoria || ""}</div>;
 }
 
@@ -95,6 +96,13 @@ export function CompraEditor({ item, acciones, onClose }) {
 
   return (
     <div onClick={e => e.stopPropagation()} style={{ background: "#fafafa", border: "1px dashed #ccc", borderRadius: 8, padding: "6px 10px 10px", margin: "2px 0 8px" }}>
+      {(item.estimado || (acciones.referencia && acciones.referencia(item.text))) && (() => {
+        const ref = acciones.referencia ? acciones.referencia(item.text) : null, rg = ref && ref.rango;
+        return (<div style={{ fontFamily: F, fontSize: 12, color: "#555", background: "#fff", border: "1px dashed #999", borderRadius: 6, padding: "6px 8px", margin: "6px 0 2px", lineHeight: 1.4 }}>
+          {item.estimado && <b style={{ color: "#111" }}>Confirma el precio de hoy. </b>}
+          {ref && ref.p > 0 ? `La última vez fue ${fmtCLP(ref.p)}` : "Aún no hay precio de referencia"}{rg && rg.n > 1 ? `; las últimas ${rg.n} veces, entre ${fmtCLP(rg.min)} y ${fmtCLP(rg.max)}.` : "."}
+        </div>);
+      })()}
       <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
         <div style={{ width: 64 }}>
           <div style={rotulo}>Cantidad</div>
