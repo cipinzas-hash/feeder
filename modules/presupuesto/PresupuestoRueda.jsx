@@ -4,7 +4,7 @@
 // Va DENTRO del marco de la app (lineamiento «módulo colapsado, sin scroll»): sin ventana flotante, sin título propio (la pestaña ya
 // dice el módulo) y llena el área libre; la rueda se escala al alto que sobra para que el estado colapsado nunca necesite scroll.
 import { fmtCLP } from "../../core/format.js";
-import { geometriaRueda, TAM, BOTONES, LADO_BTN, EXT_BTN } from "./ruedaGeometria.js";
+import { geometriaRueda, TAM, BOTONES, RUTA_ESQUINA, transformEsquina, centroEmoji } from "./ruedaGeometria.js";
 const { useState, useRef, useEffect } = React;
 
 const F = "'DM Sans',sans-serif", C = "'Caveat',cursive";
@@ -180,17 +180,19 @@ export default function PresupuestoRueda({ datos, periodLabel, sobresOn, hayInic
           <div style={{ position: "relative", width: TAM * k, height: TAM * k, flexShrink: 0 }}>
             <div ref={caja} onPointerDown={alBajar} onPointerMove={alMover} onPointerUp={alSoltar} onPointerCancel={alSoltar} onClick={alClick}
               style={{ position: "absolute", left: 0, top: 0, width: TAM, height: TAM, transform: `scale(${k})`, transformOrigin: "top left", touchAction: "none", userSelect: "none", WebkitUserSelect: "none", cursor: "grab" }}>
-              {BOTONES.map(({ k, em, nom, x, y }) => {
-                const izq = x < TAM / 2, arr = y < TAM / 2, ex = izq ? EXT_BTN : 0, ey = arr ? EXT_BTN : 0;
-                const accion = () => (k === "m" ? onTodos() : onTorta(k));
-                return (
-                  <div key={k} data-btn={k} role="button" tabIndex={0} aria-label={nom} title={nom}
-                    onPointerDown={e => e.stopPropagation()} onClick={accion} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); accion(); } }}
-                    style={{ position: "absolute", left: x - ex, top: y - ey, width: LADO_BTN + EXT_BTN, height: LADO_BTN + EXT_BTN, cursor: "pointer", zIndex: 3 }}>
-                    <div style={{ position: "absolute", left: ex, top: ey, width: LADO_BTN, height: LADO_BTN, borderRadius: 12, background: "#111", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, boxShadow: "2px 2px 0 #9a9a9a", userSelect: "none", WebkitUserSelect: "none" }}>{em}</div>
-                  </div>
-                );
-              })}
+              <svg width={TAM} height={TAM} viewBox={`0 0 ${TAM} ${TAM}`} style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none", overflow: "visible" }}>
+                {BOTONES.map(bt => {
+                  const accion = () => (bt.k === "m" ? onTodos() : onTorta(bt.k)), c = centroEmoji(bt);
+                  return (
+                    <g key={bt.k} data-btn={bt.k} role="button" tabIndex={0} aria-label={bt.nom} onPointerDown={e => e.stopPropagation()} onClick={accion}
+                      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); accion(); } }} style={{ pointerEvents: "all", cursor: "pointer", outline: "none" }}>
+                      <title>{bt.nom}</title>
+                      <path d={RUTA_ESQUINA} transform={transformEsquina(bt)} fill="#111111"/>
+                      <text x={c.x} y={c.y} textAnchor="middle" dominantBaseline="central" fontSize="24" style={{ userSelect: "none", pointerEvents: "none" }}>{bt.em}</text>
+                    </g>
+                  );
+                })}
+              </svg>
               <div style={{ position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", fontSize: 14, color: "#b71c1c", zIndex: 2, lineHeight: 1 }}>▼</div>
               <div style={{ position: "absolute", left: g.pista.left, top: g.pista.top, width: g.pista.size, height: g.pista.size, border: "1px dashed #999", borderRadius: "50%", boxSizing: "border-box" }}/>
               <div style={{ position: "absolute", inset: 0, transform: `rotate(${rot}deg)`, transition: arrastrando ? "none" : "transform .25s ease" }}>

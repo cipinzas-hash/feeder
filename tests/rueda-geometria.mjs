@@ -1,6 +1,6 @@
 // La rueda de sobres: los centros de los círculos caen sobre la pista (circunferencia centrada), sin solaparse entre vecinos.
 import assert from "node:assert/strict";
-import { geometriaRueda, TAM, CEN, R, BOTONES, LADO_BTN, EXT_BTN } from "../modules/presupuesto/ruedaGeometria.js";
+import { geometriaRueda, TAM, CEN, R, RB, X1, BOTONES, RUTA_ESQUINA, POS_EMOJI, RADIO_ESQ, transformEsquina, centroEmoji } from "../modules/presupuesto/ruedaGeometria.js";
 
 for (const n of [1, 2, 3, 5, 8, 12, 16, 20, 24]) {
   const g = geometriaRueda(n);
@@ -15,20 +15,29 @@ for (const n of [1, 2, 3, 5, 8, 12, 16, 20, 24]) {
   }
   assert.ok(g.nodo >= 22 && g.nodo <= 34);
   assert.ok(g.centro / 2 + (g.nodo * 1.3) / 2 < R, `n=${n}: el centro tapa los nodos`);   // el panel central no toca el nodo seleccionado
-  assert.ok(CEN + R + (g.nodo * 1.3) / 2 <= TAM + 4, `n=${n}: la rueda se sale del contenedor`);
+  assert.ok(CEN + R + (g.nodo * 1.3) / 2 <= TAM, `n=${n}: la rueda se sale del contenedor`);
 }
-// Los cuatro botones de las esquinas no tocan la rueda: el punto más cercano al centro queda más lejos que cualquier nodo.
+// Los cuatro botones son las piezas de esquina que rellenan lo que deja el círculo: abrazan el círculo sin tocar los círculos de los sobres,
+// no se tocan entre sí y, con el círculo, completan el rectángulo (como un control remoto).
 assert.equal(BOTONES.length, 4);
+assert.deepEqual(BOTONES.map(b => [b.sx, b.sy]), [[1, 1], [-1, 1], [1, -1], [-1, -1]]);                  // una por esquina
+assert.equal(TAM, 2 * CEN); assert.ok(RB > CEN && RB < CEN + 8, "el borde cóncavo es casi tangente a los lados");
+// el borde cóncavo cae sobre una circunferencia de radio RB centrada en el cuadro (sus dos extremos están a RB del centro)
+assert.ok(Math.abs(Math.hypot(X1 - CEN, 0 - CEN) - RB) < 1e-9 && Math.abs(Math.hypot(0 - CEN, X1 - CEN) - RB) < 1e-9, "extremos del arco sobre el círculo");
 for (const n of [1, 4, 8, 16, 24]) {
   const g = geometriaRueda(n);
-  for (const b of BOTONES) {
-    const px = Math.min(Math.max(CEN, b.x), b.x + LADO_BTN), py = Math.min(Math.max(CEN, b.y), b.y + LADO_BTN);
-    const d = Math.hypot(px - CEN, py - CEN);
-    assert.ok(d >= R + g.nodo / 2 + 2, `n=${n}: el botón ${b.k} toca los círculos (distancia ${d.toFixed(1)})`);
-    assert.ok(b.x >= 0 && b.y >= 0 && b.x + LADO_BTN <= TAM && b.y + LADO_BTN <= TAM, `el botón ${b.k} se sale del cuadro`);
-  }
+  const maxExt = R + (g.nodo * 1.3) / 2 + 4;                               // el sobre seleccionado (escala 1,3) con su aro
+  assert.ok(RB - maxExt >= 8, `n=${n}: las piezas tocan los círculos de los sobres (holgura ${(RB - maxExt).toFixed(1)})`);
 }
-// Cada botón ocupa su propia esquina (arriba/abajo, izquierda/derecha) y la zona táctil crece solo hacia afuera.
-assert.deepEqual(BOTONES.map(b => [b.x < TAM / 2, b.y < TAM / 2]), [[true, true], [false, true], [true, false], [false, false]]);
-assert.ok(EXT_BTN > 0);
+// las piezas vecinas no se tocan: cada una termina antes del punto medio de los lados y queda un hueco entre sus puntas
+assert.ok(CEN - X1 >= 8, "hueco entre piezas vecinas: " + (2 * (CEN - X1)).toFixed(1));
+assert.ok(X1 > RADIO_ESQ * 2, "la pieza es más larga que su redondeo");
+// el emoji de cada pieza cae dentro de ella: fuera del círculo, dentro del cuadro y lejos de los bordes de corte
+for (const b of BOTONES) {
+  const c = centroEmoji(b);
+  assert.ok(Math.hypot(c.x - CEN, c.y - CEN) >= RB + 12, `el emoji de ${b.k} se mete en el círculo`);
+  assert.ok(c.x > 12 && c.x < TAM - 12 && c.y > 12 && c.y < TAM - 12, `el emoji de ${b.k} se sale del cuadro`);
+  assert.match(transformEsquina(b), /^translate\(\d+,\d+\) scale\(-?1,-?1\)$/);
+}
+assert.equal(POS_EMOJI, 34); assert.match(RUTA_ESQUINA, /^M16,0 L[\d.]+,0 A167,167 0 0 0 0,[\d.]+ L0,16 Q0,0 16,0 Z$/);
 console.log("rueda-geometria: OK");
