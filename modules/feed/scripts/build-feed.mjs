@@ -249,7 +249,15 @@ async function extractFullText(url) {
   }
 }
 async function main() {
-  const feedsConfig = JSON.parse(await readFile(FEEDS_PATH, "utf-8"));
+  let feedsConfig = JSON.parse(await readFile(FEEDS_PATH, "utf-8"));
+  // Modo acotado (manual): SOLO_CATEGORIA="Dark scene / Música" baja únicamente esa
+  // categoría. Lo usa update-musica.yml para regenerar la música sin esperar la bajada
+  // completa del feed (> 15 min). El feed.json que sale de este modo NO se publica
+  // (el workflow lo descarta); solo importa musica-noticias.json.
+  if (process.env.SOLO_CATEGORIA) {
+    feedsConfig = feedsConfig.filter(g => g.cat === process.env.SOLO_CATEGORIA);
+    console.log(`⚙ Modo acotado: solo "${process.env.SOLO_CATEGORIA}" (${feedsConfig.reduce((n, g) => n + g.feeds.length, 0)} fuentes)`);
+  }
 
   // Corrida anterior — para reusar fullText ya extraído y no repetir trabajo.
   let previous = { categories: [] };

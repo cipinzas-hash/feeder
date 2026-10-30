@@ -52,6 +52,8 @@ jobs:
         working-directory: modules/feed
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          # Solo las 3 fuentes de música: la bajada completa del feed tarda más de 15 min.
+          SOLO_CATEGORIA: "Dark scene / Música"
         run: |
           set -o pipefail
           timeout -s TERM -k 15 15m node scripts/build-feed.mjs 2>&1 | tee /tmp/feed-build.log
