@@ -11013,6 +11013,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     }, [filas.length]);
     const k = Math.max(0.5, Math.min(1.15, (dim.h - 14) / TAM, dim.w / TAM));
     const down = useRef9(null);
+    const tapCentro = useRef9(false);
     const sel = mod(Math.round(-rot / g.paso), N);
     const fila = filas[sel];
     const prevSel = useRef9(sel);
@@ -11032,6 +11033,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     function alBajar(e) {
       if (e.target.closest && e.target.closest("[data-btn]")) return;
       const t = e.target.closest ? e.target.closest("[data-i]") : null;
+      tapCentro.current = false;
       down.current = { x: e.clientX, y: e.clientY, i: t ? Number(t.getAttribute("data-i")) : null, centro: !!(e.target.closest && e.target.closest("[data-centro]")), movido: false, ult: angulo(e) };
       setArrastrando(true);
       try {
@@ -11061,7 +11063,12 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       }
       setRot(-s * g.paso);
       down.current = null;
-      if (!d.movido && d.centro && fila) onAbrir(fila.sec, fila.row.id);
+      if (!d.movido && d.centro && fila) tapCentro.current = true;
+    }
+    function alClick() {
+      if (!tapCentro.current) return;
+      tapCentro.current = false;
+      if (fila) onAbrir(fila.sec, fila.row.id);
     }
     const anual = modo === "a";
     const movsVista = datos.movs.filter((m) => anual || m.enPeriodo);
@@ -11127,6 +11134,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
         onPointerMove: alMover,
         onPointerUp: alSoltar,
         onPointerCancel: alSoltar,
+        onClick: alClick,
         style: { position: "absolute", left: 0, top: 0, width: TAM, height: TAM, transform: `scale(${k})`, transformOrigin: "top left", touchAction: "none", userSelect: "none", WebkitUserSelect: "none", cursor: "grab" }
       },
       BOTONES.map(({ k: k2, em, nom, x, y }) => {
@@ -15494,6 +15502,16 @@ Toco reintentar ahora.`);
         return next;
       });
     }
+    const diaAbiertoKey = semanaKeys.find((k) => !minimized[k]) || null;
+    useEffect22(() => {
+      const el = semanaBodyRef.current;
+      if (!el || page !== 0 || !diaAbiertoKey) return;
+      const card = el.querySelector(`[data-dia="${diaAbiertoKey}"]`);
+      if (!card) return;
+      const y = card.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop;
+      if (typeof el.scrollTo === "function") el.scrollTo({ top: y, behavior: "smooth" });
+      else el.scrollTop = y;
+    }, [diaAbiertoKey, page]);
     useEffect22(() => {
       const el = semanaBodyRef.current;
       if (!el || page !== 0) return;
@@ -16928,7 +16946,7 @@ Toco reintentar ahora.`);
       const isMajorFinals = majorToday && dateKey === majorToday.end;
       const isPokemonFinals = pokemonToday && dateKey === pokemonToday.end;
       const isSc2Finals = sc2Today && dateKey === sc2Today.end;
-      return /* @__PURE__ */ React.createElement("div", { key: dateKey, className: `card${!isMin ? " expanded" : ""}${isToday ? " today-card" : ""}`, style: isToday ? { border: "2px solid #fff", boxShadow: "0 0 0 2px #111", borderRadius: 16 } : hol ? { borderStyle: "solid", borderColor: hol.type === "weekend" ? "#ddd" : "#111" } : {} }, /* @__PURE__ */ React.createElement("div", { className: "blk", style: {
+      return /* @__PURE__ */ React.createElement("div", { key: dateKey, "data-dia": dateKey, className: `card${!isMin ? " expanded" : ""}${isToday ? " today-card" : ""}`, style: isToday ? { border: "2px solid #fff", boxShadow: "0 0 0 2px #111", borderRadius: 16 } : hol ? { borderStyle: "solid", borderColor: hol.type === "weekend" ? "#ddd" : "#111" } : {} }, /* @__PURE__ */ React.createElement("div", { className: "blk", style: {
         background: isWeekend ? "#fff" : dayMarkArr.includes("work") ? "#0a0e14" : dayMarkArr.includes("romantic") ? "#1a0a10" : dayMarkArr.includes("social") ? "#0a140a" : dayMarkArr.includes("colegio") ? "#130a1f" : dayMarkArr.includes("doctor") ? "#1a0a0a" : dayMarkArr.includes("gym") ? "#1a0f00" : "#111",
         outline: isToday ? "2px dashed #111" : isWeekend && !withKidsToday ? "2px dashed #111" : isWeekend ? "1px solid #111" : "none",
         outlineOffset: "-5px"

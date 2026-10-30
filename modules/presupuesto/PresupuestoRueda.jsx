@@ -68,6 +68,7 @@ export default function PresupuestoRueda({ datos, periodLabel, sobresOn, hayInic
   }, [filas.length]);
   const k = Math.max(0.5, Math.min(1.15, (dim.h - 14) / TAM, dim.w / TAM));   // escala de la rueda según el alto libre
   const down = useRef(null);
+  const tapCentro = useRef(false);   // el toque al centro se resuelve en el click, no al soltar (ver alClick)
   const sel = mod(Math.round(-rot / g.paso), N);
   const fila = filas[sel];
 
@@ -80,6 +81,7 @@ export default function PresupuestoRueda({ datos, periodLabel, sobresOn, hayInic
   function alBajar(e) {
     if (e.target.closest && e.target.closest("[data-btn]")) return;
     const t = e.target.closest ? e.target.closest("[data-i]") : null;
+    tapCentro.current = false;
     down.current = { x: e.clientX, y: e.clientY, i: t ? Number(t.getAttribute("data-i")) : null, centro: !!(e.target.closest && e.target.closest("[data-centro]")), movido: false, ult: angulo(e) };
     setArrastrando(true);
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* sin captura */ }
@@ -98,7 +100,14 @@ export default function PresupuestoRueda({ datos, periodLabel, sobresOn, hayInic
     if (!d.movido && d.i !== null) { let df = mod(d.i - s0, N); if (df > N / 2) df -= N; s = s0 + df; }
     setRot(-s * g.paso);
     down.current = null;
-    if (!d.movido && d.centro && fila) onAbrir(fila.sec, fila.row.id);
+    // Abrir el detalle aquí (al soltar) hacía que el click que el navegador dispara justo después cayera sobre lo
+    // que apareció bajo el dedo (p. ej. «Registrar gasto» del detalle). Se abre en el click, que es el último evento.
+    if (!d.movido && d.centro && fila) tapCentro.current = true;
+  }
+  function alClick() {
+    if (!tapCentro.current) return;
+    tapCentro.current = false;
+    if (fila) onAbrir(fila.sec, fila.row.id);
   }
 
   const anual = modo === "a";
@@ -169,7 +178,7 @@ export default function PresupuestoRueda({ datos, periodLabel, sobresOn, hayInic
       <div ref={zona} style={{ flex: "1 1 0", minHeight: 150, display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 16 }}>
         {filas.length === 0 ? <div style={{ fontSize: 13, color: "#aaa", textAlign: "center" }}>Aún no hay sobres: créalos en Asignar.</div> : (
           <div style={{ position: "relative", width: TAM * k, height: TAM * k, flexShrink: 0 }}>
-            <div ref={caja} onPointerDown={alBajar} onPointerMove={alMover} onPointerUp={alSoltar} onPointerCancel={alSoltar}
+            <div ref={caja} onPointerDown={alBajar} onPointerMove={alMover} onPointerUp={alSoltar} onPointerCancel={alSoltar} onClick={alClick}
               style={{ position: "absolute", left: 0, top: 0, width: TAM, height: TAM, transform: `scale(${k})`, transformOrigin: "top left", touchAction: "none", userSelect: "none", WebkitUserSelect: "none", cursor: "grab" }}>
               {BOTONES.map(({ k, em, nom, x, y }) => {
                 const izq = x < TAM / 2, arr = y < TAM / 2, ex = izq ? EXT_BTN : 0, ey = arr ? EXT_BTN : 0;

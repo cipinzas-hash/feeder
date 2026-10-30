@@ -711,6 +711,17 @@ function AngstApp() {
       return next;
     });
   }
+  // Al abrir un día (flecha del día, tira o baliza del dashboard) la pantalla se desplaza hasta que el día
+  // abierto queda inmediatamente después del carrusel de módulos (el cuerpo de Semana arranca justo ahí).
+  const diaAbiertoKey = semanaKeys.find(k=>!minimized[k]) || null;
+  useEffect(()=>{
+    const el = semanaBodyRef.current;
+    if(!el || page!==0 || !diaAbiertoKey) return;
+    const card = el.querySelector(`[data-dia="${diaAbiertoKey}"]`);
+    if(!card) return;
+    const y = card.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop;
+    if(typeof el.scrollTo === "function") el.scrollTo({top:y, behavior:"smooth"}); else el.scrollTop = y;
+  }, [diaAbiertoKey, page]);
   // R3: sin nada expandido no hay scroll (y vuelve al inicio). Válvula = detector:
   // si aun colapsado desborda, se habilita el scroll y se avisa en consola.
   useEffect(()=>{
@@ -2041,7 +2052,7 @@ function AngstApp() {
                 const isPokemonFinals= pokemonToday&&dateKey===pokemonToday.end;
                 const isSc2Finals    = sc2Today&&dateKey===sc2Today.end;
                 return (
-                  <div key={dateKey} className={`card${!isMin?" expanded":""}${isToday?" today-card":""}`} style={isToday?{border:"2px solid #fff",boxShadow:"0 0 0 2px #111",borderRadius:16}:hol?{borderStyle:"solid",borderColor:hol.type==="weekend"?"#ddd":"#111"}:{}}>
+                  <div key={dateKey} data-dia={dateKey} className={`card${!isMin?" expanded":""}${isToday?" today-card":""}`} style={isToday?{border:"2px solid #fff",boxShadow:"0 0 0 2px #111",borderRadius:16}:hol?{borderStyle:"solid",borderColor:hol.type==="weekend"?"#ddd":"#111"}:{}}>
                     <div className="blk" style={{
                       background:isWeekend?"#fff":dayMarkArr.includes("work")?"#0a0e14":dayMarkArr.includes("romantic")?"#1a0a10":dayMarkArr.includes("social")?"#0a140a":dayMarkArr.includes("colegio")?"#130a1f":dayMarkArr.includes("doctor")?"#1a0a0a":dayMarkArr.includes("gym")?"#1a0f00":"#111",
                       outline:isToday?"2px dashed #111":(isWeekend&&!withKidsToday)?"2px dashed #111":isWeekend?"1px solid #111":"none",
