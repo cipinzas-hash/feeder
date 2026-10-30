@@ -10891,8 +10891,8 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
   }
 
   // modules/presupuesto/ruedaGeometria.js
-  var TAM = 300;
-  var CEN = 150;
+  var TAM = 330;
+  var CEN = TAM / 2;
   var R = 126;
   function geometriaRueda(n) {
     const paso = 360 / n;
@@ -10904,14 +10904,19 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     const centro = Math.round(2 * (R - nodo * 1.3 / 2 - 10));
     return { R, paso, nodo, nodos, centro, pista: { left: CEN - R, top: CEN - R, size: 2 * R } };
   }
-  var LADO_BTN = 40;
-  var EXT_BTN = 16;
+  var RB = CEN + 2;
+  var X1 = CEN - Math.sqrt(RB * RB - CEN * CEN);
+  var RADIO_ESQ = 16;
+  var POS_EMOJI = 34;
+  var RUTA_ESQUINA = `M${RADIO_ESQ},0 L${X1.toFixed(2)},0 A${RB},${RB} 0 0 0 0,${X1.toFixed(2)} L0,${RADIO_ESQ} Q0,0 ${RADIO_ESQ},0 Z`;
   var BOTONES = [
-    { k: "s", em: "\u2709\uFE0F", nom: "Por sobre", x: 2, y: 2 },
-    { k: "c", em: "\u{1F3F7}\uFE0F", nom: "Por categor\xEDa", x: TAM - LADO_BTN - 2, y: 2 },
-    { k: "p", em: "\u{1F9FE}", nom: "Por compra", x: 2, y: TAM - LADO_BTN - 2 },
-    { k: "m", em: "\u{1F4CB}", nom: "Todos los movimientos", x: TAM - LADO_BTN - 2, y: TAM - LADO_BTN - 2 }
+    { k: "s", em: "\u2709\uFE0F", nom: "Por sobre", sx: 1, sy: 1 },
+    { k: "c", em: "\u{1F3F7}\uFE0F", nom: "Por categor\xEDa", sx: -1, sy: 1 },
+    { k: "p", em: "\u{1F9FE}", nom: "Por compra", sx: 1, sy: -1 },
+    { k: "m", em: "\u{1F4CB}", nom: "Todos los movimientos", sx: -1, sy: -1 }
   ];
+  var transformEsquina = (b) => `translate(${b.sx < 0 ? TAM : 0},${b.sy < 0 ? TAM : 0}) scale(${b.sx},${b.sy})`;
+  var centroEmoji = (b) => ({ x: b.sx > 0 ? POS_EMOJI : TAM - POS_EMOJI, y: b.sy > 0 ? POS_EMOJI : TAM - POS_EMOJI });
 
   // modules/presupuesto/PresupuestoRueda.jsx
   var { useState: useState18, useRef: useRef9, useEffect: useEffect11 } = React;
@@ -11137,18 +11142,16 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
         onClick: alClick,
         style: { position: "absolute", left: 0, top: 0, width: TAM, height: TAM, transform: `scale(${k})`, transformOrigin: "top left", touchAction: "none", userSelect: "none", WebkitUserSelect: "none", cursor: "grab" }
       },
-      BOTONES.map(({ k: k2, em, nom, x, y }) => {
-        const izq = x < TAM / 2, arr = y < TAM / 2, ex = izq ? EXT_BTN : 0, ey = arr ? EXT_BTN : 0;
-        const accion = () => k2 === "m" ? onTodos() : onTorta(k2);
+      /* @__PURE__ */ React.createElement("svg", { width: TAM, height: TAM, viewBox: `0 0 ${TAM} ${TAM}`, style: { position: "absolute", left: 0, top: 0, pointerEvents: "none", overflow: "visible" } }, BOTONES.map((bt) => {
+        const accion = () => bt.k === "m" ? onTodos() : onTorta(bt.k), c = centroEmoji(bt);
         return /* @__PURE__ */ React.createElement(
-          "div",
+          "g",
           {
-            key: k2,
-            "data-btn": k2,
+            key: bt.k,
+            "data-btn": bt.k,
             role: "button",
             tabIndex: 0,
-            "aria-label": nom,
-            title: nom,
+            "aria-label": bt.nom,
             onPointerDown: (e) => e.stopPropagation(),
             onClick: accion,
             onKeyDown: (e) => {
@@ -11157,11 +11160,13 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
                 accion();
               }
             },
-            style: { position: "absolute", left: x - ex, top: y - ey, width: LADO_BTN + EXT_BTN, height: LADO_BTN + EXT_BTN, cursor: "pointer", zIndex: 3 }
+            style: { pointerEvents: "all", cursor: "pointer", outline: "none" }
           },
-          /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: ex, top: ey, width: LADO_BTN, height: LADO_BTN, borderRadius: 12, background: "#111", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, boxShadow: "2px 2px 0 #9a9a9a", userSelect: "none", WebkitUserSelect: "none" } }, em)
+          /* @__PURE__ */ React.createElement("title", null, bt.nom),
+          /* @__PURE__ */ React.createElement("path", { d: RUTA_ESQUINA, transform: transformEsquina(bt), fill: "#111111" }),
+          /* @__PURE__ */ React.createElement("text", { x: c.x, y: c.y, textAnchor: "middle", dominantBaseline: "central", fontSize: "24", style: { userSelect: "none", pointerEvents: "none" } }, bt.em)
         );
-      }),
+      })),
       /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", fontSize: 14, color: "#b71c1c", zIndex: 2, lineHeight: 1 } }, "\u25BC"),
       /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: g.pista.left, top: g.pista.top, width: g.pista.size, height: g.pista.size, border: "1px dashed #999", borderRadius: "50%", boxSizing: "border-box" } }),
       /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, transform: `rotate(${rot}deg)`, transition: arrastrando ? "none" : "transform .25s ease" } }, g.nodos.map((n) => {
