@@ -12,7 +12,7 @@
     "test:rueda": "node tests/rueda-geometria.mjs",
     "test:torta": "node tests/torta-datos.mjs",
     "test:memoria": "node tests/compras-memoria.mjs",
-    "test:fadiman": "node tests/fadiman-diario.mjs"
+    "test:fadiman": "node tests/fadiman-diario.mjs && node tests/fadiman-protocolo.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"

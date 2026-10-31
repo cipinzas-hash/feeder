@@ -21,21 +21,33 @@ fadimanData.fadimanDiario = {
 No hay claves nuevas de localStorage ni campos nuevos del planner: `npm run audit:export` sigue pasando.
 `protocolo` se sella al crear la entrada del día (si ese día era de dosis Fadiman) para poder separar efectos.
 
+## Pantalla (lineamiento, issue #33)
+Módulo completo bajo `docs/angst-lineamiento-y-handoff.md`; la pestaña usa `app-fit` en el shell (como Semana, Presupuesto y Salud).
+- **Colapsado (sin scroll, R2):** franja de estado (🍄 protocolo de hoy · 📓 registro de hoy · alerta si hay palpitaciones o dolor de pecho), navegador de día, cinco filas y una **tendencia** de foco (14 días) que ocupa el alto sobrante. Sin título propio (R6).
+- **Filas (expansión exclusiva, R3):** ☀️ Mañana · 🌙 Cierre · 🍄 Protocolo (próximas dosis e historial) · 📈 Resumen · 📏 Línea base y dosis. Expandido, el contenido scrollea por dentro.
+- **Emergentes (R4):** registro de un día de dosis del protocolo, iniciar/reiniciar protocolo.
+- **Válvula (§4.5):** si colapsado no cupiera, aparece scroll en vez de recortar, y se avisa en consola (`[fadiman] desborda colapsado`).
+- El diario es usable sin protocolo iniciado; reiniciar el protocolo no lo toca.
+
 ## Archivos
-- `modules/fadiman/diarioModel.js` — lógica pura (resumen, serie, comparación con/sin toma, texto exportable).
-- `modules/fadiman/DiarioFadiman.jsx` — pantalla (pestañas día / resumen, gráfico SVG, línea base).
-- `modules/fadiman/FadimanPage.jsx` — botón "📓 diario" (en el inicio del protocolo y en el encabezado); rama `view==="diario"`.
-- `core/App.jsx` — pasa `cruzFor(k)` a Fadiman: tareas hechas/total del día, `computeStressScore`, ejercicio hecho.
-- `tests/fadiman-diario.mjs` — `npm run test:fadiman`.
+- `modules/fadiman/diarioModel.js` — lógica pura del diario (resumen, serie, comparación con/sin toma, texto exportable).
+- `modules/fadiman/protocoloModel.js` — lógica pura del protocolo (tipo de día, dosis, restantes), con fechas locales.
+- `modules/fadiman/fadimanUi.jsx` — piezas visuales (fila de sección, hoja emergente, escalas, gráficos).
+- `modules/fadiman/DiarioSecciones.jsx` — Mañana, Cierre, Resumen, Línea base.
+- `modules/fadiman/ProtocoloVistas.jsx` — sección Protocolo y las dos hojas (registro de dosis, iniciar/reiniciar).
+- `modules/fadiman/FadimanPage.jsx` — estado de la página, franja y composición.
+- `core/App.jsx` — `app-fit` para la pestaña 5 y `cruzFor(k)` (tareas hechas/total, `computeStressScore`, ejercicio).
+- `tests/fadiman-diario.mjs`, `tests/fadiman-protocolo.mjs` — `npm run test:fadiman`.
 
 ## Decisiones y límites declarados
-- Ánimo e irritabilidad van como dos escalas separadas (en una sola, la dirección de la escala era ambigua). Todas: 1 = nada, 5 = mucho.
-- Las fechas del diario son **locales** (el cierre del día se registra de noche; `toISOString()` en Chile ya marca el día siguiente pasadas ~20-21 h). El resto de FadimanPage usa fecha UTC (`today`) y no se tocó: es un desfase conocido, aparte.
+- Ánimo e irritabilidad van como dos escalas separadas (en una sola, la dirección era ambigua). Todas: 1 = nada, 5 = mucho.
+- **Fechas locales en todo el módulo** (antes el protocolo usaba UTC, y de noche en Chile marcaba el día siguiente). Cambia solo cuándo cambia "hoy"; los datos guardados no se tocan.
 - "Cruces": tareas = tareas con texto del día (hechas / total); estrés = índice de Semana; ejercicio = al menos una serie hecha. Sin dato de planner ese día, no hay cruce.
 - El resumen exportable es texto plano (copiar / descargar .txt), no PDF.
 - Aviso fijo si se marca palpitaciones o dolor de pecho. No interpreta nada.
-- La pantalla sigue el layout actual de Fadiman (scroll normal). Se rediseñará con el lineamiento colapsado cuando le toque a Fadiman (Fase 2).
+- Reiniciar el protocolo borra sus registros (comportamiento de siempre); ahora la hoja lo advierte.
+- La fila de sección es una copia local del aspecto de Salud (`FilaSeccion`): candidata a unificarse en `shared/ui.jsx` cuando se toque Salud.
 
 ## Validación hecha
-Test del modelo; render con jsdom (sin protocolo, marcar toma, escribir sin perder foco, alerta, escala, resumen, gráfico, línea base, reiniciar protocolo sin tocar el diario); arranque de la app completa sin errores; build; `audit:export`.
-No verificado: aspecto real en el dispositivo (sin navegador real en el sandbox).
+Tests de ambos modelos; render con jsdom de la pantalla colapsada (acordeón exclusivo, tendencia, toma, escribir sin perder foco, alerta en formulario y franja, escalas, navegación de día, resumen, línea base, iniciar solo en sábado, registro de dosis, reiniciar sin tocar el diario); arranque de la app completa; build; `audit:export`.
+No verificado: aspecto y alturas reales (480/560/640/720 px) en el dispositivo; el sandbox no mide layout. Ahí decide la válvula y una captura tuya.

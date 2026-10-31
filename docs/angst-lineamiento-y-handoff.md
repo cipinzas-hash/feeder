@@ -74,7 +74,7 @@ El id de página es el índice en `TABS`; el orden visual lo define `ORDER=[0,11
 | 2 | 📒 Emprendimientos | `NutriaPage` | |
 | 3 | 🧠 mindfulness | `EspritPage` | ~864 líneas |
 | 4 | 🩺 salud | `SaludPage` | |
-| 5 | 🍄 fadiman | `FadimanPage` | pequeño (~200 líneas) |
+| 5 | 🍄 fadiman | `FadimanPage` | ✅ rediseñado bajo el lineamiento (31-oct-2026): protocolo + diario de seguimiento, ver `docs/fadiman-diario.md` |
 | 6 | 🥗 nutrición | `NutricionPage` | ~1.300 líneas |
 | 7 | 🏋️ ejercicio | `EjercicioPage` | ~1.340 líneas |
 | 8 | 🃏 pokécripto | `PokecriptoPage` | ~2.780 líneas, el más grande |
