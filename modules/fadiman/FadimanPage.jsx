@@ -1,4 +1,6 @@
-function FadimanPage({ data, saveData }) {
+import DiarioFadiman from "./DiarioFadiman.jsx";
+
+function FadimanPage({ data, saveData, cruzFor }) {
   const today = new Date().toISOString().slice(0,10);
   const [view, setView] = React.useState("home");
   const [logDate, setLogDate] = React.useState(today);
@@ -57,6 +59,11 @@ function FadimanPage({ data, saveData }) {
   const todayLog = logs[today] || {};
   const daysRemaining = cfg?.startDate ? Math.max(0, 60 - Math.round((new Date()-new Date(cfg.startDate+"T12:00:00"))/86400000)) : null;
 
+  // ── DIARIO (independiente del protocolo: se puede usar sin haberlo iniciado) ──
+  if(view==="diario") return (
+    <DiarioFadiman data={data} saveData={saveData} protocoloDe={getDayType} cruzFor={cruzFor} onBack={()=>setView("home")}/>
+  );
+
   // ── SETUP ──
   if(showSetup || !cfg) return (
     <div style={{background:"#0d0d0d",minHeight:"100vh",color:"#fff",padding:"24px 16px"}}>
@@ -74,6 +81,7 @@ function FadimanPage({ data, saveData }) {
         </button>
       </>);})()}
       {cfg&&<button onClick={()=>setShowSetup(false)} style={{background:"transparent",border:"none",color:"#555",fontFamily:"'DM Sans',sans-serif",fontSize:12,cursor:"pointer",marginTop:16,display:"block"}}>cancelar</button>}
+      <button onClick={()=>{setShowSetup(false);setView("diario");}} style={{background:"transparent",border:"1px dashed #aac756",color:"#aac756",borderRadius:8,padding:"10px 16px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:13,marginTop:28,display:"block"}}>📓 diario de seguimiento</button>
     </div>
   );
 
@@ -138,7 +146,10 @@ function FadimanPage({ data, saveData }) {
           <div style={{fontFamily:"'Caveat',cursive",fontSize:22,color:"#fff",fontWeight:700}}>🍄 fadiman</div>
           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#444"}}>inicio: {fmt(cfg.startDate)} · {daysRemaining>0?`${daysRemaining} días restantes`:"completado"}</div>
         </div>
-        <button onClick={()=>setShowSetup(true)} style={{background:"transparent",border:"1px dashed #333",color:"#555",borderRadius:8,padding:"4px 10px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:10}}>reiniciar</button>
+        <div style={{display:"flex",gap:6}}>
+          <button onClick={()=>setView("diario")} style={{background:"transparent",border:"1px dashed #aac756",color:"#aac756",borderRadius:8,padding:"4px 10px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:10}}>📓 diario</button>
+          <button onClick={()=>setShowSetup(true)} style={{background:"transparent",border:"1px dashed #333",color:"#555",borderRadius:8,padding:"4px 10px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:10}}>reiniciar</button>
+        </div>
       </div>
 
       {/* Hoy */}

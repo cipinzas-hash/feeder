@@ -2374,7 +2374,18 @@ function AngstApp() {
         {page===2&&<NutriaPage data={nutria} saveData={updateNutria} budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
         {page===3&&<EspritPage dayData={dayData} calMarks={calMarks} updateDay={updateDay} kidsHealth={kidsHealth}/>}
         {page===4&&<SaludPage kidsHealth={kidsHealth} saveKidsHealth={saveKidsHealth} dayData={dayData} updateDay={updateDay} calMarks={calMarks} saveCalMarks={(nm)=>{setCalMarks(nm);calMarksRef.current=nm;saveToStorage({calMarks:nm});}}/>}
-        {page===5&&<FadimanPage data={fadimanData} saveData={d=>{setFadimanData(d);fadimanDataRef.current=d;saveToStorage({fadimanData:d});}}/>}
+        {page===5&&<FadimanPage data={fadimanData} saveData={d=>{setFadimanData(d);fadimanDataRef.current=d;saveToStorage({fadimanData:d});}}
+          cruzFor={dk=>{
+            const day=dayData[dk]; if(!day) return null;
+            const ts=(day.tasks||[]).filter(t=>t.text);
+            const ej=ejercicioLog[dk];
+            return {
+              estres: computeStressScore(dk, dayData, calMarks, kidsHealth),
+              tareasHechas: ts.filter(t=>t.done).length,
+              tareasTotal: ts.length,
+              ejercicio: ej ? Object.values(ej).some(v=>v===true||(v&&v.done)) : false,
+            };
+          }}/>}
         {page===6&&<NutricionPage nutriLog={nutriLog} saveNutriLog={guardarNutriLog}
           customFoods={customFoods} saveCustomFoods={d=>{setCustomFoods(d);customFoodsRef.current=d;saveToStorage({customFoods:d});}}
           foodOverrides={foodOverrides} saveFoodOverrides={d=>{setFoodOverrides(d);foodOverridesRef.current=d;saveToStorage({foodOverrides:d});}}
