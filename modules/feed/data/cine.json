@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-30T21:59:50.763Z",
+  "generatedAt": "2026-10-31T01:30:07.455Z",
   "categories": [
     {
       "cat": "Películas",
@@ -38,13 +38,13 @@
               "order": 0
             },
             {
-              "name": "Carey Mulligan",
-              "character": "Alexandra (voice)",
+              "name": "Jacob Tremblay",
+              "character": "Curtis Mehlberg (voice)",
               "order": 1
             },
             {
-              "name": "Jacob Tremblay",
-              "character": "Curtis Mehlberg (voice)",
+              "name": "Carey Mulligan",
+              "character": "Alexandra (voice)",
               "order": 2
             },
             {
@@ -53,33 +53,33 @@
               "order": 3
             },
             {
+              "name": "Richard E. Grant",
+              "character": "Owl Rex (voice)",
+              "order": 4
+            },
+            {
               "name": "Angela Bassett",
               "character": "The General (voice)",
-              "order": 4
+              "order": 5
             },
             {
               "name": "Awkwafina",
               "character": "Septima (voice)",
-              "order": 5
-            },
-            {
-              "name": "Jake Johnson",
-              "character": "Mr. McKeel (voice)",
               "order": 6
-            },
-            {
-              "name": "Charlie Day",
-              "character": "Dmitri (voice)",
-              "order": 7
             },
             {
               "name": "Amandla Stenberg",
               "character": "Niamh (voice)",
+              "order": 7
+            },
+            {
+              "name": "Tom Waits",
+              "character": "Maxim (voice)",
               "order": 8
             },
             {
-              "name": "Jemaine Clement",
-              "character": "Roger Swindon (voice)",
+              "name": "Charlie Day",
+              "character": "Dmitri (voice)",
               "order": 9
             }
           ],
@@ -731,7 +731,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1503762",
@@ -809,6 +809,87 @@
             {
               "name": "Tom Brooke",
               "character": "John Dashwood",
+              "order": 9
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-movie-1507696",
+          "title": "Apocalipsis Z: Nuevo mundo",
+          "link": "https://www.themoviedb.org/movie/1507696",
+          "summary": "Cuando una misión especial parte hacia la península en busca de suministros vitales, Roberto se une al equipo con dudosas intenciones. La peligrosa operación se transforma en una carrera desesperada por la supervivencia, y Roberto y sus compañeros se encontrarán entre hordas de infectados y lealtades divididas.",
+          "image": "https://image.tmdb.org/t/p/w500/wgSMJ3083ad5qKC4QzzVNJ4cv5D.jpg",
+          "pubDate": "2026-10-09",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-30T16:33:41.418Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.9
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "BIEzwpyawtw",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Carlos Alcaide",
+              "character": "Roberto",
+              "order": 0
+            },
+            {
+              "name": "Julia Martínez",
+              "character": "Marina",
+              "order": 1
+            },
+            {
+              "name": "Mario Mayo",
+              "character": "De Luna",
+              "order": 2
+            },
+            {
+              "name": "Mónica López",
+              "character": "Castro",
+              "order": 3
+            },
+            {
+              "name": "Tamara Casellas",
+              "character": "Comillas",
+              "order": 4
+            },
+            {
+              "name": "Santiago Vaca Narvaja",
+              "character": "Core",
+              "order": 5
+            },
+            {
+              "name": "José María Yázpik",
+              "character": "Pritchenko",
+              "order": 6
+            },
+            {
+              "name": "Berta Vázquez",
+              "character": "Lucía",
+              "order": 7
+            },
+            {
+              "name": "Pedro Hernández",
+              "character": "Guzmán",
+              "order": 8
+            },
+            {
+              "name": "Javier Godino",
+              "character": "",
               "order": 9
             }
           ],
@@ -896,87 +977,6 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1507696",
-          "title": "Apocalipsis Z: Nuevo mundo",
-          "link": "https://www.themoviedb.org/movie/1507696",
-          "summary": "Cuando una misión especial parte hacia la península en busca de suministros vitales, Roberto se une al equipo con dudosas intenciones. La peligrosa operación se transforma en una carrera desesperada por la supervivencia, y Roberto y sus compañeros se encontrarán entre hordas de infectados y lealtades divididas.",
-          "image": "https://image.tmdb.org/t/p/w500/wgSMJ3083ad5qKC4QzzVNJ4cv5D.jpg",
-          "pubDate": "2026-10-09",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-30T16:33:41.418Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.9
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "BIEzwpyawtw",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Carlos Alcaide",
-              "character": "Roberto",
-              "order": 0
-            },
-            {
-              "name": "Julia Martínez",
-              "character": "Marina",
-              "order": 1
-            },
-            {
-              "name": "Mario Mayo",
-              "character": "De Luna",
-              "order": 2
-            },
-            {
-              "name": "Mónica López",
-              "character": "Castro",
-              "order": 3
-            },
-            {
-              "name": "Tamara Casellas",
-              "character": "Comillas",
-              "order": 4
-            },
-            {
-              "name": "Santiago Vaca Narvaja",
-              "character": "Core",
-              "order": 5
-            },
-            {
-              "name": "José María Yázpik",
-              "character": "Pritchenko",
-              "order": 6
-            },
-            {
-              "name": "Berta Vázquez",
-              "character": "Lucía",
-              "order": 7
-            },
-            {
-              "name": "Pedro Hernández",
-              "character": "Guzmán",
-              "order": 8
-            },
-            {
-              "name": "Javier Godino",
-              "character": "",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
           "guid": "tmdb-movie-1727734",
           "title": "Ali G: Kién es yo?",
           "link": "https://www.themoviedb.org/movie/1727734",
@@ -1052,6 +1052,249 @@
             {
               "name": "Allan Lichtman",
               "character": "(uncredited)",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1003596",
+          "title": "Vengadores: Doomsday",
+          "link": "https://www.themoviedb.org/movie/1003596",
+          "summary": "Quinta entrega de la saga 'Vengadores' incluida en el Universo Cinematográfico Marvel (UCM). Sinopsis desconocido.",
+          "image": "https://image.tmdb.org/t/p/w500/7bQczUMnjz8iwxNP9YrmLkfI8od.jpg",
+          "pubDate": "2026-12-16",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-23T14:42:44.135Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Post Production",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "X1aFkAkFASk",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Robert Downey Jr.",
+              "character": "Victor von Doom  / Doctor Doom",
+              "order": 0
+            },
+            {
+              "name": "Chris Evans",
+              "character": "Steve Rogers",
+              "order": 1
+            },
+            {
+              "name": "Chris Hemsworth",
+              "character": "Thor",
+              "order": 2
+            },
+            {
+              "name": "Pedro Pascal",
+              "character": "Reed Richards / Mister Fantastic",
+              "order": 3
+            },
+            {
+              "name": "Paul Rudd",
+              "character": "Scott Lang / Ant-Man",
+              "order": 4
+            },
+            {
+              "name": "Anthony Mackie",
+              "character": "Sam Wilson / Captain America",
+              "order": 5
+            },
+            {
+              "name": "Florence Pugh",
+              "character": "Yelena Belova",
+              "order": 6
+            },
+            {
+              "name": "Vanessa Kirby",
+              "character": "Sue Storm / Invisible Woman",
+              "order": 7
+            },
+            {
+              "name": "Ebon Moss-Bachrach",
+              "character": "Ben Grimm / The Thing",
+              "order": 8
+            },
+            {
+              "name": "Wyatt Russell",
+              "character": "John Walker",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-969681",
+          "title": "Spider-Man: Brand New Day",
+          "link": "https://www.themoviedb.org/movie/969681",
+          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad—un Spider-Man a tiempo completo—, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
+          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
+          "pubDate": "2026-07-29",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-30T08:12:18.586Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8,
+            "rt": 90,
+            "metascore": 66,
+            "tmdb": 8.5
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "P3uI5sLosKU",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Holland",
+              "character": "Peter Parker / Spider-Man",
+              "order": 0
+            },
+            {
+              "name": "Sadie Sink",
+              "character": "Jean Grey",
+              "order": 1
+            },
+            {
+              "name": "Tramell Tillman",
+              "character": "William 'Bill' Metzger",
+              "order": 2
+            },
+            {
+              "name": "Zendaya",
+              "character": "MJ",
+              "order": 3
+            },
+            {
+              "name": "Jacob Batalon",
+              "character": "Ned Leeds",
+              "order": 4
+            },
+            {
+              "name": "Jon Bernthal",
+              "character": "Frank Castle / Punisher",
+              "order": 5
+            },
+            {
+              "name": "Mark Ruffalo",
+              "character": "Bruce Banner / Hulk",
+              "order": 6
+            },
+            {
+              "name": "Florence Pugh",
+              "character": "Yelena Belova / Black Widow",
+              "order": 7
+            },
+            {
+              "name": "Liza Colón-Zayas",
+              "character": "Detective Jean DeWolff",
+              "order": 8
+            },
+            {
+              "name": "Marisa Tomei",
+              "character": "May Parker",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1381071",
+          "title": "Godzilla Minus Zero",
+          "link": "https://www.themoviedb.org/movie/1381071",
+          "summary": "La guerra dejó a Japón en la ruina, y Godzilla lo sumió en una situación aún peor. Han pasado dos años desde entonces, y el país ha librado una lucha ardua por recuperarse y finalmente retomar su vida cotidiana. Justo cuando la humanidad lograba aferrarse a una paz duramente conquistada, una nueva amenaza irrumpe, aplastando la esperanza en un instante.",
+          "image": "https://image.tmdb.org/t/p/w500/taoPyKQTXh0FSwO5rin8Djrt20C.jpg",
+          "pubDate": "2026-11-03",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-31T01:30:07.374Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": 97,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "We3rt2uQpoY",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Ryunosuke Kamiki",
+              "character": "Koichi Shikishima",
+              "order": 0
+            },
+            {
+              "name": "浜辺美波",
+              "character": "Noriko Oishi",
+              "order": 1
+            },
+            {
+              "name": "山田裕貴",
+              "character": "Shiro Mizushima",
+              "order": 2
+            },
+            {
+              "name": "Kuranosuke Sasaki",
+              "character": "Seiji Akitsu",
+              "order": 3
+            },
+            {
+              "name": "Jun Kunimura",
+              "character": "",
+              "order": 4
+            },
+            {
+              "name": "Mio Tanaka",
+              "character": "Captain Tatsuo Hotta",
+              "order": 5
+            },
+            {
+              "name": "Sakura Ando",
+              "character": "Sumiko Ota",
+              "order": 6
+            },
+            {
+              "name": "Masami Nagasawa",
+              "character": "Aoyama",
+              "order": 7
+            },
+            {
+              "name": "田中泯",
+              "character": "Kanji Murakami",
+              "order": 8
+            },
+            {
+              "name": "吉岡秀隆",
+              "character": "Kenji Noda",
               "order": 9
             }
           ],
@@ -1147,88 +1390,7 @@
               "order": 9
             }
           ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1003596",
-          "title": "Vengadores: Doomsday",
-          "link": "https://www.themoviedb.org/movie/1003596",
-          "summary": "Quinta entrega de la saga 'Vengadores' incluida en el Universo Cinematográfico Marvel (UCM). Sinopsis desconocido.",
-          "image": "https://image.tmdb.org/t/p/w500/7bQczUMnjz8iwxNP9YrmLkfI8od.jpg",
-          "pubDate": "2026-12-16",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-23T14:42:44.135Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Post Production",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "X1aFkAkFASk",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Robert Downey Jr.",
-              "character": "Victor von Doom  / Doctor Doom",
-              "order": 0
-            },
-            {
-              "name": "Chris Evans",
-              "character": "Steve Rogers",
-              "order": 1
-            },
-            {
-              "name": "Chris Hemsworth",
-              "character": "Thor",
-              "order": 2
-            },
-            {
-              "name": "Pedro Pascal",
-              "character": "Reed Richards / Mister Fantastic",
-              "order": 3
-            },
-            {
-              "name": "Paul Rudd",
-              "character": "Scott Lang / Ant-Man",
-              "order": 4
-            },
-            {
-              "name": "Anthony Mackie",
-              "character": "Sam Wilson / Captain America",
-              "order": 5
-            },
-            {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova",
-              "order": 6
-            },
-            {
-              "name": "Vanessa Kirby",
-              "character": "Sue Storm / Invisible Woman",
-              "order": 7
-            },
-            {
-              "name": "Ebon Moss-Bachrach",
-              "character": "Ben Grimm / The Thing",
-              "order": 8
-            },
-            {
-              "name": "Wyatt Russell",
-              "character": "John Walker",
-              "order": 9
-            }
-          ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1596275",
@@ -1306,87 +1468,6 @@
             {
               "name": "Leslie Malton",
               "character": "Eva Maria Fischer",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-969681",
-          "title": "Spider-Man: Brand New Day",
-          "link": "https://www.themoviedb.org/movie/969681",
-          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad—un Spider-Man a tiempo completo—, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
-          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
-          "pubDate": "2026-07-29",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-30T08:12:18.586Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8,
-            "rt": 90,
-            "metascore": 66,
-            "tmdb": 8.5
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "P3uI5sLosKU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Tom Holland",
-              "character": "Peter Parker / Spider-Man",
-              "order": 0
-            },
-            {
-              "name": "Sadie Sink",
-              "character": "Jean Grey",
-              "order": 1
-            },
-            {
-              "name": "Tramell Tillman",
-              "character": "William 'Bill' Metzger",
-              "order": 2
-            },
-            {
-              "name": "Zendaya",
-              "character": "MJ",
-              "order": 3
-            },
-            {
-              "name": "Jacob Batalon",
-              "character": "Ned Leeds",
-              "order": 4
-            },
-            {
-              "name": "Jon Bernthal",
-              "character": "Frank Castle / Punisher",
-              "order": 5
-            },
-            {
-              "name": "Mark Ruffalo",
-              "character": "Bruce Banner / Hulk",
-              "order": 6
-            },
-            {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova / Black Widow",
-              "order": 7
-            },
-            {
-              "name": "Liza Colón-Zayas",
-              "character": "Detective Jean DeWolff",
-              "order": 8
-            },
-            {
-              "name": "Marisa Tomei",
-              "character": "May Parker",
               "order": 9
             }
           ],
@@ -4765,6 +4846,118 @@
           ]
         },
         {
+          "guid": "tmdb-tv-59941",
+          "title": "The Tonight Show Starring Jimmy Fallon",
+          "link": "https://www.themoviedb.org/tv/59941",
+          "summary": "Después del segundo retiro de Jay Leno del programa, Jimmy Fallon intervino como su reemplazo permanente. Después de 42 años en Los Ángeles, el programa regresó a Nueva York.",
+          "image": "https://image.tmdb.org/t/p/w500/1N4o5PmmqhlVDrcdJ2RlCFWbLGX.jpg",
+          "pubDate": "2014-02-17",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-10-23T14:42:44.328Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 5.8
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-10-26",
+          "numberOfSeasons": 14,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 191,
+              "fechaEstreno": "2014-02-17"
+            },
+            {
+              "numero": 2,
+              "episodios": 263,
+              "fechaEstreno": "2015-01-05"
+            },
+            {
+              "numero": 3,
+              "episodios": 144,
+              "fechaEstreno": "2016-01-04"
+            },
+            {
+              "numero": 4,
+              "episodios": 208,
+              "fechaEstreno": "2016-09-19"
+            },
+            {
+              "numero": 5,
+              "episodios": 190,
+              "fechaEstreno": "2017-09-25"
+            },
+            {
+              "numero": 6,
+              "episodios": 194,
+              "fechaEstreno": "2018-09-24"
+            },
+            {
+              "numero": 7,
+              "episodios": 201,
+              "fechaEstreno": "2019-09-23"
+            },
+            {
+              "numero": 8,
+              "episodios": 197,
+              "fechaEstreno": "2020-09-21"
+            },
+            {
+              "numero": 9,
+              "episodios": 194,
+              "fechaEstreno": "2021-09-19"
+            },
+            {
+              "numero": 10,
+              "episodios": 132,
+              "fechaEstreno": "2022-09-19"
+            },
+            {
+              "numero": 11,
+              "episodios": 182,
+              "fechaEstreno": "2023-10-01"
+            },
+            {
+              "numero": 12,
+              "episodios": 163,
+              "fechaEstreno": "2024-09-22"
+            },
+            {
+              "numero": 13,
+              "episodios": 155,
+              "fechaEstreno": "2025-09-22"
+            },
+            {
+              "numero": 14,
+              "episodios": 20,
+              "fechaEstreno": "2026-09-21"
+            }
+          ],
+          "currentSeason": 14,
+          "reviews": null,
+          "trailer": {
+            "key": "q-0YafsWK_M",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Jimmy Fallon",
+              "character": "Self - Host",
+              "order": 0
+            },
+            {
+              "name": "Steve Higgins",
+              "character": "Self - Announcer",
+              "order": 1
+            }
+          ],
+          "trending": false
+        },
+        {
           "guid": "tmdb-tv-213375",
           "title": "VisionQuest",
           "link": "https://www.themoviedb.org/tv/213375",
@@ -5704,7 +5897,8 @@
               "character": "Quiet Ray Renzetti",
               "order": 9
             }
-          ]
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-tv-112470",
@@ -6017,118 +6211,6 @@
             "site": "YouTube"
           },
           "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-59941",
-          "title": "The Tonight Show Starring Jimmy Fallon",
-          "link": "https://www.themoviedb.org/tv/59941",
-          "summary": "Después del segundo retiro de Jay Leno del programa, Jimmy Fallon intervino como su reemplazo permanente. Después de 42 años en Los Ángeles, el programa regresó a Nueva York.",
-          "image": "https://image.tmdb.org/t/p/w500/1N4o5PmmqhlVDrcdJ2RlCFWbLGX.jpg",
-          "pubDate": "2014-02-17",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-10-23T14:42:44.328Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 5.8
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-26",
-          "numberOfSeasons": 14,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 191,
-              "fechaEstreno": "2014-02-17"
-            },
-            {
-              "numero": 2,
-              "episodios": 263,
-              "fechaEstreno": "2015-01-05"
-            },
-            {
-              "numero": 3,
-              "episodios": 144,
-              "fechaEstreno": "2016-01-04"
-            },
-            {
-              "numero": 4,
-              "episodios": 208,
-              "fechaEstreno": "2016-09-19"
-            },
-            {
-              "numero": 5,
-              "episodios": 190,
-              "fechaEstreno": "2017-09-25"
-            },
-            {
-              "numero": 6,
-              "episodios": 194,
-              "fechaEstreno": "2018-09-24"
-            },
-            {
-              "numero": 7,
-              "episodios": 201,
-              "fechaEstreno": "2019-09-23"
-            },
-            {
-              "numero": 8,
-              "episodios": 197,
-              "fechaEstreno": "2020-09-21"
-            },
-            {
-              "numero": 9,
-              "episodios": 194,
-              "fechaEstreno": "2021-09-19"
-            },
-            {
-              "numero": 10,
-              "episodios": 132,
-              "fechaEstreno": "2022-09-19"
-            },
-            {
-              "numero": 11,
-              "episodios": 182,
-              "fechaEstreno": "2023-10-01"
-            },
-            {
-              "numero": 12,
-              "episodios": 163,
-              "fechaEstreno": "2024-09-22"
-            },
-            {
-              "numero": 13,
-              "episodios": 155,
-              "fechaEstreno": "2025-09-22"
-            },
-            {
-              "numero": 14,
-              "episodios": 20,
-              "fechaEstreno": "2026-09-21"
-            }
-          ],
-          "currentSeason": 14,
-          "reviews": null,
-          "trailer": {
-            "key": "q-0YafsWK_M",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Jimmy Fallon",
-              "character": "Self - Host",
-              "order": 0
-            },
-            {
-              "name": "Steve Higgins",
-              "character": "Self - Announcer",
-              "order": 1
-            }
-          ],
           "trending": false
         },
         {
