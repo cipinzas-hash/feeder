@@ -2,13 +2,17 @@ import { EF, AnalogClock, CalendarModal, ModeMenu, ComprasModal, HumorSelector, 
 import { computeStressScore, esTareaMedica, DOCTOR_KEYWORDS, DEFAULT_HUMORS } from "./stress.js";
 import { requestNotifPermission, scheduleTaskNotifs } from "./notifications.js";
 import { downloadBackupJSON, validarPayloadExport, leerCamposLocales, escribirCamposLocales } from "./persistence.js";
+import { memoriaDesdeHistorial, tieneMemoria, buscarSugerencias, recordarCompra, rangoPrecios, claveNombre } from "./comprasMemoria.js";
 import { marcarEdicionLocal, LOCAL_EDIT_KEY } from "../modules/shared/localedit.js";
 import { rehidratarCineEstado } from "../modules/vitrina/estado.js";
 import { rehidratarOverlay } from "../modules/vitrina/avance.js";
-import { fmt, fmtFull, getHoliday, addDays } from "./dates.js";
+import { fmt, fmtFull, getHoliday, addDays, weekOffsetFor } from "./dates.js";
+import { nivelRegistro, colorRegistro, barrasRegistro } from "./registro.js";
+import { FamiliaInboxModal } from "./FamiliaInbox.jsx";
+import { leerDecisiones, guardarDecisiones, pendientes as familiaPendientes, fechasDeEvento, tareaDesdeEvento, registrarImportado, registrarIgnorado, podar as podarFamilia } from "./familiaInbox.js";
 import PokecriptoPage, { CARPETAS_DEFAULT } from "../modules/pokecripto/PokecriptoPage.jsx";
-import SaludPage from "../modules/salud/SaludPage.jsx";
-import { migrateKidsHealth, emptyKidsHealth } from "../modules/salud/saludModel.js";
+import SaludPage, { SaludRegistro } from "../modules/salud/SaludPage.jsx";
+import { migrateKidsHealth, emptyKidsHealth, effectiveMarks, citasOnDay, citaLine } from "../modules/salud/saludModel.js";
 import FadimanPage from "../modules/fadiman/FadimanPage.jsx";
 import RoutinesPage from "../modules/rutinas/RoutinesPage.jsx";
 import NutriaPage from "../modules/nutria/NutriaPage.jsx";
@@ -18,7 +22,7 @@ import NutricionPage from "../modules/nutricion/NutricionPage.jsx";
 import BudgetPage from "../modules/presupuesto/BudgetPage.jsx";
 import GastoModal from "../modules/presupuesto/GastoModal.jsx";
 import CarritoModal from "../modules/presupuesto/CarritoModal.jsx";
-import { carteraCompras, registrarCompra, deshacerCompra, inicioSobres, bolsillosDe, estadoBolsillo, categoriasDe, agregarCategoria, resolverPeriodo, montoCompra, ID_ALIMENTACION } from "./presupuesto-modelo.js";
+import { carteraCompras, registrarCompra, deshacerCompra, inicioSobres, bolsillosDe, estadoBolsillo, categoriasDe, agregarCategoria, resolverPeriodo, montoCompra, ID_ALIMENTACION, filaCompras, destinoCategoria, etiquetaFila, destinosPosibles, puedeGenerarPeriodo } from "./presupuesto-modelo.js";
 import IngestaRapida from "../modules/nutricion/IngestaRapida.jsx";
 import AgregarCartaModal from "../modules/pokecripto/AgregarCartaModal.jsx";
 import RegistroRapido from "./RegistroRapido.jsx";
@@ -74,6 +78,7 @@ function AngstApp() {
   const [menuRegOpen, setMenuRegOpen] = useState(false);     // ➕ Registrar: gasto, ingesta, cartas
   const [ingestaOpen, setIngestaOpen] = useState(false);
   const [cartaOpen, setCartaOpen] = useState(false);
+  const [saludReg, setSaludReg] = useState(null);         // {type?, date?} → ventana de Salud (➕ Registrar / pincel Doctor)
   const [registroTipo, setRegistroTipo] = useState(null);   // "nota" | "tarea" | "compra" (ventana de texto de ➕ Registrar)
   const [regMsg, setRegMsg] = useState(null);                // leyenda temporal de los registros rápidos
   const regMsgTimer = useRef(null);
@@ -371,6 +376,8 @@ function AngstApp() {
   const dayDataRef  = useRef({});
   const weekOffsetRef = useRef(0);
   const budgetRef   = useRef({});
+  const memoriaRef  = useRef({});                       // memoria de compras (lo comprado de verdad); ver core/comprasMemoria.js
+  const [comprasMemoria, setComprasMemoria] = useState({});
   const nutriaRef   = useRef(makeDefaultNutria());
   const calMarksRef = useRef({});
   const routinesRef  = useRef([]);
@@ -393,6 +400,9 @@ function AngstApp() {
   const [kidsHealth, setKidsHealth] = useState(emptyKidsHealth);
   const kidsHealthRef = useRef(null);
   if(kidsHealthRef.current===null) kidsHealthRef.current = emptyKidsHealth();
+  // Marcas para LEER: guardadas + 🏥 derivado de las citas de Salud (una sola fuente: la cita).
+  // Las escrituras (handleMark, autoMarkDoctor) siguen yendo al calMarks guardado.
+  const calMarksView = useMemo(()=>effectiveMarks(calMarks, kidsHealth.events), [calMarks, kidsHealth]);
   const [pokeInventario, setPokeInventario] = useState([]);
   const pokeInventarioRef = useRef([]);
   const [pokeCarpetas, setPokeCarpetas] = useState([...CARPETAS_DEFAULT]);
@@ -425,6 +435,60 @@ function AngstApp() {
   // no se pide de nuevo si ya está cargado.
   const ANGST_STATE_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
   const ANGST_STATE_AUTH_KEY = "angst-simkl-auth-v1";
+
+  // ── Bandeja Familia → Angst (issue #26, docs/gcal-sync.md) ────────────────
+  // google-inbox.json (lo escribe el bot cada 30 min) trae los eventos del calendario Familia que no son de Angst.
+  // "Pasar a tarea" crea la tarea y anota el evento como importado (localStorage angst-gcal-inbox-v1, viaja en el export);
+  // el sync borra de Google el original SOLO cuando esa tarea ya está en el estado exportado (📤). "Ignorar" no toca Google.
+  const [familiaData, setFamiliaData] = useState(null);
+  const [familiaOpen, setFamiliaOpen] = useState(false);
+  const [familiaBusy, setFamiliaBusy] = useState(false);
+  const [familiaMsg, setFamiliaMsg] = useState(null);
+  const [familiaVer, setFamiliaVer] = useState(0); // las decisiones viven en localStorage: esto fuerza el re-render
+  const familiaLastRef = useRef(0);
+  async function cargarFamilia(force) {
+    const auth = localStorage.getItem(ANGST_STATE_AUTH_KEY);
+    if(!auth) { if(force) setFamiliaMsg("Falta el AUTH_SECRET (se guarda al usar podcasts o 📤)"); return; }
+    if(!force && Date.now()-familiaLastRef.current < 120000) return;
+    familiaLastRef.current = Date.now();
+    setFamiliaBusy(true);
+    try {
+      const r = await fetch(`${ANGST_STATE_WORKER_URL}?path=google-inbox.json`, { headers: { "X-Angst-Auth": auth } });
+      if(!r.ok) { setFamiliaMsg(`No pude leer la bandeja (${r.status})`); return; }
+      const j = await r.json();
+      const events = Array.isArray(j?.events) ? j.events : [];
+      setFamiliaData({ events, generatedAt: j?.generatedAt||null });
+      setFamiliaMsg(null);
+      if(j && j.found !== false) guardarDecisiones(podarFamilia(leerDecisiones(), events));
+    } catch(e) { setFamiliaMsg("No pude leer la bandeja (sin conexión)"); }
+    finally { setFamiliaBusy(false); }
+  }
+  useEffect(()=>{
+    cargarFamilia(false);
+    const onVis = ()=>{ if(document.visibilityState==="visible") cargarFamilia(false); };
+    document.addEventListener("visibilitychange", onVis);
+    return ()=>document.removeEventListener("visibilitychange", onVis);
+  }, []);
+  const familiaPend = familiaPendientes(familiaData?.events||[], leerDecisiones(), fmtFull(new Date()));
+  function familiaImportar(ev) {
+    const fechas = fechasDeEvento(ev);
+    if(!fechas.length) return null;
+    const nx = { ...(dayDataRef.current||{}) };
+    const items = [];
+    fechas.forEach((f,i)=>{
+      const nid = Date.now().toString()+"-"+i+Math.random().toString(36).slice(2,6);
+      const t = tareaDesdeEvento(ev, nid);
+      const d = nx[f]||makeEmptyDay();
+      nx[f] = { ...d, tasks: t.deadline ? sortTasks([...d.tasks, t]) : [...d.tasks, t] };
+      items.push({ date: f, taskId: nid });
+    });
+    setDayData(nx); dayDataRef.current = nx; saveToStorage({dayData:nx});
+    return items;
+  }
+  function familiaPasar(ev) { const items = familiaImportar(ev); if(!items) return; guardarDecisiones(registrarImportado(leerDecisiones(), ev.id, items)); setFamiliaVer(v=>v+1); }
+  function familiaIgnorar(ev) { guardarDecisiones(registrarIgnorado(leerDecisiones(), ev.id)); setFamiliaVer(v=>v+1); }
+  function familiaPasarTodos() { let dec = leerDecisiones(); for(const {ev} of familiaPend) { const items = familiaImportar(ev); if(items) dec = registrarImportado(dec, ev.id, items); } guardarDecisiones(dec); setFamiliaVer(v=>v+1); }
+  function familiaIgnorarTodos() { let dec = leerDecisiones(); for(const {ev} of familiaPend) dec = registrarIgnorado(dec, ev.id); guardarDecisiones(dec); setFamiliaVer(v=>v+1); }
   const ANGST_STATE_PATH = "angst-full-state.json";
   const ANGST_STATE_BRANCH = "state-sync";
   const [stateSyncMsg, setStateSyncMsg] = useState(null);
@@ -634,6 +698,31 @@ function AngstApp() {
       return next;
     });
   }
+  // Abrir una fecha concreta desde el dashboard (tira de días, balizas): cambia a su semana si
+  // hace falta y deja abierto solo ese día (acordeón exclusivo, como toggleDia).
+  function abrirDia(dateKey){
+    const off = weekOffsetFor(dateKey);
+    if(off !== weekOffsetRef.current) updateWeekOffset(off);
+    setDashAbierto(false);
+    const inicio = addDays(BASE_DATE, off*7);
+    setMinimized(m=>{
+      const next = {...m};
+      for(let i=0;i<7;i++){ const d = new Date(inicio); d.setDate(d.getDate()+i); next[fmtFull(d)] = true; }
+      next[dateKey] = false;
+      return next;
+    });
+  }
+  // Al abrir un día (flecha del día, tira o baliza del dashboard) la pantalla se desplaza hasta que el día
+  // abierto queda inmediatamente después del carrusel de módulos (el cuerpo de Semana arranca justo ahí).
+  const diaAbiertoKey = semanaKeys.find(k=>!minimized[k]) || null;
+  useEffect(()=>{
+    const el = semanaBodyRef.current;
+    if(!el || page!==0 || !diaAbiertoKey) return;
+    const card = el.querySelector(`[data-dia="${diaAbiertoKey}"]`);
+    if(!card) return;
+    const y = card.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop;
+    if(typeof el.scrollTo === "function") el.scrollTo({top:y, behavior:"smooth"}); else el.scrollTop = y;
+  }, [diaAbiertoKey, page]);
   // R3: sin nada expandido no hay scroll (y vuelve al inicio). Válvula = detector:
   // si aun colapsado desborda, se habilita el scroll y se avisa en consola.
   useEffect(()=>{
@@ -837,6 +926,7 @@ function AngstApp() {
             setBudgets(migrated); budgetRef.current=migrated;
           }
           if(d.nutria){ setNutria(d.nutria); nutriaRef.current=d.nutria; }
+          { const mem = tieneMemoria(d.comprasMemoria) ? d.comprasMemoria : memoriaDesdeHistorial(d.dayData); setComprasMemoria(mem); memoriaRef.current=mem; }   // sin memoria aún: se arma con lo ya comprado
           if(d.cookingOpts) setCookingOpts(d.cookingOpts);
           if(d.aseoOpts){ const merged=[...d.aseoOpts];DEFAULT_ASEO_OPTS.forEach(o=>{if(!merged.includes(o))merged.splice(merged.length-1,0,o);});setAseoOpts(merged); }
           if(d.custody) setCustody(d.custody);
@@ -927,6 +1017,7 @@ function AngstApp() {
       calMarks:   overrides.calMarks   ?? calMarksRef.current,
       cookingOpts: overrides.cookingOpts ?? cookingOpts,
       aseoOpts: overrides.aseoOpts ?? aseoOpts,
+      comprasMemoria: overrides.comprasMemoria ?? memoriaRef.current,
       routines:   overrides.routines   ?? routinesRef.current,
       recurring:  overrides.recurring  ?? recurringRef.current,
       lastRollover: overrides.lastRollover ?? lastRolloverRef.current,
@@ -1221,6 +1312,14 @@ function AngstApp() {
   }
 
   function handleMark(key,val){
+    // Pincel "Doctor": un día sin marca guardada abre el formulario de cita (paciente, especialidad,
+    // hora) en vez de dejar una marca sin datos. Si el día ya tiene una marca guardada (de antes
+    // de las citas), tocar de nuevo la quita, como siempre.
+    if(val==="doctor"){
+      const raw = calMarksRef.current[key];
+      const arr = Array.isArray(raw)?raw:(raw?[raw]:[]);
+      if(!arr.includes("doctor")){ setSaludReg({type:"cita", date:key}); return; }
+    }
     setCalMarks(prev => {
       const cur = Array.isArray(prev[key]) ? prev[key] : (prev[key] ? [prev[key]] : []);
       let next;
@@ -1317,6 +1416,7 @@ function AngstApp() {
       calMarks: clone(calMarksRef.current),
       cookingOpts: clone(cookingOpts),
       aseoOpts: clone(aseoOpts),
+      comprasMemoria: clone(memoriaRef.current),
       routines: clone(routinesRef.current),
       recurring: clone(recurringRef.current),
       lastRollover: lastRolloverRef.current,
@@ -1366,6 +1466,7 @@ function AngstApp() {
     if(d.calMarks){ setCalMarks(d.calMarks); calMarksRef.current=d.calMarks; }
     if(d.cookingOpts){ setCookingOpts(d.cookingOpts); }
     if(d.aseoOpts){ setAseoOpts(d.aseoOpts); }
+    { const mem = tieneMemoria(d.comprasMemoria) ? d.comprasMemoria : memoriaDesdeHistorial(d.dayData); setComprasMemoria(mem); memoriaRef.current=mem; }   // un respaldo antiguo sin memoria: se rearma con su historial
     if(d.routines){ setRoutines(d.routines); routinesRef.current=d.routines; }
     if(d.recurring){ setRecurring(d.recurring); recurringRef.current=d.recurring; }
     if(d.lastRollover){ setLastRollover(d.lastRollover); lastRolloverRef.current=d.lastRollover; }
@@ -1537,8 +1638,12 @@ function AngstApp() {
   const agregarTareaRapida = ({text, date, urgent})=>{
     mutarDia(date, day=>({...day, tasks:[...(day.tasks||[]), {id:Date.now(), text, fixed:false, done:false, ...(urgent?{urgent:true}:{})}]}));
   };
-  const agregarCompraRapida = texto=>{
-    mutarDia(fmtFull(new Date()), day=>({...day, compras:[...(day.compras||[]), {id:Date.now().toString(), text:texto, done:false}]}));
+  // Lista de compras única (Carrito, ➕ Registrar y 🛒 de cada día): agregar y quitar ítems de un día.
+  const agregarCompraEn = (dateKey, item)=>{
+    mutarDia(dateKey, day=>({...day, compras:[...(day.compras||[]), item]}));
+  };
+  const quitarCompraEn = (dateKey, itemId)=>{
+    mutarDia(dateKey, day=>({...day, compras:(day.compras||[]).filter(c=>c.id!==itemId)}));
   };
   // Leyenda temporal en la barra superior (mismo patrón que "descargado ✓" / "guardado ✓").
   const avisarRegistro = txt=>{
@@ -1550,11 +1655,14 @@ function AngstApp() {
 
   // Compras ↔ presupuesto (issue #25): un ítem comprado se descuenta de la cartera Alimentación (cantidad × precio).
   // Mientras Alimentación no sea cartera con sobres activos, el ítem solo guarda su precio y no descuenta nada.
-  const comprasInfo = ()=>{
+  // Cada categoría descuenta de un bolsillo: Alimentación por defecto, Aseo del suyo (o el que se eligió al crear la categoría).
+  const comprasInfo = (categoria, destinoForzado)=>{
     const hoy = fmtFull(new Date());
-    const dest = carteraCompras(budgets, hoy);
+    const fa = filaCompras(budgets, hoy);
+    const dest = carteraCompras(budgets, hoy, categoria, destinoForzado);
+    const destId = dest ? dest.row.id : (destinoForzado || destinoCategoria(fa?fa.row:null, categoria));
     const ini = inicioSobres(budgets);
-    const base = {activo:false, dest, bolsillos:[], saldo:0, categorias:categoriasDe(dest?dest.row:{id:ID_ALIMENTACION}), puedeNuevaCategoria:!!dest};
+    const base = {activo:false, dest, destId, destLabel:etiquetaFila(budgets,hoy,destId), bolsillos:[], saldo:0, categorias:categoriasDe(fa?fa.row:{id:ID_ALIMENTACION}), puedeNuevaCategoria:!!fa, destinos:destinosPosibles(budgets,hoy)};
     if(!dest||!ini||dest.periodo<ini) return base;
     const bolsillos = bolsillosDe(dest.sec,dest.row)
       .map(b=>({...b, saldo:(estadoBolsillo(budgets,dest.periodo,dest.sec,dest.row.id,b.subId)||{saldo:0}).saldo}))
@@ -1565,7 +1673,7 @@ function AngstApp() {
   const comprasApi = {
     info: comprasInfo,
     comprar: item=>{
-      if(!comprasInfo().activo) return {patch:{}};
+      if(!comprasInfo(item.categoria).activo) return {patch:{}};
       if(montoCompra(item)===0) return {error:"Falta el precio del ítem."};
       const r = registrarCompra(budgetRef.current,{fecha:fmtFull(new Date()),item,subId:item.subId??null});
       if(r.error) return {error:r.error};
@@ -1580,10 +1688,21 @@ function AngstApp() {
       if(r.budget) guardarBudget(item.gastoPeriodo,r.budget);
       return {patch:{gastoId:null,gastoPeriodo:null}};
     },
-    nuevaCategoria: label=>{
-      const dest = carteraCompras(budgetRef.current,fmtFull(new Date()));
-      if(!dest) return;
-      guardarBudget(dest.periodo,agregarCategoria(resolverPeriodo(budgetRef.current,dest.periodo),dest.sec,dest.row.id,label));
+    // Memoria de compras: sugerencias al escribir, referencia del último precio (solo referencia: se confirma el de hoy) y aprendizaje al comprar.
+    sugerir: texto=>buscarSugerencias(comprasMemoria, texto),
+    referencia: texto=>{ const m=comprasMemoria.items&&comprasMemoria.items[claveNombre(texto)]; return m?{...m, rango:rangoPrecios(m)}:null; },
+    recordar: item=>{
+      const m=recordarCompra(memoriaRef.current,{ text:item.text, categoria:item.categoria, precio:item.estimado?0:item.precio, fecha:fmtFull(new Date()) });
+      memoriaRef.current=m; setComprasMemoria(m); saveToStorage({ comprasMemoria:m });
+    },
+    // Agrega la categoría a la lista de compras (fila «ali», sea gasto base o cartera). Devuelve un mensaje si no se puede.
+    nuevaCategoria: (label, destino)=>{
+      const fa = filaCompras(budgetRef.current,fmtFull(new Date()));
+      if(!fa) return "No encuentro la fila de Alimentación en el presupuesto.";
+      const p = puedeGenerarPeriodo(budgetRef.current,fa.periodo);
+      if(!p.ok) return p.motivo;
+      guardarBudget(fa.periodo,agregarCategoria(resolverPeriodo(budgetRef.current,fa.periodo),fa.sec,fa.row.id,label,destino));
+      return null;
     },
   };
   const carritoPend = Object.values(dayData||{}).reduce((t,d)=>t+((d&&d.compras)||[]).filter(i=>!i.done).length,0);
@@ -1738,7 +1857,7 @@ function AngstApp() {
         items={dayData[comprasOpen]?.compras||[]}
         onSave={items=>updateDay(comprasOpen,{compras:items})}
         onMoveToNext={item=>{const nextDay=fmtFull(new Date(new Date(comprasOpen+"T12:00:00").getTime()+86400000));const ndd={...dayDataRef.current};const nd=ndd[nextDay]||makeEmptyDay();ndd[nextDay]={...nd,compras:[...nd.compras,{...item,origId:item.id,id:Date.now().toString()}]};setDayData(ndd);dayDataRef.current=ndd;saveToStorage({dayData:ndd});}}
-        info={comprasApi.info()} api={comprasApi}
+        api={comprasApi}
         onClose={()=>setComprasOpen(null)}
       />}
       {notifClockOpen&&<AnalogClock h={notifClockOpen.h} m={notifClockOpen.m} onClose={()=>setNotifClockOpen(null)} onSave={({h,m})=>{
@@ -1760,9 +1879,10 @@ function AngstApp() {
           dayDataRef.current=next; saveToStorage({dayData:next}); return next;
         });
       }}/>}
-      {calOpen&&<CalendarModal weekStart={weekStart} marks={calMarks} onMark={handleMark} dayData={dayData} calMarks={calMarks} kidsHealth={kidsHealth} onWeekSelect={date=>{const dow=date.getDay();const mon=addDays(date,-(dow===0?6:dow-1));const diff=Math.round((mon-BASE_DATE)/(7*86400000));updateWeekOffset(diff);}} onClose={()=>setCalOpen(false)}/>}
+      {familiaOpen&&<FamiliaInboxModal items={familiaPend} onImport={familiaPasar} onIgnore={familiaIgnorar} onImportAll={familiaPasarTodos} onIgnoreAll={familiaIgnorarTodos} onRefresh={()=>cargarFamilia(true)} onClose={()=>setFamiliaOpen(false)} cargando={familiaBusy} mensaje={familiaMsg} generadoEn={familiaData?.generatedAt}/>}
+      {calOpen&&<CalendarModal weekStart={weekStart} marks={calMarksView} onMark={handleMark} dayData={dayData} calMarks={calMarksView} kidsHealth={kidsHealth} onWeekSelect={date=>{const dow=date.getDay();const mon=addDays(date,-(dow===0?6:dow-1));const diff=Math.round((mon-BASE_DATE)/(7*86400000));updateWeekOffset(diff);}} onClose={()=>setCalOpen(false)}/>}
 
-      <div className={"app"+(page===0?" app-fit":"")}>
+      <div className={"app"+((page===0||page===1||page===4||page===5)?" app-fit":"")}>
         <div className="hdr">
           <div className="hdr-title" style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>angstapp</div>
           <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
@@ -1802,7 +1922,8 @@ function AngstApp() {
                       <button style={itemMenu} onClick={()=>{cerrarMenus();setRegistroTipo("compra");}}>🛒 Compra</button>
                       <button style={itemMenu} onClick={()=>{cerrarMenus();setIngestaOpen(true);}}>🍽️ Ingesta</button>
                       <button style={itemMenu} onClick={()=>{cerrarMenus();setGastoOpen(true);}}>💸 Gasto</button>
-                      <button style={{...itemMenu,borderBottom:"none"}} onClick={()=>{cerrarMenus();setCartaOpen(true);}}>🃏 Cartas</button>
+                      <button style={itemMenu} onClick={()=>{cerrarMenus();setCartaOpen(true);}}>🃏 Cartas</button>
+                      <button style={{...itemMenu,borderBottom:"none"}} onClick={()=>{cerrarMenus();setSaludReg({});}}>🩺 Salud</button>
                     </div>
                   )}
                 </div>
@@ -1886,18 +2007,19 @@ function AngstApp() {
         {page===0&&(
           <div className="semana">
             <div className="semana-body" ref={semanaBodyRef} data-expandido={hayAbierto?"true":"false"} data-valvula={semanaValvula?"true":"false"}>
-<SemanaDashboard abierto={dashAbierto} onToggle={toggleDash}
+<SemanaDashboard abierto={dashAbierto} onToggle={toggleDash} onAbrirDia={abrirDia}
               navegacion={<>
               <button className="nbtn" onClick={()=>updateWeekOffset(weekOffset-1)}>‹</button>
               <div className="wnav-dates">{fmt(weekStart)} — {fmt(addDays(weekStart,6))}</div>
               <button className="calbtn" onClick={()=>setCalOpen(true)}>📅</button>
+              {familiaPend.length>0&&<button className="calbtn" onClick={()=>setFamiliaOpen(true)} title="Eventos nuevos en el calendario Familia">📥{familiaPend.length}</button>}
               <button className="nbtn" onClick={()=>updateWeekOffset(weekOffset+1)}>›</button>
               </>}
                   weekKeys={semanaKeys}
                   todayKey={fmtFull(new Date())}
                   ahoraMin={new Date().getHours()*60+new Date().getMinutes()}
                   dayData={dayData}
-                  calMarks={calMarks}
+                  calMarks={calMarksView}
                   eventos={[...meleeMajors.map(ev=>({...ev,tipo:"melee",url:"https://www.start.gg/"})),...POKEMON_EVENTS.map(ev=>({...ev,tipo:"pokemon"})),...SC2_EVENTS.map(ev=>({...ev,tipo:"sc2"}))]}
                   stressFor={k=>computeStressScore(k, dayData, calMarks, kidsHealth)}
                   conNinosEn={k=>isWithKids(k, custody)}
@@ -1916,7 +2038,7 @@ function AngstApp() {
                 const flex  = day.tasks.filter(t=>!t.fixed);
                 const hol = getHoliday(dayDate);
                 const isMin = !!minimized[dateKey];
-                const dayMarkArr = Array.isArray(calMarks[dateKey])?calMarks[dateKey]:(calMarks[dateKey]?[calMarks[dateKey]]:[]);
+                const dayMarkArr = Array.isArray(calMarksView[dateKey])?calMarksView[dateKey]:(calMarksView[dateKey]?[calMarksView[dateKey]]:[]);
                 const MARK_COLORS = {social:"#4caf50",romantic:"#e91e8c",work:"#5c7a99",colegio:"#7b4fd4",doctor:"#e53935"};
                 const dowDay = new Date(dateKey+"T12:00:00").getDay();
                 const isWeekend = dowDay===0||dowDay===6;
@@ -1931,7 +2053,7 @@ function AngstApp() {
                 const isPokemonFinals= pokemonToday&&dateKey===pokemonToday.end;
                 const isSc2Finals    = sc2Today&&dateKey===sc2Today.end;
                 return (
-                  <div key={dateKey} className={`card${!isMin?" expanded":""}${isToday?" today-card":""}`} style={isToday?{border:"2px solid #fff",boxShadow:"0 0 0 2px #111",borderRadius:16}:hol?{borderStyle:"solid",borderColor:hol.type==="weekend"?"#ddd":"#111"}:{}}>
+                  <div key={dateKey} data-dia={dateKey} className={`card${!isMin?" expanded":""}${isToday?" today-card":""}`} style={isToday?{border:"2px solid #fff",boxShadow:"0 0 0 2px #111",borderRadius:16}:hol?{borderStyle:"solid",borderColor:hol.type==="weekend"?"#ddd":"#111"}:{}}>
                     <div className="blk" style={{
                       background:isWeekend?"#fff":dayMarkArr.includes("work")?"#0a0e14":dayMarkArr.includes("romantic")?"#1a0a10":dayMarkArr.includes("social")?"#0a140a":dayMarkArr.includes("colegio")?"#130a1f":dayMarkArr.includes("doctor")?"#1a0a0a":dayMarkArr.includes("gym")?"#1a0f00":"#111",
                       outline:isToday?"2px dashed #111":(isWeekend&&!withKidsToday)?"2px dashed #111":isWeekend?"1px solid #111":"none",
@@ -1946,33 +2068,29 @@ function AngstApp() {
                           {sc2Today&&<a href={sc2Today.url} target="_blank" rel="noopener" onClick={e=>e.stopPropagation()} style={{fontSize:9,background:isSc2Finals?"#1565c0":"rgba(21,101,192,0.3)",color:isSc2Finals?"#fff":"#1565c0",borderRadius:6,padding:"1px 5px",marginLeft:3,fontFamily:"'DM Sans',sans-serif",fontWeight:700,letterSpacing:0.5,verticalAlign:"middle",textDecoration:"none"}}>{isSc2Finals?"FINALS":"SC2"}</a>}
                         </div>
                         <div className="ddate">{fmt(dayDate)}</div>
-                        {(()=>{
-                          const isWorkDay2 = dayMarkArr.includes("work");
-                          const fields = [day.menu, day.aseoMode, day.cookingMode, day.summary, day.energy, day.concentration, day.intensity||day.mood];
-                          if(isWorkDay2) fields.push(day.workLevel);
-                          fields.push(day.sleep);
-                          const hasNutri = (nutriLog[dateKey]||[]).length > 0;
-                          fields.push(hasNutri ? "ok" : undefined);
-                          const filled = fields.filter(f=>f!==undefined&&f!==null&&f!=="").length;
-                          const pct = Math.round((filled/fields.length)*100);
-                          const batColor = pct<=30?"#e53935":pct<=60?"#ff9800":pct<=90?"#ffcc00":"#4caf50";
-                          return (
-                            <div title={`registro: ${pct}%`} style={{display:"flex",alignItems:"center",gap:2,marginLeft:2}}>
-                              <div style={{width:12,height:18,border:`1.5px solid ${isWeekend?"#555":"rgba(255,255,255,0.3)"}`,borderRadius:2,padding:1,position:"relative",flexShrink:0}}>
-                                <div style={{position:"absolute",top:"-3px",left:"50%",transform:"translateX(-50%)",width:4,height:2,background:isWeekend?"#555":"rgba(255,255,255,0.3)",borderRadius:"1px 1px 0 0"}}/>
-                                <div style={{width:"100%",height:`${pct}%`,background:batColor,borderRadius:1,position:"absolute",bottom:1,left:1,right:1,width:"calc(100% - 2px)",transition:"height 0.3s"}}/>
-                              </div>
-                            </div>
-                          );
-                        })()}
                         {(()=>{const hids=Array.isArray(day.humors)&&day.humors.length>0?day.humors:(day.humor?[day.humor]:[]);return hids.length>0?<div style={{display:"flex",gap:1,marginLeft:4}}>{hids.map(hid=>{const hobj=[...DEFAULT_HUMORS,...(day.humorCustom||[])].find(h=>h.id===hid);return hobj?<span key={hid} style={{fontSize:13}}>{hobj.emoji}</span>:null;})}</div>:null;})()}
                         {(()=>{const hasUrgent=(day.tasks||[]).some(t=>t.urgent&&!t.done);return hasUrgent?<span style={{fontSize:11,filter:"drop-shadow(0 0 3px #ff3b30)",marginRight:2}} title="tarea urgente">🚨</span>:null;})()}
-                        {dayMarkArr.length>0&&<div style={{display:"flex",gap:2,alignItems:"center"}}>{dayMarkArr.map(m=>{
+                        {dayMarkArr.length>0&&<div style={{display:"flex",gap:2,alignItems:"center",minWidth:0,flex:"0 1 auto",overflow:"hidden"}}>{dayMarkArr.map(m=>{
                           if(m==="social")return <span key={m} style={{fontSize:12}}>🟢</span>;
                           if(m==="romantic")return <span key={m} style={{fontSize:12}}>🌸</span>;
                           if(m==="work")return <span key={m} style={{fontSize:12}}>💼</span>;
                           if(m==="colegio")return <span key={m} style={{fontSize:12}}>🎒</span>;
-                          if(m==="doctor")return <span key={m} style={{fontSize:12}}>🏥</span>;
+                          if(m==="doctor"){
+                            // 🏥 + hora · paciente · especialidad de la(s) cita(s) de Salud (la cita es la fuente).
+                            // Elástico (se acorta con …) para no empujar fuera de la tarjeta lo que va a la derecha,
+                            // y tocarlo abre/cierra el día como el resto del encabezado.
+                            const cs = citasOnDay(kidsHealth.events, dateKey);
+                            if(!cs.length) return <span key={m} onClick={()=>toggleDia(dateKey)} style={{fontSize:12,cursor:"pointer"}}>🏥</span>;
+                            const nm = id => ((kidsHealth.family||[]).find(f=>f.id===id)||{}).name||id;
+                            const c0 = cs[0];
+                            const txt = [c0.startTime, nm(c0.personId), c0.title].filter(Boolean).join(" · ");
+                            return <span key={m} onClick={()=>toggleDia(dateKey)} title={cs.map(c=>citaLine(c,nm(c.personId),true)).join("\n")}
+                              style={{display:"flex",alignItems:"center",gap:3,minWidth:0,flex:"0 1 auto",fontSize:10,color:"#e53935",cursor:"pointer",whiteSpace:"nowrap"}}>
+                              <span style={{flex:"none"}}>🏥</span>
+                              <span style={{minWidth:0,overflow:"hidden",textOverflow:"ellipsis"}}>{txt}</span>
+                              {cs.length>1&&<span style={{flex:"none"}}>+{cs.length-1}</span>}
+                            </span>;
+                          }
                           if(m==="gym")return <svg key={m} width="13" height="13" viewBox="0 0 24 24" style={{display:"inline-block",verticalAlign:"middle"}}><rect x="1" y="9" width="3" height="6" rx="1" fill="#26a69a"/><rect x="4" y="7" width="2.5" height="10" rx="1" fill="#26a69a"/><rect x="6.5" y="10.5" width="11" height="3" rx="1" fill="#26a69a"/><rect x="17.5" y="7" width="2.5" height="10" rx="1" fill="#26a69a"/><rect x="20" y="9" width="3" height="6" rx="1" fill="#26a69a"/></svg>;
                           if(m==="melee")return <svg key={m} width="13" height="13" viewBox="0 0 24 24" style={{display:"inline-block",verticalAlign:"middle"}}><path fillRule="evenodd" fill="#ff6600" d="M12,1 A11,11,0,1,0,12,23 A11,11,0,1,0,12,1Z M1,14.5 H23 V16.5 H1Z M7.5,1 V23 H9.5 V1Z M8.5,12.5 A3,3,0,1,0,8.5,18.5 A3,3,0,1,0,8.5,12.5Z"/></svg>;
                           if(m==="pokemon")return <svg key={m} width="13" height="13" viewBox="0 0 12 12" style={{display:"inline-block"}}><circle cx="6" cy="6" r="5" fill="none" stroke="#ffcc00" strokeWidth="1.3"/><line x1="1" y1="6" x2="11" y2="6" stroke="#ffcc00" strokeWidth="1.3"/><circle cx="6" cy="6" r="1.8" fill="#ffcc00"/></svg>;
@@ -1983,16 +2101,17 @@ function AngstApp() {
                           {hol&&hol.type!=="weekend"&&<div style={{fontSize:9,color:"#555",fontFamily:"'DM Sans',sans-serif",textAlign:"right",lineHeight:1.3,fontWeight:600,maxWidth:90,overflow:"hidden"}}>{hol.type==="cl"&&"🇨🇱 "}{hol.type==="us"&&"🇺🇸 "}{hol.type==="both"&&"🇨🇱🇺🇸 "}{hol.label}</div>}
                         </div>
                         {(()=>{
-                          const ds = computeStressScore(dateKey, dayData, calMarks, kidsHealth);
-                          const barColor = ds<=5?"#4caf50":ds<=7?"#ff9800":"#f44336";
-                          const label = ds<=5?"tranqui":ds<=7?"meh":"full";
+                          // Nivel de registro del día (antes: pilita junto a la fecha). El estrés queda en el dashboard.
+                          const reg = nivelRegistro(day, {esTrabajo:dayMarkArr.includes("work"), tieneNutri:(nutriLog[dateKey]||[]).length>0});
+                          const barColor = colorRegistro(reg.pct);
+                          const llenas = barrasRegistro(reg.pct);
                           return (
-                            <div title={`carga: ${label} (${ds}/10)`} onClick={()=>toggleDia(dateKey)}
-                              style={{display:"flex",alignItems:"center",gap:4,marginRight:2,cursor:"pointer",padding:"4px 4px"}}>
+                            <div title={`registro: ${reg.pct}%`} onClick={()=>toggleDia(dateKey)}
+                              style={{display:"flex",alignItems:"center",gap:4,marginRight:2,cursor:"pointer",padding:"4px 4px",flexShrink:0}}>
                               <div style={{display:"flex",gap:1.5,alignItems:"center"}}>
                                 {Array.from({length:5}).map((_,i)=>(
-                                  <div key={i} style={{width:3,height:i<Math.ceil(ds/2)?8:4,borderRadius:1.5,
-                                    background:i<Math.ceil(ds/2)?barColor:"rgba(255,255,255,0.12)",
+                                  <div key={i} style={{width:3,height:i<llenas?8:4,borderRadius:1.5,
+                                    background:i<llenas?barColor:"rgba(255,255,255,0.12)",
                                     transition:"all 0.2s"}}/>
                                 ))}
                               </div>
@@ -2026,6 +2145,7 @@ function AngstApp() {
                                   <div className="ftxt" style={{flex:1}}>{rec.text}</div>
                                   <span style={{fontSize:9,color:"#bbb",background:"#f0f0f0",borderRadius:8,padding:"2px 6px",letterSpacing:0.5,flexShrink:0}}>🔁 {FREQ_LABELS[rec.freq]||rec.freq}</span>
                                   <button onClick={()=>{saveRecurring(recurringRef.current.map(r=>r.id===rec.id?{...r,urgent:!r.urgent}:r));}} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:12,opacity:rec.urgent?1:0.2,padding:"0 1px",lineHeight:1}} title="urgente">🚨</button>
+                                  <button onClick={()=>{saveRecurring(recurringRef.current.map(r=>r.id===rec.id?{...r,privada:!r.privada}:r));}} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:12,opacity:rec.privada?1:0.2,padding:"0 1px",lineHeight:1}} title="privada: no va al calendario de los hijos">🔒</button>
                                   <button onClick={()=>postponeRecurring(rec.id, dateKey)} style={{background:"transparent",border:"none",color:"#bbb",fontSize:11,cursor:"pointer",padding:"0 3px",flexShrink:0}} title="posponer">→</button>
                                   <button onClick={()=>{if(window.confirm("¿Eliminar esta tarea recurrente y todas sus ocurrencias?"))deleteRecurring(rec.id);}} style={{background:"transparent",border:"none",color:"#ccc",fontSize:15,cursor:"pointer",flexShrink:0,lineHeight:1}} className="fdel">×</button>
                                 </div>
@@ -2045,6 +2165,7 @@ function AngstApp() {
                                     :<button onClick={()=>setClockOpen({dateKey,tid:task.id,h:9,m:0})} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:13,opacity:0.25,padding:"0 2px",lineHeight:1,transition:"opacity 0.15s",flexShrink:0}} title="fijar hora">🕐</button>
                                   }
                                   <button onClick={()=>updateTask(dateKey,task.id,{urgent:!task.urgent})} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:12,opacity:task.urgent?1:0.2,padding:"0 1px",lineHeight:1,transition:"opacity 0.15s"}} title="baliza">🚨</button>
+                                  <button onClick={()=>updateTask(dateKey,task.id,{privada:!task.privada})} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:12,opacity:task.privada?1:0.2,padding:"0 1px",lineHeight:1,transition:"opacity 0.15s"}} title="privada: no va al calendario de los hijos">🔒</button>
                                   <FixedFreqBtn menuId={`${dateKey}:${task.id}:freq`} openMenu={openFMenu} setOpenMenu={setOpenFMenu} value={task.recurringId?recurringRef.current.find(r=>r.id===task.recurringId):null}
                                     onSetFreq={freq=>{
                                       // Create or update recurring for this fixed task
@@ -2142,6 +2263,7 @@ function AngstApp() {
                                   :<div className="ttxt" style={task.carried?{borderLeft:"2px dashed #ddd",paddingLeft:6}:{}} onClick={()=>!done&&startEdit(dateKey,task.id,task.text)} style={{textDecoration:done?"line-through":"none",color:done?"#bbb":"#333",cursor:done?"default":"pointer"}}>{task.text}</div>
                                 }
                                 {!done&&<button onClick={()=>updateTask(dateKey,task.id,{urgent:!task.urgent})} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:12,opacity:task.urgent?1:0.15,padding:"0 1px",lineHeight:1,transition:"opacity 0.15s"}} title="urgente">🚨</button>}
+                                {!done&&<button onClick={()=>updateTask(dateKey,task.id,{privada:!task.privada})} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:12,opacity:task.privada?1:0.15,padding:"0 1px",lineHeight:1,transition:"opacity 0.15s"}} title="privada: no va al calendario de los hijos">🔒</button>}
                                 {!done&&dl&&<span style={{fontSize:11,color:"#888",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",padding:"0 2px",cursor:"pointer"}} onClick={()=>setClockOpen({dateKey,tid:task.id,h:dl.h,m:dl.m})}>{"🕐 "+fmtTime(dl)}</span>}
                                 {!done&&!dl&&<button onClick={()=>setClockOpen({dateKey,tid:task.id,h:9,m:0})} style={{background:"transparent",border:"none",cursor:"pointer",fontSize:13,opacity:0.2,padding:"0 2px",lineHeight:1,flexShrink:0}} title="fijar hora">🕐</button>}
                                 {!done&&task.carried&&<button onClick={()=>{
@@ -2240,17 +2362,31 @@ function AngstApp() {
         )}
 
         {page===1&&<BudgetPage budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
-        {carritoOpen&&<CarritoModal dayData={dayData} hoy={fmtFull(new Date())} api={comprasApi} onItem={updateComprasItem} onClose={()=>setCarritoOpen(false)}/>}
+        {carritoOpen&&<CarritoModal dayData={dayData} hoy={fmtFull(new Date())} api={comprasApi} onItem={updateComprasItem} onAdd={agregarCompraEn} onDelete={quitarCompraEn} onClose={()=>setCarritoOpen(false)}/>}
         {gastoOpen&&<GastoModal arriba permanecer budgets={budgets} onSaveBudget={(...a)=>{updateBudgetForMonth(...a);avisarRegistro("Gasto registrado ✓");}} onClose={()=>setGastoOpen(false)}/>}
         {ingestaOpen&&<IngestaRapida nutriLog={nutriLog} saveNutriLog={guardarNutriLog} customFoods={customFoods} foodOverrides={foodOverrides}
           nutriDecks={nutriDecks} permanecer onClose={()=>setIngestaOpen(false)} onGuardado={avisarRegistro}/>}
-        {registroTipo&&<RegistroRapido tipo={registroTipo} onNota={agregarNotaRapida} onTarea={agregarTareaRapida} onCompra={agregarCompraRapida} onGuardado={avisarRegistro} onClose={()=>setRegistroTipo(null)}/>}
+        {saludReg&&<SaludRegistro kidsHealth={kidsHealth} saveKidsHealth={saveKidsHealth} dayData={dayData} updateDay={updateDay} calMarks={calMarks}
+          saveCalMarks={(nm)=>{setCalMarks(nm);calMarksRef.current=nm;saveToStorage({calMarks:nm});}}
+          initial={saludReg} onClose={()=>setSaludReg(null)} onGuardado={avisarRegistro}/>}
+        {registroTipo&&<RegistroRapido tipo={registroTipo} onNota={agregarNotaRapida} onTarea={agregarTareaRapida} compras={{hoy:fmtFull(new Date()), items:((dayData[fmtFull(new Date())]||{}).compras)||[], api:comprasApi, onPatch:(id,f)=>updateComprasItem(fmtFull(new Date()),id,f), onAdd:item=>agregarCompraEn(fmtFull(new Date()),item), onDelete:id=>quitarCompraEn(fmtFull(new Date()),id)}} onGuardado={avisarRegistro} onClose={()=>setRegistroTipo(null)}/>}
         {cartaOpen&&<AgregarCartaModal inventario={pokeInventario} carpetas={pokeCarpetas} priceCache={pokePriceCache}
           saveInventario={guardarInventario} permanecer onClose={()=>setCartaOpen(false)} onGuardado={avisarRegistro}/>}
         {page===2&&<NutriaPage data={nutria} saveData={updateNutria} budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
         {page===3&&<EspritPage dayData={dayData} calMarks={calMarks} updateDay={updateDay} kidsHealth={kidsHealth}/>}
         {page===4&&<SaludPage kidsHealth={kidsHealth} saveKidsHealth={saveKidsHealth} dayData={dayData} updateDay={updateDay} calMarks={calMarks} saveCalMarks={(nm)=>{setCalMarks(nm);calMarksRef.current=nm;saveToStorage({calMarks:nm});}}/>}
-        {page===5&&<FadimanPage data={fadimanData} saveData={d=>{setFadimanData(d);fadimanDataRef.current=d;saveToStorage({fadimanData:d});}}/>}
+        {page===5&&<FadimanPage data={fadimanData} saveData={d=>{setFadimanData(d);fadimanDataRef.current=d;saveToStorage({fadimanData:d});}}
+          cruzFor={dk=>{
+            const day=dayData[dk]; if(!day) return null;
+            const ts=(day.tasks||[]).filter(t=>t.text);
+            const ej=ejercicioLog[dk];
+            return {
+              estres: computeStressScore(dk, dayData, calMarks, kidsHealth),
+              tareasHechas: ts.filter(t=>t.done).length,
+              tareasTotal: ts.length,
+              ejercicio: ej ? Object.values(ej).some(v=>v===true||(v&&v.done)) : false,
+            };
+          }}/>}
         {page===6&&<NutricionPage nutriLog={nutriLog} saveNutriLog={guardarNutriLog}
           customFoods={customFoods} saveCustomFoods={d=>{setCustomFoods(d);customFoodsRef.current=d;saveToStorage({customFoods:d});}}
           foodOverrides={foodOverrides} saveFoodOverrides={d=>{setFoodOverrides(d);foodOverridesRef.current=d;saveToStorage({foodOverrides:d});}}

@@ -6,7 +6,13 @@
   "scripts": {
     "build": "node build/assemble.mjs",
     "audit:export": "node tests/export-coverage.mjs && node tests/vitrina-restore.mjs",
-    "test:presupuesto": "node tests/presupuesto-modelo.mjs"
+    "test:presupuesto": "node tests/presupuesto-modelo.mjs",
+    "test:gcal": "node tests/gcal-sync.mjs",
+    "test:familia": "node tests/familia-inbox.mjs",
+    "test:rueda": "node tests/rueda-geometria.mjs",
+    "test:torta": "node tests/torta-datos.mjs",
+    "test:memoria": "node tests/compras-memoria.mjs",
+    "test:fadiman": "node tests/fadiman-diario.mjs && node tests/fadiman-protocolo.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"

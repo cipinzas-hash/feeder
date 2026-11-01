@@ -6,7 +6,7 @@ import {
   puedeQuitarGasto, resumenDeudas, guiaSobres, capacidadPrestamo, candidatosPrestamo, sugerirFuentes,
   puedeGenerarPeriodo, primerArqueoPendiente, filasArqueo, guardarArqueo, rendicion, progresoMeta,
   proyeccionAnual, ritmoSobre,
-  categoriasDe, agregarCategoria, gastoPorCategoria, carteraCompras, montoCompra, registrarCompra, deshacerCompra, CATEGORIAS_ALIMENTACION,
+  categoriasDe, agregarCategoria, gastoPorCategoria, carteraCompras, montoCompra, registrarCompra, deshacerCompra, CATEGORIAS_COMPRAS, datosRueda, gastosSinCategoria, categorizarGasto, destinoCategoria, filaCompras, destinosPosibles,
 } from "../core/presupuesto-modelo.js";
 
 // Períodos 25 → 24
@@ -250,24 +250,24 @@ assert.equal(puedeEliminar({ "2026-09": oct }, "2026-09", "propositos", fila(), 
   assert.equal(estadoBolsillo(B, "2026-10", "propositos", "ali", null).asignado, 300000);
 
   // Categorías: Alimentación trae las suyas; el resto parte vacío; se puede agregar sin duplicar
-  assert.deepEqual(categoriasDe(ali()), CATEGORIAS_ALIMENTACION);
+  assert.deepEqual(categoriasDe(ali()), CATEGORIAS_COMPRAS);
   assert.deepEqual(categoriasDe(fila()), []);
   let bud = resolverPeriodo(B, "2026-10");
   bud = agregarCategoria(bud, "propositos", "ali", "Mascotas");
   bud = agregarCategoria(bud, "propositos", "ali", " mascotas ");
   assert.equal(categoriasDe(bud.propositos.find(r => r.id === "ali")).filter(x => x === "Mascotas").length, 1);
-  assert.equal(categoriasDe(bud.propositos.find(r => r.id === "ali")).length, CATEGORIAS_ALIMENTACION.length + 1);
+  assert.equal(categoriasDe(bud.propositos.find(r => r.id === "ali")).length, CATEGORIAS_COMPRAS.length + 1);
 
   // Compras: cantidad × precio, descuenta del bolsillo, guarda nota, categoría y vínculo con el ítem
   const C = { ...B, "2026-10": bud };
   assert.equal(montoCompra({ cantidad: 3, precio: 1200 }), 3600);
   assert.equal(montoCompra({ precio: 990 }), 990);
   assert.equal(montoCompra({ text: "pan" }), 0);
-  const item = { id: "i1", text: "Tomates", cantidad: 2, precio: 1500, categoria: "Verduras y frutas" };
+  const item = { id: "i1", text: "Tomates", cantidad: 2, precio: 1500, categoria: "Verdura" };
   const r1 = registrarCompra(C, { fecha: "2026-10-26", item });
   assert.ok(!r1.error, r1.error);
   const g = r1.budget.gastos[0];
-  assert.equal(g.monto, 3000); assert.equal(g.nota, "2× Tomates"); assert.equal(g.categoria, "Verduras y frutas"); assert.equal(g.compraId, "i1");
+  assert.equal(g.monto, 3000); assert.equal(g.nota, "2× Tomates"); assert.equal(g.categoria, "Verdura"); assert.equal(g.compraId, "i1");
   assert.equal(r1.gastoId, g.id); assert.equal(r1.periodo, "2026-10");
   const C2 = { ...C, "2026-10": r1.budget };
   assert.equal(estadoBolsillo(C2, "2026-10", "propositos", "ali", null).saldo, 297000);
@@ -278,17 +278,144 @@ assert.equal(puedeEliminar({ "2026-09": oct }, "2026-09", "propositos", fila(), 
   assert.ok(registrarCompra(B, { fecha: "2026-10-01", item }).error);
 
   // Gasto por categoría
-  const r2 = registrarCompra(C2, { fecha: "2026-10-27", item: { id: "i4", text: "Arroz", cantidad: 1, precio: 2000, categoria: "Despensa" } });
-  const r3 = registrarCompra({ ...C2, "2026-10": r2.budget }, { fecha: "2026-10-27", item: { id: "i5", text: "Cosa", cantidad: 1, precio: 500 } });
+  const r2 = registrarCompra(C2, { fecha: "2026-10-27", item: { id: "i4", text: "Arroz", cantidad: 1, precio: 2000, categoria: "Huevos" } });
+  assert.match(registrarCompra({ ...C2, "2026-10": r2.budget }, { fecha: "2026-10-27", item: { id: "i5", text: "Cosa", cantidad: 1, precio: 500 } }).error, /categoría/);   // una compra sin categoría ya no se registra
+  const r3 = agregarGasto({ ...C2, "2026-10": r2.budget }, { fecha: "2026-10-27", sec: "propositos", rowId: "ali", subId: null, monto: 500, nota: "Cosa" });   // un gasto antiguo sin categoría sigue apareciendo como «Sin categoría»
   const pc = gastoPorCategoria(r3.budget, "propositos", "ali");
   assert.equal(pc.total, 5500);
-  assert.deepEqual(pc.lista.map(x => [x.categoria, x.monto]), [["Verduras y frutas", 3000], ["Despensa", 2000], ["Sin categoría", 500]]);
+  assert.deepEqual(pc.lista.map(x => [x.categoria, x.monto]), [["Verdura", 3000], ["Huevos", 2000], ["Sin categoría", 500]]);
 
   // Desmarcar: devuelve la plata al sobre
   const d = deshacerCompra(C2, "2026-10", r1.gastoId);
   assert.equal(d.budget.gastos.length, 0);
   assert.equal(estadoBolsillo({ ...C2, "2026-10": d.budget }, "2026-10", "propositos", "ali", null).saldo, 300000);
   assert.equal(deshacerCompra(C2, "2026-10", "no-existe").budget, null);
+}
+
+// ── Arqueo → saldo de arrastre del período siguiente ────────────────────────
+{
+  const rop = () => ({ id: "r1", emoji: "👕", label: "Ropa", monto: 100000, subs: [{ id: "s1", label: "Colegio", monto: 60000 }, { id: "s2", label: "Calzado", monto: 30000 }] });
+  const hog = () => ({ id: "r2", emoji: "🏠", label: "Hogar", monto: 40000 });
+  const sep0 = { ingresos: {}, gastos_base: [], personales: [], propositos: [rop(), hog()], apertura: {} };
+  const g = agregarGasto({ "2026-09": sep0 }, { fecha: "2026-09-30", sec: "propositos", rowId: "r2", subId: null, monto: 5000 });
+  const conArqueo = conteos => guardarArqueo({ "2026-09": g.budget }, "2026-09", { fecha: "2026-10-24", conteos }).budget;
+  const saldoOct = (bud, sec, id, sub) => estadoBolsillo({ "2026-09": bud }, "2026-10", sec, id, sub);
+
+  // Sin arqueo, el sobrante pasa tal cual (35.000 esperados en Hogar)
+  assert.equal(saldoOct(g.budget, "propositos", "r2", null).inicial, 35000);
+  // Faltante: lo contado (33.000) es el arrastre; el saldo del período cerrado sigue según registros
+  const falt = conArqueo({ "propositos|r1": 100000, "propositos|r2": 33000 });
+  assert.equal(saldoOct(falt, "propositos", "r2", null).inicial, 33000);
+  assert.equal(estadoBolsillo({ "2026-09": falt }, "2026-09", "propositos", "r2", null).saldo, 35000);
+  assert.equal(filasArqueo({ "2026-09": falt }, "2026-09").find(f => f.rowId === "r2").esperado, 35000);      // repetir el arqueo no se contamina
+  // Sobrante: va al bolsillo libre de la cartera
+  const sobra = conArqueo({ "propositos|r1": 105000, "propositos|r2": 35000 });
+  assert.deepEqual([null, "s1", "s2"].map(sub => saldoOct(sobra, "propositos", "r1", sub).inicial), [15000, 60000, 30000]);
+  // Faltante en una cartera con sub-partidas: sale primero del libre y luego del más abultado; el total es lo contado
+  const falt2 = conArqueo({ "propositos|r1": 85000, "propositos|r2": 35000 });
+  assert.deepEqual([null, "s1", "s2"].map(sub => saldoOct(falt2, "propositos", "r1", sub).inicial), [0, 55000, 30000]);
+  assert.equal([null, "s1", "s2"].reduce((t, sub) => t + saldoOct(falt2, "propositos", "r1", sub).inicial, 0), 85000);
+  // La guía mensual refleja el arrastre contado
+  assert.equal(estadoFila({ "2026-09": falt }, "2026-10", "propositos", hog()).debiaHaber, 33000 + 40000);
+}
+
+// ── Compras por categoría: Aseo descuenta de su propio bolsillo ─────────────
+{
+  const ali = () => ({ id: "ali", emoji: "🍽️", label: "Alimentación", monto: 300000, aCartera: true });
+  const aseo = () => ({ id: "aseo", emoji: "🧼", label: "Aseo", monto: 20000, aCartera: true });
+  const sepB = { ingresos: {}, gastos_base: [ali(), aseo()], personales: [], propositos: [], apertura: {} };
+  const B = { "2026-09": sepB };
+  const conOct = B0 => ({ ...B0, "2026-10": resolverPeriodo(B0, "2026-10") });   // octubre ya generado (la compuerta del arqueo es de otra prueba)
+  assert.deepEqual(CATEGORIAS_COMPRAS, ["Lácteos", "Huevos", "Prote", "Snack", "Verdura", "Fruta", "Aseo"]);
+  assert.equal(destinoCategoria(filaCompras(B, "2026-10-26").row, "Aseo"), "aseo");
+  assert.equal(destinoCategoria(filaCompras(B, "2026-10-26").row, "aseo"), "aseo");
+  ["Lácteos", "Huevos", "Prote", "Snack", "Verdura", "Fruta", "Otra", "", undefined].forEach(c => assert.equal(destinoCategoria(filaCompras(B, "2026-10-26").row, c), "ali"));
+  assert.equal(carteraCompras(B, "2026-10-26", "Aseo").row.id, "aseo");
+  assert.equal(carteraCompras(B, "2026-10-26", "Fruta").row.id, "ali");
+  const ra = registrarCompra(conOct(B), { fecha: "2026-10-26", item: { id: "a1", text: "Cloro", precio: 2500, categoria: "Aseo" } });
+  assert.ok(!ra.error, ra.error);
+  const gA = ra.budget.gastos[0];
+  assert.deepEqual([gA.rowId, gA.monto, gA.categoria], ["aseo", 2500, "Aseo"]);
+  const C = { ...B, "2026-10": ra.budget };
+  assert.equal(estadoBolsillo(C, "2026-10", "propositos", "aseo", null).saldo, 17500);
+  assert.equal(estadoBolsillo(C, "2026-10", "propositos", "ali", null).saldo, 300000);          // Alimentación no se toca
+  const rf = registrarCompra(C, { fecha: "2026-10-26", item: { id: "f1", text: "Manzanas", precio: 1000, categoria: "Fruta" } });
+  assert.equal(rf.budget.gastos.find(x => x.compraId === "f1").rowId, "ali");
+  // Una sub-partida que no es de la cartera destino no se usa: cae en el bolsillo libre
+  assert.equal(registrarCompra(conOct(B), { fecha: "2026-10-26", item: { id: "a2", text: "Jabón", precio: 900, categoria: "Aseo" }, subId: "no-existe" }).budget.gastos[0].subId, null);
+  // Mientras Aseo siga siendo gasto base no descuenta, y lo dice
+  const soloAli = { "2026-09": { ...sepB, gastos_base: [ali(), { ...aseo(), aCartera: undefined }] } };
+  assert.equal(carteraCompras(soloAli, "2026-10-26", "Aseo"), null);
+  assert.match(registrarCompra(conOct(soloAli), { fecha: "2026-10-26", item: { id: "a3", text: "Cloro", precio: 2500, categoria: "Aseo" } }).error, /Aseo todavía no es una cartera/);
+  assert.ok(!registrarCompra(conOct(soloAli), { fecha: "2026-10-26", item: { id: "f2", text: "Pan", precio: 900, categoria: "Fruta" } }).error);
+  // Categoría nueva con destino propio; sin destino, Alimentación
+  let bud = resolverPeriodo(B, "2026-10");
+  bud = agregarCategoria(bud, "propositos", "ali", "Mascotas", "aseo");
+  bud = agregarCategoria(bud, "propositos", "ali", "Panadería");
+  const fa = bud.propositos.find(r => r.id === "ali");
+  assert.equal(destinoCategoria(fa, "Mascotas"), "aseo"); assert.equal(destinoCategoria(fa, "mascotas"), "aseo");
+  assert.equal(destinoCategoria(fa, "Panadería"), "ali");
+  assert.deepEqual(destinosPosibles(B, "2026-10-26").map(x => x.id), ["ali", "aseo"]);
+}
+
+// ── Aseo creado a mano como cartera con otro id (caso real): se encuentra por nombre ─────────────
+{
+  const ali = { id: "ali", emoji: "🍽️", label: "Alimentación", monto: 300000 };
+  const aseoMano = { id: "1792841832166", emoji: "🧼", label: "Aseo", monto: 20000 };
+  const sep1 = { ingresos: {}, gastos_base: [], personales: [], propositos: [ali, aseoMano], apertura: {}, arqueo: { fecha: "2026-10-24", filas: [] } };
+  const J = { "2026-10": sep1 };
+  assert.equal(carteraCompras(J, "2026-10-26", "Aseo").row.id, "1792841832166");
+  assert.equal(carteraCompras(J, "2026-10-26", "Fruta").row.id, "ali");
+  const r = registrarCompra(J, { fecha: "2026-10-26", item: { id: "z1", text: "Cloro", precio: 2500, categoria: "Aseo" } });
+  assert.ok(!r.error, r.error);
+  assert.deepEqual([r.budget.gastos[0].rowId, r.budget.gastos[0].monto], ["1792841832166", 2500]);
+  assert.equal(estadoBolsillo({ "2026-10": r.budget }, "2026-10", "propositos", "1792841832166", null).gastado, 2500);
+  assert.equal(destinosPosibles(J, "2026-10-26").filter(d => d.label === "Aseo").length, 1);
+}
+
+// ── Datos de la rueda: gastado del período, de los últimos 12 períodos y movimientos ordenados ──
+{
+  const r1 = { id: "r1", emoji: "👕", label: "Ropa", monto: 100000 }, r2 = { id: "r2", emoji: "🏠", label: "Hogar", monto: 40000 };
+  const mk = (gastos, extra = {}) => ({ ingresos: {}, gastos_base: [], personales: [], propositos: [r1, r2], apertura: {}, gastos, ...extra });
+  const g = (id, fecha, rowId, monto, nota) => ({ id, fecha, sec: "propositos", rowId, subId: null, monto, nota });
+  const B = { "2026-08": mk([g("a", "2026-08-30", "r1", 10000, "Zapatillas")]), "2026-09": mk([g("b", "2026-09-26", "r1", 5000, "Polera"), g("c", "2026-10-02", "r2", 2000, "Ampolleta")]) };
+  const d = datosRueda(B, "2026-09");
+  assert.deepEqual(d.filas.map(f => [f.row.id, f.asignado, f.gastado, f.anual]), [["r1", 100000, 5000, 15000], ["r2", 40000, 2000, 2000]]);
+  assert.deepEqual(d.movs.map(m => [m.id, m.enPeriodo]), [["c", true], ["b", true], ["a", false]]);          // del más reciente al más antiguo
+  assert.deepEqual(datosRueda(B, "2026-08").movs.map(m => m.id), ["a"]);                                     // mira solo hacia atrás
+  assert.deepEqual(datosRueda({ "2026-09": mk([]) }, "2026-09").movs, []);
+}
+
+// ── Categoría obligatoria y «Por categorizar» ────────────────────────────────
+{
+  const r1 = { id: "r1", emoji: "👕", label: "Ropa", monto: 100000 };
+  const bud = { ingresos: {}, gastos_base: [], personales: [], propositos: [r1], apertura: {}, arqueo: { fecha: "2026-10-24", filas: [] } };
+  const B = { "2026-10": bud };
+  // exigirCategoria: sin categoría no se registra; con categoría sí
+  assert.match(agregarGasto(B, { fecha: "2026-10-26", sec: "propositos", rowId: "r1", subId: null, monto: 1000, exigirCategoria: true }).error, /categoría/);
+  assert.match(agregarGasto(B, { fecha: "2026-10-26", sec: "propositos", rowId: "r1", subId: null, monto: 1000, categoria: "  ", exigirCategoria: true }).error, /categoría/);
+  assert.ok(!agregarGasto(B, { fecha: "2026-10-26", sec: "propositos", rowId: "r1", subId: null, monto: 1000, categoria: "Calzado", exigirCategoria: true }).error);
+  assert.ok(!agregarGasto(B, { fecha: "2026-10-26", sec: "propositos", rowId: "r1", subId: null, monto: 1000 }).error);          // sin la opción, igual que antes
+  // gastos antiguos sin categoría: aparecen como pendientes, de todos los períodos, y se pueden categorizar
+  const viejo = { id: "v1", fecha: "2026-09-12", sec: "propositos", rowId: "r1", subId: null, monto: 500, nota: "algo" };
+  const nuevo = { id: "v2", fecha: "2026-10-20", sec: "propositos", rowId: "r1", subId: null, monto: 700, nota: "otro" };
+  const ok = { id: "v3", fecha: "2026-10-21", sec: "propositos", rowId: "r1", subId: null, monto: 900, nota: "ya", categoria: "Calzado" };
+  const C = { "2026-09": { ...bud, gastos: [viejo] }, "2026-10": { ...bud, gastos: [nuevo, ok] } };
+  assert.deepEqual(gastosSinCategoria(C).map(x => [x.periodo, x.gasto.id]), [["2026-10", "v2"], ["2026-09", "v1"]]);
+  const c1 = categorizarGasto(C, "2026-09", "v1", " Polera ");
+  assert.equal(c1.budget.gastos[0].categoria, "Polera");
+  assert.ok(categoriasDe(c1.budget.propositos[0]).includes("Polera"));            // la categoría queda en la lista del sobre
+  assert.equal(gastosSinCategoria({ ...C, "2026-09": c1.budget }).length, 1);
+  assert.match(categorizarGasto(C, "2026-09", "v1", "").error, /categoría/);
+  assert.match(categorizarGasto(C, "2026-09", "nope", "x").error, /gasto/);
+  assert.equal(C["2026-09"].gastos[0].categoria, undefined);                          // no muta lo anterior
+  // compras: sin categoría no se descuenta; con categoría, además queda en la lista del sobre de destino
+  const ali = { id: "ali", emoji: "🍽️", label: "Alimentación", monto: 300000 }, aseo = { id: "aseo", emoji: "🧼", label: "Aseo", monto: 20000 };
+  const D = { "2026-10": { ...bud, propositos: [ali, aseo] } };
+  assert.match(registrarCompra(D, { fecha: "2026-10-26", item: { id: "x", text: "Cloro", precio: 2500 } }).error, /categoría/);
+  const rc = registrarCompra(D, { fecha: "2026-10-26", item: { id: "x", text: "Cloro", precio: 2500, categoria: "Limpieza" } });
+  assert.ok(!rc.error, rc.error);
+  assert.ok(categoriasDe(rc.budget.propositos.find(r => r.id === "ali")).includes("Limpieza") || categoriasDe(rc.budget.propositos.find(r => r.id === "aseo")).includes("Limpieza"));
 }
 
 console.log("presupuesto-modelo: OK");

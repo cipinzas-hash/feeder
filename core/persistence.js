@@ -120,6 +120,7 @@ export const CORE_EXPORT_FIELDS = {
   fadimanData: "object", nutriLog: "object", ejercicioLog: "object", ejercicioDecks: "array",
   customFoods: "object", foodOverrides: "object", customEjercicios: "object", nutriDecks: "array",
   pokeInventario: "array", pokeCarpetas: "array", pokeDarkCatalogo: "array", pokePriceCache: "object",
+  comprasMemoria: "object",
 };
 
 // Campos que NO pasan por React state de AngstApp: cada uno vive en su propia
@@ -136,6 +137,7 @@ export const LOCAL_KEY_FIELDS = {
   feedPodcastPositions: "angst-podcast-positions-v1",     // {guid: segundos} — retomar un podcast (auditoría 13-oct)
   feedSeriesOverlay: "angst-series-overlay-v1",           // marcas de episodios aún no reflejadas por Simkl (TTL 48 h)
   pokeAgotadas: "angst-pokecripto-agotadas-v1",           // cartas agotadas en la revisión (cooldown 7 días)
+  gcalInbox: "angst-gcal-inbox-v1",                       // bandeja Familia → Angst: eventos ya pasados a tarea o ignorados (el sync borra de Google los importados)
 };
 
 // Claves "angst-*" que a propósito NO viajan en el export, con el motivo.

@@ -208,6 +208,47 @@ export function addSnapshot(history, market, low, high, dateISO, src) {
     return h.map((x, i) => i === h.length - 1 ? { ...x, market, low, high, ...extra } : x);
   return [...h, { date: today, market, low: low || null, high: high || null, ...extra }];
 }
+// Compactación del historial (issue #27, pedido de Cristopher 25-oct-2026): lo de los últimos `diasDiarios` días queda
+// diario; cada mes anterior se reduce a UN punto = promedio del mes (market, ponderado por n), low mínimo, high máximo.
+// `agg:true` marca el punto mensual y `n` cuántos snapshots resume; la fecha es la del último snapshot resumido.
+// Idempotente: volver a correrla sobre un historial ya compactado no cambia nada, y si el mes sigue abierto en la
+// frontera de los 30 días, los puntos diarios que entran a la ventana se suman al mensual con el peso correcto.
+export function compactarHistorial(history, hoyISO, diasDiarios = 30) {
+  const h = Array.isArray(history) ? history : [];
+  if (h.length < 2) return h;
+  const corte = new Date(hoyISO + "T12:00:00Z"); corte.setUTCDate(corte.getUTCDate() - diasDiarios);
+  const corteISO = corte.toISOString().slice(0, 10);
+  const recientes = [], porMes = new Map();
+  const orden = [...h].filter(p => p && p.date).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const ultimo = orden[orden.length - 1];
+  for (const p of orden) {
+    // el último snapshot queda siempre tal cual (es el que respalda tcgMarket), aunque tenga más de 30 días
+    if (p.date >= corteISO || (p === ultimo && !p.agg)) { recientes.push(p); continue; }
+    const m = String(p.date).slice(0, 7);
+    if (!porMes.has(m)) porMes.set(m, []);
+    porMes.get(m).push(p);
+  }
+  const num = x => (typeof x === "number" && Number.isFinite(x) ? x : null);
+  const meses = [];
+  for (const pts of porMes.values()) {
+    if (pts.length === 1 && pts[0].agg) { meses.push(pts[0]); continue; }
+    let n = 0, suma = 0, nPrecio = 0, low = null, high = null;
+    const srcs = new Set();
+    for (const p of pts) {
+      const w = p.agg && p.n > 0 ? p.n : 1;
+      const mk = num(p.market);
+      if (mk != null) { suma += mk * w; nPrecio += w; }
+      const lo = num(p.low), hi = num(p.high);
+      if (lo != null && (low == null || lo < low)) low = lo;
+      if (hi != null && (high == null || hi > high)) high = hi;
+      n += w; srcs.add(p.src || "");
+    }
+    const agg = { date: pts[pts.length - 1].date, market: nPrecio ? Math.round((suma / nPrecio) * 100) / 100 : null, low, high, n, agg: true };
+    if (srcs.size === 1 && [...srcs][0]) agg.src = [...srcs][0];
+    meses.push(agg);
+  }
+  return [...meses, ...recientes];
+}
 // Dos snapshots son comparables si alguno es viejo (sin src, no se puede saber) o si vienen de la misma fuente.
 export function fuenteCompatible(a, b) {
   return !a?.src || !b?.src || a.src === b.src;

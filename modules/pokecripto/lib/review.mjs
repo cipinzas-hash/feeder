@@ -58,10 +58,16 @@ export function fusionarPending(inventario, pending) {
   const inv = Array.isArray(inventario) ? [...inventario] : [];
   const porId = new Map(inv.map((c, i) => [c.id, i]));
   const fusionados = {}; // id -> JSON de la entrada procesada (para no borrar después una versión más nueva)
-  let nuevas = 0, parcheadas = 0;
+  let nuevas = 0, parcheadas = 0, bajas = 0;
   for (const e of Array.isArray(pending) ? pending : []) {
     if (!e || e.id == null) continue;
     fusionados[e.id] = JSON.stringify(e);
+    if (e._baja) {                       // baja (issue #27): el cliente quitó la carta; el bot solo sumaba y la dejaba huérfana
+      const idx = porId.get(e.id);
+      if (idx == null) continue;         // ya no está: nada que quitar
+      inv[idx] = null; porId.delete(e.id); bajas++;
+      continue;
+    }
     if (e._patch) {
       const idx = porId.get(e.id);
       if (idx == null) continue; // parche de una carta que no existe: se descarta
@@ -74,7 +80,7 @@ export function fusionarPending(inventario, pending) {
     const { _patch, ...carta } = e;
     porId.set(carta.id, inv.length); inv.push(carta); nuevas++;
   }
-  return { inventario: inv, fusionados, nuevas, parcheadas };
+  return { inventario: inv.filter(c => c != null), fusionados, nuevas, parcheadas, bajas };
 }
 // Lo que debe quedar en pending después de la corrida: lo que el cliente encoló MIENTRAS el bot corría
 // (entradas nuevas o distintas de las que el bot ya fusionó). Antes el bot vaciaba el archivo entero y pisaba esas altas.

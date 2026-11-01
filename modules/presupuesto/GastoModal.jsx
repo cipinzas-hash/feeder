@@ -24,7 +24,7 @@ export default function GastoModal({ budgets, onSaveBudget, onClose, inicial, ar
   });
   const [monto, setMonto] = useState("");
   const [nota, setNota] = useState("");
-  const [categoria, setCategoria] = useState("");      // "" = sin categoría · "__nueva" = escribir una nueva
+  const [categoria, setCategoria] = useState("");      // "" = sin elegir · "__nueva" = escribir una nueva (la categoría es obligatoria)
   const [nuevaCat, setNuevaCat] = useState("");
   const [error, setError] = useState("");
   const [manual, setManual] = useState(null);   // fuentes editadas a mano; null = usar la sugerencia
@@ -83,9 +83,9 @@ export default function GastoModal({ budgets, onSaveBudget, onClose, inicial, ar
     if (!fila) { setError("Elige la cartera o el fondo personal."); return; }
     if (!elegido) { setError("Elige la sub-partida."); return; }
     const fuentes = falta > 0 ? usadas.filter(f => f.monto > 0) : undefined;
-    const cat = categoria === "__nueva" ? nuevaCat.trim() : categoria;
-    if (categoria === "__nueva" && !cat) { setError("Escribe el nombre de la categoría."); return; }
-    const r = agregarGasto(budgets, { fecha, sec, rowId: fila.id, subId: elegido.subId, monto: montoNum, nota, fuentes, categoria: cat });
+    const cat = catSel === "__nueva" ? nuevaCat.trim() : catSel;
+    if (!cat) { setError(catSel === "__nueva" ? "Escribe el nombre de la categoría." : "Elige la categoría del gasto."); return; }
+    const r = agregarGasto(budgets, { fecha, sec, rowId: fila.id, subId: elegido.subId, monto: montoNum, nota, fuentes, categoria: cat, exigirCategoria: true });
     if (r.error) { setError(r.error); return; }
     onSaveBudget(r.periodo, cat ? agregarCategoria(r.budget, sec, fila.id, cat) : r.budget);
     if (permanecer) {
@@ -93,7 +93,11 @@ export default function GastoModal({ budgets, onSaveBudget, onClose, inicial, ar
       setMonto(""); setNota(""); setManual(null); setCategoria(""); setNuevaCat(""); setError("");   // cartera y fecha se mantienen
     } else onClose();
   }
-  const puede = !!fila && montoNum > 0 && (falta === 0 || completo);
+  // La categoría es obligatoria: cada sobre tiene las suyas; si aún no tiene ninguna, se crea la primera aquí mismo.
+  const cats = fila ? categoriasDe(fila) : [];
+  const catSel = categoria || (fila && cats.length === 0 ? "__nueva" : "");
+  const catValida = catSel === "__nueva" ? nuevaCat.trim().length > 0 : !!catSel;
+  const puede = !!fila && montoNum > 0 && (falta === 0 || completo) && catValida;
 
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: arriba ? "flex-start" : "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", paddingTop: arriba ? "calc(env(safe-area-inset-top, 0px) + 6px)" : 0 }}>
@@ -156,13 +160,15 @@ export default function GastoModal({ budgets, onSaveBudget, onClose, inicial, ar
               )}
 
               {fila && <>
-                <div style={rotulo}>Categoría (opcional)</div>
-                <select value={categoria} onChange={e => { setCategoria(e.target.value); setError(""); }} style={campo}>
-                  <option value="">Sin categoría</option>
-                  {categoriasDe(fila).map(c => <option key={c} value={c}>{c}</option>)}
-                  <option value="__nueva">+ nueva categoría…</option>
-                </select>
-                {categoria === "__nueva" && <input value={nuevaCat} onChange={e => { setNuevaCat(e.target.value); setError(""); }} placeholder="nombre de la categoría" style={{ ...campo, marginTop: 6 }}/>}
+                <div style={rotulo}>Categoría</div>
+                {cats.length > 0 && (
+                  <select value={catSel} onChange={e => { setCategoria(e.target.value); setError(""); }} style={campo}>
+                    <option value="">Elegir…</option>
+                    {cats.map(c => <option key={c} value={c}>{c}</option>)}
+                    <option value="__nueva">+ nueva categoría…</option>
+                  </select>
+                )}
+                {catSel === "__nueva" && <input value={nuevaCat} onChange={e => { setNuevaCat(e.target.value); setError(""); }} placeholder={cats.length === 0 ? `primera categoría de ${fila.label}` : "nombre de la categoría"} style={{ ...campo, marginTop: cats.length ? 6 : 0 }}/>}
               </>}
 
               <div style={rotulo}>Fecha</div>

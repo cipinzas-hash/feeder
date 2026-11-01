@@ -40,11 +40,11 @@ t("cosecha: UNA búsqueda 'Solo 5' deja tcgId y precio a las dos cartas (mismo n
 });
 t("sin match en 3 sets seguidos: el descubrimiento por set se apaga 7 días y queda el diagnóstico legible en el estado", () => {
   assert.ok(a1.estado.descubrimientoSetApagadoHasta > hoy);
-  assert.equal(a1.estado.diagnosticoDescubrimiento.resultados, 0); assert.ok(a1.estado.diagnosticoDescubrimiento.consulta);
+  assert.equal(a1.estado.diagnosticoDescubrimiento.filas, 0); assert.ok(a1.estado.diagnosticoDescubrimiento.set);
 });
 const a2 = runA();
 t("2ª corrida: no repite búsquedas por set mientras está apagado", () => {
-  assert.ok(!a2.log.some(l => /^SEARCH q=(Set Uno|Set Dos|Set Tres|Delta Species|Otro Set) /.test(l) && !/ \d+ page/.test(l.replace(/ page=\d+$/, "")) ));
+  assert.ok(!a2.log.some(l => /^(SETS|SETCARDS)/.test(l)), "apagado: ni lista de sets ni sets");
 });
 
 // B) cupo diario ya gastado por otra corrida: cero consultas a tcgpricelookup, sigue por pokemontcg.io
@@ -59,7 +59,7 @@ t("cupo diario compartido: si ya se usaron 85 hoy no hace ninguna consulta (ni a
 const runC = escenario(invA.concat([c("a1", "Foo", "1", "Alpha", "alp")]), { env: { MOCK_REMAINING: "5" } });
 const cc = runC();
 t("cupo real bajo (cabecera = 5): se detiene después de la primera consulta y lo anota", () => {
-  assert.equal(cc.log.filter(l => /^(SEARCH|BATCH)/.test(l)).length, 1);
+  assert.equal(cc.log.filter(l => /^(SEARCH|BATCH|SETS|SETCARDS)/.test(l)).length, 1);
   assert.equal(cc.estado.ultimaCorrida.cupoRestanteApi, 5);
 });
 // D) con cupo para UNA sola búsqueda: va primero la carta recién agregada (sin ningún snapshot de tcgpricelookup), no la más vieja
@@ -77,8 +77,8 @@ t("cola: la alta reciente (precio de pokemontcg.io) se corrige antes que la cart
 });
 const runE = escenario([c("a1", "Foo", "1", "Alpha", "alp"), c("a2", "Bar", "2", "Alpha", "alp")], { env: { POKECRIPTO_DESCUBRIMIENTO_TOPE: "0" } });
 const e = runE();
-t("descubrimiento por set con tope 0 (el valor por defecto): no hace ninguna búsqueda por nombre de set", () => {
-  assert.ok(!e.log.some(l => l.startsWith("SEARCH q=Alpha")));
+t("descubrimiento por set con tope 0: no consulta ni la lista de sets ni ningún set", () => {
+  assert.ok(!e.log.some(l => /^(SETS|SETCARDS)/.test(l)));
   assert.equal(e.estado.ultimaCorrida.descubrimiento.llamadas, 0);
   assert.equal(e.inv.a1.tcgId, "t-alp-1"); // igual consigue su tcgId por la búsqueda carta por carta
 });

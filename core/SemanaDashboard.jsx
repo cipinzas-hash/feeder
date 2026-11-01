@@ -154,7 +154,8 @@ function HoyLinea({ hoy }) {
 
 // Panel único: selector de semana (`navegacion`) + fechas con anillo de estrés e íconos
 // de marcas + una línea de lo importante. Ocupa el espacio que dejan los días colapsados.
-function SemanaDashboard({ abierto, onToggle, navegacion, ...args }) {
+function SemanaDashboard({ abierto, onToggle, onAbrirDia, navegacion, ...args }) {
+  const abrir = k => { if (onAbrirDia) onAbrirDia(k); };
   const r = buildResumen(args);
   return (
     <div className={"dashpanel" + (abierto ? " abierto" : "")}>
@@ -162,7 +163,8 @@ function SemanaDashboard({ abierto, onToggle, navegacion, ...args }) {
 
       <div className="dw-grid">
         {r.semana.map(c => (
-          <div key={c.k} className={"dw-col" + (c.hoy ? " hoy" : "") + (c.pasado ? " pasado" : "")}>
+          <div key={c.k} className={"dw-col" + (c.hoy ? " hoy" : "") + (c.pasado ? " pasado" : "")}
+            onClick={() => abrir(c.k)} style={{ cursor: "pointer" }}>
             <span className="dw-dow">{DIA_LARGO[c.dow]}</span>
             <Aro score={c.score}>{c.num}</Aro>
             <span className="dw-ic">{iconosDia(c, 3)}</span>
@@ -171,16 +173,16 @@ function SemanaDashboard({ abierto, onToggle, navegacion, ...args }) {
         ))}
       </div>
 
-      <div className="dp-info" onClick={onToggle}>
+      <div className="dp-info">
         <div className="dp-lineas">
-          <div className="dp-l1">
+          <div className="dp-l1" onClick={r.proxima ? () => abrir(r.proxima.dateKey) : undefined} style={r.proxima ? { cursor: "pointer" } : undefined}>
             {r.proxima
               ? <>🚨 {cuando(r.proxima.dias)} · {DIA_LARGO[r.proxima.dow]} {r.proxima.hora ? r.proxima.hora + " " : ""}{r.proxima.texto}{r.proxima.extra > 0 ? ` +${r.proxima.extra}` : ""}</>
               : r.hoy ? <HoyLinea hoy={r.hoy} /> : <span className="dash-dim">sin balizas</span>}
           </div>
           {r.proxima && r.hoy && <div className="dp-l2"><HoyLinea hoy={r.hoy} /></div>}
         </div>
-        <button className="min-btn" onClick={e => { e.stopPropagation(); onToggle(); }}>{abierto ? "▴" : "▾"}</button>
+        <button className="min-btn" onClick={e => { e.stopPropagation(); onToggle(); }} aria-label={abierto ? "cerrar resumen" : "abrir resumen"}>{abierto ? "▴" : "▾"}</button>
       </div>
 
       {abierto && (
@@ -191,7 +193,7 @@ function SemanaDashboard({ abierto, onToggle, navegacion, ...args }) {
             {r.agenda.length === 0
               ? <div className="dash-dim">{r.proxima ? `la próxima es ${cuando(r.proxima.dias)}` : "sin balizas por delante"}</div>
               : r.agenda.map(d => (
-                <div key={d.k} className={"dq-row" + (d.hoy ? " hoy" : "")}>
+                <div key={d.k} className={"dq-row" + (d.hoy ? " hoy" : "")} onClick={() => abrir(d.k)} style={{ cursor: "pointer" }}>
                   <span className="dq-d">{DIA_LARGO[d.dow]} {d.num}</span>
                   <span className="dq-t">
                     {d.balizas.map((b, i) => <span key={i}>🚨 {b.hora ? <span className="dq-h">{b.hora} </span> : null}{b.texto}</span>)}
