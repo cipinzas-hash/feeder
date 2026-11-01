@@ -1798,6 +1798,10 @@ function AngstApp() {
         .app-fit{height:100vh;height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
         .app-fit>.hdr,.app-fit>.tabs,.app-fit>.ftr{flex:none;}
         .app-fit>.ftr{margin-top:0;}
+        .musica{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
+        .musica-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
+        .musica-body[data-expandido="true"]{overflow-y:auto;}
+        .musica-body[data-expandido="true"]>*{flex:none;}
         .semana{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
         .semana-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
         .semana-body[data-expandido="true"],.semana-body[data-valvula="true"]{overflow-y:auto;}
@@ -1882,7 +1886,7 @@ function AngstApp() {
       {familiaOpen&&<FamiliaInboxModal items={familiaPend} onImport={familiaPasar} onIgnore={familiaIgnorar} onImportAll={familiaPasarTodos} onIgnoreAll={familiaIgnorarTodos} onRefresh={()=>cargarFamilia(true)} onClose={()=>setFamiliaOpen(false)} cargando={familiaBusy} mensaje={familiaMsg} generadoEn={familiaData?.generatedAt}/>}
       {calOpen&&<CalendarModal weekStart={weekStart} marks={calMarksView} onMark={handleMark} dayData={dayData} calMarks={calMarksView} kidsHealth={kidsHealth} onWeekSelect={date=>{const dow=date.getDay();const mon=addDays(date,-(dow===0?6:dow-1));const diff=Math.round((mon-BASE_DATE)/(7*86400000));updateWeekOffset(diff);}} onClose={()=>setCalOpen(false)}/>}
 
-      <div className={"app"+((page===0||page===1||page===4||page===5)?" app-fit":"")}>
+      <div className={"app"+((page===0||page===1||page===4||page===5||page===12)?" app-fit":"")}>
         <div className="hdr">
           <div className="hdr-title" style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>angstapp</div>
           <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>

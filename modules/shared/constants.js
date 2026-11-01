@@ -9,9 +9,8 @@ export const MELEE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/f
 // Microdocumentales + Conciertos aparte (lo genera build-feed): la Vitrina no necesita bajar
 // los ~5 MB de feed.json para leer ~60 KB.
 export const VIDEOTECA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/videoteca.json";
-// Módulo de música (oct-2026). MIENTRAS la rama `musica` no se fusione, el JSON vive en esa
-// rama; al fusionar a main este es el ÚNICO valor que hay que cambiar ("/musica/" → "/main/").
-export const MUSICA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/musica/modules/feed/data/musica.json";
+// Módulo de música (oct-2026): lanzamientos + fichas de artista, lo escribe build-musica.mjs.
+export const MUSICA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/musica.json";
 
 // Destacados (vitrina audiovisual) — 3 categorías separadas, cada una su
 // propio carrusel. Ya no participan del swipe round-robin de "Noticias".
@@ -21,7 +20,7 @@ export const CINE_CATEGORIAS = ["Películas", "Series", "Animación"];
 // de CINE_CATEGORIAS aunque comparta la misma exclusión del round-robin.
 export const VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales", "Melee", "Conciertos"];
 const NOTICIAS_CATEGORIA = "Noticias"; // RSS cine/TV/anime — vive en el área "Noticias", no en Vitrina
-const MUSIC_CATEGORIA = "Dark scene / Música";
+export const MUSIC_CATEGORIA = "Dark scene / Música";
 
 // Colores por categoría — reusa acentos que ya existen en Angst (melee/pokemon/gym/fadiman)
 export const CAT_COLORS = {

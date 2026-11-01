@@ -1,4 +1,4 @@
-import { CINE_JSON_URL, FEED_JSON_URL, FORMATO_BY_CATEGORIA, MELEE_JSON_URL, MUSICA_JSON_URL, VIDEOTECA_JSON_URL, VITRINA_CATEGORIAS, fetchJsonSafe } from "./constants.js";
+import { CINE_JSON_URL, FEED_JSON_URL, FORMATO_BY_CATEGORIA, MELEE_JSON_URL, MUSIC_CATEGORIA, MUSICA_JSON_URL, VIDEOTECA_JSON_URL, VITRINA_CATEGORIAS, fetchJsonSafe } from "./constants.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -25,7 +25,8 @@ export async function fetchFeedData() {
   const feedData = await fetchJsonSafe(FEED_JSON_URL);
   if (!feedData) throw new Error("no se pudo leer feed.json");
   const feedCats = (feedData.categories || [])
-    .filter(c => !VITRINA_CATEGORIAS.includes(c.cat))
+    // Música tiene su propio módulo (🎧): aunque un feed.json anterior aún la traiga, no entra a la cola.
+    .filter(c => !VITRINA_CATEGORIAS.includes(c.cat) && c.cat !== MUSIC_CATEGORIA)
     .map(c => {
       const formato = FORMATO_BY_CATEGORIA[c.cat] || "lectura";
       return { cat: c.cat, items: (c.items || []).map(it => ({ ...it, formato })) };

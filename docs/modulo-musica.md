@@ -1,6 +1,6 @@
 # Módulo de música (🎧) — descubrimiento de lanzamientos
 
-Estado: **Fase 1 en la rama `musica`** (oct-2026). Reemplaza a la categoría "Dark scene / Música" del Feed.
+Estado: **Fase 1 fusionada a `main`** (1-nov-2026). Reemplaza a la categoría "Dark scene / Música" del Feed.
 
 ## Qué hace
 Un carrusel con un lanzamiento a la vez (portada + reproductor) y, desde ahí, la **ficha del artista**: bio, ubicación, foto, discografía completa con carátulas y nombres, reproductor por disco, links y las noticias que lo mencionan. Sin estado persistente: no agrega claves de localStorage (no toca `core/persistence.js` ni el export).
@@ -39,7 +39,8 @@ MusicaPage.jsx   ◄──  MUSICA_JSON_URL             (shared/constants.js)
 - Las imágenes se enlazan (bcbits, Deezer, TheAudioDB), no se copian al repo. Revisar términos de uso si algún día se publica fuera de uso personal.
 - `build-feed.mjs` completo tarda más de 15 min en un runner limpio; para la música se usa `SOLO_CATEGORIA="Dark scene / Música"` (modo acotado).
 
-## Al fusionar la rama a main
-1. `MUSICA_JSON_URL` en `modules/shared/constants.js`: cambiar `/musica/` por `/main/` (único lugar).
-2. Reconstruir el bundle (`npm run build`) y commitear `index.html`.
-3. Borrar `docs/logs-musica/` (logs de desarrollo).
+## Montaje en el marco de Angst
+La pestaña 12 se monta sobre `.app-fit` (norma N1 del lineamiento): `.musica` / `.musica-body` en `core/App.jsx`, sin `useAltoLibre` ni medir el alto a mano. La portada del lanzamiento se reparte el espacio libre con CSS (flex + `aspect-ratio`). Entrada colapsada = sin scroll; la ficha del artista y el reproductor abierto son estados expandidos (`data-expandido`) y scrollean. **Pendiente:** medir a 480/560/640/720 px de alto libre en celular y tablet (N3) y declarar el mínimo; no se midió en un navegador real.
+
+## Al fusionar (hecho el 1-nov-2026)
+`MUSICA_JSON_URL` apunta a `/main/`, se reconstruyó el bundle y se borraron los logs de desarrollo. `fetchFeedData` además excluye la categoría de música por si un `feed.json` anterior aún la trae.

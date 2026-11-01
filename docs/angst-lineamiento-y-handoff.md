@@ -3,6 +3,7 @@
 > Documento de traspaso para otro agente (IA ejecutora o diseñadora).
 > Fecha de corte: 17-oct-2026. Estado del repo al corte: `main` en `63c75f0` (más commits automáticos de bots).
 > Idioma de trabajo con el usuario: **español**.
+> **§4 (el lineamiento) fue reescrito el 1-nov-2026**; el resto del documento conserva su fecha de corte.
 
 ## 0. Cómo leer este documento
 
@@ -22,11 +23,11 @@ Orden de lectura sugerido: §1 (reglas, obligatorio) → §2 (proyecto) → §4 
 
 El usuario es **Cristopher** (Cris). Define el producto y las decisiones finales. Dice no tener conocimientos técnicos ni de programación más allá de generar ideas: explica en lenguaje simple, sin jerga innecesaria, y no esperes que revise código.
 
-1. **No escribir código sin su Go explícito.** Una idea o preferencia ("quiero que…", "se podría…") no es un Go. El patrón que ha funcionado: él propone → el agente investiga el código real y presenta un plan concreto (qué cambia, qué no, cómo se valida, riesgos) → él aprueba ("perfecto", "Go") → el agente implementa de una vez.
+1. **No escribir código sin su Go explícito.** Una idea o preferencia ("quiero que…", "se podría…") no es un Go. El patrón que ha funcionado: él propone → el agente investiga el código real y presenta un plan concreto (qué cambia, qué no, cómo se valida, riesgos) → él aprueba ("perfecto", "Go") → el agente implementa de una vez. **Excepción (4.6):** el rediseño bajo el lineamiento del módulo en que se trabaja no necesita Go aparte.
 2. **Una vez dado el Go, trabajar en bloques sustanciales** sin fragmentar en confirmaciones intermedias.
 3. **Validar antes de publicar:** sintaxis, build y comprobación del contenido del **bundle final** (`index.html`), no solo del código fuente. Reportar con precisión qué quedó terminado y qué no, incluidas las cosas que no se pudieron probar (por ejemplo, el aspecto real en su celular).
 4. **Datos persistidos (localStorage, `angst-data`, exportaciones) no se migran ni modifican implícitamente.** Toda migración se declara y la aprueba él. Ejemplo reciente: se le preguntó qué hacer con ítems de Vitrina guardados en el Buzón de Feed y eligió descartarlos.
-5. **Mantenerse dentro del alcance pedido.** No aprovechar un cambio puntual para reestructurar. Si algo cercano merece cambio, se propone aparte.
+5. **Mantenerse dentro del alcance pedido.** No aprovechar un cambio puntual para reestructurar. Si algo cercano merece cambio, se propone aparte. **Excepción (4.6):** el rediseño del módulo en que se trabaja, bajo el lineamiento, sí va en la misma entrega.
 6. **No dejar dos soluciones vivas** para el mismo problema. Al reemplazar algo, buscar referencias y eliminar lo obsoleto (o declararlo).
 7. **Un fix no está terminado hasta llegar al artefacto servido.** El sitio sirve `index.html` en GitHub Pages.
 8. **Una pregunta por mensaje como máximo**, al final, y solo si es necesaria. Preferir dejar decisiones por defecto razonables indicadas, para que él las corrija.
@@ -51,7 +52,7 @@ Documentos vigentes del repo que complementan esto: `docs/operating-directives.m
 ```
 core/            App.jsx (shell + Semana inline), ui.jsx, persistence.js, dates.js, format.js, notifications.js, stress.js
 modules/<mod>/   <Mod>Page.jsx + manifest.js (+ archivos propios)
-modules/shared/  ui.jsx (useAltoLibre, MarcoAngst, FormatoTag…), constants.js, catalog.js, episodios.js, localedit.js
+modules/shared/  ui.jsx (FormatoTag…; `useAltoLibre` y `MarcoAngst` obsoletos, ver N1), constants.js, catalog.js, episodios.js, localedit.js
 modules/feed/    FeedPage.jsx, scripts/build-feed.mjs, scripts/lib/embeds.mjs, feeds.json, data/
 modules/vitrina/ VitrinaPage.jsx, cine.jsx, series.jsx, melee.jsx, videoteca.jsx, estado.js, simkl.js, avance.js
 build/           assemble.mjs
@@ -79,8 +80,8 @@ El id de página es el índice en `TABS`; el orden visual lo define `ORDER=[0,11
 | 7 | 🏋️ ejercicio | `EjercicioPage` | ~1.340 líneas |
 | 8 | 🃏 pokécripto | `PokecriptoPage` | ~2.780 líneas, el más grande |
 | 9 | 📰 feed | `FeedPage` | solo noticias |
-| 12 | 🎧 música | `MusicaPage` (`modules/musica/`) | descubrimiento de lanzamientos; ver `docs/modulo-musica.md` (rama `musica` hasta fusionar) |
-| 10 | 🎬 vitrina | `VitrinaPage` | plantilla del lineamiento |
+| 12 | 🎧 música | `MusicaPage` (`modules/musica/`) | ya sobre `.app-fit` (N1), sin `useAltoLibre`; descubrimiento de lanzamientos, ver `docs/modulo-musica.md`; falta medir N3 a 480–720 px |
+| 10 | 🎬 vitrina | `VitrinaPage` | aún usa `useAltoLibre` (obsoleto, N1); listas con scroll interno (4.7) |
 
 Chrome fijo del shell: **encabezado** `.hdr` (título "angstapp" + botones 📁💾⬆️⬇️🎙️), **pestañas** `.tabs` (emoji; la abierta muestra su nombre), **contenido**, **pie** `.ftr` (frase rotativa `STOIC_PHRASES` cada 10 s + logo "ANGST").
 
@@ -107,7 +108,8 @@ Lo que el usuario aprobó en el camino (para no re-preguntar): opción A (todo d
 
 ## 4. EL LINEAMIENTO: "módulo colapsado, sin scroll, scroll solo al expandir"
 
-> Es la idea central del rediseño que viene. Aplica a **todos los módulos existentes** y a **cualquier módulo nuevo**.
+> **Versión 2 (1-nov-2026).** Reemplaza a la versión del 17-oct. Aplica a **todos los módulos existentes** y a **cualquier módulo nuevo**.
+> Equivalencias con las referencias antiguas: R1, R2, R3 y R5 → **N3**; R4 y R9–R11 → **N2**; R6, R7 y R8 se mantienen con ese número (4.4). El "contrato Fase 0" y la lista de patrones opcionales quedan **obsoletos**: los reemplazan N1 y N2.
 
 ### 4.1 La idea, en palabras del usuario
 
@@ -117,147 +119,78 @@ Lo que el usuario aprobó en el camino (para no re-preguntar): opción A (todo d
 
 ### 4.2 Definiciones
 
-- **Marco / chrome:** encabezado `.hdr` + pestañas `.tabs` + pie `.ftr`. Siempre visibles, nunca scrollean.
-- **Área libre:** la pantalla menos el chrome. Es el único espacio disponible para un módulo.
-- **Estado colapsado (estado de apertura):** lo que ve el usuario al entrar a un módulo, con **todos** sus elementos colapsables cerrados.
-- **Elemento colapsable:** sección, tarjeta o bloque que muestra un resumen y se despliega **en el mismo lugar** (inline) al tocarlo.
-- **Estado expandido:** al menos un elemento está abierto; ahora el contenido puede superar el área libre y **recién ahí** se habilita el scroll vertical.
-- **Válvula:** protección de último recurso (ver 4.5).
+- **Marco:** encabezado `.hdr` + pestañas `.tabs` + pie `.ftr`. Siempre visibles, nunca scrollean.
+- **Área libre:** pantalla menos marco. Referencia medida en el celular del usuario (≈457×810 px CSS): marco ≈162 px, área libre ≈640–650 px de alto. Varía por dispositivo y barras del navegador: medir siempre.
+- **Colapsado:** el módulo recién abierto, con todos sus elementos cerrados. **Expandido:** al menos un elemento abierto.
 
-### 4.3 Reglas normativas
+### 4.3 Las tres normas
 
-**DEBE**
+**N1 — Un solo marco para todos los módulos.**
+Todo módulo se monta sobre el marco CSS del shell (`.app-fit` en `core/App.jsx`: altura `100dvh`, encabezado, pestañas y pie fijos, el módulo llena el resto). Está prohibido medir el alto a mano. `useAltoLibre` y `MarcoAngst` están **obsoletos**: se eliminan cuando el último módulo que los usa (Feed, Vitrina) pase al marco. No se dejan dos mecanismos vivos para lo mismo. Las piezas comunes (fila de sección, hoja emergente, aviso de desborde) viven una sola vez en `modules/shared/ui.jsx`; no se copian entre módulos.
 
-1. **R1 — Llenar el área libre:** en estado colapsado el contenido del módulo mide exactamente el área libre: ni más (scroll) ni menos (hueco muerto). El pie con su frase **siempre** se ve sin scrollear.
-2. **R2 — Sin scroll vertical en estado colapsado.** Ningún módulo puede necesitar scroll para usar su función principal al abrirse.
-3. **R3 — El scroll nace al expandir.** Solo se habilita mientras haya un elemento expandido; al colapsar todo, vuelve a no haber scroll (y el scroll vuelve al inicio).
-4. **R4 — Expansión inline.** Expandir un elemento no abre pantalla completa ni cambia de página. Las **ventanas emergentes** (formularios, confirmaciones, selectores) siguen permitidas pero **no sustituyen** a la expansión como mecanismo normal de profundidad.
-5. **R5 — Si el diseño actual no cabe, se rediseña la pantalla.** No se corrige con scroll ni con letra diminuta. Es decisión de diseño que se discute con el usuario por módulo.
-6. **R6 — No repetir el nombre del módulo.** La pestaña abierta ya lo dice: sin título de página, sin filas de subpestañas que lo repitan. El encabezado es siempre **"angstapp"** (identidad).
-7. **R7 — Identidad visual de Angst:** tipografías **Caveat** (títulos, acentos, firma) y **DM Sans** (texto), emojis como iconografía, chrome oscuro (`#111`), frase del pie en Caveat. Firma de piezas exportadas: "angstapp" discreta (Caveat, ~35 % de opacidad, abajo al centro).
-8. **R8 — Los datos no cambian por un rediseño de pantalla.** Mismas claves, mismo formato, sin migraciones. Si un rediseño exigiera tocar datos, es una decisión aparte y explícita.
+**N2 — Un solo patrón base.**
+Franja de estado arriba (lo que se consulta a diario) + filas-encabezado que se expanden **inline y de a una** (abrir una cierra la anterior) + "+ agregar" + ventanas emergentes **solo** para formularios y confirmaciones. Es el patrón de Salud y Fadiman. Excepción justificada: el carrusel que escala (Vitrina). No se inventa un patrón nuevo sin acuerdo con el usuario.
 
-**DEBERÍA**
+**N3 — Colapsado sin scroll; el scroll nace al expandir.**
+Colapsado, el módulo mide exactamente el área libre: sin scroll vertical, sin hueco muerto, con el pie y su frase siempre visibles. Al expandir se habilita el scroll interno; al colapsar todo, vuelve al inicio y al estado sin scroll. Si no cabe, **se rediseña la pantalla**: no se corrige con letra chica ni con scroll permanente. Se prueba a 480/560/640/720 px de alto libre, en celular y en tablet (vertical y horizontal), y se declara el mínimo medido.
 
-9. **R9 — Densidad con aire:** el resumen colapsado prioriza lo que el usuario consulta a diario; lo demás queda a un toque.
-10. **R10 — Adaptarse al alto real.** El área libre varía por dispositivo y barras del navegador (ver 4.4). El diseño debe degradar con elegancia: p. ej. un carrusel que **escala** (como Vitrina), filas que se compactan, en vez de tamaños fijos.
-11. **R11 — Gestos y controles ya existentes se conservan** (swipe de tareas en Semana, reproductor de podcasts flotante, etc.).
+### 4.4 Se mantienen sin cambio
 
-### 4.4 Presupuesto de espacio (referencial; medir en cada caso)
+- **R6.** No repetir el nombre del módulo: sin título propio ni subpestañas que lo repitan; el encabezado es siempre "angstapp".
+- **R7.** Identidad: **Caveat** (títulos, acentos, firma) y **DM Sans** (texto), emojis como iconografía, chrome oscuro `#111`, firma "angstapp" discreta en piezas exportadas.
+- **R8.** Los datos no cambian por un rediseño de pantalla: mismas claves, mismo formato, sin migraciones. Si hiciera falta tocarlos, es una decisión aparte y explícita del usuario.
+- Los gestos y controles existentes (swipe de tareas, reproductor de podcasts flotante, etc.) se conservan.
 
-Medido sobre las capturas del usuario (1080×2400 px; ≈2,36 px de pantalla por px CSS, calculado con una tarjeta de 160 px CSS; ancho ≈ 457 px CSS), con el navegador mostrando sus barras inferiores:
+### 4.5 La válvula
 
-- Alto visible de la página ≈ 810 px CSS. Encabezado + pestañas ≈ 100 px CSS; pie (frase + logo) ≈ 62 px CSS.
-- **El área libre de un módulo es ≈ 640–650 px CSS de alto × ≈ 457 de ancho.** Es bastante menos que una página larga: un módulo colapsado tiene que caber ahí. Eso obliga a rediseñar la mayoría de los módulos (hoy son páginas largas con scroll).
-- Referencia útil: en Vitrina, dentro de esa área, los botones de categoría + filtros ocupan ≈ 200 px CSS y el carrusel recibe lo que sobra (≈ 420–450 px CSS).
-- Calcular siempre: `libre = alto_visible − (encabezado + pestañas) − pie`. Probar al menos con áreas libres de 480, 560, 640 y 720 px (pantallas más chicas o con más barras del navegador dan menos).
+Si un módulo no cabe colapsado, aparece scroll en vez de cortar contenido. La válvula **no es una solución, es un detector**: si se activa colapsada, el módulo no cumple y hay que rediseñarlo. Se avisa al usuario y, en desarrollo, `console.warn("<módulo> desborda N px colapsado")`.
 
-### 4.5 La válvula (decisión tomada)
+### 4.6 OBLIGACIÓN al trabajar en un módulo
 
-Aunque el diseño busca que nunca ocurra, si un módulo ya migrado **no cabe** en estado colapsado, **aparece scroll en vez de cortar contenido** (cortar lo haría inaccesible sin avisar). Pero la válvula **no es una solución, es un detector:** si se activa en estado colapsado, el módulo **no cumple el lineamiento** y debe rediseñarse; el agente debe marcarlo explícitamente al usuario (y, en desarrollo, emitir `console.warn("<módulo> desborda N px colapsado")`).
+> **Quien trabaje en un módulo, por el motivo que sea, debe confirmar que su rediseño bajo este lineamiento ya se hizo, o hacerlo. No se entrega trabajo sobre un módulo sin una de las dos cosas dichas en el reporte.**
 
-### 4.6 Contrato del shell (🟡 propuesto, "Fase 0")
+1. **Verificar en el código real**, antes de tocar nada (no en la memoria ni en este documento): el módulo usa `.app-fit`; no importa `useAltoLibre` ni `MarcoAngst`; no tiene título propio; colapsado no desborda; usa las piezas compartidas.
+2. **Si cumple:** decirlo explícito en el reporte ("módulo X: cumple, verificado en…").
+3. **Si no cumple: se rediseña como parte del mismo trabajo, sin pedir un Go aparte** (decisión del usuario, 1-nov-2026). Se rediseña solo el módulo en que se trabaja, nunca varios a la vez, siguiendo N1–N3 y R6–R8 (los datos no se tocan). Al entregar se informa qué se ve colapsado, qué se expande, qué pasó a emergente y qué quedó a más toques; la captura del usuario sigue siendo el criterio de aceptación. **Excepción:** lo declarado en 4.7 (Feed y listas de Vitrina), donde el diseño sigue siendo decisión abierta: ahí se propone y se espera su Go.
+4. **No vale** "no era el alcance": el cambio puntual y la confirmación o el rediseño van en la misma entrega. Si el usuario posterga el rediseño, se escribe "rediseño pendiente" en el reporte.
 
-Reemplazar las mediciones por JavaScript (`useAltoLibre`) por **reglas de diseño** del marco:
+### 4.7 Excepciones declaradas
 
-```css
-.app        { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
-.hdr, .tabs { flex: none; }
-.contenido  { flex: 1 1 0; min-height: 0; overflow-y: hidden; }      /* colapsado */
-.contenido[data-expandido="true"], .contenido[data-valvula="true"]
-            { overflow-y: auto; }                                    /* expandido o válvula */
-.ftr        { flex: none; }
-/* la raíz de cada módulo migrado: height:100%; display:flex; flex-direction:column */
-```
+Siguen con scroll interno hasta su rediseño, y no cuentan como cumplimiento: **Feed** (lectura y Buzón) y las **listas de Vitrina** (Microdocumentales, Melee, Conciertos). La obligación 4.6 aplica igual a estos módulos.
 
-- API sugerida para módulos: un contexto del marco con `useExpandible(id, abierto)` que registra qué elementos están expandidos; el marco deriva `data-expandido`. Alternativa más simple: cada módulo reporta un booleano `hayExpandido`.
-- **Detector de válvula:** si no hay nada expandido y `scrollHeight > clientHeight`, el marco pone `data-valvula="true"` y avisa.
-- **Migración módulo a módulo:** una lista `MODULOS_MIGRADOS` (p. ej. `{9, 10}` al inicio). Los migrados usan el shell nuevo; los demás conservan el layout de hoy (alto natural, pie después del contenido) **hasta que se les haga su rediseño**. Aplicar la regla estricta a todos a la vez cortaría contenido.
-- `100dvh` maneja bien las barras dinámicas de Chrome Android. Es más robusto que `window.innerHeight − top − footer` calculado a mano (que es lo que hoy hace `useAltoLibre`).
-- Vitrina y Feed son los primeros en montarse sobre el marco nuevo; con eso `useAltoLibre` y `MarcoAngst` quedan **obsoletos** y deben eliminarse (R6 de §1: no dejar dos soluciones vivas).
+### 4.8 Listo para un módulo nuevo o rediseñado
 
-### 4.7 Cómo diseñar el estado colapsado de un módulo
+- [ ] `modules/<id>/<Nombre>Page.jsx` + `manifest.js`, registrado en `TABS` de `core/App.jsx` (sin renumerar ids; el orden visual lo da `ORDER`) y montado en el marco (N1).
+- [ ] Colapsado cabe sin scroll a 480/560/640/720 px, celular y tablet; el scroll existe solo con algo expandido (N3).
+- [ ] Usa el patrón base (N2), sin título propio (R6), identidad según R7.
+- [ ] Claves de datos nuevas, si hay, en `core/persistence.js` y cubiertas por `tests/export-coverage.mjs`; `npm run audit:export` pasa (R8).
+- [ ] Build OK, bundle verificado por módulo (§7.2), arranque de la app completa sin errores, pie visible al abrir.
+- [ ] Documentado en `docs/` si cambia comportamiento.
 
-Patrones disponibles (elegir por módulo, discutir con el usuario):
+### 4.9 Anti-patrones
 
-1. **Carrusel que escala** (Vitrina): un elemento protagonista grande y centrado, vecinos asomando; escala para llenar el área libre.
-2. **Tira de resumen + lista de secciones colapsadas:** una franja con el dato clave (p. ej. total del mes) y debajo filas-encabezado que se expanden (acordeón).
-3. **Tarjetas compactas** (grilla 2×N): cada tarjeta es un elemento colapsado; al tocarla se expande inline y empuja el resto.
-4. **Vista de un día/ítem activo + navegación lateral:** muestra el elemento actual completo y permite cambiar sin scroll (como las stories de Feed).
-
-**Plantilla de propuesta por módulo** (lo que el agente debe llevar al usuario antes de implementar):
-
-1. Qué muestra el módulo hoy (pantallas y secciones, con sus funciones).
-2. Qué se vería colapsado dentro de ~640 px de alto × ~457 de ancho (boceto en texto o SVG).
-3. Qué elementos se expanden y qué revelan.
-4. Qué pasa a ventana emergente.
-5. Qué datos toca (esperado: ninguno nuevo; R8).
-6. Qué funciones quedarían a más toques de distancia (costo del rediseño) y cuáles se vuelven más rápidas.
-7. Riesgos y cómo se validará.
-
-### 4.8 Expansión: comportamiento
-
-- Tocar un elemento colapsado lo expande **inline**; el scroll del área de contenido se habilita.
-- ❓ **Abierto:** ¿se permite más de un elemento expandido a la vez, o expandir uno colapsa el anterior (acordeón exclusivo)? Recomendación del agente: exclusivo por defecto (menos scroll, más predecible), con excepciones justificadas por módulo.
-- Al colapsar el último elemento, el área vuelve a `overflow:hidden` y el scroll vuelve al inicio.
-- Un elemento expandido debe poder cerrarse con un toque obvio (mismo encabezado), sin gestos ocultos.
-
-### 4.9 Ventanas emergentes, toasts, overlays
-
-- Las ventanas emergentes existentes (muchas en Pokécripto, Presupuesto, Nutrición, etc.) **no son parte del flujo de scroll**; siguen siendo `position: fixed`. No se tocan salvo que el rediseño del módulo lo requiera.
-- Los **toasts** son fijos y transitorios: permitidos.
-- Para módulos nuevos: preferir expansión inline (R4); reservar emergentes para formularios y confirmaciones.
-
-### 4.10 Checklist para módulos nuevos (definición de "listo")
-
-- [ ] Tiene `modules/<id>/<Nombre>Page.jsx` y `manifest.js` (como los demás) y se registra en `TABS`/`page===N` de `core/App.jsx` (id nuevo; no renumerar los existentes; el orden visual se controla con `ORDER`).
-- [ ] Se declara migrado al lineamiento (entra en `MODULOS_MIGRADOS`).
-- [ ] Estado colapsado cabe en el área libre a 480/560/640/720 px de alto sin scroll (R1, R2).
-- [ ] El scroll solo existe con algo expandido (R3).
-- [ ] Sin título propio ni subpestañas que repitan la pestaña (R6).
-- [ ] Tipografías y firma según R7. Emoji de pestaña definido.
-- [ ] Datos: sus claves nuevas están en `core/persistence.js` y cubiertas por `tests/export-coverage.mjs`; `npm run audit:export` pasa.
-- [ ] Build OK, bundle verificado **por módulo** (ver §7.2), prueba de arranque de la app completa sin errores.
-- [ ] El pie con la frase y el logo es visible al abrir.
-- [ ] Documentado en `docs/` si cambia comportamiento (objetivo, estado actual, archivos, criterios de aceptación).
-
-### 4.11 Anti-patrones (no hacer)
-
-- `min-height: 100vh` en un módulo (empuja el pie fuera de pantalla; fue el bug de Vitrina).
-- `position: fixed; inset: 0` para una vista de módulo (tapa el chrome; fue el bug de Feed).
+- `min-height: 100vh` en un módulo (empuja el pie fuera de pantalla).
+- `position: fixed; inset: 0` como vista de módulo (tapa el marco).
 - Resolver "no cabe" con letra pequeña o scroll interno permanente.
 - Repetir el nombre del módulo en un título o fila de subpestañas.
-- Calcular el alto libre a mano con `window.innerHeight` si el shell ya lo provee (tras Fase 0).
+- Medir el alto libre a mano con `window.innerHeight`.
+- Copiar un componente de un módulo a otro en vez de compartirlo.
 - Tocar datos persistidos "de paso".
-- Reestructurar varios módulos a la vez sin que el usuario haya aprobado cada diseño.
-
-### 4.12 Referencia viva: Vitrina (qué ya cumple y qué reutilizar)
-
-- `modules/shared/ui.jsx`: `useAltoLibre(ref, minimo, reserva, deps)` y `MarcoAngst` (ya publicados; **a reemplazar** en Fase 0).
-- `modules/vitrina/VitrinaPage.jsx`: raíz que llena el área libre; sin título propio; carrusel de cine a cargo de `CineCoverFlow`.
-- `modules/vitrina/cine.jsx` → `CineCoverFlow`: calcula `k` (escala) = `min((libre − 20)/altoNaturalTarjeta, 0,56·ancho/CARD_W, 1,6)`, nunca menor que 1; `ESPACIADO = ITEM_W·(1+(k−1)·0,5)`; tarjeta centrada con `top=(libre − h0)/2`. Es el patrón "carrusel que escala".
-- Las listas (Microdocumentales, Melee, Conciertos) en Vitrina **aún no** cumplen el lineamiento estricto: hoy solo llenan el fondo hasta el pie; su contenido largo scrollea. Son candidatas a rediseño.
-- Feed: sus vistas (story, música, lectura, fin de cola, Buzón, diagnóstico) viven en `MarcoAngst` con scroll interno en las vistas largas (lectura, Buzón). Conviene revisarlas contra R2/R3.
+- Rediseñar varios módulos a la vez: la regla 4.6 cubre solo el módulo en que se trabaja.
 
 ---
 
 ## 5. Plan por fases (🟡 propuesto, sin Go)
 
-**Fase 0 — Infraestructura (casi invisible).** Implementar el contrato del shell (§4.6) con `MODULOS_MIGRADOS`, la válvula y el aviso de desborde. Montar Vitrina y Feed sobre él, eliminar `useAltoLibre`/`MarcoAngst`. Verificar que ningún otro módulo cambie de aspecto.
+**Estado al 1-nov-2026:** ya cumplen el marco `.app-fit` Semana (0), Presupuesto (1), Salud (4) y Fadiman (5). La antigua "Fase 0" (contrato con `MODULOS_MIGRADOS`) queda **reemplazada por N1**: el marco CSS ya existe; falta pasar los demás módulos y eliminar `useAltoLibre`/`MarcoAngst`.
 
-**Fase 1 — Uso diario.** Rutinas (el más chico de los diarios; propuesto como primero) y Semana (calendario semanal; 360 líneas inline en `App.jsx`; probablemente el más delicado: tareas, swipe, reflexión, utilidades).
+**Pendientes, de a uno** (propuesta del agente → aprobación → implementación → publicación → captura del usuario → ajustes): Rutinas, Emprendimientos, mindfulness, Nutrición, Ejercicio, Pokécripto, Feed y Vitrina. El usuario decide el orden; el agente no se adelanta a módulos no aprobados, salvo la obligación de 4.6 cuando trabaja en uno.
 
-**Fase 2 — El resto, de a uno.** Empezar por los más chicos (Fadiman, Presupuesto) y terminar con Pokécripto. Cada módulo: propuesta (plantilla §4.7) → aprobación → implementación → publicación → revisión del usuario en su celular (captura) → ajustes.
+### 5.1 Decisiones del lineamiento
 
-Entre fases, el usuario decide el orden; el agente no debe adelantarse a módulos no aprobados.
-
-### 5.1 Decisiones abiertas del lineamiento (❓)
-
-1. ¿Expansión exclusiva (un elemento abierto a la vez) o múltiple? (recomendado: exclusiva).
-2. ¿Primer módulo a rediseñar tras la Fase 0? (propuesto: Rutinas).
-3. Para Feed: ¿sus vistas largas (lectura, Buzón) deben pasar a "elemento expandido" para cumplir R2/R3, o se aceptan como vistas inmersivas con scroll interno?
-4. Para las listas de Vitrina (Microdocs/Melee/Conciertos): ¿qué se muestra colapsado?
-5. Nada de esto está aprobado para implementar: **falta el Go de la Fase 0**.
+1. ✅ Expansión exclusiva (un elemento abierto a la vez): decidido, es N2.
+2. ✅ Vistas largas de Feed y listas de Vitrina: siguen con scroll interno por ahora (4.7).
+3. ❓ Orden de los módulos pendientes: lo define el usuario.
 
 ---
 

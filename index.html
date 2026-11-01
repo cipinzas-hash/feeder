@@ -13068,7 +13068,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
   var CINE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/cine.json";
   var MELEE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/melee.json";
   var VIDEOTECA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/videoteca.json";
-  var MUSICA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/musica/modules/feed/data/musica.json";
+  var MUSICA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/musica.json";
   var CINE_CATEGORIAS = ["Pel\xEDculas", "Series", "Animaci\xF3n"];
   var VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales", "Melee", "Conciertos"];
   var MUSIC_CATEGORIA = "Dark scene / M\xFAsica";
@@ -13196,7 +13196,7 @@ ${item.link}`);
   async function fetchFeedData() {
     const feedData = await fetchJsonSafe(FEED_JSON_URL);
     if (!feedData) throw new Error("no se pudo leer feed.json");
-    const feedCats = (feedData.categories || []).filter((c) => !VITRINA_CATEGORIAS.includes(c.cat)).map((c) => {
+    const feedCats = (feedData.categories || []).filter((c) => !VITRINA_CATEGORIAS.includes(c.cat) && c.cat !== MUSIC_CATEGORIA).map((c) => {
       const formato = FORMATO_BY_CATEGORIA[c.cat] || "lectura";
       return { cat: c.cat, items: (c.items || []).map((it) => ({ ...it, formato })) };
     });
@@ -15039,23 +15039,27 @@ Toco reintentar ahora.`);
   var quitarCaratula = (e) => {
     e.currentTarget.style.visibility = "hidden";
   };
-  function Caratula({ src, lado, alt }) {
-    const caja = { width: lado, height: lado, borderRadius: 10, background: "#16121f", border: "1px solid #2a2438", overflow: "hidden", flex: "none", display: "flex", alignItems: "center", justifyContent: "center", color: "#4a4260", fontSize: Math.round(lado / 3) };
-    return /* @__PURE__ */ React.createElement("div", { style: caja }, src ? /* @__PURE__ */ React.createElement("img", { src, alt: alt || "", loading: "lazy", onError: quitarCaratula, style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } }) : "\u266A");
+  function Caratula({ src, lado, alt, flexible }) {
+    const vacio = { background: "#16121f", border: "1px solid #2a2438", borderRadius: 10, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", color: "#4a4260" };
+    const img = src ? /* @__PURE__ */ React.createElement("img", { src, alt: alt || "", loading: "lazy", onError: quitarCaratula, style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } }) : "\u266A";
+    if (flexible)
+      return /* @__PURE__ */ React.createElement("div", { style: { position: "relative", flex: "1 1 0", minHeight: 0, width: "100%" } }, /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { ...vacio, height: "100%", maxWidth: "100%", aspectRatio: "1 / 1", fontSize: 48 } }, img)));
+    return /* @__PURE__ */ React.createElement("div", { style: { ...vacio, width: lado, height: lado, flex: "none", fontSize: Math.round(lado / 3) } }, img);
   }
   function Chip({ children, activo, onClick, style }) {
     return /* @__PURE__ */ React.createElement("span", { onClick, style: { fontFamily: FUENTE2, fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: activo ? "#111" : "#b9afd6", background: activo ? ACENTO : "#1c1729", border: `1px solid ${activo ? ACENTO : "#2f2745"}`, borderRadius: 12, padding: "3px 9px", ...style } }, children);
   }
-  function LanzamientoCard({ lz, indice, total, onPrev, onNext, onArtista, alto }) {
+  function LanzamientoCard({ lz, indice, total, onPrev, onNext, onArtista, onExpandido }) {
     const [sonando, setSonando] = useState34(false);
     useEffect22(() => {
       setSonando(false);
     }, [lz.id]);
+    useEffect22(() => {
+      onExpandido(sonando);
+    }, [sonando]);
     const esVideo = lz.player && lz.player.tipo === "youtube";
-    const reservado = 232 + (sonando && !esVideo ? 128 : 0);
-    const lado = Math.max(120, Math.min(300, (alto || 560) - reservado));
     const fuentes = lz.fuentes || [];
-    return /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", alignItems: "center", padding: "6px 16px 0", gap: 10 } }, sonando && esVideo ? /* @__PURE__ */ React.createElement("div", { style: { width: "100%" } }, /* @__PURE__ */ React.createElement(Reproductor, { player: lz.player, titulo: `${lz.artista} \u2014 ${lz.disco || ""}` })) : /* @__PURE__ */ React.createElement(Caratula, { src: lz.arte, lado, alt: `${lz.artista} \u2014 ${lz.disco || ""}` }), sonando && !esVideo && /* @__PURE__ */ React.createElement("div", { style: { width: "100%" } }, /* @__PURE__ */ React.createElement(Reproductor, { player: lz.player, titulo: `${lz.artista} \u2014 ${lz.disco || ""}` })), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", width: "100%", minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", lineHeight: 1.05, overflowWrap: "anywhere" } }, lz.artista), lz.disco && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 14, color: "#cfc7e6", marginTop: 3, overflowWrap: "anywhere" } }, lz.disco), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, justifyContent: "center", alignItems: "center", marginTop: 8, flexWrap: "wrap" } }, TIPO[lz.tipo] && /* @__PURE__ */ React.createElement(Chip, { activo: true }, TIPO[lz.tipo]), /* @__PURE__ */ React.createElement(Chip, null, hace(lz.fecha)), /* @__PURE__ */ React.createElement(Chip, null, fuentes.length > 1 ? `${fuentes.length} fuentes` : fuentes[0]?.fuente || ""))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, width: "100%", marginTop: "auto" } }, lz.player && !sonando && /* @__PURE__ */ React.createElement("button", { onClick: () => setSonando(true), style: { flex: 2, background: ACENTO, color: "#111", border: "none", borderRadius: 12, padding: "12px 8px", fontFamily: FUENTE2, fontSize: 14, fontWeight: 800, cursor: "pointer" } }, "\u25B6 escuchar"), /* @__PURE__ */ React.createElement("button", { onClick: onArtista, style: { flex: 2, background: "transparent", color: "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, padding: "12px 8px", fontFamily: FUENTE2, fontSize: 14, fontWeight: 700, cursor: "pointer" } }, "ficha del artista \u2192")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", paddingBottom: 6 } }, /* @__PURE__ */ React.createElement("button", { onClick: onPrev, disabled: indice === 0, "aria-label": "lanzamiento anterior", style: navBtn(indice === 0) }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE2, fontSize: 11, color: "#7d7396", letterSpacing: "0.06em" } }, indice + 1, " / ", total), /* @__PURE__ */ React.createElement("button", { onClick: onNext, disabled: indice >= total - 1, "aria-label": "lanzamiento siguiente", style: navBtn(indice >= total - 1) }, "\u2192")));
+    return /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", alignItems: "center", padding: "6px 16px 0", gap: 10 } }, sonando && esVideo ? /* @__PURE__ */ React.createElement("div", { style: { width: "100%" } }, /* @__PURE__ */ React.createElement(Reproductor, { player: lz.player, titulo: `${lz.artista} \u2014 ${lz.disco || ""}` })) : sonando ? /* @__PURE__ */ React.createElement(Caratula, { src: lz.arte, lado: 180, alt: `${lz.artista} \u2014 ${lz.disco || ""}` }) : /* @__PURE__ */ React.createElement(Caratula, { src: lz.arte, flexible: true, alt: `${lz.artista} \u2014 ${lz.disco || ""}` }), sonando && !esVideo && /* @__PURE__ */ React.createElement("div", { style: { width: "100%" } }, /* @__PURE__ */ React.createElement(Reproductor, { player: lz.player, titulo: `${lz.artista} \u2014 ${lz.disco || ""}` })), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", width: "100%", minWidth: 0, flex: "none" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", lineHeight: 1.05, overflowWrap: "anywhere" } }, lz.artista), lz.disco && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 14, color: "#cfc7e6", marginTop: 3, overflowWrap: "anywhere" } }, lz.disco), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, justifyContent: "center", alignItems: "center", marginTop: 8, flexWrap: "wrap" } }, TIPO[lz.tipo] && /* @__PURE__ */ React.createElement(Chip, { activo: true }, TIPO[lz.tipo]), /* @__PURE__ */ React.createElement(Chip, null, hace(lz.fecha)), /* @__PURE__ */ React.createElement(Chip, null, fuentes.length > 1 ? `${fuentes.length} fuentes` : fuentes[0]?.fuente || ""))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, width: "100%", flex: "none" } }, lz.player && !sonando && /* @__PURE__ */ React.createElement("button", { onClick: () => setSonando(true), style: { flex: 2, background: ACENTO, color: "#111", border: "none", borderRadius: 12, padding: "12px 8px", fontFamily: FUENTE2, fontSize: 14, fontWeight: 800, cursor: "pointer" } }, "\u25B6 escuchar"), /* @__PURE__ */ React.createElement("button", { onClick: onArtista, style: { flex: 2, background: "transparent", color: "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, padding: "12px 8px", fontFamily: FUENTE2, fontSize: 14, fontWeight: 700, cursor: "pointer" } }, "ficha del artista \u2192")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", paddingBottom: 6, flex: "none" } }, /* @__PURE__ */ React.createElement("button", { onClick: onPrev, disabled: indice === 0, "aria-label": "lanzamiento anterior", style: navBtn(indice === 0) }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE2, fontSize: 11, color: "#7d7396", letterSpacing: "0.06em" } }, indice + 1, " / ", total), /* @__PURE__ */ React.createElement("button", { onClick: onNext, disabled: indice >= total - 1, "aria-label": "lanzamiento siguiente", style: navBtn(indice >= total - 1) }, "\u2192")));
   }
   var navBtn = (off) => ({ width: 52, height: 40, background: "transparent", border: "1px solid #2f2745", borderRadius: 10, color: off ? "#3c3552" : "#e5def7", fontSize: 18, cursor: off ? "default" : "pointer" });
   function FichaArtista({ slug, artista, lanzamientos, discoInicial, onVolver }) {
@@ -15087,8 +15091,7 @@ Toco reintentar ahora.`);
     const [error, setError] = useState34(null);
     const [indice, setIndice] = useState34(0);
     const [artistaAbierto, setArtistaAbierto] = useState34(null);
-    const raiz = useRef20(null);
-    const alto = useAltoLibre(raiz, 0);
+    const [expandido, setExpandido] = useState34(false);
     async function cargar() {
       setError(null);
       try {
@@ -15102,22 +15105,23 @@ Toco reintentar ahora.`);
     }, []);
     const lanzamientos = datos ? datos.lanzamientos : [];
     const lz = lanzamientos[Math.min(indice, Math.max(0, lanzamientos.length - 1))];
-    const base = { position: "relative", width: "100%", maxWidth: 480, margin: "0 auto", boxSizing: "border-box", display: "flex", flexDirection: "column" };
+    const centrado = { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FUENTE2, fontSize: 13, color: "#7d7396", padding: 24, textAlign: "center" };
+    const ancho = { width: "100%", maxWidth: 480, margin: "0 auto", boxSizing: "border-box" };
     if (artistaAbierto && datos) {
-      return /* @__PURE__ */ React.createElement("div", { style: { ...base, minHeight: alto || "70vh" } }, /* @__PURE__ */ React.createElement(FichaArtista, { key: artistaAbierto, slug: artistaAbierto, artista: datos.artistas[artistaAbierto], lanzamientos, discoInicial: lz && lz.artistaSlug === artistaAbierto ? lz : null, onVolver: () => setArtistaAbierto(null) }));
+      return /* @__PURE__ */ React.createElement("div", { className: "musica" }, /* @__PURE__ */ React.createElement("div", { className: "musica-body", "data-expandido": "true", style: ancho }, /* @__PURE__ */ React.createElement(FichaArtista, { key: artistaAbierto, slug: artistaAbierto, artista: datos.artistas[artistaAbierto], lanzamientos, discoInicial: lz && lz.artistaSlug === artistaAbierto ? lz : null, onVolver: () => setArtistaAbierto(null) })));
     }
-    return /* @__PURE__ */ React.createElement("div", { ref: raiz, style: { ...base, height: alto || "70vh", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "8px 18px 2px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE2, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: ACENTO } }, "lanzamientos"), datos && datos.generatedAt && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE2, fontSize: 10, color: "#6a6180" } }, "actualizado ", hace(datos.generatedAt))), !datos && !error && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FUENTE2, fontSize: 13, color: "#7d7396" } }, "cargando m\xFAsica\u2026"), error && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 24, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 13, color: "#c9a0a0" } }, "No se pudo cargar la m\xFAsica (", error, ")."), /* @__PURE__ */ React.createElement("button", { onClick: cargar, style: { background: "transparent", color: "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, padding: "10px 18px", fontFamily: FUENTE2, fontSize: 13, fontWeight: 700, cursor: "pointer" } }, "reintentar")), datos && !lz && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FUENTE2, fontSize: 13, color: "#7d7396", padding: 24, textAlign: "center" } }, "Todav\xEDa no hay lanzamientos con forma de escucharse."), datos && lz && /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { className: "musica" }, /* @__PURE__ */ React.createElement("div", { className: "musica-body", "data-expandido": expandido ? "true" : "false", style: ancho }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "8px 18px 2px", flex: "none" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE2, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: ACENTO } }, "lanzamientos"), datos && datos.generatedAt && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE2, fontSize: 10, color: "#6a6180" } }, "actualizado ", hace(datos.generatedAt))), !datos && !error && /* @__PURE__ */ React.createElement("div", { style: centrado }, "cargando m\xFAsica\u2026"), error && /* @__PURE__ */ React.createElement("div", { style: { ...centrado, flexDirection: "column", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { color: "#c9a0a0" } }, "No se pudo cargar la m\xFAsica (", error, ")."), /* @__PURE__ */ React.createElement("button", { onClick: cargar, style: { background: "transparent", color: "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, padding: "10px 18px", fontFamily: FUENTE2, fontSize: 13, fontWeight: 700, cursor: "pointer" } }, "reintentar")), datos && !lz && /* @__PURE__ */ React.createElement("div", { style: centrado }, "Todav\xEDa no hay lanzamientos con forma de escucharse."), datos && lz && /* @__PURE__ */ React.createElement(
       LanzamientoCard,
       {
         lz,
         indice: Math.min(indice, lanzamientos.length - 1),
         total: lanzamientos.length,
-        alto,
+        onExpandido: setExpandido,
         onPrev: () => setIndice((i) => Math.max(0, i - 1)),
         onNext: () => setIndice((i) => Math.min(lanzamientos.length - 1, i + 1)),
         onArtista: () => setArtistaAbierto(lz.artistaSlug)
       }
-    ));
+    )));
   }
 
   // core/SemanaDashboard.jsx
@@ -17215,6 +17219,10 @@ Toco reintentar ahora.`);
         .app-fit{height:100vh;height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
         .app-fit>.hdr,.app-fit>.tabs,.app-fit>.ftr{flex:none;}
         .app-fit>.ftr{margin-top:0;}
+        .musica{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
+        .musica-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
+        .musica-body[data-expandido="true"]{overflow-y:auto;}
+        .musica-body[data-expandido="true"]>*{flex:none;}
         .semana{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
         .semana-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
         .semana-body[data-expandido="true"],.semana-body[data-valvula="true"]{overflow-y:auto;}
@@ -17310,7 +17318,7 @@ Toco reintentar ahora.`);
       const mon = addDays(date, -(dow === 0 ? 6 : dow - 1));
       const diff = Math.round((mon - BASE_DATE) / (7 * 864e5));
       updateWeekOffset(diff);
-    }, onClose: () => setCalOpen(false) }), /* @__PURE__ */ React.createElement("div", { className: "app" + (page === 0 || page === 1 || page === 4 || page === 5 ? " app-fit" : "") }, /* @__PURE__ */ React.createElement("div", { className: "hdr" }, /* @__PURE__ */ React.createElement("div", { className: "hdr-title", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, "angstapp"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexShrink: 0 } }, regMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: regMsg.includes("\u2713") ? "#4caf50" : "#c00", fontSize: 14 } }, regMsg), saved && !regMsg && /* @__PURE__ */ React.createElement("span", { className: "saved-msg" }, "guardado \u2713"), loadMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: loadMsg.startsWith("\u2713") ? "#4caf50" : loadMsg.startsWith("\u26A0") ? "#f0a000" : "#c00", fontSize: 13, maxWidth: 220 } }, loadMsg), exportOk === true && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#4caf50", fontSize: 13 } }, "descargado \u2713"), exportOk === false && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, "error al exportar"), typeof exportOk === "string" && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, exportOk), /* @__PURE__ */ React.createElement("input", { ref: cargarInputRef, type: "file", accept: ".xlsx,.xls,.json", onChange: handleLoad, style: { display: "none" } }), (menuDatosOpen || menuRegOpen) && /* @__PURE__ */ React.createElement("div", { onClick: cerrarMenus, style: { position: "fixed", inset: 0, zIndex: 590 } }), (() => {
+    }, onClose: () => setCalOpen(false) }), /* @__PURE__ */ React.createElement("div", { className: "app" + (page === 0 || page === 1 || page === 4 || page === 5 || page === 12 ? " app-fit" : "") }, /* @__PURE__ */ React.createElement("div", { className: "hdr" }, /* @__PURE__ */ React.createElement("div", { className: "hdr-title", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, "angstapp"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexShrink: 0 } }, regMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: regMsg.includes("\u2713") ? "#4caf50" : "#c00", fontSize: 14 } }, regMsg), saved && !regMsg && /* @__PURE__ */ React.createElement("span", { className: "saved-msg" }, "guardado \u2713"), loadMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: loadMsg.startsWith("\u2713") ? "#4caf50" : loadMsg.startsWith("\u26A0") ? "#f0a000" : "#c00", fontSize: 13, maxWidth: 220 } }, loadMsg), exportOk === true && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#4caf50", fontSize: 13 } }, "descargado \u2713"), exportOk === false && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, "error al exportar"), typeof exportOk === "string" && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, exportOk), /* @__PURE__ */ React.createElement("input", { ref: cargarInputRef, type: "file", accept: ".xlsx,.xls,.json", onChange: handleLoad, style: { display: "none" } }), (menuDatosOpen || menuRegOpen) && /* @__PURE__ */ React.createElement("div", { onClick: cerrarMenus, style: { position: "fixed", inset: 0, zIndex: 590 } }), (() => {
       const itemMenu = { display: "block", width: "100%", textAlign: "left", background: "transparent", border: "none", borderBottom: "1px dashed #333", color: "#fff", padding: "10px 12px", fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" };
       const caja = { position: "absolute", top: "calc(100% + 4px)", right: 0, width: 230, background: "#222", border: "1px dashed #444", borderRadius: 4, zIndex: 600 };
       return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "disk-btn", onClick: () => {

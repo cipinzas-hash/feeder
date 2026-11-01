@@ -79,10 +79,7 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git checkout -- modules/feed/data/feed.json modules/feed/data/videoteca.json 2>/dev/null || true
           # una ruta por vez: `git add a b` falla entero si alguna no existe todavía
-          # Logs de las corridas de desarrollo (GitHub no deja bajarlos desde fuera): se quitan al fusionar.
-          mkdir -p docs/logs-musica
-          for l in feed-build musica-build; do [ -f "/tmp/$l.log" ] && tail -n 400 "/tmp/$l.log" > "docs/logs-musica/$l.log"; done
-          for f in modules/feed/data/musica.json modules/feed/data/musica-noticias.json docs/muestras-bandcamp docs/logs-musica; do
+          for f in modules/feed/data/musica.json modules/feed/data/musica-noticias.json docs/muestras-bandcamp; do
             [ -e "$f" ] && git add -f "$f"
           done
           true

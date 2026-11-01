@@ -1,6 +1,5 @@
 import { fetchMusicaData } from "../shared/catalog.js";
 import { CAT_COLORS } from "../shared/constants.js";
-import { useAltoLibre } from "../shared/ui.jsx";
 
 const { useState, useEffect, useRef } = React;
 
@@ -11,8 +10,10 @@ const { useState, useEffect, useRef } = React;
 // (musica.json); aquí solo se muestran. No guarda nada en localStorage: no
 // hay estado persistente que migrar ni exportar.
 //
-// Vista de entrada: sin scroll, llena el espacio hasta el pie de Angst
-// (useAltoLibre). La ficha del artista es una vista expandida y sí scrollea.
+// Montaje (norma N1 del lineamiento): sobre el marco CSS `.app-fit` de core/App.jsx
+// (clases .musica / .musica-body). NO se mide el alto a mano: la portada se reparte el
+// espacio libre con flex. Entrada colapsada = sin scroll (N3); la ficha del artista y el
+// reproductor abierto son estados expandidos y scrollean (data-expandido).
 
 const ACENTO = CAT_COLORS["Dark scene / Música"] || "#7b4fd4";
 const FUENTE = "'DM Sans',sans-serif";
@@ -52,9 +53,19 @@ export function Reproductor({ player, titulo }) {
 
 const quitarCaratula = e => { e.currentTarget.style.visibility = "hidden"; };
 
-function Caratula({ src, lado, alt }) {
-  const caja = { width: lado, height: lado, borderRadius: 10, background: "#16121f", border: "1px solid #2a2438", overflow: "hidden", flex: "none", display: "flex", alignItems: "center", justifyContent: "center", color: "#4a4260", fontSize: Math.round(lado / 3) };
-  return <div style={caja}>{src ? <img src={src} alt={alt || ""} loading="lazy" onError={quitarCaratula} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /> : "♪"}</div>;
+function Caratula({ src, lado, alt, flexible }) {
+  // flexible: ocupa TODO el alto que deje el resto de la tarjeta (CSS puro, sin medir).
+  const vacio = { background: "#16121f", border: "1px solid #2a2438", borderRadius: 10, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", color: "#4a4260" };
+  const img = src ? <img src={src} alt={alt || ""} loading="lazy" onError={quitarCaratula} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /> : "♪";
+  if (flexible)
+    return (
+      <div style={{ position: "relative", flex: "1 1 0", minHeight: 0, width: "100%" }}>
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ ...vacio, height: "100%", maxWidth: "100%", aspectRatio: "1 / 1", fontSize: 48 }}>{img}</div>
+        </div>
+      </div>
+    );
+  return <div style={{ ...vacio, width: lado, height: lado, flex: "none", fontSize: Math.round(lado / 3) }}>{img}</div>;
 }
 
 function Chip({ children, activo, onClick, style }) {
@@ -62,21 +73,21 @@ function Chip({ children, activo, onClick, style }) {
 }
 
 // ─── Vista de entrada: un lanzamiento a la vez ──────────────────────────────
-function LanzamientoCard({ lz, indice, total, onPrev, onNext, onArtista, alto }) {
+function LanzamientoCard({ lz, indice, total, onPrev, onNext, onArtista, onExpandido }) {
   const [sonando, setSonando] = useState(false);
   useEffect(() => { setSonando(false); }, [lz.id]);
+  useEffect(() => { onExpandido(sonando); }, [sonando]);
   const esVideo = lz.player && lz.player.tipo === "youtube";
-  // La portada se reparte el alto libre: descuenta cabecera, textos, botones y reproductor.
-  const reservado = 232 + (sonando && !esVideo ? 128 : 0);
-  const lado = Math.max(120, Math.min(300, (alto || 560) - reservado));
   const fuentes = lz.fuentes || [];
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", alignItems: "center", padding: "6px 16px 0", gap: 10 }}>
       {sonando && esVideo
         ? <div style={{ width: "100%" }}><Reproductor player={lz.player} titulo={`${lz.artista} — ${lz.disco || ""}`} /></div>
-        : <Caratula src={lz.arte} lado={lado} alt={`${lz.artista} — ${lz.disco || ""}`} />}
+        : sonando
+          ? <Caratula src={lz.arte} lado={180} alt={`${lz.artista} — ${lz.disco || ""}`} />
+          : <Caratula src={lz.arte} flexible alt={`${lz.artista} — ${lz.disco || ""}`} />}
       {sonando && !esVideo && <div style={{ width: "100%" }}><Reproductor player={lz.player} titulo={`${lz.artista} — ${lz.disco || ""}`} /></div>}
-      <div style={{ textAlign: "center", width: "100%", minWidth: 0 }}>
+      <div style={{ textAlign: "center", width: "100%", minWidth: 0, flex: "none" }}>
         <div style={{ fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", lineHeight: 1.05, overflowWrap: "anywhere" }}>{lz.artista}</div>
         {lz.disco && <div style={{ fontFamily: FUENTE, fontSize: 14, color: "#cfc7e6", marginTop: 3, overflowWrap: "anywhere" }}>{lz.disco}</div>}
         <div style={{ display: "flex", gap: 6, justifyContent: "center", alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
@@ -85,13 +96,13 @@ function LanzamientoCard({ lz, indice, total, onPrev, onNext, onArtista, alto })
           <Chip>{fuentes.length > 1 ? `${fuentes.length} fuentes` : (fuentes[0]?.fuente || "")}</Chip>
         </div>
       </div>
-      <div style={{ display: "flex", gap: 8, width: "100%", marginTop: "auto" }}>
+      <div style={{ display: "flex", gap: 8, width: "100%", flex: "none" }}>
         {lz.player && !sonando && (
           <button onClick={() => setSonando(true)} style={{ flex: 2, background: ACENTO, color: "#111", border: "none", borderRadius: 12, padding: "12px 8px", fontFamily: FUENTE, fontSize: 14, fontWeight: 800, cursor: "pointer" }}>▶ escuchar</button>
         )}
         <button onClick={onArtista} style={{ flex: 2, background: "transparent", color: "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, padding: "12px 8px", fontFamily: FUENTE, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>ficha del artista →</button>
       </div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", paddingBottom: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", paddingBottom: 6, flex: "none" }}>
         <button onClick={onPrev} disabled={indice === 0} aria-label="lanzamiento anterior" style={navBtn(indice === 0)}>←</button>
         <span style={{ fontFamily: FUENTE, fontSize: 11, color: "#7d7396", letterSpacing: "0.06em" }}>{indice + 1} / {total}</span>
         <button onClick={onNext} disabled={indice >= total - 1} aria-label="lanzamiento siguiente" style={navBtn(indice >= total - 1)}>→</button>
@@ -205,8 +216,7 @@ export default function MusicaPage() {
   const [error, setError] = useState(null);
   const [indice, setIndice] = useState(0);
   const [artistaAbierto, setArtistaAbierto] = useState(null);
-  const raiz = useRef(null);
-  const alto = useAltoLibre(raiz, 0);
+  const [expandido, setExpandido] = useState(false); // reproductor abierto en la entrada
 
   async function cargar() {
     setError(null);
@@ -217,38 +227,43 @@ export default function MusicaPage() {
 
   const lanzamientos = datos ? datos.lanzamientos : [];
   const lz = lanzamientos[Math.min(indice, Math.max(0, lanzamientos.length - 1))];
-  const base = { position: "relative", width: "100%", maxWidth: 480, margin: "0 auto", boxSizing: "border-box", display: "flex", flexDirection: "column" };
+  const centrado = { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FUENTE, fontSize: 13, color: "#7d7396", padding: 24, textAlign: "center" };
+  const ancho = { width: "100%", maxWidth: 480, margin: "0 auto", boxSizing: "border-box" };
 
   if (artistaAbierto && datos) {
     return (
-      <div style={{ ...base, minHeight: alto || "70vh" }}>
-        <FichaArtista key={artistaAbierto} slug={artistaAbierto} artista={datos.artistas[artistaAbierto]} lanzamientos={lanzamientos} discoInicial={lz && lz.artistaSlug === artistaAbierto ? lz : null} onVolver={() => setArtistaAbierto(null)} />
+      <div className="musica">
+        <div className="musica-body" data-expandido="true" style={ancho}>
+          <FichaArtista key={artistaAbierto} slug={artistaAbierto} artista={datos.artistas[artistaAbierto]} lanzamientos={lanzamientos} discoInicial={lz && lz.artistaSlug === artistaAbierto ? lz : null} onVolver={() => setArtistaAbierto(null)} />
+        </div>
       </div>
     );
   }
 
   return (
-    <div ref={raiz} style={{ ...base, height: alto || "70vh", overflow: "hidden" }}>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "8px 18px 2px" }}>
-        <span style={{ fontFamily: FUENTE, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: ACENTO }}>lanzamientos</span>
-        {datos && datos.generatedAt && <span style={{ fontFamily: FUENTE, fontSize: 10, color: "#6a6180" }}>actualizado {hace(datos.generatedAt)}</span>}
-      </div>
-      {!datos && !error && <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FUENTE, fontSize: 13, color: "#7d7396" }}>cargando música…</div>}
-      {error && (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 24, textAlign: "center" }}>
-          <div style={{ fontFamily: FUENTE, fontSize: 13, color: "#c9a0a0" }}>No se pudo cargar la música ({error}).</div>
-          <button onClick={cargar} style={{ background: "transparent", color: "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, padding: "10px 18px", fontFamily: FUENTE, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>reintentar</button>
+    <div className="musica">
+      <div className="musica-body" data-expandido={expandido ? "true" : "false"} style={ancho}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "8px 18px 2px", flex: "none" }}>
+          <span style={{ fontFamily: FUENTE, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: ACENTO }}>lanzamientos</span>
+          {datos && datos.generatedAt && <span style={{ fontFamily: FUENTE, fontSize: 10, color: "#6a6180" }}>actualizado {hace(datos.generatedAt)}</span>}
         </div>
-      )}
-      {datos && !lz && <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FUENTE, fontSize: 13, color: "#7d7396", padding: 24, textAlign: "center" }}>Todavía no hay lanzamientos con forma de escucharse.</div>}
-      {datos && lz && (
-        <LanzamientoCard
-          lz={lz} indice={Math.min(indice, lanzamientos.length - 1)} total={lanzamientos.length} alto={alto}
-          onPrev={() => setIndice(i => Math.max(0, i - 1))}
-          onNext={() => setIndice(i => Math.min(lanzamientos.length - 1, i + 1))}
-          onArtista={() => setArtistaAbierto(lz.artistaSlug)}
-        />
-      )}
+        {!datos && !error && <div style={centrado}>cargando música…</div>}
+        {error && (
+          <div style={{ ...centrado, flexDirection: "column", gap: 12 }}>
+            <div style={{ color: "#c9a0a0" }}>No se pudo cargar la música ({error}).</div>
+            <button onClick={cargar} style={{ background: "transparent", color: "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, padding: "10px 18px", fontFamily: FUENTE, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>reintentar</button>
+          </div>
+        )}
+        {datos && !lz && <div style={centrado}>Todavía no hay lanzamientos con forma de escucharse.</div>}
+        {datos && lz && (
+          <LanzamientoCard
+            lz={lz} indice={Math.min(indice, lanzamientos.length - 1)} total={lanzamientos.length} onExpandido={setExpandido}
+            onPrev={() => setIndice(i => Math.max(0, i - 1))}
+            onNext={() => setIndice(i => Math.min(lanzamientos.length - 1, i + 1))}
+            onArtista={() => setArtistaAbierto(lz.artistaSlug)}
+          />
+        )}
+      </div>
     </div>
   );
 }
