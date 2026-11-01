@@ -10,6 +10,7 @@ const { useState, useEffect, useRef } = React;
 // en el archivo (function declarations, hoisted, así que el orden no importa).
 // Feed es solo noticias: el formato "cine" vive únicamente en Vitrina.
 function cardsFor(formato) {
+  // LEGACY: el Feed ya no emite música; este caso solo sirve para lo guardado antes en el Buzón.
   if (formato === "musica") return { Story: MusicStoryCard, Extended: MusicExtendedView };
   return { Story: StoryCard, Extended: ExtendedView };
 }
@@ -451,7 +452,10 @@ function FeedPage() {
         // Migración defensiva: colas guardadas antes de esta sesión pueden traer
         // ítems formato "cine" (CineStoryCard ya no existe, Vitrina los reemplazó).
         // Sin este filtro, React explota (error #130: componente null/undefined).
-        const cleanQueue = (s.feedQueue || []).filter(it => it.formato !== "cine");
+        // Música (oct-2026) salió del Feed: tiene su propio módulo (🎧). Las noticias de música
+        // que quedaron SIN LEER en la cola se retiran; lo ya guardado en el Buzón NO se toca
+        // y se sigue mostrando con MusicExtendedView (modo legacy).
+        const cleanQueue = (s.feedQueue || []).filter(it => it.formato !== "cine" && it.formato !== "musica");
         setQueue(cleanQueue);
         setSeen(s.feedSeen || []);
         // Feed es solo noticias. Los ítems de categorías de Vitrina que quedaron

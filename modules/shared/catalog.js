@@ -1,4 +1,4 @@
-import { CINE_JSON_URL, FEED_JSON_URL, FORMATO_BY_CATEGORIA, MELEE_JSON_URL, VIDEOTECA_JSON_URL, VITRINA_CATEGORIAS, fetchJsonSafe } from "./constants.js";
+import { CINE_JSON_URL, FEED_JSON_URL, FORMATO_BY_CATEGORIA, MELEE_JSON_URL, MUSICA_JSON_URL, VIDEOTECA_JSON_URL, VITRINA_CATEGORIAS, fetchJsonSafe } from "./constants.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -72,4 +72,12 @@ export async function fetchVitrinaData() {
   ingest(meleeData, "lectura");
   const generatedAt = [cineData, meleeData, videoteca].map(d => d?.generatedAt).filter(Boolean).sort().pop() || null;
   return { vitrina, fuentes, generatedAt };
+}
+
+// Música: lanzamientos + fichas de artista (musica.json, lo escribe build-musica.mjs).
+// Archivo propio: la música ya no viaja en feed.json.
+export async function fetchMusicaData() {
+  const d = await fetchJsonSafe(MUSICA_JSON_URL);
+  if (!d || !Array.isArray(d.lanzamientos)) throw new Error("no se pudo leer musica.json");
+  return { lanzamientos: d.lanzamientos, artistas: d.artistas || {}, generatedAt: d.generatedAt || null };
 }

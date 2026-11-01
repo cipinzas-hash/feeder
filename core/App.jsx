@@ -25,6 +25,7 @@ import RegistroRapido from "./RegistroRapido.jsx";
 import EspritPage from "../modules/espiritu/EspritPage.jsx";
 import FeedPage from "../modules/feed/FeedPage.jsx";
 import VitrinaPage from "../modules/vitrina/VitrinaPage.jsx";
+import MusicaPage from "../modules/musica/MusicaPage.jsx";
 import SemanaDashboard from "./SemanaDashboard.jsx";
 
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
@@ -1860,9 +1861,9 @@ function AngstApp() {
         </div>
 
         {(()=>{
-          const TABS=[{label:"📅 Semana",emoji:"📅"},{label:"💵 Presupuesto",emoji:"💵"},{label:"📒 Emprendimientos",emoji:"📒"},{label:"🧠 mindfulness",emoji:"🧠"},{label:"🩺 salud",emoji:"🩺"},{label:"🍄 fadiman",emoji:"🍄"},{label:"🥗 nutrición",emoji:"🥗"},{label:"🏋️ ejercicio",emoji:"🏋️"},{label:"🃏 pokécripto",emoji:"🃏"},{label:"📰 feed",emoji:"📰"},{label:"🎬 vitrina",emoji:"🎬"},{label:"🌱 rutinas",emoji:"🌱"}];
-          // Orden visual: Rutinas va justo después de Semana. Los ids de página (índice en TABS) no se renumeran.
-          const ORDER=[0,11,1,2,3,4,5,6,7,8,9,10];
+          const TABS=[{label:"📅 Semana",emoji:"📅"},{label:"💵 Presupuesto",emoji:"💵"},{label:"📒 Emprendimientos",emoji:"📒"},{label:"🧠 mindfulness",emoji:"🧠"},{label:"🩺 salud",emoji:"🩺"},{label:"🍄 fadiman",emoji:"🍄"},{label:"🥗 nutrición",emoji:"🥗"},{label:"🏋️ ejercicio",emoji:"🏋️"},{label:"🃏 pokécripto",emoji:"🃏"},{label:"📰 feed",emoji:"📰"},{label:"🎬 vitrina",emoji:"🎬"},{label:"🌱 rutinas",emoji:"🌱"},{label:"🎧 música",emoji:"🎧"}];
+          // Orden visual: Rutinas va justo después de Semana y Música (id 12) justo después de Feed. Los ids de página (índice en TABS) no se renumeran.
+          const ORDER=[0,11,1,2,3,4,5,6,7,8,9,12,10];
           return (
             <div className="tabs" style={{userSelect:"none"}}>
               {ORDER.map(ti=>{
@@ -2282,6 +2283,7 @@ function AngstApp() {
         />}
         {page===9&&<FeedPage/>}
         {page===10&&<VitrinaPage/>}
+        {page===12&&<MusicaPage/>}
         {page===11&&<RoutinesPage routines={routines} onSave={saveRoutines} onAddToDay={(name,emoji)=>{const tk=fmtFull(new Date());const nid=Date.now();const dd=dayDataRef.current||{};const d=dd[tk]||makeEmptyDay();const nx={...dd,[tk]:{...d,tasks:[...d.tasks,{id:nid,text:(emoji?emoji+" ":"")+name,fixed:false,done:false}]}};setDayData(nx);dayDataRef.current=nx;saveToStorage({dayData:nx});}}/>}
 
         <div className="ftr">
