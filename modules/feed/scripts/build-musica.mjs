@@ -34,6 +34,7 @@ const MAX_EXTRACCIONES = num("MUSICA_MAX_EXTRACCIONES", 80);  // llamadas a Gemi
 const MAX_MS = num("MUSICA_MAX_MIN", 11) * 60 * 1000;        // tope de tiempo para enriquecer
 const RETENCION_DIAS = 45;
 const ARTISTA_TTL_DIAS = 14;
+const ESQUEMA_ARTISTA = 2; // súbelo cuando cambie cómo se arma la ficha: obliga a rehacer las cacheadas
 const MB_GAP_MS = num("MB_GAP_MS", 1100);
 const GEMINI_GAP_MS = num("GEMINI_GAP_MS", 4500);
 const MAX_DISCOS = 60;
@@ -165,9 +166,17 @@ export async function resolverBandcamp({ nombre, hostsCandidatos, hostMB, idsRel
     if (!p) continue;
     const contieneRelease = (idsRelease || []).some(id => p.items.some(i => i.id === id));
     if (!p.esSello) {
-      // Página de banda: es la del artista si el nombre coincide, si MusicBrainz la
-      // señala, o si contiene el disco de la noticia (evidencia fuerte de identidad).
-      if (mismoArtista(p.nombre, nombre) || host === hostMB || contieneRelease || hostsDeSello.has(host)) { propia = { host, pagina: p }; break; }
+      // Página de banda: es la del artista si el nombre coincide, si MusicBrainz la señala o si
+      // el sello declaró ese host como suyo.
+      if (mismoArtista(p.nombre, nombre) || host === hostMB || hostsDeSello.has(host)) { propia = { host, pagina: p }; break; }
+      // Contiene el disco de la noticia pero NO se llama como el artista: puede ser un sello o
+      // colectivo que rotula "ARTISTA: Título" en el propio título (sin artist-override). No se
+      // toma como página propia: se queda con los discos que nombran al artista.
+      if (contieneRelease) {
+        const n = normalizar(nombre);
+        const mios = p.items.filter(i => (idsRelease || []).includes(i.id) || (n.length >= 3 && normalizar(i.titulo).includes(n)));
+        sello = sello || { host, pagina: p, items: mios };
+      }
       continue;
     }
     // Página de sello: se filtran sus discos por artista y se sigue a la página propia.
@@ -253,7 +262,7 @@ async function audiodbLogo(nombre, mbid) {
 
 // ── Enriquecer un artista ────────────────────────────────────────────────────
 async function enriquecerArtista(nombre, lanzamientos) {
-  const rec = { nombre, slug: slug(nombre), actualizado: new Date().toISOString(), bandcamp: null, mb: null, wiki: null, deezer: null, logo: null, bio: null, foto: null };
+  const rec = { v: ESQUEMA_ARTISTA, nombre, slug: slug(nombre), actualizado: new Date().toISOString(), bandcamp: null, mb: null, wiki: null, deezer: null, logo: null, bio: null, foto: null };
   const idsRelease = [...new Set(lanzamientos.flatMap(l => l.bcIds))];
   const disco = lanzamientos.find(l => l.disco)?.disco || null;
 
@@ -373,7 +382,7 @@ async function main() {
   const pendientes = [];
   for (const [s, lz] of porArtista) {
     const c = previo.artistas?.[s];
-    const venc = !c || (Date.now() - new Date(c.actualizado).getTime()) > ARTISTA_TTL_DIAS * 86400000;
+    const venc = !c || c.v !== ESQUEMA_ARTISTA || (Date.now() - new Date(c.actualizado).getTime()) > ARTISTA_TTL_DIAS * 86400000;
     const idsCache = new Set((c?.bandcamp?.discos || []).map(d => d.id));
     const discoNuevo = !!c && lz.some(g => g.bcIds.some(id => !idsCache.has(id)));
     if (c && !venc && !discoNuevo) { artistas[s] = c; continue; }

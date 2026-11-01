@@ -12175,7 +12175,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       setSelMonth((m % 12 + 12) % 12);
     };
     const secProps = { totalIngreso: T, onRowSave: updRow, onRowAdd: addRow, onRowDelete: delRow, onRowCheck: checkRow, onChartOpen: setChartData };
-    const navBtn = { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "6px 11px", cursor: "pointer", color: "#888", fontSize: 16, lineHeight: 1 };
+    const navBtn2 = { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "6px 11px", cursor: "pointer", color: "#888", fontSize: 16, lineHeight: 1 };
     return /* @__PURE__ */ React.createElement("div", { style: { flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column", overflowY: vista === "asignar" ? "auto" : "hidden" } }, ingChart && /* @__PURE__ */ React.createElement(IngresoChartModal, { budgets, selYear, selMonth, onClose: () => setIngChart(false) }), chartData && /* @__PURE__ */ React.createElement(ChartModal, { title: chartData.title, emoji: chartData.emoji, rows: chartData.rows, total: chartData.total, onClose: () => setChartData(null) }), idxVentana >= 0 && /* @__PURE__ */ React.createElement(
       CarteraVentana,
       {
@@ -12226,12 +12226,12 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       const ny = selMonth === 0 ? selYear - 1 : selYear;
       setSelMonth(nm);
       setSelYear(ny);
-    }, style: navBtn }, "\u2039"), /* @__PURE__ */ React.createElement("button", { onClick: () => setMonthModal(true), style: { fontFamily: "'Caveat',cursive", fontSize: 17, color: "#555", background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "7px 14px", cursor: "pointer" } }, "\u{1F4C5} ", periodLabel), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+    }, style: navBtn2 }, "\u2039"), /* @__PURE__ */ React.createElement("button", { onClick: () => setMonthModal(true), style: { fontFamily: "'Caveat',cursive", fontSize: 17, color: "#555", background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "7px 14px", cursor: "pointer" } }, "\u{1F4C5} ", periodLabel), /* @__PURE__ */ React.createElement("button", { onClick: () => {
       const nm = selMonth === 11 ? 0 : selMonth + 1;
       const ny = selMonth === 11 ? selYear + 1 : selYear;
       setSelMonth(nm);
       setSelYear(ny);
-    }, style: navBtn }, "\u203A")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } }, sobresOn && /* @__PURE__ */ React.createElement("button", { onClick: () => setCierre({ periodo: compuerta.ok ? monthKey : compuerta.requiere, tab: void 0 }), title: "Arqueo y rendici\xF3n del per\xEDodo", style: { ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: arqueoVence ? "#a60" : "#555", padding: "7px 12px", borderColor: arqueoVence ? "#e0b070" : "#ddd" } }, "\u{1F50D} cierre", arqueoVence ? " \u25CF" : ""), inicio ? /* @__PURE__ */ React.createElement("button", { onClick: () => setGuia(true), title: "Cu\xE1nto debe haber en cada sobre", style: { ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: "#555", padding: "7px 12px" } }, "\u{1F9FE} sobres", sobresOn ? "" : " (desde " + MONTH_NAMES[parseInt(inicio.slice(5)) - 1].slice(0, 3) + ")", " \u25B8") : /* @__PURE__ */ React.createElement("button", { onClick: iniciarSobres, title: "Activa saldos, gastos y sobrantes por cartera a partir de este per\xEDodo", style: { ...navBtn, fontFamily: "'Caveat',cursive", fontSize: 15, color: "#555", padding: "7px 12px" } }, "\u{1F9FE} iniciar sobres"))), !compuerta.ok && /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#8a5a00", background: "#fffaf0", border: "1px dashed #e0b070", borderRadius: 6, padding: "8px 10px", marginBottom: 14, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }) }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, "\u{1F512} Este per\xEDodo a\xFAn no existe: ", compuerta.motivo.toLowerCase()), /* @__PURE__ */ React.createElement("button", { onClick: () => setCierre({ periodo: compuerta.requiere }), style: { background: "#111", color: "#fff", border: "none", borderRadius: 6, padding: "5px 12px", fontSize: 12, cursor: "pointer" } }, "Hacer el arqueo")), aviso && /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", marginBottom: 14 }) }, aviso), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "10px 14px", borderRadius: "8px 8px 0 0", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { onClick: () => setIngChart(true), style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700, cursor: "pointer" } }, "\u{1F4B5} Ingresos ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, opacity: 0.5 } }, "\u25B8")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, fmtCLP(totalIngreso))), /* @__PURE__ */ React.createElement("div", { style: { border: "1px solid #eee", borderTop: "none", borderRadius: "0 0 8px 8px", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: GAP, padding: "7px 12px", background: "#f8f8f8", borderBottom: "1px solid #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { ...celdaTitulo, letterSpacing: 2, textTransform: "uppercase" } }, "Fuente"), /* @__PURE__ */ React.createElement("div", { style: { ...celdaTitulo, textAlign: "right", paddingRight: PAD_MONTO, width: 120 - PAD_MONTO } }, "$ Mensual")), [{ k: "trabajo", l: "Trabajo principal", e: "\u{1F3E2}" }, { k: "emprendimiento", l: "Emprendimiento", e: "\u{1F6E0}\uFE0F" }, { k: "reventa", l: "Reventa", e: "\u267B\uFE0F" }, { k: "otros", l: "Otros", e: "\u2795" }].map((s, i) => /* @__PURE__ */ React.createElement("div", { key: s.k, style: { display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: GAP, padding: "11px 12px", borderBottom: i < 3 ? "1px dashed #f0f0f0" : "none", alignItems: "center", background: i % 2 === 0 ? "#fff" : "#fafafa" } }, /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 13, color: "#333", display: "flex", alignItems: "center", gap: 6 }) }, /* @__PURE__ */ React.createElement("span", null, s.e), /* @__PURE__ */ React.createElement("span", null, s.l)), /* @__PURE__ */ React.createElement(AmountRow, { value: ing[s.k], onSave: (v) => updIng(s.k, v) }))))), /* @__PURE__ */ React.createElement(BudgetSec, { title: "Gastos Base", emoji: "\u{1F9F1}", rows: budget.gastos_base, secKey: "gastos_base", subtotal: sumBase, canEdit: true, onToggleCartera: toggleCartera, anual: proy.filas.gastos_base, ...secProps }), /* @__PURE__ */ React.createElement(BudgetSec, { title: "Fondos Personales", emoji: "\u{1F464}", rows: budget.personales, secKey: "personales", subtotal: sumPers, canEdit: false, onOpenCartera: abrirCartera, anual: proy.filas.personales, ...secProps }), /* @__PURE__ */ React.createElement(BudgetSec, { title: "Fondos por Prop\xF3sito", emoji: "\u{1F4E6}", rows: budget.propositos, secKey: "propositos", subtotal: sumProp, canEdit: true, onOpenCartera: abrirCartera, anual: proy.filas.propositos, ...secProps }), /* @__PURE__ */ React.createElement("div", { style: { border: "2px solid #111", borderRadius: 8, overflow: "hidden", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "12px 12px", background: "#111", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", fontWeight: 700 } }, "Total distribuido"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 14, color: "#fff", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO }) }, fmtCLP(totalGasto)), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#888", textAlign: "right" }) }, T > 0 ? (totalGasto / T * 100).toFixed(1) : "-", "%"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#888", textAlign: "right" }) }, fmtCLP(anualTotal)), /* @__PURE__ */ React.createElement("div", null)), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "10px 12px", background: remainder < 0 ? "#fff5f5" : "#f9f9f9", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: remainder < 0 ? "#c00" : "#555" } }, remainder < 0 ? "\u26A0\uFE0F D\xE9ficit" : "Remanente"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 14, color: remainder < 0 ? "#c00" : "#111", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO }) }, fmtCLP(Math.abs(remainder))), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#aaa", textAlign: "right" }) }, T > 0 ? (Math.abs(remainder) / T * 100).toFixed(1) : "-", "%"), /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", null))), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 10, color: "#aaa", lineHeight: 1.5, padding: "4px 4px 0" }) }, "Proy. anual: los pr\xF3ximos 12 per\xEDodos con el monto asignado en cada mes. Los meses que a\xFAn no existen usan el promedio de ", proy.mesesPromedio > 0 ? `los \xFAltimos ${proy.mesesPromedio} mes${proy.mesesPromedio > 1 ? "es" : ""} en registro` : "este mes (a\xFAn no hay registro)", ", contando como cero los meses sin presupuesto."), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } })));
+    }, style: navBtn2 }, "\u203A")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } }, sobresOn && /* @__PURE__ */ React.createElement("button", { onClick: () => setCierre({ periodo: compuerta.ok ? monthKey : compuerta.requiere, tab: void 0 }), title: "Arqueo y rendici\xF3n del per\xEDodo", style: { ...navBtn2, fontFamily: "'Caveat',cursive", fontSize: 15, color: arqueoVence ? "#a60" : "#555", padding: "7px 12px", borderColor: arqueoVence ? "#e0b070" : "#ddd" } }, "\u{1F50D} cierre", arqueoVence ? " \u25CF" : ""), inicio ? /* @__PURE__ */ React.createElement("button", { onClick: () => setGuia(true), title: "Cu\xE1nto debe haber en cada sobre", style: { ...navBtn2, fontFamily: "'Caveat',cursive", fontSize: 15, color: "#555", padding: "7px 12px" } }, "\u{1F9FE} sobres", sobresOn ? "" : " (desde " + MONTH_NAMES[parseInt(inicio.slice(5)) - 1].slice(0, 3) + ")", " \u25B8") : /* @__PURE__ */ React.createElement("button", { onClick: iniciarSobres, title: "Activa saldos, gastos y sobrantes por cartera a partir de este per\xEDodo", style: { ...navBtn2, fontFamily: "'Caveat',cursive", fontSize: 15, color: "#555", padding: "7px 12px" } }, "\u{1F9FE} iniciar sobres"))), !compuerta.ok && /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#8a5a00", background: "#fffaf0", border: "1px dashed #e0b070", borderRadius: 6, padding: "8px 10px", marginBottom: 14, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }) }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, "\u{1F512} Este per\xEDodo a\xFAn no existe: ", compuerta.motivo.toLowerCase()), /* @__PURE__ */ React.createElement("button", { onClick: () => setCierre({ periodo: compuerta.requiere }), style: { background: "#111", color: "#fff", border: "none", borderRadius: 6, padding: "5px 12px", fontSize: 12, cursor: "pointer" } }, "Hacer el arqueo")), aviso && /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#c00", background: "#fff5f5", border: "1px dashed #e0b0b0", borderRadius: 6, padding: "8px 10px", marginBottom: 14 }) }, aviso), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "10px 14px", borderRadius: "8px 8px 0 0", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { onClick: () => setIngChart(true), style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700, cursor: "pointer" } }, "\u{1F4B5} Ingresos ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, opacity: 0.5 } }, "\u25B8")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, fmtCLP(totalIngreso))), /* @__PURE__ */ React.createElement("div", { style: { border: "1px solid #eee", borderTop: "none", borderRadius: "0 0 8px 8px", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: GAP, padding: "7px 12px", background: "#f8f8f8", borderBottom: "1px solid #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { ...celdaTitulo, letterSpacing: 2, textTransform: "uppercase" } }, "Fuente"), /* @__PURE__ */ React.createElement("div", { style: { ...celdaTitulo, textAlign: "right", paddingRight: PAD_MONTO, width: 120 - PAD_MONTO } }, "$ Mensual")), [{ k: "trabajo", l: "Trabajo principal", e: "\u{1F3E2}" }, { k: "emprendimiento", l: "Emprendimiento", e: "\u{1F6E0}\uFE0F" }, { k: "reventa", l: "Reventa", e: "\u267B\uFE0F" }, { k: "otros", l: "Otros", e: "\u2795" }].map((s, i) => /* @__PURE__ */ React.createElement("div", { key: s.k, style: { display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: GAP, padding: "11px 12px", borderBottom: i < 3 ? "1px dashed #f0f0f0" : "none", alignItems: "center", background: i % 2 === 0 ? "#fff" : "#fafafa" } }, /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 13, color: "#333", display: "flex", alignItems: "center", gap: 6 }) }, /* @__PURE__ */ React.createElement("span", null, s.e), /* @__PURE__ */ React.createElement("span", null, s.l)), /* @__PURE__ */ React.createElement(AmountRow, { value: ing[s.k], onSave: (v) => updIng(s.k, v) }))))), /* @__PURE__ */ React.createElement(BudgetSec, { title: "Gastos Base", emoji: "\u{1F9F1}", rows: budget.gastos_base, secKey: "gastos_base", subtotal: sumBase, canEdit: true, onToggleCartera: toggleCartera, anual: proy.filas.gastos_base, ...secProps }), /* @__PURE__ */ React.createElement(BudgetSec, { title: "Fondos Personales", emoji: "\u{1F464}", rows: budget.personales, secKey: "personales", subtotal: sumPers, canEdit: false, onOpenCartera: abrirCartera, anual: proy.filas.personales, ...secProps }), /* @__PURE__ */ React.createElement(BudgetSec, { title: "Fondos por Prop\xF3sito", emoji: "\u{1F4E6}", rows: budget.propositos, secKey: "propositos", subtotal: sumProp, canEdit: true, onOpenCartera: abrirCartera, anual: proy.filas.propositos, ...secProps }), /* @__PURE__ */ React.createElement("div", { style: { border: "2px solid #111", borderRadius: 8, overflow: "hidden", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "12px 12px", background: "#111", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", fontWeight: 700 } }, "Total distribuido"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 14, color: "#fff", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO }) }, fmtCLP(totalGasto)), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#888", textAlign: "right" }) }, T > 0 ? (totalGasto / T * 100).toFixed(1) : "-", "%"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#888", textAlign: "right" }) }, fmtCLP(anualTotal)), /* @__PURE__ */ React.createElement("div", null)), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "10px 12px", background: remainder < 0 ? "#fff5f5" : "#f9f9f9", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: remainder < 0 ? "#c00" : "#555" } }, remainder < 0 ? "\u26A0\uFE0F D\xE9ficit" : "Remanente"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 14, color: remainder < 0 ? "#c00" : "#111", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO }) }, fmtCLP(Math.abs(remainder))), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#aaa", textAlign: "right" }) }, T > 0 ? (Math.abs(remainder) / T * 100).toFixed(1) : "-", "%"), /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", null))), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 10, color: "#aaa", lineHeight: 1.5, padding: "4px 4px 0" }) }, "Proy. anual: los pr\xF3ximos 12 per\xEDodos con el monto asignado en cada mes. Los meses que a\xFAn no existen usan el promedio de ", proy.mesesPromedio > 0 ? `los \xFAltimos ${proy.mesesPromedio} mes${proy.mesesPromedio > 1 ? "es" : ""} en registro` : "este mes (a\xFAn no hay registro)", ", contando como cero los meses sin presupuesto."), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } })));
   }
   var BudgetPage_default = BudgetPage;
 
@@ -13068,6 +13068,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
   var CINE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/cine.json";
   var MELEE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/melee.json";
   var VIDEOTECA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/videoteca.json";
+  var MUSICA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/musica/modules/feed/data/musica.json";
   var CINE_CATEGORIAS = ["Pel\xEDculas", "Series", "Animaci\xF3n"];
   var VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales", "Melee", "Conciertos"];
   var MUSIC_CATEGORIA = "Dark scene / M\xFAsica";
@@ -13238,6 +13239,11 @@ ${item.link}`);
     ingest(meleeData, "lectura");
     const generatedAt = [cineData, meleeData, videoteca].map((d) => d?.generatedAt).filter(Boolean).sort().pop() || null;
     return { vitrina, fuentes, generatedAt };
+  }
+  async function fetchMusicaData() {
+    const d = await fetchJsonSafe(MUSICA_JSON_URL);
+    if (!d || !Array.isArray(d.lanzamientos)) throw new Error("no se pudo leer musica.json");
+    return { lanzamientos: d.lanzamientos, artistas: d.artistas || {}, generatedAt: d.generatedAt || null };
   }
 
   // modules/feed/FeedPage.jsx
@@ -13455,7 +13461,7 @@ ${item.link}`);
       (async () => {
         const s = await loadState();
         if (s) {
-          const cleanQueue = (s.feedQueue || []).filter((it) => it.formato !== "cine");
+          const cleanQueue = (s.feedQueue || []).filter((it) => it.formato !== "cine" && it.formato !== "musica");
           setQueue(cleanQueue);
           setSeen(s.feedSeen || []);
           const buzonAll = Array.isArray(s.feedBuzon) ? s.feedBuzon : [];
@@ -14998,6 +15004,122 @@ Toco reintentar ahora.`);
   }
   var VitrinaPage_default = VitrinaPage;
 
+  // modules/musica/MusicaPage.jsx
+  var { useState: useState34, useEffect: useEffect22, useRef: useRef20 } = React;
+  var ACENTO = CAT_COLORS["Dark scene / M\xFAsica"] || "#7b4fd4";
+  var FUENTE2 = "'DM Sans',sans-serif";
+  var MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  function hace(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (isNaN(d)) return "";
+    const dias = Math.floor((Date.now() - d.getTime()) / 864e5);
+    if (dias <= 0) return "hoy";
+    if (dias === 1) return "ayer";
+    if (dias < 14) return `hace ${dias} d`;
+    return `${d.getDate()} ${MESES[d.getMonth()]}`;
+  }
+  var TIPO = { album: "\xE1lbum", ep: "EP", single: "single", video: "video", reedicion: "reedici\xF3n" };
+  function embedBandcamp(kind, id) {
+    return `https://bandcamp.com/EmbeddedPlayer/${kind === "track" ? "track" : "album"}=${id}/size=large/bgcol=0a0a0a/linkcol=ffffff/tracklist=false/transparent=true/`;
+  }
+  function Reproductor({ player, titulo }) {
+    if (!player) return null;
+    const caja = { width: "100%", border: 0, borderRadius: 8, background: "#000", display: "block" };
+    if (player.tipo === "bandcamp")
+      return /* @__PURE__ */ React.createElement("iframe", { title: titulo || "Bandcamp", src: embedBandcamp(player.kind, player.id), style: { ...caja, height: 120 }, seamless: true, allow: "autoplay" });
+    if (player.tipo === "youtube")
+      return /* @__PURE__ */ React.createElement("iframe", { title: titulo || "YouTube", src: `https://www.youtube.com/embed/${player.videoId}?rel=0&playsinline=1`, style: { ...caja, aspectRatio: "16 / 9", height: "auto" }, allow: "autoplay; encrypted-media; picture-in-picture", allowFullScreen: true });
+    if (player.tipo === "soundcloud")
+      return /* @__PURE__ */ React.createElement("iframe", { title: titulo || "SoundCloud", src: player.url, style: { ...caja, height: 120 }, allow: "autoplay" });
+    if (player.tipo === "deezer")
+      return /* @__PURE__ */ React.createElement("iframe", { title: titulo || "Deezer", src: `https://widget.deezer.com/widget/dark/track/${player.trackId}?tracklist=false`, style: { ...caja, height: 140 }, allow: "encrypted-media" });
+    return null;
+  }
+  var quitarCaratula = (e) => {
+    e.currentTarget.style.visibility = "hidden";
+  };
+  function Caratula({ src, lado, alt }) {
+    const caja = { width: lado, height: lado, borderRadius: 10, background: "#16121f", border: "1px solid #2a2438", overflow: "hidden", flex: "none", display: "flex", alignItems: "center", justifyContent: "center", color: "#4a4260", fontSize: Math.round(lado / 3) };
+    return /* @__PURE__ */ React.createElement("div", { style: caja }, src ? /* @__PURE__ */ React.createElement("img", { src, alt: alt || "", loading: "lazy", onError: quitarCaratula, style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } }) : "\u266A");
+  }
+  function Chip({ children, activo, onClick, style }) {
+    return /* @__PURE__ */ React.createElement("span", { onClick, style: { fontFamily: FUENTE2, fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: activo ? "#111" : "#b9afd6", background: activo ? ACENTO : "#1c1729", border: `1px solid ${activo ? ACENTO : "#2f2745"}`, borderRadius: 12, padding: "3px 9px", ...style } }, children);
+  }
+  function LanzamientoCard({ lz, indice, total, onPrev, onNext, onArtista, alto }) {
+    const [sonando, setSonando] = useState34(false);
+    useEffect22(() => {
+      setSonando(false);
+    }, [lz.id]);
+    const esVideo = lz.player && lz.player.tipo === "youtube";
+    const reservado = 232 + (sonando && !esVideo ? 128 : 0);
+    const lado = Math.max(120, Math.min(300, (alto || 560) - reservado));
+    const fuentes = lz.fuentes || [];
+    return /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", alignItems: "center", padding: "6px 16px 0", gap: 10 } }, sonando && esVideo ? /* @__PURE__ */ React.createElement("div", { style: { width: "100%" } }, /* @__PURE__ */ React.createElement(Reproductor, { player: lz.player, titulo: `${lz.artista} \u2014 ${lz.disco || ""}` })) : /* @__PURE__ */ React.createElement(Caratula, { src: lz.arte, lado, alt: `${lz.artista} \u2014 ${lz.disco || ""}` }), sonando && !esVideo && /* @__PURE__ */ React.createElement("div", { style: { width: "100%" } }, /* @__PURE__ */ React.createElement(Reproductor, { player: lz.player, titulo: `${lz.artista} \u2014 ${lz.disco || ""}` })), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", width: "100%", minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", lineHeight: 1.05, overflowWrap: "anywhere" } }, lz.artista), lz.disco && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 14, color: "#cfc7e6", marginTop: 3, overflowWrap: "anywhere" } }, lz.disco), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, justifyContent: "center", alignItems: "center", marginTop: 8, flexWrap: "wrap" } }, TIPO[lz.tipo] && /* @__PURE__ */ React.createElement(Chip, { activo: true }, TIPO[lz.tipo]), /* @__PURE__ */ React.createElement(Chip, null, hace(lz.fecha)), /* @__PURE__ */ React.createElement(Chip, null, fuentes.length > 1 ? `${fuentes.length} fuentes` : fuentes[0]?.fuente || ""))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, width: "100%", marginTop: "auto" } }, lz.player && !sonando && /* @__PURE__ */ React.createElement("button", { onClick: () => setSonando(true), style: { flex: 2, background: ACENTO, color: "#111", border: "none", borderRadius: 12, padding: "12px 8px", fontFamily: FUENTE2, fontSize: 14, fontWeight: 800, cursor: "pointer" } }, "\u25B6 escuchar"), /* @__PURE__ */ React.createElement("button", { onClick: onArtista, style: { flex: 2, background: "transparent", color: "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, padding: "12px 8px", fontFamily: FUENTE2, fontSize: 14, fontWeight: 700, cursor: "pointer" } }, "ficha del artista \u2192")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", paddingBottom: 6 } }, /* @__PURE__ */ React.createElement("button", { onClick: onPrev, disabled: indice === 0, "aria-label": "lanzamiento anterior", style: navBtn(indice === 0) }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE2, fontSize: 11, color: "#7d7396", letterSpacing: "0.06em" } }, indice + 1, " / ", total), /* @__PURE__ */ React.createElement("button", { onClick: onNext, disabled: indice >= total - 1, "aria-label": "lanzamiento siguiente", style: navBtn(indice >= total - 1) }, "\u2192")));
+  }
+  var navBtn = (off) => ({ width: 52, height: 40, background: "transparent", border: "1px solid #2f2745", borderRadius: 10, color: off ? "#3c3552" : "#e5def7", fontSize: 18, cursor: off ? "default" : "pointer" });
+  function FichaArtista({ slug, artista, lanzamientos, discoInicial, onVolver }) {
+    const bc = artista?.bandcamp || null;
+    const discos = bc?.discos || [];
+    const propios = lanzamientos.filter((l) => l.artistaSlug === slug);
+    const inicial = discoInicial || propios[0] || null;
+    const [player, setPlayer] = useState34(inicial ? inicial.player : null);
+    const [titulo, setTitulo] = useState34(inicial ? `${inicial.artista} \u2014 ${inicial.disco || ""}` : "");
+    const [bioAbierta, setBioAbierta] = useState34(false);
+    const playerRef = useRef20(null);
+    const nombre = artista?.nombre || propios[0]?.artista || "";
+    const bio = artista?.bio || "";
+    const meta = [bc?.ubicacion, artista?.mb?.desde ? `desde ${String(artista.mb.desde).slice(0, 4)}` : null, artista?.mb?.pais].filter(Boolean).join(" \xB7 ");
+    const tags = artista?.mb?.tags || [];
+    function elegir(d) {
+      setPlayer({ tipo: "bandcamp", kind: d.tipo, id: d.id });
+      setTitulo(`${nombre} \u2014 ${d.titulo || ""}`);
+      if (playerRef.current && playerRef.current.scrollIntoView) playerRef.current.scrollIntoView({ block: "start", behavior: "smooth" });
+    }
+    const enlace2 = (href, texto) => href ? /* @__PURE__ */ React.createElement("a", { key: texto, href, target: "_blank", rel: "noopener noreferrer", style: { fontFamily: FUENTE2, fontSize: 12, fontWeight: 700, color: "#e5def7", textDecoration: "none", border: "1px solid #2f2745", borderRadius: 10, padding: "7px 12px" } }, texto, " \u2197") : null;
+    return /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 16px 22px", display: "flex", flexDirection: "column", gap: 14 } }, /* @__PURE__ */ React.createElement("button", { onClick: onVolver, style: { alignSelf: "flex-start", background: "transparent", border: "none", color: "#8a80a6", fontFamily: FUENTE2, fontSize: 13, cursor: "pointer", padding: "4px 0" } }, "\u2190 lanzamientos"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, alignItems: "center" } }, artista?.foto ? /* @__PURE__ */ React.createElement("img", { src: artista.foto, alt: "", loading: "lazy", onError: quitarCaratula, style: { width: 84, height: 84, borderRadius: "50%", objectFit: "cover", border: `2px solid ${ACENTO}`, flex: "none", background: "#16121f" } }) : /* @__PURE__ */ React.createElement("div", { style: { width: 84, height: 84, borderRadius: "50%", border: `2px solid ${ACENTO}`, flex: "none", display: "flex", alignItems: "center", justifyContent: "center", color: ACENTO, fontSize: 30, background: "#16121f" } }, "\u266A"), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, artista?.logo ? /* @__PURE__ */ React.createElement("img", { src: artista.logo, alt: nombre, loading: "lazy", onError: quitarCaratula, style: { maxWidth: "100%", maxHeight: 54, objectFit: "contain", display: "block" } }) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 30, fontWeight: 700, color: "#fff", lineHeight: 1.02, overflowWrap: "anywhere" } }, nombre), artista?.logo && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 12, color: "#8a80a6", marginTop: 2 } }, nombre), meta && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 12, color: "#9d93b8", marginTop: 4 } }, meta))), tags.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, tags.map((t) => /* @__PURE__ */ React.createElement(Chip, { key: t }, t))), /* @__PURE__ */ React.createElement("div", { ref: playerRef, style: { scrollMarginTop: 8 } }, player ? /* @__PURE__ */ React.createElement(Reproductor, { player, titulo }) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 12, color: "#7d7396", border: "1px dashed #2f2745", borderRadius: 8, padding: "14px 12px", textAlign: "center" } }, "elige un disco para escucharlo"), titulo && player && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 11, color: "#7d7396", marginTop: 6, overflowWrap: "anywhere" } }, titulo)), bio && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 13, lineHeight: 1.5, color: "#cfc7e6", whiteSpace: "pre-line", overflowWrap: "anywhere", ...bioAbierta ? {} : { display: "-webkit-box", WebkitLineClamp: 5, WebkitBoxOrient: "vertical", overflow: "hidden" } } }, bio), bio.length > 260 && /* @__PURE__ */ React.createElement("button", { onClick: () => setBioAbierta(!bioAbierta), style: { background: "transparent", border: "none", color: ACENTO, fontFamily: FUENTE2, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "6px 0 0" } }, bioAbierta ? "leer menos" : "leer m\xE1s"), !artista?.bandcamp?.bio && artista?.wiki && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 10, color: "#6a6180", marginTop: 2 } }, "texto de Wikipedia (", artista.wiki.lang, ")")), discos.length > 0 && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#8a80a6", marginBottom: 8 } }, "discograf\xEDa \xB7 ", bc.totalDiscos > discos.length ? `${discos.length} de ${bc.totalDiscos}` : discos.length, bc.pagina === "sello" && /* @__PURE__ */ React.createElement("span", { style: { textTransform: "none", letterSpacing: 0, fontWeight: 500 } }, " \xB7 del cat\xE1logo de su sello")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 } }, discos.map((d) => {
+      const activo = player && player.tipo === "bandcamp" && player.id === d.id;
+      return /* @__PURE__ */ React.createElement("button", { key: `${d.tipo}-${d.id}`, onClick: () => elegir(d), style: { background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "left", minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { aspectRatio: "1 / 1", borderRadius: 8, overflow: "hidden", background: "#16121f", border: `2px solid ${activo ? ACENTO : "#2a2438"}` } }, d.arte && /* @__PURE__ */ React.createElement("img", { src: d.arte, alt: "", loading: "lazy", onError: quitarCaratula, style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 11, lineHeight: 1.25, color: activo ? "#fff" : "#b9afd6", marginTop: 5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "anywhere" } }, d.titulo));
+    }))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, enlace2(bc?.url, "Bandcamp"), enlace2(artista?.mb?.url, "MusicBrainz"), enlace2(artista?.wiki?.url, "Wikipedia")), propios.length > 0 && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#8a80a6", marginBottom: 6 } }, "en las noticias"), propios.flatMap((l) => l.fuentes.map((f2) => /* @__PURE__ */ React.createElement("a", { key: f2.link, href: f2.link, target: "_blank", rel: "noopener noreferrer", style: { display: "block", fontFamily: FUENTE2, fontSize: 12, color: "#b9afd6", textDecoration: "none", padding: "5px 0", borderBottom: "1px solid #1f1a2e", overflowWrap: "anywhere" } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#6a6180" } }, f2.fuente, " \xB7 ", hace(f2.fecha), " \u2014 "), f2.titulo, " \u2197")))));
+  }
+  function MusicaPage() {
+    const [datos, setDatos] = useState34(null);
+    const [error, setError] = useState34(null);
+    const [indice, setIndice] = useState34(0);
+    const [artistaAbierto, setArtistaAbierto] = useState34(null);
+    const raiz = useRef20(null);
+    const alto = useAltoLibre(raiz, 0);
+    async function cargar() {
+      setError(null);
+      try {
+        setDatos(await fetchMusicaData());
+      } catch (e) {
+        setError(e.message || "error");
+      }
+    }
+    useEffect22(() => {
+      cargar();
+    }, []);
+    const lanzamientos = datos ? datos.lanzamientos : [];
+    const lz = lanzamientos[Math.min(indice, Math.max(0, lanzamientos.length - 1))];
+    const base = { position: "relative", width: "100%", maxWidth: 480, margin: "0 auto", boxSizing: "border-box", display: "flex", flexDirection: "column" };
+    if (artistaAbierto && datos) {
+      return /* @__PURE__ */ React.createElement("div", { style: { ...base, minHeight: alto || "70vh" } }, /* @__PURE__ */ React.createElement(FichaArtista, { key: artistaAbierto, slug: artistaAbierto, artista: datos.artistas[artistaAbierto], lanzamientos, discoInicial: lz && lz.artistaSlug === artistaAbierto ? lz : null, onVolver: () => setArtistaAbierto(null) }));
+    }
+    return /* @__PURE__ */ React.createElement("div", { ref: raiz, style: { ...base, height: alto || "70vh", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "8px 18px 2px" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE2, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: ACENTO } }, "lanzamientos"), datos && datos.generatedAt && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE2, fontSize: 10, color: "#6a6180" } }, "actualizado ", hace(datos.generatedAt))), !datos && !error && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FUENTE2, fontSize: 13, color: "#7d7396" } }, "cargando m\xFAsica\u2026"), error && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 24, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 13, color: "#c9a0a0" } }, "No se pudo cargar la m\xFAsica (", error, ")."), /* @__PURE__ */ React.createElement("button", { onClick: cargar, style: { background: "transparent", color: "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, padding: "10px 18px", fontFamily: FUENTE2, fontSize: 13, fontWeight: 700, cursor: "pointer" } }, "reintentar")), datos && !lz && /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FUENTE2, fontSize: 13, color: "#7d7396", padding: 24, textAlign: "center" } }, "Todav\xEDa no hay lanzamientos con forma de escucharse."), datos && lz && /* @__PURE__ */ React.createElement(
+      LanzamientoCard,
+      {
+        lz,
+        indice: Math.min(indice, lanzamientos.length - 1),
+        total: lanzamientos.length,
+        alto,
+        onPrev: () => setIndice((i) => Math.max(0, i - 1)),
+        onNext: () => setIndice((i) => Math.min(lanzamientos.length - 1, i + 1)),
+        onArtista: () => setArtistaAbierto(lz.artistaSlug)
+      }
+    ));
+  }
+
   // core/SemanaDashboard.jsx
   var DIA_LARGO = ["dom", "lun", "mar", "mi\xE9", "jue", "vie", "s\xE1b"];
   var MARCAS = [
@@ -15157,7 +15279,7 @@ Toco reintentar ahora.`);
   var SemanaDashboard_default = SemanaDashboard;
 
   // core/App.jsx
-  var { useState: useState34, useEffect: useEffect22, useRef: useRef20, useMemo: useMemo12, useCallback: useCallback7 } = React;
+  var { useState: useState35, useEffect: useEffect23, useRef: useRef21, useMemo: useMemo12, useCallback: useCallback7 } = React;
   async function localGet(key) {
     const val = localStorage.getItem(key);
     if (val === null) return null;
@@ -15206,39 +15328,39 @@ Toco reintentar ahora.`);
     "el tiempo es el \xFAnico activo que no se recupera."
   ];
   function AngstApp() {
-    const [page, setPage] = useState34(0);
-    const [gastoOpen, setGastoOpen] = useState34(false);
-    const [carritoOpen, setCarritoOpen] = useState34(false);
-    const [menuDatosOpen, setMenuDatosOpen] = useState34(false);
-    const [menuRegOpen, setMenuRegOpen] = useState34(false);
-    const [ingestaOpen, setIngestaOpen] = useState34(false);
-    const [cartaOpen, setCartaOpen] = useState34(false);
-    const [saludReg, setSaludReg] = useState34(null);
-    const [registroTipo, setRegistroTipo] = useState34(null);
-    const [regMsg, setRegMsg] = useState34(null);
-    const regMsgTimer = useRef20(null);
-    const cargarInputRef = useRef20(null);
-    const [dayData, setDayData] = useState34({});
-    const [weekOffset, setWeekOffset] = useState34(0);
-    const [budgets, setBudgets] = useState34({});
-    const [nutria, setNutria] = useState34(makeDefaultNutria());
-    const [fadimanData, setFadimanData] = useState34({});
-    const fadimanDataRef = useRef20({});
-    const [nutriLog, setNutriLog] = useState34({});
-    const [ejercicioLog, setEjercicioLog] = useState34({});
-    const nutriLogRef = useRef20({});
-    const [customFoods, setCustomFoods] = useState34({});
-    const customFoodsRef = useRef20({});
-    const [foodOverrides, setFoodOverrides] = useState34({});
-    const foodOverridesRef = useRef20({});
-    const [customEjercicios, setCustomEjercicios] = useState34({});
-    const customEjerciciosRef = useRef20({});
-    const ejercicioLogRef = useRef20({});
-    const [ejercicioDecks, setEjercicioDecks] = useState34([]);
-    const ejercicioDecksRef = useRef20([]);
-    const [calMarks, setCalMarks] = useState34({});
-    const [meleeMajors, setMeleeMajors] = useState34([]);
-    const [custody, setCustody] = useState34({ baseDate: "2026-04-28", withKids: true, overrides: {} });
+    const [page, setPage] = useState35(0);
+    const [gastoOpen, setGastoOpen] = useState35(false);
+    const [carritoOpen, setCarritoOpen] = useState35(false);
+    const [menuDatosOpen, setMenuDatosOpen] = useState35(false);
+    const [menuRegOpen, setMenuRegOpen] = useState35(false);
+    const [ingestaOpen, setIngestaOpen] = useState35(false);
+    const [cartaOpen, setCartaOpen] = useState35(false);
+    const [saludReg, setSaludReg] = useState35(null);
+    const [registroTipo, setRegistroTipo] = useState35(null);
+    const [regMsg, setRegMsg] = useState35(null);
+    const regMsgTimer = useRef21(null);
+    const cargarInputRef = useRef21(null);
+    const [dayData, setDayData] = useState35({});
+    const [weekOffset, setWeekOffset] = useState35(0);
+    const [budgets, setBudgets] = useState35({});
+    const [nutria, setNutria] = useState35(makeDefaultNutria());
+    const [fadimanData, setFadimanData] = useState35({});
+    const fadimanDataRef = useRef21({});
+    const [nutriLog, setNutriLog] = useState35({});
+    const [ejercicioLog, setEjercicioLog] = useState35({});
+    const nutriLogRef = useRef21({});
+    const [customFoods, setCustomFoods] = useState35({});
+    const customFoodsRef = useRef21({});
+    const [foodOverrides, setFoodOverrides] = useState35({});
+    const foodOverridesRef = useRef21({});
+    const [customEjercicios, setCustomEjercicios] = useState35({});
+    const customEjerciciosRef = useRef21({});
+    const ejercicioLogRef = useRef21({});
+    const [ejercicioDecks, setEjercicioDecks] = useState35([]);
+    const ejercicioDecksRef = useRef21([]);
+    const [calMarks, setCalMarks] = useState35({});
+    const [meleeMajors, setMeleeMajors] = useState35([]);
+    const [custody, setCustody] = useState35({ baseDate: "2026-04-28", withKids: true, overrides: {} });
     const POKEMON_EVENTS = [
       { name: "Lima Special Championships \u{1F1F5}\u{1F1EA}", start: "2026-05-23", end: "2026-05-24", url: "https://www.pokemon.com/us/play-pokemon/pokemon-events/find-a-pokemon-event/" },
       { name: "NAIC \u2014 North America Internationals \u{1F1FA}\u{1F1F8}", start: "2026-06-12", end: "2026-06-14", url: "https://www.pokemon.com/us/play-pokemon/pokemon-events/find-a-pokemon-event/" },
@@ -15249,22 +15371,22 @@ Toco reintentar ahora.`);
     const SC2_EVENTS = [
       { name: "BlizzCon \u2014 Blizzard Classic Cup (SC2) \u{1F3AE}", start: "2026-09-12", end: "2026-09-13", url: "https://blizzcon.com" }
     ];
-    const [editingTask, setEditingTask] = useState34(null);
-    const [editText, setEditText] = useState34("");
-    const [clockOpen, setClockOpen] = useState34(null);
-    const [notifClockOpen, setNotifClockOpen] = useState34(null);
-    const [calOpen, setCalOpen] = useState34(false);
-    const [minimized, setMinimized] = useState34({});
-    const [loaded, setLoaded] = useState34(false);
-    const [notifGranted, setNotifGranted] = useState34(false);
-    const [saved, setSaved] = useState34(false);
-    const [footerIdx, setFooterIdx] = useState34(() => Math.floor(Math.random() * STOIC_PHRASES.length));
-    const [exportOk, setExportOk] = useState34(null);
-    const [loadMsg, setLoadMsg] = useState34(null);
+    const [editingTask, setEditingTask] = useState35(null);
+    const [editText, setEditText] = useState35("");
+    const [clockOpen, setClockOpen] = useState35(null);
+    const [notifClockOpen, setNotifClockOpen] = useState35(null);
+    const [calOpen, setCalOpen] = useState35(false);
+    const [minimized, setMinimized] = useState35({});
+    const [loaded, setLoaded] = useState35(false);
+    const [notifGranted, setNotifGranted] = useState35(false);
+    const [saved, setSaved] = useState35(false);
+    const [footerIdx, setFooterIdx] = useState35(() => Math.floor(Math.random() * STOIC_PHRASES.length));
+    const [exportOk, setExportOk] = useState35(null);
+    const [loadMsg, setLoadMsg] = useState35(null);
     const PODCAST_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
     const PODCAST_AUTH_KEY = "angst-simkl-auth-v1";
-    const [podcastLatest, setPodcastLatest] = useState34(null);
-    const [podcastDispatched, setPodcastDispatched] = useState34(() => {
+    const [podcastLatest, setPodcastLatest] = useState35(null);
+    const [podcastDispatched, setPodcastDispatched] = useState35(() => {
       try {
         const v = localStorage.getItem("angst-podcast-dispatched-v1");
         return v ? JSON.parse(v) : [];
@@ -15272,16 +15394,16 @@ Toco reintentar ahora.`);
         return [];
       }
     });
-    const [nowPlaying, setNowPlaying] = useState34(null);
-    const [podcastMenuOpen, setPodcastMenuOpen] = useState34(false);
-    const [activeShowIdx, setActiveShowIdx] = useState34(0);
-    const [podcastPlaying, setPodcastPlaying] = useState34(false);
-    const [podcastProgress, setPodcastProgress] = useState34({ current: 0, duration: 0 });
-    const [newPodcastNombre, setNewPodcastNombre] = useState34("");
-    const [newPodcastUrl, setNewPodcastUrl] = useState34("");
-    const [addPodcastBusy, setAddPodcastBusy] = useState34(false);
-    const [addPodcastMsg, setAddPodcastMsg] = useState34(null);
-    const [playerPos, setPlayerPos] = useState34(() => {
+    const [nowPlaying, setNowPlaying] = useState35(null);
+    const [podcastMenuOpen, setPodcastMenuOpen] = useState35(false);
+    const [activeShowIdx, setActiveShowIdx] = useState35(0);
+    const [podcastPlaying, setPodcastPlaying] = useState35(false);
+    const [podcastProgress, setPodcastProgress] = useState35({ current: 0, duration: 0 });
+    const [newPodcastNombre, setNewPodcastNombre] = useState35("");
+    const [newPodcastUrl, setNewPodcastUrl] = useState35("");
+    const [addPodcastBusy, setAddPodcastBusy] = useState35(false);
+    const [addPodcastMsg, setAddPodcastMsg] = useState35(null);
+    const [playerPos, setPlayerPos] = useState35(() => {
       try {
         const v = localStorage.getItem("angst-podcast-player-pos-v1");
         if (v) return JSON.parse(v);
@@ -15289,9 +15411,9 @@ Toco reintentar ahora.`);
       }
       return null;
     });
-    const dragState = useRef20(null);
-    const podcastAudioRef = useRef20(null);
-    useEffect22(() => {
+    const dragState = useRef21(null);
+    const podcastAudioRef = useRef21(null);
+    useEffect23(() => {
       fetch("https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/podcast-latest.json", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((d) => {
         if (!d) return;
         setPodcastLatest(d);
@@ -15362,7 +15484,7 @@ Toco reintentar ahora.`);
       const m = Math.floor(s / 60), sec = Math.floor(s % 60);
       return `${m}:${sec < 10 ? "0" : ""}${sec}`;
     }
-    const lastPosSaveRef = useRef20(0);
+    const lastPosSaveRef = useRef21(0);
     function closePodcastPlayer() {
       if (nowPlaying?.guid && podcastAudioRef.current) {
         savePodcastPosition(nowPlaying.guid, podcastAudioRef.current.currentTime);
@@ -15371,7 +15493,7 @@ Toco reintentar ahora.`);
       setPodcastPlaying(false);
       setPodcastProgress({ current: 0, duration: 0 });
     }
-    useEffect22(() => {
+    useEffect23(() => {
       function onVisibility() {
         if (document.visibilityState === "hidden" && nowPlaying?.guid && podcastAudioRef.current) {
           savePodcastPosition(nowPlaying.guid, podcastAudioRef.current.currentTime);
@@ -15506,44 +15628,44 @@ Toco reintentar ahora.`);
         }
       }
     }
-    const dayDataRef = useRef20({});
-    const weekOffsetRef = useRef20(0);
-    const budgetRef = useRef20({});
-    const memoriaRef = useRef20({});
-    const [comprasMemoria, setComprasMemoria] = useState34({});
-    const nutriaRef = useRef20(makeDefaultNutria());
-    const calMarksRef = useRef20({});
-    const routinesRef = useRef20([]);
-    const recurringRef = useRef20([]);
-    const lastRolloverRef = useRef20(null);
-    const [routines, setRoutines] = useState34([]);
-    const [recurring, setRecurring] = useState34([]);
-    const [lastRollover, setLastRollover] = useState34(null);
-    const [cookingOpts, setCookingOpts] = useState34([...DEFAULT_COOKING_OPTS]);
-    const [aseoOpts, setAseoOpts] = useState34([...DEFAULT_ASEO_OPTS]);
-    const [comprasOpen, setComprasOpen] = useState34(null);
-    const [searchOpen, setSearchOpen] = useState34(false);
-    const [scheduleOpen, setScheduleOpen] = useState34(null);
-    const [liftedTask, setLiftedTask] = useState34(null);
-    const [taskDragTarget, setTaskDragTarget] = useState34(null);
-    const holdTimerRef = useRef20(null);
-    const taskTouchX = useRef20(0);
-    const taskTouchY = useRef20(0);
-    const [openFMenu, setOpenFMenu] = useState34(null);
-    const [kidsHealth, setKidsHealth] = useState34(emptyKidsHealth);
-    const kidsHealthRef = useRef20(null);
+    const dayDataRef = useRef21({});
+    const weekOffsetRef = useRef21(0);
+    const budgetRef = useRef21({});
+    const memoriaRef = useRef21({});
+    const [comprasMemoria, setComprasMemoria] = useState35({});
+    const nutriaRef = useRef21(makeDefaultNutria());
+    const calMarksRef = useRef21({});
+    const routinesRef = useRef21([]);
+    const recurringRef = useRef21([]);
+    const lastRolloverRef = useRef21(null);
+    const [routines, setRoutines] = useState35([]);
+    const [recurring, setRecurring] = useState35([]);
+    const [lastRollover, setLastRollover] = useState35(null);
+    const [cookingOpts, setCookingOpts] = useState35([...DEFAULT_COOKING_OPTS]);
+    const [aseoOpts, setAseoOpts] = useState35([...DEFAULT_ASEO_OPTS]);
+    const [comprasOpen, setComprasOpen] = useState35(null);
+    const [searchOpen, setSearchOpen] = useState35(false);
+    const [scheduleOpen, setScheduleOpen] = useState35(null);
+    const [liftedTask, setLiftedTask] = useState35(null);
+    const [taskDragTarget, setTaskDragTarget] = useState35(null);
+    const holdTimerRef = useRef21(null);
+    const taskTouchX = useRef21(0);
+    const taskTouchY = useRef21(0);
+    const [openFMenu, setOpenFMenu] = useState35(null);
+    const [kidsHealth, setKidsHealth] = useState35(emptyKidsHealth);
+    const kidsHealthRef = useRef21(null);
     if (kidsHealthRef.current === null) kidsHealthRef.current = emptyKidsHealth();
     const calMarksView = useMemo12(() => effectiveMarks(calMarks, kidsHealth.events), [calMarks, kidsHealth]);
-    const [pokeInventario, setPokeInventario] = useState34([]);
-    const pokeInventarioRef = useRef20([]);
-    const [pokeCarpetas, setPokeCarpetas] = useState34([...CARPETAS_DEFAULT]);
-    const pokeCarpetasRef = useRef20([...CARPETAS_DEFAULT]);
-    const [pokeDarkCatalogo, setPokeDarkCatalogo] = useState34([]);
-    const pokeDarkCatalogoRef = useRef20([]);
-    const [pokePriceCache, setPokePriceCache] = useState34({});
-    const pokePriceCacheRef = useRef20({});
+    const [pokeInventario, setPokeInventario] = useState35([]);
+    const pokeInventarioRef = useRef21([]);
+    const [pokeCarpetas, setPokeCarpetas] = useState35([...CARPETAS_DEFAULT]);
+    const pokeCarpetasRef = useRef21([...CARPETAS_DEFAULT]);
+    const [pokeDarkCatalogo, setPokeDarkCatalogo] = useState35([]);
+    const pokeDarkCatalogoRef = useRef21([]);
+    const [pokePriceCache, setPokePriceCache] = useState35({});
+    const pokePriceCacheRef = useRef21({});
     const TCG_KEY_STORAGE = "angst-tcg-price-key";
-    const [pokeApiKey, setPokeApiKey] = useState34(() => {
+    const [pokeApiKey, setPokeApiKey] = useState35(() => {
       try {
         return localStorage.getItem(TCG_KEY_STORAGE) || "";
       } catch (e) {
@@ -15557,16 +15679,16 @@ Toco reintentar ahora.`);
       }
       setPokeApiKey(k);
     }
-    const [nutriDecks, setNutriDecks] = useState34([]);
-    const nutriDecksRef = useRef20([]);
+    const [nutriDecks, setNutriDecks] = useState35([]);
+    const nutriDecksRef = useRef21([]);
     const ANGST_STATE_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
     const ANGST_STATE_AUTH_KEY = "angst-simkl-auth-v1";
-    const [familiaData, setFamiliaData] = useState34(null);
-    const [familiaOpen, setFamiliaOpen] = useState34(false);
-    const [familiaBusy, setFamiliaBusy] = useState34(false);
-    const [familiaMsg, setFamiliaMsg] = useState34(null);
-    const [familiaVer, setFamiliaVer] = useState34(0);
-    const familiaLastRef = useRef20(0);
+    const [familiaData, setFamiliaData] = useState35(null);
+    const [familiaOpen, setFamiliaOpen] = useState35(false);
+    const [familiaBusy, setFamiliaBusy] = useState35(false);
+    const [familiaMsg, setFamiliaMsg] = useState35(null);
+    const [familiaVer, setFamiliaVer] = useState35(0);
+    const familiaLastRef = useRef21(0);
     async function cargarFamilia(force) {
       const auth = localStorage.getItem(ANGST_STATE_AUTH_KEY);
       if (!auth) {
@@ -15593,7 +15715,7 @@ Toco reintentar ahora.`);
         setFamiliaBusy(false);
       }
     }
-    useEffect22(() => {
+    useEffect23(() => {
       cargarFamilia(false);
       const onVis = () => {
         if (document.visibilityState === "visible") cargarFamilia(false);
@@ -15646,7 +15768,7 @@ Toco reintentar ahora.`);
     }
     const ANGST_STATE_PATH = "angst-full-state.json";
     const ANGST_STATE_BRANCH = "state-sync";
-    const [stateSyncMsg, setStateSyncMsg] = useState34(null);
+    const [stateSyncMsg, setStateSyncMsg] = useState35(null);
     function markLocalEdit() {
       marcarEdicionLocal();
     }
@@ -15663,7 +15785,7 @@ Toco reintentar ahora.`);
       if (!payload || !payload.exportedAt) return false;
       return new Date(payload.exportedAt).getTime() > new Date(localTs).getTime();
     }
-    const forceRepoReadRef = useRef20(false);
+    const forceRepoReadRef = useRef21(false);
     function getAngstStateAuth() {
       try {
         return localStorage.getItem(ANGST_STATE_AUTH_KEY) || null;
@@ -15784,8 +15906,8 @@ Toco reintentar ahora.`);
       }
       setTimeout(() => setStateSyncMsg(null), 4e3);
     }
-    const autoLeidoRef = useRef20(false);
-    useEffect22(() => {
+    const autoLeidoRef = useRef21(false);
+    useEffect23(() => {
       if (autoLeidoRef.current) return;
       autoLeidoRef.current = true;
       const auth = getAngstStateAuth();
@@ -15809,58 +15931,58 @@ Toco reintentar ahora.`);
         }
       })();
     }, []);
-    useEffect22(() => {
+    useEffect23(() => {
       dayDataRef.current = dayData;
     }, [dayData]);
-    useEffect22(() => {
+    useEffect23(() => {
       weekOffsetRef.current = weekOffset;
     }, [weekOffset]);
-    useEffect22(() => {
+    useEffect23(() => {
       budgetRef.current = budgets;
     }, [budgets]);
-    useEffect22(() => {
+    useEffect23(() => {
       nutriaRef.current = nutria;
     }, [nutria]);
-    useEffect22(() => {
+    useEffect23(() => {
       calMarksRef.current = calMarks;
     }, [calMarks]);
-    useEffect22(() => {
+    useEffect23(() => {
       routinesRef.current = routines;
     }, [routines]);
-    useEffect22(() => {
+    useEffect23(() => {
       recurringRef.current = recurring;
     }, [recurring]);
-    useEffect22(() => {
+    useEffect23(() => {
       lastRolloverRef.current = lastRollover;
     }, [lastRollover]);
-    useEffect22(() => {
+    useEffect23(() => {
       pokeInventarioRef.current = pokeInventario;
     }, [pokeInventario]);
-    useEffect22(() => {
+    useEffect23(() => {
       pokeCarpetasRef.current = pokeCarpetas;
     }, [pokeCarpetas]);
-    useEffect22(() => {
+    useEffect23(() => {
       pokeDarkCatalogoRef.current = pokeDarkCatalogo;
     }, [pokeDarkCatalogo]);
-    useEffect22(() => {
+    useEffect23(() => {
       pokePriceCacheRef.current = pokePriceCache;
     }, [pokePriceCache]);
-    useEffect22(() => {
+    useEffect23(() => {
       nutriDecksRef.current = nutriDecks;
     }, [nutriDecks]);
-    useEffect22(() => {
+    useEffect23(() => {
       ejercicioDecksRef.current = ejercicioDecks;
     }, [ejercicioDecks]);
-    useEffect22(() => {
+    useEffect23(() => {
       const iv = setInterval(() => setFooterIdx((i) => (i + 1) % STOIC_PHRASES.length), 1e4);
       return () => clearInterval(iv);
     }, []);
     const weekStart = addDays(BASE_DATE, weekOffset * 7);
-    const semanaBodyRef = useRef20(null);
+    const semanaBodyRef = useRef21(null);
     const semanaKeys = Array.from({ length: 7 }, (_, k) => fmtFull(addDays(weekStart, k)));
     const hayDiaAbierto = semanaKeys.some((k) => !minimized[k]);
-    const [semanaValvula, setSemanaValvula] = useState34(false);
-    const [dashAbierto, setDashAbierto] = useState34(false);
+    const [semanaValvula, setSemanaValvula] = useState35(false);
+    const [dashAbierto, setDashAbierto] = useState35(false);
     const hayAbierto = hayDiaAbierto || dashAbierto;
     function toggleDash() {
       if (!dashAbierto) {
@@ -15903,7 +16025,7 @@ Toco reintentar ahora.`);
       });
     }
     const diaAbiertoKey = semanaKeys.find((k) => !minimized[k]) || null;
-    useEffect22(() => {
+    useEffect23(() => {
       const el = semanaBodyRef.current;
       if (!el || page !== 0 || !diaAbiertoKey) return;
       const card = el.querySelector(`[data-dia="${diaAbiertoKey}"]`);
@@ -15912,7 +16034,7 @@ Toco reintentar ahora.`);
       if (typeof el.scrollTo === "function") el.scrollTo({ top: y, behavior: "smooth" });
       else el.scrollTop = y;
     }, [diaAbiertoKey, page]);
-    useEffect22(() => {
+    useEffect23(() => {
       const el = semanaBodyRef.current;
       if (!el || page !== 0) return;
       if (hayAbierto) {
@@ -16019,7 +16141,7 @@ Toco reintentar ahora.`);
         saveToStorage({ lastRollover: todayKey }, { skipEditMark: true });
       }
     }
-    useEffect22(() => {
+    useEffect23(() => {
       if (!loaded) return;
       function onVisible() {
         if (document.visibilityState === "visible") {
@@ -16031,7 +16153,7 @@ Toco reintentar ahora.`);
       document.addEventListener("visibilitychange", onVisible);
       return () => document.removeEventListener("visibilitychange", onVisible);
     }, [loaded]);
-    useEffect22(() => {
+    useEffect23(() => {
       async function fetchMelee() {
         try {
           const res = await fetch("https://meleemajors.gg/calendar.ics");
@@ -16067,7 +16189,7 @@ Toco reintentar ahora.`);
       }
       fetchMelee();
     }, []);
-    useEffect22(() => {
+    useEffect23(() => {
       async function load() {
         try {
           const r = await localGet("angst-v12");
@@ -17288,8 +17410,8 @@ Toco reintentar ahora.`);
         addPodcastBusy ? "agregando..." : "+ agregar podcast"
       ), addPodcastMsg && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: addPodcastMsg.startsWith("\u2713") ? "#4caf50" : "#f0a000" } }, addPodcastMsg)));
     })()))), (() => {
-      const TABS2 = [{ label: "\u{1F4C5} Semana", emoji: "\u{1F4C5}" }, { label: "\u{1F4B5} Presupuesto", emoji: "\u{1F4B5}" }, { label: "\u{1F4D2} Emprendimientos", emoji: "\u{1F4D2}" }, { label: "\u{1F9E0} mindfulness", emoji: "\u{1F9E0}" }, { label: "\u{1FA7A} salud", emoji: "\u{1FA7A}" }, { label: "\u{1F344} fadiman", emoji: "\u{1F344}" }, { label: "\u{1F957} nutrici\xF3n", emoji: "\u{1F957}" }, { label: "\u{1F3CB}\uFE0F ejercicio", emoji: "\u{1F3CB}\uFE0F" }, { label: "\u{1F0CF} pok\xE9cripto", emoji: "\u{1F0CF}" }, { label: "\u{1F4F0} feed", emoji: "\u{1F4F0}" }, { label: "\u{1F3AC} vitrina", emoji: "\u{1F3AC}" }, { label: "\u{1F331} rutinas", emoji: "\u{1F331}" }];
-      const ORDER = [0, 11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      const TABS2 = [{ label: "\u{1F4C5} Semana", emoji: "\u{1F4C5}" }, { label: "\u{1F4B5} Presupuesto", emoji: "\u{1F4B5}" }, { label: "\u{1F4D2} Emprendimientos", emoji: "\u{1F4D2}" }, { label: "\u{1F9E0} mindfulness", emoji: "\u{1F9E0}" }, { label: "\u{1FA7A} salud", emoji: "\u{1FA7A}" }, { label: "\u{1F344} fadiman", emoji: "\u{1F344}" }, { label: "\u{1F957} nutrici\xF3n", emoji: "\u{1F957}" }, { label: "\u{1F3CB}\uFE0F ejercicio", emoji: "\u{1F3CB}\uFE0F" }, { label: "\u{1F0CF} pok\xE9cripto", emoji: "\u{1F0CF}" }, { label: "\u{1F4F0} feed", emoji: "\u{1F4F0}" }, { label: "\u{1F3AC} vitrina", emoji: "\u{1F3AC}" }, { label: "\u{1F331} rutinas", emoji: "\u{1F331}" }, { label: "\u{1F3A7} m\xFAsica", emoji: "\u{1F3A7}" }];
+      const ORDER = [0, 11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 10];
       return /* @__PURE__ */ React.createElement("div", { className: "tabs", style: { userSelect: "none" } }, ORDER.map((ti) => {
         const tab = TABS2[ti];
         const isActive = ti === page;
@@ -17751,7 +17873,7 @@ Toco reintentar ahora.`);
         apiKey: pokeApiKey,
         saveApiKey: savePokeApiKey
       }
-    ), page === 9 && /* @__PURE__ */ React.createElement(FeedPage_default, null), page === 10 && /* @__PURE__ */ React.createElement(VitrinaPage_default, null), page === 11 && /* @__PURE__ */ React.createElement(RoutinesPage_default, { routines, onSave: saveRoutines, onAddToDay: (name, emoji) => {
+    ), page === 9 && /* @__PURE__ */ React.createElement(FeedPage_default, null), page === 10 && /* @__PURE__ */ React.createElement(VitrinaPage_default, null), page === 12 && /* @__PURE__ */ React.createElement(MusicaPage, null), page === 11 && /* @__PURE__ */ React.createElement(RoutinesPage_default, { routines, onSave: saveRoutines, onAddToDay: (name, emoji) => {
       const tk = fmtFull(/* @__PURE__ */ new Date());
       const nid2 = Date.now();
       const dd = dayDataRef.current || {};

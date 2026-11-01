@@ -64,6 +64,13 @@ await t("el sello declara el host del artista: se acepta aunque el nombre de la 
   const r = await resolverBandcamp({ nombre: "Delerium", hostsCandidatos: ["metropolisrecords"], hostMB: null, idsRelease: [], traerPagina: traerConPropia });
   assert.equal(r.tipo, "artista"); assert.equal(r.host, "delerium-official");
 });
+await t("sello que rotula 'ARTISTA: Título' (sin artist-override): no se toma como página propia ni se muestran sus 100+ discos", async () => {
+  const item = (id, titulo) => ({ tipo: "album", id, titulo, url: "https://antennanongrata.bandcamp.com/album/" + id, arte: "a", artista: null, bandId: "7" });
+  const colectivo = { nombre: "Antenna Non Grata", ubicacion: "Poland", bio: "bio del sello", foto: "f", esSello: false,
+    items: [item("1", "PAN SIATECZKO: I MISSED TRAIN"), item("2", "CHORE IA: COLD"), item("3", "Roman Bromboszcz: Lost in Frequencies"), item("4", "Pan Siateczko: Zimny Wiatr")] };
+  const r = await resolverBandcamp({ nombre: "Pan Siateczko", hostsCandidatos: ["antennanongrata"], hostMB: null, idsRelease: ["1"], traerPagina: async () => colectivo });
+  assert.equal(r.tipo, "sello"); assert.deepEqual(r.items.map(i => i.id).sort(), ["1", "4"]);
+});
 await t("página de otra banda con nombre parecido NO se acepta como propia", async () => {
   const r = await resolverBandcamp({ nombre: "Combichrist Tribute", hostsCandidatos: ["mesh-uk"], hostMB: null, idsRelease: [], traerPagina: traer });
   assert.equal(r, null);
