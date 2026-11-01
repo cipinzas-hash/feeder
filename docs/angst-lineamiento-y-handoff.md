@@ -64,7 +64,7 @@ Los módulos usan **React global** (`const { useState } = React;`), no imports d
 
 ### 2.2 Pestañas del shell (`core/App.jsx`)
 
-El id de página es el índice en `TABS`; el orden visual lo define `ORDER=[0,11,1,2,3,4,5,6,7,8,9,10]` (Rutinas se mostró después de Semana **sin renumerar** ids).
+El id de página es el índice en `TABS`; el orden visual lo define `ORDER=[0,11,1,2,3,4,5,6,7,8,9,12,10]` (Rutinas se muestra después de Semana y Música después de Feed, **sin renumerar** ids).
 
 | id | Pestaña | Componente | Notas |
 |---|---|---|---|
@@ -79,6 +79,7 @@ El id de página es el índice en `TABS`; el orden visual lo define `ORDER=[0,11
 | 7 | 🏋️ ejercicio | `EjercicioPage` | ~1.340 líneas |
 | 8 | 🃏 pokécripto | `PokecriptoPage` | ~2.780 líneas, el más grande |
 | 9 | 📰 feed | `FeedPage` | solo noticias |
+| 12 | 🎧 música | `MusicaPage` (`modules/musica/`) | descubrimiento de lanzamientos; ver `docs/modulo-musica.md` (rama `musica` hasta fusionar) |
 | 10 | 🎬 vitrina | `VitrinaPage` | plantilla del lineamiento |
 
 Chrome fijo del shell: **encabezado** `.hdr` (título "angstapp" + botones 📁💾⬆️⬇️🎙️), **pestañas** `.tabs` (emoji; la abierta muestra su nombre), **contenido**, **pie** `.ftr` (frase rotativa `STOIC_PHRASES` cada 10 s + logo "ANGST").
@@ -262,7 +263,9 @@ Entre fases, el usuario decide el orden; el agente no debe adelantarse a módulo
 
 ## 6. Otros pendientes (fuera del lineamiento)
 
-### 6.1 Descubrimiento musical (🟡 plan aceptado, falta Go de implementación)
+### 6.1 Descubrimiento musical (🟢 reemplazado por el módulo 🎧 música — rama `musica`, ver `docs/modulo-musica.md`)
+
+> **Superado (oct-2026):** en vez de una categoría "Descubrimiento" dentro del Feed se construyó un módulo propio (pestaña 🎧), y "Dark scene / Música" salió del Feed. Lo que sigue es el plan original; se conserva porque **las fuentes candidatas para goth/dark metal y vkei siguen pendientes** (hoy los 3 blogs cubren darkwave/EBM/post-punk/industrial y casi nada de goth metal ni vkei).
 
 Se discutió y el usuario aceptó empezar por goth/dark metal y permitir YouTube para vkei ("Suena bien"). Se dejó **después** del lineamiento, salvo que él lo reordene.
 
