@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-01T21:46:55.842Z",
+  "generatedAt": "2026-11-02T01:19:20.792Z",
   "categories": [
     {
       "cat": "Películas",
@@ -26,7 +26,14 @@
           "numberOfSeasons": null,
           "seasons": null,
           "currentSeason": null,
-          "reviews": null,
+          "reviews": {
+            "top": {
+              "rating": 9,
+              "text": "He ido al cine sin mucha expectación. No vi trailer ni leí sinopsis, y la pelicula no parecía muy popular ni tenia publicidad por ninguna parte, pero el estudio Laika siempre me ha gustado, y por eso me decidí a verla. Ha sido una muy grata sorpresa y no decepciona ni un solo momento de la pelicula. Una imagen increible, historia bien narrada, personajes creíbles y emoción. Una muy buena pelicula. Sin duda la recomiendo.",
+              "author": "JaviG97"
+            },
+            "bottom": null
+          },
           "trailer": {
             "key": "bJQGtSeLPII",
             "site": "YouTube"
@@ -343,7 +350,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 7.4
+            "tmdb": 7.5
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -731,7 +738,7 @@
               "order": 9
             }
           ],
-          "trending": false
+          "trending": true
         },
         {
           "guid": "tmdb-movie-1377237",
@@ -896,6 +903,249 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1727734",
+          "title": "Ali G: Kién es yo?",
+          "link": "https://www.themoviedb.org/movie/1727734",
+          "summary": "Tras veinte años dedicados a «relajarse, fumar y follar», Ali G se queda atónito al descubrir que Julie, su novia de toda la vida, está embarazada de ocho meses. Ante la perspectiva de tener una boca más que alimentar, deja de holgazanear y pone rumbo a Estados Unidos para recuperar su antigua gloria... pero pronto se topa con adversarios que acabarán amenazando su propia existencia y la de su hijo.",
+          "image": "https://image.tmdb.org/t/p/w500/hAEYrq657G7oeNWDQBnRNPZMlxh.jpg",
+          "pubDate": "2026-10-22",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-28T16:28:01.183Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "pV32AcPa-iA",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Sacha Baron Cohen",
+              "character": "Ali G / Nira Cain-N'Degeocello / Erran Morad",
+              "order": 0
+            },
+            {
+              "name": "Morgana Robinson",
+              "character": "Julie",
+              "order": 1
+            },
+            {
+              "name": "Alpha Miknas",
+              "character": "Manu",
+              "order": 2
+            },
+            {
+              "name": "Clive Russell",
+              "character": "Malcolm 'Rocky' Atkins",
+              "order": 3
+            },
+            {
+              "name": "A$AP Rocky",
+              "character": "A$AP Rocky",
+              "order": 4
+            },
+            {
+              "name": "Rihanna",
+              "character": "Rihanna",
+              "order": 5
+            },
+            {
+              "name": "Tiffany Haddish",
+              "character": "Lab Technician",
+              "order": 6
+            },
+            {
+              "name": "DJ Jazzy Jeff",
+              "character": "DJ Jazzy Jeff",
+              "order": 7
+            },
+            {
+              "name": "C. Stewart Rodeheaver",
+              "character": "(uncredited)",
+              "order": 8
+            },
+            {
+              "name": "Allan Lichtman",
+              "character": "(uncredited)",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1596275",
+          "title": "Drive: Los farsantes",
+          "link": "https://www.themoviedb.org/movie/1596275",
+          "summary": "Una joven mecánica de coches de carreras finge estar comprometida con la estrella más escandalosa del mundo del automovilismo: oficialmente, por su reputación; pero, en secreto, para tener la oportunidad de ponerse al volante. Pronto, la mentira amenaza con lo destruir todo.",
+          "image": "https://image.tmdb.org/t/p/w500/aSvA1Xat045jh8ck7U626PPkzH1.jpg",
+          "pubDate": "2026-10-27",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-28T16:28:01.091Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.6
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "-sV69CJwUwU",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Lisa-Marie Koroll",
+              "character": "Sarah Jenkins",
+              "order": 0
+            },
+            {
+              "name": "Amin Baahmed",
+              "character": "Dante Annunziata",
+              "order": 1
+            },
+            {
+              "name": "Gustav Schmidt",
+              "character": "Ruben Laroch",
+              "order": 2
+            },
+            {
+              "name": "Mišel Matičević",
+              "character": "Alexander Bronson",
+              "order": 3
+            },
+            {
+              "name": "Lucie Heinze",
+              "character": "Tanya Stein",
+              "order": 4
+            },
+            {
+              "name": "Frederic Linkemann",
+              "character": "Jack Schroder",
+              "order": 5
+            },
+            {
+              "name": "Inka Friedrich",
+              "character": "Irene Jenkins",
+              "order": 6
+            },
+            {
+              "name": "Jeanette Hain",
+              "character": "Sofia Annunziata",
+              "order": 7
+            },
+            {
+              "name": "Philippe Brenninkmeyer",
+              "character": "Dr. Frederic Richter",
+              "order": 8
+            },
+            {
+              "name": "Leslie Malton",
+              "character": "Eva Maria Fischer",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-969681",
+          "title": "Spider-Man: Brand New Day",
+          "link": "https://www.themoviedb.org/movie/969681",
+          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad—un Spider-Man a tiempo completo—, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
+          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
+          "pubDate": "2026-07-29",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-30T08:12:18.586Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8,
+            "rt": 90,
+            "metascore": 66,
+            "tmdb": 8.5
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "P3uI5sLosKU",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Holland",
+              "character": "Peter Parker / Spider-Man",
+              "order": 0
+            },
+            {
+              "name": "Sadie Sink",
+              "character": "Jean Grey",
+              "order": 1
+            },
+            {
+              "name": "Tramell Tillman",
+              "character": "William 'Bill' Metzger",
+              "order": 2
+            },
+            {
+              "name": "Zendaya",
+              "character": "MJ",
+              "order": 3
+            },
+            {
+              "name": "Jacob Batalon",
+              "character": "Ned Leeds",
+              "order": 4
+            },
+            {
+              "name": "Jon Bernthal",
+              "character": "Frank Castle / Punisher",
+              "order": 5
+            },
+            {
+              "name": "Mark Ruffalo",
+              "character": "Bruce Banner / Hulk",
+              "order": 6
+            },
+            {
+              "name": "Florence Pugh",
+              "character": "Yelena Belova / Black Widow",
+              "order": 7
+            },
+            {
+              "name": "Liza Colón-Zayas",
+              "character": "Detective Jean DeWolff",
+              "order": 8
+            },
+            {
+              "name": "Marisa Tomei",
+              "character": "May Parker",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1507696",
           "title": "Apocalipsis Z: Nuevo mundo",
           "link": "https://www.themoviedb.org/movie/1507696",
@@ -910,7 +1160,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.1
+            "tmdb": 6
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -929,13 +1179,13 @@
               "order": 0
             },
             {
-              "name": "José María Yázpik",
-              "character": "Pritchenko",
+              "name": "Julia Martínez",
+              "character": "Marina",
               "order": 1
             },
             {
-              "name": "Julia Martínez",
-              "character": "Marina",
+              "name": "José María Yázpik",
+              "character": "Pritchenko",
               "order": 2
             },
             {
@@ -971,6 +1221,87 @@
             {
               "name": "Pedro Hernández",
               "character": "Guzmán",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1290418",
+          "title": "The Cycle",
+          "link": "https://www.themoviedb.org/movie/1290418",
+          "summary": "A daughter unravels her father's dark past after his body, missing for 36 years, is found at a horrific crime scene.",
+          "image": "https://image.tmdb.org/t/p/w500/n5gSNf55KWfDc9hqP4H1KCCSutE.jpg",
+          "pubDate": "2026-09-24",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-24T20:23:25.600Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": 100,
+            "metascore": null,
+            "tmdb": 8
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "m8vcBN8uza8",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Deborah Ann Woll",
+              "character": "Meg",
+              "order": 0
+            },
+            {
+              "name": "Jeffrey Donovan",
+              "character": "Marks",
+              "order": 1
+            },
+            {
+              "name": "Gretchen Corbett",
+              "character": "Joni",
+              "order": 2
+            },
+            {
+              "name": "Jack Doolan",
+              "character": "Lenny",
+              "order": 3
+            },
+            {
+              "name": "Will Hochman",
+              "character": "Ian",
+              "order": 4
+            },
+            {
+              "name": "Dana Millican",
+              "character": "",
+              "order": 5
+            },
+            {
+              "name": "Phillip Andre Botello",
+              "character": "Daniel",
+              "order": 6
+            },
+            {
+              "name": "Don Keith Opper",
+              "character": "Frank",
+              "order": 7
+            },
+            {
+              "name": "Carl W. Crudup",
+              "character": "Lou Bishop",
+              "order": 8
+            },
+            {
+              "name": "Danika Golombek",
+              "character": "Katie",
               "order": 9
             }
           ],
@@ -1055,7 +1386,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1339713",
@@ -1147,88 +1478,7 @@
               "order": 9
             }
           ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1596275",
-          "title": "Drive: Los farsantes",
-          "link": "https://www.themoviedb.org/movie/1596275",
-          "summary": "Una joven mecánica de coches de carreras finge estar comprometida con la estrella más escandalosa del mundo del automovilismo: oficialmente, por su reputación; pero, en secreto, para tener la oportunidad de ponerse al volante. Pronto, la mentira amenaza con lo destruir todo.",
-          "image": "https://image.tmdb.org/t/p/w500/aSvA1Xat045jh8ck7U626PPkzH1.jpg",
-          "pubDate": "2026-10-27",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-28T16:28:01.091Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.7
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "-sV69CJwUwU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Lisa-Marie Koroll",
-              "character": "Sarah Jenkins",
-              "order": 0
-            },
-            {
-              "name": "Amin Baahmed",
-              "character": "Dante Annunziata",
-              "order": 1
-            },
-            {
-              "name": "Gustav Schmidt",
-              "character": "Ruben Laroch",
-              "order": 2
-            },
-            {
-              "name": "Mišel Matičević",
-              "character": "Alexander Bronson",
-              "order": 3
-            },
-            {
-              "name": "Lucie Heinze",
-              "character": "Tanya Stein",
-              "order": 4
-            },
-            {
-              "name": "Frederic Linkemann",
-              "character": "Jack Schroder",
-              "order": 5
-            },
-            {
-              "name": "Inka Friedrich",
-              "character": "Irene Jenkins",
-              "order": 6
-            },
-            {
-              "name": "Jeanette Hain",
-              "character": "Sofia Annunziata",
-              "order": 7
-            },
-            {
-              "name": "Philippe Brenninkmeyer",
-              "character": "Dr. Frederic Richter",
-              "order": 8
-            },
-            {
-              "name": "Leslie Malton",
-              "character": "Eva Maria Fischer",
-              "order": 9
-            }
-          ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1571955",
@@ -1312,87 +1562,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-movie-1727734",
-          "title": "Ali G: Kién es yo?",
-          "link": "https://www.themoviedb.org/movie/1727734",
-          "summary": "Tras veinte años dedicados a «relajarse, fumar y follar», Ali G se queda atónito al descubrir que Julie, su novia de toda la vida, está embarazada de ocho meses. Ante la perspectiva de tener una boca más que alimentar, deja de holgazanear y pone rumbo a Estados Unidos para recuperar su antigua gloria... pero pronto se topa con adversarios que acabarán amenazando su propia existencia y la de su hijo.",
-          "image": "https://image.tmdb.org/t/p/w500/hAEYrq657G7oeNWDQBnRNPZMlxh.jpg",
-          "pubDate": "2026-10-22",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-28T16:28:01.183Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "pV32AcPa-iA",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Sacha Baron Cohen",
-              "character": "Ali G / Nira Cain-N'Degeocello / Erran Morad",
-              "order": 0
-            },
-            {
-              "name": "Morgana Robinson",
-              "character": "Julie",
-              "order": 1
-            },
-            {
-              "name": "Alpha Miknas",
-              "character": "Manu",
-              "order": 2
-            },
-            {
-              "name": "Clive Russell",
-              "character": "Malcolm 'Rocky' Atkins",
-              "order": 3
-            },
-            {
-              "name": "A$AP Rocky",
-              "character": "A$AP Rocky",
-              "order": 4
-            },
-            {
-              "name": "Rihanna",
-              "character": "Rihanna",
-              "order": 5
-            },
-            {
-              "name": "Tiffany Haddish",
-              "character": "Lab Technician",
-              "order": 6
-            },
-            {
-              "name": "DJ Jazzy Jeff",
-              "character": "DJ Jazzy Jeff",
-              "order": 7
-            },
-            {
-              "name": "C. Stewart Rodeheaver",
-              "character": "(uncredited)",
-              "order": 8
-            },
-            {
-              "name": "Allan Lichtman",
-              "character": "(uncredited)",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
           "guid": "tmdb-movie-1381071",
           "title": "Godzilla Minus Zero",
           "link": "https://www.themoviedb.org/movie/1381071",
@@ -1468,168 +1637,6 @@
             {
               "name": "吉岡秀隆",
               "character": "Kenji Noda",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-969681",
-          "title": "Spider-Man: Brand New Day",
-          "link": "https://www.themoviedb.org/movie/969681",
-          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad—un Spider-Man a tiempo completo—, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
-          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
-          "pubDate": "2026-07-29",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-30T08:12:18.586Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8,
-            "rt": 90,
-            "metascore": 66,
-            "tmdb": 8.5
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "P3uI5sLosKU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Tom Holland",
-              "character": "Peter Parker / Spider-Man",
-              "order": 0
-            },
-            {
-              "name": "Sadie Sink",
-              "character": "Jean Grey",
-              "order": 1
-            },
-            {
-              "name": "Tramell Tillman",
-              "character": "William 'Bill' Metzger",
-              "order": 2
-            },
-            {
-              "name": "Zendaya",
-              "character": "MJ",
-              "order": 3
-            },
-            {
-              "name": "Jacob Batalon",
-              "character": "Ned Leeds",
-              "order": 4
-            },
-            {
-              "name": "Jon Bernthal",
-              "character": "Frank Castle / Punisher",
-              "order": 5
-            },
-            {
-              "name": "Mark Ruffalo",
-              "character": "Bruce Banner / Hulk",
-              "order": 6
-            },
-            {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova / Black Widow",
-              "order": 7
-            },
-            {
-              "name": "Liza Colón-Zayas",
-              "character": "Detective Jean DeWolff",
-              "order": 8
-            },
-            {
-              "name": "Marisa Tomei",
-              "character": "May Parker",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1290418",
-          "title": "The Cycle",
-          "link": "https://www.themoviedb.org/movie/1290418",
-          "summary": "A daughter unravels her father's dark past after his body, missing for 36 years, is found at a horrific crime scene.",
-          "image": "https://image.tmdb.org/t/p/w500/n5gSNf55KWfDc9hqP4H1KCCSutE.jpg",
-          "pubDate": "2026-09-24",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-24T20:23:25.600Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": 100,
-            "metascore": null,
-            "tmdb": 8
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "m8vcBN8uza8",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Deborah Ann Woll",
-              "character": "Meg",
-              "order": 0
-            },
-            {
-              "name": "Jeffrey Donovan",
-              "character": "Marks",
-              "order": 1
-            },
-            {
-              "name": "Gretchen Corbett",
-              "character": "Joni",
-              "order": 2
-            },
-            {
-              "name": "Jack Doolan",
-              "character": "Lenny",
-              "order": 3
-            },
-            {
-              "name": "Will Hochman",
-              "character": "Ian",
-              "order": 4
-            },
-            {
-              "name": "Dana Millican",
-              "character": "",
-              "order": 5
-            },
-            {
-              "name": "Phillip Andre Botello",
-              "character": "Daniel",
-              "order": 6
-            },
-            {
-              "name": "Don Keith Opper",
-              "character": "Frank",
-              "order": 7
-            },
-            {
-              "name": "Carl W. Crudup",
-              "character": "Lou Bishop",
-              "order": 8
-            },
-            {
-              "name": "Danika Golombek",
-              "character": "Katie",
               "order": 9
             }
           ],
