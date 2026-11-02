@@ -1,5 +1,5 @@
 import { CINE_RATINGS, STATUS_BADGE, diasHasta, diasParaEstreno, diasRestantesCartelera, esEnProduccion, esEstreno, esNuevo, esTrending, seasonLabel, setCineItemEstado, useCineEstadoMap } from "./estado.js";
-import { FormatoTag, MarcoAngst, btnGhost, shareToWhatsApp, useAltoLibre } from "../shared/ui.jsx";
+import { FormatoTag, btnGhost, shareToWhatsApp, useAltoDe } from "../shared/ui.jsx";
 import { SeriesSeguimiento } from "./series.jsx";
 import { avanceDe, estadoAvance, estadoEfectivo, estadoRemotoDe, useAvanceVersion } from "./avance.js";
 import { enqueueSimklAction, flushSimklQueue, pedirSimklAuth, useSimklDiscovery, useSimklSyncStatus } from "./simkl.js";
@@ -317,7 +317,7 @@ export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategor
   const leads = (item.cast || []).filter(c => c.order < 4);
   const supporting = (item.cast || []).filter(c => c.order >= 4);
   return (
-    <MarcoAngst style={{ background: "#0d0d0d" }}>
+    <div style={{ flex: "1 1 0", minHeight: 0, position: "relative", width: "100%", maxWidth: 480, margin: "0 auto", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box", background: "#0d0d0d" }}>
       <div style={{ padding: "14px 18px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #1a1a1a" }}>
         <button onClick={onBack} style={{ background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" }}>←</button>
         <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 }}>{item.source}</span>
@@ -459,7 +459,7 @@ export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategor
           </div>
         </React.Fragment>
       )}
-    </MarcoAngst>
+    </div>
   );
 }
 
@@ -467,7 +467,7 @@ export function CineExtendedView({ item, onBack, onNext, onSave, onChangeCategor
 // Vitrina (catálogo completo del mes).
 // Flechas ◀️▶️ a los costados + loop infinito (después del último vuelve
 // al primero, y viceversa) además del scroll táctil de siempre.
-export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
+export function CineCoverFlow({ items, onOpen, generatedAt, categoria, memoria }) {
   // Reintenta lo que haya quedado pendiente de una corrida anterior
   // (red caída, Worker no respondió, etc.) al entrar a la Vitrina --
   // sin esto, solo se reintenta la próxima vez que se toque un ítem.
@@ -496,6 +496,13 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
   const posRef = useRef(0);
   const dragRef = useRef(null); // {startX, startPos, moved, pointerId} mientras se arrastra
   const animRef = useRef(null); // id de la animación de snap/paso en curso
+  // Qué película recentrar al volver del detalle (la guarda VitrinaPage en `memoria`). Se toma al montar y se consume.
+  const pendRef = useRef(undefined);
+  if (pendRef.current === undefined) {
+    const mm = memoria && memoria.current;
+    pendRef.current = mm && mm.guid ? { guid: mm.guid, idx: mm.idx } : null;
+    if (mm) mm.guid = null;
+  }
 
   function setPosBoth(v) { posRef.current = v; setPos(v); }
 
@@ -515,6 +522,7 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
   useEffect(() => () => { if (animRef.current) cancelAnimationFrame(animRef.current); }, []);
 
   function onPointerDown(e) {
+    pendRef.current = null;
     if (animRef.current) { cancelAnimationFrame(animRef.current); animRef.current = null; }
     e.currentTarget.setPointerCapture?.(e.pointerId);
     const tapEl = e.target.closest?.("[data-cine-tap]");
@@ -549,12 +557,12 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
       const rawIdx = Math.round(d.startPos) + d.tapOffset;
       const realIdx = ((rawIdx % total) + total) % total;
       const item = sortedItems[realIdx];
-      if (item) onOpen(item);
+      if (item) { if (memoria) { memoria.current.guid = item.guid; memoria.current.idx = realIdx; } onOpen(item); }
     }
     endDrag();
   }
 
-  function step(dir) { animateTo(Math.round(posRef.current) + dir); }
+  function step(dir) { pendRef.current = null; animateTo(Math.round(posRef.current) + dir); }
 
   const cineEstado = useCineEstadoMap();
   const avVersion = useAvanceVersion(); // avance/estados de Simkl: re-render + dependencia estable de useMemo
@@ -596,26 +604,32 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
   // borrar la marca -- son solo filtros de vista. "solo me interesa"
   // es la vía para revisar el acumulado sin que se pierda entre lo
   // demás (issue: "cómo se van a acumular sin ver").
-  const [sortBy, setSortBy] = useState("default"); // default | proxima
+  // Los filtros sobreviven al detalle: el carrusel se desmonta al abrir una película y se vuelve a montar al cerrarla.
+  const f0 = (memoria && memoria.current.filtros) || {};
+  const [sortBy, setSortBy] = useState(f0.sortBy ?? "default"); // default | proxima
   // Ocultas por defecto -- el toggle las muestra si querés revisarlas.
-  const [ocultarDescartadas, setOcultarDescartadas] = useState(true);
-  const [ocultarVistas, setOcultarVistas] = useState(true);
-  const [soloInteresa, setSoloInteresa] = useState(false);
+  const [ocultarDescartadas, setOcultarDescartadas] = useState(f0.ocultarDescartadas ?? true);
+  const [ocultarVistas, setOcultarVistas] = useState(f0.ocultarVistas ?? true);
+  const [soloInteresa, setSoloInteresa] = useState(f0.soloInteresa ?? false);
   // Novedades = ítems sin NINGUNA marca (ni 👍, ni 👎, ni vista). Opuesto a "solo me
   // interesa", así que activar uno apaga el otro. "Solo pendientes" (series con algo
   // visto y episodios emitidos por ver) se combina con cualquiera.
-  const [soloNovedades, setSoloNovedades] = useState(false);
-  const [soloPendientes, setSoloPendientes] = useState(false);
+  const [soloNovedades, setSoloNovedades] = useState(f0.soloNovedades ?? false);
+  const [soloPendientes, setSoloPendientes] = useState(f0.soloPendientes ?? false);
   const puedePendientes = categoria === "Series" || categoria === "Animación";
-  useEffect(() => { setSoloPendientes(false); }, [categoria]);
+  const catPrev = useRef(categoria);
+  useEffect(() => { if (catPrev.current !== categoria) { catPrev.current = categoria; setSoloPendientes(false); } }, [categoria]);
   // Estreno pasó de "ocultar" a "solo" -- como filtro negativo casi no
   // se notaba (13/32 en un carrusel no es un cambio visible claro);
   // como filtro positivo sí sirve para "qué puedo ver todavía en el
   // cine" (15 días desde pubDate). Producción se sacó entera -- con
   // 1-2 ítems en producción a la vez el toggle no tenía nada real que
   // mostrar/ocultar.
-  const [soloEstrenos, setSoloEstrenos] = useState(false);
-  const [ocultarTrending, setOcultarTrending] = useState(false);
+  const [soloEstrenos, setSoloEstrenos] = useState(f0.soloEstrenos ?? false);
+  const [ocultarTrending, setOcultarTrending] = useState(f0.ocultarTrending ?? false);
+  useEffect(() => {
+    if (memoria) memoria.current.filtros = { sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloNovedades, soloPendientes, soloEstrenos, ocultarTrending };
+  }, [sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloNovedades, soloPendientes, soloEstrenos, ocultarTrending]);
   const esPelicula = categoria === "Películas";
   const sortedItems = React.useMemo(() => {
     let arr = fullItems;
@@ -662,8 +676,19 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
   // principio -- el `pos` anterior podía corresponder a un índice sin
   // sentido en la lista nueva.
   useEffect(() => { setPosBoth(0); }, [sortedItems.length, sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloNovedades, soloPendientes, soloEstrenos, ocultarTrending, categoria]);
+  // Al volver del detalle de una película: recentrar el carrusel en esa misma película (o, si el filtro la
+  // ocultó —p. ej. se marcó vista—, en su lugar aproximado). Va DESPUÉS del reinicio de arriba para que gane
+  // sobre él; sigue activo hasta que el usuario toca algo o pasa un momento (los datos pueden llegar tarde).
+  useEffect(() => {
+    const p = pendRef.current;
+    if (!p || !sortedItems.length) return;
+    const i = sortedItems.findIndex(it => it.guid === p.guid);
+    setPosBoth(i >= 0 ? i : Math.min(p.idx || 0, sortedItems.length - 1));
+  }, [sortedItems]);
+  useEffect(() => { const t = setTimeout(() => { pendRef.current = null; }, 1500); return () => clearTimeout(t); }, []);
 
   function irARandom() {
+    pendRef.current = null;
     if (sortedItems.length < 2) return;
     let idx = Math.floor(Math.random() * sortedItems.length);
     if (idx === Math.round(posRef.current)) idx = (idx + 1) % sortedItems.length;
@@ -715,7 +740,7 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
     </div>
   );
 
-  const alto = useAltoLibre(contRef, 380, 16, [categoria, simklStatus.estado, puedePendientes, esPelicula, sortedItems.length]);
+  const alto = useAltoDe(contRef, [sortedItems.length > 0]);
   useLayoutEffect(() => {
     const h = cardRef.current && cardRef.current.offsetHeight;
     if (h && h > h0) setH0(h);
@@ -766,9 +791,9 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
   }
 
   return (
-    <div>
+    <div style={{ flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column" }}>
       {toolbar}
-      <div style={{ position: "relative" }}>
+      <div style={{ position: "relative", flex: "1 1 0", minHeight: h0 ? h0 + 16 : 0, marginBottom: 16 }}>
       <button onClick={() => step(-1)} style={{ ...arrowStyle, left: 6 }}>◀️</button>
       <button onClick={() => step(1)} style={{ ...arrowStyle, right: 6 }}>▶️</button>
       <div
@@ -776,7 +801,7 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
         onPointerDown={onPointerDown} onPointerMove={onPointerMove}
         onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
         style={{
-          position: "relative", height: altoCont, boxSizing: "border-box", touchAction: "none", perspective: 2600, overflow: "hidden",
+          position: "absolute", inset: 0, boxSizing: "border-box", touchAction: "none", perspective: 2600, overflow: "hidden",
           userSelect: "none", cursor: "grab",
         }}>
         {slots.map(({ offset, item, dist }) => {

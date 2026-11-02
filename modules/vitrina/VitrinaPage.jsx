@@ -3,7 +3,7 @@ import { ArchivedFeed } from "./videoteca.jsx";
 import { MeleeFeed } from "./melee.jsx";
 import { CineCoverFlow, CineExtendedView } from "./cine.jsx";
 import { fetchVitrinaData } from "../shared/catalog.js";
-import { useAltoLibre } from "../shared/ui.jsx";
+import { useDesborde } from "../shared/ui.jsx";
 
 const { useState, useEffect, useRef } = React;
 
@@ -13,13 +13,14 @@ const VITRINA_ICONS = { "Películas": "🎬", "Series": "📺", "Animación": "�
 // Segmented control fijo arriba, sin auto-alternancia: se queda en la
 // categoría elegida hasta que el usuario cambia manualmente. Muestra el
 // catálogo completo de 30 días, no solo lo cargado en la cola de Noticias.
-export function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, generatedAt, aviso, cargando }) {
+export function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, generatedAt, aviso, cargando, memoria }) {
   const items = vitrinaData[vitrinaCat] || [];
   // La vista llena la pantalla hasta el pie de Angst (que queda visible, no
   // empujado fuera por un min-height de 100vh). El carrusel de cine se reparte
   // solo el espacio libre (ver CineCoverFlow): tarjetas más grandes y centradas.
-  const raiz = useRef(null);
-  const alto = useAltoLibre(raiz, 0);
+  const contenidoRef = useRef(null);
+  const esLista = ["Microdocumentales", "Melee", "Conciertos"].includes(vitrinaCat);
+  useDesborde(contenidoRef, "vitrina", !esLista);   // listas: scroll interno aceptado (lineamiento 4.7)
   const segBtn = (active) => ({
     flex: 1, padding: "9px 4px", fontSize: 20,
     border: "1px solid", borderRadius: 20, cursor: "pointer",
@@ -28,15 +29,15 @@ export function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, gene
     borderColor: active ? (CAT_COLORS[vitrinaCat] || "#e91e8c") : "#333",
   });
   return (
-    <div ref={raiz} style={{ paddingBottom: 16, background: "#111", minHeight: alto || "100vh", boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", gap: 6, padding: "16px 18px 12px" }}>
+    <div style={{ flex: "1 1 0", minHeight: 0, background: "#111", boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
+      <div style={{ flex: "none", display: "flex", gap: 6, padding: "16px 18px 12px" }}>
         {VITRINA_CATEGORIAS.map(cat => (
           <button key={cat} onClick={() => onChangeCat(cat)} title={cat} style={segBtn(cat === vitrinaCat)}>{VITRINA_ICONS[cat] || cat}</button>
         ))}
       </div>
       {aviso && (
         <div style={{
-          margin: "0 18px 8px", padding: "8px 12px", borderRadius: 10, fontFamily: "'DM Sans',sans-serif", fontSize: 12,
+          flex: "none", margin: "0 18px 8px", padding: "8px 12px", borderRadius: 10, fontFamily: "'DM Sans',sans-serif", fontSize: 12,
           display: "flex", alignItems: "center", gap: 10,
           background: aviso.tono === "error" ? "rgba(231,76,60,0.15)" : aviso.tono === "aviso" ? "rgba(245,197,24,0.13)" : "rgba(255,255,255,0.06)",
           color: aviso.tono === "error" ? "#ff8a7a" : aviso.tono === "aviso" ? "#f5c518" : "#aaa",
@@ -45,7 +46,7 @@ export function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, gene
           {aviso.accion && <button onClick={aviso.accion.fn} style={{ background: "transparent", border: "1px solid currentColor", color: "inherit", borderRadius: 14, padding: "3px 10px", fontSize: 11, cursor: "pointer" }}>{aviso.accion.label}</button>}
         </div>
       )}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <div ref={contenidoRef} style={{ flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden", paddingBottom: esLista ? 16 : 0 }}>
         {/* Categorías de lista (no carrusel) vacías: decirlo, en vez de dejar la pantalla en blanco. */}
         {!cargando && items.length === 0 && ["Microdocumentales", "Conciertos", "Melee"].includes(vitrinaCat) && (
           <div style={{ fontFamily: "'Caveat',cursive", fontSize: 16, color: "#666", textAlign: "center", padding: "50px 20px" }}>
@@ -58,7 +59,7 @@ export function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, gene
           ? <MeleeFeed items={items} />
           : vitrinaCat === "Conciertos"
           ? <ArchivedFeed items={items} storageKey="angst-feed-conciertos-vistos-v1" />
-          : <CineCoverFlow items={items} onOpen={onOpen} generatedAt={generatedAt} categoria={vitrinaCat} />
+          : <CineCoverFlow items={items} onOpen={onOpen} generatedAt={generatedAt} categoria={vitrinaCat} memoria={memoria} />
         }
       </div>
     </div>
@@ -75,6 +76,8 @@ function VitrinaPage() {
   const [vitrinaCat, setVitrinaCat] = useState("Películas");
   const [vitrinaData, setVitrinaData] = useState({ "Películas": [], "Series": [], "Animación": [], "Microdocumentales": [], "Melee": [], "Conciertos": [] });
   const [vitrinaOpenItem, setVitrinaOpenItem] = useState(null);
+  // Lo que el carrusel necesita para volver igual tras cerrar el detalle: qué película estaba al centro y sus filtros.
+  const memCarrusel = useRef({ guid: null, idx: null, filtros: null });
   const [generatedAt, setGeneratedAt] = useState(null);
   // Estado de la carga: antes un fallo de red (o un JSON vacío) dejaba la pantalla
   // en blanco sin distinguirse de "no hay nada".
@@ -110,7 +113,9 @@ function VitrinaPage() {
     const list = vitrinaData[vitrinaCat] || [];
     const idx = list.findIndex(i => i.guid === item.guid);
     if (idx === -1 || !list.length) { setVitrinaOpenItem(null); return; }
-    setVitrinaOpenItem(list[(idx + delta + list.length) % list.length]);
+    const sig = list[(idx + delta + list.length) % list.length];
+    memCarrusel.current.guid = sig.guid;   // al cerrar, el carrusel queda en la última película vista
+    setVitrinaOpenItem(sig);
   }
 
   if (vitrinaOpenItem) {
@@ -122,8 +127,8 @@ function VitrinaPage() {
   }
 
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif" }}>
-      <VitrinaView vitrinaData={vitrinaData} vitrinaCat={vitrinaCat} onChangeCat={setVitrinaCat} onOpen={item => setVitrinaOpenItem(item)} generatedAt={generatedAt} aviso={aviso} cargando={carga.cargando} />
+    <div style={{ fontFamily: "'DM Sans',sans-serif", flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column" }}>
+      <VitrinaView vitrinaData={vitrinaData} vitrinaCat={vitrinaCat} onChangeCat={setVitrinaCat} onOpen={item => setVitrinaOpenItem(item)} generatedAt={generatedAt} aviso={aviso} cargando={carga.cargando} memoria={memCarrusel} />
     </div>
   );
 }

@@ -11563,8 +11563,8 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
         );
       })),
       /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", fontSize: 14, color: "#b71c1c", zIndex: 2, lineHeight: 1 } }, "\u25BC"),
-      /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: g.pista.left, top: g.pista.top, width: g.pista.size, height: g.pista.size, border: "1px dashed #999", borderRadius: "50%", boxSizing: "border-box" } }),
-      /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, transform: `rotate(${rot}deg)`, transition: arrastrando ? "none" : "transform .25s ease" } }, g.nodos.map((n) => {
+      /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", left: g.pista.left, top: g.pista.top, width: g.pista.size, height: g.pista.size, border: "1px dashed #999", borderRadius: "50%", boxSizing: "border-box", pointerEvents: "none" } }),
+      /* @__PURE__ */ React.createElement("div", { style: { position: "absolute", inset: 0, pointerEvents: "none", transform: `rotate(${rot}deg)`, transition: arrastrando ? "none" : "transform .25s ease" } }, g.nodos.map((n) => {
         const f2 = filas[n.i], on = n.i === sel;
         return /* @__PURE__ */ React.createElement(
           "div",
@@ -11575,6 +11575,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
             "aria-label": f2.row.label,
             style: {
               position: "absolute",
+              pointerEvents: "auto",
               left: n.cx - g.nodo / 2,
               top: n.cy - g.nodo / 2,
               width: g.nodo,
@@ -11596,7 +11597,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
           f2.row.emoji || "\u{1F4E6}"
         );
       })),
-      /* @__PURE__ */ React.createElement("div", { "data-centro": "1", style: { position: "absolute", left: (TAM - g.centro) / 2, top: (TAM - g.centro) / 2, width: g.centro, height: g.centro, borderRadius: "50%", boxSizing: "border-box", background: "#fff", border: "1.5px dashed #111", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "0 18px", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { "data-centro": "1", style: { fontFamily: C2, fontSize: 21, fontWeight: 700, lineHeight: 1.05, maxHeight: 46, overflow: "hidden" } }, fila.row.label), /* @__PURE__ */ React.createElement("div", { "data-centro": "1", style: { fontFamily: C2, fontSize: 30, fontWeight: 700, lineHeight: 1.1 } }, fmtCLP(grande)), /* @__PURE__ */ React.createElement("div", { "data-centro": "1", style: { fontSize: 12, color: "#777", marginTop: -2 } }, etiqueta), /* @__PURE__ */ React.createElement("div", { "data-centro": "1", style: { width: "100%", height: 7, background: "#eee", borderRadius: 4, overflow: "hidden", margin: "6px 0 4px", border: "1px dashed #bbb", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${Math.max(0, Math.min(100, pc))}%`, height: "100%", background: pc >= 85 ? "#b71c1c" : "#111" } })), /* @__PURE__ */ React.createElement("div", { "data-centro": "1", style: { fontSize: 12, color: "#777" } }, linea))
+      /* @__PURE__ */ React.createElement("div", { "data-centro": "1", style: { position: "absolute", left: (TAM - g.centro) / 2, top: (TAM - g.centro) / 2, width: g.centro, height: g.centro, borderRadius: "50%", boxSizing: "border-box", background: "#fff", border: "1.5px dashed #111", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "0 18px", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { "data-centro": "1", style: { fontFamily: C2, fontSize: 21, fontWeight: 700, lineHeight: 1.05, maxHeight: 46, overflow: "hidden" } }, fila.row.label), /* @__PURE__ */ React.createElement("div", { "data-centro": "1", style: { fontFamily: C2, fontSize: 30, fontWeight: 700, lineHeight: 1.1 } }, fmtCLP(grande)), /* @__PURE__ */ React.createElement("div", { "data-centro": "1", style: { fontSize: 12, color: "#777", marginTop: -2 } }, etiqueta), /* @__PURE__ */ React.createElement("div", { "data-centro": "1", style: { width: "100%", height: 7, background: "#eee", borderRadius: 4, overflow: "hidden", margin: "6px 0 4px", border: "1px dashed #bbb", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${Math.max(0, Math.min(100, pc))}%`, height: "100%", background: "#b71c1c" } })), /* @__PURE__ */ React.createElement("div", { "data-centro": "1", style: { fontSize: 12, color: "#777" } }, linea))
     ))));
   }
 
@@ -11962,8 +11963,115 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     return /* @__PURE__ */ React.createElement("div", { onClick: onClose, style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 12, width: "min(95vw,440px)", maxHeight: "86vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "6px 6px 0 #111", fontFamily: F9, color: "#111" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C5, fontSize: 22, color: "#fff", fontWeight: 700 } }, "\u{1F3F7}\uFE0F Por categorizar ", /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: "#888" } }, lista.length)), /* @__PURE__ */ React.createElement("button", { onClick: onClose, "aria-label": "Cerrar", style: { background: "transparent", border: "none", color: "#aaa", fontSize: 22, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "4px 16px 14px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#777", padding: "8px 0 2px" } }, "Todo gasto lleva categor\xEDa. Estos se registraron antes de que fuera obligatoria: ponles la que corresponda; el monto, la fecha y la nota no cambian."), lista.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#aaa", fontSize: 13, textAlign: "center", padding: "26px 0" } }, "Todo est\xE1 categorizado \u2713"), lista.map((x) => /* @__PURE__ */ React.createElement(Pendiente, { key: x.gasto.id, budgets, periodo: x.periodo, gasto: x.gasto, onGuardar: onSaveBudget })))));
   }
 
+  // modules/shared/ui.jsx
+  var { useState: useState22, useEffect: useEffect12, useLayoutEffect, useRef: useRef10 } = React;
+  var btnGhost = { flex: 1, background: "transparent", border: "1px dashed #444", color: "#aaa", borderRadius: 10, padding: "10px 6px", fontFamily: "'DM Sans',sans-serif", fontSize: 10, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 };
+  function shareToWhatsApp(item) {
+    const text = encodeURIComponent(`${item.title}
+${item.link}`);
+    window.open(`https://wa.me/?text=${text}`, "_blank");
+  }
+  var FORMATO_BADGE_COLORS = { TXT: "#6b7280", VID: "#e0483e", AUD: "#9b59d0" };
+  function formatoBadges(item) {
+    const badges = [];
+    if (item.formato === "cine") {
+      if (item.trailer && item.trailer.key) badges.push("VID");
+      if (item.summary) badges.push("TXT");
+    } else if (item.formato === "musica") {
+      const hasVideo = item.tipo === "video" && !!item.videoId;
+      const hasAudio = !!item.bandcampEmbedUrl || !!item.soundcloudEmbedUrl;
+      if (hasVideo) badges.push("VID");
+      else if (hasAudio) badges.push("AUD");
+      if (item.fullText) badges.push("TXT");
+    } else {
+      if (item.tipo === "video") badges.push("VID");
+      else if (item.tipo === "podcast") badges.push("AUD");
+      if (item.fullText) badges.push("TXT");
+    }
+    return badges;
+  }
+  function FormatoTag({ item }) {
+    const badges = formatoBadges(item);
+    if (!badges.length) return null;
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, justifyContent: "center", marginBottom: 8 } }, badges.map((b) => /* @__PURE__ */ React.createElement("span", { key: b, style: {
+      fontFamily: "'DM Sans',sans-serif",
+      fontSize: 10,
+      fontWeight: 800,
+      letterSpacing: "0.04em",
+      color: "#fff",
+      background: FORMATO_BADGE_COLORS[b],
+      padding: "3px 8px",
+      borderRadius: 4,
+      boxShadow: "2px 2px 0 rgba(0,0,0,0.45)"
+    } }, b)));
+  }
+  function useAltoDe(ref, deps = []) {
+    const [alto, setAlto] = useState22(0);
+    useLayoutEffect(() => {
+      const el = ref.current;
+      if (!el) return void 0;
+      const medir = () => setAlto(el.clientHeight);
+      medir();
+      if (typeof ResizeObserver === "undefined") return void 0;
+      const ro = new ResizeObserver(medir);
+      ro.observe(el);
+      return () => ro.disconnect();
+    }, [ref, ...deps]);
+    return alto;
+  }
+  function useDesborde(ref, nombre, activo = true) {
+    const [desborda, setDesborda] = useState22(false);
+    const medirRef = useRef10(null);
+    useLayoutEffect(() => {
+      medirRef.current = () => {
+        const el = ref.current;
+        const over = el && activo ? el.scrollHeight - el.clientHeight : 0;
+        if (over > 1) console.warn(`[${nombre}] desborda colapsado: ${over}px \u2014 revisar alturas (R2)`);
+        setDesborda(over > 1);
+      };
+      medirRef.current();
+    });
+    useLayoutEffect(() => {
+      const el = ref.current;
+      if (!el || typeof ResizeObserver === "undefined") return void 0;
+      const ro = new ResizeObserver(() => medirRef.current && medirRef.current());
+      ro.observe(el);
+      return () => ro.disconnect();
+    }, [ref]);
+    return desborda;
+  }
+  function useAltoLibre(ref, minimo = 460, reserva = 0, deps = []) {
+    const [alto, setAlto] = useState22(null);
+    useLayoutEffect(() => {
+      function medir() {
+        const el = ref.current;
+        if (!el) return;
+        const arriba = el.getBoundingClientRect().top + window.scrollY;
+        const pie2 = document.querySelector(".ftr");
+        const altoPie = pie2 ? pie2.offsetHeight + 8 : 0;
+        const vh = window.visualViewport && window.visualViewport.height || window.innerHeight;
+        setAlto(Math.max(minimo, Math.round(vh - arriba - altoPie - reserva)));
+      }
+      medir();
+      const t = setTimeout(medir, 350);
+      window.addEventListener("resize", medir);
+      window.addEventListener("orientationchange", medir);
+      return () => {
+        clearTimeout(t);
+        window.removeEventListener("resize", medir);
+        window.removeEventListener("orientationchange", medir);
+      };
+    }, deps);
+    return alto;
+  }
+  function MarcoAngst({ children, style }) {
+    const ref = useRef10(null);
+    const alto = useAltoLibre(ref);
+    return /* @__PURE__ */ React.createElement("div", { ref, style: { position: "relative", width: "100%", maxWidth: 480, margin: "0 auto", height: alto || "70vh", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box", ...style } }, children);
+  }
+
   // modules/presupuesto/BudgetPage.jsx
-  var { useState: useState22, useEffect: useEffect12, useRef: useRef10, useMemo: useMemo9, useCallback: useCallback6 } = React;
+  var { useState: useState23, useEffect: useEffect13, useRef: useRef11, useMemo: useMemo9, useCallback: useCallback6 } = React;
   var getBudgetForPeriod = resolverPeriodo;
   function PieChart({ data, total, annual }) {
     const CX2 = 100, CY2 = 100, R2 = 76;
@@ -11981,7 +12089,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("svg", { width: "200", height: "200", viewBox: "0 0 200 200" }, slices.map((s, i) => /* @__PURE__ */ React.createElement("path", { key: i, d: s.path, fill: s.color, stroke: "#fff", strokeWidth: "1.5" })), slices.map((s, i) => s.big && /* @__PURE__ */ React.createElement("text", { key: `em${i}`, x: s.ex.toFixed(1), y: s.ey.toFixed(1), textAnchor: "middle", dominantBaseline: "middle", fontSize: "12" }, s.emoji)), /* @__PURE__ */ React.createElement("circle", { cx: CX2, cy: CY2, r: 34, fill: "#fff" }), /* @__PURE__ */ React.createElement("text", { x: CX2, y: CY2 - 5, textAnchor: "middle", dominantBaseline: "middle", fontFamily: "'Caveat',cursive", fontSize: "12", fill: "#111", fontWeight: "700" }, annual ? "anual" : "mensual"), /* @__PURE__ */ React.createElement("text", { x: CX2, y: CY2 + 10, textAnchor: "middle", dominantBaseline: "middle", fontFamily: "'DM Sans',sans-serif", fontSize: "9", fill: "#555" }, fmtCLP(annual ? total * 12 : total))), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", display: "flex", flexDirection: "column", gap: 4, padding: "0 4px" } }, slices.map((s, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 6 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 9, height: 9, borderRadius: 2, background: s.color, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#444" } }, s.emoji, " ", s.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#111", fontWeight: 600 } }, fmtCLP(s.monto)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", width: 32, textAlign: "right" } }, s.pct, "%")))));
   }
   function IngresoChartModal({ budgets, selYear, selMonth, onClose }) {
-    const [view, setView] = useState22(0);
+    const [view, setView] = useState23(0);
     const GRAYS = ["#111", "#333", "#555", "#777", "#aaa", "#ccc"];
     const sources = [{ k: "trabajo", l: "Trabajo", e: "\u{1F3E2}" }, { k: "emprendimiento", l: "Emprend.", e: "\u{1F6E0}\uFE0F" }, { k: "reventa", l: "Reventa", e: "\u{1F504}" }, { k: "otros", l: "Otros", e: "\u2728" }];
     const monthKey = `${selYear}-${String(selMonth + 1).padStart(2, "0")}`;
@@ -12005,11 +12113,11 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     }))))));
   }
   function ChartModal({ title, emoji, rows, total, onClose }) {
-    const [view, setView] = useState22(0);
+    const [view, setView] = useState23(0);
     return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }, onClick: onClose }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: 320, maxHeight: "90vh", overflowY: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, color: "#fff", fontWeight: 700 } }, emoji, " ", title), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#555", fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", borderBottom: "1px solid #eee" } }, ["Mensual", "Anual"].map((lbl2, idx) => /* @__PURE__ */ React.createElement("button", { key: idx, onClick: () => setView(idx), style: { flex: 1, padding: "10px", fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, cursor: "pointer", background: view === idx ? "#111" : "#fff", color: view === idx ? "#fff" : "#999", border: "none", transition: "all 0.15s" } }, lbl2))), /* @__PURE__ */ React.createElement("div", { style: { padding: "16px" } }, /* @__PURE__ */ React.createElement(PieChart, { data: rows, total, annual: view === 1 }))));
   }
   function MonthSelectorModal({ currentYear, currentMonth, onSelect, onClose }) {
-    const [year, setYear] = useState22(currentYear);
+    const [year, setYear] = useState23(currentYear);
     return /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }, onClick: onClose }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: 300 } }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setYear((y) => y - 1), style: { background: "transparent", border: "none", color: "#fff", fontSize: 22, cursor: "pointer", fontWeight: 700 } }, "\u2039"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, year), /* @__PURE__ */ React.createElement("button", { onClick: () => setYear((y) => y + 1), style: { background: "transparent", border: "none", color: "#fff", fontSize: 22, cursor: "pointer", fontWeight: 700 } }, "\u203A")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 2, padding: 12 } }, MONTH_NAMES.map((m, i) => {
       const cur = i === currentMonth && year === currentYear;
       const nowDate = /* @__PURE__ */ new Date(), isNow = i === nowDate.getMonth() && year === nowDate.getFullYear() && !cur;
@@ -12023,12 +12131,12 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
   function BudgetSec({ title, emoji, rows, secKey, subtotal, totalIngreso, canEdit, onRowSave, onRowAdd, onRowDelete, onRowCheck, onChartOpen, onOpenCartera, onToggleCartera, anual }) {
     const T = totalIngreso;
     const pct2 = T > 0 ? (subtotal / T * 100).toFixed(1) : "-";
-    const [hover, setHover] = useState22(false);
-    const [adding, setAdding] = useState22(false);
-    const [newLabel, setNewLabel] = useState22("");
-    const [newEmoji, setNewEmoji] = useState22("\u{1F4CC}");
-    const [editId, setEditId] = useState22(null);
-    const [editLabel, setEditLabel] = useState22("");
+    const [hover, setHover] = useState23(false);
+    const [adding, setAdding] = useState23(false);
+    const [newLabel, setNewLabel] = useState23("");
+    const [newEmoji, setNewEmoji] = useState23("\u{1F4CC}");
+    const [editId, setEditId] = useState23(null);
+    const [editLabel, setEditLabel] = useState23("");
     function confirmAdd() {
       if (!newLabel.trim()) return;
       onRowAdd(secKey, { id: Date.now().toString(), emoji: newEmoji, label: newLabel.trim(), monto: 0 });
@@ -12076,23 +12184,25 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     }, placeholder: "nombre del fondo...", style: { flex: 1, border: "1px dashed #ccc", borderRadius: 4, padding: "4px 8px", fontSize: 13, fontFamily: FUENTE, outline: "none", background: "#fff" } }), /* @__PURE__ */ React.createElement("button", { onClick: confirmAdd, style: { background: "#111", color: "#fff", border: "none", borderRadius: 4, padding: "4px 10px", fontSize: 12, cursor: "pointer" } }, "\u2713"), /* @__PURE__ */ React.createElement("button", { onClick: () => setAdding(false), style: { background: "transparent", border: "none", color: "#bbb", fontSize: 18, cursor: "pointer" } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: GRID, gap: GAP, padding: "10px 12px", background: "#f3f3f3", alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", null), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 12, color: "#111", fontWeight: 700 }) }, "Subtotal"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 13, color: "#111", fontWeight: 700, textAlign: "right", paddingRight: PAD_MONTO }) }, fmtCLP(subtotal)), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 11, color: "#666", textAlign: "right", fontWeight: 600 }) }, pct2, "%"), /* @__PURE__ */ React.createElement("div", { style: celda({ fontSize: 11, color: "#666", textAlign: "right", fontWeight: 600 }) }, fmtCLP(anualSub)), /* @__PURE__ */ React.createElement("div", null))));
   }
   function BudgetPage({ budgets, onSaveBudget }) {
-    const [chartData, setChartData] = useState22(null);
-    const [ingChart, setIngChart] = useState22(false);
-    const [monthModal, setMonthModal] = useState22(false);
-    const [aviso, setAviso] = useState22("");
-    const [ventana, setVentana] = useState22(null);
-    const [gastoDesde, setGastoDesde] = useState22(null);
-    const [guia, setGuia] = useState22(false);
-    const [cierre, setCierre] = useState22(null);
-    const [vista, setVista] = useState22("rueda");
-    const [modo, setModo] = useState22("m");
-    const [movsOpen, setMovsOpen] = useState22(false);
-    const [porCat, setPorCat] = useState22(false);
-    const [torta, setTorta] = useState22(null);
-    const avisoRef = useRef10(null);
+    const [chartData, setChartData] = useState23(null);
+    const [ingChart, setIngChart] = useState23(false);
+    const [monthModal, setMonthModal] = useState23(false);
+    const [aviso, setAviso] = useState23("");
+    const [ventana, setVentana] = useState23(null);
+    const [gastoDesde, setGastoDesde] = useState23(null);
+    const [guia, setGuia] = useState23(false);
+    const [cierre, setCierre] = useState23(null);
+    const [vista, setVista] = useState23("rueda");
+    const [modo, setModo] = useState23("m");
+    const [movsOpen, setMovsOpen] = useState23(false);
+    const [porCat, setPorCat] = useState23(false);
+    const [torta, setTorta] = useState23(null);
+    const avisoRef = useRef11(null);
+    const cuerpoRef = useRef11(null);
+    const desborda = useDesborde(cuerpoRef, "presupuesto", vista !== "asignar");
     const now = /* @__PURE__ */ new Date();
-    const [selYear, setSelYear] = useState22(now.getFullYear());
-    const [selMonth, setSelMonth] = useState22(now.getDate() >= 25 ? now.getMonth() : (now.getMonth() - 1 + 12) % 12);
+    const [selYear, setSelYear] = useState23(now.getFullYear());
+    const [selMonth, setSelMonth] = useState23(now.getDate() >= 25 ? now.getMonth() : (now.getMonth() - 1 + 12) % 12);
     const monthKey = `${selYear}-${String(selMonth + 1).padStart(2, "0")}`;
     const budget = getBudgetForPeriod(budgets, monthKey);
     const periodLabel = `25 ${MONTH_NAMES[selMonth].slice(0, 3)} \u2014 24 ${MONTH_NAMES[(selMonth + 1) % 12].slice(0, 3)} ${selYear}`;
@@ -12176,7 +12286,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     };
     const secProps = { totalIngreso: T, onRowSave: updRow, onRowAdd: addRow, onRowDelete: delRow, onRowCheck: checkRow, onChartOpen: setChartData };
     const navBtn2 = { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "6px 11px", cursor: "pointer", color: "#888", fontSize: 16, lineHeight: 1 };
-    return /* @__PURE__ */ React.createElement("div", { style: { flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column", overflowY: vista === "asignar" ? "auto" : "hidden" } }, ingChart && /* @__PURE__ */ React.createElement(IngresoChartModal, { budgets, selYear, selMonth, onClose: () => setIngChart(false) }), chartData && /* @__PURE__ */ React.createElement(ChartModal, { title: chartData.title, emoji: chartData.emoji, rows: chartData.rows, total: chartData.total, onClose: () => setChartData(null) }), idxVentana >= 0 && /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { ref: cuerpoRef, style: { flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column", overflowY: vista === "asignar" || desborda ? "auto" : "hidden" } }, ingChart && /* @__PURE__ */ React.createElement(IngresoChartModal, { budgets, selYear, selMonth, onClose: () => setIngChart(false) }), chartData && /* @__PURE__ */ React.createElement(ChartModal, { title: chartData.title, emoji: chartData.emoji, rows: chartData.rows, total: chartData.total, onClose: () => setChartData(null) }), idxVentana >= 0 && /* @__PURE__ */ React.createElement(
       CarteraVentana,
       {
         carteras,
@@ -12268,7 +12378,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
   }
 
   // modules/pokecripto/AgregarCartaModal.jsx
-  var { useState: useState23, useMemo: useMemo11 } = React;
+  var { useState: useState24, useMemo: useMemo11 } = React;
   var F11 = "'DM Sans',sans-serif";
   var C6 = "'Caveat',cursive";
   var CONDICIONES2 = ["NM", "LP", "MP", "HP", "DMG"];
@@ -12285,14 +12395,14 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       return b.includes("Price Watch") ? b : [...b, "Price Watch"];
     }, [carpetas]);
     const carpetasNormales = cats.filter((c) => c !== "Price Watch");
-    const [query, setQuery] = useState23("");
-    const [cargando2, setCargando] = useState23(false);
-    const [resultados, setResultados] = useState23([]);
-    const [error, setError] = useState23(null);
-    const [carta, setCarta] = useState23(null);
-    const [hechos, setHechos] = useState23([]);
-    const [ultima, setUltima] = useState23(null);
-    const [form, setForm] = useState23({ destino: "inventario", carpeta: carpetasNormales[0] || "MLP", cantidad: 1, costoUSD: "", precioObjetivo: "", condicion: "NM" });
+    const [query, setQuery] = useState24("");
+    const [cargando2, setCargando] = useState24(false);
+    const [resultados, setResultados] = useState24([]);
+    const [error, setError] = useState24(null);
+    const [carta, setCarta] = useState24(null);
+    const [hechos, setHechos] = useState24([]);
+    const [ultima, setUltima] = useState24(null);
+    const [form, setForm] = useState24({ destino: "inventario", carpeta: carpetasNormales[0] || "MLP", cantidad: 1, costoUSD: "", precioObjetivo: "", condicion: "NM" });
     async function buscar() {
       const q = query.trim();
       if (!q) return;
@@ -12374,18 +12484,18 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
   var AgregarCartaModal_default = AgregarCartaModal;
 
   // core/RegistroRapido.jsx
-  var { useState: useState24 } = React;
+  var { useState: useState25 } = React;
   var F12 = "'DM Sans',sans-serif";
   var C7 = "'Caveat',cursive";
   var campo7 = { width: "100%", border: "none", borderBottom: "2px solid #111", padding: "8px 4px", fontSize: 18, fontFamily: C7, outline: "none", background: "transparent", color: "#111", boxSizing: "border-box" };
   var chip4 = (activo, color2) => ({ fontFamily: F12, fontSize: 12, padding: "6px 12px", borderRadius: 14, border: "1px dashed " + (activo && color2 ? color2 : "#ddd"), background: activo ? color2 || "#111" : "transparent", color: activo ? "#fff" : "#555", cursor: "pointer" });
   var TITULOS = { nota: "\u{1F4DD} nota r\xE1pida", tarea: "\u2705 nueva tarea", compra: "\u{1F6D2} compras de hoy" };
   function RegistroRapido({ tipo, onNota, onTarea, compras, onGuardado, onClose }) {
-    const [texto, setTexto] = useState24("");
-    const [urgente, setUrgente] = useState24(false);
-    const [dia, setDia] = useState24("hoy");
-    const [fecha2, setFecha] = useState24(fmtFull(/* @__PURE__ */ new Date()));
-    const [hechos, setHechos] = useState24([]);
+    const [texto, setTexto] = useState25("");
+    const [urgente, setUrgente] = useState25(false);
+    const [dia, setDia] = useState25("hoy");
+    const [fecha2, setFecha] = useState25(fmtFull(/* @__PURE__ */ new Date()));
+    const [hechos, setHechos] = useState25([]);
     const diaClave = () => {
       if (dia === "hoy") return fmtFull(/* @__PURE__ */ new Date());
       if (dia === "manana") return fmtFull(new Date(Date.now() + 864e5));
@@ -13063,7 +13173,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
   var EspritPage_default = EspritPage;
 
   // modules/shared/constants.js
-  var { useState: useState25, useEffect: useEffect13, useRef: useRef11 } = React;
+  var { useState: useState26, useEffect: useEffect14, useRef: useRef12 } = React;
   var FEED_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/feed.json";
   var CINE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/cine.json";
   var MELEE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/melee.json";
@@ -13103,78 +13213,6 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     }
   }
   var STORAGE_KEY = "angst-feed-proto-v1";
-
-  // modules/shared/ui.jsx
-  var { useState: useState26, useEffect: useEffect14, useLayoutEffect, useRef: useRef12 } = React;
-  var btnGhost = { flex: 1, background: "transparent", border: "1px dashed #444", color: "#aaa", borderRadius: 10, padding: "10px 6px", fontFamily: "'DM Sans',sans-serif", fontSize: 10, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 };
-  function shareToWhatsApp(item) {
-    const text = encodeURIComponent(`${item.title}
-${item.link}`);
-    window.open(`https://wa.me/?text=${text}`, "_blank");
-  }
-  var FORMATO_BADGE_COLORS = { TXT: "#6b7280", VID: "#e0483e", AUD: "#9b59d0" };
-  function formatoBadges(item) {
-    const badges = [];
-    if (item.formato === "cine") {
-      if (item.trailer && item.trailer.key) badges.push("VID");
-      if (item.summary) badges.push("TXT");
-    } else if (item.formato === "musica") {
-      const hasVideo = item.tipo === "video" && !!item.videoId;
-      const hasAudio = !!item.bandcampEmbedUrl || !!item.soundcloudEmbedUrl;
-      if (hasVideo) badges.push("VID");
-      else if (hasAudio) badges.push("AUD");
-      if (item.fullText) badges.push("TXT");
-    } else {
-      if (item.tipo === "video") badges.push("VID");
-      else if (item.tipo === "podcast") badges.push("AUD");
-      if (item.fullText) badges.push("TXT");
-    }
-    return badges;
-  }
-  function FormatoTag({ item }) {
-    const badges = formatoBadges(item);
-    if (!badges.length) return null;
-    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, justifyContent: "center", marginBottom: 8 } }, badges.map((b) => /* @__PURE__ */ React.createElement("span", { key: b, style: {
-      fontFamily: "'DM Sans',sans-serif",
-      fontSize: 10,
-      fontWeight: 800,
-      letterSpacing: "0.04em",
-      color: "#fff",
-      background: FORMATO_BADGE_COLORS[b],
-      padding: "3px 8px",
-      borderRadius: 4,
-      boxShadow: "2px 2px 0 rgba(0,0,0,0.45)"
-    } }, b)));
-  }
-  function useAltoLibre(ref, minimo = 460, reserva = 0, deps = []) {
-    const [alto, setAlto] = useState26(null);
-    useLayoutEffect(() => {
-      function medir() {
-        const el = ref.current;
-        if (!el) return;
-        const arriba = el.getBoundingClientRect().top + window.scrollY;
-        const pie2 = document.querySelector(".ftr");
-        const altoPie = pie2 ? pie2.offsetHeight + 8 : 0;
-        const vh = window.visualViewport && window.visualViewport.height || window.innerHeight;
-        setAlto(Math.max(minimo, Math.round(vh - arriba - altoPie - reserva)));
-      }
-      medir();
-      const t = setTimeout(medir, 350);
-      window.addEventListener("resize", medir);
-      window.addEventListener("orientationchange", medir);
-      return () => {
-        clearTimeout(t);
-        window.removeEventListener("resize", medir);
-        window.removeEventListener("orientationchange", medir);
-      };
-    }, deps);
-    return alto;
-  }
-  function MarcoAngst({ children, style }) {
-    const ref = useRef12(null);
-    const alto = useAltoLibre(ref);
-    return /* @__PURE__ */ React.createElement("div", { ref, style: { position: "relative", width: "100%", maxWidth: 480, margin: "0 auto", height: alto || "70vh", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box", ...style } }, children);
-  }
 
   // modules/shared/catalog.js
   var { useState: useState27, useEffect: useEffect15, useRef: useRef13 } = React;
@@ -14444,7 +14482,7 @@ ${item.link}`);
     const color2 = CAT_COLORS[item.categoria] || "#e91e8c";
     const leads = (item.cast || []).filter((c) => c.order < 4);
     const supporting = (item.cast || []).filter((c) => c.order >= 4);
-    return /* @__PURE__ */ React.createElement(MarcoAngst, { style: { background: "#0d0d0d" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #1a1a1a" } }, /* @__PURE__ */ React.createElement("button", { onClick: onBack, style: { background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 } }, item.source), /* @__PURE__ */ React.createElement("a", { href: item.link, target: "_blank", rel: "noopener", style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", textDecoration: "none" } }, "fuente \u2197")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", overscrollBehaviorY: "contain", padding: "18px 20px 30px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, marginBottom: 12 } }, item.image && /* @__PURE__ */ React.createElement("img", { src: item.image, alt: "", style: { width: 110, minWidth: 110, borderRadius: 10, alignSelf: "flex-start" }, onError: (e) => {
+    return /* @__PURE__ */ React.createElement("div", { style: { flex: "1 1 0", minHeight: 0, position: "relative", width: "100%", maxWidth: 480, margin: "0 auto", overflow: "hidden", display: "flex", flexDirection: "column", boxSizing: "border-box", background: "#0d0d0d" } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 18px 10px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid #1a1a1a" } }, /* @__PURE__ */ React.createElement("button", { onClick: onBack, style: { background: "transparent", border: "none", color: "#666", fontSize: 20, cursor: "pointer" } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", flex: 1 } }, item.source), /* @__PURE__ */ React.createElement("a", { href: item.link, target: "_blank", rel: "noopener", style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", textDecoration: "none" } }, "fuente \u2197")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", overscrollBehaviorY: "contain", padding: "18px 20px 30px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, marginBottom: 12 } }, item.image && /* @__PURE__ */ React.createElement("img", { src: item.image, alt: "", style: { width: 110, minWidth: 110, borderRadius: 10, alignSelf: "flex-start" }, onError: (e) => {
       e.target.style.display = "none";
     } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement(FormatoTag, { item }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff", margin: "4px 0 8px", lineHeight: 1.15, wordBreak: "break-word" } }, item.title), /* @__PURE__ */ React.createElement(RatingBadges, { rating: item.rating, size: "lg" }))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 14, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, marginBottom: 18 } }, item.summary), item.trailer && /* @__PURE__ */ React.createElement("div", { style: { margin: "16px 0", borderRadius: 10, overflow: "hidden", aspectRatio: "16/9" } }, /* @__PURE__ */ React.createElement(
       "iframe",
@@ -14476,7 +14514,7 @@ ${item.link}`);
       return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", marginBottom: 4 } }, r ? `${r.emoji} ${r.label}` : "sin calificar");
     })(), estadoItem.nota && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", fontStyle: "italic" } }, '"', estadoItem.nota, '"'), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 4 } }, "tocar para editar")) : reviewOpen || estado !== "vista" ? reviewOpen && /* @__PURE__ */ React.createElement(MiniReviewForm, { onSave: guardarReview, onCancel: () => setReviewOpen(false), inicial: estadoItem }) : null, estado === "vista" && !reviewOpen && estadoItem?.rating && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: exportarImagen, disabled: exportando, style: { ...btnGhost, width: "100%", opacity: exportando ? 0.6 : 1 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4F8}"), exportando ? "generando imagen\u2026" : "exportar imagen"), exportMsg && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 6 } }, exportMsg)), estado !== "vista" && !reviewOpen && /* @__PURE__ */ React.createElement("button", { onClick: () => setReviewOpen(true), style: { ...btnGhost, width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4DD}"), "marcar como vista")), leads.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 6 } }, "reparto principal"), leads.map((c, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.7)", marginBottom: 2 } }, /* @__PURE__ */ React.createElement("b", { style: { color: "#fff" } }, c.name), c.character ? ` \u2014 ${c.character}` : "")), supporting.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6 } }, supporting.map((c) => c.name).join(" \xB7 "))), item.reviews ? /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 } }, "rese\xF1as de usuario"), /* @__PURE__ */ React.createElement(ReviewBlock, { label: "mejor valorada", review: item.reviews.top, color: color2 }), item.reviews.bottom && /* @__PURE__ */ React.createElement(ReviewBlock, { label: "peor valorada", review: item.reviews.bottom, color: color2 })) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#666", fontStyle: "italic" } }, "sin rese\xF1as de usuario disponibles para este t\xEDtulo")), !hideActions && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "anterior"), onSave && /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareToWhatsApp(item), style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4E4}"), "compartir"), /* @__PURE__ */ React.createElement("button", { onClick: onNext, style: { ...btnGhost, background: color2, color: "#111", borderColor: color2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente"))));
   }
-  function CineCoverFlow({ items, onOpen, generatedAt, categoria }) {
+  function CineCoverFlow({ items, onOpen, generatedAt, categoria, memoria }) {
     useEffect20(() => {
       flushSimklQueue();
     }, []);
@@ -14492,6 +14530,12 @@ ${item.link}`);
     const posRef = useRef18(0);
     const dragRef = useRef18(null);
     const animRef = useRef18(null);
+    const pendRef = useRef18(void 0);
+    if (pendRef.current === void 0) {
+      const mm = memoria && memoria.current;
+      pendRef.current = mm && mm.guid ? { guid: mm.guid, idx: mm.idx } : null;
+      if (mm) mm.guid = null;
+    }
     function setPosBoth(v) {
       posRef.current = v;
       setPos(v);
@@ -14513,6 +14557,7 @@ ${item.link}`);
       if (animRef.current) cancelAnimationFrame(animRef.current);
     }, []);
     function onPointerDown(e) {
+      pendRef.current = null;
       if (animRef.current) {
         cancelAnimationFrame(animRef.current);
         animRef.current = null;
@@ -14546,11 +14591,18 @@ ${item.link}`);
         const rawIdx = Math.round(d.startPos) + d.tapOffset;
         const realIdx = (rawIdx % total + total) % total;
         const item = sortedItems[realIdx];
-        if (item) onOpen(item);
+        if (item) {
+          if (memoria) {
+            memoria.current.guid = item.guid;
+            memoria.current.idx = realIdx;
+          }
+          onOpen(item);
+        }
       }
       endDrag();
     }
     function step(dir) {
+      pendRef.current = null;
       animateTo(Math.round(posRef.current) + dir);
     }
     const cineEstado = useCineEstadoMap();
@@ -14564,18 +14616,26 @@ ${item.link}`);
       [simklDiscoveryAll, itemGuidsEnCartelera, exemptGuids, categoria]
     );
     const fullItems = exemptExtra.length || simklExtra.length ? [...items, ...exemptExtra, ...simklExtra] : items;
-    const [sortBy, setSortBy] = useState32("default");
-    const [ocultarDescartadas, setOcultarDescartadas] = useState32(true);
-    const [ocultarVistas, setOcultarVistas] = useState32(true);
-    const [soloInteresa, setSoloInteresa] = useState32(false);
-    const [soloNovedades, setSoloNovedades] = useState32(false);
-    const [soloPendientes, setSoloPendientes] = useState32(false);
+    const f0 = memoria && memoria.current.filtros || {};
+    const [sortBy, setSortBy] = useState32(f0.sortBy ?? "default");
+    const [ocultarDescartadas, setOcultarDescartadas] = useState32(f0.ocultarDescartadas ?? true);
+    const [ocultarVistas, setOcultarVistas] = useState32(f0.ocultarVistas ?? true);
+    const [soloInteresa, setSoloInteresa] = useState32(f0.soloInteresa ?? false);
+    const [soloNovedades, setSoloNovedades] = useState32(f0.soloNovedades ?? false);
+    const [soloPendientes, setSoloPendientes] = useState32(f0.soloPendientes ?? false);
     const puedePendientes = categoria === "Series" || categoria === "Animaci\xF3n";
+    const catPrev = useRef18(categoria);
     useEffect20(() => {
-      setSoloPendientes(false);
+      if (catPrev.current !== categoria) {
+        catPrev.current = categoria;
+        setSoloPendientes(false);
+      }
     }, [categoria]);
-    const [soloEstrenos, setSoloEstrenos] = useState32(false);
-    const [ocultarTrending, setOcultarTrending] = useState32(false);
+    const [soloEstrenos, setSoloEstrenos] = useState32(f0.soloEstrenos ?? false);
+    const [ocultarTrending, setOcultarTrending] = useState32(f0.ocultarTrending ?? false);
+    useEffect20(() => {
+      if (memoria) memoria.current.filtros = { sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloNovedades, soloPendientes, soloEstrenos, ocultarTrending };
+    }, [sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloNovedades, soloPendientes, soloEstrenos, ocultarTrending]);
     const esPelicula = categoria === "Pel\xEDculas";
     const sortedItems = React.useMemo(() => {
       let arr = fullItems;
@@ -14613,7 +14673,20 @@ ${item.link}`);
     useEffect20(() => {
       setPosBoth(0);
     }, [sortedItems.length, sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloNovedades, soloPendientes, soloEstrenos, ocultarTrending, categoria]);
+    useEffect20(() => {
+      const p = pendRef.current;
+      if (!p || !sortedItems.length) return;
+      const i = sortedItems.findIndex((it) => it.guid === p.guid);
+      setPosBoth(i >= 0 ? i : Math.min(p.idx || 0, sortedItems.length - 1));
+    }, [sortedItems]);
+    useEffect20(() => {
+      const t = setTimeout(() => {
+        pendRef.current = null;
+      }, 1500);
+      return () => clearTimeout(t);
+    }, []);
     function irARandom() {
+      pendRef.current = null;
       if (sortedItems.length < 2) return;
       let idx = Math.floor(Math.random() * sortedItems.length);
       if (idx === Math.round(posRef.current)) idx = (idx + 1) % sortedItems.length;
@@ -14655,7 +14728,7 @@ Toco reintentar ahora.`);
       simklStatus.ultimoError || "error",
       " (tocar)"
     ), simklStatus.conectado && simklStatus.estado === "idle" && /* @__PURE__ */ React.createElement("span", { style: { ...toolbarBtn(false), cursor: "default", opacity: 0.5 } }, "\u{1F517} Simkl conectado"));
-    const alto = useAltoLibre(contRef, 380, 16, [categoria, simklStatus.estado, puedePendientes, esPelicula, sortedItems.length]);
+    const alto = useAltoDe(contRef, [sortedItems.length > 0]);
     useLayoutEffect2(() => {
       const h = cardRef.current && cardRef.current.offsetHeight;
       if (h && h > h0) setH0(h);
@@ -14705,7 +14778,7 @@ Toco reintentar ahora.`);
       const realIdx = (rawIdx % total + total) % total;
       slots.push({ offset: o, item: sortedItems[realIdx], dist: rawIdx - pos });
     }
-    return /* @__PURE__ */ React.createElement("div", null, toolbar, /* @__PURE__ */ React.createElement("div", { style: { position: "relative" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => step(-1), style: { ...arrowStyle, left: 6 } }, "\u25C0\uFE0F"), /* @__PURE__ */ React.createElement("button", { onClick: () => step(1), style: { ...arrowStyle, right: 6 } }, "\u25B6\uFE0F"), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { style: { flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column" } }, toolbar, /* @__PURE__ */ React.createElement("div", { style: { position: "relative", flex: "1 1 0", minHeight: h0 ? h0 + 16 : 0, marginBottom: 16 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => step(-1), style: { ...arrowStyle, left: 6 } }, "\u25C0\uFE0F"), /* @__PURE__ */ React.createElement("button", { onClick: () => step(1), style: { ...arrowStyle, right: 6 } }, "\u25B6\uFE0F"), /* @__PURE__ */ React.createElement(
       "div",
       {
         ref: contRef,
@@ -14714,8 +14787,8 @@ Toco reintentar ahora.`);
         onPointerUp,
         onPointerCancel: onPointerUp,
         style: {
-          position: "relative",
-          height: altoCont,
+          position: "absolute",
+          inset: 0,
           boxSizing: "border-box",
           touchAction: "none",
           perspective: 2600,
@@ -14922,10 +14995,11 @@ Toco reintentar ahora.`);
   // modules/vitrina/VitrinaPage.jsx
   var { useState: useState33, useEffect: useEffect21, useRef: useRef19 } = React;
   var VITRINA_ICONS = { "Pel\xEDculas": "\u{1F3AC}", "Series": "\u{1F4FA}", "Animaci\xF3n": "\u26E9\uFE0F", "Microdocumentales": "\u{1F3A5}", "Melee": "\u{1F579}\uFE0F", "Conciertos": "\u{1F3AA}" };
-  function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, generatedAt, aviso, cargando: cargando2 }) {
+  function VitrinaView({ vitrinaData, vitrinaCat, onChangeCat, onOpen, generatedAt, aviso, cargando: cargando2, memoria }) {
     const items = vitrinaData[vitrinaCat] || [];
-    const raiz = useRef19(null);
-    const alto = useAltoLibre(raiz, 0);
+    const contenidoRef = useRef19(null);
+    const esLista = ["Microdocumentales", "Melee", "Conciertos"].includes(vitrinaCat);
+    useDesborde(contenidoRef, "vitrina", !esLista);
     const segBtn = (active) => ({
       flex: 1,
       padding: "9px 4px",
@@ -14937,7 +15011,8 @@ Toco reintentar ahora.`);
       color: active ? "#111" : "#999",
       borderColor: active ? CAT_COLORS[vitrinaCat] || "#e91e8c" : "#333"
     });
-    return /* @__PURE__ */ React.createElement("div", { ref: raiz, style: { paddingBottom: 16, background: "#111", minHeight: alto || "100vh", boxSizing: "border-box", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "16px 18px 12px" } }, VITRINA_CATEGORIAS.map((cat) => /* @__PURE__ */ React.createElement("button", { key: cat, onClick: () => onChangeCat(cat), title: cat, style: segBtn(cat === vitrinaCat) }, VITRINA_ICONS[cat] || cat))), aviso && /* @__PURE__ */ React.createElement("div", { style: {
+    return /* @__PURE__ */ React.createElement("div", { style: { flex: "1 1 0", minHeight: 0, background: "#111", boxSizing: "border-box", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: "none", display: "flex", gap: 6, padding: "16px 18px 12px" } }, VITRINA_CATEGORIAS.map((cat) => /* @__PURE__ */ React.createElement("button", { key: cat, onClick: () => onChangeCat(cat), title: cat, style: segBtn(cat === vitrinaCat) }, VITRINA_ICONS[cat] || cat))), aviso && /* @__PURE__ */ React.createElement("div", { style: {
+      flex: "none",
       margin: "0 18px 8px",
       padding: "8px 12px",
       borderRadius: 10,
@@ -14948,12 +15023,13 @@ Toco reintentar ahora.`);
       gap: 10,
       background: aviso.tono === "error" ? "rgba(231,76,60,0.15)" : aviso.tono === "aviso" ? "rgba(245,197,24,0.13)" : "rgba(255,255,255,0.06)",
       color: aviso.tono === "error" ? "#ff8a7a" : aviso.tono === "aviso" ? "#f5c518" : "#aaa"
-    } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, aviso.texto), aviso.accion && /* @__PURE__ */ React.createElement("button", { onClick: aviso.accion.fn, style: { background: "transparent", border: "1px solid currentColor", color: "inherit", borderRadius: 14, padding: "3px 10px", fontSize: 11, cursor: "pointer" } }, aviso.accion.label)), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column" } }, !cargando2 && items.length === 0 && ["Microdocumentales", "Conciertos", "Melee"].includes(vitrinaCat) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#666", textAlign: "center", padding: "50px 20px" } }, "no hay \xEDtems en esta categor\xEDa por ahora"), vitrinaCat === "Microdocumentales" ? /* @__PURE__ */ React.createElement(ArchivedFeed, { items, storageKey: "angst-feed-microdocs-vistos-v1" }) : vitrinaCat === "Melee" ? /* @__PURE__ */ React.createElement(MeleeFeed, { items }) : vitrinaCat === "Conciertos" ? /* @__PURE__ */ React.createElement(ArchivedFeed, { items, storageKey: "angst-feed-conciertos-vistos-v1" }) : /* @__PURE__ */ React.createElement(CineCoverFlow, { items, onOpen, generatedAt, categoria: vitrinaCat })));
+    } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1 } }, aviso.texto), aviso.accion && /* @__PURE__ */ React.createElement("button", { onClick: aviso.accion.fn, style: { background: "transparent", border: "1px solid currentColor", color: "inherit", borderRadius: 14, padding: "3px 10px", fontSize: 11, cursor: "pointer" } }, aviso.accion.label)), /* @__PURE__ */ React.createElement("div", { ref: contenidoRef, style: { flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column", overflowY: "auto", overflowX: "hidden", paddingBottom: esLista ? 16 : 0 } }, !cargando2 && items.length === 0 && ["Microdocumentales", "Conciertos", "Melee"].includes(vitrinaCat) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#666", textAlign: "center", padding: "50px 20px" } }, "no hay \xEDtems en esta categor\xEDa por ahora"), vitrinaCat === "Microdocumentales" ? /* @__PURE__ */ React.createElement(ArchivedFeed, { items, storageKey: "angst-feed-microdocs-vistos-v1" }) : vitrinaCat === "Melee" ? /* @__PURE__ */ React.createElement(MeleeFeed, { items }) : vitrinaCat === "Conciertos" ? /* @__PURE__ */ React.createElement(ArchivedFeed, { items, storageKey: "angst-feed-conciertos-vistos-v1" }) : /* @__PURE__ */ React.createElement(CineCoverFlow, { items, onOpen, generatedAt, categoria: vitrinaCat, memoria })));
   }
   function VitrinaPage() {
     const [vitrinaCat, setVitrinaCat] = useState33("Pel\xEDculas");
     const [vitrinaData, setVitrinaData] = useState33({ "Pel\xEDculas": [], "Series": [], "Animaci\xF3n": [], "Microdocumentales": [], "Melee": [], "Conciertos": [] });
     const [vitrinaOpenItem, setVitrinaOpenItem] = useState33(null);
+    const memCarrusel = useRef19({ guid: null, idx: null, filtros: null });
     const [generatedAt, setGeneratedAt] = useState33(null);
     const [carga, setCarga] = useState33({ cargando: true, error: null, fuentes: null });
     function cargar() {
@@ -14987,7 +15063,9 @@ Toco reintentar ahora.`);
         setVitrinaOpenItem(null);
         return;
       }
-      setVitrinaOpenItem(list[(idx + delta + list.length) % list.length]);
+      const sig = list[(idx + delta + list.length) % list.length];
+      memCarrusel.current.guid = sig.guid;
+      setVitrinaOpenItem(sig);
     }
     if (vitrinaOpenItem) {
       return /* @__PURE__ */ React.createElement(
@@ -15000,7 +15078,7 @@ Toco reintentar ahora.`);
         }
       );
     }
-    return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif" } }, /* @__PURE__ */ React.createElement(VitrinaView, { vitrinaData, vitrinaCat, onChangeCat: setVitrinaCat, onOpen: (item) => setVitrinaOpenItem(item), generatedAt, aviso, cargando: carga.cargando }));
+    return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement(VitrinaView, { vitrinaData, vitrinaCat, onChangeCat: setVitrinaCat, onOpen: (item) => setVitrinaOpenItem(item), generatedAt, aviso, cargando: carga.cargando, memoria: memCarrusel }));
   }
   var VitrinaPage_default = VitrinaPage;
 
@@ -17318,7 +17396,7 @@ Toco reintentar ahora.`);
       const mon = addDays(date, -(dow === 0 ? 6 : dow - 1));
       const diff = Math.round((mon - BASE_DATE) / (7 * 864e5));
       updateWeekOffset(diff);
-    }, onClose: () => setCalOpen(false) }), /* @__PURE__ */ React.createElement("div", { className: "app" + (page === 0 || page === 1 || page === 4 || page === 5 || page === 12 ? " app-fit" : "") }, /* @__PURE__ */ React.createElement("div", { className: "hdr" }, /* @__PURE__ */ React.createElement("div", { className: "hdr-title", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, "angstapp"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexShrink: 0 } }, regMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: regMsg.includes("\u2713") ? "#4caf50" : "#c00", fontSize: 14 } }, regMsg), saved && !regMsg && /* @__PURE__ */ React.createElement("span", { className: "saved-msg" }, "guardado \u2713"), loadMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: loadMsg.startsWith("\u2713") ? "#4caf50" : loadMsg.startsWith("\u26A0") ? "#f0a000" : "#c00", fontSize: 13, maxWidth: 220 } }, loadMsg), exportOk === true && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#4caf50", fontSize: 13 } }, "descargado \u2713"), exportOk === false && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, "error al exportar"), typeof exportOk === "string" && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, exportOk), /* @__PURE__ */ React.createElement("input", { ref: cargarInputRef, type: "file", accept: ".xlsx,.xls,.json", onChange: handleLoad, style: { display: "none" } }), (menuDatosOpen || menuRegOpen) && /* @__PURE__ */ React.createElement("div", { onClick: cerrarMenus, style: { position: "fixed", inset: 0, zIndex: 590 } }), (() => {
+    }, onClose: () => setCalOpen(false) }), /* @__PURE__ */ React.createElement("div", { className: "app" + (page === 0 || page === 1 || page === 4 || page === 5 || page === 10 || page === 12 ? " app-fit" : "") }, /* @__PURE__ */ React.createElement("div", { className: "hdr" }, /* @__PURE__ */ React.createElement("div", { className: "hdr-title", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, "angstapp"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexShrink: 0 } }, regMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: regMsg.includes("\u2713") ? "#4caf50" : "#c00", fontSize: 14 } }, regMsg), saved && !regMsg && /* @__PURE__ */ React.createElement("span", { className: "saved-msg" }, "guardado \u2713"), loadMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: loadMsg.startsWith("\u2713") ? "#4caf50" : loadMsg.startsWith("\u26A0") ? "#f0a000" : "#c00", fontSize: 13, maxWidth: 220 } }, loadMsg), exportOk === true && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#4caf50", fontSize: 13 } }, "descargado \u2713"), exportOk === false && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, "error al exportar"), typeof exportOk === "string" && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, exportOk), /* @__PURE__ */ React.createElement("input", { ref: cargarInputRef, type: "file", accept: ".xlsx,.xls,.json", onChange: handleLoad, style: { display: "none" } }), (menuDatosOpen || menuRegOpen) && /* @__PURE__ */ React.createElement("div", { onClick: cerrarMenus, style: { position: "fixed", inset: 0, zIndex: 590 } }), (() => {
       const itemMenu = { display: "block", width: "100%", textAlign: "left", background: "transparent", border: "none", borderBottom: "1px dashed #333", color: "#fff", padding: "10px 12px", fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" };
       const caja = { position: "absolute", top: "calc(100% + 4px)", right: 0, width: 230, background: "#222", border: "1px dashed #444", borderRadius: 4, zIndex: 600 };
       return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "disk-btn", onClick: () => {

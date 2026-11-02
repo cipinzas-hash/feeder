@@ -54,7 +54,54 @@ export function FormatoTag({ item }) {
   );
 }
 
-// ─── useAltoLibre — alto que queda en pantalla bajo un elemento ─────────────
+// ─── useAltoDe — alto actual de un elemento propio ──────────────────────────
+// Para componentes que escalan a su contenedor (p. ej. el carrusel de Vitrina).
+// El alto lo da el marco por CSS (flex); acá solo se lee con ResizeObserver, sin
+// medir la pantalla. `deps`: re-engancha si el elemento se monta más tarde.
+export function useAltoDe(ref, deps = []) {
+  const [alto, setAlto] = useState(0);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const medir = () => setAlto(el.clientHeight);
+    medir();
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref, ...deps]);
+  return alto;
+}
+
+// ─── useDesborde — válvula y aviso (lineamiento 4.5) ────────────────────────
+// Si el contenido de `ref` no cabe colapsado (`activo`), devuelve true y avisa en
+// consola: quien lo use pone scroll en vez de recortar. Es un detector, no una
+// solución: si se activa, el módulo hay que rediseñarlo. Una sola pieza para
+// todos los módulos (norma N1/N4).
+export function useDesborde(ref, nombre, activo = true) {
+  const [desborda, setDesborda] = useState(false);
+  const medirRef = useRef(null);
+  useLayoutEffect(() => {
+    medirRef.current = () => {
+      const el = ref.current;
+      const over = el && activo ? el.scrollHeight - el.clientHeight : 0;
+      if (over > 1) console.warn(`[${nombre}] desborda colapsado: ${over}px — revisar alturas (R2)`);
+      setDesborda(over > 1);
+    };
+    medirRef.current();
+  });
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return undefined;
+    const ro = new ResizeObserver(() => medirRef.current && medirRef.current());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref]);
+  return desborda;
+}
+
+// ─── useAltoLibre — OBSOLETO (norma N1): solo lo usa MarcoAngst, que solo usa Feed ─
+// Alto que queda en pantalla bajo un elemento. Se elimina cuando Feed pase al marco.
 // Descuenta el pie de Angst (.ftr, frase + logo) para que el pie se vea sin
 // scrollear: el contenido de una vista llena la pantalla y el pie queda justo
 // debajo. Se mide en vivo (el encabezado y el pie pueden cambiar de alto).
@@ -85,7 +132,7 @@ export function useAltoLibre(ref, minimo = 460, reserva = 0, deps = []) {
   return alto;
 }
 
-// ─── MarcoAngst — contenedor de las vistas de Feed y del detalle de Vitrina ──
+// ─── MarcoAngst — OBSOLETO (N1): contenedor de las vistas de Feed (Vitrina ya no lo usa) ──
 // Antes cada vista era position:fixed + inset:0 y tapaba todo el marco de
 // Angst (encabezado, pestañas, pie). Ahora vive dentro del marco, como los
 // demás módulos: mismo ancho máximo (480) y la altura que queda entre las

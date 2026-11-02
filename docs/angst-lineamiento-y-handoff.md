@@ -81,7 +81,7 @@ El id de página es el índice en `TABS`; el orden visual lo define `ORDER=[0,11
 | 8 | 🃏 pokécripto | `PokecriptoPage` | ~2.780 líneas, el más grande |
 | 9 | 📰 feed | `FeedPage` | solo noticias |
 | 12 | 🎧 música | `MusicaPage` (`modules/musica/`) | ya sobre `.app-fit` (N1), sin `useAltoLibre`; descubrimiento de lanzamientos, ver `docs/modulo-musica.md`; falta medir N3 a 480–720 px |
-| 10 | 🎬 vitrina | `VitrinaPage` | aún usa `useAltoLibre` (obsoleto, N1); listas con scroll interno (4.7) |
+| 10 | 🎬 vitrina | `VitrinaPage` | en el marco `.app-fit` (1-nov-2026); recuerda película central y filtros al cerrar el detalle; listas con scroll interno (4.7) |
 
 Chrome fijo del shell: **encabezado** `.hdr` (título "angstapp" + botones 📁💾⬆️⬇️🎙️), **pestañas** `.tabs` (emoji; la abierta muestra su nombre), **contenido**, **pie** `.ftr` (frase rotativa `STOIC_PHRASES` cada 10 s + logo "ANGST").
 
@@ -182,9 +182,9 @@ Siguen con scroll interno hasta su rediseño, y no cuentan como cumplimiento: **
 
 ## 5. Plan por fases (🟡 propuesto, sin Go)
 
-**Estado al 1-nov-2026:** ya cumplen el marco `.app-fit` Semana (0), Presupuesto (1), Salud (4) y Fadiman (5). La antigua "Fase 0" (contrato con `MODULOS_MIGRADOS`) queda **reemplazada por N1**: el marco CSS ya existe; falta pasar los demás módulos y eliminar `useAltoLibre`/`MarcoAngst`.
+**Estado al 1-nov-2026:** ya cumplen el marco `.app-fit` Semana (0), Presupuesto (1), Salud (4), Fadiman (5), Música (12) y Vitrina (10, carrusel y detalle; sus listas siguen con scroll interno, 4.7). El aviso de desborde compartido (`useDesborde`, `modules/shared/ui.jsx`) lo usan Presupuesto y Vitrina; Salud y Fadiman conservan su copia local, a unificar cuando se trabaje en ellos (N1/N4). `useAltoLibre` y `MarcoAngst` solo los usa ya Feed. La antigua "Fase 0" (contrato con `MODULOS_MIGRADOS`) queda **reemplazada por N1**: el marco CSS ya existe; falta pasar los demás módulos y eliminar `useAltoLibre`/`MarcoAngst`.
 
-**Pendientes, de a uno** (propuesta del agente → aprobación → implementación → publicación → captura del usuario → ajustes): Rutinas, Emprendimientos, mindfulness, Nutrición, Ejercicio, Pokécripto, Feed y Vitrina. El usuario decide el orden; el agente no se adelanta a módulos no aprobados, salvo la obligación de 4.6 cuando trabaja en uno.
+**Pendientes, de a uno** (propuesta del agente → aprobación → implementación → publicación → captura del usuario → ajustes): Rutinas, Emprendimientos, mindfulness, Nutrición, Ejercicio, Pokécripto y Feed. El usuario decide el orden; el agente no se adelanta a módulos no aprobados, salvo la obligación de 4.6 cuando trabaja en uno.
 
 ### 5.1 Decisiones del lineamiento
 

@@ -10,6 +10,7 @@ import PresupuestoRueda from "./PresupuestoRueda.jsx";
 import MovimientosModal from "./MovimientosModal.jsx";
 import TortaModal from "./TortaModal.jsx";
 import PorCategorizarModal from "./PorCategorizarModal.jsx";
+import { useDesborde } from "../shared/ui.jsx";
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
 // La lógica de períodos, sub-partidas, saldos y gastos vive en core/presupuesto-modelo.js (issue #24).
@@ -158,6 +159,8 @@ function BudgetPage({ budgets, onSaveBudget }) {
   const [porCat, setPorCat] = useState(false);
   const [torta, setTorta] = useState(null);       // null o la vista de la torta abierta: s (por sobre), c (por categoría), p (por compra)
   const avisoRef = useRef(null);
+  const cuerpoRef = useRef(null);
+  const desborda = useDesborde(cuerpoRef, "presupuesto", vista !== "asignar");   // válvula: si la rueda no cabe, scroll en vez de recortar
   const now = new Date();
   const [selYear, setSelYear] = useState(now.getFullYear());
   const [selMonth, setSelMonth] = useState(now.getDate() >= 25 ? now.getMonth() : (now.getMonth() - 1 + 12) % 12);
@@ -225,7 +228,7 @@ function BudgetPage({ budgets, onSaveBudget }) {
   const navBtn = { background: "transparent", border: "1px dashed #ddd", borderRadius: 8, padding: "6px 11px", cursor: "pointer", color: "#888", fontSize: 16, lineHeight: 1 };
 
   return (
-    <div style={{ flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column", overflowY: vista === "asignar" ? "auto" : "hidden" }}>
+    <div ref={cuerpoRef} style={{ flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column", overflowY: (vista === "asignar" || desborda) ? "auto" : "hidden" }}>
       {ingChart && <IngresoChartModal budgets={budgets} selYear={selYear} selMonth={selMonth} onClose={() => setIngChart(false)}/>}
       {chartData && <ChartModal title={chartData.title} emoji={chartData.emoji} rows={chartData.rows} total={chartData.total} onClose={() => setChartData(null)}/>}
       {idxVentana >= 0 && <CarteraVentana carteras={carteras} index={idxVentana} onIndex={i => setVentana({ sec: carteras[i].sec, rowId: carteras[i].row.id })} onClose={() => setVentana(null)}

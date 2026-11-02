@@ -194,11 +194,11 @@ export default function PresupuestoRueda({ datos, periodLabel, sobresOn, hayInic
                 })}
               </svg>
               <div style={{ position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", fontSize: 14, color: "#b71c1c", zIndex: 2, lineHeight: 1 }}>▼</div>
-              <div style={{ position: "absolute", left: g.pista.left, top: g.pista.top, width: g.pista.size, height: g.pista.size, border: "1px dashed #999", borderRadius: "50%", boxSizing: "border-box" }}/>
-              <div style={{ position: "absolute", inset: 0, transform: `rotate(${rot}deg)`, transition: arrastrando ? "none" : "transform .25s ease" }}>
+              <div style={{ position: "absolute", left: g.pista.left, top: g.pista.top, width: g.pista.size, height: g.pista.size, border: "1px dashed #999", borderRadius: "50%", boxSizing: "border-box", pointerEvents: "none" }}/>
+              <div style={{ position: "absolute", inset: 0, pointerEvents: "none", transform: `rotate(${rot}deg)`, transition: arrastrando ? "none" : "transform .25s ease" }}>
                 {g.nodos.map(n => { const f = filas[n.i], on = n.i === sel; return (
                   <div key={f.sec + f.row.id} data-i={n.i} role="button" aria-label={f.row.label}
-                    style={{ position: "absolute", left: n.cx - g.nodo / 2, top: n.cy - g.nodo / 2, width: g.nodo, height: g.nodo, borderRadius: "50%", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", fontSize: Math.round(g.nodo * 0.5), lineHeight: 1,
+                    style={{ position: "absolute", pointerEvents: "auto", left: n.cx - g.nodo / 2, top: n.cy - g.nodo / 2, width: g.nodo, height: g.nodo, borderRadius: "50%", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", fontSize: Math.round(g.nodo * 0.5), lineHeight: 1,
                       background: on ? "#111" : "#fff", border: on ? "2px solid #111" : "1px dashed #888", boxShadow: on ? "0 0 0 3px #fff, 0 0 0 4px #b71c1c" : "none",
                       transform: `rotate(${-rot}deg)${on ? " scale(1.3)" : ""}`, transition: arrastrando ? "none" : "transform .25s ease" }}>{f.row.emoji || "📦"}</div>
                 ); })}
@@ -207,7 +207,7 @@ export default function PresupuestoRueda({ datos, periodLabel, sobresOn, hayInic
                 <div data-centro="1" style={{ fontFamily: C, fontSize: 21, fontWeight: 700, lineHeight: 1.05, maxHeight: 46, overflow: "hidden" }}>{fila.row.label}</div>
                 <div data-centro="1" style={{ fontFamily: C, fontSize: 30, fontWeight: 700, lineHeight: 1.1 }}>{fmtCLP(grande)}</div>
                 <div data-centro="1" style={{ fontSize: 12, color: "#777", marginTop: -2 }}>{etiqueta}</div>
-                <div data-centro="1" style={{ width: "100%", height: 7, background: "#eee", borderRadius: 4, overflow: "hidden", margin: "6px 0 4px", border: "1px dashed #bbb", boxSizing: "border-box" }}><div style={{ width: `${Math.max(0, Math.min(100, pc))}%`, height: "100%", background: pc >= 85 ? "#b71c1c" : "#111" }}/></div>
+                <div data-centro="1" style={{ width: "100%", height: 7, background: "#eee", borderRadius: 4, overflow: "hidden", margin: "6px 0 4px", border: "1px dashed #bbb", boxSizing: "border-box" }}><div style={{ width: `${Math.max(0, Math.min(100, pc))}%`, height: "100%", background: "#b71c1c" }}/></div>
                 <div data-centro="1" style={{ fontSize: 12, color: "#777" }}>{linea}</div>
               </div>
             </div>
