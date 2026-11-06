@@ -21,6 +21,7 @@
 // Ver fetchMeleeItems() más abajo.
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { pathToFileURL } from "node:url";
 import { narrateResult } from "./lib/melee-narration.mjs";
 
 const OUTPUT_PATH = new URL("../data/melee.json", import.meta.url);
@@ -621,7 +622,7 @@ function scoreRoundLabelMatch(title, roundLabel) {
   if (otraFinal) delta -= 6;  // el título nombra OTRA final -- descarta aunque los jugadores coincidan
   return delta;
 }
-async function pickBestMatchClip(items, nombreA, nombreB, roundLabel) {
+async function pickBestMatchClip(items, nombreA, nombreB, roundLabel, excluir = new Set()) {
   if (!items.length) return null;
   const ids = items.map(it => it.id.videoId).join(",");
   const detailsRes = await fetch(
@@ -634,15 +635,16 @@ async function pickBestMatchClip(items, nombreA, nombreB, roundLabel) {
     const title = v.snippet?.title || "";
     const titleLower = title.toLowerCase();
     let score = 0;
-    if (titleLower.includes(a) && titleLower.includes(b)) score += 4; // ambos nombres en el título = señal fuerte de clip real
+    const ambos = titleLower.includes(a) && titleLower.includes(b);
+    if (ambos) score += 4; // ambos nombres en el título = señal fuerte de clip real
     else if (titleLower.includes(a) || titleLower.includes(b)) score += 1;
     else score -= 2; // ni un nombre en el título -- dudoso que sea el clip correcto
     if (seconds >= 30 && seconds <= 2400) score += 2; // rango típico de un set real (30s a 40min, bo5 largo incluido)
     else if (seconds > 2400) score -= 3; // probablemente el stream completo, no un clip
     if (CLIP_TITLE_PENALTY.test(title)) score -= 3;
     score += scoreRoundLabelMatch(title, roundLabel);
-    return { videoId: v.id, seconds, score };
-  });
+    return { videoId: v.id, seconds, score, ambos };
+  }).filter(c => !excluir.has(c.videoId)); // un video ya asignado a OTRO set de este torneo no se reutiliza
   candidatos.sort((x, y) => y.score - x.score);
   return candidatos[0] || null;
 }
@@ -714,7 +716,12 @@ function stripSponsorTag(name) {
   return idx === -1 ? name.trim() : name.slice(idx + 1).trim();
 }
 
-async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roundLabel) {
+// Clave de caché de un clip: par de jugadores + ronda (ver clipCached).
+function clipCacheKey(ganadorNombre, perdedorNombre, ronda) {
+  return `${ganadorNombre}|${perdedorNombre}|${ronda || ""}`;
+}
+
+async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roundLabel, excluir = new Set()) {
   if (!YOUTUBE_API_KEY) return null;
   if (youtubeQuotaExhausted) return null;
   const channelId = KNOWN_PRODUCTION_CHANNEL[tournamentName];
@@ -749,9 +756,11 @@ async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roun
       if (vodClipDebug.length < 20) vodClipDebug.push({ q: decodeURIComponent(q), itemsFound: 0 });
       return null;
     }
-    const best = await pickBestMatchClip(items, ganadorLimpio, perdedorLimpio, roundLabel);
+    const best = await pickBestMatchClip(items, ganadorLimpio, perdedorLimpio, roundLabel, excluir);
     if (vodClipDebug.length < 20) vodClipDebug.push({ q: decodeURIComponent(q), itemsFound: items.length, bestScore: best?.score ?? null, primerTitulo: items[0]?.snippet?.title ?? null });
-    if (!best || best.score < 1) return null; // nada que pinte lo bastante bien a que sea el clip correcto
+    // Exige AMBOS nombres en el título (nov-2026, caso Platfight): con solo un nombre bastaba
+    // para aceptar otro set del mismo jugador (un mismo video quedó en dos sets de Magi).
+    if (!best || !best.ambos || best.score < 1) return null;
     return { videoId: best.videoId, startSeconds: 0 }; // el clip ES el partido -- no hace falta timestamp
   } catch (e) {
     console.error(`✗ Melee · clip de ${ganadorNombre} vs ${perdedorNombre} (${tournamentName}): ${e.message}`);
@@ -1097,22 +1106,49 @@ ${upsetsData || "(ninguno detectado por el criterio automático)"}`;
 // ver RETENTION_DAYS más abajo — este item queda exento para siempre (mismo
 // criterio que Podcasts): es el resumen final del torneo, no un aviso
 // puntual que pierde sentido con el tiempo.
-// Orden real de juego del Top 8 (según lo que se ve en el broadcast, no el
-// orden "teórico" de bracket): Losers Quarters, Winners Quarters, Losers
-// Semis, Winners Semis, Winners Final, Losers Final, Grand Final(s).
+// Orden de juego del Top 8, por ELIMINACIONES (criterio de Cristopher, nov-2026,
+// tras el caso Platfight 2026): se eliminan los 7º (la ronda de losers justo antes del
+// Losers Quarter), se juegan los Winners Semis, se elimina a los 5º (Losers Quarter),
+// Winners Final, se elimina al 4º (Losers Semi), al 3º (Losers Final) y por último al 2º
+// (Grand Final, y su reset). En cada etapa el set de losers va antes que el de winners;
+// la excepción son las rondas que dependen de otra (Winners Quarter antes de la ronda de
+// los 7º). Antes: Winners Final iba antes que Losers Final y Losers Semi antes que Winners
+// Semi, que en start.gg no es el orden en que se eliminan los puestos.
+// La ronda de los 7º se llama "Losers Round N" (no tiene nombre propio): se detecta aparte
+// en ronda7mos() como el "Losers Round" de mayor N de la fase.
+const RANK_RONDA_7MOS = 2;
 const TOP8_ROUND_ORDER = [
-  { rank: 1, re: /losers?.*quarter/i },
-  { rank: 2, re: /winners?.*quarter/i },
-  { rank: 3, re: /losers?.*semi/i },
-  { rank: 4, re: /winners?.*semi/i },
+  { rank: 1, re: /winners?.*quarter/i },
+  // rank 2 = ronda de los 7º (dinámica, ver ronda7mos)
+  { rank: 3, re: /winners?.*semi/i },
+  { rank: 4, re: /losers?.*quarter/i },
   { rank: 5, re: /winners?\s*final/i },
-  { rank: 6, re: /losers?\s*final/i },
-  { rank: 7, re: /grand\s*final(?!.*reset)/i },
-  { rank: 8, re: /grand\s*final.*reset/i },
+  { rank: 6, re: /losers?.*semi/i },
+  { rank: 7, re: /losers?\s*final/i },
+  { rank: 8, re: /grand\s*final(?!.*reset)/i },
+  { rank: 9, re: /grand\s*final.*reset/i },
 ];
 function top8RoundOrder(fullRoundText) {
   for (const { rank, re } of TOP8_ROUND_ORDER) if (re.test(fullRoundText || "")) return rank;
   return 99; // ronda no reconocida -- al final, no se pierde el set, solo queda sin orden claro
+}
+
+// Ronda que elimina a los 7º: el "Losers Round N" de mayor N dentro de la fase, siempre que
+// exista un Losers Quarter (si no, no sabemos que sea la ronda previa) y tenga a lo más 2 sets
+// (en un doble eliminación estándar son 2; más sets = es una ronda de más atrás, no del Top 8).
+function ronda7mos(sets, finalPhaseId) {
+  const setsPorN = new Map();
+  let hayLosersQuarter = false;
+  for (const set of sets) {
+    if (finalPhaseId != null && set.phaseGroup?.phase?.id !== finalPhaseId) continue;
+    const t = set.fullRoundText || "";
+    if (/losers?.*quarter/i.test(t)) hayLosersQuarter = true;
+    const m = t.match(/^losers?\s*round\s*(\d+)/i);
+    if (m) setsPorN.set(Number(m[1]), (setsPorN.get(Number(m[1])) || 0) + 1);
+  }
+  if (!hayLosersQuarter || !setsPorN.size) return null;
+  const maxN = Math.max(...setsPorN.keys());
+  return setsPorN.get(maxN) <= 2 ? maxN : null;
 }
 
 // Todos los sets de Top 8, ordenados por orden real de juego (no por el
@@ -1127,9 +1163,14 @@ function top8RoundOrder(fullRoundText) {
 // finales son identificables por nombre igual.
 function buildTop8Ordered(sets, finalPhaseId) {
   const matches = [];
+  const n7 = ronda7mos(sets, finalPhaseId);
   for (const set of sets) {
     if (finalPhaseId != null && set.phaseGroup?.phase?.id !== finalPhaseId) continue;
-    const orden = top8RoundOrder(set.fullRoundText);
+    let orden = top8RoundOrder(set.fullRoundText);
+    if (orden === 99 && n7 != null) {
+      const m = (set.fullRoundText || "").match(/^losers?\s*round\s*(\d+)/i);
+      if (m && Number(m[1]) === n7) orden = RANK_RONDA_7MOS;
+    }
     if (orden === 99) continue; // no es una ronda de Top 8 reconocida
     if (!set.winnerId || !set.slots || set.slots.length !== 2) continue;
     const [a, b] = set.slots.map(s => s.entrant);
@@ -1145,7 +1186,10 @@ function buildTop8Ordered(sets, finalPhaseId) {
       perdedor: { nombre: loser.name, seed: loser.initialSeedNum ?? null, ssbmrank: ssbmrankOf(loser.name), pj: entrantCharacter(set.games, loser.id), juegosGanados: gamesWonBy(set.games, loser.id), foto: entrantFace(loser) },
     });
   }
-  matches.sort((x, y) => x.orden - y.orden);
+  // Mismo rank (ej. los 2 sets del Losers Quarter): por id de set ascendente = orden del bracket
+  // (`sets` viene RECENT-first, así que sin desempate saldrían al revés).
+  const idNum = v => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  matches.sort((x, y) => x.orden - y.orden || idNum(x.setId) - idNum(y.setId));
   return matches;
 }
 
@@ -1537,12 +1581,21 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
         // el mismo matchup puede aparecer en más de una sección (un upset
         // real de Top 8 cae en top8Clips Y en upsetClips) y no tiene sentido
         // pagar la búsqueda de YouTube dos veces por lo mismo.
-        const clipCache = new Map(); // "ganador|perdedor" -> clip | null
-        async function clipCached(ganadorNombre, perdedorNombre, roundLabel) {
-          const key = `${ganadorNombre}|${perdedorNombre}`;
+        // La clave incluye la RONDA: el mismo par puede jugar dos sets en un torneo (Winners
+        // Final y Grand Final, o un rematch Winners Semi / Losers Final) y cada uno tiene su
+        // propio video. Sin la ronda en la clave, el segundo set heredaba el video del primero
+        // (bug real, Platfight 2026). Un mismo set que aparece en dos secciones (top8 y upsets)
+        // sí comparte clave y se busca una sola vez.
+        const clipCache = new Map(); // "ganador|perdedor|ronda" -> clip | null
+        const videoOwner = new Map(); // videoId -> clave del set al que ya pertenece
+        const keyOf = (ganadorNombre, perdedorNombre, ronda) => clipCacheKey(ganadorNombre, perdedorNombre, ronda);
+        async function clipCached(ganadorNombre, perdedorNombre, roundLabel, ronda) {
+          const key = keyOf(ganadorNombre, perdedorNombre, ronda);
           if (clipCache.has(key)) return clipCache.get(key);
-          const clip = await findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roundLabel);
+          const excluir = new Set([...videoOwner].filter(([, k]) => k !== key).map(([v]) => v));
+          const clip = await findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roundLabel, excluir);
           clipCache.set(key, clip);
+          if (clip?.videoId) videoOwner.set(clip.videoId, key);
           return clip;
         }
 
@@ -1575,13 +1628,16 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
           // chequea acá también, dentro de cada uno de los tres loops --
           // en el peor caso se pierden los clips que faltaban de ESTE
           // torneo, nunca el resto del pipeline.
+          for (const m of top8Matches) { const k = clipStateByGuid.get(`melee-top8clip-${slug}-${m.setId}`); if (k?.videoId) videoOwner.set(k.videoId, keyOf(m.ganador.nombre, m.perdedor.nombre, m.ronda)); }
+          for (const m of upsetMatches) { const k = clipStateByGuid.get(`melee-upsetclip-${slug}-${m.guid}`); if (k?.videoId) videoOwner.set(k.videoId, keyOf(m.ganador.nombre, m.perdedor.nombre, m.ronda)); }
+          for (const m of docMatches) { const k = clipStateByGuid.get(`melee-docclip-${slug}-${m.setId}`); if (k?.videoId) videoOwner.set(k.videoId, keyOf(m.ganador.nombre, m.perdedor.nombre, m.ronda)); }
           let presupuestoAgotado = false;
           for (const m of top8Matches) {
             const guid = `melee-top8clip-${slug}-${m.setId}`;
             const known = clipStateByGuid.get(guid);
             if (known) { top8Clips.push({ guid, ronda: m.ronda, orden: m.orden, stages: m.stages, ganador: m.ganador, perdedor: m.perdedor, videoId: known.videoId, startSeconds: known.startSeconds ?? 0 }); continue; }
             if (Date.now() > meleeDeadline) { presupuestoAgotado = true; break; }
-            const clip = await clipCached(m.ganador.nombre, m.perdedor.nombre, productionRoundLabel(m.ronda));
+            const clip = await clipCached(m.ganador.nombre, m.perdedor.nombre, productionRoundLabel(m.ronda), m.ronda);
             if (!clip) continue;
             top8Clips.push({ guid, ronda: m.ronda, orden: m.orden, stages: m.stages, ganador: m.ganador, perdedor: m.perdedor, videoId: clip.videoId, startSeconds: 0 });
             newClipState.set(guid, { videoId: clip.videoId, startSeconds: 0 });
@@ -1591,7 +1647,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
             const known = clipStateByGuid.get(guid);
             if (known) { upsetClips.push({ guid, ronda: m.ronda, stages: m.stages, ganador: m.ganador, perdedor: m.perdedor, videoId: known.videoId, startSeconds: known.startSeconds ?? 0 }); continue; }
             if (Date.now() > meleeDeadline) { presupuestoAgotado = true; break; }
-            const clip = await clipCached(m.ganador.nombre, m.perdedor.nombre);
+            const clip = await clipCached(m.ganador.nombre, m.perdedor.nombre, undefined, m.ronda);
             if (!clip) continue;
             upsetClips.push({ guid, ronda: m.ronda, stages: m.stages, ganador: m.ganador, perdedor: m.perdedor, videoId: clip.videoId, startSeconds: 0 });
             newClipState.set(guid, { videoId: clip.videoId, startSeconds: 0 });
@@ -1612,7 +1668,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
             if (known) {
               clip = known;
             } else if (!presupuestoAgotado && Date.now() <= meleeDeadline) {
-              clip = await clipCached(m.ganador.nombre, m.perdedor.nombre);
+              clip = await clipCached(m.ganador.nombre, m.perdedor.nombre, undefined, m.ronda);
               if (clip?.videoId) newClipState.set(guid, { videoId: clip.videoId, startSeconds: 0 });
             } else {
               presupuestoAgotado = true;
@@ -1782,7 +1838,12 @@ async function main() {
   console.log(`✓ ${items.length} ítems de Melee (${allArchiveItems.length} archivo(s) permanente(s)) · ${Object.keys(mergedClipState).length} clip(s) en estado persistido`);
 }
 
-main().catch(e => {
-  console.error("Error fatal:", e);
-  process.exit(1);
-});
+export { top8RoundOrder, ronda7mos, buildTop8Ordered, pickBestMatchClip, findMatchClip, clipCacheKey };
+
+// Solo corre el pipeline cuando se ejecuta como script (no al importarlo desde tests/).
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch(e => {
+    console.error("Error fatal:", e);
+    process.exit(1);
+  });
+}
