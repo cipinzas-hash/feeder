@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-06T11:42:12.487Z",
+  "generatedAt": "2026-11-06T18:40:57.503Z",
   "categories": [
     {
       "cat": "Melee",
@@ -8,9 +8,9 @@
           "guid": "melee-hype-tournament/port-priority-dx/event/melee-singles",
           "title": "Se viene Port Priority: DX",
           "link": "https://www.start.gg/tournament/port-priority-dx/event/melee-singles",
-          "summary": "empieza en 9 día(s) Bracket en start.gg. 512 inscritos hasta ahora.",
+          "summary": "empieza en 8 día(s) Bracket en start.gg. 512 inscritos hasta ahora.",
           "image": null,
-          "pubDate": "2026-11-06T11:42:12.228Z",
+          "pubDate": "2026-11-06T18:40:56.210Z",
           "source": "Port Priority: DX",
           "categoria": "Melee",
           "fullText": null,
@@ -1289,14 +1289,13 @@
           "guid": "melee-archivo-tournament/platfight-gaming-championships-2026/event/melee-singles",
           "title": "Resultado final: Platfight 2026",
           "link": "https://www.start.gg/tournament/platfight-gaming-championships-2026/event/melee-singles",
-          "summary": "RapMonster se consagró campeón de Platfight 2026 tras superar a Soonsay en la gran final, mientras que Salt completó el podio en el tercer puesto y Axe finalizó cuarto. El top 8 se completó con Magi y Free Cuba en el quinto lugar, seguidos por Fiction y Maher en la séptima posición. El torneo estuvo marcado por múltiples sorpresas, destacando las victorias de PigeonBorb sobre Krizski, Christo y Jackson sobre Vish, y Big Dawg ante Jam. Asimismo, otros resultados inesperados incluyeron los triunfos de bnaba frente a Krizski, Birmi contra Vish, Jackson superando a Kevon y jed imponiéndose ante Jam.",
+          "summary": "RapMonster se coronó campeón de Platfight 2026 tras derrotar a Soonsay en la gran final, mientras que Salt aseguró el tercer puesto del podio y Axe finalizó en cuarto lugar. El top 8 se completó con Magi y Free Cuba en la quinta posición, seguidos por Fiction y Maher en el séptimo puesto. El torneo estuvo marcado por múltiples sorpresas, destacando especialmente la eliminación temprana de Vish, quien cayó ante Birmi en winners y posteriormente fue superado por Christo y Jackson en el bracket de losers. Otros resultados destacados incluyeron las victorias de Jackson sobre Kevon, de PigeonBorb y bnaba frente a Krizski, y los triunfos de Big Dawg y jed sobre Jam.",
           "image": null,
-          "pubDate": "2026-11-06T11:42:10.734Z",
+          "pubDate": "2026-11-06T18:40:54.492Z",
           "source": "Platfight 2026",
           "categoria": "Melee",
           "fullText": null,
-          "tipo": "video",
-          "videoId": "uP6070etrrA",
+          "videoId": null,
           "startSeconds": 0,
           "esArchivo": true,
           "top8Clips": [
@@ -1575,20 +1574,22 @@
   ],
   "meleeDebug": [
     {
-      "meleemajorsCount": 4,
+      "meleemajorsCount": 5,
       "meleemajorsSlugs": [
         "tournament/platfight-gaming-championships-2026/event/melee-singles",
         null,
         "tournament/port-priority-dx/event/melee-singles",
-        "tournament/taking-back-tampa-the-movie/event/melee-singles"
+        "tournament/taking-back-tampa-the-movie/event/melee-singles",
+        "tournament/genesis-x4/event/melee-singles"
       ]
     },
     {
-      "combinedCount": 3,
+      "combinedCount": 4,
       "combinedSlugs": [
         "tournament/platfight-gaming-championships-2026/event/melee-singles",
         "tournament/port-priority-dx/event/melee-singles",
-        "tournament/taking-back-tampa-the-movie/event/melee-singles"
+        "tournament/taking-back-tampa-the-movie/event/melee-singles",
+        "tournament/genesis-x4/event/melee-singles"
       ],
       "previousTrackedCount": 1,
       "previousProcessedCount": 3
@@ -1631,6 +1632,13 @@
       "state": "CREATED",
       "eventId": 1684091,
       "yaProcesado": false
+    },
+    {
+      "slug": "tournament/genesis-x4/event/melee-singles",
+      "tournamentName": "Genesis X4",
+      "state": "CREATED",
+      "eventId": 1655410,
+      "yaProcesado": false
     }
   ],
   "vodClipDebug": [
@@ -1668,61 +1676,7 @@
     },
     {
       "q": "Jackson vs Vish Platfight 2026",
-      "itemsFound": 0
-    },
-    {
-      "q": "Birmi vs Vish Platfight 2026",
-      "itemsFound": 0
-    },
-    {
-      "q": "Dright vs Kevon Platfight 2026",
-      "itemsFound": 0
-    },
-    {
-      "q": "PigeonBorb vs Krizski Platfight 2026",
-      "itemsFound": 0
-    },
-    {
-      "q": "jed vs Jam Platfight 2026",
-      "itemsFound": 0
-    },
-    {
-      "q": "Big Dawg vs Jam Platfight 2026",
-      "itemsFound": 1,
-      "bestScore": -5,
-      "primerTitulo": "NASB2 Without Updates For One Year Looks Like This (NASB2 2026 Tier List)"
-    },
-    {
-      "q": "Jackson vs Necroflyer Platfight 2026",
-      "itemsFound": 0
-    },
-    {
-      "q": "Smoke vs Necroflyer Platfight 2026",
-      "itemsFound": 0
-    },
-    {
-      "q": "bnaba vs Krizski Platfight 2026",
-      "itemsFound": 0
-    },
-    {
-      "q": "Nana Plays Bass vs Friend Platfight 2026",
-      "itemsFound": 0
-    },
-    {
-      "q": "Kia vs Dright Platfight 2026",
-      "itemsFound": 0
-    },
-    {
-      "q": "MiniJoel vs Kevon Platfight 2026",
-      "itemsFound": 0
-    },
-    {
-      "q": "Platfight 2026 TOP 8 Anjo vs Zaza",
-      "itemsFound": 0
-    },
-    {
-      "q": "Christo vs Vish Platfight 2026",
-      "itemsFound": 0
+      "error": "YouTube API: Quota exceeded for quota metric 'Search Queries' and limit 'Search Queries per day' of service 'youtube.googleapis.com' for consumer 'project_number:556655948838'."
     }
   ]
 }
