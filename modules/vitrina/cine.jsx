@@ -475,6 +475,8 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria, memoria }
 
   const CARD_W = 160;
   const GAP = 20;
+  const REFLEJO_H = 46;      // reflejo bajo el póster (42 + marginTop 4), ver el render de la tarjeta
+  const FILA_ESTADO_H = 15;  // fila de estado bajo el rating (marginTop 2 + minHeight 13): reservada, a veces vacía
   const ITEM_W = CARD_W + GAP;
 
   // pos = posición central continua, en "unidades de ítem" (puede tener
@@ -746,10 +748,18 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria, memoria }
     if (h && h > h0) setH0(h);
   });
   const anchoVista = Math.min((contRef.current && contRef.current.offsetWidth) || window.innerWidth, 480);
-  const kCalc = Math.max(1, Math.min(h0 && alto ? (alto - 20) / h0 : 1, (anchoVista * 0.56) / CARD_W, 1.6));
+  // Lo que se ve de una tarjeta es póster + título + rating (+ la fila de estado, que a veces está vacía). El
+  // reflejo (42 + 4 de margen, opacity .2 con máscara) es casi invisible: no cuenta como contenido. Escala y
+  // centrado se calculan sobre lo visible; si no, el carrusel queda pegado a los filtros y sobra un hueco
+  // antes del pie.
+  const hCont = h0 ? Math.max(1, h0 - REFLEJO_H) : 0;          // póster … fila de estado: debe caber entero
+  const hVis = h0 ? Math.max(1, hCont - FILA_ESTADO_H) : 0;    // póster … rating: es lo que se centra
+  const kCalc = Math.max(1, Math.min(hCont && alto ? (alto - 20) / hCont : 1, (anchoVista * 0.56) / CARD_W, 1.6));
   useEffect(() => { if (Math.abs(kCalc - k) > 0.005) setK(kCalc); }, [kCalc]);
   const altoCont = alto || 380;
-  const topTarjeta = h0 ? Math.max(0, Math.round((altoCont - h0) / 2)) : 16;
+  // La tarjeta escala desde su centro (el de h0, que incluye reflejo y fila de estado): se compensa para que el
+  // centro de lo VISIBLE quede en el centro del espacio libre.
+  const topTarjeta = hVis ? Math.max(0, Math.round((altoCont - h0 + (h0 - hVis) * k) / 2)) : 16;
 
   if (!sortedItems.length) {
     return (
@@ -793,7 +803,7 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria, memoria }
   return (
     <div style={{ flex: "1 1 0", minHeight: 0, display: "flex", flexDirection: "column" }}>
       {toolbar}
-      <div style={{ position: "relative", flex: "1 1 0", minHeight: h0 ? h0 + 16 : 0, marginBottom: 16 }}>
+      <div style={{ position: "relative", flex: "1 1 0", minHeight: hCont ? hCont + 16 : 0 }}>
       <button onClick={() => step(-1)} style={{ ...arrowStyle, left: 6 }}>◀️</button>
       <button onClick={() => step(1)} style={{ ...arrowStyle, right: 6 }}>▶️</button>
       <div
