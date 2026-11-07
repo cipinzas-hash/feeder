@@ -3,7 +3,7 @@
 Estado: **Fase 1 fusionada a `main`** (1-nov-2026). Reemplaza a la categoría "Dark scene / Música" del Feed.
 
 ## Qué hace
-Un carrusel con un lanzamiento a la vez (portada + reproductor) y, desde ahí, la **ficha del artista**: bio, ubicación, foto, discografía completa con carátulas y nombres, reproductor por disco, links y las noticias que lo mencionan. Sin estado persistente: no agrega claves de localStorage (no toca `core/persistence.js` ni el export).
+Un carrusel con un lanzamiento a la vez (portada + reproductor) y, desde ahí, la **ficha del artista**: bio, ubicación, foto, discografía completa con carátulas y nombres, reproductor por disco, links y las noticias que lo mencionan. El único estado persistente es el ♥ (ver "Me gusta y directorio de artistas", Fase 2).
 
 ## Decisiones tomadas (de Cris)
 - "Conciertos" se queda en Vitrina; no se mueve.
@@ -44,3 +44,15 @@ La pestaña 12 se monta sobre `.app-fit` (norma N1 del lineamiento): `.musica` /
 
 ## Al fusionar (hecho el 1-nov-2026)
 `MUSICA_JSON_URL` apunta a `/main/`, se reconstruyó el bundle y se borraron los logs de desarrollo. `fetchFeedData` además excluye la categoría de música por si un `feed.json` anterior aún la trae.
+
+## Me gusta y directorio de artistas (Fase 2, nov-2026)
+Pedido de Cris: poder marcar que le gusta un lanzamiento, guardarlo, y juntar los artistas en un directorio filtrable por género para descubrir discos o sencillos.
+
+**Decisión (de Cris):** el artista entra al directorio **automáticamente** al dar ♥ a un lanzamiento suyo.
+
+- **Qué hay:** botón ♡/♥ en la tarjeta del lanzamiento, y en el encabezado dos chips: `lanzamientos` | `♥ artistas · N`. El directorio lista los artistas con ♥ (más reciente primero), con filtro por género (chips con conteo; `sin género` si algún artista no tiene). Tocar un artista abre su ficha (discografía para descubrir más discos/sencillos); la ficha vuelve a `← artistas`.
+- **Persistencia:** UNA clave, `angst-musica-megusta-v1` (`{ [lanzamientoId]: { lz, nombre, foto, tags, at } }`), declarada en `LOCAL_KEY_FIELDS.musicaMegusta` → viaja en el export 💾 / Angst-data y se rehidrata en `restoreFromPayload` con `rehidratarMegusta()`. Es una clave **nueva**: no migra ni modifica datos existentes. Cada ♥ guarda una **copia** del lanzamiento y del artista, porque `musica.json` solo conserva ~30 días.
+- **El directorio se deriva** de los ♥ (`directorio()` en `modules/musica/megusta.js`); no hay segundo almacén. Un artista sale del directorio cuando no le queda ningún ♥.
+- **Código:** `modules/musica/megusta.js` (almacén + hook), `modules/musica/MusicaPage.jsx` (botón, chips, `Directorio`, ficha desde el directorio). Pruebas: `npm run test:musica` (`tests/musica-megusta.mjs`); `tests/export-coverage.mjs` exige la clave en el export.
+- **Límite conocido — géneros:** solo vienen de MusicBrainz con identidad verificada (tags de `artistas[slug].mb.tags`): al 6-nov, 17 de 49 artistas los tenían. El resto cae en `sin género`. Cubrirlos exigiría extraer los tags de Bandcamp en `build-musica.mjs` (no hecho: es un cambio de pipeline, decisión pendiente de Cris).
+- **Pendiente:** el bug "el reproductor queda cubierto por parte de la carátula" no se reprodujo en Chromium (Bandcamp, Deezer y YouTube, alturas 560–731 px: las cajas no se pisan). Hace falta una captura del caso real. Además `.musica` no define fondo propio y queda sobre el `#f7f6f4` de `.app` con texto claro; no se tocó por no estar pedido.

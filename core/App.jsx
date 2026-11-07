@@ -6,6 +6,7 @@ import { memoriaDesdeHistorial, tieneMemoria, buscarSugerencias, recordarCompra,
 import { marcarEdicionLocal, LOCAL_EDIT_KEY } from "../modules/shared/localedit.js";
 import { rehidratarCineEstado } from "../modules/vitrina/estado.js";
 import { rehidratarOverlay } from "../modules/vitrina/avance.js";
+import { rehidratarMegusta } from "../modules/musica/megusta.js";
 import { fmt, fmtFull, getHoliday, addDays, weekOffsetFor } from "./dates.js";
 import { nivelRegistro, colorRegistro, barrasRegistro } from "./registro.js";
 import { FamiliaInboxModal } from "./FamiliaInbox.jsx";
@@ -1504,6 +1505,7 @@ function AngstApp() {
     // marca lo pisaba (probado con estado.js). Se rehidrata cada caché viva:
     rehidratarCineEstado();   // Vitrina: estado de cine (caché de módulo)
     rehidratarOverlay();      // Vitrina: marcas de episodios (overlay de módulo)
+    rehidratarMegusta();      // Música: ♥ guardados (caché de módulo)
     if(Array.isArray(d.feedPodcastDispatched)) setPodcastDispatched(d.feedPodcastDispatched); // state de App
     try{ window.dispatchEvent(new Event("angst:restaurado")); }catch(e){} // Pokécripto relee "agotadas"
     setLoadMsg(`✓ Restauración completa desde ${sourceLabel||"backup"}`);

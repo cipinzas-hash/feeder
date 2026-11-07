@@ -1,5 +1,6 @@
 import { fetchMusicaData } from "../shared/catalog.js";
 import { CAT_COLORS } from "../shared/constants.js";
+import { useMegusta, alternarMegusta, directorio } from "./megusta.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -7,8 +8,9 @@ const { useState, useEffect, useRef } = React;
 // Descubrimiento de lanzamientos: un carrusel con UN lanzamiento a la vez
 // (portada + reproductor) y, desde ahí, la ficha del artista (bio, discografía
 // con carátulas, reproductor por disco). Los datos los arma build-musica.mjs
-// (musica.json); aquí solo se muestran. No guarda nada en localStorage: no
-// hay estado persistente que migrar ni exportar.
+// (musica.json); aquí solo se muestran. Lo único que se guarda es el ♥ (megusta.js,
+// clave "angst-musica-megusta-v1", viaja en el export): de lo guardado sale el
+// directorio de artistas con filtro por género.
 //
 // Montaje (norma N1 del lineamiento): sobre el marco CSS `.app-fit` de core/App.jsx
 // (clases .musica / .musica-body). NO se mide el alto a mano: la portada se reparte el
@@ -73,7 +75,7 @@ function Chip({ children, activo, onClick, style }) {
 }
 
 // ─── Vista de entrada: un lanzamiento a la vez ──────────────────────────────
-function LanzamientoCard({ lz, indice, total, onPrev, onNext, onArtista, onExpandido }) {
+function LanzamientoCard({ lz, indice, total, onPrev, onNext, onArtista, onExpandido, meGusta, onMegusta }) {
   const [sonando, setSonando] = useState(false);
   useEffect(() => { setSonando(false); }, [lz.id]);
   useEffect(() => { onExpandido(sonando); }, [sonando]);
@@ -97,6 +99,7 @@ function LanzamientoCard({ lz, indice, total, onPrev, onNext, onArtista, onExpan
         </div>
       </div>
       <div style={{ display: "flex", gap: 8, width: "100%", flex: "none" }}>
+        <button onClick={onMegusta} aria-pressed={meGusta} aria-label={meGusta ? "quitar me gusta" : "me gusta"} style={{ flex: "none", width: 52, background: meGusta ? ACENTO : "transparent", color: meGusta ? "#111" : "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, fontSize: 22, lineHeight: 1, cursor: "pointer" }}>{meGusta ? "♥" : "♡"}</button>
         {lz.player && !sonando && (
           <button onClick={() => setSonando(true)} style={{ flex: 2, background: ACENTO, color: "#111", border: "none", borderRadius: 12, padding: "12px 8px", fontFamily: FUENTE, fontSize: 14, fontWeight: 800, cursor: "pointer" }}>▶ escuchar</button>
         )}
@@ -113,7 +116,7 @@ function LanzamientoCard({ lz, indice, total, onPrev, onNext, onArtista, onExpan
 const navBtn = off => ({ width: 52, height: 40, background: "transparent", border: "1px solid #2f2745", borderRadius: 10, color: off ? "#3c3552" : "#e5def7", fontSize: 18, cursor: off ? "default" : "pointer" });
 
 // ─── Ficha del artista ──────────────────────────────────────────────────────
-function FichaArtista({ slug, artista, lanzamientos, discoInicial, onVolver }) {
+function FichaArtista({ slug, artista, lanzamientos, discoInicial, onVolver, volverA }) {
   const bc = artista?.bandcamp || null;
   const discos = bc?.discos || [];
   const propios = lanzamientos.filter(l => l.artistaSlug === slug);
@@ -136,7 +139,7 @@ function FichaArtista({ slug, artista, lanzamientos, discoInicial, onVolver }) {
 
   return (
     <div style={{ padding: "10px 16px 22px", display: "flex", flexDirection: "column", gap: 14 }}>
-      <button onClick={onVolver} style={{ alignSelf: "flex-start", background: "transparent", border: "none", color: "#8a80a6", fontFamily: FUENTE, fontSize: 13, cursor: "pointer", padding: "4px 0" }}>← lanzamientos</button>
+      <button onClick={onVolver} style={{ alignSelf: "flex-start", background: "transparent", border: "none", color: "#8a80a6", fontFamily: FUENTE, fontSize: 13, cursor: "pointer", padding: "4px 0" }}>← {volverA || "lanzamientos"}</button>
 
       <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
         {artista?.foto
@@ -210,6 +213,47 @@ function FichaArtista({ slug, artista, lanzamientos, discoInicial, onVolver }) {
   );
 }
 
+// ─── Directorio de artistas (los que tienen ♥) ──────────────────────────────
+const SIN_GENERO = "\u0000sin-genero";
+function Directorio({ guardados, onArtista }) {
+  const [elegido, setElegido] = useState(null);   // null = todos
+  const arts = directorio(guardados);
+  const conteo = {};
+  let sinGenero = 0;
+  for (const a of arts) { if (!a.tags.length) sinGenero++; for (const t of a.tags) conteo[t] = (conteo[t] || 0) + 1; }
+  const generos = Object.keys(conteo).sort((a, b) => conteo[b] - conteo[a] || a.localeCompare(b));
+  const genero = elegido === SIN_GENERO ? (sinGenero ? elegido : null) : (elegido && conteo[elegido] ? elegido : null);   // si ya no queda ninguno de ese género, vuelve a "todos"
+  const visibles = arts.filter(a => genero === null ? true : genero === SIN_GENERO ? !a.tags.length : a.tags.includes(genero));
+  const clic = { cursor: "pointer" };
+  if (!arts.length)
+    return <div style={{ flex: "none", fontFamily: FUENTE, fontSize: 13, color: "#7d7396", padding: "40px 28px", textAlign: "center", lineHeight: 1.5 }}>Todavía no guardas nada. Toca ♡ en un lanzamiento y su artista entra aquí.</div>;
+  return (
+    <div style={{ padding: "6px 16px 22px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <Chip activo={genero === null} onClick={() => setElegido(null)} style={clic}>todos · {arts.length}</Chip>
+        {generos.map(g => <Chip key={g} activo={genero === g} onClick={() => setElegido(g)} style={clic}>{g} · {conteo[g]}</Chip>)}
+        {sinGenero > 0 && generos.length > 0 && <Chip activo={genero === SIN_GENERO} onClick={() => setElegido(SIN_GENERO)} style={clic}>sin género · {sinGenero}</Chip>}
+      </div>
+      {visibles.map(a => (
+        <button key={a.slug} onClick={() => onArtista(a)} style={{ display: "flex", gap: 12, alignItems: "center", background: "#14101d", border: "1px solid #2a2438", borderRadius: 12, padding: "10px 12px", textAlign: "left", cursor: "pointer", width: "100%", minWidth: 0 }}>
+          {a.foto
+            ? <img src={a.foto} alt="" loading="lazy" onError={quitarCaratula} style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", flex: "none", background: "#16121f", border: `2px solid ${ACENTO}` }} />
+            : <div style={{ width: 52, height: 52, borderRadius: "50%", flex: "none", display: "flex", alignItems: "center", justifyContent: "center", color: ACENTO, fontSize: 20, background: "#16121f", border: `2px solid ${ACENTO}` }}>♪</div>}
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff", lineHeight: 1.05, overflowWrap: "anywhere" }}>{a.nombre}</div>
+            <div style={{ fontFamily: FUENTE, fontSize: 12, color: "#9d93b8", marginTop: 3, overflowWrap: "anywhere" }}>
+              {a.lanzamientos.map(l => (l.disco || "—") + (TIPO[l.tipo] ? ` (${TIPO[l.tipo]})` : "")).join(" · ")}
+            </div>
+            {a.tags.length > 0 && <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 6 }}>{a.tags.slice(0, 4).map(t => <Chip key={t} style={{ fontSize: 9, padding: "2px 7px" }}>{t}</Chip>)}</div>}
+          </div>
+          <span style={{ color: "#6a6180", fontSize: 18, flex: "none" }}>→</span>
+        </button>
+      ))}
+      {!visibles.length && <div style={{ fontFamily: FUENTE, fontSize: 13, color: "#7d7396", textAlign: "center", padding: 20 }}>Ningún artista guardado con ese género.</div>}
+    </div>
+  );
+}
+
 // ─── Página ─────────────────────────────────────────────────────────────────
 export default function MusicaPage() {
   const [datos, setDatos] = useState(null);
@@ -217,6 +261,9 @@ export default function MusicaPage() {
   const [indice, setIndice] = useState(0);
   const [artistaAbierto, setArtistaAbierto] = useState(null);
   const [expandido, setExpandido] = useState(false); // reproductor abierto en la entrada
+  const [vista, setVista] = useState("lanzamientos"); // "lanzamientos" | "directorio"
+  const [desdeDir, setDesdeDir] = useState(null);     // artista del directorio con el que se abrió la ficha
+  const guardados = useMegusta();
 
   async function cargar() {
     setError(null);
@@ -230,11 +277,19 @@ export default function MusicaPage() {
   const centrado = { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FUENTE, fontSize: 13, color: "#7d7396", padding: 24, textAlign: "center" };
   const ancho = { width: "100%", maxWidth: 480, margin: "0 auto", boxSizing: "border-box" };
 
-  if (artistaAbierto && datos) {
+  if (artistaAbierto && (datos || desdeDir)) {
+    // Desde el directorio la ficha puede ser de un artista que ya salió de musica.json (ventana de ~30 días):
+    // se arma con lo que quedó guardado con el ♥.
+    const artistasDatos = (datos && datos.artistas) || {};
+    const artistaFicha = artistasDatos[artistaAbierto] || (desdeDir ? { nombre: desdeDir.nombre, foto: desdeDir.foto, mb: { tags: desdeDir.tags } } : undefined);
+    const ids = new Set(lanzamientos.map(l => l.id));
+    const guardadosLz = Object.values(guardados).map(g => g.lz).filter(l => l && !ids.has(l.id));
+    const discoIni = desdeDir ? desdeDir.lanzamientos[0] : (lz && lz.artistaSlug === artistaAbierto ? lz : null);
     return (
       <div className="musica">
         <div className="musica-body" data-expandido="true" style={ancho}>
-          <FichaArtista key={artistaAbierto} slug={artistaAbierto} artista={datos.artistas[artistaAbierto]} lanzamientos={lanzamientos} discoInicial={lz && lz.artistaSlug === artistaAbierto ? lz : null} onVolver={() => setArtistaAbierto(null)} />
+          <FichaArtista key={artistaAbierto} slug={artistaAbierto} artista={artistaFicha} lanzamientos={[...lanzamientos, ...guardadosLz]} discoInicial={discoIni}
+            volverA={desdeDir ? "artistas" : "lanzamientos"} onVolver={() => { setArtistaAbierto(null); setDesdeDir(null); }} />
         </div>
       </div>
     );
@@ -242,21 +297,24 @@ export default function MusicaPage() {
 
   return (
     <div className="musica">
-      <div className="musica-body" data-expandido={expandido ? "true" : "false"} style={ancho}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "8px 18px 2px", flex: "none" }}>
-          <span style={{ fontFamily: FUENTE, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: ACENTO }}>lanzamientos</span>
-          {datos && datos.generatedAt && <span style={{ fontFamily: FUENTE, fontSize: 10, color: "#6a6180" }}>actualizado {hace(datos.generatedAt)}</span>}
+      <div className="musica-body" data-expandido={(expandido || vista === "directorio") ? "true" : "false"} style={ancho}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 18px 2px", flex: "none" }}>
+          <Chip activo={vista === "lanzamientos"} onClick={() => setVista("lanzamientos")} style={{ cursor: "pointer" }}>lanzamientos</Chip>
+          <Chip activo={vista === "directorio"} onClick={() => setVista("directorio")} style={{ cursor: "pointer" }}>♥ artistas{directorio(guardados).length ? ` · ${directorio(guardados).length}` : ""}</Chip>
+          {vista === "lanzamientos" && datos && datos.generatedAt && <span style={{ fontFamily: FUENTE, fontSize: 10, color: "#6a6180", marginLeft: "auto" }}>actualizado {hace(datos.generatedAt)}</span>}
         </div>
-        {!datos && !error && <div style={centrado}>cargando música…</div>}
-        {error && (
+        {vista === "directorio" && <Directorio guardados={guardados} onArtista={a => { setDesdeDir(a); setArtistaAbierto(a.slug); }} />}
+        {vista === "lanzamientos" && !datos && !error && <div style={centrado}>cargando música…</div>}
+        {vista === "lanzamientos" && error && (
           <div style={{ ...centrado, flexDirection: "column", gap: 12 }}>
             <div style={{ color: "#c9a0a0" }}>No se pudo cargar la música ({error}).</div>
             <button onClick={cargar} style={{ background: "transparent", color: "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, padding: "10px 18px", fontFamily: FUENTE, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>reintentar</button>
           </div>
         )}
-        {datos && !lz && <div style={centrado}>Todavía no hay lanzamientos con forma de escucharse.</div>}
-        {datos && lz && (
+        {vista === "lanzamientos" && datos && !lz && <div style={centrado}>Todavía no hay lanzamientos con forma de escucharse.</div>}
+        {vista === "lanzamientos" && datos && lz && (
           <LanzamientoCard
+            meGusta={!!guardados[lz.id]} onMegusta={() => alternarMegusta(lz, datos.artistas[lz.artistaSlug])}
             lz={lz} indice={Math.min(indice, lanzamientos.length - 1)} total={lanzamientos.length} onExpandido={setExpandido}
             onPrev={() => setIndice(i => Math.max(0, i - 1))}
             onNext={() => setIndice(i => Math.min(lanzamientos.length - 1, i + 1))}

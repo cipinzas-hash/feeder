@@ -138,6 +138,7 @@ export const LOCAL_KEY_FIELDS = {
   feedSeriesOverlay: "angst-series-overlay-v1",           // marcas de episodios aún no reflejadas por Simkl (TTL 48 h)
   pokeAgotadas: "angst-pokecripto-agotadas-v1",           // cartas agotadas en la revisión (cooldown 7 días)
   gcalInbox: "angst-gcal-inbox-v1",                       // bandeja Familia → Angst: eventos ya pasados a tarea o ignorados (el sync borra de Google los importados)
+  musicaMegusta: "angst-musica-megusta-v1",                // ♥ de Música: lanzamientos guardados (de ahí sale el directorio de artistas)
 };
 
 // Claves "angst-*" que a propósito NO viajan en el export, con el motivo.

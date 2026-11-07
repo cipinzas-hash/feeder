@@ -1632,7 +1632,7 @@ var __angst = (() => {
       }
       return true;
     }
-    function guardar() {
+    function guardar2() {
       if (!prepararCategoria()) return;
       acciones.guardar(campos());
     }
@@ -1666,7 +1666,7 @@ var __angst = (() => {
     }, placeholder: "$0", style: { ...campo, textAlign: "right" } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 14, fontWeight: 700, color: noAlcanza ? "#c00" : "#111", paddingBottom: 9, minWidth: 70, textAlign: "right" } }, total ? fmtCLP(total) : "\u2014")), /* @__PURE__ */ React.createElement(SelectorCategoria, { info, cat, setCat, nueva, setNueva, destNueva, setDestNueva, alCambiar: limpiar }), info.activo && bolsillos.length > 1 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Sub-partida"), /* @__PURE__ */ React.createElement("select", { value: bolsillo ? String(bolsillo.subId) : "", onChange: (e) => {
       setSubSel(e.target.value);
       limpiar();
-    }, style: campo }, bolsillos.map((b) => /* @__PURE__ */ React.createElement("option", { key: String(b.subId), value: String(b.subId) }, b.emoji, " ", b.label, " \xB7 saldo ", fmtCLP(b.saldo))))), /* @__PURE__ */ React.createElement(DescuentaDe, { info: { ...info, saldo }, total }), err && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 12, color: "#c00", marginTop: 6 } }, err), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: comprado, disabled: noAlcanza, style: { ...boton(true), background: noAlcanza ? "#ccc" : "#111", cursor: noAlcanza ? "default" : "pointer" } }, "Comprado \u2713"), /* @__PURE__ */ React.createElement("button", { onClick: guardar, style: boton(false) }, "Guardar"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { ...boton(false), flex: "0 0 auto", padding: "9px 12px" } }, "\xD7")), info.activo && /* @__PURE__ */ React.createElement("button", { onClick: sinGasto, style: { background: "transparent", border: "none", color: "#aaa", fontFamily: F, fontSize: 11, cursor: "pointer", marginTop: 6, padding: 0, textDecoration: "underline" } }, "marcar comprado sin descontar"));
+    }, style: campo }, bolsillos.map((b) => /* @__PURE__ */ React.createElement("option", { key: String(b.subId), value: String(b.subId) }, b.emoji, " ", b.label, " \xB7 saldo ", fmtCLP(b.saldo))))), /* @__PURE__ */ React.createElement(DescuentaDe, { info: { ...info, saldo }, total }), err && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 12, color: "#c00", marginTop: 6 } }, err), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: comprado, disabled: noAlcanza, style: { ...boton(true), background: noAlcanza ? "#ccc" : "#111", cursor: noAlcanza ? "default" : "pointer" } }, "Comprado \u2713"), /* @__PURE__ */ React.createElement("button", { onClick: guardar2, style: boton(false) }, "Guardar"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { ...boton(false), flex: "0 0 auto", padding: "9px 12px" } }, "\xD7")), info.activo && /* @__PURE__ */ React.createElement("button", { onClick: sinGasto, style: { background: "transparent", border: "none", color: "#aaa", fontFamily: F, fontSize: 11, cursor: "pointer", marginTop: 6, padding: 0, textDecoration: "underline" } }, "marcar comprado sin descontar"));
   }
 
   // modules/presupuesto/ListaCompras.jsx
@@ -2945,8 +2945,10 @@ var __angst = (() => {
     // marcas de episodios aún no reflejadas por Simkl (TTL 48 h)
     pokeAgotadas: "angst-pokecripto-agotadas-v1",
     // cartas agotadas en la revisión (cooldown 7 días)
-    gcalInbox: "angst-gcal-inbox-v1"
+    gcalInbox: "angst-gcal-inbox-v1",
     // bandeja Familia → Angst: eventos ya pasados a tarea o ignorados (el sync borra de Google los importados)
+    musicaMegusta: "angst-musica-megusta-v1"
+    // ♥ de Música: lanzamientos guardados (de ahí sale el directorio de artistas)
   };
   var TIPOS_OK = {
     object: (v) => typeof v === "object" && v !== null && !Array.isArray(v),
@@ -3567,6 +3569,79 @@ var __angst = (() => {
       }
     }
     if (pares.length) aplicarMarcas(item, { marcar: pares });
+  }
+
+  // modules/musica/megusta.js
+  var KEY = "angst-musica-megusta-v1";
+  function leer() {
+    try {
+      const v = JSON.parse(globalThis.localStorage.getItem(KEY));
+      return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  var cache = leer();
+  var oyentes = /* @__PURE__ */ new Set();
+  function guardar(next) {
+    cache = next;
+    try {
+      globalThis.localStorage.setItem(KEY, JSON.stringify(next));
+    } catch (e) {
+    }
+    oyentes.forEach((fn) => fn(next));
+  }
+  function rehidratarMegusta() {
+    cache = leer();
+    oyentes.forEach((fn) => fn(cache));
+  }
+  function alternarMegusta(lz, artista) {
+    const next = { ...cache };
+    if (next[lz.id]) delete next[lz.id];
+    else {
+      next[lz.id] = {
+        lz: {
+          id: lz.id,
+          artista: lz.artista,
+          artistaSlug: lz.artistaSlug,
+          disco: lz.disco || null,
+          tipo: lz.tipo || null,
+          fecha: lz.fecha || null,
+          arte: lz.arte || null,
+          player: lz.player || null,
+          fuentes: (lz.fuentes || []).slice(0, 3)
+        },
+        nombre: artista && artista.nombre || lz.artista,
+        foto: artista && (artista.foto || artista.bandcamp && artista.bandcamp.foto) || null,
+        tags: (artista && artista.mb && artista.mb.tags || []).slice(0, 8),
+        at: Date.now()
+      };
+    }
+    guardar(next);
+  }
+  function useMegusta() {
+    const [map, setMap] = React.useState(cache);
+    React.useEffect(() => {
+      oyentes.add(setMap);
+      setMap(cache);
+      return () => oyentes.delete(setMap);
+    }, []);
+    return map;
+  }
+  function directorio(map) {
+    const por = {};
+    for (const e of Object.values(map || {})) {
+      if (!e || !e.lz || !e.lz.artistaSlug) continue;
+      const slug = e.lz.artistaSlug;
+      const a = por[slug] || (por[slug] = { slug, nombre: e.nombre || e.lz.artista, foto: null, tags: [], lanzamientos: [], at: 0 });
+      a.lanzamientos.push(e.lz);
+      if (!a.foto && e.foto) a.foto = e.foto;
+      for (const t of e.tags || []) if (!a.tags.includes(t)) a.tags.push(t);
+      if ((e.at || 0) > a.at) a.at = e.at || 0;
+    }
+    const out = Object.values(por);
+    out.forEach((a) => a.lanzamientos.sort((x, y) => String(y.fecha || "").localeCompare(String(x.fecha || ""))));
+    return out.sort((x, y) => y.at - x.at || x.nombre.localeCompare(y.nombre));
   }
 
   // core/registro.js
@@ -4526,7 +4601,7 @@ var __angst = (() => {
       return b.includes("Price Watch") ? b : [...b, "Price Watch"];
     }, [carpetas]);
     const darkCat = darkCatalogo || [];
-    const cache = priceCache || {};
+    const cache2 = priceCache || {};
     const hoy = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
     const alertasWatch = inv.filter((c) => c.carpeta === "Price Watch" && c.estado !== "vendida" && c.precioObjetivo > 0 && c.tcgMarket != null && c.tcgMarket <= c.precioObjetivo);
     const [view, setView] = React.useState("coleccion");
@@ -4779,7 +4854,7 @@ var __angst = (() => {
     }, [allSets]);
     React.useEffect(() => {
       if (!darkSetsScope.length) return;
-      const lastSync = cache._lastResyncDate;
+      const lastSync = cache2._lastResyncDate;
       if (lastSync && Date.now() - new Date(lastSync).getTime() < RESYNC_INTERVAL_MS) return;
       resyncAbort.current = false;
       setResyncStatus("running");
@@ -4878,7 +4953,7 @@ var __angst = (() => {
     }, [allSets]);
     React.useEffect(() => {
       if (!allSets.length) return;
-      const lastSync = cache._lastResyncIlustradorDate;
+      const lastSync = cache2._lastResyncIlustradorDate;
       if (lastSync && Date.now() - new Date(lastSync).getTime() < RESYNC_INTERVAL_MS) return;
       resyncAbort.current = false;
       setResyncStatus("running");
@@ -5858,7 +5933,7 @@ var __angst = (() => {
         }
       ), /* @__PURE__ */ React.createElement("button", { onClick: doSearch, style: { background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontFamily: "'Caveat',cursive", fontSize: 15, cursor: "pointer" } }, "buscar")), zoomImage && /* @__PURE__ */ React.createElement("div", { onClick: () => setZoomImage(null), style: { position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("img", { src: zoomImage, style: { maxWidth: "90vw", maxHeight: "90vh", borderRadius: 12, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" } })), /* @__PURE__ */ React.createElement(PokeLoader, { active: loading }), !loading && searchErr && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: 16, fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#c00" } }, searchErr), results.map((card) => {
         const p = getPrimaryPrice(card);
-        const cacheEntry = cache[card.id];
+        const cacheEntry = cache2[card.id];
         const tcgPrice = cacheEntry?.lastMarket || p?.market || null;
         const yaInv = inv.some((c) => c.cardId === card.id && c.carpeta !== "Price Watch");
         const yaWatch = inv.some((c) => c.cardId === card.id && c.carpeta === "Price Watch");
@@ -7642,11 +7717,11 @@ var __angst = (() => {
       if (over > 1 !== desborda) setDesborda(over > 1);
     });
     const save = (updates) => saveData({ ...data, ...updates });
-    const guardar = (nuevo) => save({ fadimanDiario: nuevo });
-    const set = (campo8, valor) => guardar(conCampo(diario, fecha2, campo8, valor, esProtocolo));
+    const guardar2 = (nuevo) => save({ fadimanDiario: nuevo });
+    const set = (campo8, valor) => guardar2(conCampo(diario, fecha2, campo8, valor, esProtocolo));
     const setNum = (campo8, txt) => set(campo8, txt === "" ? null : parseFloat(txt));
-    const setBase = (campo8, valor) => guardar(conBase(diario, campo8, valor));
-    const setMg = (txt) => guardar({ ...diario, cfg: { ...diario.cfg, mg: txt === "" ? 10 : parseFloat(txt) } });
+    const setBase = (campo8, valor) => guardar2(conBase(diario, campo8, valor));
+    const setMg = (txt) => guardar2({ ...diario, cfg: { ...diario.cfg, mg: txt === "" ? 10 : parseFloat(txt) } });
     function marcarToma() {
       if (e.tomo) {
         set("tomo", false);
@@ -7655,7 +7730,7 @@ var __angst = (() => {
       let d = conCampo(diario, fecha2, "tomo", true, esProtocolo);
       if (!e.hora && fecha2 === hoy) d = conCampo(d, fecha2, "hora", horaLocal(), esProtocolo);
       if (!e.mg) d = conCampo(d, fecha2, "mg", diario.cfg.mg, esProtocolo);
-      guardar(d);
+      guardar2(d);
     }
     const saveLog = (dateKey, field, val) => save({ fadimanLogs: { ...logs, [dateKey]: { ...logs[dateKey] || {}, [field]: val } } });
     function iniciar(startDate) {
@@ -9989,7 +10064,7 @@ var __angst = (() => {
       setSizeKey("M");
       setPaso("porcion");
     }
-    function guardar(items, texto) {
+    function guardar2(items, texto) {
       const nuevos = items.map((e) => ({ ...e, meal, uid: Date.now() + Math.random() }));
       saveNutriLog({ ...nutriLog, [dk]: [...nutriLog[dk] || [], ...nuevos] });
       if (onGuardado) onGuardado(`${texto} \u2713`);
@@ -10016,7 +10091,7 @@ var __angst = (() => {
         setPaso("bandeja");
         return;
       }
-      guardar([entry], `${comida.label} \xB7 ${food.name}`);
+      guardar2([entry], `${comida.label} \xB7 ${food.name}`);
     }
     function confirmarEstimada() {
       const e = armarEntradaEstimada(est, meal);
@@ -10027,7 +10102,7 @@ var __angst = (() => {
         setPaso("bandeja");
         return;
       }
-      guardar([e], `${comida.label} \xB7 ${e.name}`);
+      guardar2([e], `${comida.label} \xB7 ${e.name}`);
     }
     function abrirBandeja(items, nombre, mealId) {
       setBandeja(items.map((e) => ({ ...e })));
@@ -10113,7 +10188,7 @@ var __angst = (() => {
       }, style: { ...chip2(false), fontSize: 13 } }, "+ agregar alimento"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F4, fontSize: 13, color: "#111", fontWeight: 700 } }, kcalBandeja, " kcal")), /* @__PURE__ */ React.createElement(
         "button",
         {
-          onClick: () => guardar(bandeja, `${comida.label} \xB7 ${titulo || `${bandeja.length} alimento${bandeja.length === 1 ? "" : "s"}`}`),
+          onClick: () => guardar2(bandeja, `${comida.label} \xB7 ${titulo || `${bandeja.length} alimento${bandeja.length === 1 ? "" : "s"}`}`),
           disabled: !bandeja.length,
           style: { ...btnPrincipal, opacity: bandeja.length ? 1 : 0.4 }
         },
@@ -10840,9 +10915,9 @@ var __angst = (() => {
       if (typeof max === "number") r = Math.min(max, r);
       return r;
     };
-    const leer = (s) => parseInt(String(s).replace(/\D/g, "")) || 0;
+    const leer2 = (s) => parseInt(String(s).replace(/\D/g, "")) || 0;
     function commit() {
-      onSave(acotar(leer(txt)));
+      onSave(acotar(leer2(txt)));
       setEd(false);
     }
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 2, justifyContent: "flex-end" } }, /* @__PURE__ */ React.createElement("button", { style: btnFlecha, onClick: () => onSave(acotar(value - 1e3)) }, "\u2039"), ed ? /* @__PURE__ */ React.createElement(
@@ -10852,7 +10927,7 @@ var __angst = (() => {
         value: txt,
         onChange: (e) => {
           setTxt(e.target.value);
-          onSave(acotar(leer(e.target.value)));
+          onSave(acotar(leer2(e.target.value)));
         },
         onBlur: commit,
         onKeyDown: (e) => {
@@ -11239,7 +11314,7 @@ var __angst = (() => {
     const completo = !!filas && filas.every((f2) => num2(conteos[f2.sec + "|" + f2.rowId]) !== null);
     const totEsperado = filas ? filas.reduce((s, f2) => s + f2.esperado, 0) : 0;
     const totContado = filas ? filas.reduce((s, f2) => s + (num2(conteos[f2.sec + "|" + f2.rowId]) || 0), 0) : 0;
-    function guardar() {
+    function guardar2() {
       const c = {};
       (filas || []).forEach((f2) => {
         const v = num2(conteos[f2.sec + "|" + f2.rowId]);
@@ -11282,7 +11357,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
         setConteos({ ...conteos, [k]: e.target.value });
         setError("");
       }, style: campo4 })), dif !== null && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: colorDif(dif), textAlign: "right", marginTop: 4 } }, dif === 0 ? "cuadra" : `diferencia ${signo(dif)}`), dif !== null && dif !== 0 && /* @__PURE__ */ React.createElement("input", { placeholder: "\xBFa qu\xE9 se debe? (opcional)", value: notas[k] || "", onChange: (e) => setNotas({ ...notas, [k]: e.target.value }), style: { ...campo4, width: "100%", textAlign: "left", fontSize: 12, marginTop: 6, padding: "6px 8px" } }));
-    }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "12px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#777" } }, "Esperado ", fmtCLP(totEsperado), " \xB7 contado ", fmtCLP(totContado)), completo && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: colorDif(totContado - totEsperado) } }, totContado === totEsperado ? "todo cuadra" : `diferencia ${signo(totContado - totEsperado)}`)), /* @__PURE__ */ React.createElement("div", { style: { ...rotulo4, margin: "10px 0 4px" } }, "Fecha del arqueo"), /* @__PURE__ */ React.createElement("input", { type: "date", value: fecha2, onChange: (e) => setFecha(e.target.value || fechaISO(/* @__PURE__ */ new Date())), style: { ...campo4, width: "100%", textAlign: "left" } }), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#c00", marginTop: 12 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: guardar, disabled: !completo, style: { width: "100%", marginTop: 14, padding: "13px", background: completo ? "#111" : "#ccc", color: "#fff", border: "none", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, cursor: completo ? "pointer" : "default" } }, guardado ? "Guardar de nuevo" : "Guardar arqueo")), filas && tab === "rendicion" && rend && /* @__PURE__ */ React.createElement(React.Fragment, null, rend.arqueoFecha ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#777", marginBottom: 8 } }, "Arqueo del ", fechaCorta3(rend.arqueoFecha), ".") : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#a60", background: "#fffaf0", border: "1px dashed #e0b070", borderRadius: 6, padding: "6px 10px", marginBottom: 8 } }, "Falta el arqueo de este per\xEDodo: hazlo en la pesta\xF1a Arqueo."), rend.filas.map((f2) => /* @__PURE__ */ React.createElement("div", { key: f2.sec + f2.row.id, style: { padding: "10px 0", borderBottom: "1px dashed #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: FUENTE, fontSize: 14, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f2.row.emoji, " ", f2.row.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 15, fontWeight: 700, color: f2.saldo < 0 ? "#c00" : "#111" } }, fmtCLP(f2.saldo))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#999", marginTop: 3, lineHeight: 1.5 } }, "asignado ", fmtCLP(f2.asignado), " \xB7 gastado ", fmtCLP(f2.gastado), f2.prestamoRecibido > 0 && ` \xB7 pidi\xF3 ${fmtCLP(f2.prestamoRecibido)}`, f2.prestamoDado > 0 && ` \xB7 prest\xF3 ${fmtCLP(f2.prestamoDado)}`, f2.devPagada > 0 && ` \xB7 devolvi\xF3 ${fmtCLP(f2.devPagada)}`, f2.devRecibida > 0 && ` \xB7 le devolvieron ${fmtCLP(f2.devRecibida)}`), f2.arqueo && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: colorDif(f2.arqueo.diferencia), marginTop: 3 } }, "arqueo: contado ", fmtCLP(f2.arqueo.contado), " de ", fmtCLP(f2.arqueo.esperado), " \xB7 ", f2.arqueo.diferencia === 0 ? "cuadra" : `diferencia ${signo(f2.arqueo.diferencia)}`, f2.arqueo.nota ? ` \xB7 ${f2.arqueo.nota}` : ""), (f2.deudas.debe > 0 || f2.deudas.teDeben > 0) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#a60", marginTop: 2 } }, f2.deudas.debe > 0 && `Debe ${fmtCLP(f2.deudas.debe)}. `, f2.deudas.teDeben > 0 && `Le deben ${fmtCLP(f2.deudas.teDeben)}.`), f2.gastos.length > 0 && /* @__PURE__ */ React.createElement("details", { style: { marginTop: 4 } }, /* @__PURE__ */ React.createElement("summary", { style: { fontFamily: FUENTE, fontSize: 11, color: "#666", cursor: "pointer" } }, f2.gastos.length, " gasto", f2.gastos.length > 1 ? "s" : ""), f2.gastos.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.id, style: { fontFamily: FUENTE, fontSize: 12, color: "#444", padding: "3px 0 3px 8px", display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#999", width: 44, flexShrink: 0 } }, fechaCorta3(g.fecha)), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0 } }, g.sub, g.nota ? ` \xB7 ${g.nota}` : "", g.prestamoId ? " \u{1F4B3}" : ""), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, fmtCLP(g.monto))))))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "14px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#555" } }, "Asignado ", fmtCLP(rend.totales.asignado), " \xB7 gastado ", fmtCLP(rend.totales.gastado)), rend.totales.diferencia !== null && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: colorDif(rend.totales.diferencia) } }, rend.totales.diferencia === 0 ? "todo cuadra" : `diferencia ${signo(rend.totales.diferencia)}`)), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#c00", marginTop: 8 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: copiar, style: { width: "100%", marginTop: 14, padding: "11px", background: "transparent", color: "#555", border: "1px dashed #bbb", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 18, cursor: "pointer" } }, copiado ? "\u2713 copiado" : "Copiar rendici\xF3n")))));
+    }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "12px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#777" } }, "Esperado ", fmtCLP(totEsperado), " \xB7 contado ", fmtCLP(totContado)), completo && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: colorDif(totContado - totEsperado) } }, totContado === totEsperado ? "todo cuadra" : `diferencia ${signo(totContado - totEsperado)}`)), /* @__PURE__ */ React.createElement("div", { style: { ...rotulo4, margin: "10px 0 4px" } }, "Fecha del arqueo"), /* @__PURE__ */ React.createElement("input", { type: "date", value: fecha2, onChange: (e) => setFecha(e.target.value || fechaISO(/* @__PURE__ */ new Date())), style: { ...campo4, width: "100%", textAlign: "left" } }), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#c00", marginTop: 12 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: guardar2, disabled: !completo, style: { width: "100%", marginTop: 14, padding: "13px", background: completo ? "#111" : "#ccc", color: "#fff", border: "none", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, cursor: completo ? "pointer" : "default" } }, guardado ? "Guardar de nuevo" : "Guardar arqueo")), filas && tab === "rendicion" && rend && /* @__PURE__ */ React.createElement(React.Fragment, null, rend.arqueoFecha ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#777", marginBottom: 8 } }, "Arqueo del ", fechaCorta3(rend.arqueoFecha), ".") : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#a60", background: "#fffaf0", border: "1px dashed #e0b070", borderRadius: 6, padding: "6px 10px", marginBottom: 8 } }, "Falta el arqueo de este per\xEDodo: hazlo en la pesta\xF1a Arqueo."), rend.filas.map((f2) => /* @__PURE__ */ React.createElement("div", { key: f2.sec + f2.row.id, style: { padding: "10px 0", borderBottom: "1px dashed #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: FUENTE, fontSize: 14, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f2.row.emoji, " ", f2.row.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 15, fontWeight: 700, color: f2.saldo < 0 ? "#c00" : "#111" } }, fmtCLP(f2.saldo))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#999", marginTop: 3, lineHeight: 1.5 } }, "asignado ", fmtCLP(f2.asignado), " \xB7 gastado ", fmtCLP(f2.gastado), f2.prestamoRecibido > 0 && ` \xB7 pidi\xF3 ${fmtCLP(f2.prestamoRecibido)}`, f2.prestamoDado > 0 && ` \xB7 prest\xF3 ${fmtCLP(f2.prestamoDado)}`, f2.devPagada > 0 && ` \xB7 devolvi\xF3 ${fmtCLP(f2.devPagada)}`, f2.devRecibida > 0 && ` \xB7 le devolvieron ${fmtCLP(f2.devRecibida)}`), f2.arqueo && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: colorDif(f2.arqueo.diferencia), marginTop: 3 } }, "arqueo: contado ", fmtCLP(f2.arqueo.contado), " de ", fmtCLP(f2.arqueo.esperado), " \xB7 ", f2.arqueo.diferencia === 0 ? "cuadra" : `diferencia ${signo(f2.arqueo.diferencia)}`, f2.arqueo.nota ? ` \xB7 ${f2.arqueo.nota}` : ""), (f2.deudas.debe > 0 || f2.deudas.teDeben > 0) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#a60", marginTop: 2 } }, f2.deudas.debe > 0 && `Debe ${fmtCLP(f2.deudas.debe)}. `, f2.deudas.teDeben > 0 && `Le deben ${fmtCLP(f2.deudas.teDeben)}.`), f2.gastos.length > 0 && /* @__PURE__ */ React.createElement("details", { style: { marginTop: 4 } }, /* @__PURE__ */ React.createElement("summary", { style: { fontFamily: FUENTE, fontSize: 11, color: "#666", cursor: "pointer" } }, f2.gastos.length, " gasto", f2.gastos.length > 1 ? "s" : ""), f2.gastos.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.id, style: { fontFamily: FUENTE, fontSize: 12, color: "#444", padding: "3px 0 3px 8px", display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#999", width: 44, flexShrink: 0 } }, fechaCorta3(g.fecha)), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0 } }, g.sub, g.nota ? ` \xB7 ${g.nota}` : "", g.prestamoId ? " \u{1F4B3}" : ""), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, fmtCLP(g.monto))))))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "14px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#555" } }, "Asignado ", fmtCLP(rend.totales.asignado), " \xB7 gastado ", fmtCLP(rend.totales.gastado)), rend.totales.diferencia !== null && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: colorDif(rend.totales.diferencia) } }, rend.totales.diferencia === 0 ? "todo cuadra" : `diferencia ${signo(rend.totales.diferencia)}`)), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#c00", marginTop: 8 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: copiar, style: { width: "100%", marginTop: 14, padding: "11px", background: "transparent", color: "#555", border: "1px dashed #bbb", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 18, cursor: "pointer" } }, copiado ? "\u2713 copiado" : "Copiar rendici\xF3n")))));
   }
 
   // modules/presupuesto/ruedaGeometria.js
@@ -11926,7 +12001,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     const [err, setErr] = useState21("");
     const efectiva = sel || (cats.length === 0 ? "__nueva" : "");
     const cat = efectiva === "__nueva" ? nueva.trim() : efectiva;
-    function guardar() {
+    function guardar2() {
       const r = categorizarGasto(budgets, periodo, gasto.id, cat);
       if (r.error) {
         setErr(r.error);
@@ -11946,11 +12021,11 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
         role: "button",
         tabIndex: 0,
         "aria-label": "Guardar categor\xEDa",
-        onClick: () => cat && guardar(),
+        onClick: () => cat && guardar2(),
         onKeyDown: (e) => {
           if ((e.key === "Enter" || e.key === " ") && cat) {
             e.preventDefault();
-            guardar();
+            guardar2();
           }
         },
         style: { flexShrink: 0, background: cat ? "#111" : "#ccc", color: "#fff", borderRadius: 8, padding: "8px 14px", fontFamily: C5, fontSize: 17, fontWeight: 700, cursor: cat ? "pointer" : "default", userSelect: "none", display: "flex", alignItems: "center" }
@@ -12388,7 +12463,7 @@ ${item.link}`);
   var fmtUSD2 = (n) => "$" + parseFloat(n || 0).toFixed(2);
   function AgregarCartaModal({ inventario, carpetas, priceCache, saveInventario, permanecer, onClose, onGuardado }) {
     const inv = inventario || [];
-    const cache = priceCache || {};
+    const cache2 = priceCache || {};
     const hoy = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
     const cats = useMemo11(() => {
       const b = carpetas || [...CARPETAS_DEFAULT];
@@ -12418,13 +12493,13 @@ ${item.link}`);
       }
       setCargando(false);
     }
-    const precioDe = (c) => cache[c.id] && cache[c.id].lastMarket || (getPrimaryPrice(c) || {}).market || null;
+    const precioDe = (c) => cache2[c.id] && cache2[c.id].lastMarket || (getPrimaryPrice(c) || {}).market || null;
     function elegir(c) {
       setCarta(c);
       const carpetaBase = isDarkCard(c) && carpetasNormales.includes("Dark Collection") ? "Dark Collection" : carpetasNormales[0] || "MLP";
       setForm((f2) => ({ ...f2, destino: ultima ? ultima.destino : "inventario", carpeta: ultima ? ultima.carpeta : carpetaBase, cantidad: 1, costoUSD: "", precioObjetivo: "" }));
     }
-    function guardar() {
+    function guardar2() {
       const precio = precioDe(carta);
       const nueva = armarCartaNueva(carta, { ...form, precioVentaUSD: precio ? precio.toFixed(2) : "", fechaCompra: hoy, notas: "" }, cats, hoy);
       try {
@@ -12456,7 +12531,7 @@ ${item.link}`);
             style: { flex: 1, padding: "8px 0", background: form.destino === k ? "#111" : "transparent", color: form.destino === k ? "#fff" : "#999", border: "none", cursor: "pointer", fontFamily: C6, fontSize: 14, fontWeight: 700 }
           },
           l
-        ))), !watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Carpeta"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, carpetasNormales.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, carpeta: c })), style: chip3(form.carpeta === c) }, c)))), watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "\u{1F3AF} Me avisa cuando baje a (USD, opcional)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.precioObjetivo, onChange: (e) => setForm((f2) => ({ ...f2, precioObjetivo: e.target.value })), placeholder: "ej: 2.50", style: campo6 })), form.destino === "inventario" && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Lo que pagu\xE9 USD (0 si fue regalo)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.costoUSD, onChange: (e) => setForm((f2) => ({ ...f2, costoUSD: e.target.value })), placeholder: "ej: 8.50", style: campo6 })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: Math.max(1, (f2.cantidad || 1) - 1) })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: C6, fontSize: 24, fontWeight: 700, color: "#111", minWidth: 28, textAlign: "center" } }, form.cantidad || 1), /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: (f2.cantidad || 1) + 1 })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "+")))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Condici\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, CONDICIONES2.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, condicion: c })), style: { ...chip3(form.condicion === c), flex: 1, padding: "6px 4px" } }, c)))), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F11, fontSize: 12, color: "#c00", marginBottom: 10 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: guardar, style: { width: "100%", background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "14px", fontFamily: C6, fontSize: 18, cursor: "pointer", marginBottom: 8 } }, "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+        ))), !watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Carpeta"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, carpetasNormales.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, carpeta: c })), style: chip3(form.carpeta === c) }, c)))), watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "\u{1F3AF} Me avisa cuando baje a (USD, opcional)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.precioObjetivo, onChange: (e) => setForm((f2) => ({ ...f2, precioObjetivo: e.target.value })), placeholder: "ej: 2.50", style: campo6 })), form.destino === "inventario" && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Lo que pagu\xE9 USD (0 si fue regalo)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.costoUSD, onChange: (e) => setForm((f2) => ({ ...f2, costoUSD: e.target.value })), placeholder: "ej: 8.50", style: campo6 })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: Math.max(1, (f2.cantidad || 1) - 1) })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: C6, fontSize: 24, fontWeight: 700, color: "#111", minWidth: 28, textAlign: "center" } }, form.cantidad || 1), /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: (f2.cantidad || 1) + 1 })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "+")))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Condici\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, CONDICIONES2.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, condicion: c })), style: { ...chip3(form.condicion === c), flex: 1, padding: "6px 4px" } }, c)))), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F11, fontSize: 12, color: "#c00", marginBottom: 10 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: guardar2, style: { width: "100%", background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "14px", fontFamily: C6, fontSize: 18, cursor: "pointer", marginBottom: 8 } }, "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
           setCarta(null);
           setError(null);
         }, style: { width: "100%", background: "transparent", color: "#999", border: "none", padding: "8px", fontFamily: F11, fontSize: 12, cursor: "pointer" } }, "volver a la b\xFAsqueda"))
@@ -12502,7 +12577,7 @@ ${item.link}`);
       return fecha2;
     };
     const puede = texto.trim().length > 0 && (tipo !== "tarea" || dia !== "fecha" || !!fecha2);
-    function guardar() {
+    function guardar2() {
       const t = texto.trim();
       if (!t) return;
       let aviso;
@@ -12521,7 +12596,7 @@ ${item.link}`);
     const enter = (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        guardar();
+        guardar2();
       }
     };
     if (tipo === "compra") {
@@ -12564,7 +12639,7 @@ ${item.link}`);
     ), tipo === "tarea" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setDia("hoy"), style: chip4(dia === "hoy") }, "hoy"), /* @__PURE__ */ React.createElement("button", { onClick: () => setDia("manana"), style: chip4(dia === "manana") }, "ma\xF1ana"), /* @__PURE__ */ React.createElement("button", { onClick: () => setDia("fecha"), style: chip4(dia === "fecha") }, "otro d\xEDa"), /* @__PURE__ */ React.createElement("button", { onClick: () => setUrgente((u) => !u), style: { ...chip4(urgente, "#ff3b30"), marginLeft: "auto" } }, urgente ? "\u{1F534} urgente" : "urgente")), dia === "fecha" && /* @__PURE__ */ React.createElement("input", { type: "date", value: fecha2, onChange: (e) => setFecha(e.target.value), style: { marginTop: 10, border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontFamily: F12, fontSize: 14, color: "#111" } })), /* @__PURE__ */ React.createElement(
       "button",
       {
-        onClick: guardar,
+        onClick: guardar2,
         disabled: !puede,
         style: { width: "100%", background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "13px", fontFamily: C7, fontSize: 18, cursor: "pointer", opacity: puede ? 1 : 0.4, marginBottom: 8 }
       },
@@ -15131,7 +15206,7 @@ Toco reintentar ahora.`);
   function Chip({ children, activo, onClick, style }) {
     return /* @__PURE__ */ React.createElement("span", { onClick, style: { fontFamily: FUENTE2, fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: activo ? "#111" : "#b9afd6", background: activo ? ACENTO : "#1c1729", border: `1px solid ${activo ? ACENTO : "#2f2745"}`, borderRadius: 12, padding: "3px 9px", ...style } }, children);
   }
-  function LanzamientoCard({ lz, indice, total, onPrev, onNext, onArtista, onExpandido }) {
+  function LanzamientoCard({ lz, indice, total, onPrev, onNext, onArtista, onExpandido, meGusta, onMegusta }) {
     const [sonando, setSonando] = useState34(false);
     useEffect22(() => {
       setSonando(false);
@@ -15141,10 +15216,10 @@ Toco reintentar ahora.`);
     }, [sonando]);
     const esVideo = lz.player && lz.player.tipo === "youtube";
     const fuentes = lz.fuentes || [];
-    return /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", alignItems: "center", padding: "6px 16px 0", gap: 10 } }, sonando && esVideo ? /* @__PURE__ */ React.createElement("div", { style: { width: "100%" } }, /* @__PURE__ */ React.createElement(Reproductor, { player: lz.player, titulo: `${lz.artista} \u2014 ${lz.disco || ""}` })) : sonando ? /* @__PURE__ */ React.createElement(Caratula, { src: lz.arte, lado: 180, alt: `${lz.artista} \u2014 ${lz.disco || ""}` }) : /* @__PURE__ */ React.createElement(Caratula, { src: lz.arte, flexible: true, alt: `${lz.artista} \u2014 ${lz.disco || ""}` }), sonando && !esVideo && /* @__PURE__ */ React.createElement("div", { style: { width: "100%" } }, /* @__PURE__ */ React.createElement(Reproductor, { player: lz.player, titulo: `${lz.artista} \u2014 ${lz.disco || ""}` })), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", width: "100%", minWidth: 0, flex: "none" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", lineHeight: 1.05, overflowWrap: "anywhere" } }, lz.artista), lz.disco && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 14, color: "#cfc7e6", marginTop: 3, overflowWrap: "anywhere" } }, lz.disco), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, justifyContent: "center", alignItems: "center", marginTop: 8, flexWrap: "wrap" } }, TIPO[lz.tipo] && /* @__PURE__ */ React.createElement(Chip, { activo: true }, TIPO[lz.tipo]), /* @__PURE__ */ React.createElement(Chip, null, hace(lz.fecha)), /* @__PURE__ */ React.createElement(Chip, null, fuentes.length > 1 ? `${fuentes.length} fuentes` : fuentes[0]?.fuente || ""))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, width: "100%", flex: "none" } }, lz.player && !sonando && /* @__PURE__ */ React.createElement("button", { onClick: () => setSonando(true), style: { flex: 2, background: ACENTO, color: "#111", border: "none", borderRadius: 12, padding: "12px 8px", fontFamily: FUENTE2, fontSize: 14, fontWeight: 800, cursor: "pointer" } }, "\u25B6 escuchar"), /* @__PURE__ */ React.createElement("button", { onClick: onArtista, style: { flex: 2, background: "transparent", color: "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, padding: "12px 8px", fontFamily: FUENTE2, fontSize: 14, fontWeight: 700, cursor: "pointer" } }, "ficha del artista \u2192")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", paddingBottom: 6, flex: "none" } }, /* @__PURE__ */ React.createElement("button", { onClick: onPrev, disabled: indice === 0, "aria-label": "lanzamiento anterior", style: navBtn(indice === 0) }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE2, fontSize: 11, color: "#7d7396", letterSpacing: "0.06em" } }, indice + 1, " / ", total), /* @__PURE__ */ React.createElement("button", { onClick: onNext, disabled: indice >= total - 1, "aria-label": "lanzamiento siguiente", style: navBtn(indice >= total - 1) }, "\u2192")));
+    return /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", alignItems: "center", padding: "6px 16px 0", gap: 10 } }, sonando && esVideo ? /* @__PURE__ */ React.createElement("div", { style: { width: "100%" } }, /* @__PURE__ */ React.createElement(Reproductor, { player: lz.player, titulo: `${lz.artista} \u2014 ${lz.disco || ""}` })) : sonando ? /* @__PURE__ */ React.createElement(Caratula, { src: lz.arte, lado: 180, alt: `${lz.artista} \u2014 ${lz.disco || ""}` }) : /* @__PURE__ */ React.createElement(Caratula, { src: lz.arte, flexible: true, alt: `${lz.artista} \u2014 ${lz.disco || ""}` }), sonando && !esVideo && /* @__PURE__ */ React.createElement("div", { style: { width: "100%" } }, /* @__PURE__ */ React.createElement(Reproductor, { player: lz.player, titulo: `${lz.artista} \u2014 ${lz.disco || ""}` })), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", width: "100%", minWidth: 0, flex: "none" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#fff", lineHeight: 1.05, overflowWrap: "anywhere" } }, lz.artista), lz.disco && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 14, color: "#cfc7e6", marginTop: 3, overflowWrap: "anywhere" } }, lz.disco), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, justifyContent: "center", alignItems: "center", marginTop: 8, flexWrap: "wrap" } }, TIPO[lz.tipo] && /* @__PURE__ */ React.createElement(Chip, { activo: true }, TIPO[lz.tipo]), /* @__PURE__ */ React.createElement(Chip, null, hace(lz.fecha)), /* @__PURE__ */ React.createElement(Chip, null, fuentes.length > 1 ? `${fuentes.length} fuentes` : fuentes[0]?.fuente || ""))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, width: "100%", flex: "none" } }, /* @__PURE__ */ React.createElement("button", { onClick: onMegusta, "aria-pressed": meGusta, "aria-label": meGusta ? "quitar me gusta" : "me gusta", style: { flex: "none", width: 52, background: meGusta ? ACENTO : "transparent", color: meGusta ? "#111" : "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, fontSize: 22, lineHeight: 1, cursor: "pointer" } }, meGusta ? "\u2665" : "\u2661"), lz.player && !sonando && /* @__PURE__ */ React.createElement("button", { onClick: () => setSonando(true), style: { flex: 2, background: ACENTO, color: "#111", border: "none", borderRadius: 12, padding: "12px 8px", fontFamily: FUENTE2, fontSize: 14, fontWeight: 800, cursor: "pointer" } }, "\u25B6 escuchar"), /* @__PURE__ */ React.createElement("button", { onClick: onArtista, style: { flex: 2, background: "transparent", color: "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, padding: "12px 8px", fontFamily: FUENTE2, fontSize: 14, fontWeight: 700, cursor: "pointer" } }, "ficha del artista \u2192")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", paddingBottom: 6, flex: "none" } }, /* @__PURE__ */ React.createElement("button", { onClick: onPrev, disabled: indice === 0, "aria-label": "lanzamiento anterior", style: navBtn(indice === 0) }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE2, fontSize: 11, color: "#7d7396", letterSpacing: "0.06em" } }, indice + 1, " / ", total), /* @__PURE__ */ React.createElement("button", { onClick: onNext, disabled: indice >= total - 1, "aria-label": "lanzamiento siguiente", style: navBtn(indice >= total - 1) }, "\u2192")));
   }
   var navBtn = (off) => ({ width: 52, height: 40, background: "transparent", border: "1px solid #2f2745", borderRadius: 10, color: off ? "#3c3552" : "#e5def7", fontSize: 18, cursor: off ? "default" : "pointer" });
-  function FichaArtista({ slug, artista, lanzamientos, discoInicial, onVolver }) {
+  function FichaArtista({ slug, artista, lanzamientos, discoInicial, onVolver, volverA }) {
     const bc = artista?.bandcamp || null;
     const discos = bc?.discos || [];
     const propios = lanzamientos.filter((l) => l.artistaSlug === slug);
@@ -15163,10 +15238,28 @@ Toco reintentar ahora.`);
       if (playerRef.current && playerRef.current.scrollIntoView) playerRef.current.scrollIntoView({ block: "start", behavior: "smooth" });
     }
     const enlace2 = (href, texto) => href ? /* @__PURE__ */ React.createElement("a", { key: texto, href, target: "_blank", rel: "noopener noreferrer", style: { fontFamily: FUENTE2, fontSize: 12, fontWeight: 700, color: "#e5def7", textDecoration: "none", border: "1px solid #2f2745", borderRadius: 10, padding: "7px 12px" } }, texto, " \u2197") : null;
-    return /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 16px 22px", display: "flex", flexDirection: "column", gap: 14 } }, /* @__PURE__ */ React.createElement("button", { onClick: onVolver, style: { alignSelf: "flex-start", background: "transparent", border: "none", color: "#8a80a6", fontFamily: FUENTE2, fontSize: 13, cursor: "pointer", padding: "4px 0" } }, "\u2190 lanzamientos"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, alignItems: "center" } }, artista?.foto ? /* @__PURE__ */ React.createElement("img", { src: artista.foto, alt: "", loading: "lazy", onError: quitarCaratula, style: { width: 84, height: 84, borderRadius: "50%", objectFit: "cover", border: `2px solid ${ACENTO}`, flex: "none", background: "#16121f" } }) : /* @__PURE__ */ React.createElement("div", { style: { width: 84, height: 84, borderRadius: "50%", border: `2px solid ${ACENTO}`, flex: "none", display: "flex", alignItems: "center", justifyContent: "center", color: ACENTO, fontSize: 30, background: "#16121f" } }, "\u266A"), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, artista?.logo ? /* @__PURE__ */ React.createElement("img", { src: artista.logo, alt: nombre, loading: "lazy", onError: quitarCaratula, style: { maxWidth: "100%", maxHeight: 54, objectFit: "contain", display: "block" } }) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 30, fontWeight: 700, color: "#fff", lineHeight: 1.02, overflowWrap: "anywhere" } }, nombre), artista?.logo && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 12, color: "#8a80a6", marginTop: 2 } }, nombre), meta && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 12, color: "#9d93b8", marginTop: 4 } }, meta))), tags.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, tags.map((t) => /* @__PURE__ */ React.createElement(Chip, { key: t }, t))), /* @__PURE__ */ React.createElement("div", { ref: playerRef, style: { scrollMarginTop: 8 } }, player ? /* @__PURE__ */ React.createElement(Reproductor, { player, titulo }) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 12, color: "#7d7396", border: "1px dashed #2f2745", borderRadius: 8, padding: "14px 12px", textAlign: "center" } }, "elige un disco para escucharlo"), titulo && player && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 11, color: "#7d7396", marginTop: 6, overflowWrap: "anywhere" } }, titulo)), bio && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 13, lineHeight: 1.5, color: "#cfc7e6", whiteSpace: "pre-line", overflowWrap: "anywhere", ...bioAbierta ? {} : { display: "-webkit-box", WebkitLineClamp: 5, WebkitBoxOrient: "vertical", overflow: "hidden" } } }, bio), bio.length > 260 && /* @__PURE__ */ React.createElement("button", { onClick: () => setBioAbierta(!bioAbierta), style: { background: "transparent", border: "none", color: ACENTO, fontFamily: FUENTE2, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "6px 0 0" } }, bioAbierta ? "leer menos" : "leer m\xE1s"), !artista?.bandcamp?.bio && artista?.wiki && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 10, color: "#6a6180", marginTop: 2 } }, "texto de Wikipedia (", artista.wiki.lang, ")")), discos.length > 0 && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#8a80a6", marginBottom: 8 } }, "discograf\xEDa \xB7 ", bc.totalDiscos > discos.length ? `${discos.length} de ${bc.totalDiscos}` : discos.length, bc.pagina === "sello" && /* @__PURE__ */ React.createElement("span", { style: { textTransform: "none", letterSpacing: 0, fontWeight: 500 } }, " \xB7 del cat\xE1logo de su sello")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 } }, discos.map((d) => {
+    return /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 16px 22px", display: "flex", flexDirection: "column", gap: 14 } }, /* @__PURE__ */ React.createElement("button", { onClick: onVolver, style: { alignSelf: "flex-start", background: "transparent", border: "none", color: "#8a80a6", fontFamily: FUENTE2, fontSize: 13, cursor: "pointer", padding: "4px 0" } }, "\u2190 ", volverA || "lanzamientos"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, alignItems: "center" } }, artista?.foto ? /* @__PURE__ */ React.createElement("img", { src: artista.foto, alt: "", loading: "lazy", onError: quitarCaratula, style: { width: 84, height: 84, borderRadius: "50%", objectFit: "cover", border: `2px solid ${ACENTO}`, flex: "none", background: "#16121f" } }) : /* @__PURE__ */ React.createElement("div", { style: { width: 84, height: 84, borderRadius: "50%", border: `2px solid ${ACENTO}`, flex: "none", display: "flex", alignItems: "center", justifyContent: "center", color: ACENTO, fontSize: 30, background: "#16121f" } }, "\u266A"), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, artista?.logo ? /* @__PURE__ */ React.createElement("img", { src: artista.logo, alt: nombre, loading: "lazy", onError: quitarCaratula, style: { maxWidth: "100%", maxHeight: 54, objectFit: "contain", display: "block" } }) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 30, fontWeight: 700, color: "#fff", lineHeight: 1.02, overflowWrap: "anywhere" } }, nombre), artista?.logo && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 12, color: "#8a80a6", marginTop: 2 } }, nombre), meta && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 12, color: "#9d93b8", marginTop: 4 } }, meta))), tags.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, tags.map((t) => /* @__PURE__ */ React.createElement(Chip, { key: t }, t))), /* @__PURE__ */ React.createElement("div", { ref: playerRef, style: { scrollMarginTop: 8 } }, player ? /* @__PURE__ */ React.createElement(Reproductor, { player, titulo }) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 12, color: "#7d7396", border: "1px dashed #2f2745", borderRadius: 8, padding: "14px 12px", textAlign: "center" } }, "elige un disco para escucharlo"), titulo && player && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 11, color: "#7d7396", marginTop: 6, overflowWrap: "anywhere" } }, titulo)), bio && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 13, lineHeight: 1.5, color: "#cfc7e6", whiteSpace: "pre-line", overflowWrap: "anywhere", ...bioAbierta ? {} : { display: "-webkit-box", WebkitLineClamp: 5, WebkitBoxOrient: "vertical", overflow: "hidden" } } }, bio), bio.length > 260 && /* @__PURE__ */ React.createElement("button", { onClick: () => setBioAbierta(!bioAbierta), style: { background: "transparent", border: "none", color: ACENTO, fontFamily: FUENTE2, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "6px 0 0" } }, bioAbierta ? "leer menos" : "leer m\xE1s"), !artista?.bandcamp?.bio && artista?.wiki && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 10, color: "#6a6180", marginTop: 2 } }, "texto de Wikipedia (", artista.wiki.lang, ")")), discos.length > 0 && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#8a80a6", marginBottom: 8 } }, "discograf\xEDa \xB7 ", bc.totalDiscos > discos.length ? `${discos.length} de ${bc.totalDiscos}` : discos.length, bc.pagina === "sello" && /* @__PURE__ */ React.createElement("span", { style: { textTransform: "none", letterSpacing: 0, fontWeight: 500 } }, " \xB7 del cat\xE1logo de su sello")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 } }, discos.map((d) => {
       const activo = player && player.tipo === "bandcamp" && player.id === d.id;
       return /* @__PURE__ */ React.createElement("button", { key: `${d.tipo}-${d.id}`, onClick: () => elegir(d), style: { background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "left", minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { aspectRatio: "1 / 1", borderRadius: 8, overflow: "hidden", background: "#16121f", border: `2px solid ${activo ? ACENTO : "#2a2438"}` } }, d.arte && /* @__PURE__ */ React.createElement("img", { src: d.arte, alt: "", loading: "lazy", onError: quitarCaratula, style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 11, lineHeight: 1.25, color: activo ? "#fff" : "#b9afd6", marginTop: 5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "anywhere" } }, d.titulo));
     }))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, enlace2(bc?.url, "Bandcamp"), enlace2(artista?.mb?.url, "MusicBrainz"), enlace2(artista?.wiki?.url, "Wikipedia")), propios.length > 0 && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#8a80a6", marginBottom: 6 } }, "en las noticias"), propios.flatMap((l) => l.fuentes.map((f2) => /* @__PURE__ */ React.createElement("a", { key: f2.link, href: f2.link, target: "_blank", rel: "noopener noreferrer", style: { display: "block", fontFamily: FUENTE2, fontSize: 12, color: "#b9afd6", textDecoration: "none", padding: "5px 0", borderBottom: "1px solid #1f1a2e", overflowWrap: "anywhere" } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#6a6180" } }, f2.fuente, " \xB7 ", hace(f2.fecha), " \u2014 "), f2.titulo, " \u2197")))));
+  }
+  var SIN_GENERO = "\0sin-genero";
+  function Directorio({ guardados, onArtista }) {
+    const [elegido, setElegido] = useState34(null);
+    const arts = directorio(guardados);
+    const conteo = {};
+    let sinGenero = 0;
+    for (const a of arts) {
+      if (!a.tags.length) sinGenero++;
+      for (const t of a.tags) conteo[t] = (conteo[t] || 0) + 1;
+    }
+    const generos = Object.keys(conteo).sort((a, b) => conteo[b] - conteo[a] || a.localeCompare(b));
+    const genero = elegido === SIN_GENERO ? sinGenero ? elegido : null : elegido && conteo[elegido] ? elegido : null;
+    const visibles = arts.filter((a) => genero === null ? true : genero === SIN_GENERO ? !a.tags.length : a.tags.includes(genero));
+    const clic = { cursor: "pointer" };
+    if (!arts.length)
+      return /* @__PURE__ */ React.createElement("div", { style: { flex: "none", fontFamily: FUENTE2, fontSize: 13, color: "#7d7396", padding: "40px 28px", textAlign: "center", lineHeight: 1.5 } }, "Todav\xEDa no guardas nada. Toca \u2661 en un lanzamiento y su artista entra aqu\xED.");
+    return /* @__PURE__ */ React.createElement("div", { style: { padding: "6px 16px 22px", display: "flex", flexDirection: "column", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(Chip, { activo: genero === null, onClick: () => setElegido(null), style: clic }, "todos \xB7 ", arts.length), generos.map((g) => /* @__PURE__ */ React.createElement(Chip, { key: g, activo: genero === g, onClick: () => setElegido(g), style: clic }, g, " \xB7 ", conteo[g])), sinGenero > 0 && generos.length > 0 && /* @__PURE__ */ React.createElement(Chip, { activo: genero === SIN_GENERO, onClick: () => setElegido(SIN_GENERO), style: clic }, "sin g\xE9nero \xB7 ", sinGenero)), visibles.map((a) => /* @__PURE__ */ React.createElement("button", { key: a.slug, onClick: () => onArtista(a), style: { display: "flex", gap: 12, alignItems: "center", background: "#14101d", border: "1px solid #2a2438", borderRadius: 12, padding: "10px 12px", textAlign: "left", cursor: "pointer", width: "100%", minWidth: 0 } }, a.foto ? /* @__PURE__ */ React.createElement("img", { src: a.foto, alt: "", loading: "lazy", onError: quitarCaratula, style: { width: 52, height: 52, borderRadius: "50%", objectFit: "cover", flex: "none", background: "#16121f", border: `2px solid ${ACENTO}` } }) : /* @__PURE__ */ React.createElement("div", { style: { width: 52, height: 52, borderRadius: "50%", flex: "none", display: "flex", alignItems: "center", justifyContent: "center", color: ACENTO, fontSize: 20, background: "#16121f", border: `2px solid ${ACENTO}` } }, "\u266A"), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0, flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: "#fff", lineHeight: 1.05, overflowWrap: "anywhere" } }, a.nombre), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 12, color: "#9d93b8", marginTop: 3, overflowWrap: "anywhere" } }, a.lanzamientos.map((l) => (l.disco || "\u2014") + (TIPO[l.tipo] ? ` (${TIPO[l.tipo]})` : "")).join(" \xB7 ")), a.tags.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 5, flexWrap: "wrap", marginTop: 6 } }, a.tags.slice(0, 4).map((t) => /* @__PURE__ */ React.createElement(Chip, { key: t, style: { fontSize: 9, padding: "2px 7px" } }, t)))), /* @__PURE__ */ React.createElement("span", { style: { color: "#6a6180", fontSize: 18, flex: "none" } }, "\u2192"))), !visibles.length && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 13, color: "#7d7396", textAlign: "center", padding: 20 } }, "Ning\xFAn artista guardado con ese g\xE9nero."));
   }
   function MusicaPage() {
     const [datos, setDatos] = useState34(null);
@@ -15174,6 +15267,9 @@ Toco reintentar ahora.`);
     const [indice, setIndice] = useState34(0);
     const [artistaAbierto, setArtistaAbierto] = useState34(null);
     const [expandido, setExpandido] = useState34(false);
+    const [vista, setVista] = useState34("lanzamientos");
+    const [desdeDir, setDesdeDir] = useState34(null);
+    const guardados = useMegusta();
     async function cargar() {
       setError(null);
       try {
@@ -15189,12 +15285,36 @@ Toco reintentar ahora.`);
     const lz = lanzamientos[Math.min(indice, Math.max(0, lanzamientos.length - 1))];
     const centrado = { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FUENTE2, fontSize: 13, color: "#7d7396", padding: 24, textAlign: "center" };
     const ancho = { width: "100%", maxWidth: 480, margin: "0 auto", boxSizing: "border-box" };
-    if (artistaAbierto && datos) {
-      return /* @__PURE__ */ React.createElement("div", { className: "musica" }, /* @__PURE__ */ React.createElement("div", { className: "musica-body", "data-expandido": "true", style: ancho }, /* @__PURE__ */ React.createElement(FichaArtista, { key: artistaAbierto, slug: artistaAbierto, artista: datos.artistas[artistaAbierto], lanzamientos, discoInicial: lz && lz.artistaSlug === artistaAbierto ? lz : null, onVolver: () => setArtistaAbierto(null) })));
+    if (artistaAbierto && (datos || desdeDir)) {
+      const artistasDatos = datos && datos.artistas || {};
+      const artistaFicha = artistasDatos[artistaAbierto] || (desdeDir ? { nombre: desdeDir.nombre, foto: desdeDir.foto, mb: { tags: desdeDir.tags } } : void 0);
+      const ids = new Set(lanzamientos.map((l) => l.id));
+      const guardadosLz = Object.values(guardados).map((g) => g.lz).filter((l) => l && !ids.has(l.id));
+      const discoIni = desdeDir ? desdeDir.lanzamientos[0] : lz && lz.artistaSlug === artistaAbierto ? lz : null;
+      return /* @__PURE__ */ React.createElement("div", { className: "musica" }, /* @__PURE__ */ React.createElement("div", { className: "musica-body", "data-expandido": "true", style: ancho }, /* @__PURE__ */ React.createElement(
+        FichaArtista,
+        {
+          key: artistaAbierto,
+          slug: artistaAbierto,
+          artista: artistaFicha,
+          lanzamientos: [...lanzamientos, ...guardadosLz],
+          discoInicial: discoIni,
+          volverA: desdeDir ? "artistas" : "lanzamientos",
+          onVolver: () => {
+            setArtistaAbierto(null);
+            setDesdeDir(null);
+          }
+        }
+      )));
     }
-    return /* @__PURE__ */ React.createElement("div", { className: "musica" }, /* @__PURE__ */ React.createElement("div", { className: "musica-body", "data-expandido": expandido ? "true" : "false", style: ancho }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "8px 18px 2px", flex: "none" } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE2, fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: ACENTO } }, "lanzamientos"), datos && datos.generatedAt && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE2, fontSize: 10, color: "#6a6180" } }, "actualizado ", hace(datos.generatedAt))), !datos && !error && /* @__PURE__ */ React.createElement("div", { style: centrado }, "cargando m\xFAsica\u2026"), error && /* @__PURE__ */ React.createElement("div", { style: { ...centrado, flexDirection: "column", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { color: "#c9a0a0" } }, "No se pudo cargar la m\xFAsica (", error, ")."), /* @__PURE__ */ React.createElement("button", { onClick: cargar, style: { background: "transparent", color: "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, padding: "10px 18px", fontFamily: FUENTE2, fontSize: 13, fontWeight: 700, cursor: "pointer" } }, "reintentar")), datos && !lz && /* @__PURE__ */ React.createElement("div", { style: centrado }, "Todav\xEDa no hay lanzamientos con forma de escucharse."), datos && lz && /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { className: "musica" }, /* @__PURE__ */ React.createElement("div", { className: "musica-body", "data-expandido": expandido || vista === "directorio" ? "true" : "false", style: ancho }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, padding: "8px 18px 2px", flex: "none" } }, /* @__PURE__ */ React.createElement(Chip, { activo: vista === "lanzamientos", onClick: () => setVista("lanzamientos"), style: { cursor: "pointer" } }, "lanzamientos"), /* @__PURE__ */ React.createElement(Chip, { activo: vista === "directorio", onClick: () => setVista("directorio"), style: { cursor: "pointer" } }, "\u2665 artistas", directorio(guardados).length ? ` \xB7 ${directorio(guardados).length}` : ""), vista === "lanzamientos" && datos && datos.generatedAt && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE2, fontSize: 10, color: "#6a6180", marginLeft: "auto" } }, "actualizado ", hace(datos.generatedAt))), vista === "directorio" && /* @__PURE__ */ React.createElement(Directorio, { guardados, onArtista: (a) => {
+      setDesdeDir(a);
+      setArtistaAbierto(a.slug);
+    } }), vista === "lanzamientos" && !datos && !error && /* @__PURE__ */ React.createElement("div", { style: centrado }, "cargando m\xFAsica\u2026"), vista === "lanzamientos" && error && /* @__PURE__ */ React.createElement("div", { style: { ...centrado, flexDirection: "column", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { color: "#c9a0a0" } }, "No se pudo cargar la m\xFAsica (", error, ")."), /* @__PURE__ */ React.createElement("button", { onClick: cargar, style: { background: "transparent", color: "#e5def7", border: `1px solid ${ACENTO}`, borderRadius: 12, padding: "10px 18px", fontFamily: FUENTE2, fontSize: 13, fontWeight: 700, cursor: "pointer" } }, "reintentar")), vista === "lanzamientos" && datos && !lz && /* @__PURE__ */ React.createElement("div", { style: centrado }, "Todav\xEDa no hay lanzamientos con forma de escucharse."), vista === "lanzamientos" && datos && lz && /* @__PURE__ */ React.createElement(
       LanzamientoCard,
       {
+        meGusta: !!guardados[lz.id],
+        onMegusta: () => alternarMegusta(lz, datos.artistas[lz.artistaSlug]),
         lz,
         indice: Math.min(indice, lanzamientos.length - 1),
         total: lanzamientos.length,
@@ -16997,6 +17117,7 @@ Toco reintentar ahora.`);
       escribirCamposLocales(d);
       rehidratarCineEstado();
       rehidratarOverlay();
+      rehidratarMegusta();
       if (Array.isArray(d.feedPodcastDispatched)) setPodcastDispatched(d.feedPodcastDispatched);
       try {
         window.dispatchEvent(new Event("angst:restaurado"));
