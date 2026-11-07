@@ -88,6 +88,23 @@ export function parsePaginaAlbum(html) {
   return out;
 }
 
+// Tags (géneros) de la página de un álbum/track. Bandcamp mezcla en el mismo bloque los géneros, la CIUDAD
+// del artista ("Bristol") y tags internos ("zzz no details delivery api"): se descartan estos dos últimos.
+// `ubicacion` ("Bristol, UK") puede venir de la página del artista; si no, se usa la de la propia página del álbum.
+export function parseTagsAlbum(html, ubicacion = null) {
+  const bloque = (html || "").match(/class="tralbumData tralbum-tags[^"]*"[^>]*>([\s\S]*?)<\/div>/i)?.[1];
+  if (!bloque) return [];
+  const loc = ubicacion || limpiarTexto(html.match(/<span\s+class="location[^"]*">([\s\S]*?)<\/span>/i)?.[1]) || "";
+  const lugares = new Set(loc.split(",").map(x => normalizar(x)).filter(Boolean));
+  const out = [];
+  for (const m of bloque.matchAll(/<a\s+class="tag"[^>]*>([\s\S]*?)<\/a>/gi)) {
+    const t = limpiarTexto(m[1]).toLowerCase().replace(/\s+/g, " ").trim();
+    if (!t || t.startsWith("zzz") || lugares.has(normalizar(t)) || out.includes(t)) continue;
+    out.push(t);
+  }
+  return out;
+}
+
 // ── Página de música de un artista o sello ───────────────────────────────────
 const ART = (id, tam = 2) => `https://f4.bcbits.com/img/a${id}_${tam}.jpg`;
 

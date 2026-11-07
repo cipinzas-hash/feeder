@@ -23,6 +23,7 @@ import fs from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { callGemini, geminiStatus } from "./lib/gemini.mjs";
 import * as bc from "./lib/bandcamp.mjs";
+import { generosDeArtista, parseGenerosIA } from "../../shared/generos.js";
 
 const DATA = new URL("../data/", import.meta.url);
 const IN_PATH = fileURLToPath(new URL("musica-noticias.json", DATA));
@@ -34,7 +35,8 @@ const MAX_EXTRACCIONES = num("MUSICA_MAX_EXTRACCIONES", 80);  // llamadas a Gemi
 const MAX_MS = num("MUSICA_MAX_MIN", 11) * 60 * 1000;        // tope de tiempo para enriquecer
 const RETENCION_DIAS = 45;
 const ARTISTA_TTL_DIAS = 14;
-const ESQUEMA_ARTISTA = 2; // súbelo cuando cambie cómo se arma la ficha: obliga a rehacer las cacheadas
+const MAX_GENEROS_IA = num("MUSICA_MAX_GENEROS_IA", 20);   // llamadas a Gemini para inferir géneros, por corrida
+const ESQUEMA_ARTISTA = 3; // v3: géneros de Bandcamp + respaldo Gemini. Súbelo cuando cambie cómo se arma la ficha: obliga a rehacer las cacheadas
 const MB_GAP_MS = num("MB_GAP_MS", 1100);
 const GEMINI_GAP_MS = num("GEMINI_GAP_MS", 4500);
 const MAX_DISCOS = 60;
@@ -260,6 +262,44 @@ async function audiodbLogo(nombre, mbid) {
   return { logo: a.strArtistLogo || null, fanart: a.strArtistFanart || null };
 }
 
+// ── Géneros ──────────────────────────────────────────────────────────────────
+// Bandcamp: los tags viven en la página de cada álbum/track (la del artista no los trae). Se leen como
+// máximo `max` páginas: primero la del disco de la noticia, luego la más reciente. `traerHtml` es inyectable
+// para probar con HTML guardado.
+export async function tagsBandcamp({ items, idsRelease, ubicacion, traerHtml, max = 2 }) {
+  const lista = items || [];
+  const propias = lista.filter(i => (idsRelease || []).includes(i.id));
+  const orden = [...propias, ...lista.filter(i => !propias.includes(i))].filter(i => i.url);
+  const tags = [];
+  for (const it of orden.slice(0, max)) {
+    const html = await traerHtml(it.url);
+    if (!html) continue;
+    for (const t of bc.parseTagsAlbum(html, ubicacion)) if (!tags.includes(t)) tags.push(t);
+  }
+  return tags.slice(0, 8);
+}
+async function traerHtmlBandcamp(url) { const r = await http(url, { json: false }); return r.ok ? r.data : null; }
+
+// Respaldo: solo para artistas sin géneros de MusicBrainz ni de Bandcamp. Gemini SOLO puede usar lo que dicen
+// las noticias (no su memoria sobre la banda); lo que devuelva se guarda aparte (generosIA) y la interfaz lo
+// muestra marcado como "inferido".
+let generosIAUsadas = 0;
+async function generosConGemini(nombre, disco, lanzamientos) {
+  if (!process.env.GEMINI_API_KEY || generosIAUsadas >= MAX_GENEROS_IA) return null;
+  const noticias = lanzamientos.flatMap(l => l.noticias || []).slice(0, 3)
+    .map(n => `- ${n.title}\n  ${stripHtml(n.fullText || n.summary || "").slice(0, 500)}`).join("\n");
+  if (!noticias) return null;
+  generosIAUsadas++;
+  const out = await callGemini(
+    `Artista: ${nombre}\nDisco: ${disco || "(sin dato)"}\nNoticias:\n${noticias}\n\n` +
+    `Responde SOLO un objeto JSON, sin markdown: {"generos": string[]}\n` +
+    `Reglas: 1 a 3 géneros musicales en minúsculas e inglés (por ejemplo "ebm", "post-punk", "darkwave"). Usa ÚNICAMENTE lo que dicen las noticias (el texto nombra el género o lo describe con claridad); no uses lo que sepas de la banda por tu cuenta. Si el texto no permite saberlo, responde {"generos": []}.`,
+    { systemInstruction: "Clasificas música a partir de noticias. Respondes únicamente JSON válido.", temperature: 0, maxOutputTokens: 120, timeoutMs: 30000 });
+  await sleep(GEMINI_GAP_MS);
+  const g = parseGenerosIA(out);
+  return g.length ? g : null;
+}
+
 // ── Enriquecer un artista ────────────────────────────────────────────────────
 async function enriquecerArtista(nombre, lanzamientos) {
   const rec = { v: ESQUEMA_ARTISTA, nombre, slug: slug(nombre), actualizado: new Date().toISOString(), bandcamp: null, mb: null, wiki: null, deezer: null, logo: null, bio: null, foto: null };
@@ -294,6 +334,7 @@ async function enriquecerArtista(nombre, lanzamientos) {
       foto: resuelto.tipo === "artista" ? p.foto : null,
       discos: resuelto.items.slice(0, MAX_DISCOS).map(i => ({ tipo: i.tipo, id: i.id, titulo: i.titulo || bc.tituloDeSlug(i.url), url: i.url, arte: i.arte })),
       totalDiscos: resuelto.items.length,
+      tags: await tagsBandcamp({ items: resuelto.items, idsRelease, ubicacion: resuelto.tipo === "artista" ? p.ubicacion : null, traerHtml: traerHtmlBandcamp }),
     };
   }
 
@@ -316,6 +357,12 @@ async function enriquecerArtista(nombre, lanzamientos) {
 
   // Deezer: foto y reproductor de respaldo (p. ej. vkei, que casi no usa Bandcamp).
   rec.deezer = await deezerVerificado(nombre, disco);
+
+  // Géneros: MusicBrainz y Bandcamp primero; Gemini solo si no hay ninguno.
+  if (!generosDeArtista(rec).tags.length) {
+    const ia = await generosConGemini(nombre, disco, lanzamientos);
+    if (ia) rec.generosIA = ia;
+  }
 
   rec.bio = rec.bandcamp?.bio || rec.wiki?.extracto || null;
   rec.foto = rec.bandcamp?.foto || rec.deezer?.foto || null;
@@ -401,7 +448,7 @@ async function main() {
     try {
       const rec = await enriquecerArtista(p.nombre, p.lz);
       artistas[p.s] = rec;
-      log(`   bandcamp=${rec.bandcamp ? rec.bandcamp.pagina + ":" + rec.bandcamp.host + " (" + rec.bandcamp.totalDiscos + " discos)" : "no"} · mb=${rec.mb ? (rec.mb.verificado ? "verificado" : "SIN verificar") : "no"} · wiki=${rec.wiki ? rec.wiki.lang : "no"} · deezer=${rec.deezer ? "sí" : "no"} · logo=${rec.logo ? "sí" : "no"}`);
+      log(`   bandcamp=${rec.bandcamp ? rec.bandcamp.pagina + ":" + rec.bandcamp.host + " (" + rec.bandcamp.totalDiscos + " discos)" : "no"} · mb=${rec.mb ? (rec.mb.verificado ? "verificado" : "SIN verificar") : "no"} · wiki=${rec.wiki ? rec.wiki.lang : "no"} · deezer=${rec.deezer ? "sí" : "no"} · logo=${rec.logo ? "sí" : "no"} · géneros=${(() => { const g = generosDeArtista(rec); return g.tags.length ? g.tags.join("/") + (g.inferido ? " (inferido)" : "") : "no"; })()}`);
     } catch (e) { log(`   ✗ ${nombreSeguro(e)}`); }
     hechos++;
   }

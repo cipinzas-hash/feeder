@@ -57,4 +57,17 @@ almacen.set(KEY, JSON.stringify([1, 2]));
 rehidratarMegusta();
 assert.deepEqual(directorio(leerMegusta()), []);
 
+// géneros: los ACTUALES del artista (datos.artistas) mandan sobre los guardados con el ♥; sin ellos, los guardados
+almacen.set(KEY, JSON.stringify({}));
+rehidratarMegusta();
+alternarMegusta(lz("g|uno", "g", "G", "Uno", "2026-11-01"), undefined);            // ♥ antes de que hubiera géneros
+assert.deepEqual(directorio(leerMegusta())[0].tags, []);
+assert.deepEqual(directorio(leerMegusta(), { g: { bandcamp: { tags: ["ebm", "electro"] } } })[0].tags, ["ebm", "electro"], "se completa solo con los datos nuevos");
+assert.equal(directorio(leerMegusta(), { g: { bandcamp: { tags: ["ebm"] } } })[0].inferido, false);
+assert.equal(directorio(leerMegusta(), { g: { generosIA: ["goth"] } })[0].inferido, true, "solo Gemini → inferido");
+assert.deepEqual(directorio(leerMegusta(), { otro: { mb: { tags: ["x"] } } })[0].tags, [], "otro artista no pisa");
+alternarMegusta(lz("h|uno", "h", "H", "Uno", "2026-11-01"), { nombre: "H", generosIA: ["post-punk"] });
+const h = directorio(leerMegusta()).find(x => x.slug === "h");
+assert.deepEqual([h.tags, h.inferido], [["post-punk"], true], "el ♥ guarda el género inferido marcado como tal");
+
 console.log("musica-megusta.mjs OK");

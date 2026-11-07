@@ -8,7 +8,9 @@
 // clave nueva: no migra ni toca datos existentes. Cada entrada lleva una COPIA del lanzamiento (y del
 // artista) porque musica.json solo guarda ~30 días de lanzamientos.
 //
-// Forma: { [lanzamientoId]: { lz, nombre, foto, tags, at } }
+// Forma: { [lanzamientoId]: { lz, nombre, foto, tags, inferido, at } }  (tags = géneros al momento del ♥; inferido = vienen de Gemini)
+import { generosDeArtista } from "../shared/generos.js";
+
 const KEY = "angst-musica-megusta-v1";
 
 function leer() {
@@ -47,7 +49,7 @@ export function alternarMegusta(lz, artista) {
       },
       nombre: (artista && artista.nombre) || lz.artista,
       foto: (artista && (artista.foto || (artista.bandcamp && artista.bandcamp.foto))) || null,
-      tags: ((artista && artista.mb && artista.mb.tags) || []).slice(0, 8),
+      ...(() => { const g = generosDeArtista(artista); return { tags: g.tags.slice(0, 8), inferido: g.inferido }; })(),
       at: Date.now(),
     };
   }
@@ -64,20 +66,25 @@ export function useMegusta() {
   return map;
 }
 
-// Directorio: artistas con al menos un ♥, el más reciente primero. Los géneros son la unión de los que
-// quedaron guardados con cada ♥ (el primero no vacío manda el orden).
-export function directorio(map) {
+// Directorio: artistas con al menos un ♥, el más reciente primero. Géneros: si se pasa `artistas` (datos.artistas
+// de musica.json) y ahí hay géneros ACTUALES del artista, mandan esos (así lo guardado antes de que se completaran
+// los géneros se completa solo); si no, los que quedaron guardados con cada ♥. `inferido` = todo viene de Gemini.
+export function directorio(map, artistas = {}) {
   const por = {};
   for (const e of Object.values(map || {})) {
     if (!e || !e.lz || !e.lz.artistaSlug) continue;
     const slug = e.lz.artistaSlug;
-    const a = por[slug] || (por[slug] = { slug, nombre: e.nombre || e.lz.artista, foto: null, tags: [], lanzamientos: [], at: 0 });
+    const a = por[slug] || (por[slug] = { slug, nombre: e.nombre || e.lz.artista, foto: null, firmes: [], ia: [], lanzamientos: [], at: 0 });
     a.lanzamientos.push(e.lz);
     if (!a.foto && e.foto) a.foto = e.foto;
-    for (const t of e.tags || []) if (!a.tags.includes(t)) a.tags.push(t);
+    for (const t of e.tags || []) { const dest = e.inferido ? a.ia : a.firmes; if (!dest.includes(t)) dest.push(t); }
     if ((e.at || 0) > a.at) a.at = e.at || 0;
   }
-  const out = Object.values(por);
+  const out = Object.values(por).map(({ firmes, ia, ...a }) => {
+    const fresco = artistas && artistas[a.slug] ? generosDeArtista(artistas[a.slug]) : null;
+    if (fresco && fresco.tags.length) return { ...a, tags: fresco.tags, inferido: fresco.inferido };
+    return firmes.length ? { ...a, tags: firmes, inferido: false } : { ...a, tags: ia, inferido: ia.length > 0 };
+  });
   out.forEach(a => a.lanzamientos.sort((x, y) => String(y.fecha || "").localeCompare(String(x.fecha || ""))));
   return out.sort((x, y) => y.at - x.at || x.nombre.localeCompare(y.nombre));
 }

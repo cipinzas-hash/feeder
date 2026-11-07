@@ -4,7 +4,8 @@
 import fs from "node:fs";
 import assert from "node:assert/strict";
 import * as bc from "../modules/feed/scripts/lib/bandcamp.mjs";
-import { extraerHeuristico, agruparLanzamientos, resolverBandcamp, armarSalida, playerDeNoticia, slug } from "../modules/feed/scripts/build-musica.mjs";
+import { extraerHeuristico, agruparLanzamientos, resolverBandcamp, armarSalida, playerDeNoticia, slug, tagsBandcamp } from "../modules/feed/scripts/build-musica.mjs";
+import { generosDeArtista, parseGenerosIA, normalizarGenero } from "../modules/shared/generos.js";
 
 const F = new URL("./fixtures/bandcamp/", import.meta.url);
 const rd = n => fs.readFileSync(new URL(n + ".html", F), "utf8");
@@ -116,5 +117,41 @@ await t("Deezer solo como respaldo cuando no hay Bandcamp", () => {
   const g = agruparLanzamientos([{ guid: "z", title: "X", source: "S", link: "x" }], { z: { esLanzamiento: true, artista: "Dir en grey", disco: "Phalaris", tipo: "album" } });
   const l = armarSalida({ previo: {}, items: [], extracciones: {}, artistas: { "dir-en-grey": { deezer: { trackId: 99 } } }, grupos: g });
   assert.deepEqual(l[0].player, { tipo: "deezer", trackId: 99 });
+});
+console.log("Géneros (Bandcamp, Gemini, mezcla)");
+await t("Bandcamp: tags del álbum real, sin la ciudad ni los tags internos (zzz…)", () => {
+  assert.deepEqual(bc.parseTagsAlbum(rd("album-mesh")), ["electronic", "ebm", "electro", "electropop", "electrorock"]);
+  assert.deepEqual(bc.parseTagsAlbum(rd("album-mesh"), "Bristol, UK"), ["electronic", "ebm", "electro", "electropop", "electrorock"]);
+});
+await t("Bandcamp: página sin tags o vacía → []", () => { assert.deepEqual(bc.parseTagsAlbum(rd("artista-mesh")), []); assert.deepEqual(bc.parseTagsAlbum(""), []); assert.deepEqual(bc.parseTagsAlbum(null), []); });
+await t("tagsBandcamp: lee primero la página del disco de la noticia y une sin duplicar (máx. 2 páginas)", async () => {
+  const pedidas = [];
+  const items = [{ id: "1", url: "https://x.bandcamp.com/album/uno" }, { id: "2", url: "https://x.bandcamp.com/album/dos" }, { id: "3", url: "https://x.bandcamp.com/album/tres" }];
+  const traerHtml = async u => { pedidas.push(u); return u.endsWith("/dos") ? rd("album-mesh") : '<div class="tralbumData tralbum-tags"><a class="tag" href="x">ebm</a><a class="tag" href="x">Darkwave</a></div>'; };
+  const tags = await tagsBandcamp({ items, idsRelease: ["2"], ubicacion: null, traerHtml });
+  assert.deepEqual(pedidas, ["https://x.bandcamp.com/album/dos", "https://x.bandcamp.com/album/uno"]);
+  assert.deepEqual(tags, ["electronic", "ebm", "electro", "electropop", "electrorock", "darkwave"]);
+});
+await t("tagsBandcamp: si la red falla no revienta", async () => assert.deepEqual(await tagsBandcamp({ items: [{ id: "1", url: "u" }], idsRelease: [], traerHtml: async () => null }), []));
+await t("generosDeArtista: MusicBrainz ∪ Bandcamp, normalizados, sin inferido", () => {
+  const g = generosDeArtista({ mb: { tags: ["EBM", "dark wave"] }, bandcamp: { tags: ["ebm", "Electro"] }, generosIA: ["pop"] });
+  assert.deepEqual(g, { tags: ["ebm", "dark wave", "electro"], inferido: false });
+});
+await t("generosDeArtista: Gemini solo cuando no hay nada firme, y queda marcado como inferido", () => {
+  assert.deepEqual(generosDeArtista({ mb: null, bandcamp: { tags: [] }, generosIA: ["Post-Punk", "goth"] }), { tags: ["post-punk", "goth"], inferido: true });
+  assert.deepEqual(generosDeArtista({}), { tags: [], inferido: false });
+  assert.deepEqual(generosDeArtista(undefined), { tags: [], inferido: false });
+});
+await t("parseGenerosIA: JSON con ruido, tope de 3, basura → []", () => {
+  assert.deepEqual(parseGenerosIA('```json\n{"generos": ["EBM", "ebm", "Synthpop", "darkwave", "x"]}\n```'), ["ebm", "synthpop", "darkwave"]);
+  assert.deepEqual(parseGenerosIA('{"generos": []}'), []);
+  assert.deepEqual(parseGenerosIA("no sé"), []);
+  assert.deepEqual(parseGenerosIA('{"generos": "ebm"}'), []);
+  assert.deepEqual(parseGenerosIA(null), []);
+});
+await t("normalizarGenero: descarta vacíos, internos (zzz) y larguísimos", () => {
+  assert.equal(normalizarGenero("  Dark   Wave "), "dark wave");
+  assert.equal(normalizarGenero("zzz no details delivery api"), null);
+  assert.equal(normalizarGenero(""), null); assert.equal(normalizarGenero("x".repeat(40)), null); assert.equal(normalizarGenero(null), null);
 });
 console.log(`\n${process.exitCode ? "FALLÓ" : "OK"}: ${ok} pruebas pasaron`);

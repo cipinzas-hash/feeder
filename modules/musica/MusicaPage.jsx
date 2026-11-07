@@ -1,6 +1,7 @@
 import { fetchMusicaData } from "../shared/catalog.js";
 import { CAT_COLORS } from "../shared/constants.js";
 import { useMegusta, alternarMegusta, directorio } from "./megusta.js";
+import { generosDeArtista } from "../shared/generos.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -52,6 +53,8 @@ export function Reproductor({ player, titulo }) {
     return <iframe title={titulo || "Deezer"} src={`https://widget.deezer.com/widget/dark/track/${player.trackId}?tracklist=false`} style={{ ...caja, height: 140 }} allow="encrypted-media" />;
   return null;
 }
+
+const CHIP_INFERIDO = { borderStyle: "dashed", fontStyle: "italic" };   // género que viene de Gemini (inferido de las noticias)
 
 const quitarCaratula = e => { e.currentTarget.style.visibility = "hidden"; };
 
@@ -128,7 +131,7 @@ function FichaArtista({ slug, artista, lanzamientos, discoInicial, onVolver, vol
   const nombre = artista?.nombre || propios[0]?.artista || "";
   const bio = artista?.bio || "";
   const meta = [bc?.ubicacion, artista?.mb?.desde ? `desde ${String(artista.mb.desde).slice(0, 4)}` : null, artista?.mb?.pais].filter(Boolean).join(" · ");
-  const tags = artista?.mb?.tags || [];
+  const { tags, inferido } = generosDeArtista(artista);
 
   function elegir(d) {
     setPlayer({ tipo: "bandcamp", kind: d.tipo, id: d.id });
@@ -154,7 +157,7 @@ function FichaArtista({ slug, artista, lanzamientos, discoInicial, onVolver, vol
         </div>
       </div>
 
-      {tags.length > 0 && <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>{tags.map(t => <Chip key={t}>{t}</Chip>)}</div>}
+      {tags.length > 0 && <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }} title={inferido ? "género inferido de las noticias, no confirmado" : undefined}>{tags.map(t => <Chip key={t} style={inferido ? CHIP_INFERIDO : undefined}>{t}</Chip>)}</div>}
 
       <div ref={playerRef} style={{ scrollMarginTop: 8 }}>
         {player
@@ -215,9 +218,9 @@ function FichaArtista({ slug, artista, lanzamientos, discoInicial, onVolver, vol
 
 // ─── Directorio de artistas (los que tienen ♥) ──────────────────────────────
 const SIN_GENERO = "\u0000sin-genero";
-function Directorio({ guardados, onArtista }) {
+function Directorio({ guardados, artistas, onArtista }) {
   const [elegido, setElegido] = useState(null);   // null = todos
-  const arts = directorio(guardados);
+  const arts = directorio(guardados, artistas);
   const conteo = {};
   let sinGenero = 0;
   for (const a of arts) { if (!a.tags.length) sinGenero++; for (const t of a.tags) conteo[t] = (conteo[t] || 0) + 1; }
@@ -244,12 +247,13 @@ function Directorio({ guardados, onArtista }) {
             <div style={{ fontFamily: FUENTE, fontSize: 12, color: "#9d93b8", marginTop: 3, overflowWrap: "anywhere" }}>
               {a.lanzamientos.map(l => (l.disco || "—") + (TIPO[l.tipo] ? ` (${TIPO[l.tipo]})` : "")).join(" · ")}
             </div>
-            {a.tags.length > 0 && <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 6 }}>{a.tags.slice(0, 4).map(t => <Chip key={t} style={{ fontSize: 9, padding: "2px 7px" }}>{t}</Chip>)}</div>}
+            {a.tags.length > 0 && <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 6 }}>{a.tags.slice(0, 4).map(t => <Chip key={t} style={{ fontSize: 9, padding: "2px 7px", ...(a.inferido ? CHIP_INFERIDO : {}) }}>{t}</Chip>)}</div>}
           </div>
           <span style={{ color: "#6a6180", fontSize: 18, flex: "none" }}>→</span>
         </button>
       ))}
       {!visibles.length && <div style={{ fontFamily: FUENTE, fontSize: 13, color: "#7d7396", textAlign: "center", padding: 20 }}>Ningún artista guardado con ese género.</div>}
+      {arts.some(a => a.inferido) && <div style={{ fontFamily: FUENTE, fontSize: 11, color: "#6a6180", textAlign: "center" }}>Borde punteado: género inferido de las noticias, no confirmado.</div>}
     </div>
   );
 }
@@ -303,7 +307,7 @@ export default function MusicaPage() {
           <Chip activo={vista === "directorio"} onClick={() => setVista("directorio")} style={{ cursor: "pointer" }}>♥ artistas{directorio(guardados).length ? ` · ${directorio(guardados).length}` : ""}</Chip>
           {vista === "lanzamientos" && datos && datos.generatedAt && <span style={{ fontFamily: FUENTE, fontSize: 10, color: "#6a6180", marginLeft: "auto" }}>actualizado {hace(datos.generatedAt)}</span>}
         </div>
-        {vista === "directorio" && <Directorio guardados={guardados} onArtista={a => { setDesdeDir(a); setArtistaAbierto(a.slug); }} />}
+        {vista === "directorio" && <Directorio guardados={guardados} artistas={(datos && datos.artistas) || {}} onArtista={a => { setDesdeDir(a); setArtistaAbierto(a.slug); }} />}
         {vista === "lanzamientos" && !datos && !error && <div style={centrado}>cargando música…</div>}
         {vista === "lanzamientos" && error && (
           <div style={{ ...centrado, flexDirection: "column", gap: 12 }}>
