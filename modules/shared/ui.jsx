@@ -1,6 +1,29 @@
 const { useState, useEffect, useLayoutEffect, useRef } = React;
 
 
+// ─── Ventana emergente de papel (Presupuesto) ───────────────────────────────
+// Marco único de las ventanas emergentes de Presupuesto (formularios, listas y confirmaciones): papel blanco, borde punteado #111,
+// sombra dura, cabecera negra con título en Caveat y texto en DM Sans (R7). Una sola pieza: no se copia entre ventanas (N1).
+//   z: capa (las que se abren desde otra ventana quedan más abajo que las que se abren sobre ellas) · arriba: pegada arriba
+//   (para teclado) · estiloMarco: ajustes puntuales del marco (alto máximo, scroll propio).
+export function Ventana({ onClose, ancho = 440, z = 1001, arriba = false, estiloMarco, children }) {
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: z, display: "flex", alignItems: arriba ? "flex-start" : "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", paddingTop: arriba ? "calc(env(safe-area-inset-top, 0px) + 6px)" : 0 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: `min(96vw,${ancho}px)`, maxHeight: "92vh", display: "flex", flexDirection: "column", fontFamily: "'DM Sans',sans-serif", color: "#111", ...estiloMarco }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+export function VentanaCabecera({ titulo, sub, onClose }) {
+  return (
+    <div style={{ background: "#111", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flex: "none" }}>
+      <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 }}>{titulo}{sub != null ? <> <span style={{ fontSize: 14, color: "#888" }}>{sub}</span></> : null}</div>
+      <button onClick={onClose} aria-label="cerrar" style={{ background: "transparent", border: "none", color: "#aaa", fontSize: 22, cursor: "pointer", lineHeight: 1 }}>×</button>
+    </div>
+  );
+}
+
 // Gestos removidos — la navegación es 100% por botones (ver StoryCard/ExtendedView).
 export const btnGhost = { flex: 1, background: "transparent", border: "1px dashed #444", color: "#aaa", borderRadius: 10, padding: "10px 6px", fontFamily: "'DM Sans',sans-serif", fontSize: 10, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 };
 

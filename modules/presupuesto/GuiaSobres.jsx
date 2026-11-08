@@ -1,6 +1,7 @@
 import { fmtCLP } from "../../core/format.js";
 import { guiaSobres } from "../../core/presupuesto-modelo.js";
 import { FUENTE } from "./grilla.jsx";
+import { Ventana } from "../shared/ui.jsx";
 
 // Guía mensual: cuánto efectivo debe haber en cada sobre al empezar el período
 // (arrastre + asignación − devolución de deudas + devoluciones recibidas).
@@ -8,8 +9,7 @@ export default function GuiaSobres({ budgets, periodo, etiquetaPeriodo, onClose 
   const g = guiaSobres(budgets, periodo);
   const linea = (txt, v, signo) => v ? <span style={{ marginRight: 8 }}>{signo}{fmtCLP(Math.abs(v))} {txt}</span> : null;
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: "min(96vw,520px)", maxHeight: "92vh", display: "flex", flexDirection: "column" }}>
+    <Ventana onClose={onClose} ancho={520} z={1000}>
         <div style={{ background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 }}>🧾 Cuánto debe haber en cada sobre</div>
@@ -41,7 +41,6 @@ export default function GuiaSobres({ budgets, periodo, etiquetaPeriodo, onClose 
               </div>
             </>}
         </div>
-      </div>
-    </div>
+    </Ventana>
   );
 }

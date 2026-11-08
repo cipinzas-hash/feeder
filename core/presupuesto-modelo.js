@@ -448,6 +448,25 @@ export function agregarGasto(budgets, { fecha, sec, rowId, subId, monto, nota, f
 }
 
 // Quita el gasto y, si pidió fondos, también su préstamo.
+// Gastos anotados en una fecha, con la cartera y la sub-partida en que se registraron (el carrito los muestra por día).
+// Solo lee: cada gasto vive en el período que le corresponde a su fecha (agregarGasto), así que basta mirar ese período.
+export function gastosDelDia(budgets, fecha) {
+  const f = fechaISO(fechaDe(fecha));
+  const per = periodoDeFecha(f);
+  const bk = budgets && budgets[per];
+  const base = resolverPeriodo(budgets, per);
+  const gastos = ((bk && bk.gastos) || []).filter(g => g.fecha === f).map(g => {
+    const fila = buscarFila(base, g.rowId, SECCIONES);
+    const sub = fila && g.subId ? (fila.row.subs || []).find(s => s.id === g.subId) : null;
+    return {
+      id: g.id, monto: g.monto || 0, nota: g.nota || "", categoria: g.categoria || "",
+      cartera: fila ? `${fila.row.emoji || ""} ${fila.row.label}`.trim() : (ETIQUETA_DESTINO[g.rowId] || g.rowId),
+      sub: sub ? sub.label : "", prestamo: !!g.prestamoId,
+    };
+  }).reverse(); // el último registrado, primero
+  return { fecha: f, gastos, total: gastos.reduce((t, g) => t + g.monto, 0) };
+}
+
 export function quitarGasto(budget, gastoId) {
   const g = (budget.gastos || []).find(x => x.id === gastoId);
   const sig = { ...budget, gastos: (budget.gastos || []).filter(x => x.id !== gastoId) };

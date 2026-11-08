@@ -6,8 +6,10 @@
 // "Baliza" = tarea con 🚨 (campo `urgent`) y sin hacer. Igual que el 🚨 de la
 // cabecera de cada día, NO cuenta las tareas recurrentes marcadas urgentes.
 // Las marcas del calendario usan los mismos íconos que el resto de la app
-// (core/ui.jsx: MARK_ICONS_CAL). Las citas de Salud ya llegan como marca
-// "doctor" (planCita las sincroniza al calendario), así que no se leen aparte.
+// (core/ui.jsx: MARK_ICONS_CAL). Las citas de Salud llegan como marca "doctor"
+// (derivada, effectiveMarks) y, además, las citas del día y los tratamientos en
+// curso entran como balizas con su detalle (`saludDe`, saludModel.saludDelDia):
+// cuentan en la próxima baliza, en el total de la semana y en la agenda.
 import { fmtFull, getHoliday } from "./dates.js";
 
 const DIA_CORTO = ["D", "L", "M", "M", "J", "V", "S"];
@@ -37,36 +39,45 @@ function cuando(dias) { return dias === 0 ? "hoy" : dias === 1 ? "mañana" : `en
 function colorCarga(score) { return score <= 5 ? "#4caf50" : score <= 7 ? "#ff9800" : "#f44336"; }
 
 // Función pura (exportada para poder probarla sin React).
-function buildResumen({ todayKey, ahoraMin, weekKeys, dayData, calMarks, eventos, stressFor, conNinosEn, ejercicioHoy, kcalHoy }) {
+function hMin(s) { const [h, m] = String(s).split(":").map(Number); return h * 60 + m; }
+function buildResumen({ todayKey, ahoraMin, weekKeys, dayData, calMarks, eventos, stressFor, conNinosEn, ejercicioHoy, kcalHoy, saludDe }) {
   const marcasDe = k => {
     const v = calMarks[k];
     const arr = Array.isArray(v) ? v : (v ? [v] : []);
     const ids = new Set(arr.map(m => (m === "medico" ? "doctor" : m)).filter(m => MARCA_POR_ID[m]));
     return MARCAS.filter(m => ids.has(m.id)).map(m => m.id);
   };
-  const ordenBaliza = (a, b) => (minutosDe(a.deadline) ?? 1e9) - (minutosDe(b.deadline) ?? 1e9);
+  // Balizas de un día, ordenadas por hora: las tareas con 🚨 y, desde hoy, las citas y tratamientos de Salud.
+  const itemsDe = k => {
+    const tareas = balizasDeDia(dayData[k]).map(t => ({
+      icono: "🚨", texto: t.text, hora: t.deadline ? hhmm(t.deadline) : null, min: minutosDe(t.deadline), detalle: null,
+    }));
+    const salud = k >= todayKey && saludDe
+      ? saludDe(k).map(s => ({ icono: s.icono, texto: s.texto, hora: s.hora, min: s.hora ? hMin(s.hora) : null, detalle: s.detalle || null }))
+      : [];
+    return [...tareas, ...salud].sort((a, b) => (a.min ?? 1e9) - (b.min ?? 1e9));
+  };
 
   // Próxima baliza: mira hacia adelante desde hoy, también fuera de la semana mostrada.
   let proxima = null;
   for (let i = 0; i <= VENTANA_BALIZA_DIAS && !proxima; i++) {
     const k = sumarDias(todayKey, i);
-    const bs = balizasDeDia(dayData[k]);
+    const bs = itemsDe(k);
     if (bs.length) {
-      const ord = [...bs].sort(ordenBaliza);
       proxima = {
         dateKey: k, dias: i, dow: aFecha(k).getDay(),
-        texto: ord[0].text, hora: ord[0].deadline ? hhmm(ord[0].deadline) : null,
+        icono: bs[0].icono, texto: bs[0].texto, hora: bs[0].hora,
         extra: bs.length - 1,
       };
     }
   }
-  const balizasSemana = weekKeys.reduce((n, k) => (k >= todayKey ? n + balizasDeDia(dayData[k]).length : n), 0);
+  const balizasSemana = weekKeys.reduce((n, k) => (k >= todayKey ? n + itemsDe(k).length : n), 0);
 
   // Una celda por día: es la tira de la fila colapsada y la grilla del detalle.
   const semana = weekKeys.map(k => ({
     k, dow: aFecha(k).getDay(), num: aFecha(k).getDate(),
     hoy: k === todayKey, pasado: k < todayKey,
-    marcas: marcasDe(k), balizas: balizasDeDia(dayData[k]).length,
+    marcas: marcasDe(k), balizas: itemsDe(k).length,
     score: stressFor(k) || 0, conNinos: !!conNinosEn(k),
   }));
 
@@ -75,8 +86,7 @@ function buildResumen({ todayKey, ahoraMin, weekKeys, dayData, calMarks, eventos
     .filter(c => !c.pasado && c.balizas)
     .map(c => ({
       k: c.k, dow: c.dow, num: c.num, hoy: c.hoy,
-      balizas: [...balizasDeDia(dayData[c.k])].sort(ordenBaliza)
-        .map(t => ({ texto: t.text, hora: t.deadline ? hhmm(t.deadline) : null })),
+      balizas: itemsDe(c.k).map(b => ({ icono: b.icono, texto: b.texto, hora: b.hora, detalle: b.detalle })),
     }));
 
   const evs = eventos
@@ -177,7 +187,7 @@ function SemanaDashboard({ abierto, onToggle, onAbrirDia, navegacion, ...args })
         <div className="dp-lineas">
           <div className="dp-l1" onClick={r.proxima ? () => abrir(r.proxima.dateKey) : undefined} style={r.proxima ? { cursor: "pointer" } : undefined}>
             {r.proxima
-              ? <>🚨 {cuando(r.proxima.dias)} · {DIA_LARGO[r.proxima.dow]} {r.proxima.hora ? r.proxima.hora + " " : ""}{r.proxima.texto}{r.proxima.extra > 0 ? ` +${r.proxima.extra}` : ""}</>
+              ? <>{r.proxima.icono} {cuando(r.proxima.dias)} · {DIA_LARGO[r.proxima.dow]} {r.proxima.hora ? r.proxima.hora + " " : ""}{r.proxima.texto}{r.proxima.extra > 0 ? ` +${r.proxima.extra}` : ""}</>
               : r.hoy ? <HoyLinea hoy={r.hoy} /> : <span className="dash-dim">sin balizas</span>}
           </div>
           {r.proxima && r.hoy && <div className="dp-l2"><HoyLinea hoy={r.hoy} /></div>}
@@ -196,7 +206,7 @@ function SemanaDashboard({ abierto, onToggle, onAbrirDia, navegacion, ...args })
                 <div key={d.k} className={"dq-row" + (d.hoy ? " hoy" : "")} onClick={() => abrir(d.k)} style={{ cursor: "pointer" }}>
                   <span className="dq-d">{DIA_LARGO[d.dow]} {d.num}</span>
                   <span className="dq-t">
-                    {d.balizas.map((b, i) => <span key={i}>🚨 {b.hora ? <span className="dq-h">{b.hora} </span> : null}{b.texto}</span>)}
+                    {d.balizas.map((b, i) => <span key={i}>{b.icono} {b.hora ? <span className="dq-h">{b.hora} </span> : null}{b.texto}{b.detalle ? <span className="dash-dim"> · {b.detalle}</span> : null}</span>)}
                   </span>
                 </div>
               ))}

@@ -4,6 +4,7 @@
 import { fmtCLP } from "../../core/format.js";
 import { Interruptor } from "./PresupuestoRueda.jsx";
 import { rebanadas, emojiCategoria, SIN_CAT } from "./tortaDatos.js";
+import { Ventana } from "../shared/ui.jsx";
 const { useState } = React;
 
 const F = "'DM Sans',sans-serif", C = "'Caveat',cursive";
@@ -105,8 +106,7 @@ export default function TortaModal({ datos, modo, onModo, periodLabel, onPrev, o
   const flecha = { background: "#fff", color: "#111", border: "1px dashed #999", borderRadius: 6, padding: "3px 9px", fontSize: 14, cursor: "pointer" };
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", border: "2px dashed #111", borderRadius: 12, width: "min(95vw,440px)", maxHeight: "92vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "6px 6px 0 #111", fontFamily: F, color: "#111" }}>
+    <Ventana onClose={onClose} ancho={440}>
         <div style={{ background: "#111", padding: "11px 14px", display: "flex", alignItems: "center", gap: 8 }}>
           {profundo && <button onClick={subir} aria-label="Subir un nivel" style={{ background: "transparent", border: "none", color: "#aaa", fontSize: 22, cursor: "pointer", padding: "0 6px", lineHeight: 1 }}>‹</button>}
           <div style={{ fontFamily: C, fontSize: 22, color: "#fff", fontWeight: 700, flex: 1 }}>{titulo}</div>
@@ -144,7 +144,6 @@ export default function TortaModal({ datos, modo, onModo, periodLabel, onPrev, o
             </div>
           ))}
         </div>
-      </div>
-    </div>
+    </Ventana>
   );
 }

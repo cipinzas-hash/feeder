@@ -5,7 +5,7 @@ import {
   validarGasto, agregarGasto, quitarGasto, puedeEliminar, maxSubMonto, bolsillosDe, sinRepartir, claveBolsillo,
   puedeQuitarGasto, resumenDeudas, guiaSobres, capacidadPrestamo, candidatosPrestamo, sugerirFuentes,
   puedeGenerarPeriodo, primerArqueoPendiente, filasArqueo, guardarArqueo, rendicion, progresoMeta,
-  proyeccionAnual, ritmoSobre,
+  proyeccionAnual, ritmoSobre, gastosDelDia,
   categoriasDe, agregarCategoria, gastoPorCategoria, carteraCompras, montoCompra, registrarCompra, deshacerCompra, CATEGORIAS_COMPRAS, datosRueda, gastosSinCategoria, categorizarGasto, destinoCategoria, filaCompras, destinosPosibles,
 } from "../core/presupuesto-modelo.js";
 
@@ -416,6 +416,25 @@ assert.equal(puedeEliminar({ "2026-09": oct }, "2026-09", "propositos", fila(), 
   const rc = registrarCompra(D, { fecha: "2026-10-26", item: { id: "x", text: "Cloro", precio: 2500, categoria: "Limpieza" } });
   assert.ok(!rc.error, rc.error);
   assert.ok(categoriasDe(rc.budget.propositos.find(r => r.id === "ali")).includes("Limpieza") || categoriasDe(rc.budget.propositos.find(r => r.id === "aseo")).includes("Limpieza"));
+}
+
+// gastos de un día (carrito): total, cartera/sub-partida, último registrado primero, solo ese día
+{
+  const fila = { id: "r1", emoji: "👕", label: "Ropa", monto: 100000, subs: [{ id: "s1", label: "Colegio", monto: 50000 }] };
+  const bud = { gastos_base: [], personales: [], propositos: [fila], gastos: [
+    { id: "a", fecha: "2026-10-26", sec: "propositos", rowId: "r1", subId: "s1", monto: 1200, nota: "pantalón", categoria: "Ropa" },
+    { id: "b", fecha: "2026-10-26", sec: "propositos", rowId: "r1", subId: null, monto: 800, nota: "calcetines", prestamoId: "p1" },
+    { id: "c", fecha: "2026-10-27", sec: "propositos", rowId: "r1", subId: null, monto: 5000, nota: "otro día" } ] };
+  const dia = gastosDelDia({ "2026-10": bud }, "2026-10-26");
+  assert.equal(dia.fecha, "2026-10-26");
+  assert.equal(dia.total, 2000);
+  assert.deepEqual(dia.gastos.map(g => g.id), ["b", "a"], "el último registrado, primero");
+  assert.equal(dia.gastos[1].cartera, "👕 Ropa"); assert.equal(dia.gastos[1].sub, "Colegio"); assert.equal(dia.gastos[1].categoria, "Ropa");
+  assert.equal(dia.gastos[0].sub, ""); assert.equal(dia.gastos[0].prestamo, true);
+  assert.deepEqual(gastosDelDia({ "2026-10": bud }, "2026-10-28"), { fecha: "2026-10-28", gastos: [], total: 0 }, "día sin gastos");
+  assert.equal(gastosDelDia({}, "2026-11-08").total, 0, "sin presupuesto del período");
+  assert.equal(gastosDelDia({ "2026-10": bud }, new Date(2026, 9, 27)).total, 5000, "acepta Date");
+  assert.equal(bud.gastos.length, 3, "no muta");
 }
 
 console.log("presupuesto-modelo: OK");

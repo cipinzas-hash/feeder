@@ -7,6 +7,7 @@
     "build": "node build/assemble.mjs",
     "audit:export": "node tests/export-coverage.mjs && node tests/vitrina-restore.mjs",
     "test:presupuesto": "node tests/presupuesto-modelo.mjs",
+    "test:semana-salud": "node tests/semana-salud.mjs",
     "test:gcal": "node tests/gcal-sync.mjs",
     "test:familia": "node tests/familia-inbox.mjs",
     "test:rueda": "node tests/rueda-geometria.mjs",

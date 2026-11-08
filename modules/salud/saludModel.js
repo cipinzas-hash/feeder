@@ -318,6 +318,24 @@ export function citaLine(ev, personName, withMedico){
 }
 // Próxima fecha de una cita (>= hoy), considerando su repetición; null si ya pasó entera.
 export function nextCitaDate(ev, today){ return citaDates(ev).find(d=>d>=today)||null; }
+// Lo de Salud que el dashboard de Semana muestra como baliza en un día: las citas de ese día y los tratamientos en curso
+// (inicio <= día <= fin; sin fin = sigue en curso). Solo lee: no escribe nada. [{icono, hora|null, texto, detalle}]
+export function saludDelDia(kh, dk){
+  const family = (kh&&kh.family)||[], events = (kh&&kh.events)||[];
+  const nm = id => (family.find(f=>f.id===id)||{}).name||"";
+  const out = [];
+  citasOnDay(events, dk).forEach(e=>{
+    out.push({icono:"🏥", hora:e.startTime||null,
+      texto:[e.title||"cita médica", nm(e.personId)].filter(Boolean).join(" · "),
+      detalle:[e.medico?("con "+e.medico):null, e.note||null].filter(Boolean).join(" · ")});
+  });
+  events.filter(e=>e.type==="tratamiento"&&e.start&&e.start<=dk&&(!e.end||dk<=e.end)).forEach(e=>{
+    out.push({icono:"🧴", hora:(e.start===dk&&e.startTime)||null,
+      texto:[e.title||"tratamiento", nm(e.personId)].filter(Boolean).join(" · "),
+      detalle:[e.dosis||null, e.freq||null, e.end?("hasta "+e.end.slice(8)+"/"+e.end.slice(5,7)):null, e.medico?("con "+e.medico):null, e.note||null].filter(Boolean).join(" · ")});
+  });
+  return out;
+}
 
 // ── Migración schema v1 → v2 (explícita y no destructiva) ──
 // v1 guardaba kidsHealth.episodes[] (con days[]), dailyLog{} y profiles[p].citasRegulares[].

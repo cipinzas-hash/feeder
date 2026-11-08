@@ -2,6 +2,7 @@ import { fmtCLP } from "../../core/format.js";
 import { estadoFila, resumenDeudas, ritmoSobre, gastoPorCategoria, claveAnterior, resolverPeriodo } from "../../core/presupuesto-modelo.js";
 import CarteraPanel from "./CarteraPanel.jsx";
 import { FUENTE } from "./grilla.jsx";
+import { Ventana } from "../shared/ui.jsx";
 const { useState, useEffect } = React;
 
 const flecha = { background: "transparent", border: "1px solid #444", borderRadius: 8, color: "#fff", fontSize: 24, width: 44, height: 40, cursor: "pointer", lineHeight: 1, flexShrink: 0 };
@@ -45,8 +46,7 @@ export default function CarteraVentana({ carteras, index, onIndex, onClose, budg
   );
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: "min(96vw,520px)", maxHeight: "92vh", display: "flex", flexDirection: "column" }}>
+    <Ventana onClose={onClose} ancho={520} z={1000}>
         <div style={{ background: "#111", padding: "10px 12px", display: "flex", alignItems: "center", gap: 8 }}>
           <button onClick={() => ir(-1)} style={flecha} title="Cartera anterior">‹</button>
           <div style={{ flex: 1, minWidth: 0, textAlign: "center" }}>
@@ -107,7 +107,6 @@ export default function CarteraVentana({ carteras, index, onIndex, onClose, budg
             onPatchRow={patch => onPatchRow(sec, row.id, patch)} onDeleteGasto={onDeleteGasto} onApertura={onApertura} onAviso={setAviso}/>
           <button onClick={() => onGasto(sec, row.id)} disabled={!sobresOn} style={{ width: "100%", marginTop: 14, padding: "12px", background: sobresOn ? "#111" : "#ccc", color: "#fff", border: "none", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 19, fontWeight: 700, cursor: sobresOn ? "pointer" : "default" }}>💸 Registrar gasto en esta cartera</button>
         </div>
-      </div>
-    </div>
+    </Ventana>
   );
 }

@@ -40,3 +40,8 @@ Entrada "🩺 Salud" (`SaludRegistro`, mismas acciones que la pestaña, `saludAc
 
 ## Archivos
 `modules/salud/saludModel.js` (lógica pura) · `saludActions.js` (guardar/borrar con sincronía al planner) · `SaludPage.jsx` (UI y `SaludRegistro`) · `GrowthView.jsx` (curva de crecimiento, movida sin cambios de comportamiento) · `tests/salud-model.mjs`.
+
+## Dashboard de Semana (8-nov-2026, issue #38)
+Las citas y los tratamientos se ven en el dashboard **como una baliza** (igual que una tarea con 🚨, con todo el detalle): cuentan en la próxima baliza, en el total de la semana, en el 🚨 del día y aparecen en la agenda del panel abierto. Antes solo se veía el 🏥 de la marca del día, sin hora, paciente ni médico, y los tratamientos no se mostraban.
+- `saludDelDia(kh, dia)` (`saludModel.js`, solo lectura): citas del día (🏥, hora, «especialidad · paciente», detalle «con médico · nota») y tratamientos en curso (🧴, «tratamiento · paciente», detalle dosis · frecuencia · «hasta dd/mm» · médico · nota; la hora solo el día de inicio; sin fecha de fin sigue en curso). Los medicamentos no entran.
+- Solo desde hoy en adelante: una cita ya ocurrida no es una baliza pendiente (las tareas con 🚨 atrasadas siguen contando, como siempre). `core/SemanaDashboard.jsx` recibe `saludDe` (cableado en `core/App.jsx`); sin esa prop todo funciona como antes. Prueba: `tests/semana-salud.mjs` y `tests/salud-model.mjs`. Sin datos nuevos (R8).

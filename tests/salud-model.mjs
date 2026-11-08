@@ -4,7 +4,7 @@ import {
   migrateKidsHealth, planCita, citaDates, buildTimeline, buildSummary, illnessLabel,
   addMonthsKey, addDaysKey, daysInclusive, emptyKidsHealth, eventMatches,
   personIdFor, addPerson, updatePerson, removePerson, personEventCount,
-  effectiveMarks, citasOnDay, citaLine, nextCitaDate, buildSections,
+  effectiveMarks, citasOnDay, citaLine, nextCitaDate, buildSections, saludDelDia,
 } from "../modules/salud/saludModel.js";
 import { computeStressScore } from "../core/stress.js";
 
@@ -241,5 +241,24 @@ assert.equal(computeStressScore("2026-10-02", dd, {}, {episodes:[{kidId:"ana",st
 const khCita = {events:[{id:"cx", personId:"ana", type:"cita", title:"pediatría", start:"2026-10-02", startTime:"10:30"}]};
 assert.equal(computeStressScore("2026-10-02", dd, {}, khCita) - base, 1, "una cita suma +1 como la marca doctor");
 assert.equal(computeStressScore("2026-10-02", dd, {"2026-10-02":["doctor"]}, khCita) - base, 1, "marca guardada + cita no cuenta doble");
+
+// ── lo de Salud que el dashboard de Semana muestra como baliza ──
+{
+  const kh = { family: [{ id: "luna", name: "Luna" }], events: [
+    { id: "c1", personId: "luna", type: "cita", title: "Pediatría", medico: "Dra. Soto", start: "2026-11-10", startTime: "15:30", note: "llevar carnet" },
+    { id: "t1", personId: "luna", type: "tratamiento", title: "Kinesiología", dosis: "3 sesiones", freq: "diaria", start: "2026-11-09", startTime: "10:00", end: "2026-11-11" },
+    { id: "t2", personId: "luna", type: "tratamiento", title: "Nebulizaciones", start: "2026-11-01" },
+    { id: "m1", personId: "luna", type: "medicamento", title: "ibuprofeno", start: "2026-11-01" },
+  ] };
+  assert.deepEqual(saludDelDia(kh, "2026-11-08").map(x => x.texto), ["Nebulizaciones · Luna"], "tratamiento sin fin sigue en curso; el medicamento no cuenta");
+  const d9 = saludDelDia(kh, "2026-11-09");
+  assert.deepEqual(d9.map(x => [x.icono, x.hora, x.texto]), [["🧴", "10:00", "Kinesiología · Luna"], ["🧴", null, "Nebulizaciones · Luna"]], "la hora solo el día de inicio");
+  assert.equal(d9[0].detalle, "3 sesiones · diaria · hasta 11/11");
+  const d10 = saludDelDia(kh, "2026-11-10");
+  assert.deepEqual(d10[0], { icono: "🏥", hora: "15:30", texto: "Pediatría · Luna", detalle: "con Dra. Soto · llevar carnet" });
+  assert.equal(saludDelDia(kh, "2026-11-12").map(x => x.texto).join(), "Nebulizaciones · Luna", "con fin, deja de aparecer al terminar");
+  assert.deepEqual(saludDelDia(emptyKidsHealth(), "2026-11-10"), []);
+  assert.deepEqual(saludDelDia(undefined, "2026-11-10"), []);
+}
 
 console.log("salud model: ok");

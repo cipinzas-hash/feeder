@@ -2,6 +2,7 @@ import { fmtCLP } from "../../core/format.js";
 import { bolsillosDe, estadoBolsillo, inicioSobres, resolverPeriodo, periodoDeFecha, fechaISO, agregarGasto, candidatosPrestamo, sugerirFuentes, claveBolsillo, categoriasDe, agregarCategoria, TOPE_PRESTAMO, TOPE_DEVOLUCION } from "../../core/presupuesto-modelo.js";
 import { AmountRow } from "./grilla.jsx";
 import { useAltoVisible } from "../../core/VentanaArriba.jsx";
+import { Ventana } from "../shared/ui.jsx";
 const { useState, useMemo } = React;
 
 const F = "'DM Sans',sans-serif";
@@ -100,8 +101,7 @@ export default function GastoModal({ budgets, onSaveBudget, onClose, inicial, ar
   const puede = !!fila && montoNum > 0 && (falta === 0 || completo) && catValida;
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: arriba ? "flex-start" : "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", paddingTop: arriba ? "calc(env(safe-area-inset-top, 0px) + 6px)" : 0 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: "min(94vw,400px)", maxHeight: arriba ? Math.round(altoVisible * 0.9) : "92vh", overflowY: "auto" }}>
+    <Ventana onClose={onClose} ancho={400} arriba={!!arriba} estiloMarco={{ display: "block", maxHeight: arriba ? Math.round(altoVisible * 0.9) : "92vh", overflowY: "auto" }}>
         <div style={{ background: "#111", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 }}>💸 Registrar gasto</div>
           <button onClick={onClose} style={{ background: "transparent", border: "none", color: "#777", fontSize: 24, cursor: "pointer", lineHeight: 1 }}>×</button>
@@ -181,7 +181,6 @@ export default function GastoModal({ budgets, onSaveBudget, onClose, inicial, ar
               <button onClick={registrar} disabled={!puede} style={{ width: "100%", marginTop: 16, padding: "13px", background: puede ? "#111" : "#ccc", color: "#fff", border: "none", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, cursor: puede ? "pointer" : "default" }}>{falta > 0 ? "Registrar con préstamo" : "Registrar"}</button>
             </>}
         </div>
-      </div>
-    </div>
+    </Ventana>
   );
 }

@@ -13,7 +13,7 @@ import { FamiliaInboxModal } from "./FamiliaInbox.jsx";
 import { leerDecisiones, guardarDecisiones, pendientes as familiaPendientes, fechasDeEvento, tareaDesdeEvento, registrarImportado, registrarIgnorado, podar as podarFamilia } from "./familiaInbox.js";
 import PokecriptoPage, { CARPETAS_DEFAULT } from "../modules/pokecripto/PokecriptoPage.jsx";
 import SaludPage, { SaludRegistro } from "../modules/salud/SaludPage.jsx";
-import { migrateKidsHealth, emptyKidsHealth, effectiveMarks, citasOnDay, citaLine } from "../modules/salud/saludModel.js";
+import { migrateKidsHealth, emptyKidsHealth, effectiveMarks, citasOnDay, citaLine, saludDelDia } from "../modules/salud/saludModel.js";
 import FadimanPage from "../modules/fadiman/FadimanPage.jsx";
 import RoutinesPage from "../modules/rutinas/RoutinesPage.jsx";
 import NutriaPage from "../modules/nutria/NutriaPage.jsx";
@@ -2028,6 +2028,7 @@ function AngstApp() {
                   calMarks={calMarksView}
                   eventos={[...meleeMajors.map(ev=>({...ev,tipo:"melee",url:"https://www.start.gg/"})),...POKEMON_EVENTS.map(ev=>({...ev,tipo:"pokemon"})),...SC2_EVENTS.map(ev=>({...ev,tipo:"sc2"}))]}
                   stressFor={k=>computeStressScore(k, dayData, calMarks, kidsHealth)}
+                  saludDe={k=>saludDelDia(kidsHealth, k)}
                   conNinosEn={k=>isWithKids(k, custody)}
       ejercicioHoy={Object.values(ejercicioLog[fmtFull(new Date())]||{}).some(v=>v===true||!!(v&&v.done))}
       kcalHoy={(nutriLog[fmtFull(new Date())]||[]).reduce((t,e)=>t+(e.kcal||0)*(e.qty||0),0)}
@@ -2368,7 +2369,7 @@ function AngstApp() {
         )}
 
         {page===1&&<BudgetPage budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
-        {carritoOpen&&<CarritoModal dayData={dayData} hoy={fmtFull(new Date())} api={comprasApi} onItem={updateComprasItem} onAdd={agregarCompraEn} onDelete={quitarCompraEn} onClose={()=>setCarritoOpen(false)}/>}
+        {carritoOpen&&<CarritoModal dayData={dayData} hoy={fmtFull(new Date())} budgets={budgets} api={comprasApi} onItem={updateComprasItem} onAdd={agregarCompraEn} onDelete={quitarCompraEn} onClose={()=>setCarritoOpen(false)}/>}
         {gastoOpen&&<GastoModal arriba permanecer budgets={budgets} onSaveBudget={(...a)=>{updateBudgetForMonth(...a);avisarRegistro("Gasto registrado ✓");}} onClose={()=>setGastoOpen(false)}/>}
         {ingestaOpen&&<IngestaRapida nutriLog={nutriLog} saveNutriLog={guardarNutriLog} customFoods={customFoods} foodOverrides={foodOverrides}
           nutriDecks={nutriDecks} permanecer onClose={()=>setIngestaOpen(false)} onGuardado={avisarRegistro}/>}

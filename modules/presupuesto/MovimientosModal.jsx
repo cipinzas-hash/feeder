@@ -1,5 +1,6 @@
 // Todos los movimientos (gastos registrados) del período, o de los últimos 12 meses si el interruptor está en Anual.
 import { fmtCLP } from "../../core/format.js";
+import { Ventana, VentanaCabecera } from "../shared/ui.jsx";
 const { useState } = React;
 const F = "'DM Sans',sans-serif", C = "'Caveat',cursive";
 
@@ -15,12 +16,8 @@ export default function MovimientosModal({ movs, filas, anual, periodLabel, onCl
   const total = lista.reduce((t, m) => t + m.monto, 0);
   const campo = { border: "1px dashed #999", borderRadius: 8, padding: "8px 10px", fontSize: 13, fontFamily: F, background: "#fff", color: "#111", outline: "none", boxSizing: "border-box" };
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", border: "2px dashed #111", borderRadius: 12, width: "min(95vw,440px)", maxHeight: "86vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "6px 6px 0 #111", fontFamily: F, color: "#111" }}>
-        <div style={{ background: "#111", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ fontFamily: C, fontSize: 22, color: "#fff", fontWeight: 700 }}>Todos los movimientos <span style={{ fontSize: 14, color: "#888" }}>{anual ? "12 meses" : periodLabel}</span></div>
-          <button onClick={onClose} style={{ background: "transparent", border: "none", color: "#aaa", fontSize: 22, cursor: "pointer", lineHeight: 1 }}>×</button>
-        </div>
+    <Ventana onClose={onClose} ancho={440}>
+        <VentanaCabecera titulo="Todos los movimientos" sub={<>{anual ? "12 meses" : periodLabel}</>} onClose={onClose}/>
         <div style={{ padding: "10px 14px 6px", display: "flex", gap: 6 }}>
           <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar por nota, categoría o sobre" style={{ ...campo, flex: 1, minWidth: 0 }}/>
           <select value={sobre} onChange={e => setSobre(e.target.value)} style={{ ...campo, maxWidth: 130 }}>
@@ -38,7 +35,6 @@ export default function MovimientosModal({ movs, filas, anual, periodLabel, onCl
           ))}
         </div>
         <div style={{ borderTop: "1px dashed #bbb", padding: "10px 16px", fontSize: 13, display: "flex", justifyContent: "space-between" }}><span style={{ color: "#777" }}>{lista.length} movimiento{lista.length === 1 ? "" : "s"}</span><b>{fmtCLP(total)}</b></div>
-      </div>
-    </div>
+    </Ventana>
   );
 }

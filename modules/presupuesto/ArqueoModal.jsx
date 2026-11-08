@@ -2,6 +2,7 @@ import { fmtCLP } from "../../core/format.js";
 import { MONTH_NAMES } from "../../core/dates.js";
 import { filasArqueo, guardarArqueo, rendicion, resolverPeriodo, fechaISO, fechaDe, claveSiguiente } from "../../core/presupuesto-modelo.js";
 import { FUENTE } from "./grilla.jsx";
+import { Ventana } from "../shared/ui.jsx";
 const { useState, useMemo } = React;
 
 const campo = { boxSizing: "border-box", border: "1px dashed #bbb", borderRadius: 6, padding: "8px 10px", fontSize: 15, fontFamily: FUENTE, background: "#fff", outline: "none", color: "#111", textAlign: "right", width: 130 };
@@ -53,8 +54,7 @@ export default function ArqueoModal({ budgets, periodo, onSaveBudget, onClose, t
   );
 
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", border: "2px dashed #111", borderRadius: 14, overflow: "hidden", boxShadow: "6px 6px 0 #111", width: "min(96vw,540px)", maxHeight: "92vh", display: "flex", flexDirection: "column" }}>
+    <Ventana onClose={onClose} ancho={540} z={1000}>
         <div style={{ background: "#111", padding: "12px 18px 0" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
@@ -142,7 +142,6 @@ export default function ArqueoModal({ budgets, periodo, onSaveBudget, onClose, t
             <button onClick={copiar} style={{ width: "100%", marginTop: 14, padding: "11px", background: "transparent", color: "#555", border: "1px dashed #bbb", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 18, cursor: "pointer" }}>{copiado ? "✓ copiado" : "Copiar rendición"}</button>
           </>}
         </div>
-      </div>
-    </div>
+    </Ventana>
   );
 }
