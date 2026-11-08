@@ -1,0 +1,43 @@
+name: Diagnóstico de canales de Melee
+
+# Solo lectura (nov-2026). Resuelve y verifica los canales de YouTube que producen los VODs de
+# los majors de Melee. Escribe docs/diag-canales-melee.md y modules/feed/data/diag-canales-melee.json.
+# No toca melee.json ni melee-state.json. Se puede borrar cuando termine la evaluación.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: diag-canales-melee
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Diagnóstico
+        working-directory: modules/feed
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: node scripts/diag-canales-melee.mjs
+      - name: Commitear el reporte
+        if: always()
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          for f in docs/diag-canales-melee.md modules/feed/data/diag-canales-melee.json; do [ -e "$f" ] && git add -f "$f"; done
+          git diff --staged --quiet || git commit -m "Diagnóstico de canales de Melee $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git push && break
+            git fetch origin main && git reset --soft origin/main
+            git diff --staged --quiet || git commit -m "Diagnóstico de canales de Melee $(date -u +%Y-%m-%dT%H:%MZ)"
+            sleep 5
+          done
