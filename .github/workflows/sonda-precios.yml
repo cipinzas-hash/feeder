@@ -1,0 +1,32 @@
+name: Sonda de precios tcgpricelookup (manual)
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pokecripto-update
+  cancel-in-progress: false
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Correr sonda
+        env:
+          TCG_API_KEY: ${{ secrets.TCG_API_KEY }}
+        run: node modules/feed/scripts/sonda-precios.mjs
+      - name: Commitear resultado
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/diag-precios.json
+          git commit -m "Sonda de precios tcgpricelookup (issue #37)" || exit 0
+          git pull --rebase origin main && git push
