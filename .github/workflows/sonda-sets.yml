@@ -1,0 +1,30 @@
+name: Sonda de sets pokemontcg.io (manual)
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pokecripto-update
+  cancel-in-progress: false
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Correr sonda
+        run: node modules/feed/scripts/sonda-sets.mjs
+      - name: Commitear resultado
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/diag-sets.json
+          git commit -m "Sonda de sets pokemontcg.io (issue #34)" || exit 0
+          git pull --rebase origin main && git push
