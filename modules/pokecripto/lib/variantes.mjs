@@ -8,6 +8,8 @@
 //    148 y la Holofoil real, con rareza "Pikachu Rare", vale 0.87).
 // Por eso, antes de la regla de siempre: 1) si solo algunas filas tienen precio, se descartan las que no; 2) si solo
 // algunas tienen rareza, se descartan las que no. Si ninguna fila trae esos datos (o todas los traen) no cambia nada.
+// La API manda la rareza de la fila fantasma como el TEXTO "None" (verificado el 8-nov-2026 en 30th Celebration), no como null.
+const tieneRareza = c => !!c.rarity && !/^(none|null|n\/a|-)?$/i.test(String(c.rarity).trim());
 export function elegirVariante(cands) {
   let lista = cands || [];
   if (lista.length > 1) {
@@ -15,7 +17,7 @@ export function elegirVariante(cands) {
     if (conPrecio.length && conPrecio.length < lista.length) lista = conPrecio;
   }
   if (lista.length > 1) {
-    const conRareza = lista.filter(c => c.rarity);
+    const conRareza = lista.filter(tieneRareza);
     if (conRareza.length && conRareza.length < lista.length) lista = conRareza;
   }
   if (lista.length === 1) return lista[0];

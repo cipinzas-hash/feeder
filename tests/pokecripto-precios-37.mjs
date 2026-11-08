@@ -30,6 +30,14 @@ await t("elegirVariante: descarta la Normal sin precio (Mega Greninja 100) y la 
     { tcgId: "h", variant: "Holofoil", rarity: "Pikachu Rare", market: 0.87 }]);
   assert.equal(p.tcgId, "h");
 });
+await t("elegirVariante: la rareza \"None\" (texto) de la fila fantasma cuenta como sin rareza (Pikachu 28/34 reales)", () => {
+  const r = elegirVariante([
+    { tcgId: "n", variant: "Normal", rarity: "None", market: 49.95 },
+    { tcgId: "h", variant: "Holofoil", rarity: "Pikachu Rare", market: 0.9 }]);
+  assert.equal(r.tcgId, "h");
+  // y si TODAS dicen "None" no se descarta ninguna: sigue Normal > Holofoil
+  assert.equal(elegirVariante([{ tcgId: "h", variant: "Holofoil", rarity: "None" }, { tcgId: "n", variant: "Normal", rarity: "None" }]).tcgId, "n");
+});
 await t("elegirVariante: sin precio ni rareza en ninguna fila, sigue Normal > Holofoil", () => {
   assert.equal(elegirVariante([{ tcgId: "h", variant: "Holofoil" }, { tcgId: "n", variant: "Normal" }]).tcgId, "n");
 });
