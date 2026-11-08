@@ -1233,7 +1233,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#bbb"}}>#{d.number}</div>
         </div>
         {d.tcgMarket&&<div style={{fontFamily:"'Caveat',cursive",fontSize:14,fontWeight:700,color:"#5c9cff",flexShrink:0}}>{fmtUSD(d.tcgMarket)}</div>}
-        <div style={{width:18,height:18,borderRadius:"50%",border:`1.5px solid ${cons?"#2e7d52":"#ddd"}`,background:cons?"#2e7d52":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+        <div style={{width:18,height:18,borderRadius:"50%",border:`1.5px solid ${cons?"#2e7d52":"#e53935"}`,background:cons?"#2e7d52":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
           {cons&&<span style={{color:"#fff",fontSize:9,fontWeight:700}}>✓</span>}
         </div>
       </div>
@@ -1242,8 +1242,8 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     return(
       <div onClick={abrir} {...press}
         style={{position:"relative",cursor:"pointer",borderRadius:isSmall?6:8,overflow:"hidden",
-          border:cons?"2px solid #2e7d52":"2px solid transparent",
-          boxShadow:cons?"0 2px 8px rgba(46,125,82,0.3)":"0 1px 3px rgba(0,0,0,0.1)"}}>
+          border:cons?"2px solid #2e7d52":"2px solid #e53935",
+          boxShadow:cons?"0 2px 8px rgba(46,125,82,0.3)":"0 2px 8px rgba(229,57,53,0.3)"}}>
         {d.image
           ?<DarkArt src={d.image} alt={d.name} cons={cons} wrapStyle={{width:"100%"}}/>
           :<div style={{aspectRatio:"2/3",background:"#1a1a1a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>⚫</div>
