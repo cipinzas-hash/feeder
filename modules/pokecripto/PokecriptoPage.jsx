@@ -1021,27 +1021,48 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // de pop-ups de mobile, que solo deja pasar los que salen directo de un
   // click. Espera a que las imágenes carguen (son de pokemontcg.io, otro
   // origen) antes de llamar a print() desde adentro de la ventana nueva.
-  function imprimirFaltantes(cartas,cat){
+  // v3 (8-nov-2026, issue #35, a pedido de Cristopher): hoja de papel 19x25 cm
+  // horizontal (250x190 mm), cartas al tamaño original 63x88 mm, 3 columnas x
+  // 2 filas = 6 por hoja. Etiqueta SOBRE la carta en 3 líneas: colección
+  // (carpeta), set y #número/total del set (printedTotal sale de allSets, sin
+  // consultas extra). Nombres largos pasan a dos líneas, nunca se cortan.
+  // Orden: fecha de lanzamiento del set ascendente y luego número (natural),
+  // para que las hojas queden como la carpeta física. Se usa tanto para
+  // "imprimir faltantes" como para "imprimir todas".
+  function imprimirPlaceholders(cartas,cat,tipo){
     const w=window.open("","_blank");
     if(!w){ alert("El navegador bloqueó la ventana de impresión — revisá el bloqueador de pop-ups para este sitio e intentá de nuevo."); return; }
-    const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    const esc=s=>String(s??"").replace(/[&<>\"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    const totalDeSet=d=>{ const st=allSets.find(x=>x.id===d.setId); return st?.printedTotal||st?.total||null; };
+    const numFmt=d=>{
+      const n=String(d.number||"");
+      const num=/^\d+$/.test(n)?n.padStart(3,"0"):n;
+      const t=totalDeSet(d);
+      return "#"+num+(t?"/"+String(t).padStart(3,"0"):"");
+    };
+    const ordenadas=[...cartas].sort((a,b)=>
+      String(a.releaseDate||"").localeCompare(String(b.releaseDate||""))
+      ||String(a.setName||"").localeCompare(String(b.setName||""))
+      ||String(a.number||"").localeCompare(String(b.number||""),undefined,{numeric:true}));
     const paginas=[];
-    for(let i=0;i<cartas.length;i+=8) paginas.push(cartas.slice(i,i+8));
-    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(cat)} — faltantes</title><style>
-      @page{size:A4 landscape;margin:8mm;}
+    for(let i=0;i<ordenadas.length;i+=6) paginas.push(ordenadas.slice(i,i+6));
+    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(cat)} — ${esc(tipo||"placeholders")}</title><style>
+      @page{size:250mm 190mm;margin:0;}
       *{box-sizing:border-box;}
       body{margin:0;font-family:sans-serif;background:#fff;}
-      .page{display:grid;grid-template-columns:repeat(4,63mm);grid-template-rows:repeat(2,88mm);gap:3mm;justify-content:center;align-content:center;page-break-after:always;}
+      .page{width:250mm;height:189mm;display:grid;grid-template-columns:repeat(3,63mm);grid-template-rows:repeat(2,88mm);gap:2mm;justify-content:center;align-content:center;page-break-after:always;overflow:hidden;}
       .page:last-child{page-break-after:auto;}
       .card{width:63mm;height:88mm;position:relative;border:0.3mm dashed #999;overflow:hidden;background:#fff;}
       .card img{width:100%;height:100%;object-fit:cover;filter:grayscale(1);display:block;}
-      .label{position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,0.88);font-size:7pt;padding:1mm;text-align:center;color:#000;line-height:1.2;}
+      .label{position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,0.88);font-size:7pt;padding:1mm 1.5mm;text-align:center;color:#000;line-height:1.2;overflow-wrap:anywhere;}
+      .label .col{font-weight:bold;}
+      .label .num{font-weight:bold;}
       .proxy{position:absolute;top:2mm;right:2mm;background:#fff;border:0.3mm solid #000;font-size:6pt;padding:0.5mm 1.5mm;font-weight:bold;color:#000;}
     </style></head><body>
       ${paginas.map(pagina=>`<div class="page">${pagina.map(d=>`
         <div class="card">
           ${d.image?`<img src="${esc(d.imageHd||d.image)}"/>`:""}
-          <div class="label">${esc(d.name)} · #${esc(d.number)}</div>
+          <div class="label"><div class="col">${esc(d.carpeta||"Dark Collection")}</div><div>${esc(d.setName||d.setId||"")}</div><div class="num">${esc(numFmt(d))}</div></div>
           <div class="proxy">PROXY</div>
         </div>`).join("")}</div>`).join("")}
       <script>
@@ -2280,9 +2301,13 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           </div>
           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:"#aac756"}}>{Math.round(valorConseguido/valorTotal*100)}% del valor</div>
         </div>}
-        {faltantes.length>0&&<button onClick={()=>imprimirFaltantes(faltantes,cat)}
+        {catMerged.length>0&&<button onClick={()=>imprimirPlaceholders(catMerged,cat,"todas")}
           style={{width:"100%",background:"transparent",border:"1px dashed #333",borderRadius:8,padding:"8px",marginBottom:8,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888",cursor:"pointer"}}>
-          🖨️ imprimir {faltantes.length} faltante{faltantes.length===1?"":"s"} (placeholders A4)
+          🖨️ imprimir todas las {catMerged.length} (placeholders 19×25, 6 por hoja)
+        </button>}
+        {faltantes.length>0&&<button onClick={()=>imprimirPlaceholders(faltantes,cat,"faltantes")}
+          style={{width:"100%",background:"transparent",border:"1px dashed #333",borderRadius:8,padding:"8px",marginBottom:8,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888",cursor:"pointer"}}>
+          🖨️ imprimir {faltantes.length} faltante{faltantes.length===1?"":"s"} (placeholders 19×25, 6 por hoja)
         </button>}
         {/* Filtro "sin precio" (23-sep-2026) -- para revisar de un vistazo
             cuáles no consiguieron precio en vez de escanear la grilla
