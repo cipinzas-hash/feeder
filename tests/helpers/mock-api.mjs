@@ -30,6 +30,11 @@ globalThis.fetch = async (url) => {
     }
     const ids = u.searchParams.get("ids"), q = u.searchParams.get("q"), page = parseInt(u.searchParams.get("page") || "1", 10);
     const setSlug = u.searchParams.get("set");
+    if (setSlug && q) { // búsqueda de texto acotada a un set (set=<slug>&q=<nombre>): solo cartas de ese set con ese nombre
+      log(`SEARCHINSET slug=${setSlug} q=${q}`);
+      if (process.env.MOCK_NO_SETSEARCH) return resp({ data: [] });
+      return resp({ data: BD.filter(c => c.set.slug === setSlug && c.name.toLowerCase() === q.toLowerCase()).slice(0, 100) });
+    }
     if (setSlug) {
       const off = parseInt(u.searchParams.get("offset") || "0", 10); log(`SETCARDS slug=${setSlug} offset=${off}`);
       if (process.env.MOCK_NO_SETSEARCH) return resp({ data: [], total: 0, limit: 100, offset: off });

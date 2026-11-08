@@ -5,6 +5,8 @@
 // enrich.mjs para Vitrina/Simkl. Sin cambios de comportamiento respecto al
 // código original, solo movida de lugar y sin JSX/React.
 
+import { elegirVariante, nombreSetCompatible } from "./variantes.mjs";
+
 export const POKE_BASE = "https://api.pokemontcg.io/v2";
 export const TCG_BASE = "https://api.tcgpricelookup.com/v1";
 
@@ -38,16 +40,24 @@ export function normNum(n) {
 // lo ancla a la carta correcta. tcgpricelookup.com además le pega el número
 // al nombre para distinguir variantes/alt-arts ("Mega Darkrai ex -
 // 116/084"), así que primero se saca ese sufijo antes de normalizar.
+// 8-nov-2026 (issue #37): además del sufijo "- 116/084", tcgpricelookup.com usa "(105 Full Art)", "(Y)", "(Secret)",
+// "(63)" para las XY y "- XY168" / "- 163" para promos. Se sacan esos paréntesis finales (los que empiezan con número,
+// Full Art, Secret, X o Y; NO "(Holo)" u otros, que distinguen impresiones) y el " - <número>" suelto; el número de la
+// carta (normNum) sigue anclando cuál es.
 export function normName(s) {
   return String(s || "")
-    .replace(/\s*[-–—]\s*\d+\/\d+\s*$/, "")
+    .replace(/(?:\s*\((?:\d+[^)]*|full art|secret(?: rare)?|[xy])\))+\s*$/i, "")
+    .replace(/\s*[-–—]\s*[A-Za-z]{0,5}\d+[A-Za-z]?(?:\/\d+)?\s*$/, "")
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 // Versión con diagnóstico completo -- devuelve además la query mandada, los
 // candidatos que trajo tcgpricelookup.com, y por qué no matcheó ninguno.
-export async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey) {
+// opts.slug (8-nov-2026): slug del set en tcgpricelookup ("pokemon--xy-flashfire"). Con él la búsqueda se acota al set
+// (`set=<slug>&q=<nombre>`): las cartas de nombre común (Pikachu) ya no se pierden entre otros sets y no hay
+// emparejamiento cruzado. Sin slug, igual que antes (texto libre) pero con el set como criterio de desempate.
+export async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey, opts = {}) {
   if (!apiKey) return { error: "sin API key" };
   try {
     // setCode (ej. "me4") es un ID interno de catálogo, no necesariamente
@@ -58,7 +68,8 @@ export async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey) 
     // matcheaban). Se sigue usando setCode más abajo, pero solo para
     // FILTRAR candidatos ya encontrados por nombre+número, nunca como
     // término de búsqueda.
-    let q = number ? `${name} ${number}` : name;
+    const slug = opts?.slug || null;
+    let q = slug ? name : (number ? `${name} ${number}` : name);
     // Confirmado con el botón de diagnóstico del cliente (10-sep-2026,
     // Drapion 97 -> HTTP 429): tcgpricelookup.com rate-limitea más agresivo
     // que pokemontcg.io, y el bot le pega varias veces seguidas cuando hay
@@ -70,7 +81,7 @@ export async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey) 
     while (true) {
       // limit=100 (4-oct-2026): con 20, los nombres comunes (Pikachu, Ultra Ball) llenaban los
       // resultados con otros sets y la carta buscada quedaba fuera. Es la misma 1 consulta del cupo.
-      r = await fetch(`${TCG_BASE}/cards/search?q=${encodeURIComponent(q)}&game=pokemon&limit=100`,
+      r = await fetch(`${TCG_BASE}/cards/search?${slug ? `set=${encodeURIComponent(slug)}&` : ""}q=${encodeURIComponent(q)}&game=pokemon&limit=100`,
         { headers: { "X-API-Key": apiKey }, signal: AbortSignal.timeout(8000) });
       if (r.status !== 429 || intento >= 2) break;
       const retryAfter = parseInt(r.headers.get("retry-after") || "", 10);
@@ -83,17 +94,36 @@ export async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey) 
     const cards = data.data || [];
     const nameNorm = normName(name), numNorm = normNum(number);
     const setCodeLow = (setCode || "").toLowerCase();
-    // Solo matcheamos con nombre+número (+setCode si lo tenemos). Nada de
-    // fallback por nombre solo o por prefijo de set -- eso generaba
-    // snapshots de la variante equivocada. Preferimos no tener precio a
-    // tener uno contaminado.
-    const match =
-      (number && setCode && cards.find(c => normName(c.name) === nameNorm && normNum(c.number) === numNorm && (c.set?.ptcgoCode?.toLowerCase() === setCodeLow || c.set?.id?.toLowerCase() === setCodeLow))) ||
-      (number && cards.find(c => normName(c.name) === nameNorm && normNum(c.number) === numNorm));
-    const candidatos = cards.slice(0, 10).map(c => {
+    // Solo matcheamos con nombre + número. Nada de fallback por nombre solo o por prefijo de set -- eso generaba
+    // snapshots de la variante equivocada. Preferimos no tener precio a tener uno contaminado.
+    // 8-nov-2026 (issue #37): el filtro por set de antes comparaba nuestro "xy2" con el ptcgoCode/UUID de la API y nunca
+    // coincidía, así que el fallback aceptaba cartas de cualquier set (M Charizard-EX 13 tomó el precio de otro set).
+    // Ahora: 1) el número manda (primero lo que coincide en número); 2) con slug, el set ya viene acotado; sin slug se
+    // desempata por código o nombre de set; si quedan cartas de varios sets sin poder decidir, no se empareja;
+    // 3) entre variantes se elige con elegirVariante (la que tiene precio y rareza antes que la Normal vacía).
+    const aFila = c => {
+      const nm = c.prices?.raw?.near_mint?.tcgplayer, lp = c.prices?.raw?.lightly_played?.tcgplayer;
+      return { tcgId: c.id, variant: c.variant || null, rarity: c.rarity || null, market: (nm || lp)?.market || null, _c: c };
+    };
+    const mismoSetApi = c => {
+      const ids = [c.set?.ptcgoCode, c.set?.id].filter(Boolean).map(x => String(x).toLowerCase());
+      return (!!setCodeLow && ids.includes(setCodeLow)) || nombreSetCompatible(setName, c.set?.name);
+    };
+    let match = null;
+    if (number && numNorm) {
+      const base = cards.filter(c => normNum(c.number) === numNorm && normName(c.name) === nameNorm);
+      let pool = base;
+      if (!slug && new Set(base.map(c => c.set?.id || c.set?.name)).size > 1) pool = base.filter(mismoSetApi);
+      const elegido = pool.length ? elegirVariante(pool.map(aFila)) : null;
+      match = elegido ? elegido._c : null;
+    }
+    // Candidatos mostrados: primero los que coinciden en número (y set), después el resto en el orden de la API.
+    const ordenados = cards.map((c, i) => ({ c, i, p: (numNorm && normNum(c.number) === numNorm ? 100 : 0) + (mismoSetApi(c) ? 50 : 0) }))
+      .sort((x, y) => y.p - x.p || x.i - y.i).map(x => x.c);
+    const candidatos = ordenados.slice(0, 10).map(c => {
       const nm = c.prices?.raw?.near_mint?.tcgplayer, lp = c.prices?.raw?.lightly_played?.tcgplayer;
       const best = nm || lp;
-      return { name: c.name, number: c.number, setId: c.set?.id, setCode: c.set?.ptcgoCode, tieneRaw: !!best, market: best?.market || null, low: best?.low || null, high: best?.high || null };
+      return { name: c.name, number: c.number, setId: c.set?.id, setCode: c.set?.ptcgoCode, variant: c.variant || null, tieneRaw: !!best, market: best?.market || null, low: best?.low || null, high: best?.high || null };
     });
     if (!match) return { query: q, candidatos, matchEncontrado: false };
     const nm = match.prices?.raw?.near_mint?.tcgplayer, lp = match.prices?.raw?.lightly_played?.tcgplayer;

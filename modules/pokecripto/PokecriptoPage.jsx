@@ -186,15 +186,25 @@ const COLECCIONES_ILUSTRADOR = [
 const CARPETAS_RETIRADAS = ["Shibuzoh","Eri Yamaki","sui"];
 const CAMPOS_COLECCION = "id,name,number,artist,images,supertype,subtypes";
 const esPokemonCarta = c => String(c.supertype||"").toLowerCase().startsWith("pok");
+// Era Mega Evolution (8-nov-2026, a pedido de Cristopher: "los mega son solo de megaevolution"): sets me1, me2, me2pt5,
+// me3… (id que empieza con "me") o lanzados desde el 26-sep-2025 (me1). Sirve tanto para un set como para una entrada
+// del catálogo ({setId, releaseDate}).
+const esEraMegaEvolution = (id, releaseDate) => /^me/i.test(String(id||""))||String(releaseDate||"").replace(/\//g,"-")>="2025-09-26";
 const REGLAS_COLECCION = {
-  // Todos los Pokémon Mega: era XY ("M Venusaur-EX") y era Mega Evolution ("Mega Dragalge ex"). Solo supertype Pokémon: sin
-  // esto entrarían entrenadores como "Mega Signal".
-  mega:(c)=>esPokemonCarta(c)&&((c.subtypes||[]).some(t=>String(t).toLowerCase()==="mega")||/^Mega\s/i.test(c.name||"")||/^M\s.+-EX$/i.test(c.name||"")),
+  // Pokémon Mega de la era Mega Evolution ("Mega Dragalge ex"). Las XY ("M Venusaur-EX") ya no entran. Solo supertype
+  // Pokémon: sin esto entrarían entrenadores como "Mega Signal".
+  mega:(c,s)=>esPokemonCarta(c)&&esEraMegaEvolution(s?.id,s?.releaseDate)&&((c.subtypes||[]).some(t=>String(t).toLowerCase()==="mega")||/^Mega\s/i.test(c.name||"")),
   // Cartas Tera de Scarlet & Violet: subtipo "Tera" de pokemontcg.io.
   tera:(c)=>esPokemonCarta(c)&&(c.subtypes||[]).some(t=>String(t).toLowerCase()==="tera"),
-  // Pikachu del set 30th Celebration (me55): las 30 ilustraciones de Pikachu.
-  pikachu30:(c,s)=>s?.id==="me55"&&/^Pikachu\b/i.test(c.name||""),
+  // Pikachu del set 30th Celebration (me55): las 30 ilustraciones de Pikachu. Sin los ex (8-nov-2026).
+  pikachu30:(c,s)=>s?.id==="me55"&&/^Pikachu\b/i.test(c.name||"")&&!/\bex\b/i.test(c.name||"")&&!(c.subtypes||[]).some(t=>String(t).toLowerCase()==="ex"),
 };
+// Bajas por cambio de regla (8-nov-2026): cartas que estaban en la colección y ya no cumplen la regla. Solo se quitan las
+// que siguen en "hunting" (nunca una que tengas o hayas comprado).
+const BAJAS_POR_REGLA = [
+  {carpeta:"Mega",       quitar:d=>!esEraMegaEvolution(d.setId,d.releaseDate)},
+  {carpeta:"Pikachu 30", quitar:d=>/\bex\b/i.test(d.name||"")},
+];
 function matchIlustrador(card, def, set){
   if(def.regla) return !!REGLAS_COLECCION[def.regla]?.(card,set);
   const a=(card.artist||"").trim().toLowerCase();
@@ -864,6 +874,26 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     }
     if(carpetasSobran.length) saveCarpetas(carpetas.filter(n=>!carpetasSobran.includes(n)));
   },[carpetas,inventario,darkCatalogo]);
+
+  // ── Baja por cambio de regla (8-nov-2026, issue #37) ──
+  // Mega: solo era Mega Evolution (fuera las XY); Pikachu 30: fuera los ex. Mismo mecanismo que la baja de carpetas
+  // retiradas, pero solo para cartas en "hunting" y solo las de esa carpeta. Cada baja se encola para que el bot la
+  // quite también del canónico.
+  React.useEffect(()=>{
+    if(!inventario||!darkCatalogo) return;
+    const dEnCat=darkCatalogo.filter(d=>BAJAS_POR_REGLA.some(b=>b.carpeta===d.carpeta&&b.quitar(d)));
+    if(!dEnCat.length) return;
+    const claves=new Set(dEnCat.map(d=>d.carpeta+"::"+d.cardId));
+    const quitar=inventario.filter(c=>claves.has(c.carpeta+"::"+c.cardId)&&c.estado==="hunting");
+    const idsQuitar=new Set(quitar.map(c=>c.id));
+    // del catálogo solo salen las que se quitan del inventario (o que ya no están en él); una que ya conseguiste se queda
+    const conservar=new Set(inventario.filter(c=>claves.has(c.carpeta+"::"+c.cardId)&&c.estado!=="hunting").map(c=>c.carpeta+"::"+c.cardId));
+    saveDarkCatalogo(prev=>(prev||[]).filter(d=>!claves.has(d.carpeta+"::"+d.cardId)||conservar.has(d.carpeta+"::"+d.cardId)));
+    if(quitar.length){
+      saveInventario(prev=>(prev||[]).filter(c=>!idsQuitar.has(c.id)));
+      encolarPokecriptoPending(quitar.map(c=>({id:c.id,_baja:true})));
+    }
+  },[inventario,darkCatalogo]);
 
   const [pokecriptoSyncMsg, setPokecriptoSyncMsg] = React.useState(null);
   function pedirPokecriptoAuth(){

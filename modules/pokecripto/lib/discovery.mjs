@@ -12,6 +12,7 @@
 // en esa corrida (ver build-pokecripto.mjs). Todo queda en el log.
 import { normNum, normName, TCG_BASE } from "./pricing.mjs";
 import { mismoSet, normSet } from "./review.mjs";
+import { elegirVariante } from "./variantes.mjs";
 
 export const POR_PAGINA = 100;
 
@@ -28,12 +29,14 @@ export function normalizarResultado(c) {
 }
 
 // Una página de resultados para una consulta de texto libre.
-export async function fetchTCGPagina(q, apiKey, page = 1) {
+// slug (8-nov-2026, issue #37): acota la búsqueda al set (`set=<slug>&q=<nombre>`); así un nombre común (Pikachu) no se pierde
+// entre otros sets y todas las filas devueltas son del set de la carta.
+export async function fetchTCGPagina(q, apiKey, page = 1, slug = null) {
   if (!apiKey) return { ok: false, status: 0, error: "sin API key", cards: [] };
   try {
     let r, intento = 0;
     while (true) {
-      const url = `${TCG_BASE}/cards/search?q=${encodeURIComponent(q)}&game=pokemon&limit=${POR_PAGINA}${page > 1 ? `&page=${page}` : ""}`;
+      const url = `${TCG_BASE}/cards/search?${slug ? `set=${encodeURIComponent(slug)}&` : ""}q=${encodeURIComponent(q)}&game=pokemon&limit=${POR_PAGINA}${page > 1 ? `&page=${page}` : ""}`;
       r = await fetch(url, { headers: { "X-API-Key": apiKey }, signal: AbortSignal.timeout(15000) });
       if (r.status !== 429 || intento >= 2) break;
       const ra = parseInt(r.headers.get("retry-after") || "", 10);
@@ -60,17 +63,8 @@ export async function fetchTCGPagina(q, apiKey, page = 1) {
 // el mismo nombre+número dejaban la carta "ambigua" y sin tcgId: causa principal de que la búsqueda individual
 // resolviera 3 de 66. La carta del inventario no distingue variantes, así que se toma la impresión base: Normal, si no
 // Holofoil; si solo queda una que no sea Reverse Holofoil, esa; si no se puede decidir, no se empareja.
-export function elegirVariante(cands) {
-  const lista = cands || [];
-  if (lista.length === 1) return lista[0];
-  for (const v of ["normal", "holofoil"]) {
-    const m = lista.filter(c => String(c.variant || "").toLowerCase() === v);
-    if (m.length === 1) return m[0];
-    if (m.length > 1) return null;
-  }
-  const noRev = lista.filter(c => !/reverse/i.test(String(c.variant || "")));
-  return noRev.length === 1 ? noRev[0] : null;
-}
+// elegirVariante vive en variantes.mjs (sin ciclos con pricing.mjs); se re-exporta para no cambiar a los que importan de acá.
+export { elegirVariante };
 
 // opts.setSeguro: los resultados vienen de una consulta filtrada por el set de la carta (`set=<slug>`), así que no hay
 // que contrastar el set por nombre/código (cada API los nombra distinto).

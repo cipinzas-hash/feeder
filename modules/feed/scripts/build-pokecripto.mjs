@@ -270,22 +270,28 @@ async function main() {
   const porPrioridadSinTplEdad = (a, b) => prioridadCarta(a) - prioridadCarta(b) || (sinTpl(b) - sinTpl(a)) || claveEdad(a).localeCompare(claveEdad(b));
   const candidatas = activas.filter(c => c.name && !tcgIdDe(c) && !actualizadas.has(c.id)).sort(porPrioridadSinTplEdad);
   console.log(`Búsqueda individual: ${candidatas.length} carta(s) sin tcgId; cupo para ${TCG_API_KEY ? Math.max(0, RESERVA_TCG_DIARIA - tcgUsadas) : 0} consulta(s) más`);
+  // La búsqueda acotada al set solo se usa si la API de sets funciona (si el descubrimiento por set se apagó, `set=` no sirve).
+  const busquedaPorSet = !!setsApi && !(estado.descubrimientoSetApagadoHasta && hoy < estado.descubrimientoSetApagadoHasta);
   let cosechadas = 0, busquedasTcg = 0, resueltas = 0, sinResolver = 0;
   for (let i = 0; i < candidatas.length; i++) {
     if (!TCG_API_KEY || !hayCupo()) break;
     const carta = candidatas[i];
     if (actualizadas.has(carta.id) || tcgIdDe(carta)) continue; // ya resuelta como cosecha de una búsqueda anterior
     const ov = carta.tcgOverride;
-    const q = ov ? `${ov.name} ${ov.number}` : (carta.number ? `${carta.name} ${carta.number}` : carta.name);
+    // 8-nov-2026 (issue #37): si se conoce el slug del set de la carta, la búsqueda va acotada al set (nombre solo) y las
+    // filas devueltas se emparejan con setSeguro: el número de carta decide dentro del set. Sin slug (o con designación
+    // manual) se busca como siempre, en texto libre.
+    const apiSet = !ov && busquedaPorSet ? slugParaSet(carta.set, setsApi) : null;
+    const q = ov ? `${ov.name} ${ov.number}` : (apiSet ? carta.name : (carta.number ? `${carta.name} ${carta.number}` : carta.name));
     try {
-      const r = await fetchTCGPagina(q, TCG_API_KEY, 1);
+      const r = await fetchTCGPagina(q, TCG_API_KEY, 1, apiSet?.slug || null);
       tcgUsadas++; busquedasTcg++; registrarCupo(r.rate);
       if (!r.ok) {
         console.log(`✗ (${i + 1}/${candidatas.length}) ${carta.name}: búsqueda ${r.error}`);
         if (r.status === 429) { restanteReal = 0; break; } // cupo agotado de verdad: nada más por hoy
         failCount++; continue;
       }
-      for (const [id, m] of asignarTcgIds(activas.filter(c => !tcgIdDe(c)), r.cards, { tomados })) {
+      for (const [id, m] of asignarTcgIds(activas.filter(c => !tcgIdDe(c) && (!apiSet || c.set === carta.set)), r.cards, { tomados, ...(apiSet ? { setSeguro: true } : {}) })) {
         parches.set(id, { tcgId: m.tcgId });
         if (id !== carta.id) cosechadas++;
         if (m.market && !actualizadas.has(id)) { actualizadas.set(id, snapshotDe(porId.get(id), m, "tpl")); okCount++; }
