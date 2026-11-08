@@ -1,0 +1,109 @@
+{
+ "fecha": "2026-11-08T01:31:20.856Z",
+ "sets": [
+  {
+   "id": "me55",
+   "name": "30th Celebration",
+   "series": "Mega Evolution",
+   "total": 161,
+   "releaseDate": "2026/09/16",
+   "updatedAt": "2026/09/14 15:00:00"
+  },
+  {
+   "id": "me55c",
+   "name": "30th Celebration: Classic Collection",
+   "series": "Mega Evolution",
+   "total": 30,
+   "releaseDate": "2026/09/16",
+   "updatedAt": "2026/09/14 15:00:00"
+  },
+  {
+   "id": "me5",
+   "name": "Pitch Black",
+   "series": "Mega Evolution",
+   "total": 120,
+   "releaseDate": "2026/07/17",
+   "updatedAt": "2026/07/16 15:00:00"
+  },
+  {
+   "id": "me4",
+   "name": "Chaos Rising",
+   "series": "Mega Evolution",
+   "total": 122,
+   "releaseDate": "2026/05/22",
+   "updatedAt": "2026/05/21 15:00:00"
+  },
+  {
+   "id": "me3",
+   "name": "Perfect Order",
+   "series": "Mega Evolution",
+   "total": 124,
+   "releaseDate": "2026/03/27",
+   "updatedAt": "2026/003/26 15:00:00"
+  },
+  {
+   "id": "me2pt5",
+   "name": "Ascended Heroes",
+   "series": "Mega Evolution",
+   "total": 295,
+   "releaseDate": "2026/01/30",
+   "updatedAt": "2026/01/30 15:00:00"
+  },
+  {
+   "id": "me2",
+   "name": "Phantasmal Flames",
+   "series": "Mega Evolution",
+   "total": 130,
+   "releaseDate": "2025/11/14",
+   "updatedAt": "2025/09/25 15:00:00"
+  },
+  {
+   "id": "me1",
+   "name": "Mega Evolution",
+   "series": "Mega Evolution",
+   "total": 188,
+   "releaseDate": "2025/09/26",
+   "updatedAt": "2025/09/25 15:00:00"
+  },
+  {
+   "id": "rsv10pt5",
+   "name": "White Flare",
+   "series": "Scarlet & Violet",
+   "total": 173,
+   "releaseDate": "2025/07/18",
+   "updatedAt": "2025/07/17 15:00:00"
+  },
+  {
+   "id": "zsv10pt5",
+   "name": "Black Bolt",
+   "series": "Scarlet & Violet",
+   "total": 172,
+   "releaseDate": "2025/07/18",
+   "updatedAt": "2025/07/17 15:00:00"
+  },
+  {
+   "id": "sv10",
+   "name": "Destined Rivals",
+   "series": "Scarlet & Violet",
+   "total": 244,
+   "releaseDate": "2025/05/30",
+   "updatedAt": "2025/05/29 22:00:00"
+  },
+  {
+   "id": "sv9",
+   "name": "Journey Together",
+   "series": "Scarlet & Violet",
+   "total": 190,
+   "releaseDate": "2025/03/28",
+   "updatedAt": "2025/03/27 16:00:00"
+  }
+ ],
+ "delta": [],
+ "errores": [
+  "https://api.pokemontcg.io/v2/cards?q=set.name:\"Delta Reign\"&pageSize=1&select=id,name intento 1: HTTP 502",
+  "https://api.pokemontcg.io/v2/cards?q=set.name:\"Delta Reign\"&pageSize=1&select=id,name intento 2: HTTP 500"
+ ],
+ "deltaCartas": {
+  "totalCount": 0
+ }
+}
