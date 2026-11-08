@@ -649,19 +649,41 @@ async function pickBestMatchClip(items, nombreA, nombreB, roundLabel, excluir = 
   return candidatos[0] || null;
 }
 
-// Canales de producción confirmados por torneo -- restringe la búsqueda de
-// YouTube a ese canal en vez de texto libre por todo YouTube. Necesario
-// porque el nombre de varios majors colisiona con vocabulario genérico de
-// altísimo volumen (ver caso "CEO": búsqueda de texto libre devolvía dramas
-// românticos/de negocios con "CEO" en el título, nunca los sets reales del
-// torneo, aunque SÍ existen subidos individualmente por set en YouTube).
-// Solo mapear acá lo que esté confirmado -- si un torneo no está en este
-// mapa, se usa búsqueda de texto libre sin restricción (comportamiento
-// anterior), no asumir que todos comparten productora.
-const KNOWN_PRODUCTION_CHANNEL = {
-  "CEO 2026": "UCj1J3QuIftjOq9iv_rr7Egw", // VGBootCamp -- confirmado (transmite CEO)
-  "Supernova 2026": "UCj1J3QuIftjOq9iv_rr7Egw", // VGBootCamp -- organizador directo de Supernova
-};
+// CANALES DE PRODUCCIÓN (nov-2026). Quién TRANSMITE y sube los VODs, no quién organiza: VGBootCamp
+// produce streams de otros TOs sin capacidad técnica (Riptide, GOML), así que el canal no sale
+// del nombre del organizador. IDs resueltos y verificados con docs/diag-canales-melee.md (Actions,
+// 8-nov-2026): cada canal devolvió VODs del evento correcto.
+//
+// Esta lista cumple DOS funciones:
+//  1. Restringe la búsqueda de YouTube a ese canal. Ya NO se busca en todo YouTube (el caso "CEO"
+//     devolvía dramas de negocios, y la búsqueda libre colaba videos de otros sets).
+//  2. Define qué torneos se archivan: SOLO majors y súper majors (criterio de Cristopher). Un
+//     torneo que no coincide con ningún patrón no recibe búsqueda de videos ni archivo de sets
+//     (se anota en meleeDebug como sinCanalMapeado: si es un major nuevo, se agrega acá).
+// `style`: "vgbc" = títulos "TORNEO ETIQUETA - Ganador vs Perdedor" (se imita en la consulta);
+// "generic" = "Jugador (Fox) vs Jugador (Marth) - Ronda - Melee Singles | GX3" (solo nombres).
+const VGBC_CHANNEL = "UCj1J3QuIftjOq9iv_rr7Egw";
+const PRODUCTION_CHANNELS = [
+  { re: /\bceo\b/i, channelId: VGBC_CHANNEL, producer: "VGBootCamp", style: "vgbc" },
+  { re: /supernova/i, channelId: VGBC_CHANNEL, producer: "VGBootCamp", style: "vgbc" },
+  { re: /riptide/i, channelId: VGBC_CHANNEL, producer: "VGBootCamp", style: "vgbc" }, // organiza Riptide, transmite VGBootCamp
+  { re: /goml|get on my level/i, channelId: VGBC_CHANNEL, producer: "VGBootCamp", style: "vgbc" },
+  { re: /genesis/i, channelId: "UC7boel3KeF8CfIoe0j1WHqA", producer: "Genesis (genesisgg)", style: "generic" },
+  { re: /port priority/i, channelId: "UCqB7d-vcBxxlccHB3oMk6ew", producer: "The Satellite Network", style: "generic" },
+  { re: /battle of bc/i, channelId: "UCG-pxOMgCQ3AtsxVPWk3XuQ", producer: "Galint Gaming VODs", style: "generic" },
+];
+function productionChannelFor(tournamentName) {
+  return PRODUCTION_CHANNELS.find(c => c.re.test(tournamentName || "")) || null;
+}
+
+// Ventana de publicación de los VODs de un evento: desde el día antes de que empiece hasta 75 días
+// después (hay producciones que suben tarde). Evita que un video de OTRA edición del mismo
+// torneo (GX3 vs GX4, mismos jugadores) pase por el clip del set buscado.
+function ventanaPublicacion(startAtSeconds) {
+  if (!startAtSeconds) return null;
+  const iso = ms => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
+  return { after: iso(startAtSeconds * 1000 - 86400000), before: iso(startAtSeconds * 1000 + 75 * 86400000) };
+}
 
 // Mapea el fullRoundText de start.gg (ej. "Grand Final", "Winners
 // Quarter-Final") a la etiqueta que VGBootCamp usa como prefijo real del
@@ -721,31 +743,25 @@ function clipCacheKey(ganadorNombre, perdedorNombre, ronda) {
   return `${ganadorNombre}|${perdedorNombre}|${ronda || ""}`;
 }
 
-async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roundLabel, excluir = new Set()) {
+async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roundLabel, excluir = new Set(), startAtSeconds = null) {
   if (!YOUTUBE_API_KEY) return null;
   if (youtubeQuotaExhausted) return null;
-  const channelId = KNOWN_PRODUCTION_CHANNEL[tournamentName];
-  // Con etiqueta de ronda: imita el orden real del título de VGBootCamp
-  // (TORNEO ETIQUETA - Ganador vs Perdedor), mucho más específico que solo
-  // nombres + torneo. Sin ronda conocida (upsets fuera de Top 8, docClips):
-  // se mantiene la forma anterior, sin inventar una etiqueta que no sabemos
-  // si existe para esos sets.
+  // Solo majors con canal conocido: sin canal mapeado NO se busca (ni en todo YouTube).
+  const canal = productionChannelFor(tournamentName);
+  if (!canal) return null;
+  // Estilo "vgbc": imita el título real (TORNEO ETIQUETA - Ganador vs Perdedor). Estilo "generic": los
+  // títulos empiezan por los jugadores y no llevan "TOP 8"; solo se conserva la etiqueta de las
+  // finales (GRAND/WINNERS/LOSERS FINALS), que sí aparece y desempata WF/GF/LF entre los mismos rivales.
+  const etiqueta = canal.style === "vgbc" ? roundLabel : (FINALS_LABELS.includes(roundLabel) ? roundLabel : null);
   const ganadorLimpio = stripSponsorTag(ganadorNombre);
   const perdedorLimpio = stripSponsorTag(perdedorNombre);
   const q = encodeURIComponent(
-    roundLabel
-      ? `${tournamentName} ${roundLabel} ${ganadorLimpio} vs ${perdedorLimpio}`
-      : `${ganadorLimpio} vs ${perdedorLimpio} ${tournamentName}`
+    canal.style === "vgbc"
+      ? (etiqueta ? `${tournamentName} ${etiqueta} ${ganadorLimpio} vs ${perdedorLimpio}` : `${ganadorLimpio} vs ${perdedorLimpio} ${tournamentName}`)
+      : `${ganadorLimpio} vs ${perdedorLimpio}${etiqueta ? " " + etiqueta : ""}`
   );
   try {
-    let searchData = await runClipSearch(q, channelId);
-    // Si la búsqueda restringida al canal no devolvió nada, probar sin
-    // restricción antes de rendirse -- puede que el video exista pero esté
-    // subido a un canal secundario (ej. "VGBootCamp Clips" en vez del
-    // principal) que no está en el mapa.
-    if (channelId && (!searchData?.items || !searchData.items.length)) {
-      searchData = await runClipSearch(q, null);
-    }
+    const searchData = await runClipSearch(q, canal.channelId, ventanaPublicacion(startAtSeconds));
     if (searchData?.error) {
       const msg = searchData.error.message || JSON.stringify(searchData.error);
       if (/quota/i.test(msg)) youtubeQuotaExhausted = true;
@@ -778,10 +794,11 @@ async function findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roun
   }
 }
 
-async function runClipSearch(q, channelId) {
+async function runClipSearch(q, channelId, ventana = null) {
   const channelParam = channelId ? `&channelId=${channelId}` : "";
+  const ventanaParam = ventana ? `&publishedAfter=${encodeURIComponent(ventana.after)}&publishedBefore=${encodeURIComponent(ventana.before)}` : "";
   const searchRes = await fetch(
-    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=5${channelParam}&key=${YOUTUBE_API_KEY}`
+    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${q}&type=video&maxResults=5${channelParam}${ventanaParam}&key=${YOUTUBE_API_KEY}`
   );
   return searchRes.json();
 }
@@ -1449,6 +1466,15 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
     // terminado el torneo — se busca/reintenta una vez que pasa a COMPLETED.
     if (state === "COMPLETED" && previousProcessedEventIds.includes(eventInfo.id)) continue; // ya escaneado y cerrado
 
+    // Solo majors y súper majors (criterio de Cristopher, nov-2026): un torneo sin canal de producción
+    // mapeado no se archiva ni recibe búsqueda de videos. Si es un major nuevo, hay que sumarlo a
+    // PRODUCTION_CHANNELS (queda anotado en meleeDebug). Lo ya archivado de torneos pasados no se toca.
+    if (!productionChannelFor(tournamentName)) {
+      console.log(`⚠ Melee · "${tournamentName}" (${state}) no tiene canal de producción mapeado: se omite (¿major nuevo? agregar a PRODUCTION_CHANNELS)`);
+      meleeDebug.push({ slug, tournamentName, state, sinCanalMapeado: true });
+      continue;
+    }
+
     let sets = [];
     try {
       sets = await fetchCompletedSets(eventInfo.id);
@@ -1471,7 +1497,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
         // ACTIVE, sin VOD todavía). Si ahora el torneo está COMPLETED y
         // sigue sin VOD, se reintenta la búsqueda; si no, se deja tal cual.
         if (state === "COMPLETED" && !already.videoId) {
-          const vod = (await findMatchClip(tournamentName, u.ganador.nombre, u.perdedor.nombre, productionRoundLabel(u.ronda))) || { videoId: null, startSeconds: 0 };
+          const vod = (await findMatchClip(tournamentName, u.ganador.nombre, u.perdedor.nombre, productionRoundLabel(u.ronda), undefined, eventInfo.startAt)) || { videoId: null, startSeconds: 0 };
           if (vod.videoId) upsetItems.push({ ...already, videoId: vod.videoId, startSeconds: vod.startSeconds });
         }
         continue;
@@ -1480,7 +1506,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
       // Durante ACTIVE no se busca VOD — el video de top 8 normalmente sube
       // recién terminado el torneo, así que sería gastar cuota de YouTube
       // buscando algo que casi seguro no existe todavía.
-      const vod = state === "COMPLETED" ? ((await findMatchClip(tournamentName, u.ganador.nombre, u.perdedor.nombre, productionRoundLabel(u.ronda))) || { videoId: null, startSeconds: 0 }) : { videoId: null, startSeconds: 0 };
+      const vod = state === "COMPLETED" ? ((await findMatchClip(tournamentName, u.ganador.nombre, u.perdedor.nombre, productionRoundLabel(u.ronda), undefined, eventInfo.startAt)) || { videoId: null, startSeconds: 0 }) : { videoId: null, startSeconds: 0 };
       const pjGanador = u.ganador.pj ? ` (${u.ganador.pj})` : "";
       const pjPerdedor = u.perdedor.pj ? ` (${u.perdedor.pj})` : "";
       // Etiqueta: seed si el torneo lo tenía, si no SSBMRank, si no nada --
@@ -1572,7 +1598,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
         );
         const finalistNames = [...standings].sort((a, b) => a.placement - b.placement).slice(0, 2).map(s => s.entrant.name);
         const vod = finalistNames.length === 2
-          ? (await findMatchClip(tournamentName, finalistNames[0], finalistNames[1], "GRAND FINALS")) || { videoId: null, startSeconds: 0 }
+          ? (await findMatchClip(tournamentName, finalistNames[0], finalistNames[1], "GRAND FINALS", undefined, eventInfo.startAt)) || { videoId: null, startSeconds: 0 }
           : { videoId: null, startSeconds: 0 };
 
         // Tres secciones, cada una con clip cortado individual (findMatchClip,
@@ -1593,7 +1619,7 @@ async function fetchMeleeItems(previousUpsetItemsByGuid, previousProcessedEventI
           const key = keyOf(ganadorNombre, perdedorNombre, ronda);
           if (clipCache.has(key)) return clipCache.get(key);
           const excluir = new Set([...videoOwner].filter(([, k]) => k !== key).map(([v]) => v));
-          const clip = await findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roundLabel, excluir);
+          const clip = await findMatchClip(tournamentName, ganadorNombre, perdedorNombre, roundLabel, excluir, eventInfo.startAt);
           clipCache.set(key, clip);
           if (clip?.videoId) videoOwner.set(clip.videoId, key);
           return clip;
@@ -1838,7 +1864,7 @@ async function main() {
   console.log(`✓ ${items.length} ítems de Melee (${allArchiveItems.length} archivo(s) permanente(s)) · ${Object.keys(mergedClipState).length} clip(s) en estado persistido`);
 }
 
-export { top8RoundOrder, ronda7mos, buildTop8Ordered, pickBestMatchClip, findMatchClip, clipCacheKey };
+export { top8RoundOrder, ronda7mos, buildTop8Ordered, pickBestMatchClip, findMatchClip, clipCacheKey, productionChannelFor, ventanaPublicacion, PRODUCTION_CHANNELS };
 
 // Solo corre el pipeline cuando se ejecuta como script (no al importarlo desde tests/).
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

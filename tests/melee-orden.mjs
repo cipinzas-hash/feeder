@@ -74,15 +74,70 @@ await t("un video ya asignado a otro set se excluye (no se repite entre dos sets
   const b = await M.pickBestMatchClip([{ id: { videoId: "v1" } }, { id: { videoId: "v2" } }], "Soonsay", "Rapmonster", "GRAND FINALS", new Set(["v2"]));
   assert.notEqual(b.videoId, "v2");
 });
+// Recoge las URLs que se piden a YouTube para inspeccionar la consulta (q, channelId, fechas).
+function espiarYouTube(ids, titulosPorId = titulos) {
+  const urls = [];
+  globalThis.fetch = async url => {
+    const u = String(url); urls.push(u);
+    if (u.includes("/search?")) return { json: async () => ({ items: ids.map(id => ({ id: { videoId: id }, snippet: { title: titulosPorId[id] } })) }) };
+    return { json: async () => ({ items: ids.map(id => ({ id, snippet: { title: titulosPorId[id] }, contentDetails: { duration: "PT22M" } })) }) };
+  };
+  return urls;
+}
+const param = (url, k) => new URL(url).searchParams.get(k);
+
 await t("un título con UN solo nombre se rechaza (antes bastaba y se colaba otro set del jugador)", async () => {
-  simularYouTube(["v3"]);
-  titulos.v3 = "Soonsay wins big | Platfight 2026 highlights"; // un solo nombre
-  const r = await M.findMatchClip("Platfight 2026", "Soonsay", "Rapmonster", null);
-  assert.equal(r, null);
+  espiarYouTube(["v3"], { v3: "Soonsay wins big | GX4 highlights" });
+  assert.equal(await M.findMatchClip("GENESIS X4", "Soonsay", "Rapmonster", null), null);
 });
 await t("un título con los dos nombres se acepta", async () => {
-  simularYouTube(["v2"]);
-  const r = await M.findMatchClip("Platfight 2026", "Soonsay", "Rapmonster", "GRAND FINALS");
-  assert.deepEqual(r, { videoId: "v2", startSeconds: 0 });
+  espiarYouTube(["v2"]);
+  assert.deepEqual(await M.findMatchClip("GENESIS X4", "Soonsay", "Rapmonster", "GRAND FINALS"), { videoId: "v2", startSeconds: 0 });
+});
+
+console.log("Canales de producción (solo majors, sin búsqueda libre)");
+const VGBC = "UCj1J3QuIftjOq9iv_rr7Egw";
+await t("VGBootCamp transmite CEO, Supernova, Riptide y GOML aunque no los organice", () => {
+  for (const n of ["CEO 2027", "Supernova 2027", "Riptide 2027", "GOML 2027", "Get On My Level 2027"]) assert.equal(M.productionChannelFor(n)?.channelId, VGBC, n);
+});
+await t("Genesis, Port Priority y Battle of BC tienen su propio canal (IDs verificados en Actions)", () => {
+  assert.equal(M.productionChannelFor("GENESIS X4")?.channelId, "UC7boel3KeF8CfIoe0j1WHqA");
+  assert.equal(M.productionChannelFor("Port Priority: DX")?.channelId, "UCqB7d-vcBxxlccHB3oMk6ew");
+  assert.equal(M.productionChannelFor("Battle of BC 9")?.channelId, "UCG-pxOMgCQ3AtsxVPWk3XuQ");
+});
+await t("lo que no es un major mapeado no tiene canal (Platfight, Taking Back Tampa, Tipped Off): no se archiva", () => {
+  for (const n of ["Platfight 2026", "Taking Back Tampa", "Tipped Off 18", "", undefined]) assert.equal(M.productionChannelFor(n), null, String(n));
+});
+await t("torneo sin canal mapeado: NO se consulta YouTube (cero requests) y no hay clip", async () => {
+  const urls = espiarYouTube(["v2"]);
+  assert.equal(await M.findMatchClip("Platfight 2026", "Soonsay", "Rapmonster", "GRAND FINALS"), null);
+  assert.equal(urls.length, 0);
+});
+await t("torneo mapeado: la búsqueda va restringida al canal y NO se reintenta en todo YouTube si viene vacía", async () => {
+  const urls = espiarYouTube([]);
+  assert.equal(await M.findMatchClip("GENESIS X4", "Soonsay", "Rapmonster", "GRAND FINALS", new Set(), 1802000000), null);
+  assert.equal(urls.length, 1, "una sola búsqueda, sin segundo intento sin canal");
+  assert.equal(param(urls[0], "channelId"), "UC7boel3KeF8CfIoe0j1WHqA");
+});
+await t("ventana de fechas: solo videos publicados desde el día antes del evento hasta 75 días después", async () => {
+  const urls = espiarYouTube([]);
+  await M.findMatchClip("GENESIS X4", "A", "B", null, new Set(), 1802000000);
+  assert.equal(param(urls[0], "publishedAfter"), "2027-02-06T11:33:20Z");
+  assert.equal(param(urls[0], "publishedBefore"), "2027-04-23T11:33:20Z");
+  assert.equal(M.ventanaPublicacion(null), null);
+});
+await t("estilo vgbc: la consulta imita el título (TORNEO ETIQUETA Ganador vs Perdedor), también TOP 8", async () => {
+  const urls = espiarYouTube([]);
+  await M.findMatchClip("CEO 2027", "Zain", "Cody", "TOP 8", new Set(), 1802000000);
+  assert.equal(param(urls[0], "q"), "CEO 2027 TOP 8 Zain vs Cody");
+  assert.equal(param(urls[0], "channelId"), VGBC);
+});
+await t("estilo generic: solo nombres; 'TOP 8' no existe en esos títulos pero GRAND FINALS sí desempata", async () => {
+  let urls = espiarYouTube([]);
+  await M.findMatchClip("GENESIS X4", "Zain", "Cody", "TOP 8", new Set(), 1802000000);
+  assert.equal(param(urls[0], "q"), "Zain vs Cody");
+  urls = espiarYouTube([]);
+  await M.findMatchClip("GENESIS X4", "Zain", "Cody", "GRAND FINALS", new Set(), 1802000000);
+  assert.equal(param(urls[0], "q"), "Zain vs Cody GRAND FINALS");
 });
 console.log(`\n${process.exitCode ? "FALLÓ" : "OK"}: ${ok} pruebas pasaron`);
