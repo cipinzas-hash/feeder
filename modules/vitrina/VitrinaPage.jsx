@@ -4,6 +4,7 @@ import { MeleeFeed } from "./melee.jsx";
 import { CineCoverFlow, CineExtendedView } from "./cine.jsx";
 import { fetchVitrinaData } from "../shared/catalog.js";
 import { useDesborde } from "../shared/ui.jsx";
+import { listaDeNavegacion } from "./navegacion.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -77,7 +78,7 @@ function VitrinaPage() {
   const [vitrinaData, setVitrinaData] = useState({ "Películas": [], "Series": [], "Animación": [], "Microdocumentales": [], "Melee": [], "Conciertos": [] });
   const [vitrinaOpenItem, setVitrinaOpenItem] = useState(null);
   // Lo que el carrusel necesita para volver igual tras cerrar el detalle: qué película estaba al centro y sus filtros.
-  const memCarrusel = useRef({ guid: null, idx: null, filtros: null });
+  const memCarrusel = useRef({ guid: null, idx: null, filtros: null, lista: null, listaCat: null });
   const [generatedAt, setGeneratedAt] = useState(null);
   // Estado de la carga: antes un fallo de red (o un JSON vacío) dejaba la pantalla
   // en blanco sin distinguirse de "no hay nada".
@@ -110,7 +111,7 @@ function VitrinaPage() {
   }
 
   function stepItem(item, delta) {
-    const list = vitrinaData[vitrinaCat] || [];
+    const list = listaDeNavegacion(memCarrusel.current, vitrinaCat, vitrinaData[vitrinaCat], item.guid);
     const idx = list.findIndex(i => i.guid === item.guid);
     if (idx === -1 || !list.length) { setVitrinaOpenItem(null); return; }
     const sig = list[(idx + delta + list.length) % list.length];

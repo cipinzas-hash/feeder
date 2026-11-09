@@ -63,22 +63,6 @@ function ArchivedFeedCard({ item, visto, onToggleVisto, onNoInteresa, showSource
     }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
         <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff", lineHeight: 1.2, flex: 1 }}>{item.title}</div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
-          <button onClick={onToggleVisto} style={{
-            fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700,
-            border: "1px solid " + (visto ? "#333" : "#26a69a"), borderRadius: 14, padding: "4px 10px",
-            background: "transparent", color: visto ? "#666" : "#26a69a", cursor: "pointer", whiteSpace: "nowrap",
-          }}>
-            {visto ? "✓ visto" : "marcar visto"}
-          </button>
-          <button onClick={onNoInteresa} style={{
-            fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700,
-            border: "1px solid #4a2f2f", borderRadius: 14, padding: "4px 10px",
-            background: "transparent", color: "#a35a5a", cursor: "pointer", whiteSpace: "nowrap",
-          }}>
-            no me interesa
-          </button>
-        </div>
       </div>
       {showSource && item.source && (
         <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>{item.source}</div>
@@ -93,6 +77,24 @@ function ArchivedFeedCard({ item, visto, onToggleVisto, onNoInteresa, showSource
       ) : (
         <a href={item.link} target="_blank" rel="noopener" style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#26a69a" }}>ver original ↗</a>
       )}
+      <div style={{ display: "flex", gap: 14, marginTop: 16 }}>
+        <button onClick={onToggleVisto} style={{
+          flex: 1, minHeight: 44,
+          fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 700,
+          border: "1px solid " + (visto ? "#333" : "#26a69a"), borderRadius: 22, padding: "10px 14px",
+          background: "transparent", color: visto ? "#666" : "#26a69a", cursor: "pointer", whiteSpace: "nowrap",
+        }}>
+          {visto ? "✓ visto" : "marcar visto"}
+        </button>
+        <button onClick={onNoInteresa} style={{
+          flex: 1, minHeight: 44,
+          fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 700,
+          border: "1px solid #4a2f2f", borderRadius: 22, padding: "10px 14px",
+          background: "transparent", color: "#a35a5a", cursor: "pointer", whiteSpace: "nowrap",
+        }}>
+          no me interesa
+        </button>
+      </div>
     </div>
   );
 }

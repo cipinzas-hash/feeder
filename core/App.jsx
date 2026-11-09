@@ -677,6 +677,37 @@ function AngstApp() {
 
   // ── Lineamiento "módulo colapsado, scroll solo al expandir" (prueba en Semana) ──
   const semanaBodyRef = useRef(null);
+  // ── Barra de módulos: scroll horizontal con pistas visuales ──
+  // tabsEdge indica hacia dónde quedan módulos ocultos ("der", "izq", "ambos" o "").
+  const tabsRef=useRef(null);
+  const [tabsEdge,setTabsEdge]=useState("");
+  useEffect(()=>{
+    const el=tabsRef.current; if(!el) return;
+    const medir=()=>{
+      const izq=el.scrollLeft>4, der=el.scrollLeft+el.clientWidth<el.scrollWidth-4;
+      setTabsEdge(izq&&der?"ambos":izq?"izq":der?"der":"");
+    };
+    // Con mouse/trackpad la rueda vertical también mueve la barra en horizontal.
+    const rueda=(e)=>{
+      if(el.scrollWidth<=el.clientWidth) return;
+      const dx=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
+      if(!dx) return;
+      el.scrollLeft+=dx; e.preventDefault();
+    };
+    // Centra el módulo activo (tras la transición de ancho de la pestaña).
+    const centrar=()=>{
+      const act=el.querySelector(".tab.active"); if(!act) return;
+      const r=act.getBoundingClientRect(), c=el.getBoundingClientRect();
+      el.scrollTo({left:el.scrollLeft+(r.left-c.left)-(c.width-r.width)/2,behavior:"smooth"});
+    };
+    el.addEventListener("scroll",medir,{passive:true});
+    el.addEventListener("wheel",rueda,{passive:false});
+    window.addEventListener("resize",medir);
+    const t=setTimeout(centrar,230);
+    medir();
+    return()=>{ clearTimeout(t); el.removeEventListener("scroll",medir); el.removeEventListener("wheel",rueda); window.removeEventListener("resize",medir); };
+  },[page]);
+
   const semanaKeys = Array.from({length:7},(_,k)=>fmtFull(addDays(weekStart,k)));
   const hayDiaAbierto = semanaKeys.some(k=>!minimized[k]);
   const [semanaValvula, setSemanaValvula] = useState(false);
@@ -1731,6 +1762,11 @@ function AngstApp() {
         .saved-msg{font-family:'Caveat',cursive;color:#555;font-size:14px;}
         .tabs{background:#111;border-top:1px solid #1e1e1e;padding:0 16px;display:flex;overflow-x:auto;scrollbar-width:none;}
         .tabs::-webkit-scrollbar{display:none;}
+        .tabs[data-edge="der"]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 30px),transparent);}
+        .tabs[data-edge="izq"]{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 30px),transparent);}
+        .tabs[data-edge="ambos"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 30px,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(to right,transparent,#000 30px,#000 calc(100% - 30px),transparent);}
+        .tab:not(.active){padding:10px 10px;}
+        @media(max-width:420px){.tab:not(.active){padding:10px 8px;}}
         .tab{font-family:'Caveat',cursive;font-size:17px;color:#777;padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;font-weight:700;white-space:nowrap;}
         .tab.active{color:#fff;border-bottom:2px solid #fff;}
         .tab:hover{color:#bbb;}
@@ -1992,7 +2028,7 @@ function AngstApp() {
           // Orden visual: Rutinas va justo después de Semana y Música (id 12) justo después de Feed. Los ids de página (índice en TABS) no se renumeran.
           const ORDER=[0,11,1,2,3,4,5,6,7,8,9,12,10];
           return (
-            <div className="tabs" style={{userSelect:"none"}}>
+            <div className="tabs" ref={tabsRef} data-edge={tabsEdge} style={{userSelect:"none"}}>
               {ORDER.map(ti=>{
                 const tab=TABS[ti];
                 const isActive=ti===page;
@@ -2000,7 +2036,7 @@ function AngstApp() {
                   <div key={ti}
                     className={`tab ${isActive?"active":""}`}
                     onClick={()=>setPage(ti)}
-                    style={{opacity:1,fontSize:isActive?17:18,padding:isActive?"10px 16px":"10px 10px",transition:"all 0.2s"}}>
+                    style={{opacity:1,fontSize:isActive?17:18,padding:isActive?"10px 16px":undefined,transition:"all 0.2s"}}>
                     {isActive?tab.label:tab.emoji}
                   </div>
                 );
