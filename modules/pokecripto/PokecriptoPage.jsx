@@ -4,6 +4,7 @@
 import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPrice, fetchTCGCandidatos, addSnapshot, refreshPrecio as refreshPrecioCompartido, fuenteCompatible } from "./lib/pricing.mjs";
 import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarCandidatos, matchAutomatico, mergeOverrides, claveCandidato, urlsFoto, mismoSet } from "./lib/review.mjs";
 import { marcarEdicionLocal } from "../shared/localedit.js";
+import { esDoubleRare, esAceSpec, carpetaDeCat, invEnCarpeta, invDeCarta, rarezaConocida, sobraPorRareza, entradasFaltantes } from "./lib/colecciones.mjs";
 import { isDarkCard, POKECRIPTO_WORKER_URL, POKECRIPTO_AUTH_KEY, getPokecriptoAuth, encolarPokecriptoPending, buscarCartas, armarCartaNueva } from "./alta.js";
 
 // ─── PokeLoader ───────────────────────────────────────────────────────────────
@@ -87,7 +88,7 @@ async function cargarUsdClp(){
 }
 const CONDICIONES = ["NM","LP","MP","HP","DMG"];
 export const CARPETAS_DEFAULT = ["MLP","Staples & Meta","Dark Collection","Price Watch"];
-const CARPETAS_ICONS = {"MLP":"🐴","Staples & Meta":"⚡","Dark Collection":"⚫","Price Watch":"🎯"};
+const CARPETAS_ICONS = {"MLP":"🐴","Staples & Meta":"⚡","Dark Collection":"⚫","Price Watch":"🎯","ACE SPEC":"🃏"};
 const ESTADOS = {
   hunting:      { label:"hunting",      color:"#7c4dff", bg:"#ede7f6" },
   sin_publicar: { label:"sin publicar", color:"#888",    bg:"#f0f0f0" },
@@ -182,9 +183,10 @@ const COLECCIONES_ILUSTRADOR = [
   {carpeta:"Mega",             regla:"mega"},
   {carpeta:"Tera",             regla:"tera"},
   {carpeta:"Pikachu 30",       regla:"pikachu30"},
+  {carpeta:"ACE SPEC",          regla:"acespec"},
 ];
 const CARPETAS_RETIRADAS = ["Shibuzoh","Eri Yamaki","sui"];
-const CAMPOS_COLECCION = "id,name,number,artist,images,supertype,subtypes";
+const CAMPOS_COLECCION = "id,name,number,artist,images,supertype,subtypes,rarity";
 const esPokemonCarta = c => String(c.supertype||"").toLowerCase().startsWith("pok");
 // Era Mega Evolution (8-nov-2026, a pedido de Cristopher: "los mega son solo de megaevolution"): sets me1, me2, me2pt5,
 // me3… (id que empieza con "me") o lanzados desde el 26-sep-2025 (me1). Sirve tanto para un set como para una entrada
@@ -193,16 +195,22 @@ const esEraMegaEvolution = (id, releaseDate) => /^me/i.test(String(id||""))||Str
 const REGLAS_COLECCION = {
   // Pokémon Mega de la era Mega Evolution ("Mega Dragalge ex"). Las XY ("M Venusaur-EX") ya no entran. Solo supertype
   // Pokémon: sin esto entrarían entrenadores como "Mega Signal".
-  mega:(c,s)=>esPokemonCarta(c)&&esEraMegaEvolution(s?.id,s?.releaseDate)&&((c.subtypes||[]).some(t=>String(t).toLowerCase()==="mega")||/^Mega\s/i.test(c.name||"")),
+  // 9-nov-2026 (issue #39): solo Double Rare (el ex base); fuera full art, illustration rare, special illustration y doradas.
+  mega:(c,s)=>esPokemonCarta(c)&&esDoubleRare(c)&&esEraMegaEvolution(s?.id,s?.releaseDate)&&((c.subtypes||[]).some(t=>String(t).toLowerCase()==="mega")||/^Mega\s/i.test(c.name||"")),
   // Cartas Tera de Scarlet & Violet: subtipo "Tera" de pokemontcg.io.
-  tera:(c)=>esPokemonCarta(c)&&(c.subtypes||[]).some(t=>String(t).toLowerCase()==="tera"),
+  // Solo Double Rare (9-nov-2026, issue #39).
+  tera:(c)=>esPokemonCarta(c)&&esDoubleRare(c)&&(c.subtypes||[]).some(t=>String(t).toLowerCase()==="tera"),
   // Pikachu del set 30th Celebration (me55): las 30 ilustraciones de Pikachu. Sin los ex (8-nov-2026).
+  // ACE SPEC desde que existen (todos los sets; 9-nov-2026, issue #39): rareza "ACE SPEC Rare" o subtipo "ACE SPEC".
+  acespec:(c)=>esAceSpec(c),
   pikachu30:(c,s)=>s?.id==="me55"&&/^Pikachu\b/i.test(c.name||"")&&!/\bex\b/i.test(c.name||"")&&!(c.subtypes||[]).some(t=>String(t).toLowerCase()==="ex"),
 };
 // Bajas por cambio de regla (8-nov-2026): cartas que estaban en la colección y ya no cumplen la regla. Solo se quitan las
 // que siguen en "hunting" (nunca una que tengas o hayas comprado).
 const BAJAS_POR_REGLA = [
-  {carpeta:"Mega",       quitar:d=>!esEraMegaEvolution(d.setId,d.releaseDate)},
+  // quitar(d, rareza): la rareza viene del catálogo o de la carta de inventario ("" si no se sabe: entonces no se quita).
+  {carpeta:"Mega",       quitar:(d,rar)=>!esEraMegaEvolution(d.setId,d.releaseDate)||sobraPorRareza("Mega",rar)},
+  {carpeta:"Tera",       quitar:(d,rar)=>sobraPorRareza("Tera",rar)},
   {carpeta:"Pikachu 30", quitar:d=>/\bex\b/i.test(d.name||"")},
 ];
 function matchIlustrador(card, def, set){
@@ -666,13 +674,13 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               releaseDate:s.releaseDate||"",
             }));
             saveDarkCatalogo(prev=>{
-              const ids=new Set((prev||[]).map(d=>d.cardId));
+              const ids=new Set((prev||[]).filter(d=>carpetaDeCat(d)==="Dark Collection").map(d=>d.cardId));
               const add=nuevas.filter(n=>!ids.has(n.cardId));
               return add.length?[...(prev||[]),...add]:(prev||[]);
             });
             saveInventario(prev=>{
               const cur=prev||[];
-              const ids=new Set(cur.map(c=>c.cardId));
+              const ids=new Set(cur.filter(c=>invEnCarpeta([c],c.cardId,"Dark Collection")).map(c=>c.cardId));
               const add=dark.filter(c=>!ids.has(c.id)).map(c=>huntingEntryFromCard(c,s));
               if(add.length) encolarPokecriptoPending(add);
               if(add.length) snapshotInicial(add);
@@ -711,7 +719,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           if(dark.length){
             saveDarkCatalogo(prev=>{
               const cur=prev||[];
-              const ids=new Set(cur.map(d=>d.cardId));
+              const ids=new Set(cur.filter(d=>carpetaDeCat(d)==="Dark Collection").map(d=>d.cardId));
               const nuevas=dark.filter(c=>!ids.has(c.id)).map(c=>({
                 cardId:c.id,name:c.name,image:c.images?.small||"",
                 number:c.number||"",setName:s.name,setId:s.id,setCode:s.id,
@@ -721,7 +729,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             });
             saveInventario(prev=>{
               const cur=prev||[];
-              const ids=new Set(cur.map(c=>c.cardId));
+              const ids=new Set(cur.filter(c=>invEnCarpeta([c],c.cardId,"Dark Collection")).map(c=>c.cardId));
               const add=dark.filter(c=>!ids.has(c.id)).map(c=>huntingEntryFromCard(c,s));
               if(add.length) encolarPokecriptoPending(add);
               if(add.length) snapshotInicial(add);
@@ -772,7 +780,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             const nuevas=match.map(c=>({
               cardId:c.id,name:c.name,image:c.images?.small||"",
               number:c.number||"",setName:s.name,setId:s.id,setCode:s.id,
-              releaseDate:s.releaseDate||"",carpeta:def.carpeta,artist:c.artist||"",
+              releaseDate:s.releaseDate||"",carpeta:def.carpeta,artist:c.artist||"",rarity:c.rarity||"",
             }));
             saveDarkCatalogo(prev=>{
               const ids=new Set((prev||[]).map(d=>d.cardId+"::"+(d.carpeta||"Dark Collection")));
@@ -781,7 +789,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             });
             saveInventario(prev=>{
               const cur=prev||[];
-              const ids=new Set(cur.map(c=>c.cardId));
+              const ids=new Set(cur.filter(c=>invEnCarpeta([c],c.cardId,def.carpeta)).map(c=>c.cardId));
               const add=match.filter(c=>!ids.has(c.id)).map(c=>huntingEntryFromCard(c,s,def.carpeta));
               if(add.length) encolarPokecriptoPending(add);
               if(add.length) snapshotInicial(add);
@@ -824,13 +832,13 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               const nuevas=match.filter(c=>!ids.has(c.id+"::"+def.carpeta)).map(c=>({
                 cardId:c.id,name:c.name,image:c.images?.small||"",
                 number:c.number||"",setName:s.name,setId:s.id,setCode:s.id,
-                releaseDate:s.releaseDate||"",carpeta:def.carpeta,artist:c.artist||"",
+                releaseDate:s.releaseDate||"",carpeta:def.carpeta,artist:c.artist||"",rarity:c.rarity||"",
               }));
               return nuevas.length?[...cur,...nuevas]:cur;
             });
             saveInventario(prev=>{
               const cur=prev||[];
-              const ids=new Set(cur.map(c=>c.cardId));
+              const ids=new Set(cur.filter(c=>invEnCarpeta([c],c.cardId,def.carpeta)).map(c=>c.cardId));
               const add=match.filter(c=>!ids.has(c.id)).map(c=>huntingEntryFromCard(c,s,def.carpeta));
               if(add.length) encolarPokecriptoPending(add);
               if(add.length) snapshotInicial(add);
@@ -881,7 +889,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // quite también del canónico.
   React.useEffect(()=>{
     if(!inventario||!darkCatalogo) return;
-    const dEnCat=darkCatalogo.filter(d=>BAJAS_POR_REGLA.some(b=>b.carpeta===d.carpeta&&b.quitar(d)));
+    const dEnCat=darkCatalogo.filter(d=>BAJAS_POR_REGLA.some(b=>b.carpeta===d.carpeta&&b.quitar(d,rarezaConocida(d,inventario))));
     if(!dEnCat.length) return;
     const claves=new Set(dEnCat.map(d=>d.carpeta+"::"+d.cardId));
     const quitar=inventario.filter(c=>claves.has(c.carpeta+"::"+c.cardId)&&c.estado==="hunting");
@@ -893,6 +901,57 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       saveInventario(prev=>(prev||[]).filter(c=>!idsQuitar.has(c.id)));
       encolarPokecriptoPending(quitar.map(c=>({id:c.id,_baja:true})));
     }
+  },[inventario,darkCatalogo]);
+
+  // ── Rareza de Mega y Tera (9-nov-2026, issue #39) ──
+  // Los escaneos viejos no pedían `rarity`: casi todas las cartas de Mega/Tera la tienen vacía y sin ella no se sabe cuáles son
+  // Double Rare. Se pide una vez por set (solo id y rareza) y se guarda en el catálogo (identidad de la carta) y en las cartas
+  // de inventario que no la tengan. Después, la baja por regla quita lo que no es Double Rare.
+  const rarezaIntentada=React.useRef(new Set());
+  const rarezaEnCurso=React.useRef(false);
+  React.useEffect(()=>{
+    if(!inventario||!darkCatalogo||rarezaEnCurso.current) return;
+    const sets=[...new Set(darkCatalogo.filter(d=>(d.carpeta==="Mega"||d.carpeta==="Tera")&&d.setId&&!rarezaConocida(d,inventario)&&!rarezaIntentada.current.has(d.setId)).map(d=>d.setId))];
+    if(!sets.length) return;
+    rarezaEnCurso.current=true;
+    (async()=>{
+      const rar={};
+      try{
+        for(const sid of sets){
+          try{
+            const data=await fetchPoke(`${POKE_BASE}/cards?q=set.id:${sid}&select=id,rarity&pageSize=500`);
+            (data.data||[]).forEach(c=>{ if(c.rarity) rar[c.id]=c.rarity; });
+            rarezaIntentada.current.add(sid);
+          }catch(e){}
+          await new Promise(r=>setTimeout(r,350));
+        }
+      } finally { rarezaEnCurso.current=false; }
+      if(!Object.keys(rar).length) return;
+      saveDarkCatalogo(prev=>(prev||[]).some(d=>!d.rarity&&rar[d.cardId])?(prev||[]).map(d=>(!d.rarity&&rar[d.cardId])?{...d,rarity:rar[d.cardId]}:d):prev);
+      saveInventario(prev=>(prev||[]).some(c=>!c.rarity&&rar[c.cardId])?(prev||[]).map(c=>(!c.rarity&&rar[c.cardId])?{...c,rarity:rar[c.cardId]}:c):prev);
+    })();
+  },[inventario,darkCatalogo]);
+
+  // ── Una carta de inventario por colección (9-nov-2026, issue #39) ──
+  // Antes el escaneo no agregaba una carta si ese cardId ya estaba en cualquier carpeta (una Mega que también es Dark solo
+  // existía en una de las dos) y el avance miraba cualquier carpeta. Ahora cada entrada del catálogo tiene su carta en su
+  // colección: las que faltaban se crean en hunting (heredan de la hermana rareza, ilustrador, imágenes y último precio).
+  // No se crean las que la regla va a dar de baja, ni las de Mega/Tera con rareza todavía desconocida (esperan al efecto de arriba).
+  React.useEffect(()=>{
+    if(!inventario||!darkCatalogo) return;
+    const elegibles=darkCatalogo.filter(d=>{
+      const car=carpetaDeCat(d), rar=rarezaConocida(d,inventario);
+      if((car==="Mega"||car==="Tera")&&!rar) return false;
+      return !BAJAS_POR_REGLA.some(b=>b.carpeta===car&&b.quitar(d,rar));
+    });
+    if(!entradasFaltantes(elegibles,inventario,()=>"x").length) return;
+    saveInventario(prev=>{
+      const cur=prev||[];
+      const add=entradasFaltantes(elegibles,cur,d=>Date.now().toString()+Math.random().toString(36).slice(2)+"_"+d.cardId);
+      if(!add.length) return cur;
+      encolarPokecriptoPending(add);
+      return [...cur,...add];
+    });
   },[inventario,darkCatalogo]);
 
   const [pokecriptoSyncMsg, setPokecriptoSyncMsg] = React.useState(null);
@@ -1016,8 +1075,14 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // carta de inv correspondiente (estado/precio/historial/imagen) — desde
   // esta sesión el catálogo NO guarda precio propio, todo vive en inv para
   // que use el mismo mecanismo confiable de snapshots que cualquier carta. ──
+  // La entrada del catálogo de una carta en la colección abierta (la misma carta puede estar en dos colecciones); sin
+  // colección abierta (historial, zoom suelto), la primera.
+  function catDeCarta(cardId){
+    return darkCat.find(d=>d.cardId===cardId&&(!autocolCarpeta||carpetaDeCat(d)===autocolCarpeta))||darkCat.find(d=>d.cardId===cardId);
+  }
+  // Cada colección es individual (issue #39): la carta de inventario es la de SU colección, nunca la de otra.
   function mergeDarkWithInv(catalogEntry){
-    const invMatch=inv.find(c=>c.cardId===catalogEntry.cardId&&c.carpeta!=="Price Watch");
+    const invMatch=invEnCarpeta(inv,catalogEntry.cardId,carpetaDeCat(catalogEntry));
     if(!invMatch) return {...catalogEntry, id:null, estado:"hunting", tcgMarket:null, tcgLow:null, tcgHigh:null, priceHistory:[], notas:"", precioUSD:null};
     return {
       ...catalogEntry,
@@ -1110,7 +1175,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // comprada normal (vía inv directo) -- compartido por irADetalle e
   // irAZoomDirecto, antes estaba duplicado inline.
   function imagenDeCard(cardId){
-    const entry=darkCat.find(d=>d.cardId===cardId);
+    const entry=catDeCarta(cardId);
     if(entry){ const m=mergeDarkWithInv(entry); return m.imageHd||m.image||null; }
     const c=inv.find(c=>c.cardId===cardId&&c.carpeta!=="Price Watch");
     return c?.imageHd||c?.image||null;
@@ -1170,7 +1235,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     }
   }
   function toggleDark(cardId){
-    const invMatch=inv.find(c=>c.cardId===cardId&&c.carpeta!=="Price Watch");
+    const invMatch=invDeCarta(inv,cardId,autocolCarpeta);
     if(!invMatch) return;
     if(invMatch.estado==="hunting"){
       setDarkPrecioInput(""); setDarkNotaInput(invMatch.notas||""); setDarkPriceModal(cardId);
@@ -1180,7 +1245,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   }
   function saveDarkModal(){
     if(!darkPriceModal) return;
-    const invMatch=inv.find(c=>c.cardId===darkPriceModal&&c.carpeta!=="Price Watch");
+    const invMatch=invDeCarta(inv,darkPriceModal,autocolCarpeta);
     if(invMatch){
       updCarta(invMatch.id,{
         estado:"sin_publicar",
@@ -1291,7 +1356,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
 
   function renderDarkPriceModal(){
     if(!darkPriceModal) return null;
-    const carta=darkCat.find(d=>d.cardId===darkPriceModal);
+    const carta=catDeCarta(darkPriceModal);
     return(
       <div onClick={()=>setDarkPriceModal(null)} style={{position:"fixed",inset:0,zIndex:660,background:"rgba(0,0,0,0.75)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
         {/* zIndex 660 (22-sep-2026, bug reportado): tiene que superar al
@@ -1576,7 +1641,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     // mapeando set->setName para que coincida con lo que ya usa el resto de
     // este modal, ya que huntingEntryFromCard/agregarCarta guardan `set`,
     // no `setName` (ese campo vive en el catálogo para las de Dark/ilustrador).
-    const catalogEntry=darkCat.find(d=>d.cardId===darkDetailId);
+    const catalogEntry=catDeCarta(darkDetailId);
     const invPlano=!catalogEntry?inv.find(c=>c.cardId===darkDetailId&&c.carpeta!=="Price Watch"):null;
     if(!catalogEntry&&!invPlano) return null;
     const detalle=catalogEntry?mergeDarkWithInv(catalogEntry):{...invPlano,setName:invPlano.set,precioUSD:invPlano.costoUSD};
@@ -2218,7 +2283,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       const entradas=darkCat.filter(d=>(d.carpeta||"Dark Collection")===nombre);
       const total=entradas.length;
       const conseguidas=entradas.filter(d=>{
-        const invMatch=inv.find(c=>c.cardId===d.cardId&&c.carpeta!=="Price Watch");
+        const invMatch=invEnCarpeta(inv,d.cardId,carpetaDeCat(d));
         return invMatch&&invMatch.estado!=="hunting";
       }).length;
       return {nombre,esDark,total,conseguidas};

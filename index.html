@@ -4268,6 +4268,69 @@ var __angst = (() => {
     return [...new Set(urls)];
   }
 
+  // modules/pokecripto/lib/colecciones.mjs
+  var DARK = "Dark Collection";
+  var esDoubleRare = (c) => String(c?.rarity || "").trim().toLowerCase() === "double rare";
+  var esAceSpec = (c) => /^ace spec/i.test(String(c?.rarity || "").trim()) || (c?.subtypes || []).some((t) => String(t).trim().toLowerCase() === "ace spec");
+  var carpetaDeInv = (c) => c?.carpeta || (c?.isDark ? DARK : "");
+  var carpetaDeCat = (d) => d?.carpeta || DARK;
+  function invEnCarpeta(inv, cardId, carpeta) {
+    return (inv || []).find((c) => c.cardId === cardId && carpetaDeInv(c) === carpeta) || null;
+  }
+  function invDeCarta(inv, cardId, carpeta) {
+    if (carpeta) return invEnCarpeta(inv, cardId, carpeta);
+    return (inv || []).find((c) => c.cardId === cardId && c.carpeta !== "Price Watch") || null;
+  }
+  function rarezaConocida(d, inv) {
+    return d?.rarity || (inv || []).find((c) => c.cardId === d?.cardId && c.rarity)?.rarity || "";
+  }
+  function sobraPorRareza(carpeta, rareza) {
+    return (carpeta === "Mega" || carpeta === "Tera") && !!rareza && !esDoubleRare({ rarity: rareza });
+  }
+  function entradasFaltantes(catalogo, inv, nuevoId3) {
+    const hechas = /* @__PURE__ */ new Set();
+    const out = [];
+    for (const d of catalogo || []) {
+      if (!d || d.manual || !d.cardId) continue;
+      const carpeta = carpetaDeCat(d);
+      const clave = carpeta + "::" + d.cardId;
+      if (hechas.has(clave) || invEnCarpeta(inv, d.cardId, carpeta)) continue;
+      hechas.add(clave);
+      const h = (inv || []).find((c) => c.cardId === d.cardId && c.carpeta !== "Price Watch") || null;
+      out.push({
+        id: nuevoId3(d),
+        cardId: d.cardId,
+        name: d.name,
+        set: d.setName || h?.set || "",
+        setCode: d.setCode || d.setId || h?.setCode || "",
+        number: d.number || h?.number || "",
+        rarity: h?.rarity || d.rarity || "",
+        artist: h?.artist || d.artist || "",
+        image: h?.image || d.image || "",
+        imageHd: h?.imageHd || h?.image || d.image || "",
+        tcgMarket: h?.tcgMarket ?? null,
+        tcgLow: h?.tcgLow ?? null,
+        tcgHigh: h?.tcgHigh ?? null,
+        tcgUpdated: h?.tcgUpdated ?? null,
+        ...h?.tcgId ? { tcgId: h.tcgId } : {},
+        ...h?.tcgOverride ? { tcgOverride: h.tcgOverride } : {},
+        priceHistory: [],
+        costoUSD: 0,
+        precioVentaUSD: 0,
+        condicion: "NM",
+        estado: "hunting",
+        carpeta,
+        fechaCompra: null,
+        cantidad: 1,
+        fechaVenta: null,
+        precioVendidoUSD: null,
+        notas: "",
+        isDark: carpeta === DARK
+      });
+    }
+    return out;
+  }
+
   // modules/pokecripto/alta.js
   var POKECRIPTO_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
   var POKECRIPTO_AUTH_KEY = "angst-simkl-auth-v1";
@@ -4444,7 +4507,7 @@ var __angst = (() => {
   }
   var CONDICIONES = ["NM", "LP", "MP", "HP", "DMG"];
   var CARPETAS_DEFAULT = ["MLP", "Staples & Meta", "Dark Collection", "Price Watch"];
-  var CARPETAS_ICONS = { "MLP": "\u{1F434}", "Staples & Meta": "\u26A1", "Dark Collection": "\u26AB", "Price Watch": "\u{1F3AF}" };
+  var CARPETAS_ICONS = { "MLP": "\u{1F434}", "Staples & Meta": "\u26A1", "Dark Collection": "\u26AB", "Price Watch": "\u{1F3AF}", "ACE SPEC": "\u{1F0CF}" };
   var ESTADOS = {
     hunting: { label: "hunting", color: "#7c4dff", bg: "#ede7f6" },
     sin_publicar: { label: "sin publicar", color: "#888", bg: "#f0f0f0" },
@@ -4524,23 +4587,30 @@ var __angst = (() => {
     { carpeta: "Asako Ito", artist: "asako ito" },
     { carpeta: "Mega", regla: "mega" },
     { carpeta: "Tera", regla: "tera" },
-    { carpeta: "Pikachu 30", regla: "pikachu30" }
+    { carpeta: "Pikachu 30", regla: "pikachu30" },
+    { carpeta: "ACE SPEC", regla: "acespec" }
   ];
   var CARPETAS_RETIRADAS = ["Shibuzoh", "Eri Yamaki", "sui"];
-  var CAMPOS_COLECCION = "id,name,number,artist,images,supertype,subtypes";
+  var CAMPOS_COLECCION = "id,name,number,artist,images,supertype,subtypes,rarity";
   var esPokemonCarta = (c) => String(c.supertype || "").toLowerCase().startsWith("pok");
   var esEraMegaEvolution = (id, releaseDate) => /^me/i.test(String(id || "")) || String(releaseDate || "").replace(/\//g, "-") >= "2025-09-26";
   var REGLAS_COLECCION = {
     // Pokémon Mega de la era Mega Evolution ("Mega Dragalge ex"). Las XY ("M Venusaur-EX") ya no entran. Solo supertype
     // Pokémon: sin esto entrarían entrenadores como "Mega Signal".
-    mega: (c, s) => esPokemonCarta(c) && esEraMegaEvolution(s?.id, s?.releaseDate) && ((c.subtypes || []).some((t) => String(t).toLowerCase() === "mega") || /^Mega\s/i.test(c.name || "")),
+    // 9-nov-2026 (issue #39): solo Double Rare (el ex base); fuera full art, illustration rare, special illustration y doradas.
+    mega: (c, s) => esPokemonCarta(c) && esDoubleRare(c) && esEraMegaEvolution(s?.id, s?.releaseDate) && ((c.subtypes || []).some((t) => String(t).toLowerCase() === "mega") || /^Mega\s/i.test(c.name || "")),
     // Cartas Tera de Scarlet & Violet: subtipo "Tera" de pokemontcg.io.
-    tera: (c) => esPokemonCarta(c) && (c.subtypes || []).some((t) => String(t).toLowerCase() === "tera"),
+    // Solo Double Rare (9-nov-2026, issue #39).
+    tera: (c) => esPokemonCarta(c) && esDoubleRare(c) && (c.subtypes || []).some((t) => String(t).toLowerCase() === "tera"),
     // Pikachu del set 30th Celebration (me55): las 30 ilustraciones de Pikachu. Sin los ex (8-nov-2026).
+    // ACE SPEC desde que existen (todos los sets; 9-nov-2026, issue #39): rareza "ACE SPEC Rare" o subtipo "ACE SPEC".
+    acespec: (c) => esAceSpec(c),
     pikachu30: (c, s) => s?.id === "me55" && /^Pikachu\b/i.test(c.name || "") && !/\bex\b/i.test(c.name || "") && !(c.subtypes || []).some((t) => String(t).toLowerCase() === "ex")
   };
   var BAJAS_POR_REGLA = [
-    { carpeta: "Mega", quitar: (d) => !esEraMegaEvolution(d.setId, d.releaseDate) },
+    // quitar(d, rareza): la rareza viene del catálogo o de la carta de inventario ("" si no se sabe: entonces no se quita).
+    { carpeta: "Mega", quitar: (d, rar) => !esEraMegaEvolution(d.setId, d.releaseDate) || sobraPorRareza("Mega", rar) },
+    { carpeta: "Tera", quitar: (d, rar) => sobraPorRareza("Tera", rar) },
     { carpeta: "Pikachu 30", quitar: (d) => /\bex\b/i.test(d.name || "") }
   ];
   function matchIlustrador(card, def, set) {
@@ -4963,13 +5033,13 @@ var __angst = (() => {
               releaseDate: s.releaseDate || ""
             }));
             saveDarkCatalogo((prev) => {
-              const ids = new Set((prev || []).map((d) => d.cardId));
+              const ids = new Set((prev || []).filter((d) => carpetaDeCat(d) === "Dark Collection").map((d) => d.cardId));
               const add2 = nuevas.filter((n) => !ids.has(n.cardId));
               return add2.length ? [...prev || [], ...add2] : prev || [];
             });
             saveInventario((prev) => {
               const cur = prev || [];
-              const ids = new Set(cur.map((c) => c.cardId));
+              const ids = new Set(cur.filter((c) => invEnCarpeta([c], c.cardId, "Dark Collection")).map((c) => c.cardId));
               const add2 = dark.filter((c) => !ids.has(c.id)).map((c) => huntingEntryFromCard(c, s));
               if (add2.length) encolarPokecriptoPending(add2);
               if (add2.length) snapshotInicial(add2);
@@ -5001,7 +5071,7 @@ var __angst = (() => {
           if (dark.length) {
             saveDarkCatalogo((prev) => {
               const cur = prev || [];
-              const ids = new Set(cur.map((d) => d.cardId));
+              const ids = new Set(cur.filter((d) => carpetaDeCat(d) === "Dark Collection").map((d) => d.cardId));
               const nuevas = dark.filter((c) => !ids.has(c.id)).map((c) => ({
                 cardId: c.id,
                 name: c.name,
@@ -5016,7 +5086,7 @@ var __angst = (() => {
             });
             saveInventario((prev) => {
               const cur = prev || [];
-              const ids = new Set(cur.map((c) => c.cardId));
+              const ids = new Set(cur.filter((c) => invEnCarpeta([c], c.cardId, "Dark Collection")).map((c) => c.cardId));
               const add2 = dark.filter((c) => !ids.has(c.id)).map((c) => huntingEntryFromCard(c, s));
               if (add2.length) encolarPokecriptoPending(add2);
               if (add2.length) snapshotInicial(add2);
@@ -5059,7 +5129,8 @@ var __angst = (() => {
               setCode: s.id,
               releaseDate: s.releaseDate || "",
               carpeta: def.carpeta,
-              artist: c.artist || ""
+              artist: c.artist || "",
+              rarity: c.rarity || ""
             }));
             saveDarkCatalogo((prev) => {
               const ids = new Set((prev || []).map((d) => d.cardId + "::" + (d.carpeta || "Dark Collection")));
@@ -5068,7 +5139,7 @@ var __angst = (() => {
             });
             saveInventario((prev) => {
               const cur = prev || [];
-              const ids = new Set(cur.map((c) => c.cardId));
+              const ids = new Set(cur.filter((c) => invEnCarpeta([c], c.cardId, def.carpeta)).map((c) => c.cardId));
               const add2 = match.filter((c) => !ids.has(c.id)).map((c) => huntingEntryFromCard(c, s, def.carpeta));
               if (add2.length) encolarPokecriptoPending(add2);
               if (add2.length) snapshotInicial(add2);
@@ -5113,13 +5184,14 @@ var __angst = (() => {
                 setCode: s.id,
                 releaseDate: s.releaseDate || "",
                 carpeta: def.carpeta,
-                artist: c.artist || ""
+                artist: c.artist || "",
+                rarity: c.rarity || ""
               }));
               return nuevas.length ? [...cur, ...nuevas] : cur;
             });
             saveInventario((prev) => {
               const cur = prev || [];
-              const ids = new Set(cur.map((c) => c.cardId));
+              const ids = new Set(cur.filter((c) => invEnCarpeta([c], c.cardId, def.carpeta)).map((c) => c.cardId));
               const add2 = match.filter((c) => !ids.has(c.id)).map((c) => huntingEntryFromCard(c, s, def.carpeta));
               if (add2.length) encolarPokecriptoPending(add2);
               if (add2.length) snapshotInicial(add2);
@@ -5157,7 +5229,7 @@ var __angst = (() => {
     }, [carpetas, inventario, darkCatalogo]);
     React.useEffect(() => {
       if (!inventario || !darkCatalogo) return;
-      const dEnCat = darkCatalogo.filter((d) => BAJAS_POR_REGLA.some((b) => b.carpeta === d.carpeta && b.quitar(d)));
+      const dEnCat = darkCatalogo.filter((d) => BAJAS_POR_REGLA.some((b) => b.carpeta === d.carpeta && b.quitar(d, rarezaConocida(d, inventario))));
       if (!dEnCat.length) return;
       const claves = new Set(dEnCat.map((d) => d.carpeta + "::" + d.cardId));
       const quitar = inventario.filter((c) => claves.has(c.carpeta + "::" + c.cardId) && c.estado === "hunting");
@@ -5168,6 +5240,51 @@ var __angst = (() => {
         saveInventario((prev) => (prev || []).filter((c) => !idsQuitar.has(c.id)));
         encolarPokecriptoPending(quitar.map((c) => ({ id: c.id, _baja: true })));
       }
+    }, [inventario, darkCatalogo]);
+    const rarezaIntentada = React.useRef(/* @__PURE__ */ new Set());
+    const rarezaEnCurso = React.useRef(false);
+    React.useEffect(() => {
+      if (!inventario || !darkCatalogo || rarezaEnCurso.current) return;
+      const sets = [...new Set(darkCatalogo.filter((d) => (d.carpeta === "Mega" || d.carpeta === "Tera") && d.setId && !rarezaConocida(d, inventario) && !rarezaIntentada.current.has(d.setId)).map((d) => d.setId))];
+      if (!sets.length) return;
+      rarezaEnCurso.current = true;
+      (async () => {
+        const rar = {};
+        try {
+          for (const sid of sets) {
+            try {
+              const data = await fetchPoke(`${POKE_BASE}/cards?q=set.id:${sid}&select=id,rarity&pageSize=500`);
+              (data.data || []).forEach((c) => {
+                if (c.rarity) rar[c.id] = c.rarity;
+              });
+              rarezaIntentada.current.add(sid);
+            } catch (e) {
+            }
+            await new Promise((r) => setTimeout(r, 350));
+          }
+        } finally {
+          rarezaEnCurso.current = false;
+        }
+        if (!Object.keys(rar).length) return;
+        saveDarkCatalogo((prev) => (prev || []).some((d) => !d.rarity && rar[d.cardId]) ? (prev || []).map((d) => !d.rarity && rar[d.cardId] ? { ...d, rarity: rar[d.cardId] } : d) : prev);
+        saveInventario((prev) => (prev || []).some((c) => !c.rarity && rar[c.cardId]) ? (prev || []).map((c) => !c.rarity && rar[c.cardId] ? { ...c, rarity: rar[c.cardId] } : c) : prev);
+      })();
+    }, [inventario, darkCatalogo]);
+    React.useEffect(() => {
+      if (!inventario || !darkCatalogo) return;
+      const elegibles = darkCatalogo.filter((d) => {
+        const car = carpetaDeCat(d), rar = rarezaConocida(d, inventario);
+        if ((car === "Mega" || car === "Tera") && !rar) return false;
+        return !BAJAS_POR_REGLA.some((b) => b.carpeta === car && b.quitar(d, rar));
+      });
+      if (!entradasFaltantes(elegibles, inventario, () => "x").length) return;
+      saveInventario((prev) => {
+        const cur = prev || [];
+        const add2 = entradasFaltantes(elegibles, cur, (d) => Date.now().toString() + Math.random().toString(36).slice(2) + "_" + d.cardId);
+        if (!add2.length) return cur;
+        encolarPokecriptoPending(add2);
+        return [...cur, ...add2];
+      });
     }, [inventario, darkCatalogo]);
     const [pokecriptoSyncMsg, setPokecriptoSyncMsg] = React.useState(null);
     function pedirPokecriptoAuth() {
@@ -5272,8 +5389,11 @@ var __angst = (() => {
       setSelectedPoint(null);
       setConfirmDelSnap(null);
     }
+    function catDeCarta(cardId) {
+      return darkCat.find((d) => d.cardId === cardId && (!autocolCarpeta || carpetaDeCat(d) === autocolCarpeta)) || darkCat.find((d) => d.cardId === cardId);
+    }
     function mergeDarkWithInv(catalogEntry) {
-      const invMatch = inv.find((c) => c.cardId === catalogEntry.cardId && c.carpeta !== "Price Watch");
+      const invMatch = invEnCarpeta(inv, catalogEntry.cardId, carpetaDeCat(catalogEntry));
       if (!invMatch) return { ...catalogEntry, id: null, estado: "hunting", tcgMarket: null, tcgLow: null, tcgHigh: null, priceHistory: [], notas: "", precioUSD: null };
       return {
         ...catalogEntry,
@@ -5342,7 +5462,7 @@ var __angst = (() => {
       w.document.close();
     }
     function imagenDeCard(cardId) {
-      const entry = darkCat.find((d) => d.cardId === cardId);
+      const entry = catDeCarta(cardId);
       if (entry) {
         const m = mergeDarkWithInv(entry);
         return m.imageHd || m.image || null;
@@ -5396,7 +5516,7 @@ var __angst = (() => {
       }
     }
     function toggleDark(cardId) {
-      const invMatch = inv.find((c) => c.cardId === cardId && c.carpeta !== "Price Watch");
+      const invMatch = invDeCarta(inv, cardId, autocolCarpeta);
       if (!invMatch) return;
       if (invMatch.estado === "hunting") {
         setDarkPrecioInput("");
@@ -5408,7 +5528,7 @@ var __angst = (() => {
     }
     function saveDarkModal() {
       if (!darkPriceModal) return;
-      const invMatch = inv.find((c) => c.cardId === darkPriceModal && c.carpeta !== "Price Watch");
+      const invMatch = invDeCarta(inv, darkPriceModal, autocolCarpeta);
       if (invMatch) {
         updCarta(invMatch.id, {
           estado: "sin_publicar",
@@ -5500,7 +5620,7 @@ var __angst = (() => {
     }
     function renderDarkPriceModal() {
       if (!darkPriceModal) return null;
-      const carta = darkCat.find((d) => d.cardId === darkPriceModal);
+      const carta = catDeCarta(darkPriceModal);
       return /* @__PURE__ */ React.createElement("div", { onClick: () => setDarkPriceModal(null), style: { position: "fixed", inset: 0, zIndex: 660, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,420px)", background: "#111", borderRadius: "16px 16px 0 0", padding: "22px 20px 40px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center", marginBottom: 16 } }, carta?.image && /* @__PURE__ */ React.createElement("img", { src: carta.image, style: { width: 44, borderRadius: 6, flexShrink: 0 } }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff" } }, carta?.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "#555" } }, "#", carta?.number, " \xB7 ", carta?.setName))), /* @__PURE__ */ React.createElement(
         "input",
         {
@@ -5746,7 +5866,7 @@ var __angst = (() => {
     }
     function renderDarkDetailModal() {
       if (!darkDetailId) return null;
-      const catalogEntry = darkCat.find((d) => d.cardId === darkDetailId);
+      const catalogEntry = catDeCarta(darkDetailId);
       const invPlano = !catalogEntry ? inv.find((c) => c.cardId === darkDetailId && c.carpeta !== "Price Watch") : null;
       if (!catalogEntry && !invPlano) return null;
       const detalle = catalogEntry ? mergeDarkWithInv(catalogEntry) : { ...invPlano, setName: invPlano.set, precioUSD: invPlano.costoUSD };
@@ -6284,7 +6404,7 @@ var __angst = (() => {
         const entradas = darkCat.filter((d) => (d.carpeta || "Dark Collection") === nombre);
         const total = entradas.length;
         const conseguidas = entradas.filter((d) => {
-          const invMatch = inv.find((c) => c.cardId === d.cardId && c.carpeta !== "Price Watch");
+          const invMatch = invEnCarpeta(inv, d.cardId, carpetaDeCat(d));
           return invMatch && invMatch.estado !== "hunting";
         }).length;
         return { nombre, esDark, total, conseguidas };
@@ -9714,7 +9834,7 @@ var __angst = (() => {
       delete n[id];
       saveCustomEjercicios(n);
     }
-    const DARK = { background: "#1a1a1a", borderRadius: 12, padding: "14px 16px", color: "#fff", marginBottom: 12 };
+    const DARK2 = { background: "#1a1a1a", borderRadius: 12, padding: "14px 16px", color: "#fff", marginBottom: 12 };
     const SL = { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 };
     if (view === "historial") {
       const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
@@ -9756,7 +9876,7 @@ var __angst = (() => {
         },
         /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14 } }, ex.emoji),
         /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 15, fontWeight: 700 } }, ex.name)
-      ))), selEx && hist.length > 0 && /* @__PURE__ */ React.createElement("div", { style: DARK }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 14 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22 } }, selEx.emoji), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff" } }, selEx.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, hist.length, " sesiones")), deltaPct !== null && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: deltaPct >= 0 ? "#aac756" : "#ff8888", lineHeight: 1 } }, deltaPct >= 0 ? "+" : "", deltaPct, "%"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.3)" } }, "progresi\xF3n"))), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 14 } }, [
+      ))), selEx && hist.length > 0 && /* @__PURE__ */ React.createElement("div", { style: DARK2 }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 14 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 22 } }, selEx.emoji), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff" } }, selEx.name), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 } }, hist.length, " sesiones")), deltaPct !== null && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 24, fontWeight: 700, color: deltaPct >= 0 ? "#aac756" : "#ff8888", lineHeight: 1 } }, deltaPct >= 0 ? "+" : "", deltaPct, "%"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.3)" } }, "progresi\xF3n"))), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 14 } }, [
         { label: "\xFAltima sesi\xF3n", val: lastEntry?.reps ? hasPeso ? `${lastEntry.reps}r\xD7${lastEntry.peso}kg` : `${lastEntry.reps}r` : "\u2014", sub: lastEntry ? fmtD(lastEntry.date) : "" },
         { label: "PR volumen", val: (() => {
           const pr = hist.find((h) => volEfectivo(h.reps, h.peso, selEx) === bestVol);
@@ -9770,7 +9890,7 @@ var __angst = (() => {
       })), selEx.how && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 14, background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "10px 12px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 } }, selEx.how)))), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
     }
     if (view === "semanas") {
-      const DARK2 = { background: "#1a1a1a", borderRadius: 12, padding: "14px 16px", color: "#fff", marginBottom: 12 };
+      const DARK3 = { background: "#1a1a1a", borderRadius: 12, padding: "14px 16px", color: "#fff", marginBottom: 12 };
       const SL2 = { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 };
       const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
       const fmtD = (dk) => {
@@ -9803,7 +9923,7 @@ var __angst = (() => {
           },
           /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 14, fontWeight: 700 } }, fmtD(m), "\u2013", fmtD(s))
         );
-      })), monday && /* @__PURE__ */ React.createElement("div", { style: DARK2 }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 14 } }, "semana del ", fmtD(monday), " al ", fmtD(sunday)), /* @__PURE__ */ React.createElement(BodyHeatmap, { totals: weekTotals, onTap: () => {
+      })), monday && /* @__PURE__ */ React.createElement("div", { style: DARK3 }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 14 } }, "semana del ", fmtD(monday), " al ", fmtD(sunday)), /* @__PURE__ */ React.createElement(BodyHeatmap, { totals: weekTotals, onTap: () => {
       } }), weekEx.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "12px 0" } }, "sin series marcadas esa semana") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: SL2 }, "ejercicios de la semana"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, weekEx.map(({ ex, series }) => {
         const hasPeso = series.some((s) => s.peso);
         return /* @__PURE__ */ React.createElement("div", { key: ex.id, style: { padding: "9px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15 } }, ex.emoji), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600, color: "#fff", flex: 1 } }, ex.name), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)" } }, series.length, " series")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.55)", paddingLeft: 23 } }, series.map((s, i) => /* @__PURE__ */ React.createElement("span", { key: i }, i > 0 ? " \xB7 " : "", s.reps, hasPeso && s.peso ? `\xD7${s.peso}kg` : "r"))));
@@ -9834,18 +9954,18 @@ var __angst = (() => {
         return { count: sessionDates.filter((dk) => dk >= s && dk <= e).length, isThis: i === 0 };
       }).reverse();
       const maxWeek = Math.max(...weeks8.map((w) => w.count), 1);
-      return /* @__PURE__ */ React.createElement("div", { style: { background: "#0a0a0a", minHeight: "100vh", padding: "16px", maxWidth: 480, margin: "0 auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setView("session"), style: { background: "transparent", border: "none", fontSize: 20, color: "#444", cursor: "pointer", padding: 0, lineHeight: 1 } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff" } }, "\u{1F4CA} estad\xEDsticas")), sessionDates.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: "80px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#333" } }, "sin sesiones a\xFAn")) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { ...DARK, display: "flex", gap: 0, padding: 0, overflow: "hidden" } }, [
+      return /* @__PURE__ */ React.createElement("div", { style: { background: "#0a0a0a", minHeight: "100vh", padding: "16px", maxWidth: 480, margin: "0 auto" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setView("session"), style: { background: "transparent", border: "none", fontSize: 20, color: "#444", cursor: "pointer", padding: 0, lineHeight: 1 } }, "\u2190"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff" } }, "\u{1F4CA} estad\xEDsticas")), sessionDates.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: "80px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#333" } }, "sin sesiones a\xFAn")) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { ...DARK2, display: "flex", gap: 0, padding: 0, overflow: "hidden" } }, [
         { label: "racha", val: `${streak}d`, color: streak >= 7 ? "#aac756" : "#fff" },
         { label: "mejor racha", val: `${maxStreak}d`, color: "#888" },
         { label: "esta semana", val: `${thisWeekSessions.length}x`, color: thisWeekSessions.length >= 3 ? "#aac756" : "#fff" },
         { label: "total", val: `${sessionDates.length}`, color: "#888" }
-      ].map(({ label, val, color: color2 }, i) => /* @__PURE__ */ React.createElement("div", { key: label, style: { flex: 1, padding: "14px 8px", textAlign: "center", borderRight: i < 3 ? "1px solid rgba(255,255,255,0.07)" : "none" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: color2, lineHeight: 1 } }, val), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 8, color: "rgba(255,255,255,0.3)", letterSpacing: 1, textTransform: "uppercase", marginTop: 4 } }, label)))), /* @__PURE__ */ React.createElement("div", { style: { ...DARK } }, /* @__PURE__ */ React.createElement("div", { style: SL }, "sesiones por semana \u2014 \xFAltimas 8"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 3, alignItems: "flex-end", height: 52 } }, weeks8.map((w, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, height: "100%", justifyContent: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { style: {
+      ].map(({ label, val, color: color2 }, i) => /* @__PURE__ */ React.createElement("div", { key: label, style: { flex: 1, padding: "14px 8px", textAlign: "center", borderRight: i < 3 ? "1px solid rgba(255,255,255,0.07)" : "none" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: color2, lineHeight: 1 } }, val), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 8, color: "rgba(255,255,255,0.3)", letterSpacing: 1, textTransform: "uppercase", marginTop: 4 } }, label)))), /* @__PURE__ */ React.createElement("div", { style: { ...DARK2 } }, /* @__PURE__ */ React.createElement("div", { style: SL }, "sesiones por semana \u2014 \xFAltimas 8"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 3, alignItems: "flex-end", height: 52 } }, weeks8.map((w, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, height: "100%", justifyContent: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { style: {
         width: "100%",
         borderRadius: "3px 3px 0 0",
         height: `${Math.max(w.count / maxWeek * 80, w.count > 0 ? 5 : 2)}%`,
         background: `rgba(255,255,255,${w.isThis ? 0.9 : 0.15 + 0.55 * (w.count / maxWeek)})`,
         border: w.isThis ? "1px solid rgba(255,255,255,0.4)" : "none"
-      } }), w.count > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 8, color: "rgba(255,255,255,0.25)" } }, w.count)))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 8 } }, "promedio ", /* @__PURE__ */ React.createElement("span", { style: { color: "rgba(255,255,255,0.6)", fontWeight: 600 } }, avgPerWeek.toFixed(1), "x/semana"), /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 8, color: avgPerWeek >= 3 ? "#aac756" : "rgba(255,255,255,0.25)" } }, avgPerWeek >= 3 ? "\u2713 objetivo" : "objetivo: 3x"))), sortedMuscles.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { ...DARK } }, /* @__PURE__ */ React.createElement("div", { style: SL }, "grupos m\xE1s trabajados \u2014 \xFAltimas 4 semanas"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 7 } }, sortedMuscles.slice(0, 6).map(([mk, count]) => {
+      } }), w.count > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 8, color: "rgba(255,255,255,0.25)" } }, w.count)))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 8 } }, "promedio ", /* @__PURE__ */ React.createElement("span", { style: { color: "rgba(255,255,255,0.6)", fontWeight: 600 } }, avgPerWeek.toFixed(1), "x/semana"), /* @__PURE__ */ React.createElement("span", { style: { marginLeft: 8, color: avgPerWeek >= 3 ? "#aac756" : "rgba(255,255,255,0.25)" } }, avgPerWeek >= 3 ? "\u2713 objetivo" : "objetivo: 3x"))), sortedMuscles.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { ...DARK2 } }, /* @__PURE__ */ React.createElement("div", { style: SL }, "grupos m\xE1s trabajados \u2014 \xFAltimas 4 semanas"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 7 } }, sortedMuscles.slice(0, 6).map(([mk, count]) => {
         const g = MUSCLE_GROUPS.find((g2) => g2.k === mk);
         return /* @__PURE__ */ React.createElement("div", { key: mk, style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, flexShrink: 0, width: 20, textAlign: "center" } }, g?.emoji), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.45)", width: 80, flexShrink: 0 } }, g?.label || mk), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 5, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${count / maxMuscle * 100}%`, background: "rgba(255,255,255,0.6)", borderRadius: 99, transition: "width 0.4s" } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: "#fff", minWidth: 20, textAlign: "right" } }, count));
       })), (() => {
@@ -9853,12 +9973,12 @@ var __angst = (() => {
         const faltantes = MUSCLE_GROUPS.filter((g) => !trabajados.has(g.k));
         if (!faltantes.length) return null;
         return /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10, padding: "8px 10px", background: "rgba(255,150,50,0.1)", borderRadius: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,200,100,0.8)", fontWeight: 600, marginBottom: 3 } }, "sin trabajo reciente"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)" } }, faltantes.map((g) => `${g.emoji} ${g.label}`).join(" \xB7 ")));
-      })()), /* @__PURE__ */ React.createElement("div", { style: { ...DARK } }, /* @__PURE__ */ React.createElement("div", { style: SL }, "d\xEDas que m\xE1s entren\xE1s"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, alignItems: "flex-end", height: 44 } }, dowCount.map((count, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, height: "100%", justifyContent: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { style: {
+      })()), /* @__PURE__ */ React.createElement("div", { style: { ...DARK2 } }, /* @__PURE__ */ React.createElement("div", { style: SL }, "d\xEDas que m\xE1s entren\xE1s"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4, alignItems: "flex-end", height: 44 } }, dowCount.map((count, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, height: "100%", justifyContent: "flex-end" } }, /* @__PURE__ */ React.createElement("div", { style: {
         width: "100%",
         borderRadius: "3px 3px 0 0",
         height: `${Math.max(count / maxDow * 80, count > 0 ? 4 : 2)}%`,
         background: count === Math.max(...dowCount) && count > 0 ? "#fff" : `rgba(255,255,255,${count > 0 ? 0.3 : 0.06})`
-      } }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.25)" } }, DOW_LABELS[i]))))), /* @__PURE__ */ React.createElement("div", { style: { ...DARK, display: "flex", alignItems: "center", gap: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: SL }, "series \u2014 \xFAltimas 4 semanas"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 36, fontWeight: 700, color: "#fff", lineHeight: 1 } }, totalSeriesRecent), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 4 } }, "series completadas")), /* @__PURE__ */ React.createElement("div", { style: { width: 1, height: 50, background: "rgba(255,255,255,0.08)" } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 } }, "por semana"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 30, fontWeight: 700, color: "rgba(255,255,255,0.55)", lineHeight: 1 } }, (totalSeriesRecent / 4).toFixed(0)))), /* @__PURE__ */ React.createElement("div", { style: { ...DARK, textAlign: "center", padding: "28px 16px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 16 } }, "constancia"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 96, fontWeight: 700, lineHeight: 1, color: RANK_COLORS[rank], textShadow: rank === "S" ? "0 0 40px rgba(255,255,255,0.4)" : "none", marginBottom: 8 } }, rank), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.2)", marginBottom: 16 } }, "frecuencia ", Math.round(Math.min(avgPerWeek / 3, 1) * 100), "% \xB7 racha ", Math.round(Math.min(maxStreak / 7, 1) * 100), "%"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, color: "rgba(255,255,255,0.55)", lineHeight: 1.5, maxWidth: 260, margin: "0 auto" } }, RANK_MSG[rank]))), /* @__PURE__ */ React.createElement("div", { style: { height: 40 } }));
+      } }), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.25)" } }, DOW_LABELS[i]))))), /* @__PURE__ */ React.createElement("div", { style: { ...DARK2, display: "flex", alignItems: "center", gap: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: SL }, "series \u2014 \xFAltimas 4 semanas"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 36, fontWeight: 700, color: "#fff", lineHeight: 1 } }, totalSeriesRecent), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 4 } }, "series completadas")), /* @__PURE__ */ React.createElement("div", { style: { width: 1, height: 50, background: "rgba(255,255,255,0.08)" } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.3)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 } }, "por semana"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 30, fontWeight: 700, color: "rgba(255,255,255,0.55)", lineHeight: 1 } }, (totalSeriesRecent / 4).toFixed(0)))), /* @__PURE__ */ React.createElement("div", { style: { ...DARK2, textAlign: "center", padding: "28px 16px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.25)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 16 } }, "constancia"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 96, fontWeight: 700, lineHeight: 1, color: RANK_COLORS[rank], textShadow: rank === "S" ? "0 0 40px rgba(255,255,255,0.4)" : "none", marginBottom: 8 } }, rank), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.2)", marginBottom: 16 } }, "frecuencia ", Math.round(Math.min(avgPerWeek / 3, 1) * 100), "% \xB7 racha ", Math.round(Math.min(maxStreak / 7, 1) * 100), "%"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, color: "rgba(255,255,255,0.55)", lineHeight: 1.5, maxWidth: 260, margin: "0 auto" } }, RANK_MSG[rank]))), /* @__PURE__ */ React.createElement("div", { style: { height: 40 } }));
     }
     if (view === "editor") {
       return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 720, margin: "0 auto" } }, editEx && /* @__PURE__ */ React.createElement("div", { onClick: () => setEditEx(null), style: { position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { width: "min(96vw,480px)", background: "#fff", borderRadius: "16px 16px 0 0", padding: "24px 24px 40px", maxHeight: "90vh", overflowY: "auto" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#111", marginBottom: 16 } }, editEx._isNew ? "\u2795 nuevo ejercicio" : "\u270E editar ejercicio"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("input", { value: editEx.emoji || "", onChange: (e) => setEditEx((ex) => ({ ...ex, emoji: e.target.value })), style: { width: 46, border: "1px dashed #ddd", borderRadius: 8, padding: "10px 8px", fontSize: 20, textAlign: "center", outline: "none", color: "#111", flexShrink: 0 } }), /* @__PURE__ */ React.createElement("input", { value: editEx.name || "", placeholder: "nombre", onChange: (e) => setEditEx((ex) => ({ ...ex, name: e.target.value })), style: { flex: 1, border: "1px dashed #ddd", borderRadius: 8, padding: "10px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 14, outline: "none", color: "#111" } })), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 5 } }, "instrucciones"), /* @__PURE__ */ React.createElement("textarea", { value: editEx.how || "", rows: 3, onChange: (e) => setEditEx((ex) => ({ ...ex, how: e.target.value })), style: { width: "100%", border: "1px dashed #ddd", borderRadius: 8, padding: "10px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none", boxSizing: "border-box", resize: "vertical", color: "#111" } })), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 } }, "series"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setEditEx((ex) => ({ ...ex, series: Math.max(1, (ex.series || 3) - 1) })), style: { width: 30, height: 30, borderRadius: 6, border: "1px dashed #ddd", background: "transparent", fontSize: 16, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 26, fontWeight: 700, color: "#111", minWidth: 24, textAlign: "center" } }, editEx.series || 3), /* @__PURE__ */ React.createElement("button", { onClick: () => setEditEx((ex) => ({ ...ex, series: Math.min(8, (ex.series || 3) + 1) })), style: { width: 30, height: 30, borderRadius: 6, border: "1px dashed #ddd", background: "transparent", fontSize: 16, cursor: "pointer", color: "#555" } }, "+"))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 } }, "descanso"), /* @__PURE__ */ React.createElement("select", { value: editEx.restSecs || 90, onChange: (e) => setEditEx((ex) => ({ ...ex, restSecs: parseInt(e.target.value) })), style: { width: "100%", border: "1px dashed #ddd", borderRadius: 8, padding: "7px 8px", fontFamily: "'DM Sans',sans-serif", fontSize: 12, outline: "none", background: "#fff", color: "#111" } }, [[45, "45 seg"], [60, "1 min"], [75, "1:15"], [90, "1:30"], [120, "2 min"], [150, "2:30"], [180, "3 min"]].map(([v, l]) => /* @__PURE__ */ React.createElement("option", { key: v, value: v }, l))))), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 } }, "rango reps min"), /* @__PURE__ */ React.createElement("input", { type: "number", value: editEx.repMin || 8, onChange: (e) => setEditEx((ex) => ({ ...ex, repMin: parseInt(e.target.value) || 8 })), style: { width: "100%", border: "1px dashed #ddd", borderRadius: 8, padding: "7px 10px", fontFamily: "'DM Sans',sans-serif", fontSize: 14, outline: "none", color: "#111" } })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 } }, "rango reps max"), /* @__PURE__ */ React.createElement("input", { type: "number", value: editEx.repMax || 12, onChange: (e) => setEditEx((ex) => ({ ...ex, repMax: parseInt(e.target.value) || 12 })), style: { width: "100%", border: "1px dashed #ddd", borderRadius: 8, padding: "7px 10px", fontFamily: "'DM Sans',sans-serif", fontSize: 14, outline: "none", color: "#111" } }))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 } }, "siguiente variante (calistenia)"), /* @__PURE__ */ React.createElement("input", { value: editEx.nextVariant || "", placeholder: "ej: Archer push-up", onChange: (e) => setEditEx((ex) => ({ ...ex, nextVariant: e.target.value || void 0 })), style: { width: "100%", border: "1px dashed #ddd", borderRadius: 8, padding: "9px 12px", fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none", color: "#111", boxSizing: "border-box" } })), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#aaa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 } }, "grupos musculares"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 5 } }, MUSCLE_GROUPS.map((g) => {
