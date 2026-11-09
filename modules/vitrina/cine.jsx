@@ -4,6 +4,7 @@ import { SeriesSeguimiento } from "./series.jsx";
 import { avanceDe, estadoAvance, estadoEfectivo, estadoRemotoDe, useAvanceVersion } from "./avance.js";
 import { enqueueSimklAction, flushSimklQueue, pedirSimklAuth, useSimklDiscovery, useSimklSyncStatus } from "./simkl.js";
 import { CAT_COLORS } from "../shared/constants.js";
+import { estaAlDia } from "./navegacion.js";
 
 const { useState, useEffect, useLayoutEffect, useRef } = React;
 
@@ -644,7 +645,7 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria, memoria }
       arr = arr.filter(it => estadoEfectivo(cineEstado, it.guid) === "sin_marca");
     } else {
       if (ocultarDescartadas) arr = arr.filter(it => estadoEfectivo(cineEstado, it.guid) !== "descartada");
-      if (ocultarVistas) arr = arr.filter(it => estadoEfectivo(cineEstado, it.guid) !== "vista");
+      if (ocultarVistas) arr = arr.filter(it => estadoEfectivo(cineEstado, it.guid) !== "vista" && !(puedePendientes && estaAlDia(avanceDe(it.guid))));
     }
     if (puedePendientes && soloPendientes) {
       arr = arr.filter(it => { const a = avanceDe(it.guid); return !!a && a.vistos > 0 && a.pendientes > 0; });
@@ -672,6 +673,11 @@ export function CineCoverFlow({ items, onOpen, generatedAt, categoria, memoria }
     const fueraDeCartelera = arr.filter(it => it._fueraDeCartelera);
     return fueraDeCartelera.length ? [...enCartelera, ...fueraDeCartelera] : arr;
   }, [fullItems, sortBy, ocultarDescartadas, ocultarVistas, soloInteresa, soloNovedades, soloPendientes, puedePendientes, soloEstrenos, ocultarTrending, esPelicula, cineEstado, avVersion]);
+
+  // Publica la lista filtrada/ordenada para que siguiente/anterior del detalle respete los filtros.
+  useEffect(() => {
+    if (memoria) { memoria.current.lista = sortedItems; memoria.current.listaCat = categoria; }
+  }, [sortedItems, categoria]);
 
   const total = sortedItems.length;
   // Al cambiar el catálogo filtrado/ordenado (o de categoría), volver al

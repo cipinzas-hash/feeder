@@ -1,5 +1,6 @@
 import { RUTINA, RUTINA_DESDE, diaSugerido, ultimoDiaRutina, fechaCorta, haceTexto } from "./rutina.js";
 import { DIBUJOS, FIG_VIEWBOX } from "./figuras.js";
+import FeedPage from "../feed/FeedPage.jsx";
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
 const MUSCLE_GROUPS = [
@@ -299,7 +300,7 @@ function ProgresionChart({ history, compact, ex }) {
   );
 }
 
-function FloatingRestTimer({ secs, maxSecs, onSkip, onAddTime }) {
+function FloatingRestTimer({ secs, maxSecs, onSkip, onAddTime, onFeed }) {
   return (
     <div onClick={onSkip} style={{position:"fixed",inset:0,zIndex:2000,background:"rgba(0,0,0,0.92)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
       <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"rgba(255,255,255,0.4)",letterSpacing:3,textTransform:"uppercase",marginBottom:18}}>descansando</div>
@@ -322,8 +323,31 @@ function FloatingRestTimer({ secs, maxSecs, onSkip, onAddTime }) {
           disparen el skip del overlay por accidente. */}
       <div style={{display:"flex",gap:10}}>
         <button onClick={e=>{e.stopPropagation();onAddTime(15);}} style={{padding:"10px 18px",borderRadius:20,border:"1px solid rgba(255,255,255,0.25)",background:"transparent",color:"rgba(255,255,255,0.7)",fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:600,cursor:"pointer"}}>+15s</button>
+        {onFeed&&<button onClick={e=>{e.stopPropagation();onFeed();}} style={{padding:"10px 18px",borderRadius:20,border:"1px solid rgba(255,255,255,0.25)",background:"transparent",color:"rgba(255,255,255,0.7)",fontFamily:"'DM Sans',sans-serif",fontSize:13,cursor:"pointer"}}>📰 feed</button>}
         <button onClick={e=>{e.stopPropagation();onSkip();}} style={{padding:"10px 22px",borderRadius:20,border:"none",background:"#fff",color:"#111",fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,cursor:"pointer"}}>saltar →</button>
       </div>
+    </div>
+  );
+}
+
+// Descanso con el Feed abierto. El estado del timer vive en EjercicioPage: acá solo se muestra
+// como una barra compacta arriba. Al llegar a 0 vibra y la barra se pone roja, pero NO cierra el Feed.
+function DescansoFeed({ secs, activo, onVolver, onTerminar }) {
+  const feed = useMemo(() => <FeedPage/>, []);   // elemento fijo: el tick del timer no re-renderiza el Feed
+  const listo = !activo;
+  useEffect(() => {
+    if (!activo) { try { if (navigator.vibrate) navigator.vibrate([250,120,250]); } catch(e) {} }
+  }, [activo]);
+  const btn = {padding:"7px 14px",borderRadius:16,fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:700,cursor:"pointer"};
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:2000,background:"#0d0d0d",display:"flex",flexDirection:"column"}}>
+      <div style={{flex:"none",display:"flex",alignItems:"center",gap:10,padding:"10px 14px",borderBottom:"1px solid #222",background:listo?"#b71c1c":"#111"}}>
+        <span style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:secs<=10&&!listo?"#e53935":"#fff"}}>{listo?"✓ descanso listo":`⏱ ${secs}s`}</span>
+        <div style={{flex:1}}/>
+        {!listo&&<button onClick={onVolver} style={{...btn,border:"1px solid rgba(255,255,255,0.25)",background:"transparent",color:"rgba(255,255,255,0.7)"}}>← timer</button>}
+        <button onClick={onTerminar} style={{...btn,border:"none",background:"#fff",color:"#111"}}>{listo?"siguiente serie →":"saltar →"}</button>
+      </div>
+      <div style={{flex:"1 1 0",minHeight:0,overflowY:"auto",padding:"10px 12px"}}>{feed}</div>
     </div>
   );
 }
@@ -379,6 +403,7 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
   const [openEx,       setOpenEx]       = useState(null);
   const [varianteElegida, setVarianteElegida] = useState({}); // exId -> variante elegida hoy (se resetea al recargar, no persiste entre días -- se guarda por serie al marcarla, ver markSerie)
   const [timerSecs,    setTimerSecs]    = useState(0);
+  const [feedDescanso, setFeedDescanso] = useState(false);   // Feed abierto sobre el descanso
   const [timerMax,     setTimerMax]     = useState(90);
   const [timerActive,  setTimerActive]  = useState(false);
   const [editEx,       setEditEx]       = useState(null);
@@ -1273,7 +1298,8 @@ function EjercicioPage({ ejercicioLog, saveEjercicioLog, customEjercicios, saveC
 
   return (
     <div style={{padding:"16px",maxWidth:720,margin:"0 auto"}}>
-      {timerActive && <FloatingRestTimer secs={timerSecs} maxSecs={timerMax} onSkip={skipTimer} onAddTime={addTimerSecs}/>}
+      {timerActive && !feedDescanso && <FloatingRestTimer secs={timerSecs} maxSecs={timerMax} onSkip={skipTimer} onAddTime={addTimerSecs} onFeed={()=>setFeedDescanso(true)}/>}
+      {feedDescanso && <DescansoFeed secs={timerSecs} activo={timerActive} onVolver={()=>setFeedDescanso(false)} onTerminar={()=>{skipTimer();setFeedDescanso(false);}}/>}
 
       {/* Nav */}
       <div style={{display:"flex",gap:0,marginBottom:16,background:"#fff",border:"1px solid #eee",borderRadius:10,overflow:"hidden"}}>
