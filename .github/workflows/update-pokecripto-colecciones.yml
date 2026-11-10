@@ -1,0 +1,63 @@
+name: Snapshot mensual de colecciones Pokécripto
+
+# Un snapshot por colección y mes (el mes en curso se actualiza; los anteriores quedan fijos). Corre después del bot de
+# precios (workflow_run), con un cron de respaldo por si ese workflow no corre ese día. Es idempotente: si nada cambió
+# no escribe ni commitea. No consume cupo de la API de precios: solo lee el inventario canónico de Angst-data.
+on:
+  workflow_run:
+    workflows: ["Actualizar precios Pokécripto"]
+    types: [completed]
+  schedule:
+    - cron: '30 14 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: pokecripto-colecciones
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout feeder (el script vive acá)
+        uses: actions/checkout@v4
+        with:
+          path: feeder
+
+      - name: Checkout Angst-data (lectura y escritura)
+        uses: actions/checkout@v4
+        with:
+          repository: cipinzas-hash/Angst-data
+          token: ${{ secrets.WORKER_GITHUB_PAT }}
+          path: angst-data
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Calcular el snapshot del mes
+        working-directory: feeder/modules/feed/scripts
+        env:
+          POKECRIPTO_INVENTARIO_PATH: ${{ github.workspace }}/angst-data/pokecripto-inventario.json
+          POKECRIPTO_COLECCIONES_PATH: ${{ github.workspace }}/angst-data/pokecripto-colecciones-historial.json
+        run: node build-pokecripto-colecciones.mjs
+
+      - name: Commitear y pushear a Angst-data, con reintento si hay conflicto
+        working-directory: angst-data
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          ARCHIVO="pokecripto-colecciones-historial.json"
+          [ -f "$ARCHIVO" ] || { echo "sin historial, nada que pushear"; exit 0; }
+          git add "$ARCHIVO"
+          git diff --staged --quiet -- "$ARCHIVO" && { echo "sin cambios, nada que pushear"; exit 0; }
+          git commit -m "Snapshot colecciones Pokécripto $(date -u +%Y-%m-%dT%H:%MZ)"
+          # Este archivo solo lo escribe este job; los otros bots tocan otros archivos de Angst-data, así que rebase es seguro.
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            echo "push falló, reintentando ($i/3)..."
+            sleep 5
+          done
+          echo "::error::push falló los 3 intentos, snapshot sin persistir"
+          exit 1

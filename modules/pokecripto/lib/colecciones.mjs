@@ -151,3 +151,20 @@ export function variacionMensual(historial, nombre, mesActual) {
     cambioCartas: actual.n !== anterior.n, nAntes: anterior.n, nAhora: actual.n,
   };
 }
+
+// ── Avance de TODAS las colecciones desde el inventario (lo usa el bot de snapshots, issue #41) ─────────────────────
+// Las colecciones automáticas del menú, en el orden del menú. tests/pokecripto-colecciones.mjs verifica que coincidan con
+// COLECCIONES_ILUSTRADOR de PokecriptoPage.jsx (el menú las deriva de ahí): si se agrega una colección, falla hasta sumarla acá.
+export const NOMBRES_COLECCIONES = ["Dark Collection", "tayu", "Sachiko Adachi", "Tomokazu Komiya", "Yuka Morii", "Asako Ito", "Mega", "Tera", "Pikachu 30", "ACE SPEC"];
+
+// El inventario tiene una fila por colección y carta (las que faltan nacen en "hunting"), así que el avance de una
+// colección sale de sus filas: conseguida = estado distinto de "hunting"; valor = tcgMarket de cada fila.
+export function avancesDeInventario(inv) {
+  const filas = Array.isArray(inv) ? inv : [];
+  const porColeccion = {};
+  for (const nombre of NOMBRES_COLECCIONES) {
+    const items = filas.filter(c => carpetaDeInv(c) === nombre).map(c => ({ estado: c.estado, tcgMarket: c.tcgMarket ?? null }));
+    porColeccion[nombre] = resumenAvance(items, x => x.estado !== "hunting");
+  }
+  return { porColeccion, total: sumarAvances(Object.values(porColeccion)) };
+}

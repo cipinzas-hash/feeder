@@ -5,7 +5,7 @@ import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPrice
 import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarCandidatos, matchAutomatico, mergeOverrides, claveCandidato, urlsFoto, mismoSet } from "./lib/review.mjs";
 import { marcarEdicionLocal } from "../shared/localedit.js";
 import { esDoubleRare, esAceSpec, carpetaDeCat, carpetaDeInv, invEnCarpeta, invDeCarta, rarezaConocida, sobraPorRareza, entradasFaltantes,
-  resumenAvance, sumarAvances, registrarSnapshotMes, serieColeccion, variacionMensual, mesDe, TOTAL_COLECCIONES } from "./lib/colecciones.mjs";
+  resumenAvance, sumarAvances, serieColeccion, variacionMensual, mesDe, TOTAL_COLECCIONES } from "./lib/colecciones.mjs";
 import { isDarkCard, POKECRIPTO_WORKER_URL, POKECRIPTO_AUTH_KEY, getPokecriptoAuth, encolarPokecriptoPending, buscarCartas, armarCartaNueva } from "./alta.js";
 
 // ─── PokeLoader ───────────────────────────────────────────────────────────────
@@ -139,7 +139,7 @@ function fmtPct(n){ return n==null?"":` (${n>0?"+":""}${n}%)`; }
 function colorDelta(n){ return n>0?"#2e9d62":n<0?"#d9534f":"#777"; }
 function VariacionMes({v}){
   const base={fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#666",marginBottom:8,paddingLeft:2};
-  if(!v) return <div style={base}>variación mensual: se arma sola, falta un mes anterior para comparar</div>;
+  if(!v) return <div style={base}>variación mensual: aparece cuando el bot tenga guardado un mes anterior</div>;
   const flecha=v.delta>0?"▲":v.delta<0?"▼":"■";
   return(
     <div style={base}>
@@ -1460,9 +1460,10 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     window.addEventListener("angst:restaurado",releer);
     return ()=>window.removeEventListener("angst:restaurado",releer);
   },[]);
-  // ── Avance y snapshots mensuales de las colecciones (issue #40, 10-nov-2026) ──
-  // Un snapshot por colección y mes (último valor del mes) en su propia clave de localStorage, que viaja en el export/sync
-  // como pokeColeccionesHistorial (core/persistence.js). El avance se calcula una vez para menú, cabecera y sets.
+  // ── Avance y snapshots mensuales de las colecciones (issue #40; el historial lo hace un bot desde el issue #41) ──
+  // El historial lo escribe el bot (update-pokecripto-colecciones.yml → pokecripto-colecciones-historial.json en Angst-data):
+  // un snapshot por colección y mes. Acá solo se lee: al abrir el módulo se trae del repo y queda en localStorage como caché
+  // (viaja en el export como pokeColeccionesHistorial). El avance de hoy se calcula una vez para menú, cabecera y sets.
   const HIST_COL_KEY="angst-pokecripto-colecciones-historial-v1";
   function leerHistColecciones(){ try{ const v=JSON.parse(localStorage.getItem(HIST_COL_KEY)||"[]"); return Array.isArray(v)?v:[]; }catch(e){ return []; } }
   const [histColecciones,setHistColecciones]=React.useState(leerHistColecciones);
@@ -1488,14 +1489,19 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     return {porColeccion,total:sumarAvances(Object.values(porColeccion))};
   },[darkCat,inv]);
   React.useEffect(()=>{
-    if(allSetsLoading||!darkCatalogo||!inventario) return;
-    const prev=leerHistColecciones();
-    const next=registrarSnapshotMes(prev,hoy,{...avancesColecciones.porColeccion,[TOTAL_COLECCIONES]:avancesColecciones.total});
-    if(next===prev) return;
-    try{ localStorage.setItem(HIST_COL_KEY,JSON.stringify(next)); }catch(e){ return; }
-    if(next.length>prev.length) marcarEdicionLocal(); // mes nuevo: se protege del pisado por una lectura vieja; las actualizaciones dentro del mes no
-    setHistColecciones(next);
-  },[avancesColecciones,allSetsLoading,hoy]);
+    const auth=getPokecriptoAuth();
+    if(!auth) return;
+    fetch(`${POKECRIPTO_WORKER_URL}?path=pokecripto-colecciones-historial.json`,{headers:{"X-Angst-Auth":auth}})
+      .then(r=>r.ok?r.json():null)
+      .then(remoto=>{
+        if(!Array.isArray(remoto)||!remoto.length) return;
+        const txt=JSON.stringify(remoto);
+        if(txt===JSON.stringify(leerHistColecciones())) return;
+        try{ localStorage.setItem(HIST_COL_KEY,txt); }catch(e){}
+        setHistColecciones(remoto); // dato del bot, no una edición local: no se marca para el guard del sync
+      })
+      .catch(()=>{});
+  },[]);
   function marcarAgotada(cardId,intentos){
     const m={...leerAgotadas(),[cardId]:{fecha:hoy,intentos}};
     try{ localStorage.setItem(REV_AGOTADA_KEY,JSON.stringify(m)); }catch(e){}

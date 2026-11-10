@@ -4372,25 +4372,6 @@ var __angst = (() => {
   var TOTAL_COLECCIONES = "*";
   var mesDe = (fecha2) => String(fecha2 || "").slice(0, 7);
   var r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
-  function snapshotDeAvance(r) {
-    return { v: r2(r.valorTotal), vc: r2(r.valorConseguido), n: r.total, c: r.conseguidas, p: r.conPrecio };
-  }
-  var igualSnap = (a, b) => !!a && !!b && a.v === b.v && a.vc === b.vc && a.n === b.n && a.c === b.c && a.p === b.p;
-  function registrarSnapshotMes(historial, fecha2, avances) {
-    const mes = mesDe(fecha2);
-    if (!/^\d{4}-\d{2}$/.test(mes)) return historial || [];
-    const base = Array.isArray(historial) ? historial : [];
-    const nuevos = {};
-    for (const [nombre, r] of Object.entries(avances || {})) {
-      if (r && r.total > 0 && r.conPrecio > 0) nuevos[nombre] = snapshotDeAvance(r);
-    }
-    if (!Object.keys(nuevos).length) return base;
-    const previo = base.find((h) => h.mes === mes);
-    const cambia = !previo || Object.entries(nuevos).some(([n, s]) => !igualSnap(previo.colecciones?.[n], s));
-    if (!cambia) return base;
-    const entrada = { mes, fecha: fecha2, colecciones: { ...previo?.colecciones || {}, ...nuevos } };
-    return [...base.filter((h) => h.mes !== mes), entrada].sort((a, b) => a.mes.localeCompare(b.mes));
-  }
   function serieColeccion(historial, nombre) {
     return (historial || []).filter((h) => h.colecciones?.[nombre]).map((h) => ({ mes: h.mes, ...h.colecciones[nombre] }));
   }
@@ -4626,7 +4607,7 @@ var __angst = (() => {
   }
   function VariacionMes({ v }) {
     const base = { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginBottom: 8, paddingLeft: 2 };
-    if (!v) return /* @__PURE__ */ React.createElement("div", { style: base }, "variaci\xF3n mensual: se arma sola, falta un mes anterior para comparar");
+    if (!v) return /* @__PURE__ */ React.createElement("div", { style: base }, "variaci\xF3n mensual: aparece cuando el bot tenga guardado un mes anterior");
     const flecha3 = v.delta > 0 ? "\u25B2" : v.delta < 0 ? "\u25BC" : "\u25A0";
     return /* @__PURE__ */ React.createElement("div", { style: base }, /* @__PURE__ */ React.createElement("span", { style: { color: colorDelta(v.delta), fontWeight: 700 } }, flecha3, " ", fmtDeltaUSD(v.delta), fmtPct(v.pct)), " valor total vs ", mesLabel(v.desde), v.cambioCartas && /* @__PURE__ */ React.createElement("span", null, " \xB7 el total de cartas pas\xF3 de ", v.nAntes, " a ", v.nAhora));
   }
@@ -5824,18 +5805,20 @@ var __angst = (() => {
       return { porColeccion, total: sumarAvances(Object.values(porColeccion)) };
     }, [darkCat, inv]);
     React.useEffect(() => {
-      if (allSetsLoading || !darkCatalogo || !inventario) return;
-      const prev = leerHistColecciones();
-      const next = registrarSnapshotMes(prev, hoy, { ...avancesColecciones.porColeccion, [TOTAL_COLECCIONES]: avancesColecciones.total });
-      if (next === prev) return;
-      try {
-        localStorage.setItem(HIST_COL_KEY, JSON.stringify(next));
-      } catch (e) {
-        return;
-      }
-      if (next.length > prev.length) marcarEdicionLocal();
-      setHistColecciones(next);
-    }, [avancesColecciones, allSetsLoading, hoy]);
+      const auth = getPokecriptoAuth();
+      if (!auth) return;
+      fetch(`${POKECRIPTO_WORKER_URL}?path=pokecripto-colecciones-historial.json`, { headers: { "X-Angst-Auth": auth } }).then((r) => r.ok ? r.json() : null).then((remoto) => {
+        if (!Array.isArray(remoto) || !remoto.length) return;
+        const txt = JSON.stringify(remoto);
+        if (txt === JSON.stringify(leerHistColecciones())) return;
+        try {
+          localStorage.setItem(HIST_COL_KEY, txt);
+        } catch (e) {
+        }
+        setHistColecciones(remoto);
+      }).catch(() => {
+      });
+    }, []);
     function marcarAgotada(cardId, intentos) {
       const m = { ...leerAgotadas(), [cardId]: { fecha: hoy, intentos } };
       try {

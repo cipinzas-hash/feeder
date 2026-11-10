@@ -1,7 +1,8 @@
 // Issue #39 (9-nov-2026): Mega/Tera solo Double Rare, colecciones individuales (una carta por colección) y ACE SPEC.
 import assert from "node:assert/strict";
 import { esDoubleRare, esAceSpec, carpetaDeInv, carpetaDeCat, invEnCarpeta, invDeCarta, rarezaConocida, sobraPorRareza, entradasFaltantes,
-  resumenAvance, sumarAvances, registrarSnapshotMes, serieColeccion, variacionMensual, mesDe, TOTAL_COLECCIONES } from "../modules/pokecripto/lib/colecciones.mjs";
+  resumenAvance, sumarAvances, registrarSnapshotMes, serieColeccion, variacionMensual, mesDe, TOTAL_COLECCIONES,
+  NOMBRES_COLECCIONES, avancesDeInventario } from "../modules/pokecripto/lib/colecciones.mjs";
 
 // rareza: solo "Double Rare" es normal; ACE SPEC por rareza o por subtipo (desde que existen)
 assert.equal(esDoubleRare({ rarity: "Double Rare" }), true);
@@ -112,5 +113,24 @@ const h4 = registrarSnapshotMes(h3, "2027-01-05", { Mega: resumenAvance([...Arra
 const vm4 = variacionMensual(h4, "Mega", "2027-01");
 assert.equal(vm4.desde, "2026-11"); assert.equal(vm4.cambioCartas, true); assert.deepEqual([vm4.nAntes, vm4.nAhora], [4, 6]);
 assert.deepEqual(registrarSnapshotMes(undefined, "mal", { Mega: av }), [], "fecha inválida o historial ausente no rompe");
+
+// ── Issue #41: avance desde el inventario (bot) ──
+const av41 = avancesDeInventario([
+  { carpeta: "Mega", estado: "sin_publicar", tcgMarket: 4 }, { carpeta: "Mega", estado: "hunting", tcgMarket: 6 },
+  { carpeta: "Tera", estado: "hunting", tcgMarket: null }, { isDark: true, estado: "en_mano", tcgMarket: 1.5 },
+  { carpeta: "Price Watch", estado: "hunting", tcgMarket: 99 }, { carpeta: "Cambio", estado: "hunting", tcgMarket: 99 }, { estado: "hunting", tcgMarket: 99 },
+]);
+assert.deepEqual(Object.keys(av41.porColeccion), NOMBRES_COLECCIONES);
+assert.deepEqual([av41.porColeccion.Mega.total, av41.porColeccion.Mega.conseguidas, av41.porColeccion.Mega.valorTotal, av41.porColeccion.Mega.valorConseguido], [2, 1, 10, 4]);
+assert.deepEqual([av41.porColeccion["Dark Collection"].total, av41.porColeccion["Dark Collection"].conseguidas], [1, 1], "una Dark antigua (isDark sin carpeta) cuenta como Dark");
+assert.equal(av41.porColeccion.Tera.conPrecio, 0);
+assert.equal(av41.total.total, 4, "Price Watch, Cambio y las filas sin carpeta no son colecciones");
+assert.equal(avancesDeInventario(null).total.total, 0);
+// el menú de la app y el bot comparten la misma lista de colecciones
+import { readFileSync } from "node:fs";
+const pagina = readFileSync(new URL("../modules/pokecripto/PokecriptoPage.jsx", import.meta.url), "utf8");
+const bloque = pagina.slice(pagina.indexOf("const COLECCIONES_ILUSTRADOR"), pagina.indexOf("];", pagina.indexOf("const COLECCIONES_ILUSTRADOR")));
+const enPagina = ["Dark Collection", ...[...bloque.matchAll(/\{carpeta:\s*"([^"]+)"/g)].map(m => m[1])];
+assert.deepEqual(enPagina, NOMBRES_COLECCIONES, "COLECCIONES_ILUSTRADOR (página) y NOMBRES_COLECCIONES (bot) deben coincidir");
 
 console.log("pokecripto-colecciones: OK");
