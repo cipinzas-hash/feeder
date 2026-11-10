@@ -1844,12 +1844,12 @@ var __angst = (() => {
       if (held !== null) return;
       setMsg("");
       if (it.done) {
-        const r2 = api.desmarcar(it);
-        if (r2.error) {
-          setMsg(r2.error);
+        const r3 = api.desmarcar(it);
+        if (r3.error) {
+          setMsg(r3.error);
           return;
         }
-        onPatch(g.key, it.id, { done: false, ...r2.patch || {} });
+        onPatch(g.key, it.id, { done: false, ...r3.patch || {} });
         return;
       }
       if (api.info(it.categoria).activo && (montoCompra(it) === 0 || it.estimado || !(it.categoria && String(it.categoria).trim()))) {
@@ -2987,6 +2987,8 @@ var __angst = (() => {
     // marcas de episodios aún no reflejadas por Simkl (TTL 48 h)
     pokeAgotadas: "angst-pokecripto-agotadas-v1",
     // cartas agotadas en la revisión (cooldown 7 días)
+    pokeColeccionesHistorial: "angst-pokecripto-colecciones-historial-v1",
+    // snapshots mensuales del valor de cada colección de Pokécripto (issue #40)
     gcalInbox: "angst-gcal-inbox-v1",
     // bandeja Familia → Angst: eventos ya pasados a tarea o ignorados (el sync borra de Google los importados)
     musicaMegusta: "angst-musica-megusta-v1"
@@ -4330,6 +4332,86 @@ var __angst = (() => {
     }
     return out;
   }
+  function resumenAvance(items, esConseguida) {
+    let total = 0, conseguidas = 0, valorTotal = 0, valorConseguido = 0, conPrecio = 0;
+    for (const d of items || []) {
+      total++;
+      const tiene = d?.tcgMarket != null && Number.isFinite(Number(d.tcgMarket));
+      const v = tiene ? Number(d.tcgMarket) : 0;
+      if (tiene) conPrecio++;
+      valorTotal += v;
+      if (esConseguida(d)) {
+        conseguidas++;
+        valorConseguido += v;
+      }
+    }
+    return {
+      total,
+      conseguidas,
+      valorTotal,
+      valorConseguido,
+      conPrecio,
+      pct: total ? Math.round(conseguidas / total * 100) : 0,
+      pctValor: valorTotal > 0 ? Math.round(valorConseguido / valorTotal * 100) : 0
+    };
+  }
+  function sumarAvances(lista) {
+    const s = (lista || []).reduce((a, r) => ({
+      total: a.total + r.total,
+      conseguidas: a.conseguidas + r.conseguidas,
+      valorTotal: a.valorTotal + r.valorTotal,
+      valorConseguido: a.valorConseguido + r.valorConseguido,
+      conPrecio: a.conPrecio + r.conPrecio
+    }), { total: 0, conseguidas: 0, valorTotal: 0, valorConseguido: 0, conPrecio: 0 });
+    return {
+      ...s,
+      pct: s.total ? Math.round(s.conseguidas / s.total * 100) : 0,
+      pctValor: s.valorTotal > 0 ? Math.round(s.valorConseguido / s.valorTotal * 100) : 0
+    };
+  }
+  var TOTAL_COLECCIONES = "*";
+  var mesDe = (fecha2) => String(fecha2 || "").slice(0, 7);
+  var r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+  function snapshotDeAvance(r) {
+    return { v: r2(r.valorTotal), vc: r2(r.valorConseguido), n: r.total, c: r.conseguidas, p: r.conPrecio };
+  }
+  var igualSnap = (a, b) => !!a && !!b && a.v === b.v && a.vc === b.vc && a.n === b.n && a.c === b.c && a.p === b.p;
+  function registrarSnapshotMes(historial, fecha2, avances) {
+    const mes = mesDe(fecha2);
+    if (!/^\d{4}-\d{2}$/.test(mes)) return historial || [];
+    const base = Array.isArray(historial) ? historial : [];
+    const nuevos = {};
+    for (const [nombre, r] of Object.entries(avances || {})) {
+      if (r && r.total > 0 && r.conPrecio > 0) nuevos[nombre] = snapshotDeAvance(r);
+    }
+    if (!Object.keys(nuevos).length) return base;
+    const previo = base.find((h) => h.mes === mes);
+    const cambia = !previo || Object.entries(nuevos).some(([n, s]) => !igualSnap(previo.colecciones?.[n], s));
+    if (!cambia) return base;
+    const entrada = { mes, fecha: fecha2, colecciones: { ...previo?.colecciones || {}, ...nuevos } };
+    return [...base.filter((h) => h.mes !== mes), entrada].sort((a, b) => a.mes.localeCompare(b.mes));
+  }
+  function serieColeccion(historial, nombre) {
+    return (historial || []).filter((h) => h.colecciones?.[nombre]).map((h) => ({ mes: h.mes, ...h.colecciones[nombre] }));
+  }
+  function variacionMensual(historial, nombre, mesActual) {
+    const serie2 = serieColeccion(historial, nombre);
+    const actual = serie2.find((s) => s.mes === mesActual) || null;
+    if (!actual) return null;
+    const anterior = [...serie2].reverse().find((s) => s.mes < mesActual) || null;
+    if (!anterior) return null;
+    const pct2 = (a, b) => b > 0 ? Math.round((a - b) / b * 1e3) / 10 : null;
+    return {
+      desde: anterior.mes,
+      delta: r2(actual.v - anterior.v),
+      pct: pct2(actual.v, anterior.v),
+      deltaConseguido: r2(actual.vc - anterior.vc),
+      pctConseguido: pct2(actual.vc, anterior.vc),
+      cambioCartas: actual.n !== anterior.n,
+      nAntes: anterior.n,
+      nAhora: actual.n
+    };
+  }
 
   // modules/pokecripto/alta.js
   var POKECRIPTO_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
@@ -4527,6 +4609,37 @@ var __angst = (() => {
   }
   function fmtUSD(n) {
     return "$" + parseFloat(n || 0).toFixed(2);
+  }
+  var MESES_ABR = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  function mesLabel(m) {
+    const [a, mm] = String(m || "").split("-");
+    return (MESES_ABR[(parseInt(mm, 10) || 1) - 1] || "") + " " + a;
+  }
+  function fmtDeltaUSD(n) {
+    return (n >= 0 ? "+" : "\u2212") + "$" + Math.abs(n).toFixed(2);
+  }
+  function fmtPct(n) {
+    return n == null ? "" : ` (${n > 0 ? "+" : ""}${n}%)`;
+  }
+  function colorDelta(n) {
+    return n > 0 ? "#2e9d62" : n < 0 ? "#d9534f" : "#777";
+  }
+  function VariacionMes({ v }) {
+    const base = { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginBottom: 8, paddingLeft: 2 };
+    if (!v) return /* @__PURE__ */ React.createElement("div", { style: base }, "variaci\xF3n mensual: se arma sola, falta un mes anterior para comparar");
+    const flecha3 = v.delta > 0 ? "\u25B2" : v.delta < 0 ? "\u25BC" : "\u25A0";
+    return /* @__PURE__ */ React.createElement("div", { style: base }, /* @__PURE__ */ React.createElement("span", { style: { color: colorDelta(v.delta), fontWeight: 700 } }, flecha3, " ", fmtDeltaUSD(v.delta), fmtPct(v.pct)), " valor total vs ", mesLabel(v.desde), v.cambioCartas && /* @__PURE__ */ React.createElement("span", null, " \xB7 el total de cartas pas\xF3 de ", v.nAntes, " a ", v.nAhora));
+  }
+  function Sparkline({ valores }) {
+    if (!valores || valores.length < 2) return null;
+    const w = 200, h = 34, min = Math.min(...valores), max = Math.max(...valores), rango = max - min || 1;
+    const pts = valores.map((v, i) => `${(i / (valores.length - 1) * w).toFixed(1)},${(h - 3 - (v - min) / rango * (h - 6)).toFixed(1)}`).join(" ");
+    return /* @__PURE__ */ React.createElement("svg", { viewBox: `0 0 ${w} ${h}`, width: "100%", height: h, preserveAspectRatio: "none", style: { display: "block", margin: "6px 0" } }, /* @__PURE__ */ React.createElement("polyline", { points: pts, fill: "none", stroke: "#aac756", strokeWidth: "1.5", vectorEffect: "non-scaling-stroke" }));
+  }
+  function HistorialMensual({ serie: serie2 }) {
+    const filas = serie2.map((s, i) => ({ ...s, pct: i > 0 && serie2[i - 1].v > 0 ? Math.round((s.v - serie2[i - 1].v) / serie2[i - 1].v * 1e3) / 10 : null })).reverse().slice(0, 36);
+    const f2 = { fontFamily: "'DM Sans',sans-serif", fontSize: 10 };
+    return /* @__PURE__ */ React.createElement("div", { style: { marginTop: 4 } }, /* @__PURE__ */ React.createElement(Sparkline, { valores: serie2.map((s) => s.v) }), filas.map((r) => /* @__PURE__ */ React.createElement("div", { key: r.mes, style: { ...f2, display: "flex", justifyContent: "space-between", gap: 8, padding: "3px 0", borderTop: "1px solid #1f1f1f", color: "#aaa" } }, /* @__PURE__ */ React.createElement("span", { style: { width: 58 } }, mesLabel(r.mes)), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, textAlign: "right" } }, fmtUSD(r.vc), " / ", fmtUSD(r.v)), /* @__PURE__ */ React.createElement("span", { style: { width: 62, textAlign: "right", color: r.pct == null ? "#555" : colorDelta(r.pct) } }, r.pct == null ? "\u2014" : `${r.pct > 0 ? "+" : ""}${r.pct}%`))), /* @__PURE__ */ React.createElement("div", { style: { ...f2, fontSize: 9, color: "#555", marginTop: 4 } }, "valor conseguido / total de la colecci\xF3n, \xFAltimo valor de cada mes"));
   }
   function diasDesde(f2) {
     if (!f2) return null;
@@ -5676,6 +5789,53 @@ var __angst = (() => {
       window.addEventListener("angst:restaurado", releer);
       return () => window.removeEventListener("angst:restaurado", releer);
     }, []);
+    const HIST_COL_KEY = "angst-pokecripto-colecciones-historial-v1";
+    function leerHistColecciones() {
+      try {
+        const v = JSON.parse(localStorage.getItem(HIST_COL_KEY) || "[]");
+        return Array.isArray(v) ? v : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    const [histColecciones, setHistColecciones] = React.useState(leerHistColecciones);
+    const [histColAbierto, setHistColAbierto] = React.useState(false);
+    React.useEffect(() => {
+      const releer = () => setHistColecciones(leerHistColecciones());
+      window.addEventListener("angst:restaurado", releer);
+      return () => window.removeEventListener("angst:restaurado", releer);
+    }, []);
+    const avancesColecciones = React.useMemo(() => {
+      const porClave = /* @__PURE__ */ new Map();
+      for (const c of inv) {
+        const k = carpetaDeInv(c) + "::" + c.cardId;
+        if (!porClave.has(k)) porClave.set(k, c);
+      }
+      const porColeccion = {};
+      for (const nombre of ["Dark Collection", ...COLECCIONES_ILUSTRADOR.map((d) => d.carpeta)]) {
+        const items = [];
+        for (const d of darkCat) {
+          if (carpetaDeCat(d) !== nombre) continue;
+          const m = porClave.get(nombre + "::" + d.cardId);
+          items.push(m ? { estado: m.estado, tcgMarket: m.tcgMarket ?? null } : { estado: "hunting", tcgMarket: null });
+        }
+        porColeccion[nombre] = resumenAvance(items, (x) => x.estado !== "hunting");
+      }
+      return { porColeccion, total: sumarAvances(Object.values(porColeccion)) };
+    }, [darkCat, inv]);
+    React.useEffect(() => {
+      if (allSetsLoading || !darkCatalogo || !inventario) return;
+      const prev = leerHistColecciones();
+      const next = registrarSnapshotMes(prev, hoy, { ...avancesColecciones.porColeccion, [TOTAL_COLECCIONES]: avancesColecciones.total });
+      if (next === prev) return;
+      try {
+        localStorage.setItem(HIST_COL_KEY, JSON.stringify(next));
+      } catch (e) {
+        return;
+      }
+      if (next.length > prev.length) marcarEdicionLocal();
+      setHistColecciones(next);
+    }, [avancesColecciones, allSetsLoading, hoy]);
     function marcarAgotada(cardId, intentos) {
       const m = { ...leerAgotadas(), [cardId]: { fecha: hoy, intentos } };
       try {
@@ -6399,17 +6559,10 @@ var __angst = (() => {
     }
     if (view === "colecciones_menu") {
       const nombres = ["Dark Collection", ...COLECCIONES_ILUSTRADOR.map((d) => d.carpeta)];
-      const filas = nombres.map((nombre) => {
-        const esDark = nombre === "Dark Collection";
-        const entradas = darkCat.filter((d) => (d.carpeta || "Dark Collection") === nombre);
-        const total = entradas.length;
-        const conseguidas = entradas.filter((d) => {
-          const invMatch = invEnCarpeta(inv, d.cardId, carpetaDeCat(d));
-          return invMatch && invMatch.estado !== "hunting";
-        }).length;
-        return { nombre, esDark, total, conseguidas };
-      });
-      return /* @__PURE__ */ React.createElement("div", { style: { background: "#0a0a0a", minHeight: "100vh", padding: "16px", maxWidth: 480, margin: "0 auto", overflowX: "hidden", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 16 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setView("coleccion"), style: { background: "transparent", border: "none", fontSize: 20, color: "#444", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff" } }, "\u{1F5C2}\uFE0F Colecciones")), filas.map(({ nombre, esDark, total, conseguidas }) => /* @__PURE__ */ React.createElement(
+      const filas = nombres.map((nombre) => ({ nombre, esDark: nombre === "Dark Collection", ...avancesColecciones.porColeccion[nombre] }));
+      const tot = avancesColecciones.total;
+      const mesActual2 = mesDe(hoy);
+      return /* @__PURE__ */ React.createElement("div", { style: { background: "#0a0a0a", minHeight: "100vh", padding: "16px", maxWidth: 480, margin: "0 auto", overflowX: "hidden", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setView("coleccion"), style: { background: "transparent", border: "none", fontSize: 20, color: "#444", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff" } }, "\u{1F5C2}\uFE0F Colecciones"), tot.total > 0 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#aac756" } }, tot.conseguidas, "/", tot.total), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#444" } }, tot.pct, "% completado"))), tot.total > 0 && /* @__PURE__ */ React.createElement("div", { style: { height: 3, background: "#1a1a1a", borderRadius: 99, overflow: "hidden", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${tot.conseguidas / tot.total * 100}%`, background: "#2e7d52", borderRadius: 99 } })), tot.valorTotal > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", background: "#151515", borderRadius: 10, padding: "10px 14px", marginBottom: 6 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 } }, "valor conseguido / total"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, fontWeight: 700, color: "#fff" } }, fmtUSD(tot.valorConseguido), " ", /* @__PURE__ */ React.createElement("span", { style: { color: "#555", fontSize: 14 } }, "/ ", fmtUSD(tot.valorTotal)))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#aac756" } }, tot.pctValor, "% del valor")), /* @__PURE__ */ React.createElement(VariacionMes, { v: variacionMensual(histColecciones, TOTAL_COLECCIONES, mesActual2) }), filas.map(({ nombre, esDark, total, conseguidas, pct: pct2, valorTotal, valorConseguido }) => /* @__PURE__ */ React.createElement(
         "button",
         {
           key: nombre,
@@ -6421,7 +6574,7 @@ var __angst = (() => {
         },
         /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20 } }, esDark ? "\u26AB" : CARPETAS_ICONS[nombre] || "\u{1F3A8}"),
         /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: "'Caveat',cursive", fontSize: 16, color: "#fff" } }, nombre),
-        /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: total > 0 ? "#aac756" : "#555" } }, total > 0 ? `${conseguidas}/${total}` : "escaneando\u2026")
+        /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: total > 0 ? "#aac756" : "#555" } }, total > 0 ? `${conseguidas}/${total} \xB7 ${pct2}%` : "escaneando\u2026"), valorTotal > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#666", marginTop: 2 } }, fmtUSD(valorConseguido), " / ", fmtUSD(valorTotal)))
       )), /* @__PURE__ */ React.createElement("div", { style: { height: 32 } }));
     }
     if (autocolCarpeta) {
@@ -6453,6 +6606,7 @@ var __angst = (() => {
       const cardIdsGrid = setGroups.flatMap((g) => g.cards.map((c) => c.cardId));
       const gridCols = darkView === "grid_small" ? "repeat(auto-fill,minmax(58px,1fr))" : darkView === "grid_med" ? "repeat(auto-fill,minmax(88px,1fr))" : null;
       const catLoading = allSetsLoading;
+      const serieCol = serieColeccion(histColecciones, cat);
       return /* @__PURE__ */ React.createElement("div", { style: { background: "#0a0a0a", minHeight: "100vh", padding: "16px", maxWidth: 480, margin: "0 auto", overflowX: "hidden", boxSizing: "border-box" } }, zoomImage && /* @__PURE__ */ React.createElement("div", { onClick: () => setZoomImage(null), style: { position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("img", { src: zoomImage, style: { maxWidth: "90vw", maxHeight: "90vh", borderRadius: 12, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" } }), (darkDetailId ? darkDetailList.length > 1 : zoomList.length > 1) && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
         "button",
         {
@@ -6473,7 +6627,7 @@ var __angst = (() => {
           style: { position: "fixed", right: 6, top: "50%", transform: "translateY(-50%)", background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 16, width: 64, height: 110, color: "#fff", fontSize: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }
         },
         "\u203A"
-      ))), renderDarkPriceModal(), renderDarkDetailModal(), renderRevisionModal(), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setAutocolCarpeta(null), style: { background: "transparent", border: "none", fontSize: 20, color: "#444", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff" } }, esDark ? "\u26AB Dark Collection" : `${CARPETAS_ICONS[cat] || "\u{1F3A8}"} ${cat}`)), total > 0 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#aac756" } }, conseguidas, "/", total), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#444" } }, Math.round(conseguidas / total * 100), "%"))), total > 0 && /* @__PURE__ */ React.createElement("div", { style: { height: 3, background: "#1a1a1a", borderRadius: 99, overflow: "hidden", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${total > 0 ? conseguidas / total * 100 : 0}%`, background: "#2e7d52", borderRadius: 99 } })), valorTotal > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", background: "#151515", borderRadius: 10, padding: "10px 14px", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 } }, "valor conseguido / total"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, fontWeight: 700, color: "#fff" } }, fmtUSD(valorConseguido), " ", /* @__PURE__ */ React.createElement("span", { style: { color: "#555", fontSize: 14 } }, "/ ", fmtUSD(valorTotal)))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#aac756" } }, Math.round(valorConseguido / valorTotal * 100), "% del valor")), catMerged.length > 0 && /* @__PURE__ */ React.createElement(
+      ))), renderDarkPriceModal(), renderDarkDetailModal(), renderRevisionModal(), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setAutocolCarpeta(null), style: { background: "transparent", border: "none", fontSize: 20, color: "#444", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff" } }, esDark ? "\u26AB Dark Collection" : `${CARPETAS_ICONS[cat] || "\u{1F3A8}"} ${cat}`)), total > 0 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#aac756" } }, conseguidas, "/", total), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#444" } }, Math.round(conseguidas / total * 100), "%"))), total > 0 && /* @__PURE__ */ React.createElement("div", { style: { height: 3, background: "#1a1a1a", borderRadius: 99, overflow: "hidden", marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${total > 0 ? conseguidas / total * 100 : 0}%`, background: "#2e7d52", borderRadius: 99 } })), valorTotal > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", background: "#151515", borderRadius: 10, padding: "10px 14px", marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 2 } }, "valor conseguido / total"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, fontWeight: 700, color: "#fff" } }, fmtUSD(valorConseguido), " ", /* @__PURE__ */ React.createElement("span", { style: { color: "#555", fontSize: 14 } }, "/ ", fmtUSD(valorTotal)))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#aac756" } }, Math.round(valorConseguido / valorTotal * 100), "% del valor")), serieCol.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { background: "#151515", borderRadius: 10, padding: "8px 14px", marginBottom: 10 } }, /* @__PURE__ */ React.createElement(VariacionMes, { v: variacionMensual(histColecciones, cat, mesDe(hoy)) }), /* @__PURE__ */ React.createElement("button", { onClick: () => setHistColAbierto((v) => !v), style: { background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#888" } }, "\u{1F4C8} historial mensual (", serieCol.length, ") ", histColAbierto ? "\u25B2" : "\u25BC"), histColAbierto && /* @__PURE__ */ React.createElement(HistorialMensual, { serie: serieCol })), catMerged.length > 0 && /* @__PURE__ */ React.createElement(
         "button",
         {
           onClick: () => imprimirPlaceholders(catMerged, cat, "todas"),
@@ -6531,7 +6685,7 @@ var __angst = (() => {
         },
         repoblando ? "repoblando..." : "\u{1F504} repoblar"
       )), resyncStatus === "running" && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#444", marginBottom: 8 } }, "resincronizando sets trackeados en segundo plano\u2026"), catLoading && /* @__PURE__ */ React.createElement(PokeLoader, { active: true }), !catLoading && total === 0 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: "32px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#333", marginBottom: 6 } }, esDark ? "cargando cartas dark..." : `buscando cartas de ${cat} en ~200 sets, puede tardar unos minutos...`)), !catLoading && total > 0 && setGroups.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: "32px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, color: "#333" } }, "cargando cat\xE1logo...")), setGroups.map(({ setName, setId, cards }) => {
-        const cons = cards.filter((c) => getEstadoDark(c) === "conseguida").length;
+        const rs = resumenAvance(porSetFull[setId]?.cards || cards, (c) => getEstadoDark(c) === "conseguida");
         const numerosUnicos = new Set(cards.map((c) => c.number)).size;
         const hayVariantes = cards.length > numerosUnicos;
         return /* @__PURE__ */ React.createElement("div", { key: setId, style: { marginBottom: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, gap: 6 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 17, fontWeight: 700, color: "#fff", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, setName), hayVariantes && /* @__PURE__ */ React.createElement(
@@ -6541,7 +6695,7 @@ var __angst = (() => {
             style: { fontFamily: "'DM Sans',sans-serif", fontSize: 8, color: "#5c9cff", background: "rgba(92,156,255,0.12)", borderRadius: 6, padding: "1px 5px", flexShrink: 0 }
           },
           "2 var."
-        ), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: cons === cards.length && cards.length > 0 ? "#2e7d52" : "#555", flexShrink: 0 } }, cons, "/", cards.length)), /* @__PURE__ */ React.createElement("div", { style: { height: 2, background: "#1a1a1a", borderRadius: 99, overflow: "hidden", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${cards.length > 0 ? cons / cards.length * 100 : 0}%`, background: "#2e7d52", borderRadius: 99 } })), darkView === "lista" ? /* @__PURE__ */ React.createElement("div", null, cards.map((d) => /* @__PURE__ */ React.createElement(DarkCard, { key: d.cardId, d, list: cardIdsGrid }))) : /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: gridCols, gap: darkView === "grid_small" ? 3 : 5 } }, cards.map((d) => /* @__PURE__ */ React.createElement(DarkCard, { key: d.cardId, d, list: cardIdsGrid }))));
+        ), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: rs.conseguidas === rs.total && rs.total > 0 ? "#2e7d52" : "#555" } }, rs.conseguidas, "/", rs.total, " \xB7 ", rs.pct, "%"), rs.valorTotal > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#666", marginTop: 1 } }, fmtUSD(rs.valorConseguido), " / ", fmtUSD(rs.valorTotal)))), /* @__PURE__ */ React.createElement("div", { style: { height: 2, background: "#1a1a1a", borderRadius: 99, overflow: "hidden", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${rs.total > 0 ? rs.conseguidas / rs.total * 100 : 0}%`, background: "#2e7d52", borderRadius: 99 } })), darkView === "lista" ? /* @__PURE__ */ React.createElement("div", null, cards.map((d) => /* @__PURE__ */ React.createElement(DarkCard, { key: d.cardId, d, list: cardIdsGrid }))) : /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: gridCols, gap: darkView === "grid_small" ? 3 : 5 } }, cards.map((d) => /* @__PURE__ */ React.createElement(DarkCard, { key: d.cardId, d, list: cardIdsGrid }))));
       }), /* @__PURE__ */ React.createElement("div", { style: { height: 40 } }));
     }
     const mesActual = (/* @__PURE__ */ new Date()).toISOString().slice(0, 7);
@@ -14927,7 +15081,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F44E}"),
       "no me interesa"
     )), !hideActions && !reviewOpen && puedeEpisodios && mostrarEpisodios && /* @__PURE__ */ React.createElement("div", { style: { margin: "0 0 18px", borderRadius: 10, overflow: "hidden" } }, /* @__PURE__ */ React.createElement(SeriesSeguimiento, { item, progresoActual, onMarcar: marcarProgreso })), !esEnProduccion(item) && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #1a1a1a" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 } }, "mi rese\xF1a"), estado === "vista" && !reviewOpen ? /* @__PURE__ */ React.createElement("div", { onClick: () => setReviewOpen(true), style: { cursor: "pointer" } }, (() => {
-      const r = CINE_RATINGS.find((r2) => r2.id === estadoItem.rating);
+      const r = CINE_RATINGS.find((r3) => r3.id === estadoItem.rating);
       return /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#fff", marginBottom: 4 } }, r ? `${r.emoji} ${r.label}` : "sin calificar");
     })(), estadoItem.nota && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", fontStyle: "italic" } }, '"', estadoItem.nota, '"'), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "#666", marginTop: 4 } }, "tocar para editar")) : reviewOpen || estado !== "vista" ? reviewOpen && /* @__PURE__ */ React.createElement(MiniReviewForm, { onSave: guardarReview, onCancel: () => setReviewOpen(false), inicial: estadoItem }) : null, estado === "vista" && !reviewOpen && estadoItem?.rating && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: exportarImagen, disabled: exportando, style: { ...btnGhost, width: "100%", opacity: exportando ? 0.6 : 1 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4F8}"), exportando ? "generando imagen\u2026" : "exportar imagen"), exportMsg && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 6 } }, exportMsg)), estado !== "vista" && !reviewOpen && /* @__PURE__ */ React.createElement("button", { onClick: () => setReviewOpen(true), style: { ...btnGhost, width: "100%" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4DD}"), "marcar como vista")), leads.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 6 } }, "reparto principal"), leads.map((c, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(255,255,255,0.7)", marginBottom: 2 } }, /* @__PURE__ */ React.createElement("b", { style: { color: "#fff" } }, c.name), c.character ? ` \u2014 ${c.character}` : "")), supporting.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6 } }, supporting.map((c) => c.name).join(" \xB7 "))), item.reviews ? /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#fff", marginBottom: 8 } }, "rese\xF1as de usuario"), /* @__PURE__ */ React.createElement(ReviewBlock, { label: "mejor valorada", review: item.reviews.top, color: color2 }), item.reviews.bottom && /* @__PURE__ */ React.createElement(ReviewBlock, { label: "peor valorada", review: item.reviews.bottom, color: color2 })) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#666", fontStyle: "italic" } }, "sin rese\xF1as de usuario disponibles para este t\xEDtulo")), !hideActions && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, padding: "4px 10px 10px", background: "#111" } }, /* @__PURE__ */ React.createElement("button", { onClick: onChangeCategory, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B05\uFE0F"), "anterior"), onSave && /* @__PURE__ */ React.createElement("button", { onClick: onSave, style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u2B07\uFE0F"), "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => shareToWhatsApp(item), style: btnGhost }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u{1F4E4}"), "compartir"), /* @__PURE__ */ React.createElement("button", { onClick: onNext, style: { ...btnGhost, background: color2, color: "#111", borderColor: color2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17 } }, "\u27A1\uFE0F"), "siguiente"))));
   }

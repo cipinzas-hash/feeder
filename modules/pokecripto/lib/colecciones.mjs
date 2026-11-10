@@ -61,3 +61,93 @@ export function entradasFaltantes(catalogo, inv, nuevoId) {
   }
   return out;
 }
+
+// ── Avance y valor (issue #40, 10-nov-2026) ─────────────────────────────────────────────────────────────────────────
+// Un mismo cálculo para el menú Colecciones, la cabecera de cada colección y la de cada set: así los tres niveles
+// no pueden divergir. `items` son entradas del catálogo ya unidas con su carta de inventario (tcgMarket, estado);
+// `esConseguida(d)` dice si la tenés. El % de completitud es por cantidad de cartas; el % del valor va aparte.
+export function resumenAvance(items, esConseguida) {
+  let total = 0, conseguidas = 0, valorTotal = 0, valorConseguido = 0, conPrecio = 0;
+  for (const d of items || []) {
+    total++;
+    const tiene = d?.tcgMarket != null && Number.isFinite(Number(d.tcgMarket));
+    const v = tiene ? Number(d.tcgMarket) : 0;
+    if (tiene) conPrecio++;
+    valorTotal += v;
+    if (esConseguida(d)) { conseguidas++; valorConseguido += v; }
+  }
+  return {
+    total, conseguidas, valorTotal, valorConseguido, conPrecio,
+    pct: total ? Math.round(conseguidas / total * 100) : 0,
+    pctValor: valorTotal > 0 ? Math.round(valorConseguido / valorTotal * 100) : 0,
+  };
+}
+
+// Suma de varios avances (el total del menú "Colecciones": cada colección cuenta sus propias cartas).
+export function sumarAvances(lista) {
+  const s = (lista || []).reduce((a, r) => ({
+    total: a.total + r.total, conseguidas: a.conseguidas + r.conseguidas,
+    valorTotal: a.valorTotal + r.valorTotal, valorConseguido: a.valorConseguido + r.valorConseguido,
+    conPrecio: a.conPrecio + r.conPrecio,
+  }), { total: 0, conseguidas: 0, valorTotal: 0, valorConseguido: 0, conPrecio: 0 });
+  return {
+    ...s,
+    pct: s.total ? Math.round(s.conseguidas / s.total * 100) : 0,
+    pctValor: s.valorTotal > 0 ? Math.round(s.valorConseguido / s.valorTotal * 100) : 0,
+  };
+}
+
+// ── Snapshots mensuales del valor de cada colección ─────────────────────────────────────────────────────────────────
+// historial: [{ mes:"2026-11", fecha:"2026-11-10", colecciones:{ [nombre]:{ v, vc, n, c, p } } }] ordenado por mes.
+//   v = valor de la colección completa, vc = valor de lo conseguido, n = cartas, c = conseguidas, p = cartas con precio.
+// "*" es el total de todas las colecciones. Un snapshot por colección y mes: mientras el mes está en curso se va
+// actualizando (queda el último valor del mes). Devuelve el MISMO array si nada cambió (no genera escrituras de más).
+export const TOTAL_COLECCIONES = "*";
+export const mesDe = fecha => String(fecha || "").slice(0, 7);
+const r2 = n => Math.round((Number(n) || 0) * 100) / 100;
+
+export function snapshotDeAvance(r) {
+  return { v: r2(r.valorTotal), vc: r2(r.valorConseguido), n: r.total, c: r.conseguidas, p: r.conPrecio };
+}
+const igualSnap = (a, b) => !!a && !!b && a.v === b.v && a.vc === b.vc && a.n === b.n && a.c === b.c && a.p === b.p;
+
+// avances: { [nombre]: resumenAvance(...) }. Solo se registran colecciones con cartas y al menos un precio
+// (con el catálogo recién escaneándose o sin precios, un valor 0 falso no debe quedar como "el valor del mes").
+export function registrarSnapshotMes(historial, fecha, avances) {
+  const mes = mesDe(fecha);
+  if (!/^\d{4}-\d{2}$/.test(mes)) return historial || [];
+  const base = Array.isArray(historial) ? historial : [];
+  const nuevos = {};
+  for (const [nombre, r] of Object.entries(avances || {})) {
+    if (r && r.total > 0 && r.conPrecio > 0) nuevos[nombre] = snapshotDeAvance(r);
+  }
+  if (!Object.keys(nuevos).length) return base;
+  const previo = base.find(h => h.mes === mes);
+  const cambia = !previo || Object.entries(nuevos).some(([n, s]) => !igualSnap(previo.colecciones?.[n], s));
+  if (!cambia) return base;
+  const entrada = { mes, fecha, colecciones: { ...(previo?.colecciones || {}), ...nuevos } };
+  return [...base.filter(h => h.mes !== mes), entrada].sort((a, b) => a.mes.localeCompare(b.mes));
+}
+
+// Serie de una colección: [{mes, ...snap}] en orden cronológico (solo los meses donde existe).
+export function serieColeccion(historial, nombre) {
+  return (historial || []).filter(h => h.colecciones?.[nombre]).map(h => ({ mes: h.mes, ...h.colecciones[nombre] }));
+}
+
+// Variación del mes en curso contra el mes anterior con snapshot (no tiene por qué ser el inmediato).
+// Devuelve null si no hay un mes anterior que comparar. `cambioCartas` avisa que el total de cartas cambió
+// (set nuevo, cartas dadas de baja): ahí parte de la variación es del catálogo y no del precio.
+export function variacionMensual(historial, nombre, mesActual) {
+  const serie = serieColeccion(historial, nombre);
+  const actual = serie.find(s => s.mes === mesActual) || null;
+  if (!actual) return null;
+  const anterior = [...serie].reverse().find(s => s.mes < mesActual) || null;
+  if (!anterior) return null;
+  const pct = (a, b) => (b > 0 ? Math.round((a - b) / b * 1000) / 10 : null);
+  return {
+    desde: anterior.mes,
+    delta: r2(actual.v - anterior.v), pct: pct(actual.v, anterior.v),
+    deltaConseguido: r2(actual.vc - anterior.vc), pctConseguido: pct(actual.vc, anterior.vc),
+    cambioCartas: actual.n !== anterior.n, nAntes: anterior.n, nAhora: actual.n,
+  };
+}

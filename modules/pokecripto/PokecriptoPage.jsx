@@ -4,7 +4,8 @@
 import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPrice, fetchTCGCandidatos, addSnapshot, refreshPrecio as refreshPrecioCompartido, fuenteCompatible } from "./lib/pricing.mjs";
 import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarCandidatos, matchAutomatico, mergeOverrides, claveCandidato, urlsFoto, mismoSet } from "./lib/review.mjs";
 import { marcarEdicionLocal } from "../shared/localedit.js";
-import { esDoubleRare, esAceSpec, carpetaDeCat, invEnCarpeta, invDeCarta, rarezaConocida, sobraPorRareza, entradasFaltantes } from "./lib/colecciones.mjs";
+import { esDoubleRare, esAceSpec, carpetaDeCat, carpetaDeInv, invEnCarpeta, invDeCarta, rarezaConocida, sobraPorRareza, entradasFaltantes,
+  resumenAvance, sumarAvances, registrarSnapshotMes, serieColeccion, variacionMensual, mesDe, TOTAL_COLECCIONES } from "./lib/colecciones.mjs";
 import { isDarkCard, POKECRIPTO_WORKER_URL, POKECRIPTO_AUTH_KEY, getPokecriptoAuth, encolarPokecriptoPending, buscarCartas, armarCartaNueva } from "./alta.js";
 
 // ─── PokeLoader ───────────────────────────────────────────────────────────────
@@ -130,6 +131,46 @@ function getEstadoDark(entry){
 }
 
 function fmtUSD(n){ return "$"+parseFloat(n||0).toFixed(2); }
+// Historial mensual de colecciones (issue #40, 10-nov-2026): etiquetas, variación y gráfico mínimo.
+const MESES_ABR=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+function mesLabel(m){ const [a,mm]=String(m||"").split("-"); return (MESES_ABR[(parseInt(mm,10)||1)-1]||"")+" "+a; }
+function fmtDeltaUSD(n){ return (n>=0?"+":"−")+"$"+Math.abs(n).toFixed(2); }
+function fmtPct(n){ return n==null?"":` (${n>0?"+":""}${n}%)`; }
+function colorDelta(n){ return n>0?"#2e9d62":n<0?"#d9534f":"#777"; }
+function VariacionMes({v}){
+  const base={fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#666",marginBottom:8,paddingLeft:2};
+  if(!v) return <div style={base}>variación mensual: se arma sola, falta un mes anterior para comparar</div>;
+  const flecha=v.delta>0?"▲":v.delta<0?"▼":"■";
+  return(
+    <div style={base}>
+      <span style={{color:colorDelta(v.delta),fontWeight:700}}>{flecha} {fmtDeltaUSD(v.delta)}{fmtPct(v.pct)}</span> valor total vs {mesLabel(v.desde)}
+      {v.cambioCartas&&<span> · el total de cartas pasó de {v.nAntes} a {v.nAhora}</span>}
+    </div>
+  );
+}
+function Sparkline({valores}){
+  if(!valores||valores.length<2) return null;
+  const w=200,h=34,min=Math.min(...valores),max=Math.max(...valores),rango=max-min||1;
+  const pts=valores.map((v,i)=>`${(i/(valores.length-1)*w).toFixed(1)},${(h-3-(v-min)/rango*(h-6)).toFixed(1)}`).join(" ");
+  return <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} preserveAspectRatio="none" style={{display:"block",margin:"6px 0"}}><polyline points={pts} fill="none" stroke="#aac756" strokeWidth="1.5" vectorEffect="non-scaling-stroke"/></svg>;
+}
+function HistorialMensual({serie}){
+  const filas=serie.map((s,i)=>({...s,pct:i>0&&serie[i-1].v>0?Math.round((s.v-serie[i-1].v)/serie[i-1].v*1000)/10:null})).reverse().slice(0,36);
+  const f={fontFamily:"'DM Sans',sans-serif",fontSize:10};
+  return(
+    <div style={{marginTop:4}}>
+      <Sparkline valores={serie.map(s=>s.v)}/>
+      {filas.map(r=>(
+        <div key={r.mes} style={{...f,display:"flex",justifyContent:"space-between",gap:8,padding:"3px 0",borderTop:"1px solid #1f1f1f",color:"#aaa"}}>
+          <span style={{width:58}}>{mesLabel(r.mes)}</span>
+          <span style={{flex:1,textAlign:"right"}}>{fmtUSD(r.vc)} / {fmtUSD(r.v)}</span>
+          <span style={{width:62,textAlign:"right",color:r.pct==null?"#555":colorDelta(r.pct)}}>{r.pct==null?"—":`${r.pct>0?"+":""}${r.pct}%`}</span>
+        </div>
+      ))}
+      <div style={{...f,fontSize:9,color:"#555",marginTop:4}}>valor conseguido / total de la colección, último valor de cada mes</div>
+    </div>
+  );
+}
 // Precio sin actualizar (15-oct-2026): el bot solo usa tcgpricelookup; las cartas que esa fuente no tiene conservan el
 // precio de cuando se agregaron. Pasados 7 días sin actualizarse se marcan con ⏳ y los días que lleva ese precio.
 function diasDesde(f){ if(!f) return null; const d=Math.round((Date.now()-new Date(String(f).slice(0,10)+"T12:00:00Z"))/86400000); return Number.isFinite(d)?Math.max(0,d):null; }
@@ -1419,6 +1460,42 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     window.addEventListener("angst:restaurado",releer);
     return ()=>window.removeEventListener("angst:restaurado",releer);
   },[]);
+  // ── Avance y snapshots mensuales de las colecciones (issue #40, 10-nov-2026) ──
+  // Un snapshot por colección y mes (último valor del mes) en su propia clave de localStorage, que viaja en el export/sync
+  // como pokeColeccionesHistorial (core/persistence.js). El avance se calcula una vez para menú, cabecera y sets.
+  const HIST_COL_KEY="angst-pokecripto-colecciones-historial-v1";
+  function leerHistColecciones(){ try{ const v=JSON.parse(localStorage.getItem(HIST_COL_KEY)||"[]"); return Array.isArray(v)?v:[]; }catch(e){ return []; } }
+  const [histColecciones,setHistColecciones]=React.useState(leerHistColecciones);
+  const [histColAbierto,setHistColAbierto]=React.useState(false);
+  React.useEffect(()=>{
+    const releer=()=>setHistColecciones(leerHistColecciones());
+    window.addEventListener("angst:restaurado",releer);
+    return ()=>window.removeEventListener("angst:restaurado",releer);
+  },[]);
+  const avancesColecciones=React.useMemo(()=>{
+    const porClave=new Map();
+    for(const c of inv){ const k=carpetaDeInv(c)+"::"+c.cardId; if(!porClave.has(k)) porClave.set(k,c); }
+    const porColeccion={};
+    for(const nombre of ["Dark Collection",...COLECCIONES_ILUSTRADOR.map(d=>d.carpeta)]){
+      const items=[];
+      for(const d of darkCat){
+        if(carpetaDeCat(d)!==nombre) continue;
+        const m=porClave.get(nombre+"::"+d.cardId);
+        items.push(m?{estado:m.estado,tcgMarket:m.tcgMarket??null}:{estado:"hunting",tcgMarket:null});
+      }
+      porColeccion[nombre]=resumenAvance(items,x=>x.estado!=="hunting");
+    }
+    return {porColeccion,total:sumarAvances(Object.values(porColeccion))};
+  },[darkCat,inv]);
+  React.useEffect(()=>{
+    if(allSetsLoading||!darkCatalogo||!inventario) return;
+    const prev=leerHistColecciones();
+    const next=registrarSnapshotMes(prev,hoy,{...avancesColecciones.porColeccion,[TOTAL_COLECCIONES]:avancesColecciones.total});
+    if(next===prev) return;
+    try{ localStorage.setItem(HIST_COL_KEY,JSON.stringify(next)); }catch(e){ return; }
+    if(next.length>prev.length) marcarEdicionLocal(); // mes nuevo: se protege del pisado por una lectura vieja; las actualizaciones dentro del mes no
+    setHistColecciones(next);
+  },[avancesColecciones,allSetsLoading,hoy]);
   function marcarAgotada(cardId,intentos){
     const m={...leerAgotadas(),[cardId]:{fecha:hoy,intentos}};
     try{ localStorage.setItem(REV_AGOTADA_KEY,JSON.stringify(m)); }catch(e){}
@@ -2278,29 +2355,40 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // -- reemplaza el acceso directo que antes tenía Dark en el dashboard.
   if(view==="colecciones_menu"){
     const nombres=["Dark Collection",...COLECCIONES_ILUSTRADOR.map(d=>d.carpeta)];
-    const filas=nombres.map(nombre=>{
-      const esDark=nombre==="Dark Collection";
-      const entradas=darkCat.filter(d=>(d.carpeta||"Dark Collection")===nombre);
-      const total=entradas.length;
-      const conseguidas=entradas.filter(d=>{
-        const invMatch=invEnCarpeta(inv,d.cardId,carpetaDeCat(d));
-        return invMatch&&invMatch.estado!=="hunting";
-      }).length;
-      return {nombre,esDark,total,conseguidas};
-    });
+    const filas=nombres.map(nombre=>({nombre,esDark:nombre==="Dark Collection",...avancesColecciones.porColeccion[nombre]}));
+    const tot=avancesColecciones.total;
+    const mesActual=mesDe(hoy);
     return(
       <div style={{background:"#0a0a0a",minHeight:"100vh",padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
           <button onClick={()=>setView("coleccion")} style={{background:"transparent",border:"none",fontSize:20,color:"#444",cursor:"pointer",padding:0}}>←</button>
-          <div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff"}}>🗂️ Colecciones</div>
+          <div style={{flex:1,fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff"}}>🗂️ Colecciones</div>
+          {tot.total>0&&<div style={{textAlign:"right"}}>
+            <div style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:"#aac756"}}>{tot.conseguidas}/{tot.total}</div>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#444"}}>{tot.pct}% completado</div>
+          </div>}
         </div>
-        {filas.map(({nombre,esDark,total,conseguidas})=>(
+        {tot.total>0&&<div style={{height:3,background:"#1a1a1a",borderRadius:99,overflow:"hidden",marginBottom:12}}>
+          <div style={{height:"100%",width:`${tot.conseguidas/tot.total*100}%`,background:"#2e7d52",borderRadius:99}}/>
+        </div>}
+        {tot.valorTotal>0&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#151515",borderRadius:10,padding:"10px 14px",marginBottom:6}}>
+          <div>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:1,textTransform:"uppercase",marginBottom:2}}>valor conseguido / total</div>
+            <div style={{fontFamily:"'Caveat',cursive",fontSize:17,fontWeight:700,color:"#fff"}}>{fmtUSD(tot.valorConseguido)} <span style={{color:"#555",fontSize:14}}>/ {fmtUSD(tot.valorTotal)}</span></div>
+          </div>
+          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:"#aac756"}}>{tot.pctValor}% del valor</div>
+        </div>}
+        <VariacionMes v={variacionMensual(histColecciones,TOTAL_COLECCIONES,mesActual)}/>
+        {filas.map(({nombre,esDark,total,conseguidas,pct,valorTotal,valorConseguido})=>(
           <button key={nombre} onClick={()=>{setView("coleccion");setAutocolCarpeta(nombre);}}
             style={{display:"flex",alignItems:"center",gap:10,width:"100%",background:"#151515",border:"none",borderRadius:10,padding:"12px 14px",marginBottom:8,cursor:"pointer",textAlign:"left"}}>
             <div style={{fontSize:20}}>{esDark?"⚫":(CARPETAS_ICONS[nombre]||"🎨")}</div>
             <div style={{flex:1,fontFamily:"'Caveat',cursive",fontSize:16,color:"#fff"}}>{nombre}</div>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:total>0?"#aac756":"#555"}}>
-              {total>0?`${conseguidas}/${total}`:"escaneando…"}
+            <div style={{textAlign:"right"}}>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:total>0?"#aac756":"#555"}}>
+                {total>0?`${conseguidas}/${total} · ${pct}%`:"escaneando…"}
+              </div>
+              {valorTotal>0&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#666",marginTop:2}}>{fmtUSD(valorConseguido)} / {fmtUSD(valorTotal)}</div>}
             </div>
           </button>
         ))}
@@ -2358,6 +2446,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const cardIdsGrid=setGroups.flatMap(g=>g.cards.map(c=>c.cardId)); // orden de lo VISIBLE (respeta soloSinPrecio), para ‹› desde la grilla
     const gridCols=darkView==="grid_small"?"repeat(auto-fill,minmax(58px,1fr))":darkView==="grid_med"?"repeat(auto-fill,minmax(88px,1fr))":null;
     const catLoading=allSetsLoading;
+    const serieCol=serieColeccion(histColecciones,cat);
 
     return(
       <div style={{background:"#0a0a0a",minHeight:"100vh",padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
@@ -2395,6 +2484,13 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             <div style={{fontFamily:"'Caveat',cursive",fontSize:17,fontWeight:700,color:"#fff"}}>{fmtUSD(valorConseguido)} <span style={{color:"#555",fontSize:14}}>/ {fmtUSD(valorTotal)}</span></div>
           </div>
           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:"#aac756"}}>{Math.round(valorConseguido/valorTotal*100)}% del valor</div>
+        </div>}
+        {serieCol.length>0&&<div style={{background:"#151515",borderRadius:10,padding:"8px 14px",marginBottom:10}}>
+          <VariacionMes v={variacionMensual(histColecciones,cat,mesDe(hoy))}/>
+          <button onClick={()=>setHistColAbierto(v=>!v)} style={{background:"transparent",border:"none",padding:0,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#888"}}>
+            📈 historial mensual ({serieCol.length}) {histColAbierto?"▲":"▼"}
+          </button>
+          {histColAbierto&&<HistorialMensual serie={serieCol}/>}
         </div>}
         {catMerged.length>0&&<button onClick={()=>imprimirPlaceholders(catMerged,cat,"todas")}
           style={{width:"100%",background:"transparent",border:"1px dashed #333",borderRadius:8,padding:"8px",marginBottom:8,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888",cursor:"pointer"}}>
@@ -2436,7 +2532,8 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           <div style={{fontFamily:"'Caveat',cursive",fontSize:16,color:"#333"}}>cargando catálogo...</div>
         </div>}
         {setGroups.map(({setName,setId,cards})=>{
-          const cons=cards.filter(c=>getEstadoDark(c)==="conseguida").length;
+          // Avance del set sobre TODAS sus cartas (no sobre las visibles con el filtro "sin precio"), con valor (issue #40).
+          const rs=resumenAvance(porSetFull[setId]?.cards||cards,c=>getEstadoDark(c)==="conseguida");
           // Diagnóstico holo/estándar (cambio 7): si hay más objetos de carta
           // que números de colección únicos, pokemontcg.io está modelando el
           // holo como una entrada separada — ya está cubierta por el fetch
@@ -2449,10 +2546,13 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                 <div style={{fontFamily:"'Caveat',cursive",fontSize:17,fontWeight:700,color:"#fff",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{setName}</div>
                 {hayVariantes&&<span title={`${cards.length} cartas · ${numerosUnicos} números únicos — hay variantes holo/estándar como entradas separadas`}
                   style={{fontFamily:"'DM Sans',sans-serif",fontSize:8,color:"#5c9cff",background:"rgba(92,156,255,0.12)",borderRadius:6,padding:"1px 5px",flexShrink:0}}>2 var.</span>}
-                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:cons===cards.length&&cards.length>0?"#2e7d52":"#555",flexShrink:0}}>{cons}/{cards.length}</div>
+                <div style={{textAlign:"right",flexShrink:0}}>
+                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:rs.conseguidas===rs.total&&rs.total>0?"#2e7d52":"#555"}}>{rs.conseguidas}/{rs.total} · {rs.pct}%</div>
+                  {rs.valorTotal>0&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#666",marginTop:1}}>{fmtUSD(rs.valorConseguido)} / {fmtUSD(rs.valorTotal)}</div>}
+                </div>
               </div>
               <div style={{height:2,background:"#1a1a1a",borderRadius:99,overflow:"hidden",marginBottom:8}}>
-                <div style={{height:"100%",width:`${cards.length>0?cons/cards.length*100:0}%`,background:"#2e7d52",borderRadius:99}}/>
+                <div style={{height:"100%",width:`${rs.total>0?rs.conseguidas/rs.total*100:0}%`,background:"#2e7d52",borderRadius:99}}/>
               </div>
               {darkView==="lista"
                 ?<div>{cards.map(d=><DarkCard key={d.cardId} d={d} list={cardIdsGrid}/>)}</div>

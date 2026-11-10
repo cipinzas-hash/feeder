@@ -1,6 +1,7 @@
 // Issue #39 (9-nov-2026): Mega/Tera solo Double Rare, colecciones individuales (una carta por colección) y ACE SPEC.
 import assert from "node:assert/strict";
-import { esDoubleRare, esAceSpec, carpetaDeInv, carpetaDeCat, invEnCarpeta, invDeCarta, rarezaConocida, sobraPorRareza, entradasFaltantes } from "../modules/pokecripto/lib/colecciones.mjs";
+import { esDoubleRare, esAceSpec, carpetaDeInv, carpetaDeCat, invEnCarpeta, invDeCarta, rarezaConocida, sobraPorRareza, entradasFaltantes,
+  resumenAvance, sumarAvances, registrarSnapshotMes, serieColeccion, variacionMensual, mesDe, TOTAL_COLECCIONES } from "../modules/pokecripto/lib/colecciones.mjs";
 
 // rareza: solo "Double Rare" es normal; ACE SPEC por rareza o por subtipo (desde que existen)
 assert.equal(esDoubleRare({ rarity: "Double Rare" }), true);
@@ -69,5 +70,47 @@ assert.equal(entradasFaltantes(undefined, undefined, () => "z").length, 0);
 
 // una Dark antigua (isDark sin carpeta) cuenta como Dark: no se duplica
 assert.deepEqual(entradasFaltantes([{ cardId: "d1" }], [{ id: "x", cardId: "d1", isDark: true }], () => "z"), []);
+
+// ── Issue #40: avance + valor, y snapshots mensuales ──
+const tiene = d => d.estado !== "hunting";
+const cartas = [
+  { estado: "sin_publicar", tcgMarket: 2.5 }, { estado: "hunting", tcgMarket: 10 }, { estado: "hunting", tcgMarket: null }, { estado: "vendida", tcgMarket: 1.25 },
+];
+const av = resumenAvance(cartas, tiene);
+assert.deepEqual([av.total, av.conseguidas, av.pct], [4, 2, 50]);
+assert.equal(av.valorTotal, 13.75); assert.equal(av.valorConseguido, 3.75); assert.equal(av.conPrecio, 3);
+assert.equal(av.pctValor, 27, "3.75/13.75");
+const vacio = resumenAvance([], tiene);
+assert.deepEqual([vacio.total, vacio.pct, vacio.pctValor], [0, 0, 0], "sin cartas no divide por cero");
+const sinPrecios = resumenAvance([{ estado: "hunting" }, { estado: "sin_publicar" }], tiene);
+assert.deepEqual([sinPrecios.pct, sinPrecios.pctValor, sinPrecios.conPrecio], [50, 0, 0]);
+const suma = sumarAvances([av, resumenAvance([{ estado: "sin_publicar", tcgMarket: 6.25 }], tiene)]);
+assert.deepEqual([suma.total, suma.conseguidas, suma.pct, suma.valorTotal, suma.valorConseguido], [5, 3, 60, 20, 10]);
+assert.equal(sumarAvances([]).pct, 0);
+
+assert.equal(mesDe("2026-11-10"), "2026-11");
+let h = registrarSnapshotMes([], "2026-10-31", { Mega: av, [TOTAL_COLECCIONES]: suma, Vacia: vacio, SinPrecios: sinPrecios });
+assert.equal(h.length, 1);
+assert.deepEqual(Object.keys(h[0].colecciones).sort(), [TOTAL_COLECCIONES, "Mega"].sort(), "sin cartas o sin ningún precio no se registra");
+assert.deepEqual(h[0].colecciones.Mega, { v: 13.75, vc: 3.75, n: 4, c: 2, p: 3 });
+assert.equal(registrarSnapshotMes(h, "2026-10-31", { Mega: av }), h, "mismo valor en el mismo mes: mismo array (cero escrituras)");
+// el mes en curso se actualiza (queda el último valor) y no pisa otras colecciones del mismo mes
+const av2 = resumenAvance([{ estado: "sin_publicar", tcgMarket: 3 }, { estado: "hunting", tcgMarket: 11 }, { estado: "hunting", tcgMarket: 1 }, { estado: "sin_publicar", tcgMarket: 1.25 }], tiene);
+const h2 = registrarSnapshotMes(h, "2026-10-31", { Mega: av2 });
+assert.equal(h2.length, 1); assert.equal(h2[0].colecciones.Mega.v, 16.25); assert.ok(h2[0].colecciones[TOTAL_COLECCIONES], "conserva lo ya registrado");
+// mes nuevo: entrada nueva, ordenada
+const h3 = registrarSnapshotMes(h2, "2026-11-10", { Mega: resumenAvance([{ estado: "sin_publicar", tcgMarket: 5 }, { estado: "hunting", tcgMarket: 11 }, { estado: "hunting", tcgMarket: 1 }, { estado: "sin_publicar", tcgMarket: 1.25 }], tiene) });
+assert.deepEqual(h3.map(x => x.mes), ["2026-10", "2026-11"]);
+assert.deepEqual(serieColeccion(h3, "Mega").map(s => s.mes), ["2026-10", "2026-11"]);
+assert.deepEqual(serieColeccion(h3, "Nada"), []);
+const vm = variacionMensual(h3, "Mega", "2026-11");
+assert.equal(vm.desde, "2026-10"); assert.equal(vm.delta, 2); assert.equal(vm.pct, 12.3); assert.equal(vm.cambioCartas, false);
+assert.equal(variacionMensual(h3, "Mega", "2026-10"), null, "sin mes anterior no hay variación");
+assert.equal(variacionMensual(h3, "Nada", "2026-11"), null);
+// salta meses sin snapshot y avisa cuando cambió la cantidad de cartas (set nuevo)
+const h4 = registrarSnapshotMes(h3, "2027-01-05", { Mega: resumenAvance([...Array(6)].map(() => ({ estado: "hunting", tcgMarket: 2 })), tiene) });
+const vm4 = variacionMensual(h4, "Mega", "2027-01");
+assert.equal(vm4.desde, "2026-11"); assert.equal(vm4.cambioCartas, true); assert.deepEqual([vm4.nAntes, vm4.nAhora], [4, 6]);
+assert.deepEqual(registrarSnapshotMes(undefined, "mal", { Mega: av }), [], "fecha inválida o historial ausente no rompe");
 
 console.log("pokecripto-colecciones: OK");

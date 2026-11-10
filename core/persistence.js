@@ -137,6 +137,7 @@ export const LOCAL_KEY_FIELDS = {
   feedPodcastPositions: "angst-podcast-positions-v1",     // {guid: segundos} — retomar un podcast (auditoría 13-oct)
   feedSeriesOverlay: "angst-series-overlay-v1",           // marcas de episodios aún no reflejadas por Simkl (TTL 48 h)
   pokeAgotadas: "angst-pokecripto-agotadas-v1",           // cartas agotadas en la revisión (cooldown 7 días)
+  pokeColeccionesHistorial: "angst-pokecripto-colecciones-historial-v1", // snapshots mensuales del valor de cada colección de Pokécripto (issue #40)
   gcalInbox: "angst-gcal-inbox-v1",                       // bandeja Familia → Angst: eventos ya pasados a tarea o ignorados (el sync borra de Google los importados)
   musicaMegusta: "angst-musica-megusta-v1",                // ♥ de Música: lanzamientos guardados (de ahí sale el directorio de artistas)
 };
