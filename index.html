@@ -4611,6 +4611,13 @@ var __angst = (() => {
     const flecha3 = v.delta > 0 ? "\u25B2" : v.delta < 0 ? "\u25BC" : "\u25A0";
     return /* @__PURE__ */ React.createElement("div", { style: base }, /* @__PURE__ */ React.createElement("span", { style: { color: colorDelta(v.delta), fontWeight: 700 } }, flecha3, " ", fmtDeltaUSD(v.delta), fmtPct(v.pct)), " valor total vs ", mesLabel(v.desde), v.cambioCartas && /* @__PURE__ */ React.createElement("span", null, " \xB7 el total de cartas pas\xF3 de ", v.nAntes, " a ", v.nAhora));
   }
+  var TRAMOS_BARRA = ["#d9534f", "#f0883e", "#e6c229", "#2e9d62"];
+  var ORO_BARRA = "linear-gradient(90deg,#b8860b,#ffd54a,#b8860b)";
+  function BarraSet({ conseguidas, total }) {
+    const pct2 = total > 0 ? conseguidas / total * 100 : 0, completa = total > 0 && conseguidas === total;
+    const fondo = completa ? ORO_BARRA : `linear-gradient(90deg,${TRAMOS_BARRA[0]} 0 25%,${TRAMOS_BARRA[1]} 25% 50%,${TRAMOS_BARRA[2]} 50% 75%,${TRAMOS_BARRA[3]} 75% 100%)`;
+    return /* @__PURE__ */ React.createElement("div", { title: `${conseguidas}/${total}`, style: { height: 6, background: "#1a1a1a", borderRadius: 99, overflow: "hidden", marginBottom: 8 } }, pct2 > 0 && /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${pct2}%`, overflow: "hidden", borderRadius: 99 } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${1e4 / pct2}%`, background: fondo } })));
+  }
   function Sparkline({ valores }) {
     if (!valores || valores.length < 2) return null;
     const w = 200, h = 34, min = Math.min(...valores), max = Math.max(...valores), rango = max - min || 1;
@@ -6678,7 +6685,7 @@ var __angst = (() => {
             style: { fontFamily: "'DM Sans',sans-serif", fontSize: 8, color: "#5c9cff", background: "rgba(92,156,255,0.12)", borderRadius: 6, padding: "1px 5px", flexShrink: 0 }
           },
           "2 var."
-        ), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right", flexShrink: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: rs.conseguidas === rs.total && rs.total > 0 ? "#2e7d52" : "#555" } }, rs.conseguidas, "/", rs.total, " \xB7 ", rs.pct, "%"), rs.valorTotal > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#666", marginTop: 1 } }, fmtUSD(rs.valorConseguido), " / ", fmtUSD(rs.valorTotal)))), /* @__PURE__ */ React.createElement("div", { style: { height: 2, background: "#1a1a1a", borderRadius: 99, overflow: "hidden", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${rs.total > 0 ? rs.conseguidas / rs.total * 100 : 0}%`, background: "#2e7d52", borderRadius: 99 } })), darkView === "lista" ? /* @__PURE__ */ React.createElement("div", null, cards.map((d) => /* @__PURE__ */ React.createElement(DarkCard, { key: d.cardId, d, list: cardIdsGrid }))) : /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: gridCols, gap: darkView === "grid_small" ? 3 : 5 } }, cards.map((d) => /* @__PURE__ */ React.createElement(DarkCard, { key: d.cardId, d, list: cardIdsGrid }))));
+        ), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right", flexShrink: 0 } }, rs.total > 0 && rs.conseguidas === rs.total && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: "#d4af37" } }, "\xA1completada!"), rs.valorTotal > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 9, color: "#666", marginTop: 1 } }, fmtUSD(rs.valorConseguido), " / ", fmtUSD(rs.valorTotal)))), /* @__PURE__ */ React.createElement(BarraSet, { conseguidas: rs.conseguidas, total: rs.total }), darkView === "lista" ? /* @__PURE__ */ React.createElement("div", null, cards.map((d) => /* @__PURE__ */ React.createElement(DarkCard, { key: d.cardId, d, list: cardIdsGrid }))) : /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: gridCols, gap: darkView === "grid_small" ? 3 : 5 } }, cards.map((d) => /* @__PURE__ */ React.createElement(DarkCard, { key: d.cardId, d, list: cardIdsGrid }))));
       }), /* @__PURE__ */ React.createElement("div", { style: { height: 40 } }));
     }
     const mesActual = (/* @__PURE__ */ new Date()).toISOString().slice(0, 7);

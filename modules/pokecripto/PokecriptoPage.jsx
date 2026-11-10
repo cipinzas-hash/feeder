@@ -148,6 +148,21 @@ function VariacionMes({v}){
     </div>
   );
 }
+// Barra de completitud de un set (10-nov-2026, pedido de Cristopher: menos números): la barra va de rojo el primer cuarto,
+// naranjo el segundo, amarillo el tercero y verde el cuarto, y al 100% se vuelve dorada (con "¡completada!" en la cabecera).
+const TRAMOS_BARRA=["#d9534f","#f0883e","#e6c229","#2e9d62"];
+const ORO_BARRA="linear-gradient(90deg,#b8860b,#ffd54a,#b8860b)";
+function BarraSet({conseguidas,total}){
+  const pct=total>0?conseguidas/total*100:0, completa=total>0&&conseguidas===total;
+  const fondo=completa?ORO_BARRA:`linear-gradient(90deg,${TRAMOS_BARRA[0]} 0 25%,${TRAMOS_BARRA[1]} 25% 50%,${TRAMOS_BARRA[2]} 50% 75%,${TRAMOS_BARRA[3]} 75% 100%)`;
+  return(
+    <div title={`${conseguidas}/${total}`} style={{height:6,background:"#1a1a1a",borderRadius:99,overflow:"hidden",marginBottom:8}}>
+      {pct>0&&<div style={{height:"100%",width:`${pct}%`,overflow:"hidden",borderRadius:99}}>
+        <div style={{height:"100%",width:`${10000/pct}%`,background:fondo}}/>
+      </div>}
+    </div>
+  );
+}
 function Sparkline({valores}){
   if(!valores||valores.length<2) return null;
   const w=200,h=34,min=Math.min(...valores),max=Math.max(...valores),rango=max-min||1;
@@ -2553,13 +2568,11 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                 {hayVariantes&&<span title={`${cards.length} cartas · ${numerosUnicos} números únicos — hay variantes holo/estándar como entradas separadas`}
                   style={{fontFamily:"'DM Sans',sans-serif",fontSize:8,color:"#5c9cff",background:"rgba(92,156,255,0.12)",borderRadius:6,padding:"1px 5px",flexShrink:0}}>2 var.</span>}
                 <div style={{textAlign:"right",flexShrink:0}}>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:rs.conseguidas===rs.total&&rs.total>0?"#2e7d52":"#555"}}>{rs.conseguidas}/{rs.total} · {rs.pct}%</div>
+                  {rs.total>0&&rs.conseguidas===rs.total&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:700,color:"#d4af37"}}>¡completada!</div>}
                   {rs.valorTotal>0&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#666",marginTop:1}}>{fmtUSD(rs.valorConseguido)} / {fmtUSD(rs.valorTotal)}</div>}
                 </div>
               </div>
-              <div style={{height:2,background:"#1a1a1a",borderRadius:99,overflow:"hidden",marginBottom:8}}>
-                <div style={{height:"100%",width:`${rs.total>0?rs.conseguidas/rs.total*100:0}%`,background:"#2e7d52",borderRadius:99}}/>
-              </div>
+              <BarraSet conseguidas={rs.conseguidas} total={rs.total}/>
               {darkView==="lista"
                 ?<div>{cards.map(d=><DarkCard key={d.cardId} d={d} list={cardIdsGrid}/>)}</div>
                 :<div style={{display:"grid",gridTemplateColumns:gridCols,gap:darkView==="grid_small"?3:5}}>

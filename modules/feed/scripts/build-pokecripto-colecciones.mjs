@@ -1,12 +1,12 @@
 // build-pokecripto-colecciones.mjs (issue #41, 10-nov-2026)
 // Snapshot mensual del valor de cada colección de Pokécripto, hecho por un bot (el registro desde la app al abrirla no
-// servía: si no se abría en el mes, el mes se perdía). Corre vía GitHub Action una vez al día, DESPUÉS del bot de precios
-// (update-pokecripto-colecciones.yml), dentro del checkout de Angst-data.
+// servía: si no se abría en el mes, el mes se perdía). Corre vía GitHub Action una vez cada 30 días (el día 1 de cada mes,
+// después del bot de precios; update-pokecripto-colecciones.yml), dentro del checkout de Angst-data.
 //
 // Lee pokecripto-inventario.json (canónico, lo reescribe el bot de precios) y mantiene pokecripto-colecciones-historial.json:
 //   [{ mes:"2026-11", fecha:"2026-11-10", colecciones:{ "Mega":{v,vc,n,c,p}, …, "*":{…total} } }]
-// Un snapshot por colección y mes; el mes en curso se actualiza en cada corrida (queda el último valor del mes) y los
-// meses anteriores no se tocan. Lógica pura en pokecripto/lib/colecciones.mjs (con test).
+// Un snapshot por colección y mes: nunca hay snapshots diarios que acumular. Si se corre a mano dentro de un mes que ya
+// tiene snapshot, reemplaza la entrada de ese mes (no agrega otra) y los meses anteriores no se tocan. Lógica pura en pokecripto/lib/colecciones.mjs (con test).
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { avancesDeInventario, registrarSnapshotMes, mesDe, TOTAL_COLECCIONES } from "../../pokecripto/lib/colecciones.mjs";
 

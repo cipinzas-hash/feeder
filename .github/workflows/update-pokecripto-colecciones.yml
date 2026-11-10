@@ -1,14 +1,12 @@
 name: Snapshot mensual de colecciones Pokécripto
 
-# Un snapshot por colección y mes (el mes en curso se actualiza; los anteriores quedan fijos). Corre después del bot de
-# precios (workflow_run), con un cron de respaldo por si ese workflow no corre ese día. Es idempotente: si nada cambió
-# no escribe ni commitea. No consume cupo de la API de precios: solo lee el inventario canónico de Angst-data.
+# Un snapshot por colección y mes, tomado UNA vez cada 30 días (día 1 de cada mes, 14:30 UTC, después del bot de precios de
+# las 12:00): no se acumulan snapshots diarios ni hay nada que promediar o borrar. Manual (workflow_dispatch) vuelve a
+# calcular el mes en curso y reemplaza su entrada, no agrega otra. No consume cupo de la API de precios: solo lee el
+# inventario canónico de Angst-data.
 on:
-  workflow_run:
-    workflows: ["Actualizar precios Pokécripto"]
-    types: [completed]
   schedule:
-    - cron: '30 14 * * *'
+    - cron: '30 14 1 * *'
   workflow_dispatch: {}
 
 concurrency:
