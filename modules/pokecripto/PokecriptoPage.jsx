@@ -166,6 +166,10 @@ function BarraSet({conseguidas,total}){
     </div>
   );
 }
+// Chip discreto de la fila de herramientas de una colección (imprimir / sin precio / variación mensual).
+function ChipHerramienta({onClick,activo,children,title}){
+  return <button onClick={onClick} title={title} style={{background:activo?"#2a2a2a":"transparent",border:"1px solid "+(activo?"#555":"#262626"),borderRadius:99,padding:"4px 11px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:activo?"#ddd":"#888",lineHeight:1.2}}>{children}</button>;
+}
 function Sparkline({valores}){
   if(!valores||valores.length<2) return null;
   const w=200,h=34,min=Math.min(...valores),max=Math.max(...valores),rango=max-min||1;
@@ -1486,6 +1490,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   function leerHistColecciones(){ try{ const v=JSON.parse(localStorage.getItem(HIST_COL_KEY)||"[]"); return Array.isArray(v)?v:[]; }catch(e){ return []; } }
   const [histColecciones,setHistColecciones]=React.useState(leerHistColecciones);
   const [histColAbierto,setHistColAbierto]=React.useState(false);
+  const [hojaImprimir,setHojaImprimir]=React.useState(false); // hoja con las opciones de impresión de placeholders
   React.useEffect(()=>{
     const releer=()=>setHistColecciones(leerHistColecciones());
     window.addEventListener("angst:restaurado",releer);
@@ -2471,6 +2476,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const gridCols=darkView==="grid_small"?"repeat(auto-fill,minmax(58px,1fr))":darkView==="grid_med"?"repeat(auto-fill,minmax(88px,1fr))":null;
     const catLoading=allSetsLoading;
     const serieCol=serieColeccion(histColecciones,cat);
+    const vmCol=variacionMensual(histColecciones,cat,mesDe(hoy));
 
     return(
       <div style={{background:"#0a0a0a",minHeight:"100vh",padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
@@ -2509,29 +2515,34 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           </div>
           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:"#aac756"}}>{Math.round(valorConseguido/valorTotal*100)}% del valor</div>
         </div>}
-        {serieCol.length>0&&<div style={{background:"#151515",borderRadius:10,padding:"8px 14px",marginBottom:10}}>
-          <VariacionMes v={variacionMensual(histColecciones,cat,mesDe(hoy))}/>
-          <button onClick={()=>setHistColAbierto(v=>!v)} style={{background:"transparent",border:"none",padding:0,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#888"}}>
-            📈 historial mensual ({serieCol.length}) {histColAbierto?"▲":"▼"}
-          </button>
-          {histColAbierto&&<HistorialMensual serie={serieCol}/>}
+        {/* Herramientas de la colección en una sola fila discreta (nov-2026): 🖨️ imprimir (hoja con opciones), 🔍 sin precio
+            (el número es la cantidad; el contador cuenta siempre sobre la carpeta completa, el toggle solo cambia qué se dibuja)
+            y 📈 variación mensual (tocar despliega el historial). Cada chip aparece solo si tiene algo que ofrecer. */}
+        {(catMerged.length>0||sinPrecioCount>0||serieCol.length>0)&&<div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",marginBottom:(histColAbierto&&serieCol.length>0)?6:10}}>
+          {catMerged.length>0&&<ChipHerramienta onClick={()=>setHojaImprimir(true)} title="imprimir placeholders">🖨️</ChipHerramienta>}
+          {sinPrecioCount>0&&<ChipHerramienta activo={soloSinPrecio} onClick={()=>setSoloSinPrecio(v=>!v)} title={soloSinPrecio?"mostrando solo sin precio":"filtrar sin precio"}>{soloSinPrecio?"✕":"🔍"} {sinPrecioCount}</ChipHerramienta>}
+          {serieCol.length>0&&<ChipHerramienta activo={histColAbierto} onClick={()=>setHistColAbierto(v=>!v)} title="historial mensual">
+            📈{vmCol&&vmCol.pct!=null&&<span style={{color:colorDelta(vmCol.delta),fontWeight:700}}> {vmCol.delta>0?"▲":vmCol.delta<0?"▼":"■"}{Math.abs(vmCol.pct)}%</span>}
+          </ChipHerramienta>}
         </div>}
-        {catMerged.length>0&&<button onClick={()=>imprimirPlaceholders(catMerged,cat,"todas")}
-          style={{width:"100%",background:"transparent",border:"1px dashed #333",borderRadius:8,padding:"8px",marginBottom:8,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888",cursor:"pointer"}}>
-          🖨️ imprimir todas las {catMerged.length} (placeholders 19×25, 6 por hoja)
-        </button>}
-        {faltantes.length>0&&<button onClick={()=>imprimirPlaceholders(faltantes,cat,"faltantes")}
-          style={{width:"100%",background:"transparent",border:"1px dashed #333",borderRadius:8,padding:"8px",marginBottom:8,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888",cursor:"pointer"}}>
-          🖨️ imprimir {faltantes.length} faltante{faltantes.length===1?"":"s"} (placeholders 19×25, 6 por hoja)
-        </button>}
-        {/* Filtro "sin precio" (23-sep-2026) -- para revisar de un vistazo
-            cuáles no consiguieron precio en vez de escanear la grilla
-            entera a ojo. El contador cuenta siempre sobre la carpeta
-            completa (sinPrecioCount), el toggle solo cambia qué se dibuja. */}
-        {sinPrecioCount>0&&<button onClick={()=>setSoloSinPrecio(v=>!v)}
-          style={{width:"100%",background:soloSinPrecio?"#3a2a1a":"transparent",border:"1px dashed #5c4a2a",borderRadius:8,padding:"8px",marginBottom:10,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#c9a86a",cursor:"pointer"}}>
-          {soloSinPrecio?"✕ mostrando solo sin precio":"🔍"} {sinPrecioCount} sin precio{soloSinPrecio?"":" — tocar para filtrar"}
-        </button>}
+        {histColAbierto&&serieCol.length>0&&<div style={{background:"#151515",borderRadius:10,padding:"8px 14px",marginBottom:10}}>
+          {vmCol&&<VariacionMes v={vmCol}/>}
+          <HistorialMensual serie={serieCol}/>
+        </div>}
+        {hojaImprimir&&<div onClick={()=>setHojaImprimir(false)} style={{position:"fixed",inset:0,zIndex:500,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+          <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,420px)",background:"#111",borderRadius:"16px 16px 0 0",padding:"18px 18px 28px",boxSizing:"border-box"}}>
+            <div style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:"#fff"}}>🖨️ imprimir placeholders</div>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#666",margin:"2px 0 12px"}}>papel 19×25 · 6 por hoja</div>
+            <button onClick={()=>{setHojaImprimir(false);imprimirPlaceholders(catMerged,cat,"todas");}}
+              style={{width:"100%",background:"transparent",border:"1px solid #333",borderRadius:10,padding:"12px",marginBottom:8,fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#ddd",cursor:"pointer"}}>
+              todas las {catMerged.length}
+            </button>
+            {faltantes.length>0&&<button onClick={()=>{setHojaImprimir(false);imprimirPlaceholders(faltantes,cat,"faltantes");}}
+              style={{width:"100%",background:"transparent",border:"1px solid #333",borderRadius:10,padding:"12px",fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#ddd",cursor:"pointer"}}>
+              {faltantes.length} faltante{faltantes.length===1?"":"s"}
+            </button>}
+          </div>
+        </div>}
         <div style={{display:"flex",gap:6,marginBottom:10,alignItems:"center",flexWrap:"wrap"}}>
           {[["grid_small","⠿"],["grid_med","▦"],["lista","≡"]].map(([v,l])=>(
             <button key={v} onClick={()=>setDarkView(v)}
