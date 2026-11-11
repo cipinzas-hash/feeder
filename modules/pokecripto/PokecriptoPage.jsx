@@ -5,7 +5,7 @@ import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPrice
 import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarCandidatos, matchAutomatico, mergeOverrides, claveCandidato, urlsFoto, mismoSet } from "./lib/review.mjs";
 import { marcarEdicionLocal } from "../shared/localedit.js";
 import { esDoubleRare, esAceSpec, carpetaDeCat, carpetaDeInv, invEnCarpeta, invDeCarta, rarezaConocida, sobraPorRareza, entradasFaltantes,
-  resumenAvance, sumarAvances, serieColeccion, variacionMensual, mesDe, TOTAL_COLECCIONES } from "./lib/colecciones.mjs";
+  resumenAvance, sumarAvances, serieColeccion, variacionMensual, mesDe, TOTAL_COLECCIONES, NOMBRES_COLECCIONES } from "./lib/colecciones.mjs";
 import { isDarkCard, POKECRIPTO_WORKER_URL, POKECRIPTO_AUTH_KEY, getPokecriptoAuth, encolarPokecriptoPending, buscarCartas, armarCartaNueva } from "./alta.js";
 
 // ─── PokeLoader ───────────────────────────────────────────────────────────────
@@ -447,7 +447,6 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
 
   // ── Estado principal ──
   const [view,           setView]           = React.useState("coleccion");
-  const [fichaId,        setFichaId]        = React.useState(null);
   const [carpetaView,    setCarpetaView]    = React.useState(null); // nombre de carpeta hardcodeada
   // ── Búsqueda por chips (26-sep-2026, a pedido de Cristopher) ──
   // Reemplaza los filtros single-select de abajo. Dos modos:
@@ -506,9 +505,13 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [allSetsLoading, setAllSetsLoading] = React.useState(false);
   const [showAddCarpeta, setShowAddCarpeta] = React.useState(false);
   const [newCarpeta,     setNewCarpeta]     = React.useState("");
-  const [historialOpen,  setHistorialOpen]  = React.useState(false);
   const [historialFecha, setHistorialFecha] = React.useState(null);
-  const [historialCarpetas, setHistorialCarpetas] = React.useState(()=>new Set()); // vacío = todas (26-sep-2026, a pedido de Cristopher)
+  // Filtros de la vista "historial de snapshots" (nov-2026)
+  const [histGrupo,   setHistGrupo]   = React.useState("");        // "" = todas; si no, nombre de colección o carpeta
+  const [histPeriodo, setHistPeriodo] = React.useState("ultimo");  // "ultimo" | "7" | "30" | "90"
+  const [histDir,     setHistDir]     = React.useState("todas");   // todas | suben | bajan | nuevas
+  const [histTen,     setHistTen]     = React.useState("todas");   // todas | tengo | faltan
+  const [histOrden,   setHistOrden]   = React.useState("cambio");
   const [apiKeyInput,    setApiKeyInput]    = React.useState("");
   // ── Revisión de cartas sin precio (3-oct-2026, a pedido de Cristopher) ──
   const [revAbierta,  setRevAbierta]  = React.useState(false);
@@ -535,7 +538,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // Detalle de carta en Dark Collection / pool hunting (cambio 2 de la sesión)
   const [darkDetailId,   setDarkDetailId]   = React.useState(null); // cardId del detalle abierto
   const [darkDetailList, setDarkDetailList] = React.useState([]); // cardIds del set/grilla actual, para las flechas ‹›
-  const [fichaList, setFichaList] = React.useState([]); // ids (inv .id) hermanas de la ficha actual, para sus flechas propias (26-sep-2026: antes la ficha plana no tenía ninguna)
+  // El detalle unificado vive en darkDetailId: una referencia que es un cardId (colección) o "inv:<id>" (fila de inventario).
+  const fichaId=typeof darkDetailId==="string"&&darkDetailId.startsWith("inv:")?darkDetailId.slice(4):null;
+  const [zoomExtra, setZoomExtra] = React.useState(null); // línea extra del fullscreen (p. ej. el cambio de precio del historial)
   const [zoomList, setZoomList] = React.useState([]); // cardIds hermanos para navegar el zoom cuando se dispara DIRECTO desde la grilla (sin que haya detalle abierto todavía)
   const [zoomCardId, setZoomCardId] = React.useState(null);
   const [darkDetailRange,setDarkDetailRange]= React.useState("todo");
@@ -550,7 +555,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   function bindLongPress(imgUrl,cardId,list){
     if(!imgUrl) return {};
     const start=()=>{ pressRef.current.fired=false; clearTimeout(pressRef.current.timer);
-      pressRef.current.timer=setTimeout(()=>{ pressRef.current.fired=true; setZoomImage(imgUrl); setZoomCardId(cardId||null); setZoomList(list||[]); }, 380); };
+      pressRef.current.timer=setTimeout(()=>{ pressRef.current.fired=true; setZoomImage(imgUrl); setZoomCardId(cardId||null); setZoomList(list||[]); setZoomExtra(null); }, 380); };
     const cancel=()=>{ clearTimeout(pressRef.current.timer); };
     return { onTouchStart:start, onTouchEnd:cancel, onTouchMove:cancel, onMouseDown:start, onMouseUp:cancel, onMouseLeave:cancel };
   }
@@ -660,10 +665,10 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
 
   // ── Auto-fetch precio en ficha ──
   React.useEffect(()=>{
-    if(view!=="ficha"||!fichaId) return;
+    if(!fichaId) return;
     const carta=inv.find(c=>c.id===fichaId);
     if(carta) refreshPrecio(carta);
-  },[view,fichaId]);
+  },[fichaId]);
 
   // ── Auto-poblar catálogo dark con sets nuevos ──
   // El catálogo guarda solo identidad (cardId/name/número/set) — el precio y
@@ -1237,12 +1242,12 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // Imagen de una carta por cardId, sea de Dark/ilustrador (vía catálogo) o
   // comprada normal (vía inv directo) -- compartido por irADetalle e
   // irAZoomDirecto, antes estaba duplicado inline.
-  function imagenDeCard(cardId){
-    const entry=catDeCarta(cardId);
-    if(entry){ const m=mergeDarkWithInv(entry); return m.imageHd||m.image||null; }
-    const c=inv.find(c=>c.cardId===cardId&&c.carpeta!=="Price Watch");
-    return c?.imageHd||c?.image||null;
+  function imagenDeCard(ref){
+    const r=resolverDetalle(ref);
+    return r?.detalle.imageHd||r?.detalle.image||null;
   }
+  // Abre el detalle unificado de una fila de inventario (carpeta / Price Watch / historial); `ids` son los .id de sus hermanas.
+  function abrirDetalleInv(id,ids){ setDarkDetailId("inv:"+id); setDarkDetailList((ids&&ids.length?ids:[id]).map(i=>"inv:"+i)); }
   function irADetalle(delta){
     const idx=darkDetailList.indexOf(darkDetailId);
     if(idx<0||!darkDetailList.length) return;
@@ -1271,14 +1276,6 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // abierto cuando se apretó zoom, navega ESE (comportamiento de siempre);
   // si el zoom se disparó directo desde la grilla, navega la lista liviana.
   function irAZoomOSea(delta){ if(darkDetailId) irADetalle(delta); else irAZoomDirecto(delta); }
-  // Flechas propias de la ficha plana (26-sep-2026) -- antes no existían.
-  function irAFicha(delta){
-    const idx=fichaList.indexOf(fichaId);
-    if(idx<0||!fichaList.length) return;
-    const nextId=fichaList[(idx+delta+fichaList.length)%fichaList.length];
-    setFichaId(nextId);
-    if(zoomImage){ const c=inv.find(x=>x.id===nextId); const img=c?.imageHd||c?.image||null; if(img) setZoomImage(img); }
-  }
   // Snapshot inicial para cartas recién descubiertas (22-sep-2026, a pedido
   // de Cristopher: "poder identificar rápidamente cuáles no se encuentran").
   // Antes había que esperar la corrida diaria del bot para saber si una
@@ -1738,78 +1735,155 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     );
   }
 
-  function renderDarkDetailModal(){
-    if(!darkDetailId) return null;
-    // Generalizado (23-sep-2026, a pedido de Cristopher: abrir el detalle
-    // desde "historial de snapshots") -- antes solo funcionaba para cartas
-    // con entrada en darkCat (Dark/ilustrador). Ahora, si no hay catálogo,
-    // arma `detalle` directo desde inv (cartas compradas normales) --
-    // mapeando set->setName para que coincida con lo que ya usa el resto de
-    // este modal, ya que huntingEntryFromCard/agregarCarta guardan `set`,
-    // no `setName` (ese campo vive en el catálogo para las de Dark/ilustrador).
-    const catalogEntry=catDeCarta(darkDetailId);
-    const invPlano=!catalogEntry?inv.find(c=>c.cardId===darkDetailId&&c.carpeta!=="Price Watch"):null;
+  // ── DETALLE ÚNICO DE CARTA (nov-2026, pedido de Cristopher: unificar los detalles) ──
+  // Una sola hoja oscura para TODA carta, venga de una colección, de una carpeta, de Price Watch o del historial de
+  // snapshots. `darkDetailId` guarda una referencia: un cardId (colección / historial viejo) o "inv:<id>" (fila de
+  // inventario: carpeta, Price Watch). Mismo cierre (×), mismas flechas (laterales, junto a la ilustración), mismo orden
+  // y mismos bloques en las tres; solo cambian los datos propios y las acciones según el contexto.
+  function resolverDetalle(ref){
+    if(!ref) return null;
+    if(typeof ref==="string"&&ref.startsWith("inv:")){
+      const row=inv.find(c=>c.id===ref.slice(4));
+      if(!row) return null;
+      return {detalle:{...row,setName:row.set},ctx:row.carpeta==="Price Watch"?"watch":"carpeta",catalogEntry:null,row};
+    }
+    const catalogEntry=catDeCarta(ref);
+    const invPlano=!catalogEntry?inv.find(c=>c.cardId===ref&&c.carpeta!=="Price Watch"):null;
     if(!catalogEntry&&!invPlano) return null;
     const detalle=catalogEntry?mergeDarkWithInv(catalogEntry):{...invPlano,setName:invPlano.set,precioUSD:invPlano.costoUSD};
-    const hist=detalle.priceHistory||[];
-    const cons=catalogEntry?getEstadoDark(detalle)==="conseguida":true; // sin catálogo no hay estado hunting/conseguida real -- se muestra en color, no gris
-    const metrics=computeHistMetrics(hist,darkDetailRange);
-    const {ath,athDate,atl,atlDate,vol,volLabel}=metrics;
-    // Navegación ‹ › entre cartas (22-sep-2026, a pedido de Cristopher) --
-    // darkDetailList es el orden real en pantalla (todos los sets de la
-    // carpeta, en el orden que se ve), seteado por DarkCard al abrir.
-    const idx=darkDetailList.indexOf(darkDetailId);
-    const irA=delta=>irADetalle(delta);
+    return {detalle,ctx:"coleccion",catalogEntry,row:invPlano||null};
+  }
+  // Líneas de datos propios de una carta según su contexto (las usa el detalle y la franja del fullscreen).
+  function extrasDeCarta(r){
+    const d=r.detalle, objetivo=d.precioObjetivo>0?d.precioObjetivo:null;
+    if(r.ctx==="watch") return objetivo?[{t:`🎯 ${fmtUSD(objetivo)}`,color:(d.tcgMarket!=null&&d.tcgMarket<=objetivo)?"#4caf80":"#ccc"}]:[];
+    if(r.ctx==="carpeta") return [d.condicion?{t:d.condicion}:null,(d.cantidad||1)>1?{t:`×${d.cantidad}`}:null].filter(Boolean);
+    const cons=r.catalogEntry?getEstadoDark(d)==="conseguida":true;
+    return [{t:cons?"conseguida":"falta",color:cons?"#4caf80":"#999"}];
+  }
+  // Fullscreen de la ilustración: × arriba a la derecha, flechas grandes laterales y, bajo la carta, los mismos datos
+  // en todos los contextos. `zoomExtra` suma una línea propia de quien lo abre (p. ej. el cambio de precio del historial).
+  function renderZoom(){
+    if(!zoomImage) return null;
+    const ref=darkDetailId||zoomCardId;
+    const r=resolverDetalle(ref);
+    const lista=darkDetailId?darkDetailList:zoomList;
+    const nav=lista.length>1;
+    const idx=lista.indexOf(ref);
+    const cerrar=()=>{setZoomImage(null);setZoomExtra(null);};
+    const flecha=(lado,delta,txt)=>(
+      <button onClick={e=>{e.stopPropagation();irAZoomOSea(delta);}}
+        style={{position:"fixed",[lado]:6,top:"42%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.12)",border:"none",borderRadius:16,width:64,height:110,color:"#fff",fontSize:30,cursor:"pointer",zIndex:2}}>{txt}</button>
+    );
+    const d=r?.detalle;
+    const extras=r?extrasDeCarta(r):[];
+    const extraLinea=zoomExtra?.[ref];
     return(
-      <div onClick={()=>{setDarkDetailId(null);setDarkDetailRange("todo");}} style={{position:"fixed",inset:0,zIndex:650,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
-        <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,460px)",background:"#111",borderRadius:"16px 16px 0 0",padding:"20px 20px 36px",maxHeight:"90vh",overflowY:"auto",boxSizing:"border-box"}}>
-          {darkDetailList.length>1&&(
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-              <button onClick={()=>irA(-1)} style={{background:"transparent",border:"1px dashed #333",borderRadius:8,padding:"4px 12px",color:"#aaa",fontSize:15,cursor:"pointer"}}>‹</button>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.3)"}}>{idx+1} / {darkDetailList.length}</div>
-              <button onClick={()=>irA(1)} style={{background:"transparent",border:"1px dashed #333",borderRadius:8,padding:"4px 12px",color:"#aaa",fontSize:15,cursor:"pointer"}}>›</button>
-            </div>
-          )}
-          {/* Arte extendido (22-sep-2026): la miniatura de 84px pasó a ser
-              banner a todo el ancho -- sigue abriendo el zoom a pantalla
-              completa al tocarla, esto es solo la vista inline. */}
-          {detalle.image&&<img src={detalle.imageHd||detalle.image} alt={detalle.name}
-            style={{width:"100%",maxHeight:280,objectFit:"contain",borderRadius:10,cursor:"pointer",filter:cons?"none":"grayscale(1) brightness(0.65)",marginBottom:12,background:"#000"}}
-            {...bindLongPress(detalle.imageHd||detalle.image)}
-            onClick={()=>setZoomImage(detalle.imageHd||detalle.image)}/>}
-          <div style={{display:"flex",gap:12,alignItems:"flex-start",marginBottom:14}}>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:"#fff",lineHeight:1.15}}>{detalle.name}</div>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#777",marginTop:3}}>#{detalle.number} · {detalle.setName}</div>
-            </div>
-            <button onClick={()=>{setDarkDetailId(null);setDarkDetailRange("todo");}} style={{background:"transparent",border:"none",color:"#555",fontSize:20,cursor:"pointer",padding:0}}>×</button>
+      <div onClick={cerrar} style={{position:"fixed",inset:0,zIndex:800,background:"rgba(0,0,0,0.92)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"12px 0",boxSizing:"border-box"}}>
+        <button onClick={e=>{e.stopPropagation();cerrar();}} title="cerrar"
+          style={{position:"fixed",top:12,right:14,background:"rgba(255,255,255,0.12)",border:"none",borderRadius:99,width:36,height:36,color:"#fff",fontSize:18,cursor:"pointer",zIndex:2}}>×</button>
+        {nav&&idx>=0&&<div style={{position:"fixed",top:20,left:0,right:0,textAlign:"center",fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.4)",pointerEvents:"none"}}>{idx+1} / {lista.length}</div>}
+        <img src={zoomImage} style={{maxWidth:"90vw",maxHeight:r?"70vh":"90vh",borderRadius:12,boxShadow:"0 8px 40px rgba(0,0,0,0.5)"}}/>
+        {d&&<div onClick={e=>e.stopPropagation()} style={{marginTop:12,textAlign:"center",maxWidth:"86vw"}}>
+          <div style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:"#fff",lineHeight:1.15}}>{d.name}</div>
+          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#999",marginTop:2}}>#{d.number} · {d.setName||d.set} · {d.carpeta||(r.catalogEntry?carpetaDeCat(r.catalogEntry):"")}</div>
+          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,marginTop:5,display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
+            <span style={{color:d.tcgMarket?"#5c9cff":"rgba(255,255,255,0.35)",fontWeight:700}}>{d.tcgMarket?fmtUSD(d.tcgMarket):"sin precio"}</span>
+            {extras.map((e,i)=><span key={i} style={{color:e.color||"#ccc"}}>{e.t}</span>)}
           </div>
-          {/* Precio de mercado — visible siempre, conseguida o hunting.
-              El rango bajo/alto de TCGPlayer (ya lo trae la misma búsqueda,
-              antes no se mostraba) sirve de referencia extra al lado del
-              market price. */}
+          {extraLinea&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#aaa",marginTop:4}}>{extraLinea}</div>}
+        </div>}
+        {nav&&flecha("left",-1,"‹")}
+        {nav&&flecha("right",1,"›")}
+      </div>
+    );
+  }
+  function renderDetalleCarta(){
+    if(!darkDetailId) return null;
+    const r=resolverDetalle(darkDetailId);
+    if(!r) return null;
+    const {detalle,ctx,catalogEntry}=r;
+    const esWatch=ctx==="watch", esCarpeta=ctx==="carpeta";
+    const carta=ctx==="coleccion"?null:r.row;               // fila de inventario editable (carpeta / Price Watch)
+    const hist=detalle.priceHistory||[];
+    const cons=ctx==="coleccion"?(catalogEntry?getEstadoDark(detalle)==="conseguida":true):detalle.estado!=="hunting";
+    const {ath,athDate,atl,atlDate,vol,volLabel}=computeHistMetrics(hist,darkDetailRange);
+    const idx=darkDetailList.indexOf(darkDetailId), nav=darkDetailList.length>1;
+    const cerrar=()=>{setDarkDetailId(null);setDarkDetailRange("todo");setEditMode(false);};
+    const est=ctx==="coleccion"?(cons?{label:"conseguida",bg:"rgba(76,175,128,0.16)",color:"#4caf80"}:{label:"falta",bg:"#222",color:"#888"}):(ESTADOS[detalle.estado]||ESTADOS.sin_publicar);
+    const colLabel=detalle.carpeta||(catalogEntry?carpetaDeCat(catalogEntry):"");
+    const dias=carta?.fechaCompra?Math.round((new Date(hoy+"T12:00:00")-new Date(carta.fechaCompra+"T12:00:00"))/86400000):null;
+    const objetivo=carta?.precioObjetivo>0?carta.precioObjetivo:null;
+    const objAlcanzado=!!(objetivo&&detalle.tcgMarket!=null&&detalle.tcgMarket<=objetivo);
+    const lbl={fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:1,textTransform:"uppercase",marginBottom:3};
+    const lblForm={fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#777",marginBottom:5};
+    const inputSt={width:"100%",border:"1px dashed #444",borderRadius:6,padding:"6px 8px",fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",boxSizing:"border-box",color:"#fff",background:"#111"};
+    const chipSt=act=>({fontFamily:"'DM Sans',sans-serif",fontSize:11,padding:"4px 10px",borderRadius:8,border:"1px dashed "+(act?"#fff":"#444"),background:act?"#fff":"transparent",color:act?"#111":"#999",cursor:"pointer"});
+    const accionSt=(bg,color)=>({flex:1,background:bg,border:bg==="transparent"?"1px dashed #555":"none",borderRadius:10,padding:"12px",fontFamily:"'Caveat',cursive",fontSize:16,color:color||"#fff",cursor:"pointer"});
+    const datos=[];
+    if(esCarpeta){
+      datos.push(["costo",detalle.estado==="hunting"?"sin comprar":detalle.costoUSD?fmtUSD(detalle.costoUSD):"regalo"],["días",dias!=null?`${dias}d`:"—"],["condición",detalle.condicion||"—"]);
+      if((detalle.cantidad||1)>1) datos.push(["cantidad",`×${detalle.cantidad}`]);
+    }else if(esWatch){
+      if(detalle.condicion) datos.push(["condición",detalle.condicion]);
+    }else if(cons&&catalogEntry){
+      if(detalle.condicion) datos.push(["condición",detalle.condicion]);
+      if((detalle.cantidad||1)>1) datos.push(["cantidad",`×${detalle.cantidad}`]);
+    }
+    const flechaImg=(lado,delta,txt)=>(
+      <button onClick={e=>{e.stopPropagation();irADetalle(delta);}}
+        style={{position:"absolute",[lado]:4,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.12)",border:"none",borderRadius:14,width:44,height:88,color:"#fff",fontSize:26,cursor:"pointer",zIndex:1}}>{txt}</button>
+    );
+    return(<>
+      <div onClick={cerrar} style={{position:"fixed",inset:0,zIndex:650,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+        <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,460px)",background:"#111",borderRadius:"16px 16px 0 0",padding:"16px 20px 36px",maxHeight:"92vh",overflowY:"auto",boxSizing:"border-box"}}>
+          {/* 1 · barra superior: contador al centro, cierre a la derecha — igual en todos los contextos */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"center",marginBottom:8}}>
+            <span/>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.35)"}}>{nav&&idx>=0?`${idx+1} / ${darkDetailList.length}`:""}</div>
+            <button onClick={cerrar} title="cerrar" style={{justifySelf:"end",background:"transparent",border:"none",color:"#777",fontSize:22,cursor:"pointer",padding:0,lineHeight:1}}>×</button>
+          </div>
+          {/* 2 · ilustración con flechas grandes a los lados; tocarla abre el fullscreen */}
+          {detalle.image&&<div style={{position:"relative",marginBottom:12}}>
+            <img src={detalle.imageHd||detalle.image} alt={detalle.name}
+              style={{width:"100%",maxHeight:280,objectFit:"contain",borderRadius:10,cursor:"pointer",filter:cons?"none":"grayscale(1) brightness(0.65)",background:"#000",display:"block"}}
+              {...bindLongPress(detalle.imageHd||detalle.image)}
+              onClick={()=>{setZoomImage(detalle.imageHd||detalle.image);setZoomExtra(null);}}/>
+            {nav&&flechaImg("left",-1,"‹")}
+            {nav&&flechaImg("right",1,"›")}
+          </div>}
+          {/* 3 · título + estado */}
+          <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontFamily:"'Caveat',cursive",fontSize:21,fontWeight:700,color:"#fff",lineHeight:1.15}}>{detalle.name}</div>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#777",marginTop:3}}>#{detalle.number} · {detalle.setName}{colLabel?` · ${colLabel}`:""}</div>
+            </div>
+            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,background:est.bg,color:est.color,borderRadius:20,padding:"3px 10px",fontWeight:600,flexShrink:0}}>{est.label}</span>
+          </div>
+          {/* 4 · precio: mercado + rango + revisar; a la derecha pagué / objetivo según el contexto */}
           <div style={{background:"#1a1a1a",borderRadius:10,padding:"12px 14px",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:1,textTransform:"uppercase",marginBottom:3}}>precio de mercado</div>
+              <div style={lbl}>precio de mercado</div>
               {detalle.tcgMarket
                 ?<div style={{fontFamily:"'Caveat',cursive",fontSize:26,fontWeight:700,color:"#5c9cff"}}>{fmtUSD(detalle.tcgMarket)}</div>
-                :<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"rgba(255,255,255,0.3)"}}>sin precio aún</div>
-              }
-              <button onClick={()=>abrirRevisionCarta(detalle.id)} style={{marginTop:4,fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.25)",borderRadius:10,padding:"3px 8px",background:"transparent",color:"rgba(255,255,255,0.6)",cursor:"pointer"}}>
-                  🔍 revisar precio
-                </button>
+                :<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"rgba(255,255,255,0.3)"}}>sin precio aún</div>}
+              {detalle.id&&<button onClick={()=>abrirRevisionCarta(detalle.id)} style={{marginTop:4,fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.2)",background:"transparent",color:"rgba(255,255,255,0.6)",borderRadius:99,padding:"2px 8px",cursor:"pointer"}}>🔍 revisar precio</button>}
               {(detalle.tcgLow||detalle.tcgHigh)&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.35)",marginTop:2}}>
                 rango {detalle.tcgLow?fmtUSD(detalle.tcgLow):"—"} – {detalle.tcgHigh?fmtUSD(detalle.tcgHigh):"—"}
               </div>}
             </div>
-            {cons&&detalle.precioUSD&&<div style={{textAlign:"right"}}>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:1,textTransform:"uppercase",marginBottom:3}}>pagué</div>
-              <div style={{fontFamily:"'Caveat',cursive",fontSize:18,fontWeight:700,color:"#fff"}}>{fmtUSD(detalle.precioUSD)}</div>
+            {esWatch&&objetivo&&<div style={{textAlign:"right"}}>
+              <div style={lbl}>🎯 objetivo</div>
+              <div style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:objAlcanzado?"#4caf80":"#fff"}}>{fmtUSD(objetivo)}</div>
+              {objAlcanzado&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#4caf80"}}>alcanzado</div>}
+            </div>}
+            {!esWatch&&cons&&(detalle.precioUSD||detalle.costoUSD)>0&&<div style={{textAlign:"right"}}>
+              <div style={lbl}>pagué</div>
+              <div style={{fontFamily:"'Caveat',cursive",fontSize:18,fontWeight:700,color:"#fff"}}>{fmtUSD(detalle.precioUSD||detalle.costoUSD)}</div>
+              {esCarpeta&&detalle.precioVentaUSD>0&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:detalle.tcgMarket?(detalle.precioVentaUSD>detalle.tcgMarket?"#4caf80":"#e57373"):"rgba(255,255,255,0.4)"}}>venta {fmtUSD(detalle.precioVentaUSD)}</div>}
             </div>}
           </div>
-          {/* ATH / ATL / Volatilidad — mismo cálculo y nivel de detalle que la
-              ficha de inventario, para cualquier carta que junte snapshots
-              (Dark Collection o Hunting, da igual el origen). */}
+          {/* 5 · métricas, variación por periodo y gráfico — mismos en los tres contextos */}
           {hist.length>=2&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
             {[
               {label:"ATH",val:ath,date:athDate,color:"#4caf80"},
@@ -1817,31 +1891,26 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               {label:`σ ${volLabel||""}`,val:vol?`${vol}%`:null,date:null,color:"#999"},
             ].map(({label,val,date,color})=>(
               <div key={label} style={{background:"#1a1a1a",borderRadius:10,padding:"10px"}}>
-                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>{label}</div>
+                <div style={{...lbl,marginBottom:4}}>{label}</div>
                 <div style={{fontFamily:"'Caveat',cursive",fontSize:18,fontWeight:700,color:val?color:"rgba(255,255,255,0.2)",lineHeight:1}}>{val?fmtUSD(parseFloat(val)):"—"}</div>
                 {date&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.3)",marginTop:3}}>{fmtDateShort(date)}</div>}
               </div>
             ))}
           </div>}
           <TimeframeDeltas history={hist} dark={true}/>
-          {/* Historial de precio — mismo gráfico seleccionable + borrado de
-              snapshot que la ficha del inventario, ahora que Dark Collection
-              usa exactamente los mismos datos (inv), esto ya funciona acá. */}
           {hist.length>=2&&(
             <div style={{background:"#1a1a1a",borderRadius:10,padding:"12px 14px",marginBottom:12}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:2,textTransform:"uppercase"}}>historial</div>
+                <div style={{...lbl,letterSpacing:2,marginBottom:0}}>historial</div>
                 <div style={{display:"flex",gap:4}}>
-                  {["7d","30d","todo"].map(r=>(
-                    <button key={r} onClick={()=>{setDarkDetailRange(r);setSelectedPoint(null);}}
+                  {["7d","30d","todo"].map(rg=>(
+                    <button key={rg} onClick={()=>{setDarkDetailRange(rg);setSelectedPoint(null);}}
                       style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,padding:"2px 7px",borderRadius:8,border:"1px solid",cursor:"pointer",
-                        background:darkDetailRange===r?"#fff":"transparent",color:darkDetailRange===r?"#111":"#666",borderColor:darkDetailRange===r?"#fff":"#333"}}>
-                      {r}
-                    </button>
+                        background:darkDetailRange===rg?"#fff":"transparent",color:darkDetailRange===rg?"#111":"#666",borderColor:darkDetailRange===rg?"#fff":"#333"}}>{rg}</button>
                   ))}
                 </div>
               </div>
-              <PriceChart history={hist} range={darkDetailRange}
+              <PriceChart history={hist} precioVenta={esCarpeta?detalle.precioVentaUSD:esWatch?objetivo:undefined} range={darkDetailRange}
                 onSelectPoint={p=>setSelectedPoint(selectedPoint?.date===p.date&&selectedPoint?.market===p.market?null:p)}
                 selectedPoint={selectedPoint}/>
               {selectedPoint&&(
@@ -1853,293 +1922,177 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                   {confirmDelSnap?.date===selectedPoint.date&&confirmDelSnap?.market===selectedPoint.market
                     ?<div style={{display:"flex",gap:6,alignItems:"center"}}>
                       <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#ff8080"}}>¿borrar?</span>
-                      <button onClick={()=>deleteSnapshot(detalle,selectedPoint)}
-                        style={{background:"#e53935",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#fff"}}>sí</button>
-                      <button onClick={()=>setConfirmDelSnap(null)}
-                        style={{background:"transparent",border:"1px dashed #444",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#999"}}>no</button>
+                      <button onClick={()=>deleteSnapshot(detalle,selectedPoint)} style={{background:"#e53935",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#fff"}}>sí</button>
+                      <button onClick={()=>setConfirmDelSnap(null)} style={{background:"transparent",border:"1px dashed #444",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#999"}}>no</button>
                     </div>
                     :<button onClick={()=>setConfirmDelSnap(selectedPoint)} disabled={!detalle.id}
-                      style={{background:"transparent",border:"1px dashed #5a2020",borderRadius:8,padding:"5px 10px",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#e08080",cursor:detalle.id?"pointer":"default",opacity:detalle.id?1:0.4}}>
-                      × borrar snapshot
-                    </button>
-                  }
+                      style={{background:"transparent",border:"1px dashed #5a2020",borderRadius:8,padding:"5px 10px",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#e08080",cursor:detalle.id?"pointer":"default"}}>× borrar snapshot</button>}
                 </div>
               )}
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.25)",marginTop:6,textAlign:"center"}}>{hist.length} snapshots — tocá un punto para seleccionarlo</div>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.25)",marginTop:6,textAlign:"center"}}>{hist.length} snapshots — tocá un punto para seleccionar</div>
             </div>
           )}
+          {/* 6 · datos propios según el contexto */}
+          {datos.length>0&&<div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>
+            {datos.map(([k,v])=>(
+              <div key={k} style={{background:"#1a1a1a",borderRadius:10,padding:"10px"}}>
+                <div style={{...lbl,marginBottom:4}}>{k}</div>
+                <div style={{fontFamily:"'Caveat',cursive",fontSize:16,fontWeight:700,color:"#fff",lineHeight:1}}>{v}</div>
+              </div>
+            ))}
+          </div>}
           {detalle.notas&&<div style={{fontFamily:"'Caveat',cursive",fontSize:14,color:"rgba(255,255,255,0.5)",marginBottom:12,fontStyle:"italic"}}>"{detalle.notas}"</div>}
-          {/* Toggle explícito de estado — reemplaza el tap directo. Solo
-              tiene sentido para cartas de Dark/ilustrador (hunting <->
-              conseguida) -- para una carta comprada normal, togglear la
-              mandaría a estado "hunting" y le pisaría costoUSD/fechaCompra,
-              así que se oculta entero si no hay catalogEntry (23-sep-2026). */}
-          {catalogEntry&&<button onClick={()=>toggleDark(detalle.cardId)}
-            style={{width:"100%",background:cons?"transparent":"#2e7d52",border:cons?"1px dashed #555":"none",borderRadius:10,padding:"12px",fontFamily:"'Caveat',cursive",fontSize:17,color:cons?"#aaa":"#fff",cursor:"pointer"}}>
-            {cons?"↺ volver a hunting":"✓ marcar conseguida"}
-          </button>}
+          {/* 7 · acciones al pie según el contexto */}
+          {ctx==="coleccion"&&catalogEntry&&<button onClick={()=>toggleDark(detalle.cardId)}
+            style={{...accionSt(cons?"transparent":"#2e7d52"),width:"100%",flex:"none",fontSize:17,color:cons?"#999":"#fff"}}>{cons?"↺ volver a hunting":"✓ marcar conseguida"}</button>}
+          {carta&&<>
+            {carta.estado==="hunting"&&<div style={{marginBottom:10}}>
+              <button onClick={()=>updCarta(carta.id,{estado:"sin_publicar",fechaCompra:carta.fechaCompra||hoy})} style={{...accionSt("#7c4dff"),width:"100%",flex:"none"}}>✓ ya la conseguí — pasar a inventario</button>
+            </div>}
+            {esCarpeta&&carta.estado!=="vendida"&&carta.estado!=="hunting"&&<div style={{display:"flex",gap:8,marginBottom:10}}>
+              <button onClick={()=>updCarta(carta.id,{estado:carta.estado==="sin_publicar"?"a_la_venta":"sin_publicar"})} style={accionSt("#2a2a2a")}>{carta.estado==="sin_publicar"?"🏷️ poner a la venta":"📦 quitar de venta"}</button>
+              <button onClick={()=>setVendModal(true)} style={accionSt("#2e7d52")}>✓ registrar venta</button>
+            </div>}
+            {editMode?(
+              <div style={{background:"#1a1a1a",border:"1px dashed #333",borderRadius:12,padding:"14px",marginBottom:10}}>
+                {editFields.carpeta!=="Price Watch"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+                  {[{k:"costoUSD",l:"Costo USD"},{k:"precioVentaUSD",l:"Precio venta USD"}].map(({k,l})=>(
+                    <div key={k}>
+                      <div style={lblForm}>{l}</div>
+                      <input type="number" step="0.01" value={editFields[k]||""} onChange={e=>setEditFields(f=>({...f,[k]:e.target.value}))} style={inputSt}/>
+                    </div>
+                  ))}
+                </div>}
+                {editFields.carpeta!=="Price Watch"&&<div style={{marginBottom:10}}>
+                  <div style={lblForm}>Cantidad</div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <button onClick={()=>setEditFields(f=>({...f,cantidad:Math.max(1,(f.cantidad||1)-1)}))} style={{width:28,height:28,borderRadius:6,border:"1px dashed #444",background:"transparent",fontSize:16,cursor:"pointer",color:"#ccc"}}>−</button>
+                    <span style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff",minWidth:28,textAlign:"center"}}>{editFields.cantidad||1}</span>
+                    <button onClick={()=>setEditFields(f=>({...f,cantidad:(f.cantidad||1)+1}))} style={{width:28,height:28,borderRadius:6,border:"1px dashed #444",background:"transparent",fontSize:16,cursor:"pointer",color:"#ccc"}}>+</button>
+                  </div>
+                </div>}
+                <div style={{marginBottom:10}}>
+                  <div style={lblForm}>Carpeta</div>
+                  <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                    {cats.map(c=><button key={c} onClick={()=>setEditFields(f=>({...f,carpeta:c}))} style={chipSt(editFields.carpeta===c)}>{c}</button>)}
+                  </div>
+                </div>
+                <div style={{marginBottom:10}}>
+                  <div style={lblForm}>Condición</div>
+                  <div style={{display:"flex",gap:4}}>
+                    {CONDICIONES.map(c=><button key={c} onClick={()=>setEditFields(f=>({...f,condicion:c}))} style={{...chipSt(editFields.condicion===c),flex:1,padding:"5px 4px"}}>{c}</button>)}
+                  </div>
+                </div>
+                <div style={{marginBottom:10}}>
+                  <div style={lblForm}>Notas</div>
+                  <textarea value={editFields.notas||""} onChange={e=>setEditFields(f=>({...f,notas:e.target.value}))} rows={2} style={{...inputSt,borderRadius:8,padding:"8px 10px",fontSize:13,resize:"none"}}/>
+                </div>
+                {editFields.carpeta==="Price Watch"&&<div style={{marginBottom:10}}>
+                  <div style={lblForm}>Precio objetivo USD (opcional)</div>
+                  <input type="number" step="0.01" value={editFields.precioObjetivo||""} onChange={e=>setEditFields(f=>({...f,precioObjetivo:e.target.value}))} style={inputSt}/>
+                </div>}
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>{updCarta(carta.id,{costoUSD:parseFloat(editFields.costoUSD)||0,precioVentaUSD:parseFloat(editFields.precioVentaUSD)||0,condicion:editFields.condicion,notas:editFields.notas||"",carpeta:editFields.carpeta,cantidad:editFields.cantidad||1,precioObjetivo:editFields.precioObjetivo?parseFloat(editFields.precioObjetivo):null});
+                    if((editFields.carpeta==="Price Watch")!==(carta.carpeta==="Price Watch")) encolarPokecriptoPending([{id:carta.id,_patch:{carpeta:editFields.carpeta}}]); // el bot refresca Price Watch primero y todos los días
+                    setEditMode(false);}}
+                    style={{flex:1,background:"#fff",border:"none",borderRadius:8,padding:"9px",fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#111",cursor:"pointer",fontWeight:600}}>guardar</button>
+                  <button onClick={()=>setEditMode(false)} style={{background:"transparent",border:"1px dashed #444",borderRadius:8,padding:"9px 14px",fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#999",cursor:"pointer"}}>cancelar</button>
+                </div>
+              </div>
+            ):(
+              <div style={{display:"flex",gap:8,marginBottom:10}}>
+                <button onClick={()=>setEditMode(true)} style={{flex:1,background:"transparent",border:"1px dashed #444",borderRadius:10,padding:"9px",fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#999",cursor:"pointer"}}>{esWatch?"✎ editar objetivo":"✎ editar"}</button>
+                {hist.length>0&&<button onClick={()=>{if(window.confirm(`¿Resetear historial de ${carta.name}? Se borran ${hist.length} snapshots.`))updCarta(carta.id,{priceHistory:[],tcgMarket:null,tcgLow:null,tcgHigh:null,tcgUpdated:null});}}
+                  style={{background:"transparent",border:"1px dashed #5a2020",borderRadius:10,padding:"9px 12px",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#e08080",cursor:"pointer",flexShrink:0}}>↺ resetear historial</button>}
+              </div>
+            )}
+            <button onClick={()=>{if(window.confirm(`¿Eliminar ${carta.name}?`)){deleteCarta(carta.id);cerrar();}}}
+              style={{width:"100%",background:"transparent",border:"1px dashed #2a2a2a",borderRadius:10,padding:"9px",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#666",cursor:"pointer"}}>eliminar carta</button>
+          </>}
         </div>
       </div>
-    );
+      {/* Venta: hoja oscura por encima del detalle */}
+      {vendModal&&carta&&(
+        <div onClick={()=>setVendModal(false)} style={{position:"fixed",inset:0,zIndex:700,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+          <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,420px)",background:"#111",borderRadius:"16px 16px 0 0",padding:"24px 20px 40px"}}>
+            <div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff",marginBottom:16}}>✓ registrar venta</div>
+            <div style={{marginBottom:12}}>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#777",letterSpacing:2,marginBottom:6}}>PRECIO USD</div>
+              <input autoFocus type="number" step="0.01" value={vendPrecio} onChange={e=>setVendPrecio(e.target.value)} style={{...inputSt,border:"1.5px solid #fff",borderRadius:8,padding:"10px 12px",fontSize:18,fontFamily:"'Caveat',cursive"}}/>
+            </div>
+            <div style={{marginBottom:16}}>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#777",letterSpacing:2,marginBottom:6}}>FECHA</div>
+              <input type="date" value={vendFecha} onChange={e=>setVendFecha(e.target.value)} style={{...inputSt,width:"auto",borderRadius:8,padding:"8px 10px"}}/>
+            </div>
+            <button onClick={()=>{marcarVendida(carta.id,vendPrecio,vendFecha);setVendModal(false);cerrar();}}
+              style={{width:"100%",background:"#2e7d52",border:"none",borderRadius:10,padding:"13px",fontFamily:"'Caveat',cursive",fontSize:18,color:"#fff",cursor:"pointer"}}>confirmar venta</button>
+          </div>
+        </div>
+      )}
+    </>);
   }
 
-  // ── VISTA FICHA ──────────────────────────────────────────────────────────────
-  if(view==="ficha"){
-    const carta=inv.find(c=>c.id===fichaId);
-    if(!carta){setView("coleccion");return null;}
-    const est=ESTADOS[carta.estado]||ESTADOS.sin_publicar;
-    const hist=carta.priceHistory||[];
-    const metrics=computeHistMetrics(hist,chartRange);
-    const {ath,athDate,atl,atlDate,vol,volLabel,filtered}=metrics;
-    const dias=carta.fechaCompra?Math.round((new Date(hoy+"T12:00:00")-new Date(carta.fechaCompra+"T12:00:00"))/86400000):null;
-    const colorVenta=carta.tcgMarket&&carta.precioVentaUSD?(carta.precioVentaUSD>carta.tcgMarket?"#2e7d52":"#e53935"):null;
-
-    // Navegación ‹ › entre cartas (26-sep-2026, a pedido de Cristopher --
-    // mismo patrón que ya tenía el detalle de Dark Collection, que nunca
-    // había llegado acá). fichaList es el orden real en pantalla, seteado
-    // por quien abre la ficha (carpetaView o el pool principal).
-    const fichaIdx=fichaList.indexOf(fichaId);
-    return(
-      <div style={{padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
-        {zoomImage&&(
-          <div onClick={()=>setZoomImage(null)} style={{position:"fixed",inset:0,zIndex:700,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <img src={zoomImage} style={{maxWidth:"90vw",maxHeight:"90vh",borderRadius:12,boxShadow:"0 8px 40px rgba(0,0,0,0.5)"}}/>
-            {fichaList.length>1&&(<>
-              <button onClick={e=>{e.stopPropagation();irAFicha(-1);}}
-                style={{position:"fixed",left:6,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.12)",border:"none",borderRadius:16,width:64,height:110,color:"#fff",fontSize:30,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
-              <button onClick={e=>{e.stopPropagation();irAFicha(1);}}
-                style={{position:"fixed",right:6,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.12)",border:"none",borderRadius:16,width:64,height:110,color:"#fff",fontSize:30,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
-            </>)}
-          </div>
-        )}
-        {/* Header */}
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
-          <button onClick={()=>setView("coleccion")} style={{background:"transparent",border:"none",fontSize:20,color:"#bbb",cursor:"pointer",padding:0}}>←</button>
-          <div style={{flex:1,minWidth:0}}>
-            <div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#111",lineHeight:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{carta.name}</div>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888",marginTop:2}}>{carta.set} · #{carta.number} · {carta.condicion} · {carta.carpeta}{(carta.cantidad||1)>1?` · ×${carta.cantidad}`:""}</div>
-          </div>
-          <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,background:est.bg,color:est.color,borderRadius:20,padding:"3px 10px",fontWeight:600,flexShrink:0}}>{est.label}</span>
-        </div>
-        {fichaList.length>1&&(
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-            <button onClick={()=>irAFicha(-1)} style={{background:"transparent",border:"1px dashed #ddd",borderRadius:8,padding:"4px 12px",color:"#999",fontSize:15,cursor:"pointer"}}>‹</button>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb"}}>{fichaIdx+1} / {fichaList.length}</div>
-            <button onClick={()=>irAFicha(1)} style={{background:"transparent",border:"1px dashed #ddd",borderRadius:8,padding:"4px 12px",color:"#999",fontSize:15,cursor:"pointer"}}>›</button>
-          </div>
-        )}
-
-        {/* Imagen grande — mantené presionado para verla fullscreen (cambio 9) */}
-        {carta.image&&<div style={{textAlign:"center",marginBottom:14}}>
-          <img src={carta.imageHd||carta.image} alt={carta.name} style={{maxWidth:200,borderRadius:10,boxShadow:"0 4px 20px rgba(0,0,0,0.15)",cursor:"pointer"}}
-            {...bindLongPress(carta.imageHd||carta.image)}/>
-        </div>}
-
-        {/* Precio de venta destacado */}
-        <div style={{background:"#111",borderRadius:12,padding:"14px 16px",marginBottom:12}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
-            <div>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.4)",letterSpacing:2,textTransform:"uppercase",marginBottom:4}}>precio de venta</div>
-              <div style={{fontFamily:"'Caveat',cursive",fontSize:34,fontWeight:700,color:colorVenta||"#fff",lineHeight:1}}>{fmtUSD(carta.precioVentaUSD)}</div>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:2}}>{fmtPokeCLP(carta.precioVentaUSD)}</div>
-            </div>
-            <div style={{textAlign:"right"}}>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.4)",letterSpacing:2,textTransform:"uppercase",marginBottom:4}}>TCGPlayer market</div>
-              {carta.tcgMarket
-                ?<div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"rgba(255,255,255,0.7)"}}>{fmtUSD(carta.tcgMarket)}</div>
-                :<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"rgba(255,255,255,0.3)"}}>sin precio</div>
-              }
-              <button onClick={()=>abrirRevisionCarta(carta.id)} style={{marginTop:4,fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.25)",borderRadius:10,padding:"3px 8px",background:"transparent",color:"rgba(255,255,255,0.6)",cursor:"pointer"}}>
-                  🔍 revisar precio
-                </button>
-              {(carta.tcgLow||carta.tcgHigh)&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:2}}>
-                rango {carta.tcgLow?fmtUSD(carta.tcgLow):"—"} – {carta.tcgHigh?fmtUSD(carta.tcgHigh):"—"}
-              </div>}
-            </div>
-          </div>
-        </div>
-
-        {/* ATH / ATL / Volatilidad */}
-        {hist.length>=2&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
-          {[
-            {label:"ATH",val:ath,date:athDate,color:"#2e7d52"},
-            {label:"ATL",val:atl,date:atlDate,color:"#e53935"},
-            {label:`σ ${volLabel||""}`,val:vol?`${vol}%`:null,date:null,color:"#888"},
-          ].map(({label,val,date,color})=>(
-            <div key={label} style={{background:"#fafafa",border:"1px solid #eee",borderRadius:10,padding:"10px"}}>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>{label}</div>
-              <div style={{fontFamily:"'Caveat',cursive",fontSize:18,fontWeight:700,color:val?color:"#ddd",lineHeight:1}}>{val?fmtUSD(parseFloat(val)):"—"}</div>
-              {date&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb",marginTop:3}}>{fmtDateShort(date)}</div>}
-            </div>
-          ))}
-        </div>}
-        <TimeframeDeltas history={hist} dark={false}/>
-
-        {/* Gráfico con selector de rango y borrar snapshot */}
-        {hist.length>=2&&(
-          <div style={{background:"#fafafa",border:"1px solid #eee",borderRadius:12,padding:"12px 14px",marginBottom:12}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb",letterSpacing:2,textTransform:"uppercase"}}>historial TCGPlayer</div>
-              <div style={{display:"flex",gap:4}}>
-                {["7d","30d","todo"].map(r=>(
-                  <button key={r} onClick={()=>{setChartRange(r);setSelectedPoint(null);}}
-                    style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,padding:"3px 8px",borderRadius:8,border:"1px solid",cursor:"pointer",
-                      background:chartRange===r?"#111":"transparent",color:chartRange===r?"#fff":"#bbb",borderColor:chartRange===r?"#111":"#ddd"}}>
-                    {r}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <PriceChart history={hist} precioVenta={carta.precioVentaUSD} range={chartRange}
-              onSelectPoint={p=>setSelectedPoint(selectedPoint?.date===p.date&&selectedPoint?.market===p.market?null:p)}
-              selectedPoint={selectedPoint}/>
-            {/* Panel de snapshot seleccionado */}
-            {selectedPoint&&(
-              <div style={{marginTop:10,background:"#fff",border:"1px dashed #ddd",borderRadius:8,padding:"10px 12px",display:"flex",alignItems:"center",gap:10}}>
-                <div style={{flex:1}}>
-                  <div style={{fontFamily:"'Caveat',cursive",fontSize:16,fontWeight:700,color:"#111"}}>{fmtUSD(selectedPoint.market)}</div>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa"}}>{selectedPoint.date}</div>
-                </div>
-                {confirmDelSnap?.date===selectedPoint.date&&confirmDelSnap?.market===selectedPoint.market
-                  ?<div style={{display:"flex",gap:6,alignItems:"center"}}>
-                    <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#e53935"}}>¿borrar?</span>
-                    <button onClick={()=>deleteSnapshot(carta,selectedPoint)}
-                      style={{background:"#e53935",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#fff"}}>sí</button>
-                    <button onClick={()=>setConfirmDelSnap(null)}
-                      style={{background:"transparent",border:"1px dashed #ddd",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#999"}}>no</button>
-                  </div>
-                  :<button onClick={()=>setConfirmDelSnap(selectedPoint)}
-                    style={{background:"transparent",border:"1px dashed #f5c0c0",borderRadius:8,padding:"5px 10px",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#e08080",cursor:"pointer"}}>
-                    × borrar snapshot
-                  </button>
-                }
-              </div>
-            )}
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#ccc",marginTop:6,textAlign:"center"}}>{hist.length} snapshots — tocá un punto para seleccionarlo</div>
-          </div>
-        )}
-
-        {/* KPIs secundarios */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
-          {[
-            {label:"costo",   val:carta.estado==="hunting"?"sin comprar":carta.costoUSD?fmtUSD(carta.costoUSD):"regalo"},
-            {label:"días",    val:dias!=null?`${dias}d`:"—"},
-            {label:"estado",  val:est.label,color:est.color},
-          ].map(({label,val,color})=>(
-            <div key={label} style={{background:"#fafafa",border:"1px solid #eee",borderRadius:10,padding:"10px"}}>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb",letterSpacing:1,textTransform:"uppercase",marginBottom:4}}>{label}</div>
-              <div style={{fontFamily:"'Caveat',cursive",fontSize:16,fontWeight:700,color:color||"#111",lineHeight:1}}>{val}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Acciones */}
-        {carta.estado==="hunting"&&<div style={{marginBottom:10}}>
-          <button onClick={()=>updCarta(carta.id,{estado:"sin_publicar",fechaCompra:carta.fechaCompra||hoy})}
-            style={{width:"100%",background:"#7c4dff",border:"none",borderRadius:10,padding:"12px",fontFamily:"'Caveat',cursive",fontSize:16,color:"#fff",cursor:"pointer"}}>
-            ✓ ya la conseguí — pasar a inventario
-          </button>
-        </div>}
-        {carta.estado!=="vendida"&&carta.estado!=="hunting"&&<div style={{display:"flex",gap:8,marginBottom:10}}>
-          <button onClick={()=>updCarta(carta.id,{estado:carta.estado==="sin_publicar"?"a_la_venta":"sin_publicar"})}
-            style={{flex:1,background:"#111",border:"none",borderRadius:10,padding:"11px",fontFamily:"'Caveat',cursive",fontSize:15,color:"#fff",cursor:"pointer"}}>
-            {carta.estado==="sin_publicar"?"🏷️ poner a la venta":"📦 quitar de venta"}
-          </button>
-          <button onClick={()=>setVendModal(true)}
-            style={{flex:1,background:"#2e7d52",border:"none",borderRadius:10,padding:"11px",fontFamily:"'Caveat',cursive",fontSize:15,color:"#fff",cursor:"pointer"}}>
-            ✓ registrar venta
-          </button>
-        </div>}
-
-        {/* Edición / Reset historial */}
-        {editMode?(
-          <div style={{background:"#fafafa",border:"1px dashed #ddd",borderRadius:12,padding:"14px",marginBottom:10}}>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-              {[{k:"costoUSD",l:"Costo USD"},{k:"precioVentaUSD",l:"Precio venta USD"}].map(({k,l})=>(
-                <div key={k}>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:4}}>{l}</div>
-                  <input type="number" step="0.01" value={editFields[k]||""} onChange={e=>setEditFields(f=>({...f,[k]:e.target.value}))}
-                    style={{width:"100%",border:"1px dashed #ccc",borderRadius:6,padding:"6px 8px",fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",boxSizing:"border-box",color:"#111"}}/>
-                </div>
-              ))}
-            </div>
-            <div style={{marginBottom:10}}>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:6}}>Cantidad</div>
-              <div style={{display:"flex",alignItems:"center",gap:8}}>
-                <button onClick={()=>setEditFields(f=>({...f,cantidad:Math.max(1,(f.cantidad||1)-1)}))} style={{width:28,height:28,borderRadius:6,border:"1px dashed #ddd",background:"transparent",fontSize:16,cursor:"pointer",color:"#555"}}>−</button>
-                <span style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#111",minWidth:28,textAlign:"center"}}>{editFields.cantidad||1}</span>
-                <button onClick={()=>setEditFields(f=>({...f,cantidad:(f.cantidad||1)+1}))} style={{width:28,height:28,borderRadius:6,border:"1px dashed #ddd",background:"transparent",fontSize:16,cursor:"pointer",color:"#555"}}>+</button>
-              </div>
-            </div>
-            <div style={{marginBottom:10}}>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:6}}>Carpeta</div>
-              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                {cats.map(c=><button key={c} onClick={()=>setEditFields(f=>({...f,carpeta:c}))}
-                  style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,padding:"4px 10px",borderRadius:8,border:"1px dashed #ddd",background:editFields.carpeta===c?"#111":"transparent",color:editFields.carpeta===c?"#fff":"#555",cursor:"pointer"}}>{c}</button>)}
-              </div>
-            </div>
-            <div style={{marginBottom:10}}>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:6}}>Condición</div>
-              <div style={{display:"flex",gap:4}}>
-                {CONDICIONES.map(c=><button key={c} onClick={()=>setEditFields(f=>({...f,condicion:c}))}
-                  style={{flex:1,fontFamily:"'DM Sans',sans-serif",fontSize:11,padding:"5px 4px",borderRadius:6,border:"1px dashed #ddd",background:editFields.condicion===c?"#111":"transparent",color:editFields.condicion===c?"#fff":"#555",cursor:"pointer"}}>{c}</button>)}
-              </div>
-            </div>
-            <div style={{marginBottom:10}}>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:4}}>Notas</div>
-              <textarea value={editFields.notas||""} onChange={e=>setEditFields(f=>({...f,notas:e.target.value}))} rows={2}
-                style={{width:"100%",border:"1px dashed #ccc",borderRadius:8,padding:"8px 10px",fontFamily:"'DM Sans',sans-serif",fontSize:13,outline:"none",resize:"none",boxSizing:"border-box",color:"#111"}}/>
-            </div>
-            {editFields.carpeta==="Price Watch"&&(
-              <div style={{marginBottom:10}}>
-                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:4}}>Precio objetivo USD (opcional)</div>
-                <input type="number" step="0.01" value={editFields.precioObjetivo||""} onChange={e=>setEditFields(f=>({...f,precioObjetivo:e.target.value}))}
-                  style={{width:"100%",border:"1px dashed #ccc",borderRadius:6,padding:"6px 8px",fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",boxSizing:"border-box",color:"#111"}}/>
-              </div>
-            )}
-            <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>{updCarta(carta.id,{costoUSD:parseFloat(editFields.costoUSD)||0,precioVentaUSD:parseFloat(editFields.precioVentaUSD)||0,condicion:editFields.condicion,notas:editFields.notas||"",carpeta:editFields.carpeta,cantidad:editFields.cantidad||1,precioObjetivo:editFields.precioObjetivo?parseFloat(editFields.precioObjetivo):null});
-                if((editFields.carpeta==="Price Watch")!==(carta.carpeta==="Price Watch")) encolarPokecriptoPending([{id:carta.id,_patch:{carpeta:editFields.carpeta}}]); // el bot refresca Price Watch primero y todos los días
-                setEditMode(false);}}
-                style={{flex:1,background:"#111",border:"none",borderRadius:8,padding:"9px",fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#fff",cursor:"pointer",fontWeight:600}}>guardar</button>
-              <button onClick={()=>setEditMode(false)}
-                style={{background:"transparent",border:"1px dashed #ddd",borderRadius:8,padding:"9px 14px",fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#999",cursor:"pointer"}}>cancelar</button>
-            </div>
-          </div>
-        ):(
-          <div style={{display:"flex",gap:8,marginBottom:10}}>
-            <button onClick={()=>setEditMode(true)}
-              style={{flex:1,background:"transparent",border:"1px dashed #ddd",borderRadius:10,padding:"9px",fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#777",cursor:"pointer"}}>✎ editar</button>
-            {hist.length>0&&<button onClick={()=>{if(window.confirm(`¿Resetear historial de ${carta.name}? Se borran ${hist.length} snapshots.`))updCarta(carta.id,{priceHistory:[],tcgMarket:null,tcgLow:null,tcgHigh:null,tcgUpdated:null});}}
-              style={{background:"transparent",border:"1px dashed #f5c0c0",borderRadius:10,padding:"9px 12px",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#e08080",cursor:"pointer",flexShrink:0}}>↺ historial</button>}
-          </div>
-        )}
-        <button onClick={()=>{if(window.confirm(`¿Eliminar ${carta.name}?`))deleteCarta(carta.id);}}
-          style={{width:"100%",background:"transparent",border:"1px dashed #eee",borderRadius:10,padding:"9px",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#ccc",cursor:"pointer"}}>eliminar carta</button>
-
-        {/* Modal venta */}
-        {vendModal&&(
-          <div onClick={()=>setVendModal(false)} style={{position:"fixed",inset:0,zIndex:500,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
-            <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,420px)",background:"#fff",borderRadius:"16px 16px 0 0",padding:"24px 20px 40px"}}>
-              <div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#111",marginBottom:16}}>✓ registrar venta</div>
-              <div style={{marginBottom:12}}>
-                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",letterSpacing:2,marginBottom:6}}>PRECIO USD</div>
-                <input autoFocus type="number" step="0.01" value={vendPrecio} onChange={e=>setVendPrecio(e.target.value)}
-                  style={{width:"100%",border:"1.5px solid #111",borderRadius:8,padding:"10px 12px",fontSize:18,fontFamily:"'Caveat',cursive",outline:"none",boxSizing:"border-box",color:"#111"}}/>
-              </div>
-              <div style={{marginBottom:16}}>
-                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",letterSpacing:2,marginBottom:6}}>FECHA</div>
-                <input type="date" value={vendFecha} onChange={e=>setVendFecha(e.target.value)}
-                  style={{border:"1px dashed #ddd",borderRadius:8,padding:"8px 10px",fontFamily:"'DM Sans',sans-serif",fontSize:14,outline:"none",color:"#111"}}/>
-              </div>
-              <button onClick={()=>{marcarVendida(carta.id,vendPrecio,vendFecha);setVendModal(false);setView("coleccion");}}
-                style={{width:"100%",background:"#2e7d52",border:"none",borderRadius:10,padding:"13px",fontFamily:"'Caveat',cursive",fontSize:18,color:"#fff",cursor:"pointer"}}>confirmar venta</button>
-            </div>
-          </div>
-        )}
-        {renderRevisionModal()}
-      </div>
-    );
+  // ── HISTORIAL DE SNAPSHOTS DE PRECIOS (nov-2026): vista propia con filtros para ver cómo cambia una colección o carpeta ──
+  // Derivado 100% de priceHistory de cada carta (sin backend ni archivo aparte). Dos modos: "ultimo" = lo que cambió en una
+  // fecha de snapshot (con ◀▶ entre fechas) y 7/30/90 d = cambio neto de cada carta entre su precio de hace N días (o su
+  // primer snapshot, si es más nuevo) y el último. Los filtros se combinan: colección/carpeta, dirección y tenencia.
+  const HIST_PERIODOS=[["ultimo","último"],["7","7 d"],["30","30 d"],["90","90 d"]];
+  const HIST_ORDENES=[["cambio","mayor cambio"],["suben","mayor subida"],["bajan","mayor baja"],["valor","valor"],["nombre","nombre"]];
+  function calcularHistorial(){
+    const tieneHist=c=>(c.priceHistory||[]).some(h=>h.market!=null);
+    const enGrupo=c=>!histGrupo||carpetaDeInv(c)===histGrupo;
+    const enTenencia=c=>histTen==="todas"||(histTen==="tengo"?c.estado!=="hunting":c.estado==="hunting");
+    const todas=inv.filter(tieneHist);
+    const base=todas.filter(c=>enGrupo(c)&&enTenencia(c));
+    const fechasSet=new Set();
+    base.forEach(c=>(c.priceHistory||[]).forEach(h=>{ if(h.market!=null) fechasSet.add(h.date); }));
+    const fechas=[...fechasSet].sort().reverse();
+    let fecha=null, entradas=[];
+    const pct=(nuevo,prev)=>(prev>0?(nuevo-prev)/prev*100:null);
+    if(histPeriodo==="ultimo"){
+      fecha=fechas.includes(historialFecha)?historialFecha:fechas[0];
+      for(const c of base){
+        const hist=c.priceHistory||[];
+        for(let i=0;i<hist.length;i++){
+          const cur=hist[i];
+          if(cur.market==null||cur.date!==fecha) continue;
+          const prev=i>0?hist[i-1]:null;
+          const ok=prev?.market&&fuenteCompatible(prev,cur);
+          entradas.push({carta:c,prevMarket:prev?.market??null,newMarket:cur.market,delta:ok?pct(cur.market,prev.market):null});
+        }
+      }
+    }else if(fechas.length){
+      const dias=parseInt(histPeriodo,10);
+      const corte=new Date(new Date(fechas[0]+"T12:00:00")-dias*86400000).toISOString().slice(0,10);
+      for(const c of base){
+        const hist=(c.priceHistory||[]).filter(h=>h.market!=null);
+        if(!hist.length) continue;
+        const cur=hist[hist.length-1];
+        const antes=hist.filter(h=>h.date<=corte);
+        const prev=antes.length?antes[antes.length-1]:(hist.length>1?hist[0]:null);
+        const ok=prev&&prev!==cur&&prev.market&&fuenteCompatible(prev,cur);
+        entradas.push({carta:c,prevMarket:prev?.market??null,newMarket:cur.market,delta:ok?pct(cur.market,prev.market):null});
+      }
+    }
+    const dirOk=e=>histDir==="todas"||(histDir==="suben"?e.delta!=null&&e.delta>0:histDir==="bajan"?e.delta!=null&&e.delta<0:e.delta==null);
+    entradas=entradas.filter(dirOk);
+    const abs=e=>(e.delta==null?-1:Math.abs(e.delta));
+    const orden={
+      cambio:(a,b)=>abs(b)-abs(a),
+      suben:(a,b)=>(b.delta??-Infinity)-(a.delta??-Infinity),
+      bajan:(a,b)=>(a.delta??Infinity)-(b.delta??Infinity),
+      valor:(a,b)=>(b.newMarket||0)-(a.newMarket||0),
+      nombre:(a,b)=>String(a.carta.name||"").localeCompare(String(b.carta.name||"")),
+    }[histOrden]||((a,b)=>abs(b)-abs(a));
+    entradas.sort(orden);
+    // Resumen: valor de lo filtrado antes y ahora, solo con las cartas que tienen punto de comparación.
+    const comp=entradas.filter(e=>e.prevMarket!=null&&e.delta!=null);
+    const antes=comp.reduce((a,e)=>a+e.prevMarket,0), ahora=comp.reduce((a,e)=>a+e.newMarket,0);
+    const resumen={n:entradas.length,comparadas:comp.length,antes,ahora,delta:ahora-antes,pct:antes>0?(ahora-antes)/antes*100:null};
+    const presentes=new Set(todas.map(c=>carpetaDeInv(c)).filter(Boolean));
+    const fijas=["MLP","Staples & Meta","Price Watch"];
+    const grupos=[...fijas.filter(g=>presentes.has(g)),...[...presentes].filter(g=>!fijas.includes(g)&&!NOMBRES_COLECCIONES.includes(g)).sort(),...NOMBRES_COLECCIONES.filter(g=>presentes.has(g))];
+    return {fechas,fecha,entradas,resumen,grupos,hayHistoria:todas.length>0};
   }
 
   // ── VISTA BUSCAR ─────────────────────────────────────────────────────────────
@@ -2157,11 +2110,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           <button onClick={doSearch} style={{background:"#111",color:"#fff",border:"none",borderRadius:8,padding:"8px 16px",fontFamily:"'Caveat',cursive",fontSize:15,cursor:"pointer"}}>buscar</button>
         </div>
         {/* Zoom de imagen */}
-        {zoomImage&&(
-          <div onClick={()=>setZoomImage(null)} style={{position:"fixed",inset:0,zIndex:600,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <img src={zoomImage} style={{maxWidth:"90vw",maxHeight:"90vh",borderRadius:12,boxShadow:"0 8px 40px rgba(0,0,0,0.5)"}}/>
-          </div>
-        )}
+        {renderZoom()}
         <PokeLoader active={loading}/>
         {!loading&&searchErr&&<div style={{textAlign:"center",padding:16,fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#c00"}}>{searchErr}</div>}
         {results.map(card=>{
@@ -2290,16 +2239,13 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     if(esDark){ setTimeout(()=>{setCarpetaView(null);setAutocolCarpeta("Dark Collection");},0); return null; }
     const cartasCarpeta=inv.filter(c=>c.carpeta===carpetaView);
     const fichaListCarpeta=cartasCarpeta.map(c=>c.id); // para las flechas de la ficha
-    const zoomListCarpeta=cartasCarpeta.map(c=>c.cardId); // para el zoom directo desde acá
     const cvView=darkView; const setCvView=setDarkView;
     const gridCols=cvView==="grid_small"?"repeat(auto-fill,minmax(72px,1fr))":cvView==="grid_med"?"repeat(auto-fill,minmax(100px,1fr))":null;
     return(
       <div style={{background:"#0a0a0a",minHeight:"100vh",padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
-        {zoomImage&&(
-          <div onClick={()=>setZoomImage(null)} style={{position:"fixed",inset:0,zIndex:700,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <img src={zoomImage} style={{maxWidth:"90vw",maxHeight:"90vh",borderRadius:12,boxShadow:"0 8px 40px rgba(0,0,0,0.5)"}}/>
-          </div>
-        )}
+        {renderZoom()}
+        {renderDetalleCarta()}
+        {renderRevisionModal()}
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
           <button onClick={()=>setCarpetaView(null)} style={{background:"transparent",border:"none",fontSize:20,color:"#444",cursor:"pointer",padding:0}}>←</button>
           <div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff"}}>{CARPETAS_ICONS[carpetaView]||"📁"} {carpetaView}</div>
@@ -2325,9 +2271,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             const up=c.tcgMarket&&c.precioVentaUSD;
             const color=up?(c.precioVentaUSD>c.tcgMarket?"#2e7d52":"#e53935"):"#fff";
             return(
-              <div key={c.id} onClick={guardLongPressClick(()=>{setFichaId(c.id);setFichaList(fichaListCarpeta);setCarpetaView(null);setView("ficha");})}
+              <div key={c.id} onClick={guardLongPressClick(()=>{abrirDetalleInv(c.id,fichaListCarpeta);})}
                 style={{display:"flex",gap:10,padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.07)",cursor:"pointer",alignItems:"center"}}>
-                {c.image&&<img src={c.image} style={{width:40,borderRadius:5,flexShrink:0}} {...bindLongPress(c.imageHd||c.image,c.cardId,zoomListCarpeta)}/>}
+                {c.image&&<img src={c.image} style={{width:40,borderRadius:5,flexShrink:0}} {...bindLongPress(c.imageHd||c.image,"inv:"+c.id,fichaListCarpeta.map(i=>"inv:"+i))}/>}
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.name}</div>
                   <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.35)"}}>{c.condicion}{(c.cantidad||1)>1?` · ×${c.cantidad}`:""}</div>
@@ -2354,9 +2300,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               const color=up?(c.precioVentaUSD>c.tcgMarket?"#2e7d52":"#e53935"):"rgba(255,255,255,0.7)";
               const isSmall=cvView==="grid_small";
               return(
-                <div key={c.id} onClick={guardLongPressClick(()=>{setFichaId(c.id);setFichaList(fichaListCarpeta);setCarpetaView(null);setView("ficha");})}
+                <div key={c.id} onClick={guardLongPressClick(()=>{abrirDetalleInv(c.id,fichaListCarpeta);})}
                   style={{cursor:"pointer",borderRadius:isSmall?6:8,overflow:"hidden",border:"2px solid transparent",position:"relative"}}
-                  {...bindLongPress(c.imageHd||c.image,c.cardId,zoomListCarpeta)}>
+                  {...bindLongPress(c.imageHd||c.image,"inv:"+c.id,fichaListCarpeta.map(i=>"inv:"+i))}>
                   {c.image
                     ?<img src={c.image} alt={c.name} style={{width:"100%",display:"block"}}/>
                     :<div style={{aspectRatio:"2/3",background:"#1a1a1a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🃏</div>
@@ -2382,6 +2328,85 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // ── MENÚ DE COLECCIONES ("Colecciones", antes tile de Dark) ────────────────────
   // Lista las colecciones automáticas (Dark + ilustradores + reglas Mega/Tera/Pikachu 30) con su avance
   // -- reemplaza el acceso directo que antes tenía Dark en el dashboard.
+  // ── VISTA HISTORIAL DE SNAPSHOTS ─────────────────────────────────────────────
+  if(view==="historial"){
+    const h=calcularHistorial();
+    const refs=h.entradas.map(e=>"inv:"+e.carta.id);
+    const idxF=h.fechas.indexOf(h.fecha);
+    const f={fontFamily:"'DM Sans',sans-serif"};
+    const signo=n=>(n>0?"+":n<0?"−":"");
+    const fmtPctH=n=>(n==null?"nuevo":`${signo(n)}${Math.abs(n).toFixed(1)}%`);
+    const colorH=n=>(n==null?"#888":n>0?"#4caf80":n<0?"#e57373":"#888");
+    const ordenIdx=HIST_ORDENES.findIndex(o=>o[0]===histOrden);
+    const filaChips=(items,valor,set)=>items.map(([k,l])=><ChipHerramienta key={k} activo={valor===k} onClick={()=>set(k)}>{l}</ChipHerramienta>);
+    return(
+      <div style={{background:"#0a0a0a",minHeight:"100vh",padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
+        {renderZoom()}
+        {renderDetalleCarta()}
+        {renderRevisionModal()}
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+          <button onClick={()=>setView("coleccion")} style={{background:"transparent",border:"none",fontSize:20,color:"#444",cursor:"pointer",padding:0}}>←</button>
+          <div style={{flex:1,fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff"}}>📊 historial de snapshots</div>
+        </div>
+        {/* colección o carpeta */}
+        <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:6,marginBottom:6}}>
+          <span style={{flexShrink:0}}><ChipHerramienta activo={!histGrupo} onClick={()=>setHistGrupo("")}>todas</ChipHerramienta></span>
+          {h.grupos.map(g=><span key={g} style={{flexShrink:0}}><ChipHerramienta activo={histGrupo===g} onClick={()=>setHistGrupo(histGrupo===g?"":g)}>{g}</ChipHerramienta></span>)}
+        </div>
+        {/* periodo + filtros + orden */}
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:6}}>{filaChips(HIST_PERIODOS,histPeriodo,setHistPeriodo)}</div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",marginBottom:10}}>
+          {filaChips([["todas","todas"],["suben","▲ suben"],["bajan","▼ bajan"],["nuevas","nuevas"]],histDir,setHistDir)}
+          <span style={{width:1,height:16,background:"#222"}}/>
+          {filaChips([["todas","todas"],["tengo","tengo"],["faltan","me faltan"]],histTen,setHistTen)}
+          <ChipHerramienta onClick={()=>setHistOrden(HIST_ORDENES[(ordenIdx+1)%HIST_ORDENES.length][0])}>⇅ {HIST_ORDENES[Math.max(0,ordenIdx)][1]}</ChipHerramienta>
+        </div>
+        {!h.hayHistoria?(
+          <div style={{...f,textAlign:"center",fontSize:12,color:"#555",padding:"30px 0"}}>todavía no hay snapshots de precios</div>
+        ):(<>
+          {/* resumen de lo filtrado: cómo cambió el valor */}
+          <div style={{background:"#151515",borderRadius:10,padding:"10px 14px",marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+            <div style={{minWidth:0}}>
+              <div style={{...f,fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:1,textTransform:"uppercase",marginBottom:2}}>{histGrupo||"todas las cartas"} · {h.resumen.n} carta{h.resumen.n===1?"":"s"}</div>
+              {h.resumen.comparadas>0
+                ?<div style={{fontFamily:"'Caveat',cursive",fontSize:17,fontWeight:700,color:"#fff"}}>{fmtUSD(h.resumen.antes)} <span style={{color:"#555"}}>→</span> {fmtUSD(h.resumen.ahora)}</div>
+                :<div style={{...f,fontSize:11,color:"#555"}}>sin cartas con punto de comparación</div>}
+            </div>
+            {h.resumen.comparadas>0&&<div style={{textAlign:"right",flexShrink:0}}>
+              <div style={{...f,fontSize:13,fontWeight:700,color:colorH(h.resumen.delta)}}>{signo(h.resumen.delta)}{fmtUSD(Math.abs(h.resumen.delta))}</div>
+              {h.resumen.pct!=null&&<div style={{...f,fontSize:10,color:colorH(h.resumen.delta)}}>{fmtPctH(h.resumen.pct)}</div>}
+            </div>}
+          </div>
+          {histPeriodo==="ultimo"&&h.fecha&&<div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+            <button onClick={()=>setHistorialFecha(h.fechas[idxF+1])} disabled={idxF>=h.fechas.length-1} style={{background:"transparent",border:"none",fontSize:15,color:"#888",cursor:idxF>=h.fechas.length-1?"default":"pointer",opacity:idxF>=h.fechas.length-1?0.3:1,padding:"0 6px"}}>◀</button>
+            <span style={{flex:1,textAlign:"center",...f,fontSize:12,color:"#ccc"}}>{h.fecha}</span>
+            <button onClick={()=>setHistorialFecha(h.fechas[idxF-1])} disabled={idxF<=0} style={{background:"transparent",border:"none",fontSize:15,color:"#888",cursor:idxF<=0?"default":"pointer",opacity:idxF<=0?0.3:1,padding:"0 6px"}}>▶</button>
+          </div>}
+          {h.entradas.length===0&&<div style={{...f,textAlign:"center",fontSize:12,color:"#555",padding:"24px 0"}}>ninguna carta cumple estos filtros</div>}
+          {h.entradas.map((e,i)=>{
+            const c=e.carta, ref="inv:"+c.id;
+            const dUSD=e.prevMarket!=null?e.newMarket-e.prevMarket:null;
+            const extra=e.prevMarket!=null?`${fmtUSD(e.prevMarket)} → ${fmtUSD(e.newMarket)}${dUSD!=null?` · ${signo(dUSD)}${fmtUSD(Math.abs(dUSD))}`:""} · ${fmtPctH(e.delta)}`:`primer snapshot · ${fmtUSD(e.newMarket)}`;
+            return(
+              <div key={c.id+"-"+i} onClick={()=>{setDarkDetailId(ref);setDarkDetailList(refs);}}
+                style={{display:"flex",alignItems:"center",gap:10,padding:"9px 0",borderBottom:"1px solid rgba(255,255,255,0.07)",cursor:"pointer"}}>
+                {c.image&&<img src={c.image} onClick={ev=>{ev.stopPropagation();const mapa={};h.entradas.forEach(x=>{const dd=x.prevMarket!=null?x.newMarket-x.prevMarket:null;mapa["inv:"+x.carta.id]=x.prevMarket!=null?`${fmtUSD(x.prevMarket)} → ${fmtUSD(x.newMarket)}${dd!=null?` · ${signo(dd)}${fmtUSD(Math.abs(dd))}`:""} · ${fmtPctH(x.delta)}`:`primer snapshot · ${fmtUSD(x.newMarket)}`;});setZoomImage(c.imageHd||c.image);setZoomCardId(ref);setZoomList(refs);setZoomExtra(mapa);}}
+                  style={{width:40,borderRadius:5,flexShrink:0}}/>}
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{...f,fontSize:13,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.name}</div>
+                  <div style={{...f,fontSize:10,color:"#666",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>#{c.number} · {c.set||c.setName} · {carpetaDeInv(c)}</div>
+                  <div style={{...f,fontSize:10,color:"#888",marginTop:2}}>{extra.split(" · ").slice(0,2).join(" · ")}</div>
+                </div>
+                <div style={{...f,fontSize:12,fontWeight:700,color:colorH(e.delta),flexShrink:0,width:62,textAlign:"right"}}>{fmtPctH(e.delta)}</div>
+              </div>
+            );
+          })}
+        </>)}
+        <div style={{height:32}}/>
+      </div>
+    );
+  }
+
   if(view==="colecciones_menu"){
     const nombres=["Dark Collection",...COLECCIONES_ILUSTRADOR.map(d=>d.carpeta)];
     const filas=nombres.map(nombre=>({nombre,esDark:nombre==="Dark Collection",...avancesColecciones.porColeccion[nombre]}));
@@ -2480,19 +2505,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
 
     return(
       <div style={{background:"#0a0a0a",minHeight:"100vh",padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
-        {zoomImage&&(
-          <div onClick={()=>setZoomImage(null)} style={{position:"fixed",inset:0,zIndex:700,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <img src={zoomImage} style={{maxWidth:"90vw",maxHeight:"90vh",borderRadius:12,boxShadow:"0 8px 40px rgba(0,0,0,0.5)"}}/>
-            {(darkDetailId?darkDetailList.length>1:zoomList.length>1)&&(<>
-              <button onClick={e=>{e.stopPropagation();irAZoomOSea(-1);}}
-                style={{position:"fixed",left:6,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.12)",border:"none",borderRadius:16,width:64,height:110,color:"#fff",fontSize:30,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
-              <button onClick={e=>{e.stopPropagation();irAZoomOSea(1);}}
-                style={{position:"fixed",right:6,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.12)",border:"none",borderRadius:16,width:64,height:110,color:"#fff",fontSize:30,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
-            </>)}
-          </div>
-        )}
+        {renderZoom()}
         {renderDarkPriceModal()}
-        {renderDarkDetailModal()}
+        {renderDetalleCarta()}
         {renderRevisionModal()}
 
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
@@ -2653,19 +2668,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           {pokecriptoSyncMsg&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#aac756",marginTop:6}}>{pokecriptoSyncMsg}</div>}
         </div>
       )}
-      {zoomImage&&(
-        <div onClick={()=>setZoomImage(null)} style={{position:"fixed",inset:0,zIndex:700,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <img src={zoomImage} style={{maxWidth:"90vw",maxHeight:"90vh",borderRadius:12,boxShadow:"0 8px 40px rgba(0,0,0,0.5)"}}/>
-          {(darkDetailId?darkDetailList.length>1:zoomList.length>1)&&(<>
-            <button onClick={e=>{e.stopPropagation();irAZoomOSea(-1);}}
-              style={{position:"fixed",left:6,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.12)",border:"none",borderRadius:16,width:64,height:110,color:"#fff",fontSize:30,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
-            <button onClick={e=>{e.stopPropagation();irAZoomOSea(1);}}
-              style={{position:"fixed",right:6,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.12)",border:"none",borderRadius:16,width:64,height:110,color:"#fff",fontSize:30,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
-          </>)}
-        </div>
-      )}
+      {renderZoom()}
       {renderDarkPriceModal()}
-      {renderDarkDetailModal()}
+      {renderDetalleCarta()}
       {renderRevisionModal()}
       {/* Header métricas */}
       <div style={{background:"#111",borderRadius:12,padding:"14px 16px",marginBottom:12,cursor:"pointer"}} onClick={()=>{}}>
@@ -2683,97 +2688,16 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         </div>
       </div>
 
-      {/* Historial de snapshots del bot -- reemplaza al scheduler viejo de
-          200/día (ya no existe, el bot corre en GitHub Actions). Derivado
-          100% de priceHistory, que ya viene en cada carta -- sin backend
-          nuevo, sin archivo aparte. Por cada carta, cada entrada de su
-          priceHistory (salvo la primera) se compara contra la anterior
-          para armar el delta del día. */}
+      {/* Entrada al historial de snapshots (nov-2026): la lista pasó a su propia vista con filtros. */}
       {(()=>{
-        const porFecha = new Map(); // fecha -> [{carta, prevMarket, newMarket, delta}]
-        // Corrección 27-sep-2026 (a pedido de Cristopher): Dark Collection y
-        // las colecciones de ilustrador NO van acá, van en los chips de la
-        // búsqueda principal (más abajo) -- las había puesto al revés.
-        const carpetasHistorial = [...new Set(inv.map(c=>c.carpeta).filter(Boolean))]
-          .filter(c=>c!=="Dark Collection"&&!COLECCIONES_ILUSTRADOR.some(d=>d.carpeta===c))
-          .sort();
-        const invHist = historialCarpetas.size===0 ? inv : inv.filter(c=>historialCarpetas.has(c.carpeta));
-        for (const c of invHist) {
-          const hist = c.priceHistory || [];
-          for (let i = 0; i < hist.length; i++) {
-            const cur = hist[i];
-            if (cur.market == null) continue;
-            const prev = i > 0 ? hist[i - 1] : null;
-            const entry = {
-              carta: c,
-              prevMarket: prev?.market ?? null,
-              newMarket: cur.market,
-              delta: prev?.market && fuenteCompatible(prev, cur) ? ((cur.market - prev.market) / prev.market * 100).toFixed(1) : null,
-            };
-            if (!porFecha.has(cur.date)) porFecha.set(cur.date, []);
-            porFecha.get(cur.date).push(entry);
-          }
-        }
-        const fechas = [...porFecha.keys()].sort().reverse();
-        const hayHistoriaAlguna = inv.some(c=>(c.priceHistory||[]).some(h=>h.market!=null));
-        if (!hayHistoriaAlguna) return null;
-        const fecha = fechas.includes(historialFecha) ? historialFecha : fechas[0];
-        const idx = fechas.indexOf(fecha);
-        const entradas = fecha ? (porFecha.get(fecha) || []).sort((a, b) => Math.abs(parseFloat(b.delta) || 0) - Math.abs(parseFloat(a.delta) || 0)) : [];
-        const cardIdsHistorial = entradas.map(e=>e.carta.cardId); // orden real en pantalla, para las flechas ‹› del detalle
-        return (
-          <div>
-            <div onClick={()=>setHistorialOpen(v=>!v)}
-              style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",background:"#f9f9f9",border:"1px solid #f0f0f0",borderRadius:8,marginBottom:4,cursor:"pointer"}}>
-              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",letterSpacing:1,flex:1}}>
-                📊 historial de snapshots{fecha?` -- ${entradas.length} carta${entradas.length===1?"":"s"} el ${fecha}`:" -- sin cambios con este filtro"}
-              </span>
-              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#bbb"}}>{historialOpen?"▴":"▾"}</span>
-            </div>
-            {historialOpen&&(
-              <div style={{background:"#fff",border:"1px solid #f0f0f0",borderRadius:8,marginBottom:8}}>
-                {/* Filtro por carpeta (26-sep-2026, a pedido de Cristopher) --
-                    vacío = todas. Dark Collection + ilustrador NO entran acá
-                    (corrección 27-sep-2026): van en los chips de la búsqueda
-                    principal, los había puesto al revés. */}
-                <div style={{display:"flex",gap:4,padding:"8px 10px",borderBottom:"1px solid #f0f0f0",overflowX:"auto"}}>
-                  {carpetasHistorial.map(c=>(
-                    <button key={c} onClick={()=>setHistorialCarpetas(prev=>{const n=new Set(prev);n.has(c)?n.delete(c):n.add(c);return n;})}
-                      style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,padding:"3px 8px",borderRadius:10,border:"1px dashed",cursor:"pointer",flexShrink:0,
-                        background:historialCarpetas.has(c)?"#111":"transparent",color:historialCarpetas.has(c)?"#fff":"#999",borderColor:historialCarpetas.has(c)?"#111":"#ddd"}}>
-                      {c}
-                    </button>
-                  ))}
-                </div>
-                {!fecha?(
-                  <div style={{padding:"14px 10px",textAlign:"center",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#bbb"}}>ninguna carta de esta carpeta cambió de precio todavía</div>
-                ):(<>
-                <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",borderBottom:"1px solid #f0f0f0"}}>
-                  <button onClick={()=>setHistorialFecha(fechas[idx+1])} disabled={idx>=fechas.length-1}
-                    style={{background:"transparent",border:"none",fontSize:14,cursor:idx>=fechas.length-1?"default":"pointer",opacity:idx>=fechas.length-1?0.3:1,padding:"0 4px"}}>◀</button>
-                  <span style={{flex:1,textAlign:"center",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#333"}}>{fecha}</span>
-                  <button onClick={()=>setHistorialFecha(fechas[idx-1])} disabled={idx<=0}
-                    style={{background:"transparent",border:"none",fontSize:14,cursor:idx<=0?"default":"pointer",opacity:idx<=0?0.3:1,padding:"0 4px"}}>▶</button>
-                </div>
-                <div style={{maxHeight:280,overflowY:"auto"}}>
-                  {entradas.map((item,i)=>{
-                    const up = item.delta!=null && parseFloat(item.delta)>=0;
-                    return(
-                      <div key={item.carta.id+i} onClick={()=>{setDarkDetailId(item.carta.cardId);setDarkDetailList(cardIdsHistorial);}}
-                        style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",borderBottom:"1px solid #f8f8f8",cursor:"pointer"}}>
-                        {item.carta.image&&<img src={item.carta.image} style={{width:28,borderRadius:4,flexShrink:0}}/>}
-                        <div style={{flex:1,minWidth:0,fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#333",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{item.carta.name}</div>
-                        <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",flexShrink:0}}>${item.newMarket?.toFixed(2)}</div>
-                        <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:700,color:item.delta==null?"#aaa":up?"#2e7d52":"#e53935",flexShrink:0,width:48,textAlign:"right"}}>
-                          {item.delta==null?"nuevo":`${up?"+":""}${item.delta}%`}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                </>)}
-              </div>
-            )}
+        let ultima=null, n=0;
+        for(const c of inv){ for(const hh of (c.priceHistory||[])){ if(hh.market!=null&&(!ultima||hh.date>ultima)) ultima=hh.date; } }
+        if(!ultima) return null;
+        for(const c of inv){ if((c.priceHistory||[]).some(hh=>hh.market!=null&&hh.date===ultima)) n++; }
+        return(
+          <div onClick={()=>setView("historial")} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 12px",background:"#151515",borderRadius:8,marginBottom:8,cursor:"pointer"}}>
+            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#888",letterSpacing:1,flex:1}}>📊 historial de snapshots -- {n} carta{n===1?"":"s"} el {ultima}</span>
+            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#666"}}>›</span>
           </div>
         );
       })()}
@@ -2902,9 +2826,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           const varTotal = hist.length>=2 && hist[0].market>0
             ? ((hist[hist.length-1].market-hist[0].market)/hist[0].market*100) : null;
           return(
-            <div key={carta.id} onClick={guardLongPressClick(()=>{setFichaId(carta.id);setFichaList(filtradas.map(x=>x.id));setView("ficha");})}
+            <div key={carta.id} onClick={guardLongPressClick(()=>{abrirDetalleInv(carta.id,filtradas.map(x=>x.id));})}
               style={{display:"flex",gap:10,padding:"12px 0",borderBottom:"1px solid #f0f0f0",cursor:"pointer",alignItems:"flex-start"}}>
-              <div style={{position:"relative",flexShrink:0}} {...bindLongPress(carta.imageHd||carta.image,carta.cardId,filtradas.map(x=>x.cardId))}>
+              <div style={{position:"relative",flexShrink:0}} {...bindLongPress(carta.imageHd||carta.image,"inv:"+carta.id,filtradas.map(x=>"inv:"+x.id))}>
                 {carta.image
                   ?<img src={carta.image} alt={carta.name} style={{width:52,borderRadius:6,boxShadow:"0 1px 6px rgba(0,0,0,0.1)"}}/>
                   :<div style={{width:52,height:72,borderRadius:6,background:"#f0f0f0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🃏</div>
@@ -2943,9 +2867,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           const est=ESTADOS[carta.estado]||ESTADOS.sin_publicar;
           const colorVenta=carta.tcgMarket&&carta.precioVentaUSD?(carta.precioVentaUSD>carta.tcgMarket?"#2e7d52":"#e53935"):null;
           return(
-            <div key={carta.id} onClick={guardLongPressClick(()=>{setFichaId(carta.id);setFichaList(filtradas.map(x=>x.id));setView("ficha");})}
+            <div key={carta.id} onClick={guardLongPressClick(()=>{abrirDetalleInv(carta.id,filtradas.map(x=>x.id));})}
               style={{display:"flex",gap:8,padding:"8px",border:"1px solid #f0f0f0",borderRadius:10,cursor:"pointer",alignItems:"flex-start"}}>
-              <div style={{position:"relative",flexShrink:0}} {...bindLongPress(carta.imageHd||carta.image,carta.cardId,filtradas.map(x=>x.cardId))}>
+              <div style={{position:"relative",flexShrink:0}} {...bindLongPress(carta.imageHd||carta.image,"inv:"+carta.id,filtradas.map(x=>"inv:"+x.id))}>
                 {carta.image
                   ?<img src={carta.image} alt={carta.name} style={{width:40,borderRadius:5}}/>
                   :<div style={{width:40,height:56,borderRadius:5,background:"#f0f0f0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🃏</div>
@@ -2968,9 +2892,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         {filtradas.map(carta=>{
           const colorVenta=carta.tcgMarket&&carta.precioVentaUSD?(carta.precioVentaUSD>carta.tcgMarket?"#2e7d52":"#e53935"):null;
           return(
-            <div key={carta.id} onClick={guardLongPressClick(()=>{setFichaId(carta.id);setFichaList(filtradas.map(x=>x.id));setView("ficha");})}
+            <div key={carta.id} onClick={guardLongPressClick(()=>{abrirDetalleInv(carta.id,filtradas.map(x=>x.id));})}
               style={{cursor:"pointer",borderRadius:8,overflow:"hidden",border:"1px solid #f0f0f0",position:"relative"}}
-              {...bindLongPress(carta.imageHd||carta.image,carta.cardId,filtradas.map(x=>x.cardId))}>
+              {...bindLongPress(carta.imageHd||carta.image,"inv:"+carta.id,filtradas.map(x=>"inv:"+x.id))}>
               {carta.image
                 ?<img src={carta.image} alt={carta.name} style={{width:"100%",display:"block"}}/>
                 :<div style={{aspectRatio:"2/3",background:"#f0f0f0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>🃏</div>
