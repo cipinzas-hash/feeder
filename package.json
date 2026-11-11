@@ -16,7 +16,8 @@
     "test:memoria": "node tests/compras-memoria.mjs",
     "test:fadiman": "node tests/fadiman-diario.mjs && node tests/fadiman-protocolo.mjs",
     "test:melee": "node tests/melee-orden.mjs",
-    "test:musica": "node tests/musica.mjs && node tests/musica-megusta.mjs"
+    "test:musica": "node tests/musica.mjs && node tests/musica-megusta.mjs",
+    "test:gameenhanced": "node tests/gameenhanced.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"

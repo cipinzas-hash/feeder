@@ -140,6 +140,7 @@ export const LOCAL_KEY_FIELDS = {
   pokeColeccionesHistorial: "angst-pokecripto-colecciones-historial-v1", // snapshots mensuales del valor de cada colección de Pokécripto (issue #40)
   gcalInbox: "angst-gcal-inbox-v1",                       // bandeja Familia → Angst: eventos ya pasados a tarea o ignorados (el sync borra de Google los importados)
   musicaMegusta: "angst-musica-megusta-v1",                // ♥ de Música: lanzamientos guardados (de ahí sale el directorio de artistas)
+  gameEnhancedEstado: "angst-game-enhanced-estado-v1",     // Game enhanced: ítems guardados ("me interesa") y ocultos ("no me interesa")
 };
 
 // Claves "angst-*" que a propósito NO viajan en el export, con el motivo.
