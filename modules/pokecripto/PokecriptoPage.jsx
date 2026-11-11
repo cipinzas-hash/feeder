@@ -2500,31 +2500,43 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           <div style={{flex:1}}>
             <div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff"}}>{esDark?"⚫ Dark Collection":`${CARPETAS_ICONS[cat]||"🎨"} ${cat}`}</div>
           </div>
-          {total>0&&<div style={{textAlign:"right"}}>
-            <div style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:"#aac756"}}>{conseguidas}/{total}</div>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#444"}}>{Math.round(conseguidas/total*100)}%</div>
-          </div>}
         </div>
-        {total>0&&<div style={{height:3,background:"#1a1a1a",borderRadius:99,overflow:"hidden",marginBottom:12}}>
-          <div style={{height:"100%",width:`${total>0?conseguidas/total*100:0}%`,background:"#2e7d52",borderRadius:99}}/>
-        </div>}
-        {valorTotal>0&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#151515",borderRadius:10,padding:"10px 14px",marginBottom:10}}>
-          <div>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:1,textTransform:"uppercase",marginBottom:2}}>valor conseguido / total</div>
-            <div style={{fontFamily:"'Caveat',cursive",fontSize:17,fontWeight:700,color:"#fff"}}>{fmtUSD(valorConseguido)} <span style={{color:"#555",fontSize:14}}>/ {fmtUSD(valorTotal)}</span></div>
-          </div>
-          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:"#aac756"}}>{Math.round(valorConseguido/valorTotal*100)}% del valor</div>
-        </div>}
-        {/* Herramientas de la colección en una sola fila discreta (nov-2026): 🖨️ imprimir (hoja con opciones), 🔍 sin precio
-            (el número es la cantidad; el contador cuenta siempre sobre la carpeta completa, el toggle solo cambia qué se dibuja)
-            y 📈 variación mensual (tocar despliega el historial). Cada chip aparece solo si tiene algo que ofrecer. */}
-        {(catMerged.length>0||sinPrecioCount>0||serieCol.length>0)&&<div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",marginBottom:(histColAbierto&&serieCol.length>0)?6:10}}>
-          {catMerged.length>0&&<ChipHerramienta onClick={()=>setHojaImprimir(true)} title="imprimir placeholders">🖨️</ChipHerramienta>}
-          {sinPrecioCount>0&&<ChipHerramienta activo={soloSinPrecio} onClick={()=>setSoloSinPrecio(v=>!v)} title={soloSinPrecio?"mostrando solo sin precio":"filtrar sin precio"}>{soloSinPrecio?"✕":"🔍"} {sinPrecioCount}</ChipHerramienta>}
-          {serieCol.length>0&&<ChipHerramienta activo={histColAbierto} onClick={()=>setHistColAbierto(v=>!v)} title="historial mensual">
-            📈{vmCol&&vmCol.pct!=null&&<span style={{color:colorDelta(vmCol.delta),fontWeight:700}}> {vmCol.delta>0?"▲":vmCol.delta<0?"▼":"■"}{Math.abs(vmCol.pct)}%</span>}
-          </ChipHerramienta>}
-        </div>}
+        {/* Tarjeta de la colección en dos mitades (nov-2026): izquierda = detalles de la completación (conteo, %, barra y
+            valor conseguido/total); derecha = opciones (🖨️ imprimir con hoja, 🔍 sin precio con la cantidad, 📈 variación
+            mensual que despliega el historial debajo). Cada chip aparece solo si tiene algo que ofrecer; sin chips, la
+            mitad izquierda ocupa toda la tarjeta. El contador de "sin precio" cuenta siempre sobre la carpeta completa. */}
+        {(total>0||catMerged.length>0||sinPrecioCount>0||serieCol.length>0)&&(()=>{
+          const hayOpciones=catMerged.length>0||sinPrecioCount>0||serieCol.length>0;
+          return(
+            <div style={{display:"flex",alignItems:"stretch",gap:12,background:"#151515",borderRadius:10,padding:"10px 14px",marginBottom:(histColAbierto&&serieCol.length>0)?6:10}}>
+              <div style={{flex:1,minWidth:0}}>
+                {total>0&&<>
+                  <div style={{display:"flex",alignItems:"baseline",gap:6}}>
+                    <span style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:"#aac756"}}>{conseguidas}/{total}</span>
+                    <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#888"}}>{Math.round(conseguidas/total*100)}%</span>
+                  </div>
+                  <div style={{height:3,background:"#1f1f1f",borderRadius:99,overflow:"hidden",margin:"4px 0 6px"}}>
+                    <div style={{height:"100%",width:`${conseguidas/total*100}%`,background:"#2e7d52",borderRadius:99}}/>
+                  </div>
+                </>}
+                {valorTotal>0&&<div style={{display:"flex",alignItems:"baseline",gap:6,flexWrap:"wrap"}}>
+                  <span style={{fontFamily:"'Caveat',cursive",fontSize:15,fontWeight:700,color:"#fff"}}>{fmtUSD(valorConseguido)} <span style={{color:"#555",fontSize:13}}>/ {fmtUSD(valorTotal)}</span></span>
+                  <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aac756"}}>{Math.round(valorConseguido/valorTotal*100)}% del valor</span>
+                </div>}
+              </div>
+              {hayOpciones&&<>
+                <div style={{width:1,background:"#222",flex:"none"}}/>
+                <div style={{flex:1,minWidth:0,display:"flex",flexWrap:"wrap",gap:6,alignContent:"center",justifyContent:"center"}}>
+                  {catMerged.length>0&&<ChipHerramienta onClick={()=>setHojaImprimir(true)} title="imprimir placeholders">🖨️</ChipHerramienta>}
+                  {sinPrecioCount>0&&<ChipHerramienta activo={soloSinPrecio} onClick={()=>setSoloSinPrecio(v=>!v)} title={soloSinPrecio?"mostrando solo sin precio":"filtrar sin precio"}>{soloSinPrecio?"✕":"🔍"} {sinPrecioCount}</ChipHerramienta>}
+                  {serieCol.length>0&&<ChipHerramienta activo={histColAbierto} onClick={()=>setHistColAbierto(v=>!v)} title="historial mensual">
+                    📈{vmCol&&vmCol.pct!=null&&<span style={{color:colorDelta(vmCol.delta),fontWeight:700}}> {vmCol.delta>0?"▲":vmCol.delta<0?"▼":"■"}{Math.abs(vmCol.pct)}%</span>}
+                  </ChipHerramienta>}
+                </div>
+              </>}
+            </div>
+          );
+        })()}
         {histColAbierto&&serieCol.length>0&&<div style={{background:"#151515",borderRadius:10,padding:"8px 14px",marginBottom:10}}>
           {vmCol&&<VariacionMes v={vmCol}/>}
           <HistorialMensual serie={serieCol}/>
