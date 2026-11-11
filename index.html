@@ -4613,10 +4613,14 @@ var __angst = (() => {
   }
   var TRAMOS_BARRA = ["#d9534f", "#f0883e", "#e6c229", "#2e9d62"];
   var ORO_BARRA = "linear-gradient(90deg,#b8860b,#ffd54a,#b8860b)";
+  function colorBarra(conseguidas, total) {
+    if (!(total > 0)) return TRAMOS_BARRA[0];
+    if (conseguidas >= total) return ORO_BARRA;
+    return TRAMOS_BARRA[Math.min(3, Math.floor(conseguidas / total * 4))];
+  }
   function BarraSet({ conseguidas, total }) {
-    const pct2 = total > 0 ? conseguidas / total * 100 : 0, completa = total > 0 && conseguidas === total;
-    const fondo = completa ? ORO_BARRA : `linear-gradient(90deg,${TRAMOS_BARRA[0]} 0 25%,${TRAMOS_BARRA[1]} 25% 50%,${TRAMOS_BARRA[2]} 50% 75%,${TRAMOS_BARRA[3]} 75% 100%)`;
-    return /* @__PURE__ */ React.createElement("div", { title: `${conseguidas}/${total}`, style: { height: 6, background: "#1a1a1a", borderRadius: 99, overflow: "hidden", marginBottom: 8 } }, pct2 > 0 && /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${pct2}%`, overflow: "hidden", borderRadius: 99 } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${1e4 / pct2}%`, background: fondo } })));
+    const pct2 = total > 0 ? Math.min(100, conseguidas / total * 100) : 0;
+    return /* @__PURE__ */ React.createElement("div", { title: `${conseguidas}/${total}`, style: { height: 6, background: "#1a1a1a", borderRadius: 99, overflow: "hidden", marginBottom: 8 } }, pct2 > 0 && /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${pct2}%`, background: colorBarra(conseguidas, total), borderRadius: 99 } }));
   }
   function Sparkline({ valores }) {
     if (!valores || valores.length < 2) return null;

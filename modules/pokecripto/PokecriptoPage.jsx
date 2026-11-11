@@ -148,18 +148,21 @@ function VariacionMes({v}){
     </div>
   );
 }
-// Barra de completitud de un set (10-nov-2026, pedido de Cristopher: menos números): la barra va de rojo el primer cuarto,
-// naranjo el segundo, amarillo el tercero y verde el cuarto, y al 100% se vuelve dorada (con "¡completada!" en la cabecera).
+// Barra de completitud de un set (10-nov-2026, pedido de Cristopher: menos números): TODA la barra toma el color del tramo
+// en que está (rojo hasta 25%, naranjo hasta 50%, amarillo hasta 75%, verde hasta 99%) y al 100% es dorada, con
+// "¡completada!" en la cabecera. Los colores no se van sumando: cambia la barra entera al cruzar de tramo.
 const TRAMOS_BARRA=["#d9534f","#f0883e","#e6c229","#2e9d62"];
 const ORO_BARRA="linear-gradient(90deg,#b8860b,#ffd54a,#b8860b)";
+function colorBarra(conseguidas,total){
+  if(!(total>0)) return TRAMOS_BARRA[0];
+  if(conseguidas>=total) return ORO_BARRA;
+  return TRAMOS_BARRA[Math.min(3,Math.floor(conseguidas/total*4))];
+}
 function BarraSet({conseguidas,total}){
-  const pct=total>0?conseguidas/total*100:0, completa=total>0&&conseguidas===total;
-  const fondo=completa?ORO_BARRA:`linear-gradient(90deg,${TRAMOS_BARRA[0]} 0 25%,${TRAMOS_BARRA[1]} 25% 50%,${TRAMOS_BARRA[2]} 50% 75%,${TRAMOS_BARRA[3]} 75% 100%)`;
+  const pct=total>0?Math.min(100,conseguidas/total*100):0;
   return(
     <div title={`${conseguidas}/${total}`} style={{height:6,background:"#1a1a1a",borderRadius:99,overflow:"hidden",marginBottom:8}}>
-      {pct>0&&<div style={{height:"100%",width:`${pct}%`,overflow:"hidden",borderRadius:99}}>
-        <div style={{height:"100%",width:`${10000/pct}%`,background:fondo}}/>
-      </div>}
+      {pct>0&&<div style={{height:"100%",width:`${pct}%`,background:colorBarra(conseguidas,total),borderRadius:99}}/>}
     </div>
   );
 }
