@@ -1,0 +1,57 @@
+name: Sonda Game enhanced
+
+# Sonda de viabilidad de datos reales (11-nov-2026) del módulo Game enhanced.
+# Solo se dispara a mano (botón "Run workflow"). No toca feed.json ni nada que
+# lea la app: escribe modules/feed/data/sonda-game-enhanced.json y docs/sonda-game-enhanced.md.
+# Usa los secrets IGDB_CLIENT_ID e IGDB_CLIENT_SECRET. Se puede borrar sin
+# consecuencias cuando termine la evaluación.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: sonda-game-enhanced
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sincronizar con la punta real de main
+        run: git fetch origin main && git reset --hard origin/main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Correr la sonda
+        env:
+          IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
+          IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
+        # Timeout propio (12 min) para que, si se cuelga, SIGTERM haga que la
+        # sonda guarde un reporte parcial antes del tope de 15 del job.
+        run: |
+          set -o pipefail
+          timeout -s TERM -k 15 12m node modules/feed/scripts/sonda-game-enhanced.mjs 2>&1 | tee /tmp/sonda-game-enhanced.log
+
+      - name: Commitear el reporte
+        if: always()
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -f modules/feed/data/sonda-game-enhanced.json docs/sonda-game-enhanced.md 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "Sonda Game enhanced $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git push && break
+            echo "push falló, reintentando ($i/3)..."
+            git fetch origin main
+            git reset --soft origin/main
+            git diff --staged --quiet || git commit -m "Sonda Game enhanced $(date -u +%Y-%m-%dT%H:%MZ)"
+            sleep 5
+          done
