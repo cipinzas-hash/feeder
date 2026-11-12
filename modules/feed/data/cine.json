@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-11T17:44:57.336Z",
+  "generatedAt": "2026-11-12T00:09:56.193Z",
   "categories": [
     {
       "cat": "Películas",
@@ -262,7 +262,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 5.8
+            "tmdb": 5.7
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -414,7 +414,7 @@
               "order": 9
             }
           ],
-          "trending": false
+          "trending": true
         },
         {
           "guid": "tmdb-movie-1232569",
@@ -817,6 +817,87 @@
           "trending": false
         },
         {
+          "guid": "tmdb-movie-1792170",
+          "title": "Model Citizen",
+          "link": "https://www.themoviedb.org/movie/1792170",
+          "summary": "With his memories gone and his past a blur, ex-cop Steven Bay seeks treatment for his amnesia while working on an isolated farm. Instead, he's met with rising hostility, strange surveillance, and instincts he can’t fully control. When the pressure becomes unbearable, Bay begins a desperate hunt for the truth behind his fractured reality.",
+          "image": "https://image.tmdb.org/t/p/w500/7SE0LBwgqiqZzkm9gKVbBAbcNQL.jpg",
+          "pubDate": "2026-11-03",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-05T17:52:53.496Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "VczwWXoMKL0",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Aaron Eckhart",
+              "character": "Steven Bay / John Locke",
+              "order": 0
+            },
+            {
+              "name": "Emmanuelle Chriqui",
+              "character": "Gretchen",
+              "order": 1
+            },
+            {
+              "name": "Paul Braunstein",
+              "character": "O'Neill",
+              "order": 2
+            },
+            {
+              "name": "David Hewlett",
+              "character": "Dr. Harris",
+              "order": 3
+            },
+            {
+              "name": "Sebastian Pigott",
+              "character": "Jellef",
+              "order": 4
+            },
+            {
+              "name": "Zion Forrest Lee",
+              "character": "Silas",
+              "order": 5
+            },
+            {
+              "name": "Avery Mendillo",
+              "character": "Sabrina",
+              "order": 6
+            },
+            {
+              "name": "Talia Asseraf",
+              "character": "Annabelle",
+              "order": 7
+            },
+            {
+              "name": "Nicolas Grimes",
+              "character": "Man in Black",
+              "order": 8
+            },
+            {
+              "name": "Michael O'Keefe",
+              "character": "Falcone",
+              "order": 10
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1368337",
           "title": "La Odisea",
           "link": "https://www.themoviedb.org/movie/1368337",
@@ -900,87 +981,6 @@
               "name": "Jarreth J. Merz",
               "character": "Leodes",
               "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1792170",
-          "title": "Model Citizen",
-          "link": "https://www.themoviedb.org/movie/1792170",
-          "summary": "With his memories gone and his past a blur, ex-cop Steven Bay seeks treatment for his amnesia while working on an isolated farm. Instead, he's met with rising hostility, strange surveillance, and instincts he can’t fully control. When the pressure becomes unbearable, Bay begins a desperate hunt for the truth behind his fractured reality.",
-          "image": "https://image.tmdb.org/t/p/w500/7SE0LBwgqiqZzkm9gKVbBAbcNQL.jpg",
-          "pubDate": "2026-11-03",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-05T17:52:53.496Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.3
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "VczwWXoMKL0",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Aaron Eckhart",
-              "character": "Steven Bay / John Locke",
-              "order": 0
-            },
-            {
-              "name": "Emmanuelle Chriqui",
-              "character": "Gretchen",
-              "order": 1
-            },
-            {
-              "name": "Paul Braunstein",
-              "character": "O'Neill",
-              "order": 2
-            },
-            {
-              "name": "David Hewlett",
-              "character": "Dr. Harris",
-              "order": 3
-            },
-            {
-              "name": "Sebastian Pigott",
-              "character": "Jellef",
-              "order": 4
-            },
-            {
-              "name": "Zion Forrest Lee",
-              "character": "Silas",
-              "order": 5
-            },
-            {
-              "name": "Avery Mendillo",
-              "character": "Sabrina",
-              "order": 6
-            },
-            {
-              "name": "Talia Asseraf",
-              "character": "Annabelle",
-              "order": 7
-            },
-            {
-              "name": "Nicolas Grimes",
-              "character": "Man in Black",
-              "order": 8
-            },
-            {
-              "name": "Michael O'Keefe",
-              "character": "Falcone",
-              "order": 10
             }
           ],
           "trending": true
@@ -1143,87 +1143,6 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1567605",
-          "title": "Scrooge y los fantasmas de la Navidad",
-          "link": "https://www.themoviedb.org/movie/1567605",
-          "summary": "Reimaginación del clásico literario, una historia de fantasmas ambientada en el Londres de Dickens que sigue el viaje sobrenatural de un hombre para enfrentarse a su pasado, presente y futuro y luchar por una segunda oportunidad.",
-          "image": "https://image.tmdb.org/t/p/w500/gnG15MkiNeObCoPbHcLUX4zrNWh.jpg",
-          "pubDate": "2026-11-11",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-10T22:55:59.703Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.3
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "l_Ozo1xUgbU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Johnny Depp",
-              "character": "Ebenezer Scrooge",
-              "order": 0
-            },
-            {
-              "name": "Rupert Grint",
-              "character": "Bob Cratchit",
-              "order": 1
-            },
-            {
-              "name": "Daisy Ridley",
-              "character": "Emily Cratchit",
-              "order": 2
-            },
-            {
-              "name": "Tramell Tillman",
-              "character": "Ghost of Christmas Present",
-              "order": 3
-            },
-            {
-              "name": "Ian McKellen",
-              "character": "Jacob Marley",
-              "order": 4
-            },
-            {
-              "name": "Andrea Riseborough",
-              "character": "Ghost of Christmas Past",
-              "order": 5
-            },
-            {
-              "name": "Sam Claflin",
-              "character": "Fred",
-              "order": 6
-            },
-            {
-              "name": "Arthur Conti",
-              "character": "Young Ebenezer",
-              "order": 7
-            },
-            {
-              "name": "Charlie Murphy",
-              "character": "",
-              "order": 8
-            },
-            {
-              "name": "Robert Strange",
-              "character": "Ghost of Christmas Future",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
           "guid": "tmdb-movie-1003596",
           "title": "Vengadores: Doomsday",
           "link": "https://www.themoviedb.org/movie/1003596",
@@ -1305,21 +1224,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1483525",
-          "title": "Un amor posible",
-          "link": "https://www.themoviedb.org/movie/1483525",
-          "summary": "Un trabajador despedido y su esposa se cruzan con una documentalista y su pareja, y se enfrentan a sus deseos ocultos.",
-          "image": "https://image.tmdb.org/t/p/w500/bYlv7oanFQB4zfTdDSGMz9cz1df.jpg",
-          "pubDate": "2026-09-23",
+          "guid": "tmdb-movie-1567605",
+          "title": "Scrooge y los fantasmas de la Navidad",
+          "link": "https://www.themoviedb.org/movie/1567605",
+          "summary": "Reimaginación del clásico literario, una historia de fantasmas ambientada en el Londres de Dickens que sigue el viaje sobrenatural de un hombre para enfrentarse a su pasado, presente y futuro y luchar por una segunda oportunidad.",
+          "image": "https://image.tmdb.org/t/p/w500/gnG15MkiNeObCoPbHcLUX4zrNWh.jpg",
+          "pubDate": "2026-11-11",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-11-06T17:14:15.285Z",
+          "firstSeenAt": "2026-11-10T22:55:59.703Z",
           "fullText": null,
           "rating": {
-            "imdb": 7.7,
-            "rt": 100,
-            "metascore": 96,
-            "tmdb": 7.7
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.3
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1328,59 +1247,140 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "_J7PWd3A2PY",
+            "key": "l_Ozo1xUgbU",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "전도연",
-              "character": "Mi-ok",
+              "name": "Johnny Depp",
+              "character": "Ebenezer Scrooge",
               "order": 0
             },
             {
-              "name": "설경구",
-              "character": "Ho-seok",
+              "name": "Rupert Grint",
+              "character": "Bob Cratchit",
               "order": 1
             },
             {
-              "name": "조인성",
-              "character": "Sang-woo",
+              "name": "Daisy Ridley",
+              "character": "Emily Cratchit",
               "order": 2
             },
             {
-              "name": "Cho Yeo-jeong",
-              "character": "Ye-ji",
+              "name": "Tramell Tillman",
+              "character": "Ghost of Christmas Present",
               "order": 3
             },
             {
-              "name": "조유리",
-              "character": "Young Mi-ok",
+              "name": "Ian McKellen",
+              "character": "Jacob Marley",
               "order": 4
             },
             {
-              "name": "최민",
-              "character": "Young Ho-seok",
+              "name": "Andrea Riseborough",
+              "character": "Ghost of Christmas Past",
               "order": 5
             },
             {
-              "name": "정섶",
-              "character": "Cheol",
+              "name": "Sam Claflin",
+              "character": "Fred",
               "order": 6
             },
             {
-              "name": "강창권",
-              "character": "Min-sik",
+              "name": "Arthur Conti",
+              "character": "Young Ebenezer",
               "order": 7
             },
             {
-              "name": "전운종",
-              "character": "Jeong-dae",
+              "name": "Charlie Murphy",
+              "character": "",
               "order": 8
             },
             {
-              "name": "김학선",
-              "character": "Mi-ok's Factory Owner",
-              "order": 12
+              "name": "Robert Strange",
+              "character": "Ghost of Christmas Future",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1300968",
+          "title": "Los Juegos del Hambre: Amanecer en la cosecha",
+          "link": "https://www.themoviedb.org/movie/1300968",
+          "summary": "Explora Panem 24 años antes de la saga de Katniss, comenzando en la mañana de la siega de los 50º Juegos del Hambre, donde participa un joven Haymitch Abernathy.",
+          "image": "https://image.tmdb.org/t/p/w500/nijGyrqQbDhSGss4uugQokvBAsG.jpg",
+          "pubDate": "2026-11-18",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-11T08:57:13.392Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "Dr060OLTodE",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Joseph Zada",
+              "character": "Haymitch Abernathy",
+              "order": 0
+            },
+            {
+              "name": "Mckenna Grace",
+              "character": "Maysilee Donner / Merrilee Donner",
+              "order": 1
+            },
+            {
+              "name": "Ralph Fiennes",
+              "character": "President Coriolanus Snow",
+              "order": 2
+            },
+            {
+              "name": "Jesse Plemons",
+              "character": "Plutarch Heavensbee",
+              "order": 3
+            },
+            {
+              "name": "Glenn Close",
+              "character": "Drusilla Sickle",
+              "order": 4
+            },
+            {
+              "name": "Whitney Peak",
+              "character": "Lenore Dove Baird",
+              "order": 5
+            },
+            {
+              "name": "Elle Fanning",
+              "character": "Effie Trinket",
+              "order": 6
+            },
+            {
+              "name": "Kieran Culkin",
+              "character": "Caesar Flickerman",
+              "order": 7
+            },
+            {
+              "name": "Maya Hawke",
+              "character": "Wiress",
+              "order": 8
+            },
+            {
+              "name": "Kelvin Harrison Jr.",
+              "character": "Beetee Latier",
+              "order": 9
             }
           ],
           "trending": true
@@ -1548,21 +1548,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1300968",
-          "title": "Los Juegos del Hambre: Amanecer en la cosecha",
-          "link": "https://www.themoviedb.org/movie/1300968",
-          "summary": "Explora Panem 24 años antes de la saga de Katniss, comenzando en la mañana de la siega de los 50º Juegos del Hambre, donde participa un joven Haymitch Abernathy.",
-          "image": "https://image.tmdb.org/t/p/w500/nijGyrqQbDhSGss4uugQokvBAsG.jpg",
-          "pubDate": "2026-11-18",
+          "guid": "tmdb-movie-1483525",
+          "title": "Un amor posible",
+          "link": "https://www.themoviedb.org/movie/1483525",
+          "summary": "Un trabajador despedido y su esposa se cruzan con una documentalista y su pareja, y se enfrentan a sus deseos ocultos.",
+          "image": "https://image.tmdb.org/t/p/w500/bYlv7oanFQB4zfTdDSGMz9cz1df.jpg",
+          "pubDate": "2026-09-23",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-11-11T08:57:13.392Z",
+          "firstSeenAt": "2026-11-06T17:14:15.285Z",
           "fullText": null,
           "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
+            "imdb": 7.7,
+            "rt": 100,
+            "metascore": 96,
+            "tmdb": 7.7
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1571,62 +1571,62 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "Dr060OLTodE",
+            "key": "_J7PWd3A2PY",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Joseph Zada",
-              "character": "Haymitch Abernathy",
+              "name": "전도연",
+              "character": "Mi-ok",
               "order": 0
             },
             {
-              "name": "Mckenna Grace",
-              "character": "Maysilee Donner / Merrilee Donner",
+              "name": "설경구",
+              "character": "Ho-seok",
               "order": 1
             },
             {
-              "name": "Ralph Fiennes",
-              "character": "President Coriolanus Snow",
+              "name": "조인성",
+              "character": "Sang-woo",
               "order": 2
             },
             {
-              "name": "Jesse Plemons",
-              "character": "Plutarch Heavensbee",
+              "name": "Cho Yeo-jeong",
+              "character": "Ye-ji",
               "order": 3
             },
             {
-              "name": "Glenn Close",
-              "character": "Drusilla Sickle",
+              "name": "조유리",
+              "character": "Young Mi-ok",
               "order": 4
             },
             {
-              "name": "Whitney Peak",
-              "character": "Lenore Dove Baird",
+              "name": "최민",
+              "character": "Young Ho-seok",
               "order": 5
             },
             {
-              "name": "Elle Fanning",
-              "character": "Effie Trinket",
+              "name": "정섶",
+              "character": "Cheol",
               "order": 6
             },
             {
-              "name": "Kieran Culkin",
-              "character": "Caesar Flickerman",
+              "name": "강창권",
+              "character": "Min-sik",
               "order": 7
             },
             {
-              "name": "Maya Hawke",
-              "character": "Wiress",
+              "name": "전운종",
+              "character": "Jeong-dae",
               "order": 8
             },
             {
-              "name": "Kelvin Harrison Jr.",
-              "character": "Beetee Latier",
-              "order": 9
+              "name": "김학선",
+              "character": "Mi-ok's Factory Owner",
+              "order": 12
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1294189",
