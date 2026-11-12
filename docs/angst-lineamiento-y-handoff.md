@@ -82,7 +82,7 @@ El id de página es el índice en `TABS`; el orden visual lo define `ORDER=[0,11
 | 9 | 📰 feed | `FeedPage` | solo noticias |
 | 12 | 🎧 música | `MusicaPage` (`modules/musica/`) | ya sobre `.app-fit` (N1), sin `useAltoLibre`; descubrimiento de lanzamientos, ver `docs/modulo-musica.md`; falta medir N3 a 480–720 px |
 | 10 | 🎬 vitrina | `VitrinaPage` | en el marco `.app-fit` (1-nov-2026); recuerda película central y filtros al cerrar el detalle; listas con scroll interno (4.7) |
-| 13 | 🎮 game enhanced | `GameEnhancedPage` (`modules/gameenhanced/`) | menú en cruz sobre `.app-fit` (10-nov-2026); datos **simulados** por ahora; medido en Chromium real, mínimo 389 px libres; ver `docs/modulo-game-enhanced.md` |
+| 13 | 🎮 game enhanced | `GameEnhancedPage` (`modules/gameenhanced/`) | menú en cruz sobre `.app-fit` (10-nov-2026); datos **simulados** por ahora; medido en Chromium real, mínimo 399 px libres; ver `docs/modulo-game-enhanced.md` |
 
 Chrome fijo del shell: **encabezado** `.hdr` (título "angstapp" + botones 📁💾⬆️⬇️🎙️), **pestañas** `.tabs` (emoji; la abierta muestra su nombre), **contenido**, **pie** `.ftr` (frase rotativa `STOIC_PHRASES` cada 10 s + logo "ANGST").
 

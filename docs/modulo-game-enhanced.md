@@ -23,10 +23,10 @@ UNA clave nueva, `angst-game-enhanced-estado-v1`: `{ guardados: {id: ts}, oculto
 
 | Viewport | Alto libre del módulo | Filas |
 |---|---|---|
-| 457×810 | 649 px | 8 |
+| 457×810 | 639 px | 8 |
 | 412×915 | 744 px | 9 |
 | 360×640 | 469 px | 5 |
-| 480×560 | **389 px (mínimo medido)** | 4 |
+| 480×560 | **399 px (mínimo medido)** | 4 |
 | 820×1180 (tablet) | 1010 px | 14 |
 
   Al expandir una fila el scroll interno aparece y colapsarla lo devuelve al inicio. **No** se midió en el celular real de Cristopher: su captura es el criterio de aceptación (lineamiento 4.6).
