@@ -170,6 +170,21 @@ function BarraSet({conseguidas,total}){
 function ChipHerramienta({onClick,activo,children,title}){
   return <button onClick={onClick} title={title} style={{background:activo?"#2a2a2a":"transparent",border:"1px solid "+(activo?"#555":"#262626"),borderRadius:99,padding:"4px 11px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:activo?"#ddd":"#888",lineHeight:1.2}}>{children}</button>;
 }
+// × de las hojas emergentes (nov-2026): arriba a la derecha, igual en todas; el contenedor debe ser position:relative.
+function BotonCerrar({onClick}){
+  return <button onClick={onClick} title="cerrar" style={{position:"absolute",top:10,right:14,background:"transparent",border:"none",color:"#777",fontSize:22,cursor:"pointer",padding:4,lineHeight:1,zIndex:2}}>×</button>;
+}
+// Control segmentado: segmentos iguales a ancho completo (filtros del historial de snapshots).
+function Segmentado({items,valor,onChange}){
+  return(
+    <div style={{display:"flex",border:"1px solid #262626",borderRadius:10,overflow:"hidden"}}>
+      {items.map(([k,l],i)=>(
+        <button key={k} onClick={()=>onChange(k)} style={{flex:1,padding:"7px 4px",border:"none",borderLeft:i?"1px solid #262626":"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,background:valor===k?"#2a2a2a":"transparent",color:valor===k?"#fff":"#888"}}>{l}</button>
+      ))}
+    </div>
+  );
+}
+const estiloSelector={flex:1,minWidth:0,background:"#151515",color:"#ddd",border:"1px solid #262626",borderRadius:10,padding:"7px 6px",fontFamily:"'DM Sans',sans-serif",fontSize:12,colorScheme:"dark"};
 function Sparkline({valores}){
   if(!valores||valores.length<2) return null;
   const w=200,h=34,min=Math.min(...valores),max=Math.max(...valores),rango=max-min||1;
@@ -1424,7 +1439,8 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             del modal de detalles (botón "marcar conseguida"), así que este
             modal se abre con el de detalles todavía montado atrás. Con 600
             quedaba oculto detrás de los 650 del detalle. */}
-        <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,420px)",background:"#111",borderRadius:"16px 16px 0 0",padding:"22px 20px 40px"}}>
+        <div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"min(96vw,420px)",background:"#111",borderRadius:"16px 16px 0 0",padding:"22px 20px 40px"}}>
+          <BotonCerrar onClick={()=>setDarkPriceModal(null)}/>
           <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:16}}>
             {carta?.image&&<img src={carta.image} style={{width:44,borderRadius:6,flexShrink:0}}/>}
             <div>
@@ -2014,7 +2030,8 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       {/* Venta: hoja oscura por encima del detalle */}
       {vendModal&&carta&&(
         <div onClick={()=>setVendModal(false)} style={{position:"fixed",inset:0,zIndex:700,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
-          <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,420px)",background:"#111",borderRadius:"16px 16px 0 0",padding:"24px 20px 40px"}}>
+          <div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"min(96vw,420px)",background:"#111",borderRadius:"16px 16px 0 0",padding:"24px 20px 40px"}}>
+            <BotonCerrar onClick={()=>setVendModal(false)}/>
             <div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff",marginBottom:16}}>✓ registrar venta</div>
             <div style={{marginBottom:12}}>
               <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#777",letterSpacing:2,marginBottom:6}}>PRECIO USD</div>
@@ -2036,8 +2053,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // Derivado 100% de priceHistory de cada carta (sin backend ni archivo aparte). Dos modos: "ultimo" = lo que cambió en una
   // fecha de snapshot (con ◀▶ entre fechas) y 7/30/90 d = cambio neto de cada carta entre su precio de hace N días (o su
   // primer snapshot, si es más nuevo) y el último. Los filtros se combinan: colección/carpeta, dirección y tenencia.
-  const HIST_PERIODOS=[["ultimo","último"],["7","7 d"],["30","30 d"],["90","90 d"]];
-  const HIST_ORDENES=[["cambio","mayor cambio"],["suben","mayor subida"],["bajan","mayor baja"],["valor","valor"],["nombre","nombre"]];
+    const HIST_ORDENES=[["cambio","mayor cambio"],["suben","mayor subida"],["bajan","mayor baja"],["valor","valor"],["nombre","nombre"]];
   function calcularHistorial(){
     const tieneHist=c=>(c.priceHistory||[]).some(h=>h.market!=null);
     const enGrupo=c=>!histGrupo||carpetaDeInv(c)===histGrupo;
@@ -2150,80 +2166,81 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         {/* Modal agregar */}
         {addingCard&&(
           <div onClick={()=>setAddingCard(null)} style={{position:"fixed",inset:0,zIndex:500,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
-            <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,420px)",background:"#fff",borderRadius:"16px 16px 0 0",padding:"22px 20px 40px",maxHeight:"90vh",overflowY:"auto"}}>
+            <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,420px)",position:"relative",background:"#111",borderRadius:"16px 16px 0 0",padding:"22px 20px 40px",maxHeight:"90vh",overflowY:"auto"}}>
+              <BotonCerrar onClick={()=>setAddingCard(null)}/>
               <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:16}}>
                 {addingCard.images?.small&&<img src={addingCard.images.small} style={{width:52,borderRadius:6,flexShrink:0,cursor:"pointer"}} onClick={()=>setZoomImage(addingCard.images?.large||addingCard.images?.small)}/>}
                 <div>
-                  <div style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:"#111",lineHeight:1.1}}>{addingCard.name}</div>
+                  <div style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:"#fff",lineHeight:1.1}}>{addingCard.name}</div>
                   <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#888",marginTop:2}}>{addingCard.set?.name} · #{addingCard.number}</div>
                 </div>
               </div>
               {/* Destino (12-oct-2026): en posesión (inventario normal) · hunting (la busco para completar una colección, va a la
                   carpeta que elija) · price watch (solo sigo su precio y me avisa al llegar a mi objetivo; va siempre a Price Watch).
                   Antes hunting y Price Watch se pisaban: las dos eran "no la tengo, trackeo el precio". */}
-              <div style={{display:"flex",gap:0,marginBottom:16,border:"1.5px solid #111",borderRadius:10,overflow:"hidden"}}>
+              <div style={{display:"flex",gap:0,marginBottom:16,border:"1.5px solid #444",borderRadius:10,overflow:"hidden"}}>
                 {[["inventario","📦 en posesión"],["hunting","🗡️ hunting"],["watch","🎯 price watch"]].map(([k,l])=>(
                   <button key={k} onClick={()=>setNewForm(f=>({...f,destino:k,carpeta:k==="watch"?"Price Watch":(f.carpeta==="Price Watch"?(cats.find(c=>c!=="Price Watch")||"MLP"):f.carpeta)}))}
-                    style={{flex:1,padding:"8px 0",background:newForm.destino===k?"#111":"transparent",color:newForm.destino===k?"#fff":"#999",
+                    style={{flex:1,padding:"8px 0",background:newForm.destino===k?"#fff":"transparent",color:newForm.destino===k?"#111":"#999",
                       border:"none",cursor:"pointer",fontFamily:"'Caveat',cursive",fontSize:14,fontWeight:700}}>
                     {l}
                   </button>
                 ))}
               </div>
               {newForm.destino!=="watch"&&<div style={{marginBottom:12}}>
-                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:6}}>Carpeta</div>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#777",marginBottom:6}}>Carpeta</div>
                 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                   {cats.filter(c=>c!=="Price Watch").map(c=><button key={c} onClick={()=>setNewForm(f=>({...f,carpeta:c}))}
-                    style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,padding:"5px 12px",borderRadius:8,border:"1px dashed #ddd",background:newForm.carpeta===c?"#111":"transparent",color:newForm.carpeta===c?"#fff":"#555",cursor:"pointer"}}>{c}</button>)}
+                    style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,padding:"5px 12px",borderRadius:8,border:"1px dashed #444",background:newForm.carpeta===c?"#fff":"transparent",color:newForm.carpeta===c?"#111":"#999",cursor:"pointer"}}>{c}</button>)}
                 </div>
               </div>}
               {newForm.destino==="watch"&&(
                 <div style={{marginBottom:12}}>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:4}}>🎯 Me avisa cuando baje a (USD, opcional) — la sigo sin comprarla</div>
+                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#777",marginBottom:4}}>🎯 Me avisa cuando baje a (USD, opcional) — la sigo sin comprarla</div>
                   <input type="number" step="0.01" value={newForm.precioObjetivo||""} onChange={e=>setNewForm(f=>({...f,precioObjetivo:e.target.value}))} placeholder="ej: 2.50"
-                    style={{width:"100%",border:"1px dashed #ccc",borderRadius:6,padding:"6px 8px",fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",boxSizing:"border-box",color:"#111"}}/>
+                    style={{width:"100%",border:"1px dashed #444",borderRadius:6,padding:"6px 8px",fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",boxSizing:"border-box",color:"#fff"}}/>
                 </div>
               )}
               <div style={{display:"grid",gridTemplateColumns:newForm.destino!=="inventario"?"1fr":"1fr 1fr",gap:10,marginBottom:12}}>
                 {newForm.destino==="inventario"&&(
                   <div>
-                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:4}}>Lo que pagué USD (0 si fue regalo)</div>
+                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#777",marginBottom:4}}>Lo que pagué USD (0 si fue regalo)</div>
                     <input type="number" step="0.01" value={newForm.costoUSD} onChange={e=>setNewForm(f=>({...f,costoUSD:e.target.value}))} placeholder="ej: 8.50"
-                      style={{width:"100%",border:"1px dashed #ccc",borderRadius:8,padding:"8px 10px",fontSize:16,fontFamily:"'Caveat',cursive",outline:"none",boxSizing:"border-box",color:"#111"}}/>
+                      style={{width:"100%",border:"1px dashed #444",borderRadius:8,padding:"8px 10px",fontSize:16,fontFamily:"'Caveat',cursive",outline:"none",boxSizing:"border-box",color:"#fff"}}/>
                   </div>
                 )}
                 <div>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:4}}>{newForm.destino!=="inventario"?"Precio de referencia USD (opcional)":"Precio venta USD"}</div>
+                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#777",marginBottom:4}}>{newForm.destino!=="inventario"?"Precio de referencia USD (opcional)":"Precio venta USD"}</div>
                   <input type="number" step="0.01" value={newForm.precioVentaUSD} onChange={e=>setNewForm(f=>({...f,precioVentaUSD:e.target.value}))} placeholder="ej: 15.00"
-                    style={{width:"100%",border:"1px dashed #ccc",borderRadius:8,padding:"8px 10px",fontSize:16,fontFamily:"'Caveat',cursive",outline:"none",boxSizing:"border-box",color:"#111"}}/>
+                    style={{width:"100%",border:"1px dashed #444",borderRadius:8,padding:"8px 10px",fontSize:16,fontFamily:"'Caveat',cursive",outline:"none",boxSizing:"border-box",color:"#fff"}}/>
                 </div>
               </div>
               {newForm.destino==="inventario"&&(
                 <div style={{marginBottom:12}}>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:6}}>Cantidad</div>
+                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#777",marginBottom:6}}>Cantidad</div>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
-                    <button onClick={()=>setNewForm(f=>({...f,cantidad:Math.max(1,(f.cantidad||1)-1)}))} style={{width:32,height:32,borderRadius:8,border:"1px dashed #ddd",background:"transparent",fontSize:18,cursor:"pointer",color:"#555"}}>−</button>
-                    <span style={{fontFamily:"'Caveat',cursive",fontSize:26,fontWeight:700,color:"#111",minWidth:32,textAlign:"center"}}>{newForm.cantidad||1}</span>
-                    <button onClick={()=>setNewForm(f=>({...f,cantidad:(f.cantidad||1)+1}))} style={{width:32,height:32,borderRadius:8,border:"1px dashed #ddd",background:"transparent",fontSize:18,cursor:"pointer",color:"#555"}}>+</button>
+                    <button onClick={()=>setNewForm(f=>({...f,cantidad:Math.max(1,(f.cantidad||1)-1)}))} style={{width:32,height:32,borderRadius:8,border:"1px dashed #444",background:"transparent",fontSize:18,cursor:"pointer",color:"#999"}}>−</button>
+                    <span style={{fontFamily:"'Caveat',cursive",fontSize:26,fontWeight:700,color:"#fff",minWidth:32,textAlign:"center"}}>{newForm.cantidad||1}</span>
+                    <button onClick={()=>setNewForm(f=>({...f,cantidad:(f.cantidad||1)+1}))} style={{width:32,height:32,borderRadius:8,border:"1px dashed #444",background:"transparent",fontSize:18,cursor:"pointer",color:"#999"}}>+</button>
                   </div>
                 </div>
               )}
               <div style={{marginBottom:12}}>
-                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:6}}>Condición</div>
+                <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#777",marginBottom:6}}>Condición</div>
                 <div style={{display:"flex",gap:6}}>
                   {CONDICIONES.map(c=><button key={c} onClick={()=>setNewForm(f=>({...f,condicion:c}))}
-                    style={{flex:1,fontFamily:"'DM Sans',sans-serif",fontSize:11,padding:"6px 4px",borderRadius:8,border:"1px dashed #ddd",background:newForm.condicion===c?"#111":"transparent",color:newForm.condicion===c?"#fff":"#555",cursor:"pointer"}}>{c}</button>)}
+                    style={{flex:1,fontFamily:"'DM Sans',sans-serif",fontSize:11,padding:"6px 4px",borderRadius:8,border:"1px dashed #444",background:newForm.condicion===c?"#fff":"transparent",color:newForm.condicion===c?"#111":"#999",cursor:"pointer"}}>{c}</button>)}
                 </div>
               </div>
               {newForm.destino==="inventario"&&(
                 <div style={{marginBottom:14}}>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",marginBottom:4}}>Fecha de compra</div>
+                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#777",marginBottom:4}}>Fecha de compra</div>
                   <input type="date" value={newForm.fechaCompra} onChange={e=>setNewForm(f=>({...f,fechaCompra:e.target.value}))}
-                    style={{border:"1px dashed #ddd",borderRadius:8,padding:"7px 10px",fontFamily:"'DM Sans',sans-serif",fontSize:13,outline:"none",color:"#111"}}/>
+                    style={{border:"1px dashed #444",borderRadius:8,padding:"7px 10px",fontFamily:"'DM Sans',sans-serif",fontSize:13,outline:"none",color:"#fff"}}/>
                 </div>
               )}
               <button onClick={()=>agregarCarta(addingCard)} disabled={newForm.destino!=="hunting"&&!newForm.precioVentaUSD}
-                style={{width:"100%",background:(newForm.destino==="hunting"||newForm.precioVentaUSD)?"#111":"#eee",border:"none",borderRadius:10,padding:"13px",fontFamily:"'Caveat',cursive",fontSize:18,color:(newForm.destino==="hunting"||newForm.precioVentaUSD)?"#fff":"#bbb",cursor:"pointer"}}>
+                style={{width:"100%",background:(newForm.destino==="hunting"||newForm.precioVentaUSD)?"#fff":"#222",border:"none",borderRadius:10,padding:"13px",fontFamily:"'Caveat',cursive",fontSize:18,color:(newForm.destino==="hunting"||newForm.precioVentaUSD)?"#111":"#555",cursor:"pointer"}}>
                 {newForm.destino==="hunting"?"🗡️ agregar a hunting":"agregar al inventario"}
               </button>
             </div>
@@ -2337,8 +2354,6 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const signo=n=>(n>0?"+":n<0?"−":"");
     const fmtPctH=n=>(n==null?"nuevo":`${signo(n)}${Math.abs(n).toFixed(1)}%`);
     const colorH=n=>(n==null?"#888":n>0?"#4caf80":n<0?"#e57373":"#888");
-    const ordenIdx=HIST_ORDENES.findIndex(o=>o[0]===histOrden);
-    const filaChips=(items,valor,set)=>items.map(([k,l])=><ChipHerramienta key={k} activo={valor===k} onClick={()=>set(k)}>{l}</ChipHerramienta>);
     return(
       <div style={{background:"#0a0a0a",minHeight:"100vh",padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
         {renderZoom()}
@@ -2348,34 +2363,32 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           <button onClick={()=>setView("coleccion")} style={{background:"transparent",border:"none",fontSize:20,color:"#444",cursor:"pointer",padding:0}}>←</button>
           <div style={{flex:1,fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff"}}>📊 historial de snapshots</div>
         </div>
-        {/* colección o carpeta */}
-        <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:6,marginBottom:6}}>
-          <span style={{flexShrink:0}}><ChipHerramienta activo={!histGrupo} onClick={()=>setHistGrupo("")}>todas</ChipHerramienta></span>
-          {h.grupos.map(g=><span key={g} style={{flexShrink:0}}><ChipHerramienta activo={histGrupo===g} onClick={()=>setHistGrupo(histGrupo===g?"":g)}>{g}</ChipHerramienta></span>)}
+        {/* una barra de tres selectores + dos controles segmentados: ocupan poco y se leen completos */}
+        <div style={{display:"flex",gap:6,marginBottom:6}}>
+          <select value={histGrupo} onChange={e=>setHistGrupo(e.target.value)} style={{...estiloSelector,flex:1.5}}>
+            <option value="">todas las cartas</option>
+            {h.grupos.some(g=>!NOMBRES_COLECCIONES.includes(g))&&<optgroup label="carpetas">{h.grupos.filter(g=>!NOMBRES_COLECCIONES.includes(g)).map(g=><option key={g} value={g}>{g}</option>)}</optgroup>}
+            {h.grupos.some(g=>NOMBRES_COLECCIONES.includes(g))&&<optgroup label="colecciones">{h.grupos.filter(g=>NOMBRES_COLECCIONES.includes(g)).map(g=><option key={g} value={g}>{g}</option>)}</optgroup>}
+          </select>
+          <select value={histPeriodo} onChange={e=>setHistPeriodo(e.target.value)} style={estiloSelector}>
+            {[["ultimo","último snapshot"],["7","7 días"],["30","30 días"],["90","90 días"]].map(([k,l])=><option key={k} value={k}>{l}</option>)}
+          </select>
+          <select value={histOrden} onChange={e=>setHistOrden(e.target.value)} style={estiloSelector}>
+            {HIST_ORDENES.map(([k,l])=><option key={k} value={k}>⇅ {l}</option>)}
+          </select>
         </div>
-        {/* periodo + filtros + orden */}
-        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:6}}>{filaChips(HIST_PERIODOS,histPeriodo,setHistPeriodo)}</div>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",marginBottom:10}}>
-          {filaChips([["todas","todas"],["suben","▲ suben"],["bajan","▼ bajan"],["nuevas","nuevas"]],histDir,setHistDir)}
-          <span style={{width:1,height:16,background:"#222"}}/>
-          {filaChips([["todas","todas"],["tengo","tengo"],["faltan","me faltan"]],histTen,setHistTen)}
-          <ChipHerramienta onClick={()=>setHistOrden(HIST_ORDENES[(ordenIdx+1)%HIST_ORDENES.length][0])}>⇅ {HIST_ORDENES[Math.max(0,ordenIdx)][1]}</ChipHerramienta>
-        </div>
+        <div style={{marginBottom:6}}><Segmentado items={[["todas","todas"],["suben","▲ suben"],["bajan","▼ bajan"],["nuevas","nuevas"]]} valor={histDir} onChange={setHistDir}/></div>
+        <div style={{marginBottom:10}}><Segmentado items={[["todas","todas"],["tengo","tengo"],["faltan","me faltan"]]} valor={histTen} onChange={setHistTen}/></div>
         {!h.hayHistoria?(
           <div style={{...f,textAlign:"center",fontSize:12,color:"#555",padding:"30px 0"}}>todavía no hay snapshots de precios</div>
         ):(<>
-          {/* resumen de lo filtrado: cómo cambió el valor */}
-          <div style={{background:"#151515",borderRadius:10,padding:"10px 14px",marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
-            <div style={{minWidth:0}}>
-              <div style={{...f,fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:1,textTransform:"uppercase",marginBottom:2}}>{histGrupo||"todas las cartas"} · {h.resumen.n} carta{h.resumen.n===1?"":"s"}</div>
-              {h.resumen.comparadas>0
-                ?<div style={{fontFamily:"'Caveat',cursive",fontSize:17,fontWeight:700,color:"#fff"}}>{fmtUSD(h.resumen.antes)} <span style={{color:"#555"}}>→</span> {fmtUSD(h.resumen.ahora)}</div>
-                :<div style={{...f,fontSize:11,color:"#555"}}>sin cartas con punto de comparación</div>}
-            </div>
-            {h.resumen.comparadas>0&&<div style={{textAlign:"right",flexShrink:0}}>
-              <div style={{...f,fontSize:13,fontWeight:700,color:colorH(h.resumen.delta)}}>{signo(h.resumen.delta)}{fmtUSD(Math.abs(h.resumen.delta))}</div>
-              {h.resumen.pct!=null&&<div style={{...f,fontSize:10,color:colorH(h.resumen.delta)}}>{fmtPctH(h.resumen.pct)}</div>}
-            </div>}
+          {/* resumen de lo filtrado en una línea: cuántas cartas y cómo cambió su valor */}
+          <div style={{background:"#151515",borderRadius:10,padding:"8px 12px",marginBottom:8,display:"flex",alignItems:"baseline",gap:10,flexWrap:"wrap"}}>
+            <span style={{...f,fontSize:10,color:"#777"}}>{h.resumen.n} carta{h.resumen.n===1?"":"s"}</span>
+            {h.resumen.comparadas>0?<>
+              <span style={{fontFamily:"'Caveat',cursive",fontSize:16,fontWeight:700,color:"#fff"}}>{fmtUSD(h.resumen.antes)} <span style={{color:"#555"}}>→</span> {fmtUSD(h.resumen.ahora)}</span>
+              <span style={{marginLeft:"auto",...f,fontSize:12,fontWeight:700,color:colorH(h.resumen.delta)}}>{signo(h.resumen.delta)}{fmtUSD(Math.abs(h.resumen.delta))}{h.resumen.pct!=null?` (${fmtPctH(h.resumen.pct)})`:""}</span>
+            </>:<span style={{...f,fontSize:11,color:"#555"}}>sin cartas con punto de comparación</span>}
           </div>
           {histPeriodo==="ultimo"&&h.fecha&&<div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
             <button onClick={()=>setHistorialFecha(h.fechas[idxF+1])} disabled={idxF>=h.fechas.length-1} style={{background:"transparent",border:"none",fontSize:15,color:"#888",cursor:idxF>=h.fechas.length-1?"default":"pointer",opacity:idxF>=h.fechas.length-1?0.3:1,padding:"0 6px"}}>◀</button>
@@ -2557,7 +2570,8 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           <HistorialMensual serie={serieCol}/>
         </div>}
         {hojaImprimir&&<div onClick={()=>setHojaImprimir(false)} style={{position:"fixed",inset:0,zIndex:500,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
-          <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,420px)",background:"#111",borderRadius:"16px 16px 0 0",padding:"18px 18px 28px",boxSizing:"border-box"}}>
+          <div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"min(96vw,420px)",background:"#111",borderRadius:"16px 16px 0 0",padding:"18px 18px 28px",boxSizing:"border-box"}}>
+            <BotonCerrar onClick={()=>setHojaImprimir(false)}/>
             <div style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:"#fff"}}>🖨️ imprimir placeholders</div>
             <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#666",margin:"2px 0 12px"}}>papel 19×25 · 6 por hoja</div>
             <button onClick={()=>{setHojaImprimir(false);imprimirPlaceholders(catMerged,cat,"todas");}}
