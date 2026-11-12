@@ -10,7 +10,11 @@ Muestra: los 71 juegos terminados de Cristopher (Stash, 10-nov-2026; `modules/ga
 | Decomps: títulos tuyos con proyecto (exacto o contenido) | 29/71 (41%) |
 | Decomps: títulos tuyos solo con proyecto de la saga | 19/71 (27%) |
 | Decomps: títulos tuyos sin nada | 23/71 (32%) |
-| IGDB | falló, ver errores |
+| IGDB: títulos que casan | 69/71 (97%) |
+| IGDB: casados con desarrolladora | 69/69 (100%) |
+| IGDB: desarrolladoras únicas | 53 |
+| IGDB: desarrolladoras con lanzamiento en 12 meses / con próximos | 21 / 6 |
+| IGDB: lanzamientos en 12 meses / próximos (todas sumadas) | 112 / 8 |
 | Noticias revisadas (feed.json) | 527 |
 | Noticias con la frase de sucesor / "de los creadores de" | 2 (0 tocan tu lista) |
 | Noticias que mencionan algo de tu lista | 67 (en Gaming: 31) |
@@ -153,6 +157,68 @@ Fecha de alta por proyecto en el JSON: **no**; lo nuevo se detecta comparando co
 | Wolfenstein | 7 | 7 | 1 |
 | South Park | 0 | 0 | 0 |
 
+## 2) Estudios y lanzamientos (IGDB)
+
+Llamadas a IGDB: 124. Sin match (2): The Angry Video Game Nerd Adventures → [Angry Video Game Nerd Adventures | Angry Video Game Nerd Adventures 2: ASSimilation]; Foobar vs. the DEA → [Foobar Versus the DEA].
+
+Desarrolladoras con 10 o más lanzamientos en 12 meses (ruido probable): Blizzard Entertainment (20), Konami (13), Namco (15), IO Interactive (12), SNK (21).
+
+| Desarrolladora | Tus juegos | Lanzamientos 12 m | Próximos | Con seguidores | Lo más seguido |
+|---|---|---|---|---|---|
+| SNK | 1: Metal Slug X | 21 | 0 | 0 | Arcade Archives 2: Fighting Golf (2026-10-07, 0 seg.); Arcade Archives: Satan of Saturn (2026-08-27, 0 seg.) |
+| Blizzard Entertainment | 2: StarCraft II: Heart of the Swarm, StarCraft II: Wings of Liberty | 20 | 3 | 0 | Starcraft (2030-12-31, 0 seg.); Diablo V (2029-03-31, 0 seg.) |
+| Namco | 4: Tekken Tag Tournament, Tekken 3, Tekken 2 | 15 | 0 | 0 | Arcade Archives 2: Rave Racer (2026-02-26, 0 seg.); Arcade Archives: Rave Racer (2026-02-26, 0 seg.) |
+| Konami | 1: Time Hollow | 13 | 0 | 0 | Metal Gear Solid Master Collection: Volume 2 (2026-08-27, 0 seg.); Metal Gear Solid: Master Collection Vol. 2 Bonus Content (2026-08-27, 0 seg.) |
+| IO Interactive | 1: Hitman: Absolution | 12 | 1 | 0 | 007 First Light (2026-05-27, 0 seg.); Hitman Classic Trilogy Remastered (2027-12-31, 0 seg.) |
+| Sonic Team | 6: Sonic Adventure DX Director’s Cut, Sonic Adventure, Sonic Generations | 8 | 0 | 0 | Sonic Racing: CrossWorlds - Godzilla Pack (2026-11-03, 0 seg.); Sonic Racing: CrossWorlds - Mega Man Pack (2026-03-25, 0 seg.) |
+| Nintendo | 1: Rhythm Heaven Megamix | 4 | 0 | 0 | DK Challenge (2026-06-09, 0 seg.); Rhythm Heaven Groove: Memory Match-Up (2026-07-04, 0 seg.) |
+| Bungie | 2: Marathon, Marathon 2: Durandal | 4 | 0 | 0 | Marathon (2026-03-05, 0 seg.); Destiny 2: Renegades (2025-12-02, 0 seg.) |
+| Quantic Dream | 2: Fahrenheit: Indigo Prophecy Remastered, Heavy Rain | 2 | 0 | 0 | Spellcasters Chronicles (2026-02-26, 0 seg.); Indigo Prophecy (2026-07-21, 0 seg.) |
+| WayForward | 1: Shantae and the Pirate’s Curse | 2 | 0 | 0 | BloodRayne: Definitive Collection (2026-07-29, 0 seg.); Sigma Star Saga DX (2026-04-07, 0 seg.) |
+| Obsidian Entertainment | 1: South Park: The Stick of Truth | 1 | 0 | 0 | Grounded 2: Beat the Heat (2026-04-15, 0 seg.) |
+| id Software | 1: Wolfenstein 3D | 1 | 0 | 0 | Doom: The Dark Ages - Revelations (2026-07-07, 0 seg.) |
+| Dimps | 1: Sonic Generations | 1 | 1 | 0 | Dragon Ball: Xenoverse 3 (2027-12-31, 0 seg.) |
+| Naughty Dog | 5: Crash Team Racing, The Last of Us, Uncharted 3: Drake’s Deception | 1 | 1 | 0 | Intergalactic: The Heretic Prophet (2027-12-31, 0 seg.) |
+| Project Soul | 1: SoulCalibur II | 1 | 0 | 0 | SoulCalibur III (2025-12-16, 0 seg.) |
+| HAL Laboratory | 4: Kirby’s Dream Land 2, Kirby’s Dream Land, Kirby Tilt ’n’ Tumble | 1 | 1 | 0 | Kirby and the World Beyond (2027-06-30, 0 seg.) |
+| Rare | 1: Donkey Kong Country | 1 | 0 | 0 | Rare Collection 1 (2025-11-28, 0 seg.) |
+| Good-Feel | 1: Kirby’s Epic Yarn | 1 | 0 | 0 | Yoshi and the Mysterious Book (2026-05-21, 0 seg.) |
+| MachineGames | 1: Wolfenstein II: The New Colossus | 1 | 0 | 0 | Quake: Dawn of the Machine (2026-08-06, 0 seg.) |
+| Nintendo R&D1 | 3: Super Mario Land 2: 6 Golden Coins, Metroid: Zero Mission, Metroid Fusion | 1 | 0 | 0 | Zero Racers (2026-08-04, 0 seg.) |
+| Drinkbox Studios | 1: Guacamelee! | 1 | 1 | 0 | Blighted (2027-12-31, 0 seg.) |
+| Eidos Montréal | 1: Deus Ex: Human Revolution | 0 | 0 | 0 | — |
+| Valve | 1: Portal 2 | 0 | 0 | 0 | — |
+| Freeverse Software | 1: Marathon 2: Durandal | 0 | 0 | 0 | — |
+| SCE Japan Studio | 1: Tokyo Jungle | 0 | 0 | 0 | — |
+| Nintendo Entertainment Analysis & Development | 1: The Legend of Zelda: A Link to the Past | 0 | 0 | 0 | — |
+| Ambrosia Software | 1: Barrack (Ambrosia Software) | 0 | 0 | 0 | — |
+| Capcom Production Studio 4 | 1: Resident Evil 4 | 0 | 0 | 0 | — |
+| Fuse Games | 1: Metroid Prime Pinball | 0 | 0 | 0 | — |
+| Supergiant Games | 1: Bastion | 0 | 0 | 0 | — |
+| Pangea Software, Inc. | 1: Power Pete | 0 | 0 | 0 | — |
+| Ubisoft San Francisco | 1: South Park: The Fractured but Whole | 0 | 0 | 0 | — |
+| Nintendo R&D2 | 2: Kirby Tilt ’n’ Tumble, Super Mario World | 0 | 0 | 0 | — |
+| Arzest | 1: Sonic Superstars | 0 | 0 | 0 | — |
+| Toaplan | 1: Snow Bros. | 0 | 0 | 0 | — |
+| Silicon Studio | 1: Final Fantasy IX | 0 | 0 | 0 | — |
+| SNK Playmore | 1: Metal Slug 7 | 0 | 0 | 0 | — |
+| Nintendo SPD Production Group No. 1 | 3: Rhythm Heaven Megamix, Rhythm Tengoku, Rhythm Heaven (DS) | 0 | 0 | 0 | — |
+| Crispy's! | 1: Tokyo Jungle | 0 | 0 | 0 | — |
+| Queasy Games | 1: Sound Shapes | 0 | 0 | 0 | — |
+| TNX Music Recordings | 1: Rhythm Heaven (DS) | 0 | 0 | 0 | — |
+| Renegade Kid | 3: Dementium: The Ward, Dementium II, Mutant Mudds | 0 | 0 | 0 | — |
+| Studio MDHR | 2: Cuphead: The Delicious Last Course, Cuphead | 0 | 0 | 0 | — |
+| Guerrilla Cambridge | 1: Killzone: Mercenary | 0 | 0 | 0 | — |
+| Studio Zero | 1: Catherine: Full Body | 0 | 0 | 0 | — |
+| SCE Santa Monica Studio | 1: Sound Shapes | 0 | 0 | 0 | — |
+| Square Enix Business Division 3 | 1: Final Fantasy IX | 0 | 0 | 0 | — |
+| hby | 1: Catherine | 0 | 0 | 0 | — |
+| Inkbox Software | 1: Journey | 0 | 0 | 0 | — |
+| Nintendo EPD Production Group No. 8 | 1: Super Mario Odyssey | 0 | 0 | 0 | — |
+| Grond | 1: Final Fantasy (Remaster) | 0 | 0 | 0 | — |
+| Square Product Development Division 5 | 1: Final Fantasy II (Remaster) | 0 | 0 | 0 | — |
+| Guild Studio Inc. | 1: Final Fantasy IX | 0 | 0 | 0 | — |
+
 ## 3) Sucesores espirituales en las noticias de feeder
 
 Por categoría: Pokémon TCG: 25 noticias, 0 con la frase, 0 mencionan tu lista · Gaming: 120 noticias, 0 con la frase, 31 mencionan tu lista · Noticias: 90 noticias, 1 con la frase, 30 mencionan tu lista · Ciencia / Conocimiento: 48 noticias, 0 con la frase, 3 mencionan tu lista · Tecnología: 39 noticias, 1 con la frase, 2 mencionan tu lista · Poliamor: 1 noticias, 0 con la frase, 0 mencionan tu lista · Microdocumentales: 168 noticias, 0 con la frase, 1 mencionan tu lista · Conciertos: 36 noticias, 0 con la frase, 0 mencionan tu lista.
@@ -163,7 +229,3 @@ Ventana de fechas: Pokémon TCG 2026-11-04→2026-11-11 · Gaming 2026-11-02→2
 |---|---|---|---|---|
 | Noticias | New trailer for Australian fantasy comedy The Fox starring Jai Courtney, Emily Browning and Olivia Colman | Flickering Myth | 2026-11-10 | — |
 | Tecnología | NASA's secret weapon in the lunar space race may be ... procurement reform? | Ars Technica | 2026-11-11 | — |
-
-## Errores
-
-- parte2: token Twitch HTTP 400: {"status":400,"message":"invalid client"} 
