@@ -1303,13 +1303,13 @@ var __angst = (() => {
       const r = b && (b[sec] || []).find((x) => x.id === rowId);
       return r ? r.monto || 0 : 0;
     };
-    const ventana = [];
-    if (ultima) for (let k = ultima, i = 0; i < 12 && k >= primera; i++, k = claveAnterior(k)) ventana.unshift(k);
+    const ventana2 = [];
+    if (ultima) for (let k = ultima, i = 0; i < 12 && k >= primera; i++, k = claveAnterior(k)) ventana2.unshift(k);
     const filas = {};
     for (const sec of SECCIONES) {
       filas[sec] = {};
       for (const row of actual[sec] || []) {
-        const prom2 = ventana.length ? Math.round(ventana.reduce((t, k2) => t + montoEn(k2, sec, row.id), 0) / ventana.length) : row.monto || 0;
+        const prom2 = ventana2.length ? Math.round(ventana2.reduce((t, k2) => t + montoEn(k2, sec, row.id), 0) / ventana2.length) : row.monto || 0;
         let total = 0, k = periodo;
         for (let i = 0; i < 12; i++, k = claveSiguiente(k)) {
           if (i === 0) total += row.monto || 0;
@@ -1319,7 +1319,7 @@ var __angst = (() => {
         filas[sec][row.id] = total;
       }
     }
-    return { filas, mesesPromedio: ventana.length };
+    return { filas, mesesPromedio: ventana2.length };
   }
   function ritmoSobre({ gastado, disponible, periodo, hoy }) {
     if (!(disponible > 0)) return null;
@@ -1390,14 +1390,14 @@ var __angst = (() => {
     }) };
   }
   function gastoPorCategoria(budget, sec, rowId) {
-    const mapa = {};
+    const mapa2 = {};
     gastosDe(budget, sec, rowId).forEach((g) => {
       const c = g.categoria || SIN_CATEGORIA;
-      mapa[c] = mapa[c] || { categoria: c, monto: 0, n: 0 };
-      mapa[c].monto += g.monto || 0;
-      mapa[c].n += 1;
+      mapa2[c] = mapa2[c] || { categoria: c, monto: 0, n: 0 };
+      mapa2[c].monto += g.monto || 0;
+      mapa2[c].n += 1;
     });
-    const lista = Object.values(mapa).sort((a, b) => b.monto - a.monto);
+    const lista = Object.values(mapa2).sort((a, b) => b.monto - a.monto);
     return { lista, total: lista.reduce((s, x) => s + x.monto, 0) };
   }
   function filaCompras(budgets, fecha2) {
@@ -1674,7 +1674,7 @@ var __angst = (() => {
       }
       return true;
     }
-    function guardar2() {
+    function guardar3() {
       if (!prepararCategoria()) return;
       acciones.guardar(campos());
     }
@@ -1708,7 +1708,7 @@ var __angst = (() => {
     }, placeholder: "$0", style: { ...campo, textAlign: "right" } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 14, fontWeight: 700, color: noAlcanza ? "#c00" : "#111", paddingBottom: 9, minWidth: 70, textAlign: "right" } }, total ? fmtCLP(total) : "\u2014")), /* @__PURE__ */ React.createElement(SelectorCategoria, { info, cat, setCat, nueva, setNueva, destNueva, setDestNueva, alCambiar: limpiar }), info.activo && bolsillos.length > 1 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Sub-partida"), /* @__PURE__ */ React.createElement("select", { value: bolsillo ? String(bolsillo.subId) : "", onChange: (e) => {
       setSubSel(e.target.value);
       limpiar();
-    }, style: campo }, bolsillos.map((b) => /* @__PURE__ */ React.createElement("option", { key: String(b.subId), value: String(b.subId) }, b.emoji, " ", b.label, " \xB7 saldo ", fmtCLP(b.saldo))))), /* @__PURE__ */ React.createElement(DescuentaDe, { info: { ...info, saldo }, total }), err && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 12, color: "#c00", marginTop: 6 } }, err), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: comprado, disabled: noAlcanza, style: { ...boton(true), background: noAlcanza ? "#ccc" : "#111", cursor: noAlcanza ? "default" : "pointer" } }, "Comprado \u2713"), /* @__PURE__ */ React.createElement("button", { onClick: guardar2, style: boton(false) }, "Guardar"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { ...boton(false), flex: "0 0 auto", padding: "9px 12px" } }, "\xD7")), info.activo && /* @__PURE__ */ React.createElement("button", { onClick: sinGasto, style: { background: "transparent", border: "none", color: "#aaa", fontFamily: F, fontSize: 11, cursor: "pointer", marginTop: 6, padding: 0, textDecoration: "underline" } }, "marcar comprado sin descontar"));
+    }, style: campo }, bolsillos.map((b) => /* @__PURE__ */ React.createElement("option", { key: String(b.subId), value: String(b.subId) }, b.emoji, " ", b.label, " \xB7 saldo ", fmtCLP(b.saldo))))), /* @__PURE__ */ React.createElement(DescuentaDe, { info: { ...info, saldo }, total }), err && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 12, color: "#c00", marginTop: 6 } }, err), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: comprado, disabled: noAlcanza, style: { ...boton(true), background: noAlcanza ? "#ccc" : "#111", cursor: noAlcanza ? "default" : "pointer" } }, "Comprado \u2713"), /* @__PURE__ */ React.createElement("button", { onClick: guardar3, style: boton(false) }, "Guardar"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { ...boton(false), flex: "0 0 auto", padding: "9px 12px" } }, "\xD7")), info.activo && /* @__PURE__ */ React.createElement("button", { onClick: sinGasto, style: { background: "transparent", border: "none", color: "#aaa", fontFamily: F, fontSize: 11, cursor: "pointer", marginTop: 6, padding: 0, textDecoration: "underline" } }, "marcar comprado sin descontar"));
   }
 
   // modules/presupuesto/ListaCompras.jsx
@@ -2991,8 +2991,10 @@ var __angst = (() => {
     // snapshots mensuales del valor de cada colección de Pokécripto (issue #40)
     gcalInbox: "angst-gcal-inbox-v1",
     // bandeja Familia → Angst: eventos ya pasados a tarea o ignorados (el sync borra de Google los importados)
-    musicaMegusta: "angst-musica-megusta-v1"
+    musicaMegusta: "angst-musica-megusta-v1",
     // ♥ de Música: lanzamientos guardados (de ahí sale el directorio de artistas)
+    gameEnhancedEstado: "angst-game-enhanced-estado-v1"
+    // Game enhanced: ítems guardados ("me interesa") y ocultos ("no me interesa")
   };
   var TIPOS_OK = {
     object: (v) => typeof v === "object" && v !== null && !Array.isArray(v),
@@ -3720,6 +3722,61 @@ var __angst = (() => {
     });
     out.forEach((a) => a.lanzamientos.sort((x, y) => String(y.fecha || "").localeCompare(String(x.fecha || ""))));
     return out.sort((x, y) => y.at - x.at || x.nombre.localeCompare(y.nombre));
+  }
+
+  // modules/gameenhanced/estado.js
+  var KEY2 = "angst-game-enhanced-estado-v1";
+  var mapa = (o) => o && typeof o === "object" && !Array.isArray(o) ? o : {};
+  function leer2() {
+    try {
+      const v = JSON.parse(globalThis.localStorage.getItem(KEY2));
+      if (v && typeof v === "object" && !Array.isArray(v)) return { guardados: mapa(v.guardados), ocultos: mapa(v.ocultos) };
+    } catch (e) {
+    }
+    return { guardados: {}, ocultos: {} };
+  }
+  var cache2 = leer2();
+  var oyentes2 = /* @__PURE__ */ new Set();
+  function guardar2(next) {
+    cache2 = next;
+    try {
+      globalThis.localStorage.setItem(KEY2, JSON.stringify(next));
+    } catch (e) {
+    }
+    oyentes2.forEach((fn) => fn(next));
+  }
+  function rehidratarEstado() {
+    cache2 = leer2();
+    oyentes2.forEach((fn) => fn(cache2));
+  }
+  function alternarGuardado(id) {
+    const g = { ...cache2.guardados };
+    if (g[id]) delete g[id];
+    else g[id] = Date.now();
+    guardar2({ ...cache2, guardados: g });
+  }
+  function ocultar(id) {
+    const previo = cache2.guardados[id] || null;
+    const g = { ...cache2.guardados };
+    delete g[id];
+    guardar2({ guardados: g, ocultos: { ...cache2.ocultos, [id]: Date.now() } });
+    return previo;
+  }
+  function deshacerOcultar(id, guardadoPrevio) {
+    const o = { ...cache2.ocultos };
+    delete o[id];
+    const g = { ...cache2.guardados };
+    if (guardadoPrevio) g[id] = guardadoPrevio;
+    guardar2({ guardados: g, ocultos: o });
+  }
+  function useEstado() {
+    const [e, setE] = React.useState(cache2);
+    React.useEffect(() => {
+      oyentes2.add(setE);
+      setE(cache2);
+      return () => oyentes2.delete(setE);
+    }, []);
+    return e;
   }
 
   // core/registro.js
@@ -4913,7 +4970,7 @@ var __angst = (() => {
       return b.includes("Price Watch") ? b : [...b, "Price Watch"];
     }, [carpetas]);
     const darkCat = darkCatalogo || [];
-    const cache2 = priceCache || {};
+    const cache3 = priceCache || {};
     const hoy = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
     const alertasWatch = inv.filter((c) => c.carpeta === "Price Watch" && c.estado !== "vendida" && c.precioObjetivo > 0 && c.tcgMarket != null && c.tcgMarket <= c.precioObjetivo);
     const [view, setView] = React.useState("coleccion");
@@ -5170,7 +5227,7 @@ var __angst = (() => {
     }, [allSets]);
     React.useEffect(() => {
       if (!darkSetsScope.length) return;
-      const lastSync = cache2._lastResyncDate;
+      const lastSync = cache3._lastResyncDate;
       if (lastSync && Date.now() - new Date(lastSync).getTime() < RESYNC_INTERVAL_MS) return;
       resyncAbort.current = false;
       setResyncStatus("running");
@@ -5270,7 +5327,7 @@ var __angst = (() => {
     }, [allSets]);
     React.useEffect(() => {
       if (!allSets.length) return;
-      const lastSync = cache2._lastResyncIlustradorDate;
+      const lastSync = cache3._lastResyncIlustradorDate;
       if (lastSync && Date.now() - new Date(lastSync).getTime() < RESYNC_INTERVAL_MS) return;
       resyncAbort.current = false;
       setResyncStatus("running");
@@ -6282,11 +6339,11 @@ var __angst = (() => {
       entradas.sort(orden);
       const comp = entradas.filter((e) => e.prevMarket != null && e.delta != null);
       const antes = comp.reduce((a, e) => a + e.prevMarket, 0), ahora = comp.reduce((a, e) => a + e.newMarket, 0);
-      const resumen2 = { n: entradas.length, comparadas: comp.length, antes, ahora, delta: ahora - antes, pct: antes > 0 ? (ahora - antes) / antes * 100 : null };
+      const resumen3 = { n: entradas.length, comparadas: comp.length, antes, ahora, delta: ahora - antes, pct: antes > 0 ? (ahora - antes) / antes * 100 : null };
       const presentes = new Set(todas.map((c) => carpetaDeInv(c)).filter(Boolean));
       const fijas = ["MLP", "Staples & Meta", "Price Watch"];
       const grupos = [...fijas.filter((g) => presentes.has(g)), ...[...presentes].filter((g) => !fijas.includes(g) && !NOMBRES_COLECCIONES.includes(g)).sort(), ...NOMBRES_COLECCIONES.filter((g) => presentes.has(g))];
-      return { fechas, fecha: fecha2, entradas, resumen: resumen2, grupos, hayHistoria: todas.length > 0 };
+      return { fechas, fecha: fecha2, entradas, resumen: resumen3, grupos, hayHistoria: todas.length > 0 };
     }
     if (view === "buscar") {
       return /* @__PURE__ */ React.createElement("div", { style: { padding: "16px", maxWidth: 480, margin: "0 auto", overflowX: "hidden", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 16 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => {
@@ -6305,7 +6362,7 @@ var __angst = (() => {
         }
       ), /* @__PURE__ */ React.createElement("button", { onClick: doSearch, style: { background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontFamily: "'Caveat',cursive", fontSize: 15, cursor: "pointer" } }, "buscar")), renderZoom(), /* @__PURE__ */ React.createElement(PokeLoader, { active: loading }), !loading && searchErr && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: 16, fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#c00" } }, searchErr), results.map((card) => {
         const p = getPrimaryPrice(card);
-        const cacheEntry = cache2[card.id];
+        const cacheEntry = cache3[card.id];
         const tcgPrice = cacheEntry?.lastMarket || p?.market || null;
         const yaInv = inv.some((c) => c.cardId === card.id && c.carpeta !== "Price Watch");
         const yaWatch = inv.some((c) => c.cardId === card.id && c.carpeta === "Price Watch");
@@ -6514,15 +6571,15 @@ var __angst = (() => {
               src: c.image,
               onClick: (ev) => {
                 ev.stopPropagation();
-                const mapa = {};
+                const mapa2 = {};
                 h.entradas.forEach((x) => {
                   const dd = x.prevMarket != null ? x.newMarket - x.prevMarket : null;
-                  mapa["inv:" + x.carta.id] = x.prevMarket != null ? `${fmtUSD(x.prevMarket)} \u2192 ${fmtUSD(x.newMarket)}${dd != null ? ` \xB7 ${signo2(dd)}${fmtUSD(Math.abs(dd))}` : ""} \xB7 ${fmtPctH(x.delta)}` : `primer snapshot \xB7 ${fmtUSD(x.newMarket)}`;
+                  mapa2["inv:" + x.carta.id] = x.prevMarket != null ? `${fmtUSD(x.prevMarket)} \u2192 ${fmtUSD(x.newMarket)}${dd != null ? ` \xB7 ${signo2(dd)}${fmtUSD(Math.abs(dd))}` : ""} \xB7 ${fmtPctH(x.delta)}` : `primer snapshot \xB7 ${fmtUSD(x.newMarket)}`;
                 });
                 setZoomImage(c.imageHd || c.image);
                 setZoomCardId(ref);
                 setZoomList(refs);
-                setZoomExtra(mapa);
+                setZoomExtra(mapa2);
               },
               style: { width: 40, borderRadius: 5, flexShrink: 0 }
             }
@@ -8001,11 +8058,11 @@ var __angst = (() => {
       if (over > 1 !== desborda) setDesborda(over > 1);
     });
     const save = (updates) => saveData({ ...data, ...updates });
-    const guardar2 = (nuevo) => save({ fadimanDiario: nuevo });
-    const set = (campo8, valor) => guardar2(conCampo(diario, fecha2, campo8, valor, esProtocolo));
+    const guardar3 = (nuevo) => save({ fadimanDiario: nuevo });
+    const set = (campo8, valor) => guardar3(conCampo(diario, fecha2, campo8, valor, esProtocolo));
     const setNum = (campo8, txt) => set(campo8, txt === "" ? null : parseFloat(txt));
-    const setBase = (campo8, valor) => guardar2(conBase(diario, campo8, valor));
-    const setMg = (txt) => guardar2({ ...diario, cfg: { ...diario.cfg, mg: txt === "" ? 10 : parseFloat(txt) } });
+    const setBase = (campo8, valor) => guardar3(conBase(diario, campo8, valor));
+    const setMg = (txt) => guardar3({ ...diario, cfg: { ...diario.cfg, mg: txt === "" ? 10 : parseFloat(txt) } });
     function marcarToma() {
       if (e.tomo) {
         set("tomo", false);
@@ -8014,7 +8071,7 @@ var __angst = (() => {
       let d = conCampo(diario, fecha2, "tomo", true, esProtocolo);
       if (!e.hora && fecha2 === hoy) d = conCampo(d, fecha2, "hora", horaLocal(), esProtocolo);
       if (!e.mg) d = conCampo(d, fecha2, "mg", diario.cfg.mg, esProtocolo);
-      guardar2(d);
+      guardar3(d);
     }
     const saveLog = (dateKey, field, val) => save({ fadimanLogs: { ...logs, [dateKey]: { ...logs[dateKey] || {}, [field]: val } } });
     function iniciar(startDate) {
@@ -10963,7 +11020,7 @@ ${item.link}`);
       setSizeKey("M");
       setPaso("porcion");
     }
-    function guardar2(items, texto) {
+    function guardar3(items, texto) {
       const nuevos = items.map((e) => ({ ...e, meal, uid: Date.now() + Math.random() }));
       saveNutriLog({ ...nutriLog, [dk]: [...nutriLog[dk] || [], ...nuevos] });
       if (onGuardado) onGuardado(`${texto} \u2713`);
@@ -10990,7 +11047,7 @@ ${item.link}`);
         setPaso("bandeja");
         return;
       }
-      guardar2([entry], `${comida.label} \xB7 ${food.name}`);
+      guardar3([entry], `${comida.label} \xB7 ${food.name}`);
     }
     function confirmarEstimada() {
       const e = armarEntradaEstimada(est, meal);
@@ -11001,7 +11058,7 @@ ${item.link}`);
         setPaso("bandeja");
         return;
       }
-      guardar2([e], `${comida.label} \xB7 ${e.name}`);
+      guardar3([e], `${comida.label} \xB7 ${e.name}`);
     }
     function abrirBandeja(items, nombre, mealId) {
       setBandeja(items.map((e) => ({ ...e })));
@@ -11087,7 +11144,7 @@ ${item.link}`);
       }, style: { ...chip2(false), fontSize: 13 } }, "+ agregar alimento"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F4, fontSize: 13, color: "#111", fontWeight: 700 } }, kcalBandeja, " kcal")), /* @__PURE__ */ React.createElement(
         "button",
         {
-          onClick: () => guardar2(bandeja, `${comida.label} \xB7 ${titulo || `${bandeja.length} alimento${bandeja.length === 1 ? "" : "s"}`}`),
+          onClick: () => guardar3(bandeja, `${comida.label} \xB7 ${titulo || `${bandeja.length} alimento${bandeja.length === 1 ? "" : "s"}`}`),
           disabled: !bandeja.length,
           style: { ...btnPrincipal, opacity: bandeja.length ? 1 : 0.4 }
         },
@@ -11814,9 +11871,9 @@ ${item.link}`);
       if (typeof max === "number") r = Math.min(max, r);
       return r;
     };
-    const leer2 = (s) => parseInt(String(s).replace(/\D/g, "")) || 0;
+    const leer3 = (s) => parseInt(String(s).replace(/\D/g, "")) || 0;
     function commit() {
-      onSave(acotar(leer2(txt)));
+      onSave(acotar(leer3(txt)));
       setEd(false);
     }
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 2, justifyContent: "flex-end" } }, /* @__PURE__ */ React.createElement("button", { style: btnFlecha, onClick: () => onSave(acotar(value - 1e3)) }, "\u2039"), ed ? /* @__PURE__ */ React.createElement(
@@ -11826,7 +11883,7 @@ ${item.link}`);
         value: txt,
         onChange: (e) => {
           setTxt(e.target.value);
-          onSave(acotar(leer2(e.target.value)));
+          onSave(acotar(leer3(e.target.value)));
         },
         onBlur: commit,
         onKeyDown: (e) => {
@@ -12213,7 +12270,7 @@ ${item.link}`);
     const completo = !!filas && filas.every((f2) => num2(conteos[f2.sec + "|" + f2.rowId]) !== null);
     const totEsperado = filas ? filas.reduce((s, f2) => s + f2.esperado, 0) : 0;
     const totContado = filas ? filas.reduce((s, f2) => s + (num2(conteos[f2.sec + "|" + f2.rowId]) || 0), 0) : 0;
-    function guardar2() {
+    function guardar3() {
       const c = {};
       (filas || []).forEach((f2) => {
         const v = num2(conteos[f2.sec + "|" + f2.rowId]);
@@ -12256,7 +12313,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
         setConteos({ ...conteos, [k]: e.target.value });
         setError("");
       }, style: campo4 })), dif !== null && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: colorDif(dif), textAlign: "right", marginTop: 4 } }, dif === 0 ? "cuadra" : `diferencia ${signo(dif)}`), dif !== null && dif !== 0 && /* @__PURE__ */ React.createElement("input", { placeholder: "\xBFa qu\xE9 se debe? (opcional)", value: notas[k] || "", onChange: (e) => setNotas({ ...notas, [k]: e.target.value }), style: { ...campo4, width: "100%", textAlign: "left", fontSize: 12, marginTop: 6, padding: "6px 8px" } }));
-    }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "12px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#777" } }, "Esperado ", fmtCLP(totEsperado), " \xB7 contado ", fmtCLP(totContado)), completo && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: colorDif(totContado - totEsperado) } }, totContado === totEsperado ? "todo cuadra" : `diferencia ${signo(totContado - totEsperado)}`)), /* @__PURE__ */ React.createElement("div", { style: { ...rotulo4, margin: "10px 0 4px" } }, "Fecha del arqueo"), /* @__PURE__ */ React.createElement("input", { type: "date", value: fecha2, onChange: (e) => setFecha(e.target.value || fechaISO(/* @__PURE__ */ new Date())), style: { ...campo4, width: "100%", textAlign: "left" } }), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#c00", marginTop: 12 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: guardar2, disabled: !completo, style: { width: "100%", marginTop: 14, padding: "13px", background: completo ? "#111" : "#ccc", color: "#fff", border: "none", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, cursor: completo ? "pointer" : "default" } }, guardado ? "Guardar de nuevo" : "Guardar arqueo")), filas && tab === "rendicion" && rend && /* @__PURE__ */ React.createElement(React.Fragment, null, rend.arqueoFecha ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#777", marginBottom: 8 } }, "Arqueo del ", fechaCorta3(rend.arqueoFecha), ".") : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#a60", background: "#fffaf0", border: "1px dashed #e0b070", borderRadius: 6, padding: "6px 10px", marginBottom: 8 } }, "Falta el arqueo de este per\xEDodo: hazlo en la pesta\xF1a Arqueo."), rend.filas.map((f2) => /* @__PURE__ */ React.createElement("div", { key: f2.sec + f2.row.id, style: { padding: "10px 0", borderBottom: "1px dashed #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: FUENTE, fontSize: 14, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f2.row.emoji, " ", f2.row.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 15, fontWeight: 700, color: f2.saldo < 0 ? "#c00" : "#111" } }, fmtCLP(f2.saldo))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#999", marginTop: 3, lineHeight: 1.5 } }, "asignado ", fmtCLP(f2.asignado), " \xB7 gastado ", fmtCLP(f2.gastado), f2.prestamoRecibido > 0 && ` \xB7 pidi\xF3 ${fmtCLP(f2.prestamoRecibido)}`, f2.prestamoDado > 0 && ` \xB7 prest\xF3 ${fmtCLP(f2.prestamoDado)}`, f2.devPagada > 0 && ` \xB7 devolvi\xF3 ${fmtCLP(f2.devPagada)}`, f2.devRecibida > 0 && ` \xB7 le devolvieron ${fmtCLP(f2.devRecibida)}`), f2.arqueo && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: colorDif(f2.arqueo.diferencia), marginTop: 3 } }, "arqueo: contado ", fmtCLP(f2.arqueo.contado), " de ", fmtCLP(f2.arqueo.esperado), " \xB7 ", f2.arqueo.diferencia === 0 ? "cuadra" : `diferencia ${signo(f2.arqueo.diferencia)}`, f2.arqueo.nota ? ` \xB7 ${f2.arqueo.nota}` : ""), (f2.deudas.debe > 0 || f2.deudas.teDeben > 0) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#a60", marginTop: 2 } }, f2.deudas.debe > 0 && `Debe ${fmtCLP(f2.deudas.debe)}. `, f2.deudas.teDeben > 0 && `Le deben ${fmtCLP(f2.deudas.teDeben)}.`), f2.gastos.length > 0 && /* @__PURE__ */ React.createElement("details", { style: { marginTop: 4 } }, /* @__PURE__ */ React.createElement("summary", { style: { fontFamily: FUENTE, fontSize: 11, color: "#666", cursor: "pointer" } }, f2.gastos.length, " gasto", f2.gastos.length > 1 ? "s" : ""), f2.gastos.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.id, style: { fontFamily: FUENTE, fontSize: 12, color: "#444", padding: "3px 0 3px 8px", display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#999", width: 44, flexShrink: 0 } }, fechaCorta3(g.fecha)), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0 } }, g.sub, g.nota ? ` \xB7 ${g.nota}` : "", g.prestamoId ? " \u{1F4B3}" : ""), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, fmtCLP(g.monto))))))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "14px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#555" } }, "Asignado ", fmtCLP(rend.totales.asignado), " \xB7 gastado ", fmtCLP(rend.totales.gastado)), rend.totales.diferencia !== null && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: colorDif(rend.totales.diferencia) } }, rend.totales.diferencia === 0 ? "todo cuadra" : `diferencia ${signo(rend.totales.diferencia)}`)), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#c00", marginTop: 8 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: copiar, style: { width: "100%", marginTop: 14, padding: "11px", background: "transparent", color: "#555", border: "1px dashed #bbb", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 18, cursor: "pointer" } }, copiado ? "\u2713 copiado" : "Copiar rendici\xF3n"))));
+    }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "12px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#777" } }, "Esperado ", fmtCLP(totEsperado), " \xB7 contado ", fmtCLP(totContado)), completo && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: colorDif(totContado - totEsperado) } }, totContado === totEsperado ? "todo cuadra" : `diferencia ${signo(totContado - totEsperado)}`)), /* @__PURE__ */ React.createElement("div", { style: { ...rotulo4, margin: "10px 0 4px" } }, "Fecha del arqueo"), /* @__PURE__ */ React.createElement("input", { type: "date", value: fecha2, onChange: (e) => setFecha(e.target.value || fechaISO(/* @__PURE__ */ new Date())), style: { ...campo4, width: "100%", textAlign: "left" } }), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#c00", marginTop: 12 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: guardar3, disabled: !completo, style: { width: "100%", marginTop: 14, padding: "13px", background: completo ? "#111" : "#ccc", color: "#fff", border: "none", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, cursor: completo ? "pointer" : "default" } }, guardado ? "Guardar de nuevo" : "Guardar arqueo")), filas && tab === "rendicion" && rend && /* @__PURE__ */ React.createElement(React.Fragment, null, rend.arqueoFecha ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#777", marginBottom: 8 } }, "Arqueo del ", fechaCorta3(rend.arqueoFecha), ".") : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#a60", background: "#fffaf0", border: "1px dashed #e0b070", borderRadius: 6, padding: "6px 10px", marginBottom: 8 } }, "Falta el arqueo de este per\xEDodo: hazlo en la pesta\xF1a Arqueo."), rend.filas.map((f2) => /* @__PURE__ */ React.createElement("div", { key: f2.sec + f2.row.id, style: { padding: "10px 0", borderBottom: "1px dashed #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: FUENTE, fontSize: 14, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f2.row.emoji, " ", f2.row.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 15, fontWeight: 700, color: f2.saldo < 0 ? "#c00" : "#111" } }, fmtCLP(f2.saldo))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#999", marginTop: 3, lineHeight: 1.5 } }, "asignado ", fmtCLP(f2.asignado), " \xB7 gastado ", fmtCLP(f2.gastado), f2.prestamoRecibido > 0 && ` \xB7 pidi\xF3 ${fmtCLP(f2.prestamoRecibido)}`, f2.prestamoDado > 0 && ` \xB7 prest\xF3 ${fmtCLP(f2.prestamoDado)}`, f2.devPagada > 0 && ` \xB7 devolvi\xF3 ${fmtCLP(f2.devPagada)}`, f2.devRecibida > 0 && ` \xB7 le devolvieron ${fmtCLP(f2.devRecibida)}`), f2.arqueo && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: colorDif(f2.arqueo.diferencia), marginTop: 3 } }, "arqueo: contado ", fmtCLP(f2.arqueo.contado), " de ", fmtCLP(f2.arqueo.esperado), " \xB7 ", f2.arqueo.diferencia === 0 ? "cuadra" : `diferencia ${signo(f2.arqueo.diferencia)}`, f2.arqueo.nota ? ` \xB7 ${f2.arqueo.nota}` : ""), (f2.deudas.debe > 0 || f2.deudas.teDeben > 0) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#a60", marginTop: 2 } }, f2.deudas.debe > 0 && `Debe ${fmtCLP(f2.deudas.debe)}. `, f2.deudas.teDeben > 0 && `Le deben ${fmtCLP(f2.deudas.teDeben)}.`), f2.gastos.length > 0 && /* @__PURE__ */ React.createElement("details", { style: { marginTop: 4 } }, /* @__PURE__ */ React.createElement("summary", { style: { fontFamily: FUENTE, fontSize: 11, color: "#666", cursor: "pointer" } }, f2.gastos.length, " gasto", f2.gastos.length > 1 ? "s" : ""), f2.gastos.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.id, style: { fontFamily: FUENTE, fontSize: 12, color: "#444", padding: "3px 0 3px 8px", display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#999", width: 44, flexShrink: 0 } }, fechaCorta3(g.fecha)), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0 } }, g.sub, g.nota ? ` \xB7 ${g.nota}` : "", g.prestamoId ? " \u{1F4B3}" : ""), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, fmtCLP(g.monto))))))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "14px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#555" } }, "Asignado ", fmtCLP(rend.totales.asignado), " \xB7 gastado ", fmtCLP(rend.totales.gastado)), rend.totales.diferencia !== null && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: colorDif(rend.totales.diferencia) } }, rend.totales.diferencia === 0 ? "todo cuadra" : `diferencia ${signo(rend.totales.diferencia)}`)), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#c00", marginTop: 8 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: copiar, style: { width: "100%", marginTop: 14, padding: "11px", background: "transparent", color: "#555", border: "1px dashed #bbb", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 18, cursor: "pointer" } }, copiado ? "\u2713 copiado" : "Copiar rendici\xF3n"))));
   }
 
   // modules/presupuesto/ruedaGeometria.js
@@ -12860,17 +12917,17 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       const centro = nivel === 0 ? tab === "p" ? anual ? "compras a\xF1o" : "compras" : anual ? "12 meses" : "per\xEDodo" : cat || (sobreFila ? sobreFila.row.label : "");
       svg = /* @__PURE__ */ React.createElement("svg", { width: "308", height: "200", viewBox: "0 0 320 200", role: "img", "aria-label": "Torta oval de gasto" }, trozos, emojis, /* @__PURE__ */ React.createElement("ellipse", { cx: CX, cy: CY, rx: "50", ry: "29", fill: "#fff" }), /* @__PURE__ */ React.createElement("text", { x: CX, y: "93", textAnchor: "middle", dominantBaseline: "middle", fontFamily: "Caveat,cursive", fontSize: "15", fontWeight: "700", fill: "#111" }, centro), /* @__PURE__ */ React.createElement("text", { x: CX, y: "110", textAnchor: "middle", dominantBaseline: "middle", fontFamily: "DM Sans,sans-serif", fontSize: "13", fontWeight: "500", fill: "#111" }, fmtCLP(total)));
     }
-    let resumen2 = null;
+    let resumen3 = null;
     if (r.ficha) {
       const f2 = r.ficha, fila = (rot, v) => /* @__PURE__ */ React.createElement("div", { key: rot, style: { display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13, padding: "7px 0", borderBottom: "1px dashed #ddd" } }, /* @__PURE__ */ React.createElement("span", null, rot), /* @__PURE__ */ React.createElement("span", { style: { textAlign: "right" } }, v));
-      resumen2 = /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { background: "#f5f5f5", border: "1px dashed #bbb", borderRadius: 8, padding: "8px 10px", fontSize: 13, display: "flex", justifyContent: "space-between", marginBottom: 6 } }, /* @__PURE__ */ React.createElement("span", null, f2.e, " ", f2.l), /* @__PURE__ */ React.createElement("b", null, fmtCLP(anual ? f2.anual : f2.periodo))), fila("Sobre", f2.sobre), fila("Categor\xEDa", f2.categoria), !anual && f2.fechas.length > 0 && fila("Registrada", f2.fechas.join(", ")), fila("En el per\xEDodo", fmtCLP(f2.periodo)), fila("En 12 meses", `${fmtCLP(f2.anual)} en ${f2.veces} compra${f2.veces === 1 ? "" : "s"}`), fila("Por compra", f2.min === f2.max ? fmtCLP(f2.min) : `entre ${fmtCLP(f2.min)} y ${fmtCLP(f2.max)}`), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#777", marginTop: 4 } }, "Los precios var\xEDan: aqu\xED ver\xE1s c\xF3mo se movi\xF3 cada vez."));
+      resumen3 = /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { background: "#f5f5f5", border: "1px dashed #bbb", borderRadius: 8, padding: "8px 10px", fontSize: 13, display: "flex", justifyContent: "space-between", marginBottom: 6 } }, /* @__PURE__ */ React.createElement("span", null, f2.e, " ", f2.l), /* @__PURE__ */ React.createElement("b", null, fmtCLP(anual ? f2.anual : f2.periodo))), fila("Sobre", f2.sobre), fila("Categor\xEDa", f2.categoria), !anual && f2.fechas.length > 0 && fila("Registrada", f2.fechas.join(", ")), fila("En el per\xEDodo", fmtCLP(f2.periodo)), fila("En 12 meses", `${fmtCLP(f2.anual)} en ${f2.veces} compra${f2.veces === 1 ? "" : "s"}`), fila("Por compra", f2.min === f2.max ? fmtCLP(f2.min) : `entre ${fmtCLP(f2.min)} y ${fmtCLP(f2.max)}`), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#777", marginTop: 4 } }, "Los precios var\xEDan: aqu\xED ver\xE1s c\xF3mo se movi\xF3 cada vez."));
     } else if (tab === "s" && nivel === 1 && sobreFila) {
       const gp = items.reduce((t, x) => t + (anual ? x.y : x.p), 0), tope = anual ? sobreFila.asignado * 12 : sobreFila.asignado, pc = tope > 0 ? Math.round(gp / tope * 100) : 0;
-      resumen2 = /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, display: "flex", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("span", null, "Gastado de lo asignado", anual ? " en el a\xF1o" : ""), /* @__PURE__ */ React.createElement("span", null, fmtCLP(gp), " de ", fmtCLP(tope))), /* @__PURE__ */ React.createElement("div", { style: { height: 8, background: "#f0f0f0", borderRadius: 4, overflow: "hidden", margin: "6px 0 4px", border: "1px dashed #ccc" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${Math.min(100, pc)}%`, height: "100%", background: pc >= 85 ? "#b71c1c" : "#111" } })), anual && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#777" } }, "En promedio ", fmtCLP(gp / 12), " al mes contra ", fmtCLP(sobreFila.asignado), " asignados."));
+      resumen3 = /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, display: "flex", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("span", null, "Gastado de lo asignado", anual ? " en el a\xF1o" : ""), /* @__PURE__ */ React.createElement("span", null, fmtCLP(gp), " de ", fmtCLP(tope))), /* @__PURE__ */ React.createElement("div", { style: { height: 8, background: "#f0f0f0", borderRadius: 4, overflow: "hidden", margin: "6px 0 4px", border: "1px dashed #ccc" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${Math.min(100, pc)}%`, height: "100%", background: pc >= 85 ? "#b71c1c" : "#111" } })), anual && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#777" } }, "En promedio ", fmtCLP(gp / 12), " al mes contra ", fmtCLP(sobreFila.asignado), " asignados."));
     } else if (nivel === 2 && cat && sobre) {
       const base = movs.filter((m) => `${m.sec}|${m.rowId}` === sobre && catDe(m) === cat);
       const y = base.reduce((t, m) => t + (m.monto || 0), 0), p = base.filter((m) => m.enPeriodo).reduce((t, m) => t + (m.monto || 0), 0);
-      resumen2 = /* @__PURE__ */ React.createElement("div", { style: { background: "#f5f5f5", border: "1px dashed #bbb", borderRadius: 8, padding: "8px 10px", fontSize: 13, display: "flex", justifyContent: "space-between", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", null, emojiCategoria(cat), " ", cat, " \xB7 ", anual ? "este per\xEDodo" : "\xFAltimos 12 meses"), /* @__PURE__ */ React.createElement("b", null, fmtCLP(anual ? p : y)));
+      resumen3 = /* @__PURE__ */ React.createElement("div", { style: { background: "#f5f5f5", border: "1px dashed #bbb", borderRadius: 8, padding: "8px 10px", fontSize: 13, display: "flex", justifyContent: "space-between", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", null, emojiCategoria(cat), " ", cat, " \xB7 ", anual ? "este per\xEDodo" : "\xFAltimos 12 meses"), /* @__PURE__ */ React.createElement("b", null, fmtCLP(anual ? p : y)));
     }
     const h = hi >= 0 ? items[hi] : null;
     const hint = r.ficha ? "" : h ? null : tab !== "p" && nivel === 2 ? "Toca una compra para resaltarla" : "Toca una porci\xF3n para resaltarla; otro toque abre el siguiente nivel";
@@ -12878,7 +12935,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     return /* @__PURE__ */ React.createElement(Ventana, { onClose, ancho: 440 }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "11px 14px", display: "flex", alignItems: "center", gap: 8 } }, profundo && /* @__PURE__ */ React.createElement("button", { onClick: subir, "aria-label": "Subir un nivel", style: { background: "transparent", border: "none", color: "#aaa", fontSize: 22, cursor: "pointer", padding: "0 6px", lineHeight: 1 } }, "\u2039"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C3, fontSize: 22, color: "#fff", fontWeight: 700, flex: 1 } }, titulo), /* @__PURE__ */ React.createElement("button", { onClick: onClose, "aria-label": "Cerrar", style: { background: "transparent", border: "none", color: "#aaa", fontSize: 22, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", background: "#f5f5f5", borderBottom: "1px dashed #bbb", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(Interruptor, { modo, onChange: onModo }), /* @__PURE__ */ React.createElement("div", { style: { marginLeft: "auto", display: "flex", alignItems: "center", gap: 2, fontSize: 12, color: "#555" } }, !anual && /* @__PURE__ */ React.createElement("button", { onClick: onPrev, "aria-label": "Per\xEDodo anterior", style: flecha3 }, "\u2039"), /* @__PURE__ */ React.createElement("span", { style: { minWidth: 92, textAlign: "center" } }, anual ? "\xFAltimos 12 meses" : periodLabel), !anual && /* @__PURE__ */ React.createElement("button", { onClick: onNext, "aria-label": "Per\xEDodo siguiente", style: flecha3 }, "\u203A"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", borderBottom: "1px solid #eee" } }, TABS.map(([k, n]) => /* @__PURE__ */ React.createElement("button", { key: k, onClick: () => cambiarTab(k), style: { flex: 1, padding: "9px 4px", fontFamily: C3, fontSize: 17, fontWeight: 700, cursor: "pointer", border: "none", borderRadius: 0, background: tab === k ? "#111" : "#fff", color: tab === k ? "#fff" : "#999" } }, n))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "8px 16px 14px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#777", display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center", marginBottom: 4 } }, migas.map((m, i) => i === migas.length - 1 ? /* @__PURE__ */ React.createElement("span", { key: i, style: { color: "#111", fontWeight: 500 } }, m.t) : /* @__PURE__ */ React.createElement("span", { key: i }, /* @__PURE__ */ React.createElement("span", { onClick: m.ir, style: { cursor: "pointer", textDecoration: "underline dotted" } }, m.t), " \u203A"))), /* @__PURE__ */ React.createElement("div", { onClick: (e) => {
       const t = e.target.closest ? e.target.closest("[data-i]") : null;
       if (t) tocar(Number(t.getAttribute("data-i")));
-    }, style: { display: "flex", justifyContent: "center" } }, svg), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#777", textAlign: "center", minHeight: 34, margin: "2px 0 6px" } }, h ? /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", { style: { color: "#111" } }, h.e, " ", h.l), ": ", fmtCLP(h.p), " en el per\xEDodo \xB7 ", fmtCLP(h.y), " en 12 meses", !h.otras && !(tab !== "p" && nivel === 2) ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("br", null), "toca de nuevo para abrir") : null) : hint), resumen2, !r.ficha && items.map((x, i) => /* @__PURE__ */ React.createElement("div", { key: x.key, "data-i": i, onClick: () => tocar(i), style: { display: "flex", alignItems: "center", gap: 8, fontSize: 13, padding: "7px 0", borderBottom: "1px dashed #ddd", cursor: "pointer", opacity: hi < 0 || hi === i ? 1 : 0.45 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 11, height: 11, borderRadius: 3, flexShrink: 0, background: color(i, items.length) } }), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, x.e), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, lineHeight: 1.25, minWidth: 0 } }, x.l, x.sub ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#777" } }, " \xB7 ", x.sub) : null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#777" } }, anual ? `per\xEDodo ${fmtCLP(x.p)}` : `12 meses ${fmtCLP(x.y)}`)), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 500 } }, fmtCLP(x.d)), /* @__PURE__ */ React.createElement("span", { style: { width: 34, textAlign: "right", fontSize: 12, color: "#777" } }, total > 0 ? Math.round(x.d / total * 100) : 0, "%")))));
+    }, style: { display: "flex", justifyContent: "center" } }, svg), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#777", textAlign: "center", minHeight: 34, margin: "2px 0 6px" } }, h ? /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", { style: { color: "#111" } }, h.e, " ", h.l), ": ", fmtCLP(h.p), " en el per\xEDodo \xB7 ", fmtCLP(h.y), " en 12 meses", !h.otras && !(tab !== "p" && nivel === 2) ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("br", null), "toca de nuevo para abrir") : null) : hint), resumen3, !r.ficha && items.map((x, i) => /* @__PURE__ */ React.createElement("div", { key: x.key, "data-i": i, onClick: () => tocar(i), style: { display: "flex", alignItems: "center", gap: 8, fontSize: 13, padding: "7px 0", borderBottom: "1px dashed #ddd", cursor: "pointer", opacity: hi < 0 || hi === i ? 1 : 0.45 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 11, height: 11, borderRadius: 3, flexShrink: 0, background: color(i, items.length) } }), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, x.e), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, lineHeight: 1.25, minWidth: 0 } }, x.l, x.sub ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#777" } }, " \xB7 ", x.sub) : null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#777" } }, anual ? `per\xEDodo ${fmtCLP(x.p)}` : `12 meses ${fmtCLP(x.y)}`)), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 500 } }, fmtCLP(x.d)), /* @__PURE__ */ React.createElement("span", { style: { width: 34, textAlign: "right", fontSize: 12, color: "#777" } }, total > 0 ? Math.round(x.d / total * 100) : 0, "%")))));
   }
 
   // modules/presupuesto/PorCategorizarModal.jsx
@@ -12898,7 +12955,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     const [err, setErr] = useState25("");
     const efectiva = sel || (cats.length === 0 ? "__nueva" : "");
     const cat = efectiva === "__nueva" ? nueva.trim() : efectiva;
-    function guardar2() {
+    function guardar3() {
       const r = categorizarGasto(budgets, periodo, gasto.id, cat);
       if (r.error) {
         setErr(r.error);
@@ -12918,11 +12975,11 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
         role: "button",
         tabIndex: 0,
         "aria-label": "Guardar categor\xEDa",
-        onClick: () => cat && guardar2(),
+        onClick: () => cat && guardar3(),
         onKeyDown: (e) => {
           if ((e.key === "Enter" || e.key === " ") && cat) {
             e.preventDefault();
-            guardar2();
+            guardar3();
           }
         },
         style: { flexShrink: 0, background: cat ? "#111" : "#ccc", color: "#fff", borderRadius: 8, padding: "8px 14px", fontFamily: C4, fontSize: 17, fontWeight: 700, cursor: cat ? "pointer" : "default", userSelect: "none", display: "flex", alignItems: "center" }
@@ -13053,7 +13110,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     const [ingChart, setIngChart] = useState26(false);
     const [monthModal, setMonthModal] = useState26(false);
     const [aviso, setAviso] = useState26("");
-    const [ventana, setVentana] = useState26(null);
+    const [ventana2, setVentana] = useState26(null);
     const [gastoDesde, setGastoDesde] = useState26(null);
     const [guia, setGuia] = useState26(false);
     const [cierre, setCierre] = useState26(null);
@@ -13140,7 +13197,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     const remainder = totalIngreso - totalGasto;
     const T = totalIngreso;
     const carteras = [...budget.personales.map((r) => ({ sec: "personales", row: r })), ...budget.propositos.map((r) => ({ sec: "propositos", row: r }))];
-    const idxVentana = ventana ? carteras.findIndex((c) => c.sec === ventana.sec && c.row.id === ventana.rowId) : -1;
+    const idxVentana = ventana2 ? carteras.findIndex((c) => c.sec === ventana2.sec && c.row.id === ventana2.rowId) : -1;
     const abrirCartera = (sec, rowId) => setVentana({ sec, rowId });
     const datos = useMemo9(() => datosRueda(budgets, monthKey), [budgets, monthKey]);
     const nSinCat = useMemo9(() => gastosSinCategoria(budgets).length, [budgets]);
@@ -13271,7 +13328,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
   var fmtUSD2 = (n) => "$" + parseFloat(n || 0).toFixed(2);
   function AgregarCartaModal({ inventario, carpetas, priceCache, saveInventario, permanecer, onClose, onGuardado }) {
     const inv = inventario || [];
-    const cache2 = priceCache || {};
+    const cache3 = priceCache || {};
     const hoy = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
     const cats = useMemo11(() => {
       const b = carpetas || [...CARPETAS_DEFAULT];
@@ -13301,13 +13358,13 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       }
       setCargando(false);
     }
-    const precioDe = (c) => cache2[c.id] && cache2[c.id].lastMarket || (getPrimaryPrice(c) || {}).market || null;
+    const precioDe = (c) => cache3[c.id] && cache3[c.id].lastMarket || (getPrimaryPrice(c) || {}).market || null;
     function elegir(c) {
       setCarta(c);
       const carpetaBase = isDarkCard(c) && carpetasNormales.includes("Dark Collection") ? "Dark Collection" : carpetasNormales[0] || "MLP";
       setForm((f2) => ({ ...f2, destino: ultima ? ultima.destino : "inventario", carpeta: ultima ? ultima.carpeta : carpetaBase, cantidad: 1, costoUSD: "", precioObjetivo: "" }));
     }
-    function guardar2() {
+    function guardar3() {
       const precio = precioDe(carta);
       const nueva = armarCartaNueva(carta, { ...form, precioVentaUSD: precio ? precio.toFixed(2) : "", fechaCompra: hoy, notas: "" }, cats, hoy);
       try {
@@ -13339,7 +13396,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
             style: { flex: 1, padding: "8px 0", background: form.destino === k ? "#111" : "transparent", color: form.destino === k ? "#fff" : "#999", border: "none", cursor: "pointer", fontFamily: C5, fontSize: 14, fontWeight: 700 }
           },
           l
-        ))), !watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Carpeta"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, carpetasNormales.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, carpeta: c })), style: chip3(form.carpeta === c) }, c)))), watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "\u{1F3AF} Me avisa cuando baje a (USD, opcional)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.precioObjetivo, onChange: (e) => setForm((f2) => ({ ...f2, precioObjetivo: e.target.value })), placeholder: "ej: 2.50", style: campo6 })), form.destino === "inventario" && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Lo que pagu\xE9 USD (0 si fue regalo)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.costoUSD, onChange: (e) => setForm((f2) => ({ ...f2, costoUSD: e.target.value })), placeholder: "ej: 8.50", style: campo6 })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: Math.max(1, (f2.cantidad || 1) - 1) })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: C5, fontSize: 24, fontWeight: 700, color: "#111", minWidth: 28, textAlign: "center" } }, form.cantidad || 1), /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: (f2.cantidad || 1) + 1 })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "+")))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Condici\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, CONDICIONES2.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, condicion: c })), style: { ...chip3(form.condicion === c), flex: 1, padding: "6px 4px" } }, c)))), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F10, fontSize: 12, color: "#c00", marginBottom: 10 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: guardar2, style: { width: "100%", background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "14px", fontFamily: C5, fontSize: 18, cursor: "pointer", marginBottom: 8 } }, "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+        ))), !watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Carpeta"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, carpetasNormales.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, carpeta: c })), style: chip3(form.carpeta === c) }, c)))), watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "\u{1F3AF} Me avisa cuando baje a (USD, opcional)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.precioObjetivo, onChange: (e) => setForm((f2) => ({ ...f2, precioObjetivo: e.target.value })), placeholder: "ej: 2.50", style: campo6 })), form.destino === "inventario" && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Lo que pagu\xE9 USD (0 si fue regalo)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.costoUSD, onChange: (e) => setForm((f2) => ({ ...f2, costoUSD: e.target.value })), placeholder: "ej: 8.50", style: campo6 })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: Math.max(1, (f2.cantidad || 1) - 1) })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: C5, fontSize: 24, fontWeight: 700, color: "#111", minWidth: 28, textAlign: "center" } }, form.cantidad || 1), /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: (f2.cantidad || 1) + 1 })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "+")))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Condici\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, CONDICIONES2.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, condicion: c })), style: { ...chip3(form.condicion === c), flex: 1, padding: "6px 4px" } }, c)))), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F10, fontSize: 12, color: "#c00", marginBottom: 10 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: guardar3, style: { width: "100%", background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "14px", fontFamily: C5, fontSize: 18, cursor: "pointer", marginBottom: 8 } }, "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
           setCarta(null);
           setError(null);
         }, style: { width: "100%", background: "transparent", color: "#999", border: "none", padding: "8px", fontFamily: F10, fontSize: 12, cursor: "pointer" } }, "volver a la b\xFAsqueda"))
@@ -13385,7 +13442,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       return fecha2;
     };
     const puede = texto.trim().length > 0 && (tipo !== "tarea" || dia !== "fecha" || !!fecha2);
-    function guardar2() {
+    function guardar3() {
       const t = texto.trim();
       if (!t) return;
       let aviso;
@@ -13404,7 +13461,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     const enter = (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        guardar2();
+        guardar3();
       }
     };
     if (tipo === "compra") {
@@ -13447,7 +13504,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     ), tipo === "tarea" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setDia("hoy"), style: chip4(dia === "hoy") }, "hoy"), /* @__PURE__ */ React.createElement("button", { onClick: () => setDia("manana"), style: chip4(dia === "manana") }, "ma\xF1ana"), /* @__PURE__ */ React.createElement("button", { onClick: () => setDia("fecha"), style: chip4(dia === "fecha") }, "otro d\xEDa"), /* @__PURE__ */ React.createElement("button", { onClick: () => setUrgente((u) => !u), style: { ...chip4(urgente, "#ff3b30"), marginLeft: "auto" } }, urgente ? "\u{1F534} urgente" : "urgente")), dia === "fecha" && /* @__PURE__ */ React.createElement("input", { type: "date", value: fecha2, onChange: (e) => setFecha(e.target.value), style: { marginTop: 10, border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontFamily: F11, fontSize: 14, color: "#111" } })), /* @__PURE__ */ React.createElement(
       "button",
       {
-        onClick: guardar2,
+        onClick: guardar3,
         disabled: !puede,
         style: { width: "100%", background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "13px", fontFamily: C6, fontSize: 18, cursor: "pointer", opacity: puede ? 1 : 0.4, marginBottom: 8 }
       },
@@ -15674,6 +15731,298 @@ Toco reintentar ahora.`);
     )));
   }
 
+  // modules/gameenhanced/datos.js
+  var SIMULADO = true;
+  var FILAS = [
+    ["d", "Torre de Aurelia", "Metroid Fusion", "GBA", 1, "Decomp al 100 %. Compila una ROM id\xE9ntica al original.", 100],
+    ["d", "Nimbus Racers", "Crash Team Racing", "PS1", 3, "Decomp al 74 %. Avanza cerca de un 2 % por semana.", 74],
+    ["d", "Cavernas de Ixtal", "Super Mario World", "SNES", 6, "Decomp al 91 %. Falta el motor de sonido.", 91],
+    ["d", "Sombra Roja", "Tekken 3", "PS1", 9, "Decomp al 23 %. Proyecto nuevo con cuatro colaboradores.", 23],
+    ["d", "Ciudad Cobalto", "Sonic Adventure", "Dreamcast", 15, "Decomp al 48 %. Sin avances hace dos semanas.", 48],
+    ["d", "Arenas de Kheb", "Metal Slug X", "Neo Geo", 22, "Decomp al 8 %. Reci\xE9n anunciado.", 8],
+    ["w", "Cavernas de Ixtal Web", "Super Mario World", "Navegador (wasm)", 2, "Port a WebAssembly. Pide tu propia ROM para jugar.", "S\xED"],
+    ["w", "Nimbus Racers Web", "Crash Team Racing", "Navegador (wasm)", 5, "Port jugable con teclado y mando.", "S\xED"],
+    ["w", "Marath\xF3n Cl\xE1sico", "Marathon 2: Durandal", "Navegador (JS)", 8, "Reimplementaci\xF3n en JavaScript. No necesita ROM.", "No"],
+    ["w", "Muros de Azrael 3D", "Wolfenstein 3D", "Navegador (wasm)", 12, "Port del motor con datos de la versi\xF3n shareware.", "No"],
+    ["w", "F\xE1brica de Ritmos", "Rhythm Heaven", "Navegador (JS)", 19, "Juego de ritmo sin descargas.", "No"],
+    ["e", "Banquete de Hojalata", "Cuphead", "PC \xB7 Switch", 4, "Anuncio de un juego nuevo del estudio. Fecha por confirmar.", null],
+    ["e", "Pirata Medianoche", "Shantae and the Pirate\u2019s Curse", "Switch \xB7 PC", 11, "Nueva aventura anunciada. Tr\xE1iler disponible.", null],
+    ["e", "Eco de Basti\xF3n", "Bastion", "PC \xB7 PS5", 17, "Primer avance mostrado en un evento.", null],
+    ["e", "Piedra y Rayo", "Guacamelee!", "PC \xB7 Switch", 26, "Entr\xF3 en fase de pruebas cerradas.", null],
+    ["s", "Hijo de Brumas", "Heavy Rain", "PC", 7, "Anunciado por parte del equipo original.", null],
+    ["s", "Radio Nocturna", "Catherine", "PC \xB7 Switch", 14, "Sucesor anunciado con un estudio nuevo.", null],
+    ["s", "Ritmo Celeste", "Rhythm Heaven", "Switch", 21, "Campa\xF1a de apoyo abierta.", null],
+    ["s", "Caza de Ecos", "Killzone: Mercenary", "Port\xE1til", 30, "Primer teaser publicado.", null]
+  ];
+  var JUEGOS = FILAS.map((f2, i) => ({
+    id: `sim-${f2[0]}-${String(i + 1).padStart(2, "0")}`,
+    tipo: f2[0],
+    titulo: f2[1],
+    juego: f2[2],
+    plataforma: f2[3],
+    dias: f2[4],
+    detalle: f2[5],
+    avance: f2[0] === "d" ? f2[6] : null,
+    pideRom: f2[0] === "w" ? f2[6] : null
+  }));
+
+  // modules/gameenhanced/logica.js
+  var TIPO2 = {
+    d: { etiqueta: "DECOMP", emoji: "\u{1F9E9}", motivo: "Porque terminaste " },
+    w: { etiqueta: "WEB", emoji: "\u{1F310}", motivo: "Porque terminaste " },
+    e: { etiqueta: "ESTUDIO", emoji: "\u{1F3E2}", motivo: "Del estudio detr\xE1s de " },
+    s: { etiqueta: "SUCESOR", emoji: "\u{1F47B}", motivo: "Sucesor espiritual de " }
+  };
+  var CATEGORIAS = [
+    ["todo", "\u2728", "Novedades"],
+    ["d", "\u{1F9E9}", "Decomps"],
+    ["w", "\u{1F310}", "Versiones web"],
+    ["e", "\u{1F3E2}", "Estudios"],
+    ["s", "\u{1F47B}", "Sucesores"]
+  ];
+  var motivoDe = (j) => TIPO2[j.tipo].motivo + j.juego;
+  function haceDias(n) {
+    if (n <= 0) return "hoy";
+    if (n === 1) return "ayer";
+    return `hace ${n} d`;
+  }
+  function itemsDe(juegos, clave, ocultos = {}) {
+    return juegos.filter((j) => !ocultos[j.id] && (clave === "todo" || j.tipo === clave)).sort((a, b) => a.dias - b.dias || (a.id < b.id ? -1 : 1));
+  }
+  function ventana(total, foco, cabe) {
+    const n = Math.max(1, cabe | 0);
+    const ini = Math.min(Math.max(0, foco), Math.max(0, total - n));
+    return { ini, fin: Math.min(total, ini + n) };
+  }
+  function filasQueCaben(alto, fila = 56, sep = 5) {
+    return Math.max(1, Math.floor((alto + sep) / (fila + sep)));
+  }
+  function resumen2(juegos, ocultos = {}, guardados = {}) {
+    const v = juegos.filter((j) => !ocultos[j.id]);
+    return {
+      semana: v.filter((j) => j.dias <= 7).length,
+      deEstudios: v.filter((j) => j.tipo === "e").length,
+      guardados: v.filter((j) => guardados[j.id]).length
+    };
+  }
+
+  // modules/gameenhanced/GameEnhancedPage.jsx
+  var { useState: useState36, useEffect: useEffect23, useRef: useRef21, useCallback: useCallback7 } = React;
+  var FUENTE3 = "'DM Sans',sans-serif";
+  var CAVEAT = "'Caveat',cursive";
+  var ROJO = "#e5383b";
+  var ROJO_TEXTO = "#ff5a5f";
+  var FONDO = "radial-gradient(120% 45% at 15% 20%,rgba(229,56,59,.18),rgba(229,56,59,0) 62%),radial-gradient(110% 40% at 95% 80%,rgba(255,255,255,.06),rgba(255,255,255,0) 60%),#0b0b0c";
+  var TONOS = ["#d4d4d8", "#c4c4ca", "#b8b8be", "#acacb2", "#a8a8ae", "#a4a4aa", "#a0a0a6"];
+  var AVISO_MS = 6e3;
+  var reset = { background: "none", border: 0, padding: 0, color: "inherit", fontFamily: "inherit", fontSize: "inherit", fontWeight: "inherit", lineHeight: "inherit", cursor: "pointer" };
+  var botonPri = { minHeight: 44, padding: "0 16px", borderRadius: 8, background: "#fff", color: "#0b0b0c", border: 0, fontFamily: FUENTE3, fontSize: 13, fontWeight: 500, cursor: "pointer" };
+  var botonSec = { minHeight: 44, padding: "0 16px", borderRadius: 8, background: "transparent", color: "#eaeaea", border: "1px solid #4a4a50", fontFamily: FUENTE3, fontSize: 13, fontWeight: 500, cursor: "pointer" };
+  var sello = { flex: "none", fontFamily: FUENTE3, fontSize: 10, letterSpacing: "0.14em", border: "1px solid #6a6a70", borderRadius: 4, padding: "2px 6px", color: "#b5b5bb" };
+  function Barra({ pct: pct2 }) {
+    return /* @__PURE__ */ React.createElement("div", { role: "img", "aria-label": `Avance ${pct2} %`, style: { height: 4, background: "#2a2a2e", borderRadius: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${pct2}%`, height: 4, background: ROJO, borderRadius: 2 } }));
+  }
+  function Fila({ j, foco, desnuda, expandida, guardado, tono, onClick }) {
+    const t = TIPO2[j.tipo];
+    const estilo = {
+      flex: "none",
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      width: "100%",
+      height: 56,
+      boxSizing: "border-box",
+      textAlign: "left",
+      borderTop: 0,
+      borderRight: 0,
+      borderBottom: 0,
+      borderLeft: "0 solid transparent",
+      cursor: "pointer",
+      fontFamily: FUENTE3,
+      borderRadius: 10,
+      ...desnuda ? { background: "none", padding: "0 10px 0 9px", color: "#fff" } : foco ? { background: "#17171a", borderLeft: `3px solid ${ROJO}`, padding: "0 10px 0 9px", color: "#fff" } : { background: "none", padding: "0 10px 0 12px", color: tono || "#d4d4d8" }
+    };
+    return /* @__PURE__ */ React.createElement("button", { onClick, style: estilo, ...foco ? { "aria-expanded": expandida ? "true" : "false" } : {} }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true", style: { flex: "none", width: 40, height: 40, boxSizing: "border-box", borderRadius: 10, background: "#1b1b1f", border: "1px solid #2c2c31", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19 } }, t.emoji), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, j.titulo, guardado ? " \u2605" : ""), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#9a9aa0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, t.etiqueta, " \xB7 ", motivoDe(j))), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 11, color: "#9a9aa0" } }, haceDias(j.dias)));
+  }
+  function Tarjeta({ j, guardado, onCerrar, onFicha, onDescartar }) {
+    return /* @__PURE__ */ React.createElement("div", { "data-id": j.id, style: { flex: "none", background: "#17171a", borderLeft: `3px solid ${ROJO}`, borderRadius: 10, paddingBottom: 12 } }, /* @__PURE__ */ React.createElement(Fila, { j, foco: true, desnuda: true, expandida: true, guardado, onClick: onCerrar }), /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 12px 0 61px", display: "flex", flexDirection: "column", gap: 8, fontFamily: FUENTE3, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, j.detalle), j.avance != null && /* @__PURE__ */ React.createElement(Barra, { pct: j.avance }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: onFicha, style: botonPri }, "Abrir ficha"), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa"))));
+  }
+  function Ficha({ j, guardado, onVolver, onGuardar, onDescartar }) {
+    const t = TIPO2[j.tipo];
+    const filas = [["Tipo", t.etiqueta], ["Por qu\xE9 lo ves", motivoDe(j)], ["Plataforma", j.plataforma], ["Novedad", haceDias(j.dias)]];
+    if (j.pideRom) filas.push(["\xBFPide tu ROM?", j.pideRom]);
+    filas.push(["Fuente", SIMULADO ? "[enlace simulado]" : "\u2014"]);
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, fontFamily: FUENTE3, color: "#eaeaea" } }, /* @__PURE__ */ React.createElement("button", { onClick: onVolver, style: { ...reset, alignSelf: "flex-start", minHeight: 44, padding: "0 8px 0 0", fontSize: 14 } }, "\u2190 Volver"), /* @__PURE__ */ React.createElement("span", { style: { alignSelf: "flex-start", fontSize: 11, letterSpacing: "0.12em", color: ROJO_TEXTO, border: `1px solid ${ROJO_TEXTO}`, borderRadius: 4, padding: "2px 6px" } }, t.etiqueta, SIMULADO ? " \xB7 SIMULADO" : ""), /* @__PURE__ */ React.createElement("h2", { style: { fontFamily: CAVEAT, fontWeight: 600, fontSize: 34, lineHeight: 1, color: "#fff", margin: 0 } }, j.titulo), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 14, color: "#c4c4ca" } }, j.detalle), j.avance != null && /* @__PURE__ */ React.createElement(Barra, { pct: j.avance }), /* @__PURE__ */ React.createElement("dl", { style: { margin: 0, display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 14px", fontSize: 13 } }, filas.map(([k, v]) => [/* @__PURE__ */ React.createElement("dt", { key: "k" + k, style: { color: "#9a9aa0" } }, k), /* @__PURE__ */ React.createElement("dd", { key: "v" + k, style: { margin: 0, color: "#eaeaea" } }, v)])), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: onGuardar, "aria-pressed": guardado, style: botonPri }, guardado ? "\u2605 Guardado" : "\u2606 Me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa")));
+  }
+  function GameEnhancedPage() {
+    const estado = useEstado();
+    const [cat, setCat] = useState36(0);
+    const [focos, setFocos] = useState36({});
+    const [abierto, setAbierto] = useState36(null);
+    const [fichaId, setFichaId] = useState36(null);
+    const [aviso, setAviso] = useState36(null);
+    const [cabe, setCabe] = useState36(6);
+    const bodyRef = useRef21(null);
+    const listaRef = useRef21(null);
+    const gesto = useRef21(null);
+    const ultimoGesto = useRef21(0);
+    const ultimaRueda = useRef21(0);
+    const tAviso = useRef21(0);
+    const vivo = useRef21({});
+    const lista = itemsDe(JUEGOS, CATEGORIAS[cat][0], estado.ocultos);
+    const foco = Math.min(focos[cat] || 0, Math.max(0, lista.length - 1));
+    const enfocado = lista[foco] || null;
+    const expandida = abierto !== null && enfocado !== null && enfocado.id === abierto;
+    const ficha = fichaId !== null ? JUEGOS.find((j) => j.id === fichaId) || null : null;
+    vivo.current = { cat, foco, largo: lista.length, expandida, ficha: !!ficha };
+    const mover2 = useCallback7((dc, df) => {
+      const v = vivo.current;
+      setAbierto(null);
+      if (dc) setCat((v.cat + dc + CATEGORIAS.length) % CATEGORIAS.length);
+      if (df) setFocos((f2) => ({ ...f2, [v.cat]: Math.max(0, Math.min(v.largo - 1, v.foco + df)) }));
+    }, []);
+    useEffect23(() => {
+      const el = listaRef.current;
+      if (!el) return void 0;
+      const medir = () => setCabe(filasQueCaben(el.clientHeight));
+      medir();
+      if (typeof ResizeObserver === "undefined") {
+        window.addEventListener("resize", medir);
+        return () => window.removeEventListener("resize", medir);
+      }
+      const ro = new ResizeObserver(medir);
+      ro.observe(el);
+      return () => ro.disconnect();
+    }, [!!ficha]);
+    useEffect23(() => {
+      const el = listaRef.current;
+      if (!el) return void 0;
+      const h = (e) => {
+        if (vivo.current.expandida) return;
+        e.preventDefault();
+        const t = Date.now();
+        if (t - ultimaRueda.current < 180) return;
+        ultimaRueda.current = t;
+        mover2(0, e.deltaY > 0 ? 1 : -1);
+      };
+      el.addEventListener("wheel", h, { passive: false });
+      return () => el.removeEventListener("wheel", h);
+    }, [!!ficha, mover2]);
+    useEffect23(() => {
+      const h = (e) => {
+        const t = e.target;
+        if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+        const v = vivo.current;
+        if (v.ficha) {
+          if (e.key === "Escape") setFichaId(null);
+          return;
+        }
+        if (e.key === "ArrowRight") mover2(1, 0);
+        else if (e.key === "ArrowLeft") mover2(-1, 0);
+        else if (e.key === "ArrowDown" && !v.expandida) {
+          e.preventDefault();
+          mover2(0, 1);
+        } else if (e.key === "ArrowUp" && !v.expandida) {
+          e.preventDefault();
+          mover2(0, -1);
+        } else if (e.key === "Escape" && v.expandida) setAbierto(null);
+      };
+      document.addEventListener("keydown", h);
+      return () => document.removeEventListener("keydown", h);
+    }, [mover2]);
+    useEffect23(() => () => clearTimeout(tAviso.current), []);
+    useEffect23(() => {
+      if (listaRef.current) listaRef.current.scrollTop = 0;
+    }, [expandida, cat]);
+    const expandido = expandida || !!ficha;
+    useEffect23(() => {
+      const b = bodyRef.current;
+      if (b && !expandido && b.scrollHeight > b.clientHeight + 1) console.warn(`game enhanced desborda ${b.scrollHeight - b.clientHeight} px colapsado`);
+    });
+    const clic = (fn) => (e) => {
+      if (Date.now() - ultimoGesto.current < 350) return;
+      fn(e);
+    };
+    const alPresionar = (e) => {
+      gesto.current = [e.clientX, e.clientY];
+    };
+    const alSoltar = (e) => {
+      const g = gesto.current;
+      gesto.current = null;
+      if (!g || ficha) return;
+      const dx = e.clientX - g[0], dy = e.clientY - g[1];
+      if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(dy)) {
+        ultimoGesto.current = Date.now();
+        mover2(dx < 0 ? 1 : -1, 0);
+      } else if (!expandida && Math.abs(dy) > 30 && Math.abs(dy) > 1.5 * Math.abs(dx)) {
+        ultimoGesto.current = Date.now();
+        mover2(0, dy < 0 ? 1 : -1);
+      }
+    };
+    function tocarFila(j, i) {
+      if (i === foco) setAbierto((a) => a === j.id ? null : j.id);
+      else {
+        setFocos((f2) => ({ ...f2, [cat]: i }));
+        setAbierto(null);
+      }
+    }
+    function descartar(j) {
+      const previo = ocultar(j.id);
+      setAbierto(null);
+      setFichaId(null);
+      clearTimeout(tAviso.current);
+      setAviso({ id: j.id, titulo: j.titulo, previo });
+      tAviso.current = setTimeout(() => setAviso(null), AVISO_MS);
+    }
+    function deshacer() {
+      if (!aviso) return;
+      deshacerOcultar(aviso.id, aviso.previo);
+      clearTimeout(tAviso.current);
+      setAviso(null);
+    }
+    const r = resumen2(JUEGOS, estado.ocultos, estado.guardados);
+    const ancho = { width: "100%", maxWidth: 480, margin: "0 auto", boxSizing: "border-box", position: "relative", padding: "10px 16px 8px" };
+    let cuerpo2;
+    if (ficha) {
+      cuerpo2 = /* @__PURE__ */ React.createElement(
+        Ficha,
+        {
+          j: ficha,
+          guardado: !!estado.guardados[ficha.id],
+          onVolver: () => setFichaId(null),
+          onGuardar: () => alternarGuardado(ficha.id),
+          onDescartar: () => descartar(ficha)
+        }
+      );
+    } else {
+      const v = ventana(lista.length, foco, cabe);
+      cuerpo2 = /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { "aria-live": "polite", style: { flex: "none", height: 30, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, fontFamily: FUENTE3, fontSize: 12, color: "#9a9aa0" } }, aviso ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, "Oculto: ", aviso.titulo), /* @__PURE__ */ React.createElement("button", { onClick: deshacer, style: { ...reset, flex: "none", minHeight: 44, margin: "-8px 0", padding: "0 8px", color: ROJO_TEXTO, textDecoration: "underline" } }, "Deshacer")) : /* @__PURE__ */ React.createElement("span", null, r.semana, " esta semana \xB7 ", r.deEstudios, " de tus estudios \xB7 \u2605 ", r.guardados), SIMULADO && /* @__PURE__ */ React.createElement("span", { style: sello }, "SIMULADO")), /* @__PURE__ */ React.createElement("div", { style: { flex: "none", height: 84, marginTop: 6, display: "flex", alignItems: "flex-start", gap: 8 } }, CATEGORIAS.map(([clave, emoji, nombre], i) => i === cat ? /* @__PURE__ */ React.createElement("button", { key: clave, onClick: clic(() => {
+      }), "aria-label": `${nombre}, categor\xEDa seleccionada`, style: { ...reset, width: 100, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6, color: "#fff" } }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true", style: { width: 52, height: 52, boxSizing: "border-box", borderRadius: "50%", border: "1.5px solid #eaeaea", background: "rgba(255,255,255,.07)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 } }, emoji), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: CAVEAT, fontWeight: 600, fontSize: 22, lineHeight: 1 } }, nombre)) : /* @__PURE__ */ React.createElement("button", { key: clave, onClick: clic(() => {
+        setCat(i);
+        setAbierto(null);
+      }), "aria-label": nombre, style: { ...reset, width: 60, height: 52, fontSize: 24, opacity: 0.6 } }, emoji))), /* @__PURE__ */ React.createElement("div", { ref: listaRef, style: { flex: 1, minHeight: 0, marginTop: 6, display: "flex", flexDirection: "column", gap: 5, justifyContent: expandida ? "flex-start" : "space-between", overflowX: "hidden", overflowY: expandida ? "auto" : "hidden", touchAction: expandida ? "pan-y" : "none" } }, lista.length === 0 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 12, fontFamily: FUENTE3, fontSize: 13, color: "#9a9aa0" } }, "No quedan \xEDtems en esta categor\xEDa."), lista.length > 0 && expandida && lista.slice(foco).map((j, i) => i === 0 ? /* @__PURE__ */ React.createElement(Tarjeta, { key: j.id, j, guardado: !!estado.guardados[j.id], onCerrar: clic(() => setAbierto(null)), onFicha: clic(() => setFichaId(j.id)), onDescartar: clic(() => descartar(j)) }) : /* @__PURE__ */ React.createElement(Fila, { key: j.id, j, guardado: !!estado.guardados[j.id], tono: TONOS[Math.min(i - 1, TONOS.length - 1)], onClick: clic(() => tocarFila(j, foco + i)) })), lista.length > 0 && !expandida && lista.slice(v.ini, v.fin).map((j, i) => {
+        const idx = v.ini + i;
+        return /* @__PURE__ */ React.createElement(Fila, { key: j.id, j, foco: idx === foco, guardado: !!estado.guardados[j.id], tono: TONOS[Math.min(Math.max(0, idx - foco - 1), TONOS.length - 1)], onClick: clic(() => tocarFila(j, idx)) });
+      })));
+    }
+    return /* @__PURE__ */ React.createElement("div", { className: "gameenh", style: { background: FONDO } }, /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        ref: bodyRef,
+        className: "gameenh-body",
+        "data-expandido": expandido ? "true" : "false",
+        "data-ficha": ficha ? "true" : "false",
+        style: ancho,
+        onPointerDown: alPresionar,
+        onPointerUp: alSoltar,
+        onPointerCancel: () => {
+          gesto.current = null;
+        }
+      },
+      cuerpo2
+    ));
+  }
+
   // core/SemanaDashboard.jsx
   var DIA_LARGO = ["dom", "lun", "mar", "mi\xE9", "jue", "vie", "s\xE1b"];
   var MARCAS = [
@@ -15724,7 +16073,7 @@ Toco reintentar ahora.`);
       const ids = new Set(arr.map((m) => m === "medico" ? "doctor" : m).filter((m) => MARCA_POR_ID[m]));
       return MARCAS.filter((m) => ids.has(m.id)).map((m) => m.id);
     };
-    const itemsDe = (k) => {
+    const itemsDe2 = (k) => {
       const tareas = balizasDeDia(dayData[k]).map((t) => ({
         icono: "\u{1F6A8}",
         texto: t.text,
@@ -15738,7 +16087,7 @@ Toco reintentar ahora.`);
     let proxima = null;
     for (let i = 0; i <= VENTANA_BALIZA_DIAS && !proxima; i++) {
       const k = sumarDias3(todayKey, i);
-      const bs = itemsDe(k);
+      const bs = itemsDe2(k);
       if (bs.length) {
         proxima = {
           dateKey: k,
@@ -15751,7 +16100,7 @@ Toco reintentar ahora.`);
         };
       }
     }
-    const balizasSemana = weekKeys.reduce((n, k) => k >= todayKey ? n + itemsDe(k).length : n, 0);
+    const balizasSemana = weekKeys.reduce((n, k) => k >= todayKey ? n + itemsDe2(k).length : n, 0);
     const semana = weekKeys.map((k) => ({
       k,
       dow: aFecha(k).getDay(),
@@ -15759,7 +16108,7 @@ Toco reintentar ahora.`);
       hoy: k === todayKey,
       pasado: k < todayKey,
       marcas: marcasDe(k),
-      balizas: itemsDe(k).length,
+      balizas: itemsDe2(k).length,
       score: stressFor(k) || 0,
       conNinos: !!conNinosEn(k)
     }));
@@ -15768,7 +16117,7 @@ Toco reintentar ahora.`);
       dow: c.dow,
       num: c.num,
       hoy: c.hoy,
-      balizas: itemsDe(c.k).map((b) => ({ icono: b.icono, texto: b.texto, hora: b.hora, detalle: b.detalle }))
+      balizas: itemsDe2(c.k).map((b) => ({ icono: b.icono, texto: b.texto, hora: b.hora, detalle: b.detalle }))
     }));
     const evs = eventos.filter((ev) => weekKeys.some((k) => k >= ev.start && k <= ev.end)).map((ev) => {
       const enCurso = todayKey >= ev.start && todayKey <= ev.end;
@@ -15847,7 +16196,7 @@ Toco reintentar ahora.`);
   var SemanaDashboard_default = SemanaDashboard;
 
   // core/App.jsx
-  var { useState: useState36, useEffect: useEffect23, useRef: useRef21, useMemo: useMemo12, useCallback: useCallback7 } = React;
+  var { useState: useState37, useEffect: useEffect24, useRef: useRef22, useMemo: useMemo12, useCallback: useCallback8 } = React;
   async function localGet(key) {
     const val = localStorage.getItem(key);
     if (val === null) return null;
@@ -15896,39 +16245,39 @@ Toco reintentar ahora.`);
     "el tiempo es el \xFAnico activo que no se recupera."
   ];
   function AngstApp() {
-    const [page, setPage] = useState36(0);
-    const [gastoOpen, setGastoOpen] = useState36(false);
-    const [carritoOpen, setCarritoOpen] = useState36(false);
-    const [menuDatosOpen, setMenuDatosOpen] = useState36(false);
-    const [menuRegOpen, setMenuRegOpen] = useState36(false);
-    const [ingestaOpen, setIngestaOpen] = useState36(false);
-    const [cartaOpen, setCartaOpen] = useState36(false);
-    const [saludReg, setSaludReg] = useState36(null);
-    const [registroTipo, setRegistroTipo] = useState36(null);
-    const [regMsg, setRegMsg] = useState36(null);
-    const regMsgTimer = useRef21(null);
-    const cargarInputRef = useRef21(null);
-    const [dayData, setDayData] = useState36({});
-    const [weekOffset, setWeekOffset] = useState36(0);
-    const [budgets, setBudgets] = useState36({});
-    const [nutria, setNutria] = useState36(makeDefaultNutria());
-    const [fadimanData, setFadimanData] = useState36({});
-    const fadimanDataRef = useRef21({});
-    const [nutriLog, setNutriLog] = useState36({});
-    const [ejercicioLog, setEjercicioLog] = useState36({});
-    const nutriLogRef = useRef21({});
-    const [customFoods, setCustomFoods] = useState36({});
-    const customFoodsRef = useRef21({});
-    const [foodOverrides, setFoodOverrides] = useState36({});
-    const foodOverridesRef = useRef21({});
-    const [customEjercicios, setCustomEjercicios] = useState36({});
-    const customEjerciciosRef = useRef21({});
-    const ejercicioLogRef = useRef21({});
-    const [ejercicioDecks, setEjercicioDecks] = useState36([]);
-    const ejercicioDecksRef = useRef21([]);
-    const [calMarks, setCalMarks] = useState36({});
-    const [meleeMajors, setMeleeMajors] = useState36([]);
-    const [custody, setCustody] = useState36({ baseDate: "2026-04-28", withKids: true, overrides: {} });
+    const [page, setPage] = useState37(0);
+    const [gastoOpen, setGastoOpen] = useState37(false);
+    const [carritoOpen, setCarritoOpen] = useState37(false);
+    const [menuDatosOpen, setMenuDatosOpen] = useState37(false);
+    const [menuRegOpen, setMenuRegOpen] = useState37(false);
+    const [ingestaOpen, setIngestaOpen] = useState37(false);
+    const [cartaOpen, setCartaOpen] = useState37(false);
+    const [saludReg, setSaludReg] = useState37(null);
+    const [registroTipo, setRegistroTipo] = useState37(null);
+    const [regMsg, setRegMsg] = useState37(null);
+    const regMsgTimer = useRef22(null);
+    const cargarInputRef = useRef22(null);
+    const [dayData, setDayData] = useState37({});
+    const [weekOffset, setWeekOffset] = useState37(0);
+    const [budgets, setBudgets] = useState37({});
+    const [nutria, setNutria] = useState37(makeDefaultNutria());
+    const [fadimanData, setFadimanData] = useState37({});
+    const fadimanDataRef = useRef22({});
+    const [nutriLog, setNutriLog] = useState37({});
+    const [ejercicioLog, setEjercicioLog] = useState37({});
+    const nutriLogRef = useRef22({});
+    const [customFoods, setCustomFoods] = useState37({});
+    const customFoodsRef = useRef22({});
+    const [foodOverrides, setFoodOverrides] = useState37({});
+    const foodOverridesRef = useRef22({});
+    const [customEjercicios, setCustomEjercicios] = useState37({});
+    const customEjerciciosRef = useRef22({});
+    const ejercicioLogRef = useRef22({});
+    const [ejercicioDecks, setEjercicioDecks] = useState37([]);
+    const ejercicioDecksRef = useRef22([]);
+    const [calMarks, setCalMarks] = useState37({});
+    const [meleeMajors, setMeleeMajors] = useState37([]);
+    const [custody, setCustody] = useState37({ baseDate: "2026-04-28", withKids: true, overrides: {} });
     const POKEMON_EVENTS = [
       { name: "Lima Special Championships \u{1F1F5}\u{1F1EA}", start: "2026-05-23", end: "2026-05-24", url: "https://www.pokemon.com/us/play-pokemon/pokemon-events/find-a-pokemon-event/" },
       { name: "NAIC \u2014 North America Internationals \u{1F1FA}\u{1F1F8}", start: "2026-06-12", end: "2026-06-14", url: "https://www.pokemon.com/us/play-pokemon/pokemon-events/find-a-pokemon-event/" },
@@ -15939,22 +16288,22 @@ Toco reintentar ahora.`);
     const SC2_EVENTS = [
       { name: "BlizzCon \u2014 Blizzard Classic Cup (SC2) \u{1F3AE}", start: "2026-09-12", end: "2026-09-13", url: "https://blizzcon.com" }
     ];
-    const [editingTask, setEditingTask] = useState36(null);
-    const [editText, setEditText] = useState36("");
-    const [clockOpen, setClockOpen] = useState36(null);
-    const [notifClockOpen, setNotifClockOpen] = useState36(null);
-    const [calOpen, setCalOpen] = useState36(false);
-    const [minimized, setMinimized] = useState36({});
-    const [loaded, setLoaded] = useState36(false);
-    const [notifGranted, setNotifGranted] = useState36(false);
-    const [saved, setSaved] = useState36(false);
-    const [footerIdx, setFooterIdx] = useState36(() => Math.floor(Math.random() * STOIC_PHRASES.length));
-    const [exportOk, setExportOk] = useState36(null);
-    const [loadMsg, setLoadMsg] = useState36(null);
+    const [editingTask, setEditingTask] = useState37(null);
+    const [editText, setEditText] = useState37("");
+    const [clockOpen, setClockOpen] = useState37(null);
+    const [notifClockOpen, setNotifClockOpen] = useState37(null);
+    const [calOpen, setCalOpen] = useState37(false);
+    const [minimized, setMinimized] = useState37({});
+    const [loaded, setLoaded] = useState37(false);
+    const [notifGranted, setNotifGranted] = useState37(false);
+    const [saved, setSaved] = useState37(false);
+    const [footerIdx, setFooterIdx] = useState37(() => Math.floor(Math.random() * STOIC_PHRASES.length));
+    const [exportOk, setExportOk] = useState37(null);
+    const [loadMsg, setLoadMsg] = useState37(null);
     const PODCAST_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
     const PODCAST_AUTH_KEY = "angst-simkl-auth-v1";
-    const [podcastLatest, setPodcastLatest] = useState36(null);
-    const [podcastDispatched, setPodcastDispatched] = useState36(() => {
+    const [podcastLatest, setPodcastLatest] = useState37(null);
+    const [podcastDispatched, setPodcastDispatched] = useState37(() => {
       try {
         const v = localStorage.getItem("angst-podcast-dispatched-v1");
         return v ? JSON.parse(v) : [];
@@ -15962,16 +16311,16 @@ Toco reintentar ahora.`);
         return [];
       }
     });
-    const [nowPlaying, setNowPlaying] = useState36(null);
-    const [podcastMenuOpen, setPodcastMenuOpen] = useState36(false);
-    const [activeShowIdx, setActiveShowIdx] = useState36(0);
-    const [podcastPlaying, setPodcastPlaying] = useState36(false);
-    const [podcastProgress, setPodcastProgress] = useState36({ current: 0, duration: 0 });
-    const [newPodcastNombre, setNewPodcastNombre] = useState36("");
-    const [newPodcastUrl, setNewPodcastUrl] = useState36("");
-    const [addPodcastBusy, setAddPodcastBusy] = useState36(false);
-    const [addPodcastMsg, setAddPodcastMsg] = useState36(null);
-    const [playerPos, setPlayerPos] = useState36(() => {
+    const [nowPlaying, setNowPlaying] = useState37(null);
+    const [podcastMenuOpen, setPodcastMenuOpen] = useState37(false);
+    const [activeShowIdx, setActiveShowIdx] = useState37(0);
+    const [podcastPlaying, setPodcastPlaying] = useState37(false);
+    const [podcastProgress, setPodcastProgress] = useState37({ current: 0, duration: 0 });
+    const [newPodcastNombre, setNewPodcastNombre] = useState37("");
+    const [newPodcastUrl, setNewPodcastUrl] = useState37("");
+    const [addPodcastBusy, setAddPodcastBusy] = useState37(false);
+    const [addPodcastMsg, setAddPodcastMsg] = useState37(null);
+    const [playerPos, setPlayerPos] = useState37(() => {
       try {
         const v = localStorage.getItem("angst-podcast-player-pos-v1");
         if (v) return JSON.parse(v);
@@ -15979,9 +16328,9 @@ Toco reintentar ahora.`);
       }
       return null;
     });
-    const dragState = useRef21(null);
-    const podcastAudioRef = useRef21(null);
-    useEffect23(() => {
+    const dragState = useRef22(null);
+    const podcastAudioRef = useRef22(null);
+    useEffect24(() => {
       fetch("https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/podcast-latest.json", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((d) => {
         if (!d) return;
         setPodcastLatest(d);
@@ -16052,7 +16401,7 @@ Toco reintentar ahora.`);
       const m = Math.floor(s / 60), sec = Math.floor(s % 60);
       return `${m}:${sec < 10 ? "0" : ""}${sec}`;
     }
-    const lastPosSaveRef = useRef21(0);
+    const lastPosSaveRef = useRef22(0);
     function closePodcastPlayer() {
       if (nowPlaying?.guid && podcastAudioRef.current) {
         savePodcastPosition(nowPlaying.guid, podcastAudioRef.current.currentTime);
@@ -16061,7 +16410,7 @@ Toco reintentar ahora.`);
       setPodcastPlaying(false);
       setPodcastProgress({ current: 0, duration: 0 });
     }
-    useEffect23(() => {
+    useEffect24(() => {
       function onVisibility() {
         if (document.visibilityState === "hidden" && nowPlaying?.guid && podcastAudioRef.current) {
           savePodcastPosition(nowPlaying.guid, podcastAudioRef.current.currentTime);
@@ -16196,44 +16545,44 @@ Toco reintentar ahora.`);
         }
       }
     }
-    const dayDataRef = useRef21({});
-    const weekOffsetRef = useRef21(0);
-    const budgetRef = useRef21({});
-    const memoriaRef = useRef21({});
-    const [comprasMemoria, setComprasMemoria] = useState36({});
-    const nutriaRef = useRef21(makeDefaultNutria());
-    const calMarksRef = useRef21({});
-    const routinesRef = useRef21([]);
-    const recurringRef = useRef21([]);
-    const lastRolloverRef = useRef21(null);
-    const [routines, setRoutines] = useState36([]);
-    const [recurring, setRecurring] = useState36([]);
-    const [lastRollover, setLastRollover] = useState36(null);
-    const [cookingOpts, setCookingOpts] = useState36([...DEFAULT_COOKING_OPTS]);
-    const [aseoOpts, setAseoOpts] = useState36([...DEFAULT_ASEO_OPTS]);
-    const [comprasOpen, setComprasOpen] = useState36(null);
-    const [searchOpen, setSearchOpen] = useState36(false);
-    const [scheduleOpen, setScheduleOpen] = useState36(null);
-    const [liftedTask, setLiftedTask] = useState36(null);
-    const [taskDragTarget, setTaskDragTarget] = useState36(null);
-    const holdTimerRef = useRef21(null);
-    const taskTouchX = useRef21(0);
-    const taskTouchY = useRef21(0);
-    const [openFMenu, setOpenFMenu] = useState36(null);
-    const [kidsHealth, setKidsHealth] = useState36(emptyKidsHealth);
-    const kidsHealthRef = useRef21(null);
+    const dayDataRef = useRef22({});
+    const weekOffsetRef = useRef22(0);
+    const budgetRef = useRef22({});
+    const memoriaRef = useRef22({});
+    const [comprasMemoria, setComprasMemoria] = useState37({});
+    const nutriaRef = useRef22(makeDefaultNutria());
+    const calMarksRef = useRef22({});
+    const routinesRef = useRef22([]);
+    const recurringRef = useRef22([]);
+    const lastRolloverRef = useRef22(null);
+    const [routines, setRoutines] = useState37([]);
+    const [recurring, setRecurring] = useState37([]);
+    const [lastRollover, setLastRollover] = useState37(null);
+    const [cookingOpts, setCookingOpts] = useState37([...DEFAULT_COOKING_OPTS]);
+    const [aseoOpts, setAseoOpts] = useState37([...DEFAULT_ASEO_OPTS]);
+    const [comprasOpen, setComprasOpen] = useState37(null);
+    const [searchOpen, setSearchOpen] = useState37(false);
+    const [scheduleOpen, setScheduleOpen] = useState37(null);
+    const [liftedTask, setLiftedTask] = useState37(null);
+    const [taskDragTarget, setTaskDragTarget] = useState37(null);
+    const holdTimerRef = useRef22(null);
+    const taskTouchX = useRef22(0);
+    const taskTouchY = useRef22(0);
+    const [openFMenu, setOpenFMenu] = useState37(null);
+    const [kidsHealth, setKidsHealth] = useState37(emptyKidsHealth);
+    const kidsHealthRef = useRef22(null);
     if (kidsHealthRef.current === null) kidsHealthRef.current = emptyKidsHealth();
     const calMarksView = useMemo12(() => effectiveMarks(calMarks, kidsHealth.events), [calMarks, kidsHealth]);
-    const [pokeInventario, setPokeInventario] = useState36([]);
-    const pokeInventarioRef = useRef21([]);
-    const [pokeCarpetas, setPokeCarpetas] = useState36([...CARPETAS_DEFAULT]);
-    const pokeCarpetasRef = useRef21([...CARPETAS_DEFAULT]);
-    const [pokeDarkCatalogo, setPokeDarkCatalogo] = useState36([]);
-    const pokeDarkCatalogoRef = useRef21([]);
-    const [pokePriceCache, setPokePriceCache] = useState36({});
-    const pokePriceCacheRef = useRef21({});
+    const [pokeInventario, setPokeInventario] = useState37([]);
+    const pokeInventarioRef = useRef22([]);
+    const [pokeCarpetas, setPokeCarpetas] = useState37([...CARPETAS_DEFAULT]);
+    const pokeCarpetasRef = useRef22([...CARPETAS_DEFAULT]);
+    const [pokeDarkCatalogo, setPokeDarkCatalogo] = useState37([]);
+    const pokeDarkCatalogoRef = useRef22([]);
+    const [pokePriceCache, setPokePriceCache] = useState37({});
+    const pokePriceCacheRef = useRef22({});
     const TCG_KEY_STORAGE = "angst-tcg-price-key";
-    const [pokeApiKey, setPokeApiKey] = useState36(() => {
+    const [pokeApiKey, setPokeApiKey] = useState37(() => {
       try {
         return localStorage.getItem(TCG_KEY_STORAGE) || "";
       } catch (e) {
@@ -16247,16 +16596,16 @@ Toco reintentar ahora.`);
       }
       setPokeApiKey(k);
     }
-    const [nutriDecks, setNutriDecks] = useState36([]);
-    const nutriDecksRef = useRef21([]);
+    const [nutriDecks, setNutriDecks] = useState37([]);
+    const nutriDecksRef = useRef22([]);
     const ANGST_STATE_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
     const ANGST_STATE_AUTH_KEY = "angst-simkl-auth-v1";
-    const [familiaData, setFamiliaData] = useState36(null);
-    const [familiaOpen, setFamiliaOpen] = useState36(false);
-    const [familiaBusy, setFamiliaBusy] = useState36(false);
-    const [familiaMsg, setFamiliaMsg] = useState36(null);
-    const [familiaVer, setFamiliaVer] = useState36(0);
-    const familiaLastRef = useRef21(0);
+    const [familiaData, setFamiliaData] = useState37(null);
+    const [familiaOpen, setFamiliaOpen] = useState37(false);
+    const [familiaBusy, setFamiliaBusy] = useState37(false);
+    const [familiaMsg, setFamiliaMsg] = useState37(null);
+    const [familiaVer, setFamiliaVer] = useState37(0);
+    const familiaLastRef = useRef22(0);
     async function cargarFamilia(force) {
       const auth = localStorage.getItem(ANGST_STATE_AUTH_KEY);
       if (!auth) {
@@ -16283,7 +16632,7 @@ Toco reintentar ahora.`);
         setFamiliaBusy(false);
       }
     }
-    useEffect23(() => {
+    useEffect24(() => {
       cargarFamilia(false);
       const onVis = () => {
         if (document.visibilityState === "visible") cargarFamilia(false);
@@ -16336,7 +16685,7 @@ Toco reintentar ahora.`);
     }
     const ANGST_STATE_PATH = "angst-full-state.json";
     const ANGST_STATE_BRANCH = "state-sync";
-    const [stateSyncMsg, setStateSyncMsg] = useState36(null);
+    const [stateSyncMsg, setStateSyncMsg] = useState37(null);
     function markLocalEdit() {
       marcarEdicionLocal();
     }
@@ -16353,7 +16702,7 @@ Toco reintentar ahora.`);
       if (!payload || !payload.exportedAt) return false;
       return new Date(payload.exportedAt).getTime() > new Date(localTs).getTime();
     }
-    const forceRepoReadRef = useRef21(false);
+    const forceRepoReadRef = useRef22(false);
     function getAngstStateAuth() {
       try {
         return localStorage.getItem(ANGST_STATE_AUTH_KEY) || null;
@@ -16474,8 +16823,8 @@ Toco reintentar ahora.`);
       }
       setTimeout(() => setStateSyncMsg(null), 4e3);
     }
-    const autoLeidoRef = useRef21(false);
-    useEffect23(() => {
+    const autoLeidoRef = useRef22(false);
+    useEffect24(() => {
       if (autoLeidoRef.current) return;
       autoLeidoRef.current = true;
       const auth = getAngstStateAuth();
@@ -16499,57 +16848,57 @@ Toco reintentar ahora.`);
         }
       })();
     }, []);
-    useEffect23(() => {
+    useEffect24(() => {
       dayDataRef.current = dayData;
     }, [dayData]);
-    useEffect23(() => {
+    useEffect24(() => {
       weekOffsetRef.current = weekOffset;
     }, [weekOffset]);
-    useEffect23(() => {
+    useEffect24(() => {
       budgetRef.current = budgets;
     }, [budgets]);
-    useEffect23(() => {
+    useEffect24(() => {
       nutriaRef.current = nutria;
     }, [nutria]);
-    useEffect23(() => {
+    useEffect24(() => {
       calMarksRef.current = calMarks;
     }, [calMarks]);
-    useEffect23(() => {
+    useEffect24(() => {
       routinesRef.current = routines;
     }, [routines]);
-    useEffect23(() => {
+    useEffect24(() => {
       recurringRef.current = recurring;
     }, [recurring]);
-    useEffect23(() => {
+    useEffect24(() => {
       lastRolloverRef.current = lastRollover;
     }, [lastRollover]);
-    useEffect23(() => {
+    useEffect24(() => {
       pokeInventarioRef.current = pokeInventario;
     }, [pokeInventario]);
-    useEffect23(() => {
+    useEffect24(() => {
       pokeCarpetasRef.current = pokeCarpetas;
     }, [pokeCarpetas]);
-    useEffect23(() => {
+    useEffect24(() => {
       pokeDarkCatalogoRef.current = pokeDarkCatalogo;
     }, [pokeDarkCatalogo]);
-    useEffect23(() => {
+    useEffect24(() => {
       pokePriceCacheRef.current = pokePriceCache;
     }, [pokePriceCache]);
-    useEffect23(() => {
+    useEffect24(() => {
       nutriDecksRef.current = nutriDecks;
     }, [nutriDecks]);
-    useEffect23(() => {
+    useEffect24(() => {
       ejercicioDecksRef.current = ejercicioDecks;
     }, [ejercicioDecks]);
-    useEffect23(() => {
+    useEffect24(() => {
       const iv = setInterval(() => setFooterIdx((i) => (i + 1) % STOIC_PHRASES.length), 1e4);
       return () => clearInterval(iv);
     }, []);
     const weekStart = addDays(BASE_DATE, weekOffset * 7);
-    const semanaBodyRef = useRef21(null);
-    const tabsRef = useRef21(null);
-    const [tabsEdge, setTabsEdge] = useState36("");
-    useEffect23(() => {
+    const semanaBodyRef = useRef22(null);
+    const tabsRef = useRef22(null);
+    const [tabsEdge, setTabsEdge] = useState37("");
+    useEffect24(() => {
       const el = tabsRef.current;
       if (!el) return;
       const medir = () => {
@@ -16583,8 +16932,8 @@ Toco reintentar ahora.`);
     }, [page]);
     const semanaKeys = Array.from({ length: 7 }, (_, k) => fmtFull(addDays(weekStart, k)));
     const hayDiaAbierto = semanaKeys.some((k) => !minimized[k]);
-    const [semanaValvula, setSemanaValvula] = useState36(false);
-    const [dashAbierto, setDashAbierto] = useState36(false);
+    const [semanaValvula, setSemanaValvula] = useState37(false);
+    const [dashAbierto, setDashAbierto] = useState37(false);
     const hayAbierto = hayDiaAbierto || dashAbierto;
     function toggleDash() {
       if (!dashAbierto) {
@@ -16627,7 +16976,7 @@ Toco reintentar ahora.`);
       });
     }
     const diaAbiertoKey = semanaKeys.find((k) => !minimized[k]) || null;
-    useEffect23(() => {
+    useEffect24(() => {
       const el = semanaBodyRef.current;
       if (!el || page !== 0 || !diaAbiertoKey) return;
       const card = el.querySelector(`[data-dia="${diaAbiertoKey}"]`);
@@ -16636,7 +16985,7 @@ Toco reintentar ahora.`);
       if (typeof el.scrollTo === "function") el.scrollTo({ top: y, behavior: "smooth" });
       else el.scrollTop = y;
     }, [diaAbiertoKey, page]);
-    useEffect23(() => {
+    useEffect24(() => {
       const el = semanaBodyRef.current;
       if (!el || page !== 0) return;
       if (hayAbierto) {
@@ -16743,7 +17092,7 @@ Toco reintentar ahora.`);
         saveToStorage({ lastRollover: todayKey }, { skipEditMark: true });
       }
     }
-    useEffect23(() => {
+    useEffect24(() => {
       if (!loaded) return;
       function onVisible() {
         if (document.visibilityState === "visible") {
@@ -16755,7 +17104,7 @@ Toco reintentar ahora.`);
       document.addEventListener("visibilitychange", onVisible);
       return () => document.removeEventListener("visibilitychange", onVisible);
     }, [loaded]);
-    useEffect23(() => {
+    useEffect24(() => {
       async function fetchMelee() {
         try {
           const res = await fetch("https://meleemajors.gg/calendar.ics");
@@ -16791,7 +17140,7 @@ Toco reintentar ahora.`);
       }
       fetchMelee();
     }, []);
-    useEffect23(() => {
+    useEffect24(() => {
       async function load() {
         try {
           const r = await localGet("angst-v12");
@@ -17514,6 +17863,7 @@ Toco reintentar ahora.`);
       rehidratarCineEstado();
       rehidratarOverlay();
       rehidratarMegusta();
+      rehidratarEstado();
       if (Array.isArray(d.feedPodcastDispatched)) setPodcastDispatched(d.feedPodcastDispatched);
       try {
         window.dispatchEvent(new Event("angst:restaurado"));
@@ -17827,6 +18177,10 @@ Toco reintentar ahora.`);
         .musica-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
         .musica-body[data-expandido="true"]{overflow-y:auto;}
         .musica-body[data-expandido="true"]>*{flex:none;}
+        .gameenh{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
+        .gameenh-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
+        .gameenh-body[data-ficha="true"]{overflow-y:auto;}
+        .gameenh-body[data-ficha="true"]>*{flex:none;}
         .semana{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
         .semana-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
         .semana-body[data-expandido="true"],.semana-body[data-valvula="true"]{overflow-y:auto;}
@@ -17922,7 +18276,7 @@ Toco reintentar ahora.`);
       const mon = addDays(date, -(dow === 0 ? 6 : dow - 1));
       const diff = Math.round((mon - BASE_DATE) / (7 * 864e5));
       updateWeekOffset(diff);
-    }, onClose: () => setCalOpen(false) }), /* @__PURE__ */ React.createElement("div", { className: "app" + (page === 0 || page === 1 || page === 4 || page === 5 || page === 10 || page === 12 ? " app-fit" : "") }, /* @__PURE__ */ React.createElement("div", { className: "hdr" }, /* @__PURE__ */ React.createElement("div", { className: "hdr-title", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, "angstapp"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexShrink: 0 } }, regMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: regMsg.includes("\u2713") ? "#4caf50" : "#c00", fontSize: 14 } }, regMsg), saved && !regMsg && /* @__PURE__ */ React.createElement("span", { className: "saved-msg" }, "guardado \u2713"), loadMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: loadMsg.startsWith("\u2713") ? "#4caf50" : loadMsg.startsWith("\u26A0") ? "#f0a000" : "#c00", fontSize: 13, maxWidth: 220 } }, loadMsg), exportOk === true && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#4caf50", fontSize: 13 } }, "descargado \u2713"), exportOk === false && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, "error al exportar"), typeof exportOk === "string" && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, exportOk), /* @__PURE__ */ React.createElement("input", { ref: cargarInputRef, type: "file", accept: ".xlsx,.xls,.json", onChange: handleLoad, style: { display: "none" } }), (menuDatosOpen || menuRegOpen) && /* @__PURE__ */ React.createElement("div", { onClick: cerrarMenus, style: { position: "fixed", inset: 0, zIndex: 590 } }), (() => {
+    }, onClose: () => setCalOpen(false) }), /* @__PURE__ */ React.createElement("div", { className: "app" + (page === 0 || page === 1 || page === 4 || page === 5 || page === 10 || page === 12 || page === 13 ? " app-fit" : "") }, /* @__PURE__ */ React.createElement("div", { className: "hdr" }, /* @__PURE__ */ React.createElement("div", { className: "hdr-title", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, "angstapp"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexShrink: 0 } }, regMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: regMsg.includes("\u2713") ? "#4caf50" : "#c00", fontSize: 14 } }, regMsg), saved && !regMsg && /* @__PURE__ */ React.createElement("span", { className: "saved-msg" }, "guardado \u2713"), loadMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: loadMsg.startsWith("\u2713") ? "#4caf50" : loadMsg.startsWith("\u26A0") ? "#f0a000" : "#c00", fontSize: 13, maxWidth: 220 } }, loadMsg), exportOk === true && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#4caf50", fontSize: 13 } }, "descargado \u2713"), exportOk === false && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, "error al exportar"), typeof exportOk === "string" && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, exportOk), /* @__PURE__ */ React.createElement("input", { ref: cargarInputRef, type: "file", accept: ".xlsx,.xls,.json", onChange: handleLoad, style: { display: "none" } }), (menuDatosOpen || menuRegOpen) && /* @__PURE__ */ React.createElement("div", { onClick: cerrarMenus, style: { position: "fixed", inset: 0, zIndex: 590 } }), (() => {
       const itemMenu = { display: "block", width: "100%", textAlign: "left", background: "transparent", border: "none", borderBottom: "1px dashed #333", color: "#fff", padding: "10px 12px", fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" };
       const caja = { position: "absolute", top: "calc(100% + 4px)", right: 0, width: 230, background: "#222", border: "1px dashed #444", borderRadius: 4, zIndex: 600 };
       return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "disk-btn", onClick: () => {
@@ -18022,8 +18376,8 @@ Toco reintentar ahora.`);
         addPodcastBusy ? "agregando..." : "+ agregar podcast"
       ), addPodcastMsg && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: addPodcastMsg.startsWith("\u2713") ? "#4caf50" : "#f0a000" } }, addPodcastMsg)));
     })()))), (() => {
-      const TABS2 = [{ label: "\u{1F4C5} Semana", emoji: "\u{1F4C5}" }, { label: "\u{1F4B5} Presupuesto", emoji: "\u{1F4B5}" }, { label: "\u{1F4D2} Emprendimientos", emoji: "\u{1F4D2}" }, { label: "\u{1F9E0} mindfulness", emoji: "\u{1F9E0}" }, { label: "\u{1FA7A} salud", emoji: "\u{1FA7A}" }, { label: "\u{1F344} fadiman", emoji: "\u{1F344}" }, { label: "\u{1F957} nutrici\xF3n", emoji: "\u{1F957}" }, { label: "\u{1F3CB}\uFE0F ejercicio", emoji: "\u{1F3CB}\uFE0F" }, { label: "\u{1F0CF} pok\xE9cripto", emoji: "\u{1F0CF}" }, { label: "\u{1F4F0} feed", emoji: "\u{1F4F0}" }, { label: "\u{1F3AC} vitrina", emoji: "\u{1F3AC}" }, { label: "\u{1F331} rutinas", emoji: "\u{1F331}" }, { label: "\u{1F3A7} m\xFAsica", emoji: "\u{1F3A7}" }];
-      const ORDER = [0, 11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 10];
+      const TABS2 = [{ label: "\u{1F4C5} Semana", emoji: "\u{1F4C5}" }, { label: "\u{1F4B5} Presupuesto", emoji: "\u{1F4B5}" }, { label: "\u{1F4D2} Emprendimientos", emoji: "\u{1F4D2}" }, { label: "\u{1F9E0} mindfulness", emoji: "\u{1F9E0}" }, { label: "\u{1FA7A} salud", emoji: "\u{1FA7A}" }, { label: "\u{1F344} fadiman", emoji: "\u{1F344}" }, { label: "\u{1F957} nutrici\xF3n", emoji: "\u{1F957}" }, { label: "\u{1F3CB}\uFE0F ejercicio", emoji: "\u{1F3CB}\uFE0F" }, { label: "\u{1F0CF} pok\xE9cripto", emoji: "\u{1F0CF}" }, { label: "\u{1F4F0} feed", emoji: "\u{1F4F0}" }, { label: "\u{1F3AC} vitrina", emoji: "\u{1F3AC}" }, { label: "\u{1F331} rutinas", emoji: "\u{1F331}" }, { label: "\u{1F3A7} m\xFAsica", emoji: "\u{1F3A7}" }, { label: "\u{1F3AE} game enhanced", emoji: "\u{1F3AE}" }];
+      const ORDER = [0, 11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 10, 13];
       return /* @__PURE__ */ React.createElement("div", { className: "tabs", ref: tabsRef, "data-edge": tabsEdge, style: { userSelect: "none" } }, ORDER.map((ti) => {
         const tab = TABS2[ti];
         const isActive = ti === page;
@@ -18486,7 +18840,7 @@ Toco reintentar ahora.`);
         apiKey: pokeApiKey,
         saveApiKey: savePokeApiKey
       }
-    ), page === 9 && /* @__PURE__ */ React.createElement(FeedPage_default, null), page === 10 && /* @__PURE__ */ React.createElement(VitrinaPage_default, null), page === 12 && /* @__PURE__ */ React.createElement(MusicaPage, null), page === 11 && /* @__PURE__ */ React.createElement(RoutinesPage_default, { routines, onSave: saveRoutines, onAddToDay: (name, emoji) => {
+    ), page === 9 && /* @__PURE__ */ React.createElement(FeedPage_default, null), page === 10 && /* @__PURE__ */ React.createElement(VitrinaPage_default, null), page === 12 && /* @__PURE__ */ React.createElement(MusicaPage, null), page === 13 && /* @__PURE__ */ React.createElement(GameEnhancedPage, null), page === 11 && /* @__PURE__ */ React.createElement(RoutinesPage_default, { routines, onSave: saveRoutines, onAddToDay: (name, emoji) => {
       const tk = fmtFull(/* @__PURE__ */ new Date());
       const nid2 = Date.now();
       const dd = dayDataRef.current || {};
