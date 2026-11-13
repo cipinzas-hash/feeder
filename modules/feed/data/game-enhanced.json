@@ -1,18 +1,23 @@
 {
  "version": 1,
- "generatedAt": "2026-11-13T01:06:09.660Z",
+ "generatedAt": "2026-11-13T08:20:01.996Z",
  "fuentes": {
   "decomps": {
    "ok": true,
-   "actualizado": "2026-11-13T01:06:09.660Z",
+   "actualizado": "2026-11-13T08:20:01.996Z",
    "generadoPorLaFuente": "2026-11-12T11:30:03Z",
    "proyectosEnLaFuente": 2807,
    "proyectos": 60
   },
   "igdb": {
-   "ok": false,
-   "error": "sin IGDB_CLIENT_ID / IGDB_CLIENT_SECRET",
-   "intento": "2026-11-13T01:06:09.660Z"
+   "ok": true,
+   "actualizado": "2026-11-13T08:20:01.996Z",
+   "terminadosConDesarrolladora": 70,
+   "estudios": 55,
+   "estudiosConsultados": 55,
+   "llamadas": 126,
+   "campoTipo": "game_type",
+   "juegos": 8
   }
  },
  "decomps": [
@@ -38,27 +43,6 @@
    "dias": 1
   },
   {
-   "id": "d-deez-coder-smo-android-port",
-   "tipo": "d",
-   "titulo": "Super Mario Odyssey (SMO Android Port)",
-   "subtipo": "source-port",
-   "plataforma": "Switch",
-   "estrellas": 79,
-   "ultimoCommit": "2026-11-11T15:15:44Z",
-   "release": "B0.3",
-   "fechaRelease": "2026-11-11T15:54:15Z",
-   "url": "https://github.com/Deez-coder/SMO-android-port",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": false,
-   "inactivo": false,
-   "tuyos": [
-    "Super Mario Odyssey"
-   ],
-   "tuJuego": "Super Mario Odyssey",
-   "dias": 1
-  },
-  {
    "id": "d-ravencaio-tlou-remastered-pc",
    "tipo": "d",
    "titulo": "The Last of Us Remastered (tlou-remastered-pc)",
@@ -78,6 +62,27 @@
    ],
    "tuJuego": "The Last of Us",
    "dias": 1
+  },
+  {
+   "id": "d-deez-coder-smo-android-port",
+   "tipo": "d",
+   "titulo": "Super Mario Odyssey (SMO Android Port)",
+   "subtipo": "source-port",
+   "plataforma": "Switch",
+   "estrellas": 79,
+   "ultimoCommit": "2026-11-11T15:15:44Z",
+   "release": "B0.3",
+   "fechaRelease": "2026-11-11T15:54:15Z",
+   "url": "https://github.com/Deez-coder/SMO-android-port",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": false,
+   "inactivo": false,
+   "tuyos": [
+    "Super Mario Odyssey"
+   ],
+   "tuJuego": "Super Mario Odyssey",
+   "dias": 2
   },
   {
    "id": "d-ecwolfengine-ecwolf",
@@ -227,27 +232,6 @@
    "dias": 2
   },
   {
-   "id": "d-palaceswitcher-smw-nes-disassembly",
-   "tipo": "d",
-   "titulo": "Super Mario World (Hummer Team NES port)",
-   "subtipo": "source-port",
-   "plataforma": "NES",
-   "estrellas": 20,
-   "ultimoCommit": "2026-11-10T13:21:32Z",
-   "release": null,
-   "fechaRelease": null,
-   "url": "https://github.com/palaceswitcher/SMW-NES-Disassembly",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": false,
-   "inactivo": false,
-   "tuyos": [
-    "Super Mario World"
-   ],
-   "tuJuego": "Super Mario World",
-   "dias": 2
-  },
-  {
    "id": "d-fabiangreffrath-wolf4sdl",
    "tipo": "d",
    "titulo": "Wolfenstein 3D (Wolf4SDL)",
@@ -266,6 +250,27 @@
     "Wolfenstein 3D"
    ],
    "tuJuego": "Wolfenstein 3D",
+   "dias": 3
+  },
+  {
+   "id": "d-palaceswitcher-smw-nes-disassembly",
+   "tipo": "d",
+   "titulo": "Super Mario World (Hummer Team NES port)",
+   "subtipo": "source-port",
+   "plataforma": "NES",
+   "estrellas": 20,
+   "ultimoCommit": "2026-11-10T13:21:32Z",
+   "release": null,
+   "fechaRelease": null,
+   "url": "https://github.com/palaceswitcher/SMW-NES-Disassembly",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": false,
+   "inactivo": false,
+   "tuyos": [
+    "Super Mario World"
+   ],
+   "tuJuego": "Super Mario World",
    "dias": 3
   },
   {
@@ -308,7 +313,7 @@
     "The Legend of Zelda: A Link to the Past"
    ],
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 6
+   "dias": 7
   },
   {
    "id": "d-jackpoison-prog-ringout",
@@ -332,6 +337,27 @@
    "dias": 8
   },
   {
+   "id": "d-yeoldpress-alttp-dx",
+   "tipo": "d",
+   "titulo": "The Legend of Zelda: A Link to the Past (ALTTP-DX)",
+   "subtipo": "source-port",
+   "plataforma": "SNES",
+   "estrellas": 25,
+   "ultimoCommit": "2026-11-01T12:16:28Z",
+   "release": "v1.8",
+   "fechaRelease": "2026-10-29T23:33:12Z",
+   "url": "https://github.com/YeOldPress/alttp-dx",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": false,
+   "inactivo": false,
+   "tuyos": [
+    "The Legend of Zelda: A Link to the Past"
+   ],
+   "tuJuego": "The Legend of Zelda: A Link to the Past",
+   "dias": 12
+  },
+  {
    "id": "d-reshaped-sonic-adventure",
    "tipo": "d",
    "titulo": "Sonic Adventure",
@@ -350,7 +376,7 @@
     "Sonic Adventure"
    ],
    "tuJuego": "Sonic Adventure",
-   "dias": 12
+   "dias": 13
   },
   {
    "id": "d-rinnegatamante-crash-team-racing-high-octane",
@@ -371,28 +397,7 @@
     "Crash Team Racing"
    ],
    "tuJuego": "Crash Team Racing",
-   "dias": 12
-  },
-  {
-   "id": "d-yeoldpress-alttp-dx",
-   "tipo": "d",
-   "titulo": "The Legend of Zelda: A Link to the Past (ALTTP-DX)",
-   "subtipo": "source-port",
-   "plataforma": "SNES",
-   "estrellas": 25,
-   "ultimoCommit": "2026-11-01T12:16:28Z",
-   "release": "v1.8",
-   "fechaRelease": "2026-10-29T23:33:12Z",
-   "url": "https://github.com/YeOldPress/alttp-dx",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": false,
-   "inactivo": false,
-   "tuyos": [
-    "The Legend of Zelda: A Link to the Past"
-   ],
-   "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 12
+   "dias": 13
   },
   {
    "id": "d-countallegrex-sa1-psp",
@@ -434,7 +439,7 @@
     "Super Mario Odyssey"
    ],
    "tuJuego": "Super Mario Odyssey",
-   "dias": 15
+   "dias": 16
   },
   {
    "id": "d-rrika-cdcenginedxhr",
@@ -455,7 +460,7 @@
     "Deus Ex: Human Revolution"
    ],
    "tuJuego": "Deus Ex: Human Revolution",
-   "dias": 15
+   "dias": 16
   },
   {
    "id": "d-mstan-supermarioland2recomp",
@@ -497,7 +502,7 @@
     "Sonic Adventure"
    ],
    "tuJuego": "Sonic Adventure",
-   "dias": 25
+   "dias": 26
   },
   {
    "id": "d-swiftshine-key",
@@ -518,7 +523,7 @@
     "Kirby’s Epic Yarn"
    ],
    "tuJuego": "Kirby’s Epic Yarn",
-   "dias": 29
+   "dias": 30
   },
   {
    "id": "d-technicallycomputers-metal-slug-x-recomp",
@@ -644,7 +649,7 @@
     "Tekken 3"
    ],
    "tuJuego": "Tekken 3",
-   "dias": 50
+   "dias": 51
   },
   {
    "id": "d-elliotttate-dkc1recomp",
@@ -665,7 +670,7 @@
     "Donkey Kong Country"
    ],
    "tuJuego": "Donkey Kong Country",
-   "dias": 54
+   "dias": 55
   },
   {
    "id": "d-ragnaroek-iron-wolf",
@@ -686,7 +691,7 @@
     "Wolfenstein 3D"
    ],
    "tuJuego": "Wolfenstein 3D",
-   "dias": 54
+   "dias": 55
   },
   {
    "id": "d-player124413-sonic-generations-recomp-android-and-pc-edition",
@@ -854,7 +859,7 @@
     "Rhythm Heaven (DS)"
    ],
    "tuJuego": "Rhythm Heaven (DS)",
-   "dias": 144
+   "dias": 145
   },
   {
    "id": "d-entroper-ff1disassembly",
@@ -917,7 +922,7 @@
     "SoulCalibur II"
    ],
    "tuJuego": "SoulCalibur II",
-   "dias": 369
+   "dias": 370
   },
   {
    "id": "d-jhdev2006-super-mario-world-remastered-public",
@@ -1086,7 +1091,7 @@
     "Donkey Kong Country"
    ],
    "tuJuego": "Donkey Kong Country",
-   "dias": 1817
+   "dias": 1818
   },
   {
    "id": "d-daniele-rapagnani-alephone-android",
@@ -1278,5 +1283,179 @@
    "dias": 4729
   }
  ],
- "estudios": []
+ "estudios": [
+  {
+   "id": "e-427396",
+   "tipo": "e",
+   "titulo": "Frankie Freako",
+   "fecha": "2026-11-02",
+   "fechaAprox": false,
+   "plataformas": [
+    "PC"
+   ],
+   "url": "https://www.igdb.com/games/frankie-freako",
+   "estudios": [
+    "FreakZone Games"
+   ],
+   "tuyos": [
+    "The Angry Video Game Nerd Adventures"
+   ],
+   "estudio": "FreakZone Games",
+   "tuJuego": "The Angry Video Game Nerd Adventures",
+   "dias": 11
+  },
+  {
+   "id": "e-176043",
+   "tipo": "e",
+   "titulo": "Zero Racers",
+   "fecha": "2026-08-04",
+   "fechaAprox": false,
+   "plataformas": [
+    "virtualboy"
+   ],
+   "url": "https://www.igdb.com/games/zero-racers",
+   "estudios": [
+    "Nintendo R&D1"
+   ],
+   "tuyos": [
+    "Super Mario Land 2: 6 Golden Coins",
+    "Metroid: Zero Mission",
+    "Metroid Fusion"
+   ],
+   "estudio": "Nintendo R&D1",
+   "tuJuego": "Super Mario Land 2: 6 Golden Coins",
+   "dias": 101
+  },
+  {
+   "id": "e-410642",
+   "tipo": "e",
+   "titulo": "Rhythm Heaven Groove: Memory Match-Up",
+   "fecha": "2026-07-04",
+   "fechaAprox": false,
+   "plataformas": [
+    "browser"
+   ],
+   "url": "https://www.igdb.com/games/rhythm-heaven-groove-memory-match-up",
+   "estudios": [
+    "Nintendo"
+   ],
+   "tuyos": [
+    "Rhythm Heaven Megamix"
+   ],
+   "estudio": "Nintendo",
+   "tuJuego": "Rhythm Heaven Megamix",
+   "dias": 132
+  },
+  {
+   "id": "e-417186",
+   "tipo": "e",
+   "titulo": "Kirby and the World Beyond",
+   "fecha": "2027-06-30",
+   "fechaAprox": false,
+   "plataformas": [
+    "Switch 2"
+   ],
+   "url": "https://www.igdb.com/games/kirby-and-the-world-beyond",
+   "estudios": [
+    "HAL Laboratory"
+   ],
+   "tuyos": [
+    "Kirby’s Dream Land 2",
+    "Kirby’s Dream Land",
+    "Kirby Tilt ’n’ Tumble",
+    "Kirby: Triple Deluxe"
+   ],
+   "estudio": "HAL Laboratory",
+   "tuJuego": "Kirby’s Dream Land 2",
+   "dias": -229
+  },
+  {
+   "id": "e-325611",
+   "tipo": "e",
+   "titulo": "Intergalactic: The Heretic Prophet",
+   "fecha": "2027-12-31",
+   "fechaAprox": true,
+   "plataformas": [
+    "PS5"
+   ],
+   "url": "https://www.igdb.com/games/intergalactic-the-heretic-prophet",
+   "estudios": [
+    "Naughty Dog"
+   ],
+   "tuyos": [
+    "Crash Team Racing",
+    "The Last of Us",
+    "Uncharted 3: Drake’s Deception",
+    "Uncharted 2: Among Thieves",
+    "Uncharted: Drake’s Fortune"
+   ],
+   "estudio": "Naughty Dog",
+   "tuJuego": "Crash Team Racing",
+   "dias": -413
+  },
+  {
+   "id": "e-347662",
+   "tipo": "e",
+   "titulo": "Blighted",
+   "fecha": "2027-12-31",
+   "fechaAprox": true,
+   "plataformas": [
+    "Switch 2",
+    "PC"
+   ],
+   "url": "https://www.igdb.com/games/blighted",
+   "estudios": [
+    "Drinkbox Studios"
+   ],
+   "tuyos": [
+    "Guacamelee!"
+   ],
+   "estudio": "Drinkbox Studios",
+   "tuJuego": "Guacamelee!",
+   "dias": -413
+  },
+  {
+   "id": "e-387020",
+   "tipo": "e",
+   "titulo": "Dragon Ball: Xenoverse 3",
+   "fecha": "2027-12-31",
+   "fechaAprox": true,
+   "plataformas": [
+    "Series X|S",
+    "PC",
+    "PS5"
+   ],
+   "url": "https://www.igdb.com/games/dragon-ball-xenoverse-3--1",
+   "estudios": [
+    "Dimps"
+   ],
+   "tuyos": [
+    "Sonic Generations"
+   ],
+   "estudio": "Dimps",
+   "tuJuego": "Sonic Generations",
+   "dias": -413
+  },
+  {
+   "id": "e-417647",
+   "tipo": "e",
+   "titulo": "Diablo V",
+   "fecha": "2029-03-31",
+   "fechaAprox": false,
+   "plataformas": [
+    "PC"
+   ],
+   "url": "https://www.igdb.com/games/diablo-v",
+   "estudios": [
+    "Blizzard Entertainment"
+   ],
+   "tuyos": [
+    "StarCraft II: Heart of the Swarm",
+    "StarCraft II: Wings of Liberty"
+   ],
+   "estudio": "Blizzard Entertainment",
+   "tuJuego": "StarCraft II: Heart of the Swarm",
+   "dias": -869
+  }
+ ]
 }
