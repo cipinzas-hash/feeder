@@ -1,0 +1,54 @@
+name: Sonda módulo Panoramas
+
+# Sonda del módulo Panoramas (issue #17, 13-nov-2026). Solo se dispara a mano
+# (botón "Run workflow"). No toca feed.json ni nada que lea la app: escribe
+# modules/feed/data/sonda-panoramas.json, modules/feed/data/muestras-panoramas/
+# y docs/sonda-panoramas.md. Se puede borrar sin consecuencias al terminar.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: sonda-panoramas
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sincronizar con la punta real de main
+        run: git fetch origin main && git reset --hard origin/main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Correr la sonda
+        working-directory: modules/feed
+        # Timeout propio (21 min) para que, si se cuelga, SIGTERM haga que la
+        # sonda guarde un reporte parcial antes del tope de 25 del job.
+        run: |
+          set -o pipefail
+          timeout -s TERM -k 15 21m node scripts/sonda-panoramas.mjs 2>&1 | tee /tmp/sonda-panoramas.log
+
+      - name: Commitear el reporte
+        if: always()
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -f modules/feed/data/sonda-panoramas.json modules/feed/data/muestras-panoramas docs/sonda-panoramas.md 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "Sonda panoramas $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git push && break
+            echo "push falló, reintentando ($i/3)..."
+            git fetch origin main
+            git reset --soft origin/main
+            git diff --staged --quiet || git commit -m "Sonda panoramas $(date -u +%Y-%m-%dT%H:%MZ)"
+            sleep 5
+          done
