@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-12T23:27:34.255Z",
+  "generatedAt": "2026-11-13T09:12:22.580Z",
   "categories": [
     {
       "cat": "Películas",
@@ -100,14 +100,21 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6
+            "tmdb": 6.1
           },
           "status": "Released",
           "nextEpisodeDate": null,
           "numberOfSeasons": null,
           "seasons": null,
           "currentSeason": null,
-          "reviews": null,
+          "reviews": {
+            "top": {
+              "rating": 5,
+              "text": "(CASTELLANO)\r\n\r\nDurante sus primeros minutos, La otra madre parecía que podía ir por un camino bastante más perturbador del que finalmente recorre. Una mujer hablando a una niña de “entrar en su corazón” y diciendo que le gusta cuidar a niños especiales cuando están a punto de romperse tiene algo realmente desagradable. Jessica Chastain consigue que unas frases aparentemente cariñosas suenen casi depredadoras.\r\n\r\nAhí sí había mal rollo.\r\n\r\nEl problema es que la película va perdiendo parte de esa incomodidad conforme explica demasiado y transforma el misterio en una aventura sobrenatural bastante convencional.\r\n\r\nBela funciona bien como centro de la historia porque todo lo vemos desde la vulnerabilidad de una niña que percibe antes que los adultos que algo no encaja. La idea de que alguien ",
+              "author": "Marco-Hugo Landeta Vacas"
+            },
+            "bottom": null
+          },
           "trailer": {
             "key": "-mnTITqqiT0",
             "site": "YouTube"
@@ -115,37 +122,37 @@
           "cast": [
             {
               "name": "Jessica Chastain",
-              "character": "Mommy / Other Mommy",
+              "character": "Ursula Martin / Other Mommy",
               "order": 0
             },
             {
-              "name": "Jay Duplass",
-              "character": "Daddo",
+              "name": "Arabella Olivia Clark",
+              "character": "Isabela \"Bela\" Martin",
               "order": 1
             },
             {
-              "name": "Arabella Olivia Clark",
-              "character": "Bela",
+              "name": "Jay Duplass",
+              "character": "Russell \"Russ\" Martin",
               "order": 2
             },
             {
               "name": "Karen Allen",
-              "character": "Grandma Ruth",
+              "character": "Ruth Martin",
               "order": 3
             },
             {
               "name": "Arian Moayed",
-              "character": "Uncle Frank",
+              "character": "Frank",
               "order": 4
-            },
-            {
-              "name": "Dichen Lachman",
-              "character": "Lois Anthony",
-              "order": 5
             },
             {
               "name": "Sean Kaufman",
               "character": "Kelvin",
+              "order": 5
+            },
+            {
+              "name": "Dichen Lachman",
+              "character": "Lois Anthony",
               "order": 6
             },
             {
@@ -262,7 +269,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.1
+            "tmdb": 6.2
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -593,7 +600,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 8.2
+            "tmdb": 7.8
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -618,7 +625,7 @@
             },
             {
               "name": "Daisy Ridley",
-              "character": "Emily Cratchit",
+              "character": "Clara",
               "order": 2
             },
             {
@@ -648,7 +655,7 @@
             },
             {
               "name": "Charlie Murphy",
-              "character": "",
+              "character": "Emily Cratchit",
               "order": 8
             },
             {
@@ -734,87 +741,6 @@
             }
           ],
           "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1117898",
-          "title": "El gato con sombrero",
-          "link": "https://www.themoviedb.org/movie/1117898",
-          "summary": "Un astuto gato lleva el caos con sus travesuras a la vida de un par de hermanos que lidian con su mudanza a una nueva ciudad.",
-          "image": "https://image.tmdb.org/t/p/w500/8TW5oOMZbxaMFVgletpW0bxd2Aa.jpg",
-          "pubDate": "2026-10-31",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-02T20:00:14.894Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.7,
-            "rt": null,
-            "metascore": 47,
-            "tmdb": 7.2
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "tkZpcypT8Z4",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Bill Hader",
-              "character": "The Cat in the Hat (voice)",
-              "order": 0
-            },
-            {
-              "name": "Xochitl Gomez",
-              "character": "Gabby (voice)",
-              "order": 1
-            },
-            {
-              "name": "Tiago Martinez",
-              "character": "Sebastian (voice)",
-              "order": 2
-            },
-            {
-              "name": "Matt Berry",
-              "character": "Waffles (voice)",
-              "order": 3
-            },
-            {
-              "name": "Quinta Brunson",
-              "character": "Sherrie from HR (voice)",
-              "order": 4
-            },
-            {
-              "name": "Bowen Yang",
-              "character": "Gary (voice)",
-              "order": 5
-            },
-            {
-              "name": "America Ferrera",
-              "character": "Mom (Carmen) (voice)",
-              "order": 6
-            },
-            {
-              "name": "Paula Pell",
-              "character": "Patty (voice)",
-              "order": 7
-            },
-            {
-              "name": "Tituss Burgess",
-              "character": "The Psychic Narwhal (voice)",
-              "order": 8
-            },
-            {
-              "name": "Giancarlo Esposito",
-              "character": "Mr. Hoogeboom (voice)",
-              "order": 9
-            }
-          ],
-          "trending": false
         },
         {
           "guid": "tmdb-movie-1368337",
@@ -905,82 +831,82 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1003596",
-          "title": "Vengadores: Doomsday",
-          "link": "https://www.themoviedb.org/movie/1003596",
-          "summary": "Quinta entrega de la saga 'Vengadores' incluida en el Universo Cinematográfico Marvel (UCM). Sinopsis desconocido.",
-          "image": "https://image.tmdb.org/t/p/w500/7bQczUMnjz8iwxNP9YrmLkfI8od.jpg",
-          "pubDate": "2026-12-16",
+          "guid": "tmdb-movie-1792170",
+          "title": "Model Citizen",
+          "link": "https://www.themoviedb.org/movie/1792170",
+          "summary": "With his memories gone and his past a blur, ex-cop Steven Bay seeks treatment for his amnesia while working on an isolated farm. Instead, he's met with rising hostility, strange surveillance, and instincts he can’t fully control. When the pressure becomes unbearable, Bay begins a desperate hunt for the truth behind his fractured reality.",
+          "image": "https://image.tmdb.org/t/p/w500/7SE0LBwgqiqZzkm9gKVbBAbcNQL.jpg",
+          "pubDate": "2026-11-03",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-10-23T14:42:44.135Z",
+          "firstSeenAt": "2026-11-05T17:52:53.496Z",
           "fullText": null,
           "rating": {
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": null
+            "tmdb": 6.4
           },
-          "status": "Post Production",
+          "status": "Released",
           "nextEpisodeDate": null,
           "numberOfSeasons": null,
           "seasons": null,
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "X1aFkAkFASk",
+            "key": "VczwWXoMKL0",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Robert Downey Jr.",
-              "character": "Victor von Doom  / Doctor Doom",
+              "name": "Aaron Eckhart",
+              "character": "Steven Bay / John Locke",
               "order": 0
             },
             {
-              "name": "Chris Evans",
-              "character": "Steve Rogers",
+              "name": "Emmanuelle Chriqui",
+              "character": "Gretchen",
               "order": 1
             },
             {
-              "name": "Chris Hemsworth",
-              "character": "Thor",
+              "name": "Paul Braunstein",
+              "character": "O'Neill",
               "order": 2
             },
             {
-              "name": "Pedro Pascal",
-              "character": "Reed Richards / Mister Fantastic",
+              "name": "David Hewlett",
+              "character": "Dr. Harris",
               "order": 3
             },
             {
-              "name": "Paul Rudd",
-              "character": "Scott Lang / Ant-Man",
+              "name": "Sebastian Pigott",
+              "character": "Jellef",
               "order": 4
             },
             {
-              "name": "Anthony Mackie",
-              "character": "Sam Wilson / Captain America",
+              "name": "Zion Forrest Lee",
+              "character": "Silas",
               "order": 5
             },
             {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova",
+              "name": "Avery Mendillo",
+              "character": "Sabrina",
               "order": 6
             },
             {
-              "name": "Vanessa Kirby",
-              "character": "Sue Storm / Invisible Woman",
+              "name": "Talia Asseraf",
+              "character": "Annabelle",
               "order": 7
             },
             {
-              "name": "Ebon Moss-Bachrach",
-              "character": "Ben Grimm / The Thing",
+              "name": "Nicolas Grimes",
+              "character": "Man in Black",
               "order": 8
             },
             {
-              "name": "Wyatt Russell",
-              "character": "John Walker",
-              "order": 9
+              "name": "Michael O'Keefe",
+              "character": "Falcone",
+              "order": 10
             }
           ],
           "trending": true
@@ -1143,21 +1069,102 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1792170",
-          "title": "Model Citizen",
-          "link": "https://www.themoviedb.org/movie/1792170",
-          "summary": "With his memories gone and his past a blur, ex-cop Steven Bay seeks treatment for his amnesia while working on an isolated farm. Instead, he's met with rising hostility, strange surveillance, and instincts he can’t fully control. When the pressure becomes unbearable, Bay begins a desperate hunt for the truth behind his fractured reality.",
-          "image": "https://image.tmdb.org/t/p/w500/7SE0LBwgqiqZzkm9gKVbBAbcNQL.jpg",
-          "pubDate": "2026-11-03",
+          "guid": "tmdb-movie-1003596",
+          "title": "Vengadores: Doomsday",
+          "link": "https://www.themoviedb.org/movie/1003596",
+          "summary": "Quinta entrega de la saga 'Vengadores' incluida en el Universo Cinematográfico Marvel (UCM). Sinopsis desconocido.",
+          "image": "https://image.tmdb.org/t/p/w500/7bQczUMnjz8iwxNP9YrmLkfI8od.jpg",
+          "pubDate": "2026-12-16",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-11-05T17:52:53.496Z",
+          "firstSeenAt": "2026-10-23T14:42:44.135Z",
           "fullText": null,
           "rating": {
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.4
+            "tmdb": null
+          },
+          "status": "Post Production",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "X1aFkAkFASk",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Robert Downey Jr.",
+              "character": "Victor von Doom  / Doctor Doom",
+              "order": 0
+            },
+            {
+              "name": "Chris Evans",
+              "character": "Steve Rogers",
+              "order": 1
+            },
+            {
+              "name": "Chris Hemsworth",
+              "character": "Thor",
+              "order": 2
+            },
+            {
+              "name": "Pedro Pascal",
+              "character": "Reed Richards / Mister Fantastic",
+              "order": 3
+            },
+            {
+              "name": "Paul Rudd",
+              "character": "Scott Lang / Ant-Man",
+              "order": 4
+            },
+            {
+              "name": "Anthony Mackie",
+              "character": "Sam Wilson / Captain America",
+              "order": 5
+            },
+            {
+              "name": "Florence Pugh",
+              "character": "Yelena Belova",
+              "order": 6
+            },
+            {
+              "name": "Vanessa Kirby",
+              "character": "Sue Storm / Invisible Woman",
+              "order": 7
+            },
+            {
+              "name": "Ebon Moss-Bachrach",
+              "character": "Ben Grimm / The Thing",
+              "order": 8
+            },
+            {
+              "name": "Wyatt Russell",
+              "character": "John Walker",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1616687",
+          "title": "No nos rendimos",
+          "link": "https://www.themoviedb.org/movie/1616687",
+          "summary": "Un exsoldado y sus nietos luchan contra despiadados criminales en un pueblo aislado. Si quieren sobrevivir, también deben enfrentarse a sus miedos y a los remordimientos.",
+          "image": "https://image.tmdb.org/t/p/w500/6cHYHIv2tcUAZsyzUi5Hcwa1IAB.jpg",
+          "pubDate": "2026-11-12",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-12T17:57:29.321Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.9
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1166,59 +1173,221 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "VczwWXoMKL0",
+            "key": "o0d1IA85D9o",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Aaron Eckhart",
-              "character": "Steven Bay / John Locke",
+              "name": "Lukman Sardi",
+              "character": "Eyang Hari",
               "order": 0
             },
             {
-              "name": "Emmanuelle Chriqui",
-              "character": "Gretchen",
+              "name": "Callista Arum",
+              "character": "Putri",
               "order": 1
             },
             {
-              "name": "Paul Braunstein",
-              "character": "O'Neill",
+              "name": "Sulthan Hamonangan",
+              "character": "Dimas",
               "order": 2
             },
             {
-              "name": "David Hewlett",
-              "character": "Dr. Harris",
+              "name": "Derby Romero",
+              "character": "Bastian",
               "order": 3
             },
             {
-              "name": "Sebastian Pigott",
-              "character": "Jellef",
+              "name": "Donny Alamsyah",
+              "character": "Ulo",
               "order": 4
             },
             {
-              "name": "Zion Forrest Lee",
-              "character": "Silas",
+              "name": "Ismi Melinda",
+              "character": "Jegeg",
               "order": 5
             },
             {
-              "name": "Avery Mendillo",
-              "character": "Sabrina",
+              "name": "Laras Sardi",
+              "character": "Mayang",
               "order": 6
             },
             {
-              "name": "Talia Asseraf",
-              "character": "Annabelle",
+              "name": "Dennis Adishwara",
+              "character": "Agus",
               "order": 7
             },
             {
-              "name": "Nicolas Grimes",
-              "character": "Man in Black",
+              "name": "Erick Estrada",
+              "character": "Iyang",
               "order": 8
             },
             {
-              "name": "Michael O'Keefe",
-              "character": "Falcone",
-              "order": 10
+              "name": "M. N. Qomaruddin",
+              "character": "Bendot",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1483525",
+          "title": "Un amor posible",
+          "link": "https://www.themoviedb.org/movie/1483525",
+          "summary": "Un trabajador despedido y su esposa se cruzan con una documentalista y su pareja, y se enfrentan a sus deseos ocultos.",
+          "image": "https://image.tmdb.org/t/p/w500/bYlv7oanFQB4zfTdDSGMz9cz1df.jpg",
+          "pubDate": "2026-09-23",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-06T17:14:15.285Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.7,
+            "rt": 100,
+            "metascore": 96,
+            "tmdb": 7.7
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "_J7PWd3A2PY",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "전도연",
+              "character": "Mi-ok",
+              "order": 0
+            },
+            {
+              "name": "설경구",
+              "character": "Ho-seok",
+              "order": 1
+            },
+            {
+              "name": "조인성",
+              "character": "Sang-woo",
+              "order": 2
+            },
+            {
+              "name": "Cho Yeo-jeong",
+              "character": "Ye-ji",
+              "order": 3
+            },
+            {
+              "name": "조유리",
+              "character": "Young Mi-ok",
+              "order": 4
+            },
+            {
+              "name": "최민",
+              "character": "Young Ho-seok",
+              "order": 5
+            },
+            {
+              "name": "정섶",
+              "character": "Cheol",
+              "order": 6
+            },
+            {
+              "name": "강창권",
+              "character": "Min-sik",
+              "order": 7
+            },
+            {
+              "name": "전운종",
+              "character": "Jeong-dae",
+              "order": 8
+            },
+            {
+              "name": "김학선",
+              "character": "Mi-ok's Factory Owner",
+              "order": 12
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-656908",
+          "title": "Ramayana: El Nacimiento de una Leyenda",
+          "link": "https://www.themoviedb.org/movie/656908",
+          "summary": "Una antigua epopeya sigue a un joven príncipe y a una princesa, cuyo matrimonio y posterior exilio marcan el comienzo de un viaje legendario. Su historia de amor, deber y destino prepara el terreno para desafíos aún mayores.",
+          "image": "https://image.tmdb.org/t/p/w500/nzL1ySE6vdmR6RxXhE7gLggkp41.jpg",
+          "pubDate": "2026-11-05",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-05T09:05:38.045Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.5
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "AYkPRN874m8",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "रणबीर कपूर",
+              "character": "Prince Rama / Parashurama",
+              "order": 0
+            },
+            {
+              "name": "Yash",
+              "character": "Ravana",
+              "order": 1
+            },
+            {
+              "name": "Sai Pallavi",
+              "character": "Sita",
+              "order": 2
+            },
+            {
+              "name": "Ravi Dubey",
+              "character": "Lakshmana",
+              "order": 3
+            },
+            {
+              "name": "अरुण गोविल",
+              "character": "King Dashrath",
+              "order": 4
+            },
+            {
+              "name": "लारा दत्ता",
+              "character": "Kaikeyi",
+              "order": 5
+            },
+            {
+              "name": "Rakul Preet Singh",
+              "character": "Surpanakha",
+              "order": 6
+            },
+            {
+              "name": "इंदिरा कृष्णन",
+              "character": "Kaushalya",
+              "order": 7
+            },
+            {
+              "name": "Sonal Jha",
+              "character": "Sumitra",
+              "order": 8
+            },
+            {
+              "name": "Adinath Kothare",
+              "character": "Bharata",
+              "order": 9
             }
           ],
           "trending": true
@@ -1305,21 +1474,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1616687",
-          "title": "No nos rendimos",
-          "link": "https://www.themoviedb.org/movie/1616687",
-          "summary": "Un exsoldado y sus nietos luchan contra despiadados criminales en un pueblo aislado. Si quieren sobrevivir, también deben enfrentarse a sus miedos y a los remordimientos.",
-          "image": "https://image.tmdb.org/t/p/w500/6cHYHIv2tcUAZsyzUi5Hcwa1IAB.jpg",
-          "pubDate": "2026-11-12",
+          "guid": "tmdb-movie-1117898",
+          "title": "El gato con sombrero",
+          "link": "https://www.themoviedb.org/movie/1117898",
+          "summary": "Un astuto gato lleva el caos con sus travesuras a la vida de un par de hermanos que lidian con su mudanza a una nueva ciudad.",
+          "image": "https://image.tmdb.org/t/p/w500/8TW5oOMZbxaMFVgletpW0bxd2Aa.jpg",
+          "pubDate": "2026-10-31",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-11-12T17:57:29.321Z",
+          "firstSeenAt": "2026-11-02T20:00:14.894Z",
           "fullText": null,
           "rating": {
-            "imdb": null,
+            "imdb": 6.7,
             "rt": null,
-            "metascore": null,
-            "tmdb": 7.8
+            "metascore": 47,
+            "tmdb": 7.2
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1328,143 +1497,62 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "o0d1IA85D9o",
+            "key": "tkZpcypT8Z4",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Lukman Sardi",
-              "character": "Eyang Hari",
+              "name": "Bill Hader",
+              "character": "The Cat in the Hat (voice)",
               "order": 0
             },
             {
-              "name": "Callista Arum",
-              "character": "Putri",
+              "name": "Xochitl Gomez",
+              "character": "Gabby (voice)",
               "order": 1
             },
             {
-              "name": "Sulthan Hamonangan",
-              "character": "Dimas",
+              "name": "Tiago Martinez",
+              "character": "Sebastian (voice)",
               "order": 2
             },
             {
-              "name": "Derby Romero",
-              "character": "Bastian",
+              "name": "Matt Berry",
+              "character": "Waffles (voice)",
               "order": 3
             },
             {
-              "name": "Donny Alamsyah",
-              "character": "Ulo",
+              "name": "Quinta Brunson",
+              "character": "Sherrie from HR (voice)",
               "order": 4
             },
             {
-              "name": "Ismi Melinda",
-              "character": "Jegeg",
+              "name": "Bowen Yang",
+              "character": "Gary (voice)",
               "order": 5
             },
             {
-              "name": "Laras Sardi",
-              "character": "Mayang",
+              "name": "America Ferrera",
+              "character": "Mom (Carmen) (voice)",
               "order": 6
             },
             {
-              "name": "Dennis Adishwara",
-              "character": "Agus",
+              "name": "Paula Pell",
+              "character": "Patty (voice)",
               "order": 7
             },
             {
-              "name": "Erick Estrada",
-              "character": "Iyang",
+              "name": "Tituss Burgess",
+              "character": "The Psychic Narwhal (voice)",
               "order": 8
             },
             {
-              "name": "M. N. Qomaruddin",
-              "character": "Bendot",
+              "name": "Giancarlo Esposito",
+              "character": "Mr. Hoogeboom (voice)",
               "order": 9
             }
           ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-656908",
-          "title": "Ramayana: El Nacimiento de una Leyenda",
-          "link": "https://www.themoviedb.org/movie/656908",
-          "summary": "Una antigua epopeya sigue a un joven príncipe y a una princesa, cuyo matrimonio y posterior exilio marcan el comienzo de un viaje legendario. Su historia de amor, deber y destino prepara el terreno para desafíos aún mayores.",
-          "image": "https://image.tmdb.org/t/p/w500/nzL1ySE6vdmR6RxXhE7gLggkp41.jpg",
-          "pubDate": "2026-11-05",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-05T09:05:38.045Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.6
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "AYkPRN874m8",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "रणबीर कपूर",
-              "character": "Prince Rama / Parashurama",
-              "order": 0
-            },
-            {
-              "name": "Yash",
-              "character": "Ravana",
-              "order": 1
-            },
-            {
-              "name": "Sai Pallavi",
-              "character": "Sita",
-              "order": 2
-            },
-            {
-              "name": "Ravi Dubey",
-              "character": "Lakshmana",
-              "order": 3
-            },
-            {
-              "name": "अरुण गोविल",
-              "character": "King Dashrath",
-              "order": 4
-            },
-            {
-              "name": "लारा दत्ता",
-              "character": "Kaikeyi",
-              "order": 5
-            },
-            {
-              "name": "Rakul Preet Singh",
-              "character": "Surpanakha",
-              "order": 6
-            },
-            {
-              "name": "इंदिरा कृष्णन",
-              "character": "Kaushalya",
-              "order": 7
-            },
-            {
-              "name": "Sonal Jha",
-              "character": "Sumitra",
-              "order": 8
-            },
-            {
-              "name": "Adinath Kothare",
-              "character": "Bharata",
-              "order": 9
-            }
-          ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1375441",
@@ -1543,168 +1631,6 @@
               "name": "Jonathan Lipnicki",
               "character": "Crazyfrog73",
               "order": 11
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1153576",
-          "title": "Street Fighter",
-          "link": "https://www.themoviedb.org/movie/1153576",
-          "summary": "En 1993, los distanciados luchadores callejeros Ryu y Ken Masters se ven arrastrados de nuevo al combate cuando la misteriosa Chun-Li los recluta para el próximo Torneo World Warrior: un enfrentamiento brutal de puños, destino y furia. Sin embargo, tras esta gran batalla se esconde una conspiración mortal que los obliga a enfrentarse tanto entre sí como a los demonios de su pasado. Y si no lo logran... ¡será el fin de la partida!",
-          "image": "https://image.tmdb.org/t/p/w500/2kdEEUkbkJe08kTDMCUbBrZ71Aw.jpg",
-          "pubDate": "2026-10-13",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-14T00:55:45.863Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.2,
-            "rt": null,
-            "metascore": 46,
-            "tmdb": 6.4
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "U6sbm1OaJb8",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Andrew Koji",
-              "character": "Ryu",
-              "order": 0
-            },
-            {
-              "name": "Noah Centineo",
-              "character": "Ken Masters",
-              "order": 1
-            },
-            {
-              "name": "Callina Liang",
-              "character": "Chun-Li",
-              "order": 2
-            },
-            {
-              "name": "David Dastmalchian",
-              "character": "M. Bison",
-              "order": 3
-            },
-            {
-              "name": "Eric Andre",
-              "character": "Don Sauvage",
-              "order": 4
-            },
-            {
-              "name": "Andrew Schulz",
-              "character": "Dan Hibiki",
-              "order": 5
-            },
-            {
-              "name": "Mel Jarnson",
-              "character": "Cammy",
-              "order": 6
-            },
-            {
-              "name": "Cody Rhodes",
-              "character": "Guile",
-              "order": 7
-            },
-            {
-              "name": "Joe Anoa'i",
-              "character": "Akuma",
-              "order": 8
-            },
-            {
-              "name": "50 Cent",
-              "character": "Balrog",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1483525",
-          "title": "Un amor posible",
-          "link": "https://www.themoviedb.org/movie/1483525",
-          "summary": "Un trabajador despedido y su esposa se cruzan con una documentalista y su pareja, y se enfrentan a sus deseos ocultos.",
-          "image": "https://image.tmdb.org/t/p/w500/bYlv7oanFQB4zfTdDSGMz9cz1df.jpg",
-          "pubDate": "2026-09-23",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-06T17:14:15.285Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.7,
-            "rt": 100,
-            "metascore": 96,
-            "tmdb": 7.7
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "_J7PWd3A2PY",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "전도연",
-              "character": "Mi-ok",
-              "order": 0
-            },
-            {
-              "name": "설경구",
-              "character": "Ho-seok",
-              "order": 1
-            },
-            {
-              "name": "조인성",
-              "character": "Sang-woo",
-              "order": 2
-            },
-            {
-              "name": "Cho Yeo-jeong",
-              "character": "Ye-ji",
-              "order": 3
-            },
-            {
-              "name": "조유리",
-              "character": "Young Mi-ok",
-              "order": 4
-            },
-            {
-              "name": "최민",
-              "character": "Young Ho-seok",
-              "order": 5
-            },
-            {
-              "name": "정섶",
-              "character": "Cheol",
-              "order": 6
-            },
-            {
-              "name": "강창권",
-              "character": "Min-sik",
-              "order": 7
-            },
-            {
-              "name": "전운종",
-              "character": "Jeong-dae",
-              "order": 8
-            },
-            {
-              "name": "김학선",
-              "character": "Mi-ok's Factory Owner",
-              "order": 12
             }
           ],
           "trending": false
@@ -4484,6 +4410,87 @@
           ]
         },
         {
+          "guid": "tmdb-tv-84773",
+          "title": "El Señor de los Anillos: Los Anillos de Poder",
+          "link": "https://www.themoviedb.org/tv/84773",
+          "summary": "Un reparto coral de personajes —unos conocidos y otros nuevos— debe afrontar la reaparición del mal en la Tierra Media. Desde las profundidades más oscuras de las Montañas Nubladas hasta los majestuosos bosques de Lindon, desde el reino insular de Númenor hasta los extremos más remotos del mapa, estos parajes y personajes forjarán los legados que perdurarán más allá de su desaparición.",
+          "image": "https://image.tmdb.org/t/p/w500/xdsgZ60TBFiuAIvGPtxRsjDt4NV.jpg",
+          "pubDate": "2022-09-01",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-11-12T17:57:29.643Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.8,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.2
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-11-18",
+          "numberOfSeasons": 3,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 8,
+              "fechaEstreno": "2022-09-01"
+            },
+            {
+              "numero": 2,
+              "episodios": 8,
+              "fechaEstreno": "2024-08-29"
+            },
+            {
+              "numero": 3,
+              "episodios": 8,
+              "fechaEstreno": "2026-11-11"
+            }
+          ],
+          "currentSeason": 3,
+          "reviews": null,
+          "trailer": {
+            "key": "x8UAUAuKNcU",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Morfydd Clark",
+              "character": "Galadriel",
+              "order": 1
+            },
+            {
+              "name": "Robert Aramayo",
+              "character": "Elrond",
+              "order": 3
+            },
+            {
+              "name": "Owain Arthur",
+              "character": "Durin IV",
+              "order": 5
+            },
+            {
+              "name": "Sophia Nomvete",
+              "character": "Disa",
+              "order": 6
+            },
+            {
+              "name": "Markella Kavenagh",
+              "character": "Elanor 'Nori' Brandyfoot",
+              "order": 8
+            },
+            {
+              "name": "Ismael Cruz Cordova",
+              "character": "Arondir",
+              "order": 10
+            },
+            {
+              "name": "Daniel Weyman",
+              "character": "Gandalf",
+              "order": 31
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-22980",
           "title": "Watch What Happens Live with Andy Cohen",
           "link": "https://www.themoviedb.org/tv/22980",
@@ -4948,87 +4955,6 @@
             "site": "YouTube"
           },
           "cast": []
-        },
-        {
-          "guid": "tmdb-tv-84773",
-          "title": "El Señor de los Anillos: Los Anillos de Poder",
-          "link": "https://www.themoviedb.org/tv/84773",
-          "summary": "Un reparto coral de personajes —unos conocidos y otros nuevos— debe afrontar la reaparición del mal en la Tierra Media. Desde las profundidades más oscuras de las Montañas Nubladas hasta los majestuosos bosques de Lindon, desde el reino insular de Númenor hasta los extremos más remotos del mapa, estos parajes y personajes forjarán los legados que perdurarán más allá de su desaparición.",
-          "image": "https://image.tmdb.org/t/p/w500/xdsgZ60TBFiuAIvGPtxRsjDt4NV.jpg",
-          "pubDate": "2022-09-01",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-11-12T17:57:29.643Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.8,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.2
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-11-18",
-          "numberOfSeasons": 3,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 8,
-              "fechaEstreno": "2022-09-01"
-            },
-            {
-              "numero": 2,
-              "episodios": 8,
-              "fechaEstreno": "2024-08-29"
-            },
-            {
-              "numero": 3,
-              "episodios": 8,
-              "fechaEstreno": "2026-11-11"
-            }
-          ],
-          "currentSeason": 3,
-          "reviews": null,
-          "trailer": {
-            "key": "x8UAUAuKNcU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Morfydd Clark",
-              "character": "Galadriel",
-              "order": 1
-            },
-            {
-              "name": "Robert Aramayo",
-              "character": "Elrond",
-              "order": 3
-            },
-            {
-              "name": "Owain Arthur",
-              "character": "Durin IV",
-              "order": 5
-            },
-            {
-              "name": "Sophia Nomvete",
-              "character": "Disa",
-              "order": 6
-            },
-            {
-              "name": "Markella Kavenagh",
-              "character": "Elanor 'Nori' Brandyfoot",
-              "order": 8
-            },
-            {
-              "name": "Ismael Cruz Cordova",
-              "character": "Arondir",
-              "order": 10
-            },
-            {
-              "name": "Daniel Weyman",
-              "character": "Gandalf",
-              "order": 31
-            }
-          ]
         },
         {
           "guid": "tmdb-tv-2224",
@@ -5800,7 +5726,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 8.3
+            "tmdb": 8.2
           },
           "status": "Returning Series",
           "nextEpisodeDate": "2026-11-18",
