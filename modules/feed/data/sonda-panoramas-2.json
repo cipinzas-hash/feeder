@@ -1,0 +1,913 @@
+{
+ "generado": "2026-11-13T23:52:43.469Z",
+ "parcial": false,
+ "bloques": {
+  "santiagocultura": {
+   "listado": {
+    "status": 200,
+    "n": 30,
+    "claves": [
+     "id",
+     "date",
+     "date_gmt",
+     "guid",
+     "modified",
+     "modified_gmt",
+     "slug",
+     "status",
+     "type",
+     "link",
+     "title",
+     "content",
+     "author",
+     "featured_media",
+     "menu_order",
+     "comment_status",
+     "ping_status",
+     "template",
+     "meta",
+     "tags",
+     "event_type",
+     "event_type_2",
+     "class_list",
+     "_links"
+    ]
+   },
+   "muestraListado": [
+    {
+     "id": 20564,
+     "link": "https://www.santiagocultura.cl/events/formas-de-sostener-coco-santibanez-transforma-el-trabajo-domestico-en-obra-de-arte/",
+     "titulo": "«Formas de Sostener»: Cocó Santibáñez transforma el trabajo doméstico en obra de arte",
+     "publicado": "2026-09-29T14:23:00",
+     "modificado": "2026-09-29T14:23:00",
+     "meta": [],
+     "tipos": []
+    },
+    {
+     "id": 20561,
+     "link": "https://www.santiagocultura.cl/events/la-incomunicacion-en-tiempos-de-aparente-conexion-el-punto-de-partida-de-la-adaptacion-de-el-bosque-de-david-mamet-que-llega-a-teatro-ictus-protagonizado-por-mario-horton-y-camila/",
+     "titulo": "La incomunicación en tiempos de aparente conexión: el punto de partida de la adaptación de “El bosque” de David Mamet, que llega a Teatro ICTUS, protagonizado por Mario Horton y Camila Hirane",
+     "publicado": "2026-09-28T17:40:49",
+     "modificado": "2026-09-28T17:40:49",
+     "meta": [],
+     "tipos": []
+    },
+    {
+     "id": 20559,
+     "link": "https://www.santiagocultura.cl/events/nudos-el-origen-de-la-ciudad/",
+     "titulo": "Nudos &#8211; El origen de la ciudad",
+     "publicado": "2026-09-28T17:35:33",
+     "modificado": "2026-09-28T17:35:33",
+     "meta": [],
+     "tipos": []
+    },
+    {
+     "id": 20556,
+     "link": "https://www.santiagocultura.cl/events/ciclo-de-cine-frankenstein-1931/",
+     "titulo": "Ciclo de Cine &#8211; Frankenstein (1931)",
+     "publicado": "2026-09-28T17:23:48",
+     "modificado": "2026-09-28T17:23:48",
+     "meta": [],
+     "tipos": []
+    },
+    {
+     "id": 20554,
+     "link": "https://www.santiagocultura.cl/events/funga-por-siempre-10-anos-museo-del-hongo/",
+     "titulo": "Funga por siempre: 10 años Museo del Hongo",
+     "publicado": "2026-09-28T15:04:55",
+     "modificado": "2026-09-28T15:04:55",
+     "meta": [],
+     "tipos": []
+    },
+    {
+     "id": 20552,
+     "link": "https://www.santiagocultura.cl/events/el-documental-encuentro-con-el-buda-se-presentara-el-1-de-octubre-en-centro-arte-alameda-ceina-santiago/",
+     "titulo": "El documental «Encuentro con el Buda» se presentará el 1 de octubre en Centro Arte Alameda (CEINA), Santiago.",
+     "publicado": "2026-09-28T13:03:52",
+     "modificado": "2026-09-28T13:03:52",
+     "meta": [],
+     "tipos": []
+    },
+    {
+     "id": 20550,
+     "link": "https://www.santiagocultura.cl/events/orquesta-usach/",
+     "titulo": "Orquesta USACH",
+     "publicado": "2026-09-28T12:58:56",
+     "modificado": "2026-09-28T12:58:56",
+     "meta": [],
+     "tipos": []
+    },
+    {
+     "id": 20519,
+     "link": "https://www.santiagocultura.cl/events/siempre-encuentra-casa-nueva-un-mueble-antiguo-en-la-basura/",
+     "titulo": "Siempre encuentra casa nueva, un mueble antiguo en la basura",
+     "publicado": "2026-09-07T11:13:27",
+     "modificado": "2026-09-07T11:13:27",
+     "meta": [],
+     "tipos": [
+      44
+     ]
+    }
+   ],
+   "/wp-json/eventon/v1/events": {
+    "status": 400,
+    "type": "application/json; charset=UTF-8",
+    "bytes": 135,
+    "inicio": "{\"code\":\"rest_missing_callback_param\",\"message\":\"Par\\u00e1metro(s) que falta(n): evo-ajax\",\"data\":{\"status\":400,\"params\":[\"evo-ajax\"]}}"
+   },
+   "/wp-json/eventon/v1/data": {
+    "status": 404,
+    "type": "application/json; charset=UTF-8",
+    "bytes": 149,
+    "inicio": "{\"code\":\"rest_no_route\",\"message\":\"No se ha encontrado ninguna ruta que coincida con la URL y el m\\u00e9todo de la solicitud.\",\"data\":{\"status\":404}}"
+   },
+   "/wp-json/wp/v2/event_type?per_page=50": {
+    "status": 200,
+    "type": "application/json; charset=UTF-8",
+    "bytes": 687,
+    "inicio": "[{\"id\":44,\"count\":33,\"description\":\"\",\"link\":\"https:\\/\\/www.santiagocultura.cl\\/event-type\\/destacamos\\/\",\"name\":\"destacamos\",\"slug\":\"destacamos\",\"taxonomy\":\"event_type\",\"parent\":0,\"meta\":[],\"_links\":{\"self\":[{\"href\":\"https:\\/\\/www.santiagocultura.cl\\/wp-json\\/wp\\/v2\\/event_type\\/44\",\"targetHints\":{\"allow\":[\"GET\"]}}],\"collection\":[{\"href\":\"https:\\/\\/www.santiagocultura.cl\\/wp-json\\/wp\\/v2\\/event_type\"}],\"about\":[{\"href\":\"https:\\/\\/www.santiagocultura.cl\\/wp-json\\/wp\\/v2\\/taxonomies\\/event_type\"}],\"wp:post_type\":[{\"href\":\"https:\\/\\/www.santiagocultura.cl\\/wp-json\\/wp\\/v2\\/ajde_events?event_type"
+   },
+   "/wp-json/wp/v2/event_location?per_page=20": {
+    "status": 404,
+    "type": "application/json; charset=UTF-8",
+    "bytes": 149,
+    "inicio": "{\"code\":\"rest_no_route\",\"message\":\"No se ha encontrado ninguna ruta que coincida con la URL y el m\\u00e9todo de la solicitud.\",\"data\":{\"status\":404}}"
+   },
+   "detalles": [
+    {
+     "link": "https://www.santiagocultura.cl/events/formas-de-sostener-coco-santibanez-transforma-el-trabajo-domestico-en-obra-de-arte/",
+     "status": 200,
+     "jsonLdEventos": [],
+     "fechasEnTexto": [],
+     "tieneEvcal": true,
+     "unixEvcal": null
+    },
+    {
+     "link": "https://www.santiagocultura.cl/events/la-incomunicacion-en-tiempos-de-aparente-conexion-el-punto-de-partida-de-la-adaptacion-de-el-bosque-de-david-mamet-que-llega-a-teatro-ictus-protagonizado-por-mario-horton-y-camila/",
+     "status": 200,
+     "jsonLdEventos": [],
+     "fechasEnTexto": [
+      "1 de octubre",
+      "2026-10-24T20:00",
+      "24 de octubre"
+     ],
+     "tieneEvcal": true,
+     "unixEvcal": null
+    },
+    {
+     "link": "https://www.santiagocultura.cl/events/nudos-el-origen-de-la-ciudad/",
+     "status": 200,
+     "jsonLdEventos": [],
+     "fechasEnTexto": [
+      "2026-10-10T16:00"
+     ],
+     "tieneEvcal": true,
+     "unixEvcal": null
+    }
+   ],
+   "sitemap": {
+    "urls": 2000,
+    "ultimosLastmod": [
+     "2024-08-29T10:44:31-04:00",
+     "2024-08-30T16:01:21-04:00",
+     "2024-09-02T11:24:17-04:00",
+     "2024-09-03T14:49:51-04:00",
+     "2024-09-03T15:27:02-04:00"
+    ]
+   }
+  },
+  "cclm": {
+   "actividad": {
+    "status": 200,
+    "n": 20,
+    "claves": [
+     "id",
+     "date",
+     "date_gmt",
+     "guid",
+     "modified",
+     "modified_gmt",
+     "slug",
+     "status",
+     "type",
+     "link",
+     "title",
+     "excerpt",
+     "featured_media",
+     "parent",
+     "template",
+     "excluir_agenda",
+     "sala",
+     "tipo_actividad",
+     "class_list",
+     "acf",
+     "yoast_head",
+     "yoast_head_json",
+     "_links"
+    ],
+    "acf": {
+     "subtitulo": "CONCIERTO",
+     "descripcion": "En el marco de su <strong>Programa de Inclusión</strong>, <strong>Centro Cultural La Moneda</strong> te invita a disfrutar y conocer <strong><em>Enredaderas, mi vida entera</em></strong>, un espectáculo de la banda musical inclusiva <strong>Sexto Sentido</strong>, perteneciente a la agrupación <strong>Birimbao Arte de Osorno</strong>, que reúne música, danza y creación audiovisual en una propuesta artística que celebra la diversidad y la participación.\r\n\r\n<strong>Integrada por jóvenes y adultos neurodivergentes</strong>, la banda presentará un repertorio original inspirado en las experiencias de vida de sus integrantes y cuidadoras. A través de interpretaciones vocales e instrumentales, narraciones poéticas, proyecciones audiovisuales y coreografías, el montaje invita a descubrir distintas formas de expresión y encuentro a través del arte.\r\n\r\nLa presentación cuenta con el patrocinio del <strong>Ministerio de las Culturas, las Artes y el Patrimonio</strong> y la colaboración de la <strong>Universidad de Los Lagos</strong>.\r\n\r\n<hr />\r\n\r\n<h6><strong>Sobre la agrupación</strong></h6>\r\nFundada en 2011, Birimbao Arte desarrolla experiencias de formación y creación musical desde un enfoque inclusivo, promoviendo espacios de participación para personas de distintas edades y capacidades. Su trayectoria contempla presentaciones en Chile y Argentina, además de una próxima gira internacional a México en 2027.",
+     "descripcion_adicional": "",
+     "coordenada_adicional": "<div class=\"coordinates__date\">Domingo 29 de noviembre, 2026</div>\r\n<div class=\"coordinates__time\">12:00 horas</div>\r\n<div class=\"singles--coordinates\">Hall central | Nivel -3</div>\r\n<div class=\"singles--coordinates\">Actividad gratuita</div>",
+     "coordenada_reemplazar": "",
+     "activar_galeria": false,
+     "galeria": null,
+     "activar_video": "desactivado",
+     "video": null,
+     "video_externo": "",
+     "activar_descargables": false,
+     "descargables": null,
+     "activar_relacionados": false,
+     "relacionados": "",
+     "activar_patrocinadores": true,
+     "auspiciadores": [
+      {
+       "titulo": "Invita ",
+       "logos": [
+        {
+         "imagen": 574424
+        }
+       ]
+      },
+      {
+       "titulo": "Colaboran",
+       "logos": [
+        {
+         "imagen": 568576
+        },
+        {
+         "imagen": 577590
+        }
+       ]
+      }
+     ],
+     "pagina_traduccion": "",
+     "ticketera_cclm": {
+      "evento_activo": true,
+      "venta_tickets": false,
+      "excluir_agenda": false,
+      "tipo_precios": "especifico",
+      "precios": {
+       "general": 0,
+       "nino": 0,
+       "estudiante": 0,
+       "mayor": 0,
+       "convenio": 0
+      },
+      "precios_eventos_externos": {
+       "costo_servicio": "",
+       "entrada": null
+      },
+      "ocultar_header": false,
+      "tipos_entradas_habilitadas": [
+       "general"
+      ],
+      "fecha_manual": "manual",
+      "fecha_y_horario": {
+       "hora": "16:00 horas",
+       "fecha": "Noviembre 29, 2026"
+      },
+      "": null,
+      "horarios": [
+       {
+        "fecha_inicio": "20261121",
+        "fecha_cierre": "20261121",
+        "hora_inicio": "16:00:00",
+        "hora_cierre": "17:30:00",
+        "dias": [
+         "Sun"
+        ],
+        "ubicacion": 30,
+        "maximo_entradas": 50,
+        "gratuito": true
+       }
+      ],
+      "cantidad_maxima_generales": 2,
+      "cantidad_maxima_ninos": 5
+     }
+    },
+    "muestra": [
+     {
+      "id": 577588,
+      "link": "https://www.cclm.cl/actividades/enredaderas-mi-vida-entera-banda-sexto-sentido/",
+      "titulo": "Enredaderas, mi vida entera | Banda Sexto Sentido",
+      "fecha": "2026-11-11T16:37:24",
+      "mod": "2026-11-11T16:37:24"
+     },
+     {
+      "id": 577586,
+      "link": "https://www.cclm.cl/actividades/big-band-santa-fe-musica-latinoamericana/",
+      "titulo": "Big Band Santa Fe: música latinoamericana",
+      "fecha": "2026-11-11T16:08:48",
+      "mod": "2026-11-11T16:38:26"
+     },
+     {
+      "id": 577581,
+      "link": "https://www.cclm.cl/actividades/culturas-del-mundo-encuentro-escolar-de-danza/",
+      "titulo": "Culturas del Mundo: Encuentro Escolar de Danza",
+      "fecha": "2026-11-11T14:07:05",
+      "mod": "2026-11-11T14:07:05"
+     },
+     {
+      "id": 577232,
+      "link": "https://www.cclm.cl/actividades/anillo-de-galerias-inventario-comun/",
+      "titulo": "Anillo de Galerías: Inventario común",
+      "fecha": "2026-11-05T16:34:29",
+      "mod": "2026-11-09T10:40:32"
+     }
+    ]
+   },
+   "exposicion": {
+    "status": 200,
+    "n": 4,
+    "claves": [
+     "id",
+     "date",
+     "date_gmt",
+     "guid",
+     "modified",
+     "modified_gmt",
+     "slug",
+     "status",
+     "type",
+     "link",
+     "title",
+     "excerpt",
+     "featured_media",
+     "parent",
+     "template",
+     "excluir_agenda",
+     "sala",
+     "tipo_de_exposicion",
+     "class_list",
+     "acf",
+     "yoast_head",
+     "yoast_head_json",
+     "_links"
+    ],
+    "acf": {
+     "subtitulo": "Roberto Matta | Circuito Matta Patrimonial, quinta edición",
+     "descripcion": "En el marco de la <strong>quinta edición del Circuito Matta Patrimonial</strong>, <strong>Centro Cultural La Moneda</strong> presenta <em><strong>Être Cible</strong> (Ser el blanco)</em>, obra del destacado artista chileno <strong>Roberto Matta</strong> (1911-2002), perteneciente a la <strong>Colección Manuel Santa Cruz</strong>, que podrá visitarse en la Galería de Patrimonio del Centro Cultural La Moneda.\r\n\r\nLa exhibición invita a acercarse al universo creativo de una de las figuras más influyentes del surrealismo y del arte del siglo XX, cuya obra exploró nuevas formas de representar el espacio, la conciencia humana y las tensiones sociales y políticas de su tiempo.\r\n\r\nEsta presentación retoma, además, un vínculo significativo del CCLM con el legado del artista. En 2011, con motivo del centenario de su nacimiento, se presentó la exposición <em><strong>Matta Centenario 11.11.11</strong></em>, que reunió alrededor de un centenar de obras provenientes de importantes museos y colecciones nacionales e internacionales. Aquella muestra contó con la curaduría de <strong>Inés Ortega-Márquez</strong>, quien vuelve a acompañar al CCLM en esta quinta edición del <strong>Circuito Matta Patrimonial</strong>.\r\n\r\n<hr />\r\n\r\n<h6><strong>Sobre la obra</strong></h6>\r\nRealizada entre 1958 y 1960, <em><strong>Être Cible</strong></em> pertenece a un momento decisivo en la evolución del pensamiento pictórico de <strong>Roberto Matta</strong>, marcado por su reflexión crítica sobre los avances de la ciencia, el desarrollo tecnológico y las consecuencias de la guerra para la humanidad.\r\n\r\nEn esta pintura de gran formato, de dos metros de alto por tres de ancho, el artista construye un espacio multidimensional habitado por estructuras mecánicas, formas geométricas y elementos de apariencia tecnológica que parecen desplazarse en un universo inestable.\r\n\r\nLa composición evoca una ciudad utópica que flota en el espacio, pero también transmite una sensación inquietante, vinculada al contexto de la Guerra Fría, la amenaza nuclear y los inicios de la exploración espacial.\r\n\r\nSu título, que puede traducirse como Ser el blanco, plantea interrogantes sobre el conocimiento, el poder y la vulnerabilidad humana, temas que atraviesan la creación de Matta y su particular manera de interpretar los conflictos del mundo contemporáneo.\r\n\r\nA través de esta obra, el público podrá aproximarse a una de las principales búsquedas del artista: la exploración de un espacio pictórico en permanente transformación, donde confluyen lo psicológico, lo cósmico, lo orgánico y lo tecnológico.\r\n\r\n<hr />\r\n\r\n<h6><strong>Circuito Matta Patrimonial</strong></h6>",
+     "descripcion_adicional": "El <strong>Circuito Matta Patrimonial</strong> es una iniciativa fundada y curada por <strong>Inés Ortega-Márquez</strong> que busca difundir la obra y el pensamiento de Roberto Matta, conectando su patrimonio artístico presente en museos, centros culturales, colecciones y espacios públicos.\r\n\r\nSu quinta edición, que se desarrolla entre el 11 y el 29 de noviembre de 2026, reúne a 18 espacios de Santiago, Valparaíso y Buenos Aires, a través de exhibiciones, visitas mediadas, encuentros y diversas actividades culturales.\r\n\r\nEn el año en que el Centro Cultural La Moneda conmemora sus veinte años de historia, la presentación de Être Cible permite renovar el encuentro con la obra de Roberto Matta y acercar a nuevos públicos su legado artístico, cuya vigencia continúa invitándonos a reflexionar sobre la condición humana y nuestra relación con el mundo.\r\n\r\n<hr />\r\n\r\n<h6><strong>Sobre la curadora</strong></h6>\r\n<strong>Inés Ortega-Márquez</strong> es curadora independiente e investigadora, española residente en Chile. Estudió Psicología en la Universidad de Vincennes Paris VIII y posteriormente se formó en Derecho, Curatoría y Museografía. Es Máster en Gestión Cultural por la Universidad de Alcalá de Henares, Madrid.\r\n\r\nCon más de veinte años de trayectoria, ha desarrollado exposiciones y proyectos curatoriales en Chile y el extranjero. Entre sus trabajos destacan <strong><em>Matta Centenario 11.11.11</em></strong> (Centro Cultural La Moneda, 2011), 4 Premios Nacionales: Balmes-Barrios-Bru-Núñez (Museo Nacional de Bellas Artes, 2017) y Roser Bru: Superar la distancia (Museu d'Art de Girona, 2024).\r\n\r\nEs fundadora y curadora del Circuito Matta Patrimonial.\r\n\r\n<hr />\r\n\r\n<h6><strong>Ficha de la obra</strong></h6>\r\n<ul>\r\n \t<li><strong>Artista:</strong> Roberto Matta (1911-2002)</li>\r\n \t<li><strong>Título:</strong> <em>Être Cible (Ser el blanco)</em></li>\r\n \t<li><strong>Fecha</strong>: ca. 1958-1960</li>\r\n \t<li><strong>Técnica:</strong> Óleo sobre tela</li>\r\n \t<li><strong>Dimensiones:</strong> 200 × 300 cm</li>\r\n \t<li><strong>Colección:</strong> Manuel Santa Cruz</li>\r\n \t<li><strong>Curaduría:</strong> Inés Ortega-Márquez</li>\r\n</ul>\r\n&nbsp;",
+     "coordenada_adicional": "<div class=\"coordinates__date\">11 de noviembre, 2026 / 03 de enero, 2027</div>\r\n<div class=\"coordinates__time\">10:15 a 18:45 horas</div>\r\n\r\n<hr />\r\n\r\n<div class=\"singles--coordinates\"><span class=\"w-light\">Galería de patrimonio | Nivel -1</span></div>\r\n<div class=\"singles--coordinates\"><span class=\"w-light\">Entrada liberada</span></div>\r\n\r\n<hr />\r\n\r\n<div class=\"singles--coordinates\"><em>Être Cible (Ser el blanco). </em>Roberto Matta, ca. 1958-1960. (detalle) © Colección Manuel Santa Cruz</div>",
+     "coordenada_reemplazar": "",
+     "activar_galeria": false,
+     "galeria": null,
+     "activar_video": "desactivado",
+     "video": null,
+     "video_externo": "",
+     "activar_descargables": false,
+     "descargables": null,
+     "activar_relacionados": false,
+     "relacionados": "",
+     "activar_patrocinadores": true,
+     "auspiciadores": [
+      {
+       "titulo": "Invitan",
+       "logos": [
+        {
+         "imagen": 574424
+        },
+        {
+         "imagen": 577278
+        }
+       ]
+      }
+     ],
+     "pagina_traduccion": "",
+     "ticketera_cclm": {
+      "evento_activo": true,
+      "venta_tickets": false,
+      "excluir_agenda": false,
+      "tipo_precios": "especifico",
+      "precios": {
+       "general": 0,
+       "nino": 0,
+       "estudiante": 0,
+       "mayor": 0,
+       "convenio": 0
+      },
+      "precios_eventos_externos": {
+       "costo_servicio": "",
+       "entrada": null
+      },
+      "ocultar_header": false,
+      "tipos_entradas_habilitadas": [
+       "general"
+      ],
+      "fecha_manual": "auto",
+      "fecha_y_horario": {
+       "hora": "10:15 a 18:45 horas",
+       "fecha": "Noviembre 11, 2026 / Enero, 03, 2027"
+      },
+      "": null,
+      "horarios": [
+       {
+        "fecha_inicio": "20261111",
+        "fecha_cierre": "20261220",
+        "hora_inicio": "10:15:00",
+        "hora_cierre": "18:45:00",
+        "dias": [
+         "Tue",
+         "Wed",
+         "Thu",
+         "Fri",
+         "Sat",
+         "Sun"
+        ],
+        "ubicacion": 23,
+        "maximo_entradas": 50,
+        "gratuito": true
+       },
+       {
+        "fecha_inicio": "20261221",
+        "fecha_cierre": "20270103",
+        "hora_inicio": "10:15:00",
+        "hora_cierre": "18:45:00",
+        "dias": [
+         "Tue",
+         "Wed",
+         "Thu",
+         "Sat",
+         "Sun"
+        ],
+        "ubicacion": 23,
+        "maximo_entradas": 50,
+        "gratuito": true
+       }
+      ],
+      "cantidad_maxima_generales": 2,
+      "cantidad_maxima_ninos": 5
+     },
+     "visitas_mediadas": {
+      "activar_visitas_mediadas": false,
+      "precio": 0,
+      "vm_dias_general": "",
+      "vm_dias_institucion": "",
+      "horarios": null,
+      "activar_solo_fines_de_semana": true,
+      "solo_dias_de_semana": true,
+      "boton_visita_mediada": "Ir a reservas"
+     }
+    },
+    "muestra": [
+     {
+      "id": 577322,
+      "link": "https://www.cclm.cl/exposicion/el-universo-de-matta/",
+      "titulo": "El universo de Matta: Être Cible (Ser el blanco)",
+      "fecha": "2026-11-06T13:59:35",
+      "mod": "2026-11-12T13:34:21"
+     },
+     {
+      "id": 576411,
+      "link": "https://www.cclm.cl/exposicion/fragmentos-de-lo-propio/",
+      "titulo": "Fragmentos de lo propio",
+      "fecha": "2026-10-14T14:48:12",
+      "mod": "2026-11-06T15:48:27"
+     },
+     {
+      "id": 568863,
+      "link": "https://www.cclm.cl/exposicion/chilenidad/",
+      "titulo": "Chilenidad",
+      "fecha": "2026-08-19T13:18:28",
+      "mod": "2026-09-16T15:32:50"
+     },
+     {
+      "id": 568553,
+      "link": "https://www.cclm.cl/exposicion/casa-comun/",
+      "titulo": "CASA COMÚN",
+      "fecha": "2026-08-18T12:16:01",
+      "mod": "2026-10-15T15:59:53"
+     }
+    ]
+   },
+   "festival": {
+    "status": 200,
+    "n": 4,
+    "claves": [
+     "id",
+     "date",
+     "date_gmt",
+     "guid",
+     "modified",
+     "modified_gmt",
+     "slug",
+     "status",
+     "type",
+     "link",
+     "title",
+     "excerpt",
+     "featured_media",
+     "parent",
+     "template",
+     "class_list",
+     "acf",
+     "yoast_head",
+     "yoast_head_json",
+     "_links"
+    ],
+    "acf": {
+     "activar_patrocinadores": true,
+     "auspiciadores": [
+      {
+       "titulo": "Invita",
+       "logos": [
+        {
+         "imagen": 574424
+        },
+        {
+         "imagen": 224434
+        },
+        {
+         "imagen": 577205
+        }
+       ]
+      },
+      {
+       "titulo": "Colaboran",
+       "logos": [
+        {
+         "imagen": 577278
+        },
+        {
+         "imagen": 577235
+        }
+       ]
+      }
+     ],
+     "pagina_traduccion": ""
+    },
+    "muestra": [
+     {
+      "id": 577204,
+      "link": "https://www.cclm.cl/festivales/noche-de-museos-2026/",
+      "titulo": "Noche de Museos en CCLM",
+      "fecha": "2026-11-04T16:46:05",
+      "mod": "2026-11-05T16:42:21"
+     },
+     {
+      "id": 569216,
+      "link": "https://www.cclm.cl/festivales/cine-tus-fantasmas-son-mios/",
+      "titulo": "TUS FANTASMAS SON MÍOS",
+      "fecha": "2026-08-26T18:30:01",
+      "mod": "2026-09-02T17:56:50"
+     },
+     {
+      "id": 555632,
+      "link": "https://www.cclm.cl/festivales/vacaciones-de-invierno-en-el-cclm/",
+      "titulo": "VACACIONES DE INVIERNO EN EL CCLM",
+      "fecha": "2026-06-09T16:47:00",
+      "mod": "2026-06-26T12:01:50"
+     },
+     {
+      "id": 552986,
+      "link": "https://www.cclm.cl/festivales/dia-de-los-patrimonios-3/",
+      "titulo": "DÍA DE LOS PATRIMONIOS",
+      "fecha": "2026-05-19T15:25:01",
+      "mod": "2026-05-19T15:25:01"
+     }
+    ]
+   },
+   "cineteca_nacional": {
+    "status": 200,
+    "n": 4,
+    "claves": [
+     "id",
+     "date",
+     "date_gmt",
+     "guid",
+     "modified",
+     "modified_gmt",
+     "slug",
+     "status",
+     "type",
+     "link",
+     "title",
+     "excerpt",
+     "featured_media",
+     "parent",
+     "template",
+     "excluir_agenda",
+     "sala",
+     "class_list",
+     "acf",
+     "yoast_head",
+     "yoast_head_json",
+     "_links"
+    ],
+    "acf": {
+     "activar_patrocinadores": true,
+     "auspiciadores": [
+      {
+       "titulo": "ORGANIZAN",
+       "logos": [
+        {
+         "imagen": 513448
+        },
+        {
+         "imagen": 568576
+        },
+        {
+         "imagen": 564116
+        },
+        {
+         "imagen": 564117
+        },
+        {
+         "imagen": 564118
+        },
+        {
+         "imagen": 564119
+        },
+        {
+         "imagen": 564120
+        },
+        {
+         "imagen": 564122
+        }
+       ]
+      }
+     ],
+     "pagina_traduccion": "",
+     "ticketera_cclm": {
+      "evento_activo": true,
+      "venta_tickets": true,
+      "excluir_agenda": false,
+      "tipo_precios": "especifico",
+      "precios": {
+       "general": 0,
+       "nino": 0,
+       "estudiante": 0,
+       "mayor": 0,
+       "convenio": 0
+      },
+      "precios_eventos_externos": {
+       "costo_servicio": "",
+       "entrada": null
+      },
+      "ocultar_header": false,
+      "tipos_entradas_habilitadas": [
+       "general"
+      ],
+      "fecha_manual": "manual",
+      "fecha_y_horario": {
+       "hora": "20:00 horas",
+       "fecha": "Septiembre 06, 2026"
+      },
+      "": null,
+      "horarios": [
+       {
+        "fecha_inicio": "20260906",
+        "fecha_cierre": "20260906",
+        "hora_inicio": "20:00:00",
+        "hora_cierre": "22:00:00",
+        "dias": [
+         "Sat"
+        ],
+        "ubicacion": 25,
+        "maximo_entradas": 210,
+        "gratuito": true
+       }
+      ],
+      "cantidad_maxima_generales": 2,
+      "cantidad_maxima_ninos": 0
+     }
+    },
+    "muestra": [
+     {
+      "id": 570511,
+      "link": "https://www.cclm.cl/cineteca-nacional/it-must-be-heaven/",
+      "titulo": "It Must Be Heaven",
+      "fecha": "2026-08-26T18:29:43",
+      "mod": "2026-08-26T18:29:43"
+     },
+     {
+      "id": 570506,
+      "link": "https://www.cclm.cl/cineteca-nacional/the-lebanese-rocket-society/",
+      "titulo": "The Lebanese Rocket Society",
+      "fecha": "2026-08-26T18:17:48",
+      "mod": "2026-08-26T18:22:00"
+     },
+     {
+      "id": 570348,
+      "link": "https://www.cclm.cl/cineteca-nacional/la-madre-de-todas-las-mentiras-the-mother-of-all-lies/",
+      "titulo": "The Mother of All Lies",
+      "fecha": "2026-08-26T18:05:40",
+      "mod": "2026-08-26T18:05:51"
+     },
+     {
+      "id": 570345,
+      "link": "https://www.cclm.cl/cineteca-nacional/143-sahara-street/",
+      "titulo": "143 Sahara Street",
+      "fecha": "2026-08-26T18:00:16",
+      "mod": "2026-08-26T18:00:16"
+     }
+    ]
+   },
+   "tipo_actividad": {
+    "status": 400,
+    "n": null,
+    "claves": null,
+    "acf": null,
+    "muestra": "{\"code\":\"rest_invalid_param\",\"message\":\"Par\\u00e1metro(s) no v\\u00e1lido(s): orderby\",\"data\":{\"status\":400,\"params\":{\"orderby\":\"orderby no es uno de id, include, name, slug, include_slugs, term_group, description, y count.\"},\"details\":{\"orderby\":{\"code\":\"rest_not_in_enum\",\"message\":\"orderby no es un"
+   },
+   "detalle": {
+    "link": "https://www.cclm.cl/actividades/enredaderas-mi-vida-entera-banda-sexto-sentido/",
+    "status": 200,
+    "jsonLdEventos": [],
+    "fechasEnTexto": [
+     "2026-11-11T19:37:24",
+     "29 de noviembre",
+     "01 de enero",
+     "01 de mayo",
+     "19 de septiembre",
+     "25 de diciembre",
+     "2026-11-13"
+    ]
+   },
+   "pagina/agenda/": {
+    "status": 404,
+    "bytes": 37954,
+    "fechas": [
+     "01 de enero",
+     "01 de mayo",
+     "19 de septiembre",
+     "25 de diciembre",
+     "2026-11-13"
+    ]
+   },
+   "pagina/cartelera/": {
+    "status": 200,
+    "bytes": 55532,
+    "fechas": [
+     "2023-04-14T16:47:15",
+     "2023-03-29T15:21:11",
+     "30 DE ABRIL",
+     "21 de abril",
+     "30 de abril",
+     "01 de enero",
+     "01 de mayo",
+     "19 de septiembre",
+     "25 de diciembre",
+     "2026-11-13"
+    ]
+   }
+  },
+  "artdec_rm": {
+   "paginas": [
+    {
+     "p": 0,
+     "filas": 10,
+     "primeraFechaInicio": "24/Abril/2025",
+     "ultimaFechaInicio": "02/Enero/2026"
+    },
+    {
+     "p": 1,
+     "filas": 10,
+     "primeraFechaInicio": "22/Enero/2026",
+     "ultimaFechaInicio": "10/Septiembre/2026"
+    },
+    {
+     "p": 2,
+     "filas": 10,
+     "primeraFechaInicio": "15/Septiembre/2026",
+     "ultimaFechaInicio": "13/Octubre/2026"
+    },
+    {
+     "p": 3,
+     "filas": 10,
+     "primeraFechaInicio": "15/Octubre/2026",
+     "ultimaFechaInicio": "06/Noviembre/2026"
+    },
+    {
+     "p": 4,
+     "filas": 10,
+     "primeraFechaInicio": "06/Noviembre/2026",
+     "ultimaFechaInicio": "13/Noviembre/2026"
+    },
+    {
+     "p": 5,
+     "filas": 10,
+     "primeraFechaInicio": "13/Noviembre/2026",
+     "ultimaFechaInicio": "14/Noviembre/2026"
+    },
+    {
+     "p": 6,
+     "filas": 10,
+     "primeraFechaInicio": "17/Noviembre/2026",
+     "ultimaFechaInicio": "20/Noviembre/2026"
+    },
+    {
+     "p": 7,
+     "filas": 3,
+     "primeraFechaInicio": "20/Noviembre/2026",
+     "ultimaFechaInicio": "20/Noviembre/2026"
+    }
+   ],
+   "variantesInscripcion": {
+    "no-inscription · Evento Vigente": 73
+   },
+   "maxPageEnPager": null,
+   "filasTotales": 73,
+   "ultimaPaginaLeida": 7,
+   "conInscripcion": 0
+  },
+  "paginas_html": {
+   "teatromunicipal": {
+    "status": 200,
+    "finalUrl": "https://ticketera.municipal.cl/entradas",
+    "bytes": 2117022,
+    "nuxtData": true,
+    "jsonLdEventos": 0,
+    "fechas": []
+   },
+   "gam_calendario": {
+    "status": 200,
+    "finalUrl": "https://gam.cl/es/calendario/",
+    "bytes": 1168716,
+    "nuxtData": false,
+    "jsonLdEventos": 0,
+    "fechas": [
+     "2026-11-01",
+     "2026-11-02",
+     "2026-11-03",
+     "2026-11-04",
+     "2026-11-05",
+     "2026-11-06"
+    ]
+   },
+   "gam_calendario_b": {
+    "status": 200,
+    "finalUrl": "https://gam.cl/es/calendario/",
+    "bytes": 1168716,
+    "nuxtData": false,
+    "jsonLdEventos": 0,
+    "fechas": [
+     "2026-11-01",
+     "2026-11-02",
+     "2026-11-03",
+     "2026-11-04",
+     "2026-11-05",
+     "2026-11-06"
+    ]
+   },
+   "m100_semana": {
+    "status": 200,
+    "finalUrl": "https://www.m100.cl/esta-semana-en-m100/",
+    "bytes": 133903,
+    "nuxtData": false,
+    "jsonLdEventos": 0,
+    "fechas": [
+     "2026-11-13"
+    ]
+   },
+   "m100_programacion": {
+    "status": 200,
+    "finalUrl": "https://www.m100.cl/programacion/educacion/",
+    "bytes": 143528,
+    "nuxtData": false,
+    "jsonLdEventos": 0,
+    "fechas": [
+     "2026-11-13"
+    ]
+   }
+  },
+  "nochedemuseos_api": {
+   "https://api.nochedemuseos.cl": {
+    "status": 200,
+    "type": "application/json; charset=utf-8",
+    "inicio": "{\"title\":\"API NocheDeMuseos\"}"
+   },
+   "https://api.nochedemuseos.cl/activities": {
+    "status": 404,
+    "type": "application/json; charset=utf-8",
+    "inicio": "{\"message\":\"Cannot GET:/activities\"}"
+   },
+   "https://api.nochedemuseos.cl/actividades": {
+    "status": 404,
+    "type": "application/json; charset=utf-8",
+    "inicio": "{\"message\":\"Cannot GET:/actividades\"}"
+   },
+   "https://api.nochedemuseos.cl/events": {
+    "status": 404,
+    "type": "application/json; charset=utf-8",
+    "inicio": "{\"message\":\"Cannot GET:/events\"}"
+   },
+   "https://api.nochedemuseos.cl/api/activities": {
+    "status": 404,
+    "type": "application/json; charset=utf-8",
+    "inicio": "{\"message\":\"Cannot GET:/api/activities\"}"
+   },
+   "https://api.nochedemuseos.cl/graphql": {
+    "status": 404,
+    "type": "application/json; charset=utf-8",
+    "inicio": "{\"message\":\"Cannot GET:/graphql\"}"
+   },
+   "rutasEnBundles": [
+    "/actividades",
+    "/espacios"
+   ]
+  }
+ }
+}
