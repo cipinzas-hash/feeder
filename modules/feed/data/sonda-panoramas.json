@@ -1,0 +1,2027 @@
+{
+ "generado": "2026-11-13T23:49:38.562Z",
+ "parcial": false,
+ "fuentes": [
+  {
+   "id": "artdec",
+   "nombre": "Red Nacional (SNPC) — artdec.gob.cl",
+   "base": "https://www.artdec.gob.cl",
+   "supuesta": false,
+   "paginas": [
+    {
+     "url": "https://www.artdec.gob.cl/cartelera/red-nacional",
+     "status": 200,
+     "finalUrl": "https://www.artdec.gob.cl/cartelera/red-nacional",
+     "bytes": 52606,
+     "ms": 2030,
+     "error": null,
+     "necesitaUABrowser": false
+    }
+   ],
+   "probes": [
+    {
+     "etiqueta": "wp-json raíz",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "The Events Calendar (API)",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "tipos de contenido WP",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "RSS /feed/",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "ICS The Events Calendar",
+     "status": 200,
+     "contentType": "text/html; charset=UTF-8",
+     "bytes": 46692,
+     "html": true
+    },
+    {
+     "etiqueta": "Drupal JSON:API",
+     "status": 200,
+     "contentType": "application/vnd.api+json",
+     "bytes": 24125,
+     "json": true,
+     "claves": [
+      "jsonapi",
+      "data",
+      "links"
+     ]
+    },
+    {
+     "etiqueta": "sitemap.xml",
+     "status": 200,
+     "contentType": "application/xml; charset=utf-8",
+     "bytes": 485,
+     "sitemap": true,
+     "urls": 1,
+     "muestraEventos": []
+    },
+    {
+     "etiqueta": "robots.txt",
+     "status": 200,
+     "contentType": "text/plain",
+     "bytes": 2027,
+     "disallow": 34,
+     "crawlDelay": null,
+     "sitemaps": [],
+     "bloqueaTodo": false
+    }
+   ],
+   "motor": [
+    "Drupal 10 (https://www.drupal.org)",
+    "Drupal"
+   ],
+   "jsonLd": {
+    "bloques": 0,
+    "tipos": [],
+    "eventos": 0,
+    "muestra": []
+   },
+   "enlaces": {
+    "alternates": [],
+    "ics": []
+   },
+   "endpoints": [
+    "https://api.whatsapp.com/send?text=https://www.mnhn.gob.cl/cartelera/mariposas-y-polillas-colores-en-movimiento",
+    "https://api.whatsapp.com/send?text=https://www.mnba.gob.cl/cartelera/roberto-matta-abrir-la-mirada",
+    "https://api.whatsapp.com/send?text=https://www.bibliotecanacional.gob.cl/cartelera/exposicion-el-mundo-en-una-biblioteca-cien-anos-de-la-donacion-de-jose-toribio-medina",
+    "https://api.whatsapp.com/send?text=https://www.bibliotecanacional.gob.cl/cartelera/un-archivo-en-construccion-la-obra-de-tito-vasquez",
+    "https://api.whatsapp.com/send?text=https://www.mnba.gob.cl/cartelera/145-anos-historias-de-una-coleccion",
+    "https://api.whatsapp.com/send?text=https://www.mnhn.gob.cl/cartelera/vitrina-colecciones-arqueologicas-y-su-estudio-en-el-mnhn",
+    "https://api.whatsapp.com/send?text=https://www.mnhn.gob.cl/cartelera/vertebrados-anatomia-evolucion-extincion",
+    "https://api.whatsapp.com/send?text=https://www.mhnv.gob.cl/cartelera/craneos-esenciales-para-la-vida",
+    "https://api.whatsapp.com/send?text=https://www.mhn.gob.cl/cartelera/atencion-catalogo-fotografico-previa-cita",
+    "https://api.whatsapp.com/send?text=https://www.mhn.gob.cl/cartelera/podcast-la-hora-del-museo-del-museo-historico-nacional"
+   ],
+   "formularios": [
+    {
+     "method": "get",
+     "action": "/buscar",
+     "campos": [
+      {
+       "tipo": "input:text",
+       "name": "texto"
+      }
+     ]
+    },
+    {
+     "method": "get",
+     "action": "/cartelera/red-nacional",
+     "campos": [
+      {
+       "tipo": "select",
+       "name": "region",
+       "opciones": [
+        {
+         "value": "",
+         "texto": "- Cualquiera -"
+        },
+        {
+         "value": "AN",
+         "texto": "Antofagasta"
+        },
+        {
+         "value": "AR",
+         "texto": "Araucanía"
+        },
+        {
+         "value": "AP",
+         "texto": "Arica y Parinacota"
+        },
+        {
+         "value": "AT",
+         "texto": "Atacama"
+        },
+        {
+         "value": "AI",
+         "texto": "Aysén del General Carlos Ibáñez del Campo"
+        },
+        {
+         "value": "BI",
+         "texto": "Biobío"
+        },
+        {
+         "value": "CO",
+         "texto": "Coquimbo"
+        },
+        {
+         "value": "LI",
+         "texto": "Libertador General Bernardo O&#039;Higgins"
+        },
+        {
+         "value": "LL",
+         "texto": "Los Lagos"
+        },
+        {
+         "value": "LR",
+         "texto": "Los Ríos"
+        },
+        {
+         "value": "MA",
+         "texto": "Magallanes y de la Antártica Chilena"
+        },
+        {
+         "value": "ML",
+         "texto": "Maule"
+        },
+        {
+         "value": "RM",
+         "texto": "Metropolitana de Santiago"
+        },
+        {
+         "value": "NB",
+         "texto": "Ñuble"
+        },
+        {
+         "value": "TA",
+         "texto": "Tarapacá"
+        },
+        {
+         "value": "VS",
+         "texto": "Valparaíso"
+        }
+       ],
+       "totalOpciones": 17
+      },
+      {
+       "tipo": "select",
+       "name": "tipo_evento",
+       "opciones": [
+        {
+         "value": "All",
+         "texto": "- Cualquiera -"
+        },
+        {
+         "value": "capacitacion",
+         "texto": "Capacitación"
+        },
+        {
+         "value": "charla",
+         "texto": "Charla"
+        },
+        {
+         "value": "ciclo",
+         "texto": "Ciclo"
+        },
+        {
+         "value": "concurso",
+         "texto": "Concurso"
+        },
+        {
+         "value": "convocatoria",
+         "texto": "Convocatoria"
+        },
+        {
+         "value": "curso",
+         "texto": "Curso"
+        },
+        {
+         "value": "encuentro",
+         "texto": "Encuentro"
+        },
+        {
+         "value": "evento-especial",
+         "texto": "Evento especial"
+        },
+        {
+         "value": "exposicion",
+         "texto": "Exposición"
+        },
+        {
+         "value": "inauguracion",
+         "texto": "Inauguración"
+        },
+        {
+         "value": "lanzamiento",
+         "texto": "Lanzamiento"
+        },
+        {
+         "value": "taller",
+         "texto": "Taller"
+        },
+        {
+         "value": "visita-guiada",
+         "texto": "Visita guiada"
+        },
+        {
+         "value": "otro",
+         "texto": "Otro"
+        }
+       ],
+       "totalOpciones": 15
+      },
+      {
+       "tipo": "select",
+       "name": "presencial_o_virtual",
+       "opciones": [
+        {
+         "value": "All",
+         "texto": "- Cualquiera -"
+        },
+        {
+         "value": "presencial",
+         "texto": "Presencial"
+        },
+        {
+         "value": "virtual",
+         "texto": "Virtual"
+        }
+       ],
+       "totalOpciones": 3
+      }
+     ]
+    }
+   ],
+   "veredicto": "A? · endpoints candidatos en el código JS (ver lista)"
+  },
+  {
+   "id": "santiagocultura",
+   "nombre": "Santiago Cultura (Municipalidad de Santiago)",
+   "base": "https://www.santiagocultura.cl",
+   "supuesta": false,
+   "paginas": [
+    {
+     "url": "https://www.santiagocultura.cl/agenda-cultural/",
+     "status": 200,
+     "finalUrl": "https://www.santiagocultura.cl/agenda-cultural/",
+     "bytes": 75041,
+     "ms": 1475,
+     "error": null,
+     "necesitaUABrowser": false
+    }
+   ],
+   "probes": [
+    {
+     "etiqueta": "wp-json raíz",
+     "status": 200,
+     "contentType": "application/json; charset=UTF-8",
+     "bytes": 259095,
+     "json": true,
+     "claves": [
+      "name",
+      "description",
+      "url",
+      "home",
+      "gmt_offset",
+      "timezone_string",
+      "page_for_posts",
+      "page_on_front",
+      "show_on_front",
+      "namespaces",
+      "authentication",
+      "routes"
+     ],
+     "namespaces": [
+      "oembed/1.0",
+      "wordfence-login-security/v1",
+      "wordfence/v1",
+      "eventon/v1",
+      "evo-admin",
+      "wp/v2",
+      "wp-site-health/v1",
+      "wp-block-editor/v1",
+      "wp-abilities/v1"
+     ]
+    },
+    {
+     "etiqueta": "The Events Calendar (API)",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "tipos de contenido WP",
+     "status": 200,
+     "contentType": "application/json; charset=UTF-8",
+     "bytes": 6938,
+     "json": true,
+     "claves": [
+      "post",
+      "page",
+      "attachment",
+      "nav_menu_item",
+      "wp_block",
+      "wp_template",
+      "wp_template_part",
+      "wp_global_styles",
+      "wp_navigation",
+      "wp_font_family",
+      "wp_font_face",
+      "ajde_events"
+     ]
+    },
+    {
+     "etiqueta": "RSS /feed/",
+     "status": 200,
+     "contentType": "application/rss+xml; charset=UTF-8",
+     "bytes": 60525,
+     "feed": true,
+     "items": 12
+    },
+    {
+     "etiqueta": "ICS The Events Calendar",
+     "status": 200,
+     "contentType": "text/html; charset=UTF-8",
+     "bytes": 76494,
+     "html": true
+    },
+    {
+     "etiqueta": "Drupal JSON:API",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "sitemap.xml",
+     "status": 200,
+     "contentType": "application/xml; charset=UTF-8",
+     "bytes": 1082,
+     "sitemap": true,
+     "urls": 9,
+     "muestraEventos": [
+      "https://www.santiagocultura.cl/wp-sitemap-posts-ajde_events-1.xml",
+      "https://www.santiagocultura.cl/wp-sitemap-posts-ajde_events-2.xml",
+      "https://www.santiagocultura.cl/wp-sitemap-taxonomies-event_location-1.xml",
+      "https://www.santiagocultura.cl/wp-sitemap-taxonomies-event_organizer-1.xml",
+      "https://www.santiagocultura.cl/wp-sitemap-taxonomies-event_type-1.xml"
+     ]
+    },
+    {
+     "etiqueta": "robots.txt",
+     "status": 200,
+     "contentType": "text/plain",
+     "bytes": 530,
+     "disallow": 14,
+     "crawlDelay": null,
+     "sitemaps": [
+      "Sitemap: https://www.santiagocultura.cl/wp-sitemap.xml"
+     ],
+     "bloqueaTodo": true
+    }
+   ],
+   "motor": [
+    "WordPress (wp-content)"
+   ],
+   "jsonLd": {
+    "bloques": 0,
+    "tipos": [],
+    "eventos": 0,
+    "muestra": []
+   },
+   "enlaces": {
+    "alternates": [
+     {
+      "href": "https://www.santiagocultura.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.santiagocultura.cl%2Fagenda-cultural%2F",
+      "type": "application/json+oembed"
+     },
+     {
+      "href": "https://www.santiagocultura.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.santiagocultura.cl%2Fagenda-cultural%2F&#038;format=xml",
+      "type": "text/xml+oembed"
+     },
+     {
+      "href": "https://www.santiagocultura.cl/wp-json/wp/v2/pages/40",
+      "type": "application/json"
+     }
+    ],
+    "ics": []
+   },
+   "endpoints": [
+    "https://www.santiagocultura.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.santiagocultura.cl%2Fagenda-cultural%2F",
+    "https://www.santiagocultura.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.santiagocultura.cl%2Fagenda-cultural%2F&#038;format=xml",
+    "https://api.w.org/",
+    "https://www.santiagocultura.cl/wp-json/",
+    "https://www.santiagocultura.cl/wp-json/wp/v2/pages/40",
+    "https://fonts.googleapis.com/css?family=Noto+Sans:400,400italic,700|Poppins:700,800,900&#038;subset=latin%2Clatin-ext&#038;ver=4.9.10",
+    "https://meet.jit.si/external_api.js?ver=4.9.10",
+    "https://www.santiagocultura.cl/wp-json/eventon/v1/data?evo-ajax=%%endpoint%%"
+   ],
+   "formularios": [
+    {
+     "method": "get",
+     "action": "https://www.santiagocultura.cl/",
+     "campos": [
+      {
+       "tipo": "input:search",
+       "name": "s"
+      }
+     ]
+    },
+    {
+     "method": "get",
+     "action": "https://www.santiagocultura.cl/",
+     "campos": [
+      {
+       "tipo": "input:search",
+       "name": "s"
+      }
+     ]
+    }
+   ],
+   "veredicto": "A− · API WordPress (revisar si hay tipo de contenido de eventos)"
+  },
+  {
+   "id": "nochedemuseos",
+   "nombre": "Noche de Museos (plataforma nacional)",
+   "base": "https://www.nochedemuseos.cl",
+   "supuesta": false,
+   "paginas": [
+    {
+     "url": "https://www.nochedemuseos.cl/",
+     "status": 200,
+     "finalUrl": "https://nochedemuseos.cl/",
+     "bytes": 216097,
+     "ms": 1386,
+     "error": null,
+     "necesitaUABrowser": false
+    }
+   ],
+   "probes": [
+    {
+     "etiqueta": "wp-json raíz",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "The Events Calendar (API)",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "tipos de contenido WP",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "RSS /feed/",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "ICS The Events Calendar",
+     "status": 200,
+     "contentType": "text/html;charset=utf-8",
+     "bytes": 214460,
+     "html": true
+    },
+    {
+     "etiqueta": "Drupal JSON:API",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "sitemap.xml",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "robots.txt",
+     "status": 200,
+     "contentType": "text/plain; charset=utf-8",
+     "bytes": 24,
+     "disallow": 1,
+     "crawlDelay": null,
+     "sitemaps": [],
+     "bloqueaTodo": false
+    }
+   ],
+   "motor": [
+    "Nuxt"
+   ],
+   "jsonLd": {
+    "bloques": 0,
+    "tipos": [],
+    "eventos": 0,
+    "muestra": []
+   },
+   "enlaces": {
+    "alternates": [],
+    "ics": []
+   },
+   "endpoints": [
+    "https://fonts.googleapis.com",
+    "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Slab:wght@400;500;700&display=swap",
+    "https://api.nochedemuseos.cl"
+   ],
+   "formularios": [],
+   "veredicto": "A? · endpoints candidatos en el código JS (ver lista)"
+  },
+  {
+   "id": "gobiernosantiago",
+   "nombre": "Gobierno de Santiago / Región Metropolitana",
+   "base": "https://www.gobiernosantiago.cl",
+   "supuesta": false,
+   "paginas": [
+    {
+     "url": "https://www.gobiernosantiago.cl/",
+     "status": 200,
+     "finalUrl": "https://www.gobiernosantiago.cl/",
+     "bytes": 204437,
+     "ms": 1148,
+     "error": null,
+     "necesitaUABrowser": false
+    }
+   ],
+   "probes": [
+    {
+     "etiqueta": "wp-json raíz",
+     "status": 200,
+     "contentType": "application/json; charset=UTF-8",
+     "bytes": 321161,
+     "json": true,
+     "claves": [
+      "name",
+      "description",
+      "url",
+      "home",
+      "gmt_offset",
+      "timezone_string",
+      "page_for_posts",
+      "page_on_front",
+      "show_on_front",
+      "namespaces",
+      "authentication",
+      "routes"
+     ],
+     "namespaces": [
+      "oembed/1.0",
+      "contact-form-7/v1",
+      "rankmath/v1",
+      "rankmath/v1/setupWizard",
+      "string-locator/v1",
+      "wpvibe/v1",
+      "v1",
+      "elementor-one/v1",
+      "metaslider/v1",
+      "ea11y/v1",
+      "wp-mail-smtp/v1",
+      "wp-mail-smtp/setup-wizard/v1",
+      "rankmath/v1/ai-visibility",
+      "rankmath/v1/ca",
+      "rankmath/v1/an",
+      "rankmath/v1/in",
+      "rankmath/v1/status",
+      "code-snippets/v1",
+      "mcp",
+      "wp/v2",
+      "wp-site-health/v1",
+      "wp-block-editor/v1",
+      "wp-abilities/v1"
+     ]
+    },
+    {
+     "etiqueta": "The Events Calendar (API)",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "tipos de contenido WP",
+     "status": 200,
+     "contentType": "application/json; charset=UTF-8",
+     "bytes": 6340,
+     "json": true,
+     "claves": [
+      "post",
+      "page",
+      "attachment",
+      "nav_menu_item",
+      "wp_block",
+      "wp_template",
+      "wp_template_part",
+      "wp_global_styles",
+      "wp_navigation",
+      "wp_font_family",
+      "wp_font_face",
+      "rm_content_editor"
+     ]
+    },
+    {
+     "etiqueta": "RSS /feed/",
+     "status": 200,
+     "contentType": "application/rss+xml; charset=UTF-8",
+     "bytes": 106110,
+     "feed": true,
+     "items": 10
+    },
+    {
+     "etiqueta": "ICS The Events Calendar",
+     "status": 200,
+     "contentType": "text/html; charset=UTF-8",
+     "bytes": 204437,
+     "html": true
+    },
+    {
+     "etiqueta": "Drupal JSON:API",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "sitemap.xml",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "robots.txt",
+     "status": 200,
+     "contentType": "text/plain; charset=utf-8",
+     "bytes": 127,
+     "disallow": 1,
+     "crawlDelay": null,
+     "sitemaps": [
+      "Sitemap: https://www.gobiernosantiago.cl/sitemap_index.xml"
+     ],
+     "bloqueaTodo": false
+    }
+   ],
+   "motor": [
+    "WordPress 7.1.4",
+    "WordPress (wp-content)"
+   ],
+   "jsonLd": {
+    "bloques": 1,
+    "tipos": [
+     "Person",
+     "Organization",
+     "WebSite",
+     "WebPage",
+     "Article"
+    ],
+    "eventos": 0,
+    "muestra": []
+   },
+   "enlaces": {
+    "alternates": [
+     {
+      "href": "https://www.gobiernosantiago.cl/feed/",
+      "type": "application/rss+xml"
+     },
+     {
+      "href": "https://www.gobiernosantiago.cl/comments/feed/",
+      "type": "application/rss+xml"
+     },
+     {
+      "href": "https://www.gobiernosantiago.cl/pagina-de-ejemplo/feed/",
+      "type": "application/rss+xml"
+     },
+     {
+      "href": "https://www.gobiernosantiago.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.gobiernosantiago.cl%2F",
+      "type": "application/json+oembed"
+     },
+     {
+      "href": "https://www.gobiernosantiago.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.gobiernosantiago.cl%2F&#038;format=xml",
+      "type": "text/xml+oembed"
+     },
+     {
+      "href": "https://www.gobiernosantiago.cl/wp-json/wp/v2/pages/2",
+      "type": "application/json"
+     }
+    ],
+    "ics": []
+   },
+   "endpoints": [
+    "https://www.gobiernosantiago.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.gobiernosantiago.cl%2F",
+    "https://www.gobiernosantiago.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.gobiernosantiago.cl%2F&#038;format=xml",
+    "https://api.w.org/",
+    "https://www.gobiernosantiago.cl/wp-json/",
+    "https://www.gobiernosantiago.cl/wp-json/wp/v2/pages/2",
+    "https://fonts.googleapis.com",
+    "https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+   ],
+   "formularios": [
+    {
+     "method": "get",
+     "action": "http://localhost/wordpress",
+     "campos": [
+      {
+       "tipo": "input:search",
+       "name": "s"
+      }
+     ]
+    },
+    {
+     "method": "get",
+     "action": "https://www.gobiernosantiago.cl/",
+     "campos": [
+      {
+       "tipo": "input:search",
+       "name": "s"
+      }
+     ]
+    }
+   ],
+   "veredicto": "A/B · ICS o RSS enlazado desde la página"
+  },
+  {
+   "id": "teatromunicipal",
+   "nombre": "Teatro Municipal — ticketera",
+   "base": "https://ticketera.municipal.cl",
+   "supuesta": false,
+   "paginas": [
+    {
+     "url": "https://ticketera.municipal.cl/entradas",
+     "status": 200,
+     "finalUrl": "https://ticketera.municipal.cl/entradas",
+     "bytes": 2117022,
+     "ms": 885,
+     "error": null,
+     "necesitaUABrowser": false
+    }
+   ],
+   "probes": [
+    {
+     "etiqueta": "wp-json raíz",
+     "status": 200,
+     "contentType": "text/html; charset=utf-8",
+     "bytes": 2107351,
+     "html": true
+    },
+    {
+     "etiqueta": "The Events Calendar (API)",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "tipos de contenido WP",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "RSS /feed/",
+     "status": 200,
+     "contentType": "text/html; charset=utf-8",
+     "bytes": 2107351,
+     "html": true
+    },
+    {
+     "etiqueta": "ICS The Events Calendar",
+     "status": 200,
+     "contentType": "text/html; charset=utf-8",
+     "bytes": 2140365,
+     "html": true
+    },
+    {
+     "etiqueta": "Drupal JSON:API",
+     "status": 200,
+     "contentType": "text/html; charset=utf-8",
+     "bytes": 2107351,
+     "html": true
+    },
+    {
+     "etiqueta": "sitemap.xml",
+     "status": 200,
+     "contentType": "text/html; charset=utf-8",
+     "bytes": 2107351,
+     "html": true
+    },
+    {
+     "etiqueta": "robots.txt",
+     "status": 404,
+     "error": null
+    }
+   ],
+   "motor": [
+    "Nuxt"
+   ],
+   "jsonLd": {
+    "bloques": 0,
+    "tipos": [],
+    "eventos": 0,
+    "muestra": []
+   },
+   "enlaces": {
+    "alternates": [],
+    "ics": []
+   },
+   "endpoints": [],
+   "formularios": [],
+   "veredicto": "C · HTML (scraping)"
+  },
+  {
+   "id": "gam",
+   "nombre": "GAM",
+   "base": "https://gam.cl",
+   "supuesta": true,
+   "paginas": [
+    {
+     "url": "https://gam.cl/",
+     "status": 200,
+     "finalUrl": "https://gam.cl/es/",
+     "bytes": 60863,
+     "ms": 2484,
+     "error": null,
+     "necesitaUABrowser": false
+    }
+   ],
+   "probes": [
+    {
+     "etiqueta": "wp-json raíz",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "The Events Calendar (API)",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "tipos de contenido WP",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "RSS /feed/",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "ICS The Events Calendar",
+     "status": 200,
+     "contentType": "text/html; charset=utf-8",
+     "bytes": 60863,
+     "html": true
+    },
+    {
+     "etiqueta": "Drupal JSON:API",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "sitemap.xml",
+     "status": 500,
+     "error": null
+    },
+    {
+     "etiqueta": "robots.txt",
+     "status": 200,
+     "contentType": "text/plain",
+     "bytes": 59,
+     "disallow": 0,
+     "crawlDelay": null,
+     "sitemaps": [
+      "Sitemap: https://gam.cl/sitemap.xml"
+     ],
+     "bloqueaTodo": false
+    }
+   ],
+   "motor": [],
+   "jsonLd": {
+    "bloques": 0,
+    "tipos": [],
+    "eventos": 0,
+    "muestra": []
+   },
+   "enlaces": {
+    "alternates": [],
+    "ics": []
+   },
+   "endpoints": [],
+   "formularios": [
+    {
+     "method": "post",
+     "action": "/es/inscripcion/",
+     "campos": [
+      {
+       "tipo": "input:email",
+       "name": "email"
+      }
+     ]
+    },
+    {
+     "method": "post",
+     "action": "/es/inscripcion/",
+     "campos": [
+      {
+       "tipo": "input:email",
+       "name": "email"
+      }
+     ]
+    }
+   ],
+   "veredicto": "C · HTML (scraping)"
+  },
+  {
+   "id": "m100",
+   "nombre": "Matucana 100",
+   "base": "https://m100.cl",
+   "supuesta": true,
+   "paginas": [
+    {
+     "url": "https://m100.cl/",
+     "status": 200,
+     "finalUrl": "https://www.m100.cl/",
+     "bytes": 161451,
+     "ms": 709,
+     "error": null,
+     "necesitaUABrowser": false
+    }
+   ],
+   "probes": [
+    {
+     "etiqueta": "wp-json raíz",
+     "status": 200,
+     "contentType": "application/json; charset=UTF-8",
+     "bytes": 126728,
+     "json": true,
+     "claves": [
+      "name",
+      "description",
+      "url",
+      "home",
+      "gmt_offset",
+      "timezone_string",
+      "namespaces",
+      "authentication",
+      "routes",
+      "_links"
+     ],
+     "namespaces": [
+      "oembed/1.0",
+      "contact-form-7/v1",
+      "wpdm",
+      "social-share/v1",
+      "recommend-post-smtp",
+      "quadlayers/wp-whatsapp-chat",
+      "wp/v2"
+     ]
+    },
+    {
+     "etiqueta": "The Events Calendar (API)",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "tipos de contenido WP",
+     "status": 200,
+     "contentType": "application/json; charset=UTF-8",
+     "bytes": 2608,
+     "json": true,
+     "claves": [
+      "post",
+      "page",
+      "attachment",
+      "wp_block",
+      "sp_accordion_faqs",
+      "portfolio",
+      "gs-logo-slider"
+     ]
+    },
+    {
+     "etiqueta": "RSS /feed/",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "ICS The Events Calendar",
+     "status": 200,
+     "contentType": "text/html; charset=UTF-8",
+     "bytes": 158275,
+     "html": true
+    },
+    {
+     "etiqueta": "Drupal JSON:API",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "sitemap.xml",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "robots.txt",
+     "status": 200,
+     "contentType": "text/plain; charset=utf-8",
+     "bytes": 112,
+     "disallow": 1,
+     "crawlDelay": null,
+     "sitemaps": [
+      "Sitemap: https://www.m100.cl/wp-sitemap.xml"
+     ],
+     "bloqueaTodo": false
+    }
+   ],
+   "motor": [
+    "WordPress 5.5.24",
+    "WordPress (wp-content)"
+   ],
+   "jsonLd": {
+    "bloques": 0,
+    "tipos": [],
+    "eventos": 0,
+    "muestra": []
+   },
+   "enlaces": {
+    "alternates": [],
+    "ics": []
+   },
+   "endpoints": [
+    "https://fonts.googleapis.com/css?family=Nunito+Sans%3A400%2C400i%2C700%2C700i%7CPoppins%3A400%2C400i%2C500%2C600%2C600i&#038;subset=latin",
+    "https://api.w.org/",
+    "https://www.m100.cl/wp-json/",
+    "https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js",
+    "https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"
+   ],
+   "formularios": [
+    {
+     "method": "get",
+     "action": "https://www.m100.cl/",
+     "campos": [
+      {
+       "tipo": "input:search",
+       "name": "s"
+      }
+     ]
+    }
+   ],
+   "veredicto": "A− · API WordPress (revisar si hay tipo de contenido de eventos)"
+  },
+  {
+   "id": "cclm",
+   "nombre": "Centro Cultural La Moneda",
+   "base": "https://www.cclm.cl",
+   "supuesta": true,
+   "paginas": [
+    {
+     "url": "https://www.cclm.cl/",
+     "status": 200,
+     "finalUrl": "https://www.cclm.cl/",
+     "bytes": 77451,
+     "ms": 463,
+     "error": null,
+     "necesitaUABrowser": false
+    }
+   ],
+   "probes": [
+    {
+     "etiqueta": "wp-json raíz",
+     "status": 200,
+     "contentType": "application/json; charset=UTF-8",
+     "bytes": 567411,
+     "json": true,
+     "claves": [
+      "name",
+      "description",
+      "url",
+      "home",
+      "gmt_offset",
+      "timezone_string",
+      "page_for_posts",
+      "page_on_front",
+      "show_on_front",
+      "namespaces",
+      "authentication",
+      "routes"
+     ],
+     "namespaces": [
+      "oembed/1.0",
+      "simple-history/v1",
+      "yoast/v1",
+      "duplicate-post/v1",
+      "check",
+      "format",
+      "search",
+      "filter",
+      "subscribe",
+      "ticketera",
+      "club",
+      "visitas",
+      "guardar",
+      "tickets",
+      "order",
+      "ticket",
+      "activity",
+      "get",
+      "reservar",
+      "pago",
+      "download",
+      "is",
+      "descuento",
+      "lioren",
+      "wp/v2",
+      "wp-site-health/v1",
+      "wp-block-editor/v1",
+      "wp-abilities/v1"
+     ]
+    },
+    {
+     "etiqueta": "The Events Calendar (API)",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "tipos de contenido WP",
+     "status": 200,
+     "contentType": "application/json; charset=UTF-8",
+     "bytes": 42105,
+     "json": true,
+     "claves": [
+      "post",
+      "page",
+      "attachment",
+      "nav_menu_item",
+      "wp_block",
+      "wp_template",
+      "wp_template_part",
+      "wp_global_styles",
+      "wp_navigation",
+      "wp_font_family",
+      "wp_font_face",
+      "acquis_catalog"
+     ]
+    },
+    {
+     "etiqueta": "RSS /feed/",
+     "status": 200,
+     "contentType": "application/rss+xml; charset=UTF-8",
+     "bytes": 47003,
+     "feed": true,
+     "items": 10
+    },
+    {
+     "etiqueta": "ICS The Events Calendar",
+     "status": 200,
+     "contentType": "text/html; charset=UTF-8",
+     "bytes": 76906,
+     "html": true
+    },
+    {
+     "etiqueta": "Drupal JSON:API",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "sitemap.xml",
+     "status": 200,
+     "contentType": "text/xml; charset=UTF-8",
+     "bytes": 3727,
+     "sitemap": true,
+     "urls": 24,
+     "muestraEventos": [
+      "https://www.cclm.cl/actividad-sitemap.xml",
+      "https://www.cclm.cl/actividad-sitemap2.xml",
+      "https://www.cclm.cl/excluir_agenda-sitemap.xml",
+      "https://www.cclm.cl/tipo_actividad-sitemap.xml"
+     ]
+    },
+    {
+     "etiqueta": "robots.txt",
+     "status": 200,
+     "contentType": "text/plain; charset=utf-8",
+     "bytes": 243,
+     "disallow": 2,
+     "crawlDelay": null,
+     "sitemaps": [
+      "Sitemap: https://www.cclm.cl/sitemap_index.xml"
+     ],
+     "bloqueaTodo": false
+    }
+   ],
+   "motor": [
+    "WordPress 6.9.11",
+    "WordPress (wp-content)"
+   ],
+   "jsonLd": {
+    "bloques": 1,
+    "tipos": [
+     "WebPage",
+     "BreadcrumbList",
+     "WebSite"
+    ],
+    "eventos": 0,
+    "muestra": []
+   },
+   "enlaces": {
+    "alternates": [
+     {
+      "href": "https://www.cclm.cl/feed/",
+      "type": "application/rss+xml"
+     },
+     {
+      "href": "https://www.cclm.cl/comments/feed/",
+      "type": "application/rss+xml"
+     },
+     {
+      "href": "https://www.cclm.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.cclm.cl%2F",
+      "type": "application/json+oembed"
+     },
+     {
+      "href": "https://www.cclm.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.cclm.cl%2F&#038;format=xml",
+      "type": "text/xml+oembed"
+     },
+     {
+      "href": "https://www.cclm.cl/wp-json/wp/v2/pages/8",
+      "type": "application/json"
+     }
+    ],
+    "ics": []
+   },
+   "endpoints": [
+    "https://www.cclm.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.cclm.cl%2F",
+    "https://www.cclm.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.cclm.cl%2F&#038;format=xml",
+    "https://api.w.org/",
+    "https://www.cclm.cl/wp-json/",
+    "https://www.cclm.cl/wp-json/wp/v2/pages/8",
+    "https://fonts.googleapis.com/css?family=PT+Serif:400,400i,700,700i&display=swap",
+    "https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap",
+    "https://fonts.googleapis.com/icon?family=Material+Icons",
+    "https://www.cclm.cl/wp-json/subscribe/newsletter",
+    "https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?",
+    "https://{s}.tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=e1957b259c1e4282a0e84048806a62cd&",
+    "/wp-json/tickets/obtain",
+    "/wp-json/ticket/delete",
+    "/wp-json/format/date",
+    "/wp-json/search/exposiciones",
+    "/wp-json/search/cineteca",
+    "/wp-json/search/actividades",
+    "/wp-json/search/cineteca_agenda",
+    "/wp-json/check/date",
+    "/wp-json/check/hours"
+   ],
+   "formularios": [
+    {
+     "method": "get",
+     "action": "/",
+     "campos": [
+      {
+       "tipo": "input:text",
+       "name": "s"
+      }
+     ]
+    },
+    {
+     "method": "get",
+     "action": "/",
+     "campos": [
+      {
+       "tipo": "input:text",
+       "name": "s"
+      }
+     ]
+    },
+    {
+     "method": "post",
+     "action": "https://www.cclm.cl/wp-json/subscribe/newsletter",
+     "campos": [
+      {
+       "tipo": "input:text",
+       "name": "suscription-name"
+      },
+      {
+       "tipo": "input:email",
+       "name": "suscription-email"
+      }
+     ]
+    }
+   ],
+   "veredicto": "A/B · ICS o RSS enlazado desde la página"
+  },
+  {
+   "id": "recoleta",
+   "nombre": "Municipalidad de Recoleta",
+   "base": "https://www.recoleta.cl",
+   "supuesta": true,
+   "paginas": [
+    {
+     "url": "https://www.recoleta.cl/",
+     "status": 403,
+     "finalUrl": "https://www.recoleta.cl/",
+     "bytes": 134,
+     "ms": 271,
+     "error": null,
+     "necesitaUABrowser": false
+    }
+   ],
+   "probes": [],
+   "motor": [],
+   "jsonLd": null,
+   "enlaces": null,
+   "endpoints": [],
+   "formularios": [],
+   "veredicto": "✗ no responde / URL por descubrir"
+  },
+  {
+   "id": "providencia",
+   "nombre": "Municipalidad de Providencia",
+   "base": "https://www.providencia.cl",
+   "supuesta": true,
+   "paginas": [
+    {
+     "url": "https://www.providencia.cl/",
+     "status": 200,
+     "finalUrl": "https://providencia.cl/provi/site/edic/base/port/inicio.html",
+     "bytes": 93207,
+     "ms": 1604,
+     "error": null,
+     "necesitaUABrowser": false
+    }
+   ],
+   "probes": [
+    {
+     "etiqueta": "wp-json raíz",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "The Events Calendar (API)",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "tipos de contenido WP",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "RSS /feed/",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "ICS The Events Calendar",
+     "status": 200,
+     "contentType": "text/html; charset=utf-8",
+     "bytes": 93207,
+     "html": true
+    },
+    {
+     "etiqueta": "Drupal JSON:API",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "sitemap.xml",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "robots.txt",
+     "status": 404,
+     "error": null
+    }
+   ],
+   "motor": [],
+   "jsonLd": {
+    "bloques": 0,
+    "tipos": [],
+    "eventos": 0,
+    "muestra": []
+   },
+   "enlaces": {
+    "alternates": [],
+    "ics": []
+   },
+   "endpoints": [
+    "https://fonts.googleapis.com/css?family=Raleway:400,500,700,800,800i&display=swap",
+    "https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap"
+   ],
+   "formularios": [
+    {
+     "method": "get",
+     "action": "/cgi-bin/prontus_search.cgi",
+     "campos": [
+      {
+       "tipo": "input:text",
+       "name": "search_texto"
+      }
+     ]
+    }
+   ],
+   "veredicto": "A? · endpoints candidatos en el código JS (ver lista)"
+  },
+  {
+   "id": "quintanormal",
+   "nombre": "Municipalidad de Quinta Normal",
+   "base": "https://www.muniqn.cl",
+   "supuesta": true,
+   "paginas": [
+    {
+     "url": "https://www.muniqn.cl/",
+     "status": 0,
+     "finalUrl": null,
+     "bytes": 0,
+     "ms": 162,
+     "error": "fetch failed",
+     "necesitaUABrowser": false
+    }
+   ],
+   "probes": [],
+   "motor": [],
+   "jsonLd": null,
+   "enlaces": null,
+   "endpoints": [],
+   "formularios": [],
+   "veredicto": "✗ no responde / URL por descubrir"
+  },
+  {
+   "id": "sesale",
+   "nombre": "SeSale! (agregador)",
+   "base": "https://www.sesale.cl",
+   "supuesta": true,
+   "paginas": [
+    {
+     "url": "https://www.sesale.cl/",
+     "status": 200,
+     "finalUrl": "https://sesale.cl/",
+     "bytes": 1918,
+     "ms": 829,
+     "error": null,
+     "necesitaUABrowser": false
+    }
+   ],
+   "probes": [
+    {
+     "etiqueta": "wp-json raíz",
+     "status": 200,
+     "contentType": "text/html; charset=utf-8",
+     "bytes": 1918,
+     "html": true
+    },
+    {
+     "etiqueta": "The Events Calendar (API)",
+     "status": 200,
+     "contentType": "text/html; charset=utf-8",
+     "bytes": 1918,
+     "html": true
+    },
+    {
+     "etiqueta": "tipos de contenido WP",
+     "status": 200,
+     "contentType": "text/html; charset=utf-8",
+     "bytes": 1918,
+     "html": true
+    },
+    {
+     "etiqueta": "RSS /feed/",
+     "status": 200,
+     "contentType": "text/html; charset=utf-8",
+     "bytes": 1918,
+     "html": true
+    },
+    {
+     "etiqueta": "ICS The Events Calendar",
+     "status": 200,
+     "contentType": "text/html; charset=utf-8",
+     "bytes": 1918,
+     "html": true
+    },
+    {
+     "etiqueta": "Drupal JSON:API",
+     "status": 200,
+     "contentType": "text/html; charset=utf-8",
+     "bytes": 1918,
+     "html": true
+    },
+    {
+     "etiqueta": "sitemap.xml",
+     "status": 200,
+     "contentType": "application/xml; charset=utf-8",
+     "bytes": 196,
+     "sitemap": true,
+     "urls": 1,
+     "muestraEventos": []
+    },
+    {
+     "etiqueta": "robots.txt",
+     "status": 200,
+     "contentType": "text/plain; charset=utf-8",
+     "bytes": 609,
+     "disallow": 13,
+     "crawlDelay": null,
+     "sitemaps": [
+      "Sitemap: https://sesale.cl/sitemap.xml",
+      "Sitemap: https://sesale.cl/api/sitemap.xml"
+     ],
+     "bloqueaTodo": false
+    }
+   ],
+   "motor": [],
+   "jsonLd": {
+    "bloques": 0,
+    "tipos": [],
+    "eventos": 0,
+    "muestra": []
+   },
+   "enlaces": {
+    "alternates": [],
+    "ics": []
+   },
+   "endpoints": [
+    "https://sesale.cl/api",
+    "/api/uploads/images/sesale-santander-v2.jpg",
+    "/api",
+    "/api${e}"
+   ],
+   "formularios": [],
+   "veredicto": "A? · endpoints candidatos en el código JS (ver lista)"
+  },
+  {
+   "id": "panoramasapp",
+   "nombre": "Panoramas.app (agregador)",
+   "base": "https://panoramas.app",
+   "supuesta": true,
+   "paginas": [
+    {
+     "url": "https://panoramas.app/",
+     "status": 200,
+     "finalUrl": "https://www.panoramas.app/",
+     "bytes": 737057,
+     "ms": 738,
+     "error": null,
+     "necesitaUABrowser": false
+    }
+   ],
+   "probes": [
+    {
+     "etiqueta": "wp-json raíz",
+     "status": 403,
+     "error": null
+    },
+    {
+     "etiqueta": "The Events Calendar (API)",
+     "status": 403,
+     "error": null
+    },
+    {
+     "etiqueta": "tipos de contenido WP",
+     "status": 403,
+     "error": null
+    },
+    {
+     "etiqueta": "RSS /feed/",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "ICS The Events Calendar",
+     "status": 200,
+     "contentType": "text/html; charset=utf-8",
+     "bytes": 737057,
+     "html": true
+    },
+    {
+     "etiqueta": "Drupal JSON:API",
+     "status": 404,
+     "error": null
+    },
+    {
+     "etiqueta": "sitemap.xml",
+     "status": 200,
+     "contentType": "application/xml",
+     "bytes": 240150,
+     "sitemap": true,
+     "urls": 1274,
+     "muestraEventos": [
+      "https://www.panoramas.app",
+      "https://www.panoramas.app/venues",
+      "https://www.panoramas.app/calendario",
+      "https://www.panoramas.app/conciertos",
+      "https://www.panoramas.app/teatro"
+     ]
+    },
+    {
+     "etiqueta": "robots.txt",
+     "status": 200,
+     "contentType": "text/plain",
+     "bytes": 1215,
+     "disallow": 34,
+     "crawlDelay": null,
+     "sitemaps": [
+      "Sitemap: https://www.panoramas.app/sitemap.xml"
+     ],
+     "bloqueaTodo": false
+    }
+   ],
+   "motor": [],
+   "jsonLd": {
+    "bloques": 2,
+    "tipos": [
+     "WebSite",
+     "Organization",
+     "FAQPage"
+    ],
+    "eventos": 0,
+    "muestra": []
+   },
+   "enlaces": {
+    "alternates": [],
+    "ics": []
+   },
+   "endpoints": [
+    "https://fonts.googleapis.com",
+    "https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700;800;900&amp;family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&amp;display=optional",
+    "https://fonts.googleapis.com/css2?family=Epilogue:wght@400;500;600;700;800;900",
+    "https://www.passline.com/imagenes/eventos/terapia-extendida-colectivo-niebla-572492-rec.jpg",
+    "https://www.passline.com/imagenes/eventos/tributo-silvio-rodriguez-por-tito-tapia-en-mystic-valley-568945-rec.jpg",
+    "https://www.passline.com/imagenes/eventos/popurrisas-presenta-risoterapia-566502-rec.jpg",
+    "https://www.passline.com/imagenes/eventos/capitan-memo-en-concierto-507230-rec.jpg",
+    "https://nextjs.org/docs/app/api-reference/functions/use-search-params#updating-searchparams",
+    "https://firebaseinstallations.googleapis.com/v1/projects/${e}/installations",
+    "https://firebase.googleapis.com/v1alpha/projects/-/apps/{app-id}/webConfig"
+   ],
+   "formularios": [],
+   "veredicto": "A? · endpoints candidatos en el código JS (ver lista)"
+  }
+ ],
+ "extras": {
+  "artdec": {
+   "filtros": [
+    {
+     "method": "get",
+     "action": "/buscar",
+     "campos": [
+      {
+       "tipo": "input:text",
+       "name": "texto"
+      }
+     ]
+    },
+    {
+     "method": "get",
+     "action": "/cartelera/red-nacional",
+     "campos": [
+      {
+       "tipo": "select",
+       "name": "region",
+       "opciones": [
+        {
+         "value": "",
+         "texto": "- Cualquiera -"
+        },
+        {
+         "value": "AN",
+         "texto": "Antofagasta"
+        },
+        {
+         "value": "AR",
+         "texto": "Araucanía"
+        },
+        {
+         "value": "AP",
+         "texto": "Arica y Parinacota"
+        },
+        {
+         "value": "AT",
+         "texto": "Atacama"
+        },
+        {
+         "value": "AI",
+         "texto": "Aysén del General Carlos Ibáñez del Campo"
+        },
+        {
+         "value": "BI",
+         "texto": "Biobío"
+        },
+        {
+         "value": "CO",
+         "texto": "Coquimbo"
+        },
+        {
+         "value": "LI",
+         "texto": "Libertador General Bernardo O&#039;Higgins"
+        },
+        {
+         "value": "LL",
+         "texto": "Los Lagos"
+        },
+        {
+         "value": "LR",
+         "texto": "Los Ríos"
+        },
+        {
+         "value": "MA",
+         "texto": "Magallanes y de la Antártica Chilena"
+        },
+        {
+         "value": "ML",
+         "texto": "Maule"
+        },
+        {
+         "value": "RM",
+         "texto": "Metropolitana de Santiago"
+        },
+        {
+         "value": "NB",
+         "texto": "Ñuble"
+        },
+        {
+         "value": "TA",
+         "texto": "Tarapacá"
+        },
+        {
+         "value": "VS",
+         "texto": "Valparaíso"
+        }
+       ],
+       "totalOpciones": 17
+      },
+      {
+       "tipo": "select",
+       "name": "tipo_evento",
+       "opciones": [
+        {
+         "value": "All",
+         "texto": "- Cualquiera -"
+        },
+        {
+         "value": "capacitacion",
+         "texto": "Capacitación"
+        },
+        {
+         "value": "charla",
+         "texto": "Charla"
+        },
+        {
+         "value": "ciclo",
+         "texto": "Ciclo"
+        },
+        {
+         "value": "concurso",
+         "texto": "Concurso"
+        },
+        {
+         "value": "convocatoria",
+         "texto": "Convocatoria"
+        },
+        {
+         "value": "curso",
+         "texto": "Curso"
+        },
+        {
+         "value": "encuentro",
+         "texto": "Encuentro"
+        },
+        {
+         "value": "evento-especial",
+         "texto": "Evento especial"
+        },
+        {
+         "value": "exposicion",
+         "texto": "Exposición"
+        },
+        {
+         "value": "inauguracion",
+         "texto": "Inauguración"
+        },
+        {
+         "value": "lanzamiento",
+         "texto": "Lanzamiento"
+        },
+        {
+         "value": "taller",
+         "texto": "Taller"
+        },
+        {
+         "value": "visita-guiada",
+         "texto": "Visita guiada"
+        },
+        {
+         "value": "otro",
+         "texto": "Otro"
+        }
+       ],
+       "totalOpciones": 15
+      },
+      {
+       "tipo": "select",
+       "name": "presencial_o_virtual",
+       "opciones": [
+        {
+         "value": "All",
+         "texto": "- Cualquiera -"
+        },
+        {
+         "value": "presencial",
+         "texto": "Presencial"
+        },
+        {
+         "value": "virtual",
+         "texto": "Virtual"
+        }
+       ],
+       "totalOpciones": 3
+      }
+     ]
+    }
+   ],
+   "regionParam": {
+    "name": "region",
+    "value": "RM"
+   },
+   "paginas": [
+    {
+     "url": "https://www.artdec.gob.cl/cartelera/red-nacional",
+     "viewsRow": 10,
+     "hastaEl": 10,
+     "eventoVigente": 10
+    },
+    {
+     "url": "https://www.artdec.gob.cl/cartelera/red-nacional?region=RM",
+     "status": 200,
+     "viewsRow": 10,
+     "hastaEl": 10,
+     "eventoVigente": 10
+    },
+    {
+     "url": "https://www.artdec.gob.cl/cartelera/red-nacional?region=RM&page=1",
+     "status": 200,
+     "viewsRow": 10,
+     "hastaEl": 10,
+     "eventoVigente": 10
+    }
+   ]
+  },
+  "santiagocultura": {
+   "enlacesDeEventos": [
+    "https://www.santiagocultura.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.santiagocultura.cl%2Fagenda-cultural%2F",
+    "https://www.santiagocultura.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.santiagocultura.cl%2Fagenda-cultural%2F&#038;format=xml",
+    "https://www.santiagocultura.cl/wp-content/plugins/eventon-full-cal/assets/fc_styles.css?ver=2.2.1",
+    "https://www.santiagocultura.cl/wp-content/uploads/2024/12/favicon-150x150.png",
+    "https://www.santiagocultura.cl/wp-content/uploads/2024/12/favicon-200x200.png"
+   ],
+   "formularios": [
+    {
+     "method": "get",
+     "action": "https://www.santiagocultura.cl/",
+     "campos": [
+      {
+       "tipo": "input:search",
+       "name": "s"
+      }
+     ]
+    },
+    {
+     "method": "get",
+     "action": "https://www.santiagocultura.cl/",
+     "campos": [
+      {
+       "tipo": "input:search",
+       "name": "s"
+      }
+     ]
+    }
+   ],
+   "detalle": {
+    "url": "https://www.santiagocultura.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.santiagocultura.cl%2Fagenda-cultural%2F",
+    "status": 200,
+    "jsonLd": {
+     "bloques": 0,
+     "tipos": [],
+     "eventos": 0,
+     "muestra": []
+    },
+    "motor": [
+     "WordPress (wp-content)"
+    ]
+   },
+   "tiposWP": [
+    {
+     "k": "post",
+     "rest_base": "posts",
+     "nombre": "Entradas"
+    },
+    {
+     "k": "page",
+     "rest_base": "pages",
+     "nombre": "Páginas"
+    },
+    {
+     "k": "attachment",
+     "rest_base": "media",
+     "nombre": "Medios"
+    },
+    {
+     "k": "nav_menu_item",
+     "rest_base": "menu-items",
+     "nombre": "Elementos del menú de navegación"
+    },
+    {
+     "k": "wp_block",
+     "rest_base": "blocks",
+     "nombre": "Patrones"
+    },
+    {
+     "k": "wp_template",
+     "rest_base": "templates",
+     "nombre": "Plantillas"
+    },
+    {
+     "k": "wp_template_part",
+     "rest_base": "template-parts",
+     "nombre": "Partes de plantilla"
+    },
+    {
+     "k": "wp_global_styles",
+     "rest_base": "global-styles",
+     "nombre": "Estilos globales"
+    },
+    {
+     "k": "wp_navigation",
+     "rest_base": "navigation",
+     "nombre": "Menús de navegación"
+    },
+    {
+     "k": "wp_font_family",
+     "rest_base": "font-families",
+     "nombre": "Familias de fuentes"
+    },
+    {
+     "k": "wp_font_face",
+     "rest_base": "font-families/(?P<font_family_id>[\\d]+)/font-faces",
+     "nombre": "Fuentes"
+    },
+    {
+     "k": "ajde_events",
+     "rest_base": "ajde_events",
+     "nombre": "Events"
+    },
+    {
+     "k": "slider",
+     "rest_base": "slider",
+     "nombre": "Sliders"
+    }
+   ],
+   "tipoEventos": {
+    "k": "ajde_events",
+    "rest_base": "ajde_events",
+    "nombre": "Events",
+    "status": 200,
+    "muestra": "[{\"id\":20564,\"date\":\"2026-09-29T14:23:00\",\"date_gmt\":\"2026-09-29T17:23:00\",\"guid\":{\"rendered\":\"https:\\/\\/www.santiagocultura.cl\\/?post_type=ajde_events&#038;p=20564\"},\"modified\":\"2026-09-29T14:23:00\",\"modified_gmt\":\"2026-09-29T17:23:00\",\"slug\":\"formas-de-sostener-coco-santibanez-transforma-el-trabajo-domestico-en-obra-de-arte\",\"status\":\"publish\",\"type\":\"ajde_events\",\"link\":\"https:\\/\\/www.santiagocultura.cl\\/events\\/formas-de-sostener-coco-santibanez-transforma-el-trabajo-domestico-en-obra-de-arte\\/\",\"title\":{\"rendered\":\"\\u00abFormas de Sostener\\u00bb: Coc\\u00f3 Santib\\u00e1\\u00f1ez transforma el trabajo dom\\u00e9stico en obra de arte\"},\"content\":{\"rendered\":\"<ul>\\n<li><strong><em>Galer\\u00eda Hifas presenta Formas de Sostener, muestra individual de la artista visual Coc\\u00f3 Santib\\u00e1\\u00f1ez. La exposici\\u00f3n se articula en torno a una imagen que naci\\u00f3 de una frase escuchada al azar: \\u201cUna tarde, mientras se ba\\u00f1aba en una piscina p\\u00fablica, la artista Coc\\u00f3 Santib\\u00e1\\u00f1ez escuch\\u00f3 a una mujer decirle a otra que reci\\u00e9n a las cuatro de la tarde pod\\u00eda sentarse a descansar. Coc\\u00f3 no conoc\\u00eda a esa mujer, pero imagin\\u00f3 que hablaba de las tareas que hac\\u00eda cotidianamente en su casa. La frase qued\\u00f3 rondando en su cabeza hasta transformarse en una imagen. Una imagen imposible: una silla de pelo trenzado que ya no permite sentarse.<\\/em><\\/strong><\\/li>\\n<\\/ul>\\n<p><i><span style=\\\"font-weight: 400;\\\">Desde entonces "
+   }
+  },
+  "redAlameda": {
+   "status": 200,
+   "enlacesExternos": [
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css",
+    "https://unpkg.com/flickity@2/dist/flickity.min.css",
+    "https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css",
+    "https://www.portaltransparencia.cl/PortalPdT/web/guest/directorio-de-organismos-regulados?p_p_id=pdtorganismos_WAR_pdtorganismosportlet&#038;orgcode=AB081",
+    "https://www.portaltransparencia.cl/PortalPdT/pdtta/-/ta/AB081",
+    "https://www.leylobby.gob.cl/instituciones/AB081",
+    "http://www.mercadopublico.cl/Portal/FeedOrg.aspx?qs=mSYIhslBRYpLxrWJ5HtCLg==",
+    "https://x.com/Gob_Santiago",
+    "https://www.tiktok.com/@gobiernosantiago",
+    "https://coresantiago.cl/",
+    "https://www.flickr.com/photos/193669698@N02/albums/",
+    "http://www.redalamedacultural.cl/"
+   ],
+   "mencionAlameda": [
+    "https://www.gobiernosantiago.cl/2026/06/09/gobierno-de-santiago-y-mas-de-50-instituciones-lanzan-red-para-activar-la-eje-alameda-como-corredor-cultural/",
+    "https://www.gobiernosantiago.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.gobiernosantiago.cl%2F2026%2F06%2F09%2Fgobierno-de-santiago-y-mas-de-50-instituciones-lanzan-red-para-activar-la-eje-alameda-como-corredor-cultural%2F",
+    "https://www.gobiernosantiago.cl/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.gobiernosantiago.cl%2F2026%2F06%2F09%2Fgobierno-de-santiago-y-mas-de-50-instituciones-lanzan-red-para-activar-la-eje-alameda-como-corredor-cultural%2F&#038;format=xml",
+    "http://www.redalamedacultural.cl/",
+    "https://www.gobiernosantiago.cl/tag/nueva-alameda/"
+   ]
+  }
+ }
+}
