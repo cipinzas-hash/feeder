@@ -1,5 +1,5 @@
-import { JUEGOS, SIMULADO } from "./datos.js";
-import { CATEGORIAS, TIPO, motivoDe, haceDias, itemsDe, ventana, filasQueCaben, resumen } from "./logica.js";
+import { fetchGameEnhancedData } from "../shared/catalog.js";
+import { CATEGORIAS, TIPO, motivoDe, cuando, detalleDe, filasFicha, edadDatos, itemsDe, ventana, filasQueCaben, resumen } from "./logica.js";
 import { useEstado, alternarGuardado, ocultar, deshacerOcultar } from "./estado.js";
 
 const { useState, useEffect, useRef, useCallback } = React;
@@ -7,7 +7,7 @@ const { useState, useEffect, useRef, useCallback } = React;
 // ─── Módulo Game enhanced (nov-2026) ────────────────────────────────────────
 // Novedades de juegos que importan: decomps, versiones web, juegos nuevos de los estudios detrás
 // de lo que terminaste y sucesores espirituales. Menú en cruz inspirado en el de la PSX:
-// categorías en horizontal (✨ 🧩 🌐 🏢 👻), ítems en vertical con el enfocado fijo arriba.
+// categorías en horizontal (✨ 🧩 🏢), ítems en vertical con el enfocado fijo arriba.
 //
 // Lineamiento (docs/angst-lineamiento-y-handoff.md §4):
 //  · N1: montado sobre el marco `.app-fit` de core/App.jsx (clases .gameenh / .gameenh-body).
@@ -20,7 +20,9 @@ const { useState, useEffect, useRef, useCallback } = React;
 //    el scroll interno nace solo al expandir una fila o abrir la ficha.
 //  · R6: sin título propio. R7: Caveat + DM Sans, emojis como iconos, fondo oscuro.
 //
-// Datos: SIMULADOS por ahora (datos.js). Persistencia: estado.js (guardados / ocultos).
+// Datos REALES (game-enhanced.json, lo arma build-game-enhanced.mjs una vez al día): decomps/ports de
+// awesome-decomp-games cruzados con tus terminados, y juegos nuevos de sus estudios vía IGDB.
+// Persistencia: estado.js (guardados / ocultos).
 
 const FUENTE = "'DM Sans',sans-serif";
 const CAVEAT = "'Caveat',cursive";
@@ -33,14 +35,11 @@ const AVISO_MS = 6000;
 const reset = { background: "none", border: 0, padding: 0, color: "inherit", fontFamily: "inherit", fontSize: "inherit", fontWeight: "inherit", lineHeight: "inherit", cursor: "pointer" };
 const botonPri = { minHeight: 44, padding: "0 16px", borderRadius: 8, background: "#fff", color: "#0b0b0c", border: 0, fontFamily: FUENTE, fontSize: 13, fontWeight: 500, cursor: "pointer" };
 const botonSec = { minHeight: 44, padding: "0 16px", borderRadius: 8, background: "transparent", color: "#eaeaea", border: "1px solid #4a4a50", fontFamily: FUENTE, fontSize: 13, fontWeight: 500, cursor: "pointer" };
-const sello = { flex: "none", fontFamily: FUENTE, fontSize: 10, letterSpacing: "0.14em", border: "1px solid #6a6a70", borderRadius: 4, padding: "2px 6px", color: "#b5b5bb" };
+const sello = { flex: "none", fontFamily: FUENTE, fontSize: 10, letterSpacing: "0.1em", border: "1px solid #6a6a70", borderRadius: 4, padding: "2px 6px", color: "#b5b5bb" };
 
-function Barra({ pct }) {
-  return (
-    <div role="img" aria-label={`Avance ${pct} %`} style={{ height: 4, background: "#2a2a2e", borderRadius: 2 }}>
-      <div style={{ width: `${pct}%`, height: 4, background: ROJO, borderRadius: 2 }} />
-    </div>
-  );
+function Valor({ v }) {
+  if (v && typeof v === "object") return <a href={v.href} target="_blank" rel="noopener noreferrer" style={{ color: ROJO_TEXTO, textDecoration: "underline" }}>{v.texto}</a>;
+  return v;
 }
 
 function Fila({ j, foco, desnuda, expandida, guardado, tono, onClick }) {
@@ -61,18 +60,17 @@ function Fila({ j, foco, desnuda, expandida, guardado, tono, onClick }) {
         <span style={{ fontSize: 15, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{j.titulo}{guardado ? " ★" : ""}</span>
         <span style={{ fontSize: 12, color: "#9a9aa0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.etiqueta} · {motivoDe(j)}</span>
       </span>
-      <span style={{ flex: "none", fontSize: 11, color: "#9a9aa0" }}>{haceDias(j.dias)}</span>
+      <span style={{ flex: "none", fontSize: 11, color: "#9a9aa0" }}>{cuando(j)}</span>
     </button>
   );
 }
 
-function Tarjeta({ j, guardado, onCerrar, onFicha, onDescartar }) {
+function Tarjeta({ j, ahora, guardado, onCerrar, onFicha, onDescartar }) {
   return (
     <div data-id={j.id} style={{ flex: "none", background: "#17171a", borderLeft: `3px solid ${ROJO}`, borderRadius: 10, paddingBottom: 12 }}>
       <Fila j={j} foco desnuda expandida guardado={guardado} onClick={onCerrar} />
       <div style={{ padding: "4px 12px 0 61px", display: "flex", flexDirection: "column", gap: 8, fontFamily: FUENTE, fontSize: 13, color: "#c4c4ca" }}>
-        <span>{j.detalle}</span>
-        {j.avance != null && <Barra pct={j.avance} />}
+        <span>{detalleDe(j, ahora)}</span>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button onClick={onFicha} style={botonPri}>Abrir ficha</button>
           <button onClick={onDescartar} style={botonSec}>No me interesa</button>
@@ -82,31 +80,31 @@ function Tarjeta({ j, guardado, onCerrar, onFicha, onDescartar }) {
   );
 }
 
-function Ficha({ j, guardado, onVolver, onGuardar, onDescartar }) {
+function Ficha({ j, ahora, guardado, onVolver, onGuardar, onDescartar }) {
   const t = TIPO[j.tipo];
-  const filas = [["Tipo", t.etiqueta], ["Por qué lo ves", motivoDe(j)], ["Plataforma", j.plataforma], ["Novedad", haceDias(j.dias)]];
-  if (j.pideRom) filas.push(["¿Pide tu ROM?", j.pideRom]);
-  filas.push(["Fuente", SIMULADO ? "[enlace simulado]" : "—"]);
+  const filas = filasFicha(j, ahora);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12, fontFamily: FUENTE, color: "#eaeaea" }}>
       <button onClick={onVolver} style={{ ...reset, alignSelf: "flex-start", minHeight: 44, padding: "0 8px 0 0", fontSize: 14 }}>← Volver</button>
-      <span style={{ alignSelf: "flex-start", fontSize: 11, letterSpacing: "0.12em", color: ROJO_TEXTO, border: `1px solid ${ROJO_TEXTO}`, borderRadius: 4, padding: "2px 6px" }}>{t.etiqueta}{SIMULADO ? " · SIMULADO" : ""}</span>
-      <h2 style={{ fontFamily: CAVEAT, fontWeight: 600, fontSize: 34, lineHeight: 1, color: "#fff", margin: 0 }}>{j.titulo}</h2>
-      <p style={{ margin: 0, fontSize: 14, color: "#c4c4ca" }}>{j.detalle}</p>
-      {j.avance != null && <Barra pct={j.avance} />}
+      <span style={{ alignSelf: "flex-start", fontSize: 11, letterSpacing: "0.12em", color: ROJO_TEXTO, border: `1px solid ${ROJO_TEXTO}`, borderRadius: 4, padding: "2px 6px" }}>{t.etiqueta}</span>
+      <h2 style={{ fontFamily: CAVEAT, fontWeight: 600, fontSize: 34, lineHeight: 1, color: "#fff", margin: 0, overflowWrap: "anywhere" }}>{j.titulo}</h2>
+      <p style={{ margin: 0, fontSize: 14, color: "#c4c4ca" }}>{detalleDe(j, ahora)}</p>
       <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 14px", fontSize: 13 }}>
-        {filas.map(([k, v]) => [<dt key={"k" + k} style={{ color: "#9a9aa0" }}>{k}</dt>, <dd key={"v" + k} style={{ margin: 0, color: "#eaeaea" }}>{v}</dd>])}
+        {filas.map(([k, v]) => [<dt key={"k" + k} style={{ color: "#9a9aa0" }}>{k}</dt>, <dd key={"v" + k} style={{ margin: 0, color: "#eaeaea", overflowWrap: "anywhere" }}><Valor v={v} /></dd>])}
       </dl>
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         <button onClick={onGuardar} aria-pressed={guardado} style={botonPri}>{guardado ? "★ Guardado" : "☆ Me interesa"}</button>
         <button onClick={onDescartar} style={botonSec}>No me interesa</button>
       </div>
+      <span style={{ fontSize: 11, color: "#9a9aa0" }}>Datos: {j.tipo === "d" ? "awesome-decomp-games" : "IGDB"}</span>
     </div>
   );
 }
 
 export default function GameEnhancedPage() {
   const estado = useEstado();
+  const [datos, setDatos] = useState(null);       // { juegos, generatedAt, fuentes }
+  const [error, setError] = useState(null);
   const [cat, setCat] = useState(0);
   const [focos, setFocos] = useState({});
   const [abierto, setAbierto] = useState(null);   // id de la fila expandida (una a la vez)
@@ -121,6 +119,8 @@ export default function GameEnhancedPage() {
   const tAviso = useRef(0);
   const vivo = useRef({});
 
+  const JUEGOS = datos ? datos.juegos : [];
+  const ahora = Date.now();
   const lista = itemsDe(JUEGOS, CATEGORIAS[cat][0], estado.ocultos);
   const foco = Math.min(focos[cat] || 0, Math.max(0, lista.length - 1));
   const enfocado = lista[foco] || null;
@@ -185,6 +185,12 @@ export default function GameEnhancedPage() {
 
   useEffect(() => () => clearTimeout(tAviso.current), []);
 
+  async function cargar() {
+    setError(null);
+    try { setDatos(await fetchGameEnhancedData()); } catch (e) { setError(e.message || "error"); }
+  }
+  useEffect(() => { cargar(); }, []);
+
   // Al expandir o colapsar, la lista vuelve a su inicio (N3).
   useEffect(() => { if (listaRef.current) listaRef.current.scrollTop = 0; }, [expandida, cat]);
 
@@ -225,12 +231,13 @@ export default function GameEnhancedPage() {
   }
 
   const r = resumen(JUEGOS, estado.ocultos, estado.guardados);
+  const edad = edadDatos(datos && datos.generatedAt, ahora);
   const ancho = { width: "100%", maxWidth: 480, margin: "0 auto", boxSizing: "border-box", position: "relative", padding: "10px 16px 8px" };
 
   let cuerpo;
   if (ficha) {
     cuerpo = (
-      <Ficha j={ficha} guardado={!!estado.guardados[ficha.id]} onVolver={() => setFichaId(null)}
+      <Ficha j={ficha} ahora={ahora} guardado={!!estado.guardados[ficha.id]} onVolver={() => setFichaId(null)}
         onGuardar={() => alternarGuardado(ficha.id)} onDescartar={() => descartar(ficha)} />
     );
   } else {
@@ -242,7 +249,7 @@ export default function GameEnhancedPage() {
             ? <><span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Oculto: {aviso.titulo}</span>
                 <button onClick={deshacer} style={{ ...reset, flex: "none", minHeight: 44, margin: "-8px 0", padding: "0 8px", color: ROJO_TEXTO, textDecoration: "underline" }}>Deshacer</button></>
             : <span>{r.semana} esta semana · {r.deEstudios} de tus estudios · ★ {r.guardados}</span>}
-          {SIMULADO && <span style={sello}>SIMULADO</span>}
+          {datos && <span style={{ ...sello, ...(edad.vieja ? { color: ROJO_TEXTO, borderColor: ROJO_TEXTO } : {}) }}>DATOS {edad.texto.toUpperCase()}</span>}
         </div>
         <div style={{ flex: "none", height: 84, marginTop: 6, display: "flex", alignItems: "flex-start", gap: 8 }}>
           {CATEGORIAS.map(([clave, emoji, nombre], i) => i === cat
@@ -255,9 +262,15 @@ export default function GameEnhancedPage() {
               <button key={clave} onClick={clic(() => { setCat(i); setAbierto(null); })} aria-label={nombre} style={{ ...reset, width: 60, height: 52, fontSize: 24, opacity: 0.6 }}>{emoji}</button>))}
         </div>
         <div ref={listaRef} style={{ flex: 1, minHeight: 0, marginTop: 6, display: "flex", flexDirection: "column", gap: 5, justifyContent: expandida ? "flex-start" : "space-between", overflowX: "hidden", overflowY: expandida ? "auto" : "hidden", touchAction: expandida ? "pan-y" : "none" }}>
-          {lista.length === 0 && <p style={{ margin: 0, padding: 12, fontFamily: FUENTE, fontSize: 13, color: "#9a9aa0" }}>No quedan ítems en esta categoría.</p>}
+          {!datos && !error && <p style={{ margin: 0, padding: 12, fontFamily: FUENTE, fontSize: 13, color: "#9a9aa0" }}>Cargando…</p>}
+          {error && (
+            <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", fontFamily: FUENTE, fontSize: 13, color: "#c4c4ca" }}>
+              <span>No se pudieron cargar los datos de Game enhanced ({error}).</span>
+              <button onClick={cargar} style={botonSec}>Reintentar</button>
+            </div>)}
+          {datos && lista.length === 0 && <p style={{ margin: 0, padding: 12, fontFamily: FUENTE, fontSize: 13, color: "#9a9aa0" }}>{CATEGORIAS[cat][0] === "todo" ? "Sin novedades recientes. Mira Decomps o Estudios." : "No quedan ítems en esta categoría."}</p>}
           {lista.length > 0 && expandida && lista.slice(foco).map((j, i) => i === 0
-            ? <Tarjeta key={j.id} j={j} guardado={!!estado.guardados[j.id]} onCerrar={clic(() => setAbierto(null))} onFicha={clic(() => setFichaId(j.id))} onDescartar={clic(() => descartar(j))} />
+            ? <Tarjeta key={j.id} j={j} ahora={ahora} guardado={!!estado.guardados[j.id]} onCerrar={clic(() => setAbierto(null))} onFicha={clic(() => setFichaId(j.id))} onDescartar={clic(() => descartar(j))} />
             : <Fila key={j.id} j={j} guardado={!!estado.guardados[j.id]} tono={TONOS[Math.min(i - 1, TONOS.length - 1)]} onClick={clic(() => tocarFila(j, foco + i))} />)}
           {lista.length > 0 && !expandida && lista.slice(v.ini, v.fin).map((j, i) => {
             const idx = v.ini + i;

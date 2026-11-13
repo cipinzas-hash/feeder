@@ -1,4 +1,4 @@
-import { CINE_JSON_URL, FEED_JSON_URL, FORMATO_BY_CATEGORIA, MELEE_JSON_URL, MUSIC_CATEGORIA, MUSICA_JSON_URL, VIDEOTECA_JSON_URL, VITRINA_CATEGORIAS, fetchJsonSafe } from "./constants.js";
+import { CINE_JSON_URL, FEED_JSON_URL, FORMATO_BY_CATEGORIA, GAME_ENHANCED_JSON_URL, MELEE_JSON_URL, MUSIC_CATEGORIA, MUSICA_JSON_URL, VIDEOTECA_JSON_URL, VITRINA_CATEGORIAS, fetchJsonSafe } from "./constants.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -77,6 +77,14 @@ export async function fetchVitrinaData() {
 
 // Música: lanzamientos + fichas de artista (musica.json, lo escribe build-musica.mjs).
 // Archivo propio: la música ya no viaja en feed.json.
+// Game enhanced: decomps/ports e juegos nuevos de los estudios (game-enhanced.json, lo escribe
+// modules/feed/scripts/build-game-enhanced.mjs una vez al día). Archivo propio.
+export async function fetchGameEnhancedData() {
+  const d = await fetchJsonSafe(GAME_ENHANCED_JSON_URL);
+  if (!d || !Array.isArray(d.decomps) || !Array.isArray(d.estudios)) throw new Error("no se pudo leer game-enhanced.json");
+  return { juegos: [...d.decomps, ...d.estudios], generatedAt: d.generatedAt || null, fuentes: d.fuentes || {} };
+}
+
 export async function fetchMusicaData() {
   const d = await fetchJsonSafe(MUSICA_JSON_URL);
   if (!d || !Array.isArray(d.lanzamientos)) throw new Error("no se pudo leer musica.json");

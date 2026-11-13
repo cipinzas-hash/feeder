@@ -1,0 +1,54 @@
+name: Actualizar Game enhanced
+
+# Pipeline de datos reales del módulo 🎮 Game enhanced (nov-2026): decomps/ports (awesome-decomp-games)
+# y juegos nuevos de los estudios (IGDB). Corre una vez al día y también a mano (Run workflow).
+# Escribe SOLO modules/feed/data/game-enhanced.json. Usa los secrets IGDB_CLIENT_ID e IGDB_CLIENT_SECRET.
+
+on:
+  schedule:
+    - cron: "40 8 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: game-enhanced-update
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  game-enhanced:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sincronizar con la punta real de main
+        run: git fetch origin main && git reset --hard origin/main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Construir datos de Game enhanced
+        env:
+          IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
+          IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
+        run: |
+          set -o pipefail
+          timeout -s TERM -k 15 12m node modules/feed/scripts/build-game-enhanced.mjs 2>&1 | tee /tmp/game-enhanced.log
+
+      - name: Commitear los datos
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add modules/feed/data/game-enhanced.json
+          git diff --staged --quiet || git commit -m "Actualizar Game enhanced $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git push && break
+            echo "push falló, reintentando ($i/3)..."
+            git fetch origin main
+            git reset --soft origin/main
+            git diff --staged --quiet || git commit -m "Actualizar Game enhanced $(date -u +%Y-%m-%dT%H:%MZ)"
+            sleep 5
+          done

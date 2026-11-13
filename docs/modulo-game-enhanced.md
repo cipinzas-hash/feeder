@@ -1,39 +1,45 @@
 # Módulo 🎮 Game enhanced (nov-2026)
 
-**Qué es.** Un módulo de novedades de juegos para "estar listo cuando un proyecto me mueva las cuerdas": decomps, versiones web, juegos nuevos de los estudios detrás de lo que Cristopher terminó y sucesores espirituales. Cada ítem dice **por qué lo ves** ("porque terminaste X", "del estudio detrás de X", "sucesor espiritual de X").
+**Qué es.** Un módulo de novedades de juegos para "estar listo cuando un proyecto me mueva las cuerdas". Cada ítem dice **por qué lo ves** ("porque terminaste X", "del estudio detrás de X") a partir de los 71 juegos terminados de Cristopher (`modules/gameenhanced/data/terminados.json`, de su Stash, 10-nov-2026).
 
-**Estado actual: los datos son SIMULADOS.** `modules/gameenhanced/datos.js` tiene 19 ítems inventados (los juegos de "motivo" sí son de su lista de terminados). Mientras `SIMULADO` sea `true`, la franja de estado y cada ficha muestran el sello "SIMULADO". El pipeline real (decomps, ports web, estudios vía IGDB, sucesores) viene después de una sonda (sin Go aún).
+**Fase 1 (datos reales): Decomps y Estudios.** Versiones web y sucesores espirituales quedaron fuera hasta tener fuente (ver `docs/sonda-game-enhanced.md`: ninguna versión web casa con su lista y las noticias casi no traen "sucesor espiritual").
 
 ## Pantalla
 - **Montaje (N1):** pestaña 🎮 `game enhanced`, id **13** (sin renumerar; `ORDER` la deja al final), sobre `.app-fit`. Clases `.gameenh` / `.gameenh-body` en `core/App.jsx`.
-- **Patrón (N2):** menú en cruz inspirado en el de la PSX, aprobado por Cristopher como excepción justificada (carrusel que escala, como Vitrina). Franja de estado arriba (`N esta semana · N de tus estudios · ★ N` + sello SIMULADO) · 5 categorías en horizontal (✨ Novedades, 🧩 Decomps, 🌐 Versiones web, 🏢 Estudios, 👻 Sucesores) · ítems en vertical con el enfocado fijo arriba.
-- **Colapsado (N3):** solo filas de una línea, sin scroll. La lista es un carrusel: se mueve el foco (deslizar arriba/abajo, rueda del mouse, ↑↓), no la lista. Se muestran las filas **enteras** que caben (se mide solo el contenedor de la lista con `ResizeObserver`, no la pantalla); el sobrante se reparte entre filas (sin hueco muerto).
-- **Expandido:** tocar la fila del cruce la abre en línea (una a la vez); ahí nace el scroll interno. Desde la tarjeta: **Abrir ficha** y **No me interesa**. La **ficha** es otro estado expandido, con ☆ Me interesa y No me interesa.
-- **Categorías:** tocar o deslizar de lado (←→ en teclado). Sin título propio (R6); Caveat + DM Sans y emojis (R7).
-- **No me interesa:** oculta el ítem, le quita el guardado si lo tenía y avisa en la franja de estado (no flotante) con **Deshacer** por 6 s; deshacer devuelve también el guardado previo.
+- **Patrón (N2):** menú en cruz inspirado en el de la PSX, aprobado por Cristopher como excepción justificada (carrusel que escala, como Vitrina). Franja de estado (`N esta semana · N de tus estudios · ★ N` + sello `DATOS HACE N H`, en rojo si pasan de 36 h) · 3 categorías en horizontal (✨ Novedades, 🧩 Decomps, 🏢 Estudios) · ítems en vertical con el enfocado fijo arriba.
+- **Colapsado (N3):** solo filas de una línea, sin scroll. La lista es un carrusel (deslizar, rueda, ↑↓). Se muestran las filas **enteras** que caben (se mide solo el contenedor de la lista con `ResizeObserver`); el sobrante se reparte entre filas.
+- **Expandido:** tocar la fila del cruce la abre en línea (una a la vez); ahí nace el scroll interno. Tarjeta: detalle, **Abrir ficha** y **No me interesa**. La **ficha** muestra los datos, enlace a la fuente (solo `https://`, `noopener`), ☆ Me interesa y No me interesa.
+- **No me interesa:** oculta el ítem, le quita el guardado y avisa en la franja (no flotante) con **Deshacer** por 6 s, que devuelve también el guardado previo.
+- Sin título propio (R6); Caveat + DM Sans y emojis (R7). Si no cargan los datos: mensaje y botón **Reintentar**.
+
+## Datos
+Los arma `modules/feed/scripts/build-game-enhanced.mjs` (funciones puras en `scripts/lib/game-enhanced-lib.mjs`) y los publica en `modules/feed/data/game-enhanced.json` el workflow `update-game-enhanced.yml` (diario 08:40 UTC + manual). La app lo lee con `fetchGameEnhancedData()` (`modules/shared/catalog.js`). Cada fuente falla por separado: si una cae, se conserva lo anterior de esa fuente y queda el error en `fuentes`.
+- **Decomps** (`awesome-decomp-games`, `data/games.json`, se actualiza a diario): un proyecto casa con un terminado si su título **sin el paréntesis final** (nombre del repo o port) es el mismo título, o ese título más una edición (Remastered, HD, DX…). No se cruza por saga ni por "contiene" (mezclaba secuelas). Se descartan las herramientas. Novedad = lo más reciente entre el último commit y la última versión. Ficha: tipo de proyecto, plataforma, estrellas, último commit/versión, jugable en navegador, "pide ROM", bandera de IA de la fuente, estado.
+- **Estudios** (IGDB, secrets `IGDB_CLIENT_ID` / `IGDB_CLIENT_SECRET`): se busca cada terminado, se toman sus desarrolladoras y se piden sus juegos de los últimos 150 días a los próximos 30 meses. Solo cuentan juegos principales, expansiones independientes y remakes; fuera DLC, paquetes, mods, remasterizaciones, ediciones ampliadas, ports, "Arcade Archives" y "Master Collection" (el ruido de Namco, SNK, Konami…). IGDB marca el 31-dic cuando solo se conoce el año: se muestra como año ("en 2027").
+- **Novedades** (ventana): decomps activos con actividad en ≤90 días; juegos de estudios lanzados hace ≤120 días o que salen en ≤240. Decomps y Estudios muestran todo. Orden: cercanía a hoy, pasados y futuros por igual.
+- **Lo que la fuente NO trae** (por eso no está en la pantalla): % de progreso de los decomps, fecha de alta de cada proyecto, versiones web de sus títulos, seguidores/expectativa en IGDB (campos vacíos).
 
 ## Datos persistidos (R8)
-UNA clave nueva, `angst-game-enhanced-estado-v1`: `{ guardados: {id: ts}, ocultos: {id: ts} }`. Declarada en `LOCAL_KEY_FIELDS.gameEnhancedEstado` (`core/persistence.js`) → viaja en el export 💾 / Angst-data; `restoreFromPayload` la rehidrata con `rehidratarGameEnhanced()`. No migra ni toca datos existentes. Los ids de los ítems simulados empiezan con `sim-`; al pasar a datos reales conviene decidir qué hacer con lo guardado/oculto sobre ítems simulados (decisión de Cristopher).
+UNA clave nueva, `angst-game-enhanced-estado-v1`: `{ guardados: {id: ts}, ocultos: {id: ts} }` (ids `d-…` y `e-…`). Declarada en `LOCAL_KEY_FIELDS.gameEnhancedEstado` (`core/persistence.js`) → viaja en el export 💾 / Angst-data; `restoreFromPayload` la rehidrata con `rehidratarGameEnhanced()`. No migra ni toca datos existentes. Quedan ids `sim-*` huérfanos de la maqueta simulada si Cristopher marcó alguno: son inertes.
 
-## Validación (10-nov-2026)
-- `node tests/gameenhanced.mjs` (datos, filtro/orden/ventana, estado, rehidratación, claves corruptas) y `npm run audit:export`: OK.
-- Bundle por módulo: sin `useAltoLibre`, `MarcoAngst`, `window.innerHeight`, `position: fixed` ni `100vh`.
-- Arranque de la app completa (jsdom): 14 pestañas, 🎮 al final, interacciones completas, 0 errores del módulo.
-- **Chromium real**, colapsado, sin scroll de módulo ni de página, pie visible, sin hueco bajo la última fila:
+## Validación
+- `node tests/gameenhanced.mjs` (cruce con decomps e IGDB, filtros, orden, ventanas, enlaces, estado, rehidratación) y `npm run audit:export`: OK.
+- Bundle por módulo sin `useAltoLibre`, `MarcoAngst`, `window.innerHeight`, `position: fixed` ni `100vh`.
+- Arranque de la app completa (jsdom) con los datos: pestaña, categorías, expandir, ficha, guardar, ocultar/deshacer, error y reintento.
+- **Chromium real**, colapsado: sin scroll de módulo ni de página, pie visible y sin hueco bajo la última fila; al expandir nace el scroll interno.
 
-| Viewport | Alto libre del módulo | Filas |
+| Viewport | Alto libre | Filas |
 |---|---|---|
-| 457×810 | 639 px | 8 |
+| 457×810 | ~649 px | 8 |
 | 412×915 | 744 px | 9 |
 | 360×640 | 469 px | 5 |
-| 480×560 | **399 px (mínimo medido)** | 4 |
-| 820×1180 (tablet) | 1010 px | 14 |
+| 480×560 | 399 px (mínimo medido) | 4 |
+| 820×1180 | 1010 px | 14 |
 
-  Al expandir una fila el scroll interno aparece y colapsarla lo devuelve al inicio. **No** se midió en el celular real de Cristopher: su captura es el criterio de aceptación (lineamiento 4.6).
+  No se midió en el celular de Cristopher: su captura es el criterio de aceptación (lineamiento 4.6).
 
 ## Pendiente / decisiones abiertas
-- Pipeline de datos reales y su sonda (sin Go): decomps (awesome-decomp-games), estudios y lanzamientos (IGDB: secrets `IGDB_CLIENT_ID` e `IGDB_CLIENT_SECRET` ya creados en el repo), sucesores espirituales (frase en noticias cruzada con su lista).
-- Lista de juegos terminados de Cristopher (71, de Stash) para cruzar con los datos reales: aún no está en el repo.
-- "No me interesa": hoy es solo por ítem; falta decidir si también debe silenciar el proyecto o el estudio.
-- Nombre de la pestaña ("game enhanced") y su posición (hoy al final) son provisorios.
-- Los botones del encabezado y la franja de estado no cambian por módulo; no hay nada específico de Game enhanced en ellos.
+- Versiones web y sucesores espirituales: faltan fuentes.
+- "No me interesa" es por ítem; falta decidir si también debe silenciar el proyecto o el estudio.
+- Proyectos con bandera de IA de la fuente se muestran marcados (no se ocultan): decidir si se filtran.
+- Nombre de la pestaña ("game enhanced") y su posición (al final) son provisorios.

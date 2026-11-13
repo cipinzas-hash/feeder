@@ -11,6 +11,7 @@ export const MELEE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/f
 export const VIDEOTECA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/videoteca.json";
 // Módulo de música (oct-2026): lanzamientos + fichas de artista, lo escribe build-musica.mjs.
 export const MUSICA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/musica.json";
+export const GAME_ENHANCED_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced.json";
 
 // Destacados (vitrina audiovisual) — 3 categorías separadas, cada una su
 // propio carrusel. Ya no participan del swipe round-robin de "Noticias".
