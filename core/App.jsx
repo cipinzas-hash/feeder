@@ -32,6 +32,7 @@ import EspritPage from "../modules/espiritu/EspritPage.jsx";
 import FeedPage from "../modules/feed/FeedPage.jsx";
 import VitrinaPage from "../modules/vitrina/VitrinaPage.jsx";
 import MusicaPage from "../modules/musica/MusicaPage.jsx";
+import PanoramasPage from "../modules/panoramas/PanoramasPage.jsx";
 import GameEnhancedPage from "../modules/gameenhanced/GameEnhancedPage.jsx";
 import SemanaDashboard from "./SemanaDashboard.jsx";
 
@@ -1843,6 +1844,7 @@ function AngstApp() {
         .musica-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
         .musica-body[data-expandido="true"]{overflow-y:auto;}
         .musica-body[data-expandido="true"]>*{flex:none;}
+        .panoramas{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
         .gameenh{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
         .gameenh-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
         .gameenh-body[data-ficha="true"]{overflow-y:auto;}
@@ -1931,7 +1933,7 @@ function AngstApp() {
       {familiaOpen&&<FamiliaInboxModal items={familiaPend} onImport={familiaPasar} onIgnore={familiaIgnorar} onImportAll={familiaPasarTodos} onIgnoreAll={familiaIgnorarTodos} onRefresh={()=>cargarFamilia(true)} onClose={()=>setFamiliaOpen(false)} cargando={familiaBusy} mensaje={familiaMsg} generadoEn={familiaData?.generatedAt}/>}
       {calOpen&&<CalendarModal weekStart={weekStart} marks={calMarksView} onMark={handleMark} dayData={dayData} calMarks={calMarksView} kidsHealth={kidsHealth} onWeekSelect={date=>{const dow=date.getDay();const mon=addDays(date,-(dow===0?6:dow-1));const diff=Math.round((mon-BASE_DATE)/(7*86400000));updateWeekOffset(diff);}} onClose={()=>setCalOpen(false)}/>}
 
-      <div className={"app"+((page===0||page===1||page===4||page===5||page===8||page===10||page===12||page===13)?" app-fit":"")}>
+      <div className={"app"+((page===0||page===1||page===4||page===5||page===8||page===10||page===12||page===13||page===14)?" app-fit":"")}>
         <div className="hdr">
           <div className="hdr-title" style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>angstapp</div>
           <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
@@ -2031,7 +2033,7 @@ function AngstApp() {
         </div>
 
         {(()=>{
-          const TABS=[{label:"📅 Semana",emoji:"📅"},{label:"💵 Presupuesto",emoji:"💵"},{label:"📒 Emprendimientos",emoji:"📒"},{label:"🧠 mindfulness",emoji:"🧠"},{label:"🩺 salud",emoji:"🩺"},{label:"🍄 fadiman",emoji:"🍄"},{label:"🥗 nutrición",emoji:"🥗"},{label:"🏋️ ejercicio",emoji:"🏋️"},{label:"🃏 pokécripto",emoji:"🃏"},{label:"📰 feed",emoji:"📰"},{label:"🎬 vitrina",emoji:"🎬"},{label:"🌱 rutinas",emoji:"🌱"},{label:"🎧 música",emoji:"🎧"},{label:"🎮 game enhanced",emoji:"🎮"}];
+          const TABS=[{label:"📅 Semana",emoji:"📅"},{label:"💵 Presupuesto",emoji:"💵"},{label:"📒 Emprendimientos",emoji:"📒"},{label:"🧠 mindfulness",emoji:"🧠"},{label:"🩺 salud",emoji:"🩺"},{label:"🍄 fadiman",emoji:"🍄"},{label:"🥗 nutrición",emoji:"🥗"},{label:"🏋️ ejercicio",emoji:"🏋️"},{label:"🃏 pokécripto",emoji:"🃏"},{label:"📰 feed",emoji:"📰"},{label:"🎬 vitrina",emoji:"🎬"},{label:"🌱 rutinas",emoji:"🌱"},{label:"🎧 música",emoji:"🎧"},{label:"🎮 game enhanced",emoji:"🎮"},{label:"🗓️ panoramas",emoji:"🗓️"}];
           // Orden visual: Rutinas va justo después de Semana, Música (id 12) justo después de Feed y Game enhanced (id 13) al final. Los ids de página (índice en TABS) no se renumeran.
           const ORDER=[0,11,1,2,3,4,5,6,7,8,9,12,10,13];
           return (
@@ -2471,6 +2473,7 @@ function AngstApp() {
         {page===10&&<VitrinaPage/>}
         {page===12&&<MusicaPage/>}
         {page===13&&<GameEnhancedPage/>}
+        {page===14&&<PanoramasPage/>}
         {page===11&&<RoutinesPage routines={routines} onSave={saveRoutines} onAddToDay={(name,emoji)=>{const tk=fmtFull(new Date());const nid=Date.now();const dd=dayDataRef.current||{};const d=dd[tk]||makeEmptyDay();const nx={...dd,[tk]:{...d,tasks:[...d.tasks,{id:nid,text:(emoji?emoji+" ":"")+name,fixed:false,done:false}]}};setDayData(nx);dayDataRef.current=nx;saveToStorage({dayData:nx});}}/>}
 
         <div className="ftr">
