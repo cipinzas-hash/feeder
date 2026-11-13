@@ -9292,6 +9292,7 @@ var __angst = (() => {
   var MELEE_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/melee.json";
   var VIDEOTECA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/videoteca.json";
   var MUSICA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/musica.json";
+  var GAME_ENHANCED_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced.json";
   var CINE_CATEGORIAS = ["Pel\xEDculas", "Series", "Animaci\xF3n"];
   var VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales", "Melee", "Conciertos"];
   var MUSIC_CATEGORIA = "Dark scene / M\xFAsica";
@@ -9503,6 +9504,11 @@ ${item.link}`);
     ingest(meleeData, "lectura");
     const generatedAt = [cineData, meleeData, videoteca].map((d) => d?.generatedAt).filter(Boolean).sort().pop() || null;
     return { vitrina, fuentes, generatedAt };
+  }
+  async function fetchGameEnhancedData() {
+    const d = await fetchJsonSafe(GAME_ENHANCED_JSON_URL);
+    if (!d || !Array.isArray(d.decomps) || !Array.isArray(d.estudios)) throw new Error("no se pudo leer game-enhanced.json");
+    return { juegos: [...d.decomps, ...d.estudios], generatedAt: d.generatedAt || null, fuentes: d.fuentes || {} };
   }
   async function fetchMusicaData() {
     const d = await fetchJsonSafe(MUSICA_JSON_URL);
@@ -13311,10 +13317,10 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     }));
     const estimado = Object.values(destinos).reduce((s, d) => s + d.estimado, 0);
     const porConfirmar = grupos.filter((g) => !g.titulo.startsWith("Comprado")).reduce((s, g) => s + g.items.filter((i) => i.estimado).length, 0);
-    const cuando2 = rotuloFecha(dia, hoy);
-    return /* @__PURE__ */ React.createElement(Ventana, { onClose, ancho: 440 }, /* @__PURE__ */ React.createElement(VentanaCabecera, { titulo: "\u{1F6D2} Carrito", sub: `${pendientes2} pendiente${pendientes2 === 1 ? "" : "s"}`, onClose }), /* @__PURE__ */ React.createElement("div", { style: { flex: "none", padding: "8px 14px", borderBottom: "1px dashed #bbb" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setDia(mover(dia, -1)), "aria-label": "D\xEDa anterior", style: flecha2 }, "\u2039"), /* @__PURE__ */ React.createElement("label", { style: { position: "relative", flex: 1, textAlign: "center", fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, cursor: "pointer" } }, "\u{1F4C5} ", cuando2, /* @__PURE__ */ React.createElement("input", { type: "date", value: dia, max: hoy, onChange: (e) => {
+    const cuando3 = rotuloFecha(dia, hoy);
+    return /* @__PURE__ */ React.createElement(Ventana, { onClose, ancho: 440 }, /* @__PURE__ */ React.createElement(VentanaCabecera, { titulo: "\u{1F6D2} Carrito", sub: `${pendientes2} pendiente${pendientes2 === 1 ? "" : "s"}`, onClose }), /* @__PURE__ */ React.createElement("div", { style: { flex: "none", padding: "8px 14px", borderBottom: "1px dashed #bbb" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setDia(mover(dia, -1)), "aria-label": "D\xEDa anterior", style: flecha2 }, "\u2039"), /* @__PURE__ */ React.createElement("label", { style: { position: "relative", flex: 1, textAlign: "center", fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, cursor: "pointer" } }, "\u{1F4C5} ", cuando3, /* @__PURE__ */ React.createElement("input", { type: "date", value: dia, max: hoy, onChange: (e) => {
       if (e.target.value) setDia(e.target.value);
-    }, "aria-label": "Elegir fecha", style: { position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer" } })), /* @__PURE__ */ React.createElement("button", { onClick: () => setDia(mover(dia, 1)), disabled: dia >= hoy, "aria-label": "D\xEDa siguiente", style: { ...flecha2, opacity: dia >= hoy ? 0.35 : 1 } }, "\u203A")), /* @__PURE__ */ React.createElement("button", { onClick: () => setVerGastos((v) => !v), "aria-expanded": verGastos, style: { width: "100%", marginTop: 6, background: "transparent", border: "none", padding: "4px 0", display: "flex", justifyContent: "space-between", alignItems: "baseline", fontFamily: F9, fontSize: 13, color: "#111", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", null, "Gastado ", cuando2.toLowerCase(), " ", /* @__PURE__ */ React.createElement("b", { style: { fontSize: 16 } }, fmtCLP(del.total))), /* @__PURE__ */ React.createElement("span", { style: { color: "#777", fontSize: 12 } }, del.gastos.length, " gasto", del.gastos.length === 1 ? "" : "s", " ", verGastos ? "\u25B4" : "\u25BE")), verGastos && /* @__PURE__ */ React.createElement("div", { style: { maxHeight: "28vh", overflowY: "auto" } }, del.gastos.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#aaa", fontSize: 13, textAlign: "center", padding: "10px 0" } }, "Sin gastos este d\xEDa."), del.gastos.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.id, style: { display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13, padding: "6px 0", borderTop: "1px dashed #ddd" } }, /* @__PURE__ */ React.createElement("span", { style: { minWidth: 0 } }, g.nota || "(sin nota)", /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#777" } }, [g.cartera, g.sub, g.categoria].filter(Boolean).join(" \xB7 "), g.prestamo ? " \xB7 con pr\xE9stamo" : "")), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 500, whiteSpace: "nowrap" } }, fmtCLP(g.monto)))))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "10px 14px" } }, /* @__PURE__ */ React.createElement(ListaCompras, { grupos, agregarEn: hoy, api, onPatch: onItem, onAdd, onDelete, vacio: "no hay compras pendientes" })), /* @__PURE__ */ React.createElement("div", { style: { flex: "none", borderTop: "1px dashed #bbb", padding: "10px 16px", fontFamily: F9, fontSize: 12, color: "#666", lineHeight: 1.5 } }, pendientes2 > 0 && /* @__PURE__ */ React.createElement("div", null, "Estimado pendiente: ", /* @__PURE__ */ React.createElement("b", { style: { color: "#111" } }, fmtCLP(estimado)), sinPrecio > 0 && /* @__PURE__ */ React.createElement("span", { style: { color: "#aaa" } }, " \xB7 ", sinPrecio, " sin precio"), porConfirmar > 0 && /* @__PURE__ */ React.createElement("span", { style: { color: "#aaa" } }, " \xB7 ", porConfirmar, " por confirmar")), Object.entries(destinos).map(([id, d]) => d.activo ? /* @__PURE__ */ React.createElement("div", { key: id, style: { color: d.estimado > d.saldo ? "#c00" : "#666" } }, d.emoji, " ", d.label, ": saldo ", /* @__PURE__ */ React.createElement("b", null, fmtCLP(d.saldo)), d.estimado > d.saldo ? " \xB7 el estimado no alcanza" : "") : /* @__PURE__ */ React.createElement("div", { key: id, style: { color: "#aaa" } }, d.label, " a\xFAn no es cartera con sobres: sus compras no descuentan de ning\xFAn fondo.")), pendientes2 === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#aaa" } }, "Agrega arriba lo que haga falta comprar.")));
+    }, "aria-label": "Elegir fecha", style: { position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer" } })), /* @__PURE__ */ React.createElement("button", { onClick: () => setDia(mover(dia, 1)), disabled: dia >= hoy, "aria-label": "D\xEDa siguiente", style: { ...flecha2, opacity: dia >= hoy ? 0.35 : 1 } }, "\u203A")), /* @__PURE__ */ React.createElement("button", { onClick: () => setVerGastos((v) => !v), "aria-expanded": verGastos, style: { width: "100%", marginTop: 6, background: "transparent", border: "none", padding: "4px 0", display: "flex", justifyContent: "space-between", alignItems: "baseline", fontFamily: F9, fontSize: 13, color: "#111", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", null, "Gastado ", cuando3.toLowerCase(), " ", /* @__PURE__ */ React.createElement("b", { style: { fontSize: 16 } }, fmtCLP(del.total))), /* @__PURE__ */ React.createElement("span", { style: { color: "#777", fontSize: 12 } }, del.gastos.length, " gasto", del.gastos.length === 1 ? "" : "s", " ", verGastos ? "\u25B4" : "\u25BE")), verGastos && /* @__PURE__ */ React.createElement("div", { style: { maxHeight: "28vh", overflowY: "auto" } }, del.gastos.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#aaa", fontSize: 13, textAlign: "center", padding: "10px 0" } }, "Sin gastos este d\xEDa."), del.gastos.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.id, style: { display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13, padding: "6px 0", borderTop: "1px dashed #ddd" } }, /* @__PURE__ */ React.createElement("span", { style: { minWidth: 0 } }, g.nota || "(sin nota)", /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: "#777" } }, [g.cartera, g.sub, g.categoria].filter(Boolean).join(" \xB7 "), g.prestamo ? " \xB7 con pr\xE9stamo" : "")), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 500, whiteSpace: "nowrap" } }, fmtCLP(g.monto)))))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "10px 14px" } }, /* @__PURE__ */ React.createElement(ListaCompras, { grupos, agregarEn: hoy, api, onPatch: onItem, onAdd, onDelete, vacio: "no hay compras pendientes" })), /* @__PURE__ */ React.createElement("div", { style: { flex: "none", borderTop: "1px dashed #bbb", padding: "10px 16px", fontFamily: F9, fontSize: 12, color: "#666", lineHeight: 1.5 } }, pendientes2 > 0 && /* @__PURE__ */ React.createElement("div", null, "Estimado pendiente: ", /* @__PURE__ */ React.createElement("b", { style: { color: "#111" } }, fmtCLP(estimado)), sinPrecio > 0 && /* @__PURE__ */ React.createElement("span", { style: { color: "#aaa" } }, " \xB7 ", sinPrecio, " sin precio"), porConfirmar > 0 && /* @__PURE__ */ React.createElement("span", { style: { color: "#aaa" } }, " \xB7 ", porConfirmar, " por confirmar")), Object.entries(destinos).map(([id, d]) => d.activo ? /* @__PURE__ */ React.createElement("div", { key: id, style: { color: d.estimado > d.saldo ? "#c00" : "#666" } }, d.emoji, " ", d.label, ": saldo ", /* @__PURE__ */ React.createElement("b", null, fmtCLP(d.saldo)), d.estimado > d.saldo ? " \xB7 el estimado no alcanza" : "") : /* @__PURE__ */ React.createElement("div", { key: id, style: { color: "#aaa" } }, d.label, " a\xFAn no es cartera con sobres: sus compras no descuentan de ning\xFAn fondo.")), pendientes2 === 0 && /* @__PURE__ */ React.createElement("div", { style: { color: "#aaa" } }, "Agrega arriba lo que haga falta comprar.")));
   }
 
   // modules/pokecripto/AgregarCartaModal.jsx
@@ -15731,63 +15737,90 @@ Toco reintentar ahora.`);
     )));
   }
 
-  // modules/gameenhanced/datos.js
-  var SIMULADO = true;
-  var FILAS = [
-    ["d", "Torre de Aurelia", "Metroid Fusion", "GBA", 1, "Decomp al 100 %. Compila una ROM id\xE9ntica al original.", 100],
-    ["d", "Nimbus Racers", "Crash Team Racing", "PS1", 3, "Decomp al 74 %. Avanza cerca de un 2 % por semana.", 74],
-    ["d", "Cavernas de Ixtal", "Super Mario World", "SNES", 6, "Decomp al 91 %. Falta el motor de sonido.", 91],
-    ["d", "Sombra Roja", "Tekken 3", "PS1", 9, "Decomp al 23 %. Proyecto nuevo con cuatro colaboradores.", 23],
-    ["d", "Ciudad Cobalto", "Sonic Adventure", "Dreamcast", 15, "Decomp al 48 %. Sin avances hace dos semanas.", 48],
-    ["d", "Arenas de Kheb", "Metal Slug X", "Neo Geo", 22, "Decomp al 8 %. Reci\xE9n anunciado.", 8],
-    ["w", "Cavernas de Ixtal Web", "Super Mario World", "Navegador (wasm)", 2, "Port a WebAssembly. Pide tu propia ROM para jugar.", "S\xED"],
-    ["w", "Nimbus Racers Web", "Crash Team Racing", "Navegador (wasm)", 5, "Port jugable con teclado y mando.", "S\xED"],
-    ["w", "Marath\xF3n Cl\xE1sico", "Marathon 2: Durandal", "Navegador (JS)", 8, "Reimplementaci\xF3n en JavaScript. No necesita ROM.", "No"],
-    ["w", "Muros de Azrael 3D", "Wolfenstein 3D", "Navegador (wasm)", 12, "Port del motor con datos de la versi\xF3n shareware.", "No"],
-    ["w", "F\xE1brica de Ritmos", "Rhythm Heaven", "Navegador (JS)", 19, "Juego de ritmo sin descargas.", "No"],
-    ["e", "Banquete de Hojalata", "Cuphead", "PC \xB7 Switch", 4, "Anuncio de un juego nuevo del estudio. Fecha por confirmar.", null],
-    ["e", "Pirata Medianoche", "Shantae and the Pirate\u2019s Curse", "Switch \xB7 PC", 11, "Nueva aventura anunciada. Tr\xE1iler disponible.", null],
-    ["e", "Eco de Basti\xF3n", "Bastion", "PC \xB7 PS5", 17, "Primer avance mostrado en un evento.", null],
-    ["e", "Piedra y Rayo", "Guacamelee!", "PC \xB7 Switch", 26, "Entr\xF3 en fase de pruebas cerradas.", null],
-    ["s", "Hijo de Brumas", "Heavy Rain", "PC", 7, "Anunciado por parte del equipo original.", null],
-    ["s", "Radio Nocturna", "Catherine", "PC \xB7 Switch", 14, "Sucesor anunciado con un estudio nuevo.", null],
-    ["s", "Ritmo Celeste", "Rhythm Heaven", "Switch", 21, "Campa\xF1a de apoyo abierta.", null],
-    ["s", "Caza de Ecos", "Killzone: Mercenary", "Port\xE1til", 30, "Primer teaser publicado.", null]
-  ];
-  var JUEGOS = FILAS.map((f2, i) => ({
-    id: `sim-${f2[0]}-${String(i + 1).padStart(2, "0")}`,
-    tipo: f2[0],
-    titulo: f2[1],
-    juego: f2[2],
-    plataforma: f2[3],
-    dias: f2[4],
-    detalle: f2[5],
-    avance: f2[0] === "d" ? f2[6] : null,
-    pideRom: f2[0] === "w" ? f2[6] : null
-  }));
-
   // modules/gameenhanced/logica.js
   var TIPO2 = {
     d: { etiqueta: "DECOMP", emoji: "\u{1F9E9}", motivo: "Porque terminaste " },
-    w: { etiqueta: "WEB", emoji: "\u{1F310}", motivo: "Porque terminaste " },
-    e: { etiqueta: "ESTUDIO", emoji: "\u{1F3E2}", motivo: "Del estudio detr\xE1s de " },
-    s: { etiqueta: "SUCESOR", emoji: "\u{1F47B}", motivo: "Sucesor espiritual de " }
+    e: { etiqueta: "ESTUDIO", emoji: "\u{1F3E2}", motivo: "Del estudio detr\xE1s de " }
   };
   var CATEGORIAS = [
     ["todo", "\u2728", "Novedades"],
     ["d", "\u{1F9E9}", "Decomps"],
-    ["w", "\u{1F310}", "Versiones web"],
-    ["e", "\u{1F3E2}", "Estudios"],
-    ["s", "\u{1F47B}", "Sucesores"]
+    ["e", "\u{1F3E2}", "Estudios"]
   ];
-  var motivoDe = (j) => TIPO2[j.tipo].motivo + j.juego;
+  var SUBTIPOS = {
+    decompilation: "Decompilaci\xF3n",
+    "static-recomp": "Recompilaci\xF3n est\xE1tica",
+    "source-port": "Source port",
+    "engine-remake": "Reimplementaci\xF3n del motor",
+    disassembly: "Desensamblado",
+    "browser-port": "Port web"
+  };
+  var ASSETS = { byo: "S\xED, con tu propia copia", instant: "No, se juega al instante", demo: "Solo la demo", unknown: "Sin dato" };
+  var VENTANA = { decompDias: 90, pasadoEstudio: 120, futuroEstudio: 240 };
+  var enNovedades = (j) => j.tipo === "d" ? !j.inactivo && j.dias <= VENTANA.decompDias : j.dias >= -VENTANA.futuroEstudio && j.dias <= VENTANA.pasadoEstudio;
+  var motivoDe = (j) => TIPO2[j.tipo].motivo + j.tuJuego;
   function haceDias(n) {
     if (n <= 0) return "hoy";
     if (n === 1) return "ayer";
-    return `hace ${n} d`;
+    if (n < 60) return `hace ${n} d`;
+    if (n < 730) return `hace ${Math.round(n / 30)} m`;
+    return `hace ${Math.round(n / 365)} a`;
+  }
+  function diasDesdeIso(iso, ahora) {
+    const t = iso ? new Date(iso).getTime() : NaN;
+    return Number.isFinite(t) ? Math.round((ahora - t) / 864e5) : null;
+  }
+  var MESES2 = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  function fechaLegible(j) {
+    if (!j.fecha) return "\u2014";
+    if (j.fechaAprox) return `${j.fecha.slice(0, 4)} (fecha por confirmar)`;
+    const [a, m, d] = j.fecha.split("-").map(Number);
+    return `${d} ${MESES2[m - 1]} ${a}`;
+  }
+  function cuando(j) {
+    if (j.tipo === "e" && j.dias < 0) return j.fechaAprox ? `en ${j.fecha.slice(0, 4)}` : j.dias < -60 ? `en ${Math.round(-j.dias / 30)} m` : `en ${-j.dias} d`;
+    return j.dias >= 9999 ? "\u2014" : haceDias(j.dias);
+  }
+  var miles = (n) => typeof n === "number" ? n.toLocaleString("es-CL") : "\u2014";
+  function detalleDe(j, ahora) {
+    if (j.tipo === "d") {
+      const c = diasDesdeIso(j.ultimoCommit, ahora);
+      return [SUBTIPOS[j.subtipo] || j.subtipo, j.plataforma, `\u2B50 ${miles(j.estrellas)}`, c === null ? null : `\xFAltimo commit ${haceDias(c)}`, j.inactivo ? "inactivo" : null, j.ia ? "hecho con IA seg\xFAn la fuente" : null].filter(Boolean).join(" \xB7 ");
+    }
+    return [j.plataformas && j.plataformas.length ? j.plataformas.join(" \xB7 ") : null, j.dias < 0 ? `sale ${j.fechaAprox ? "en " + j.fecha.slice(0, 4) : fechaLegible(j)}` : `sali\xF3 ${fechaLegible(j)}`].filter(Boolean).join(" \xB7 ");
+  }
+  function filasFicha(j, ahora) {
+    const enlace2 = (href, texto) => typeof href === "string" && href.startsWith("https://") ? { href, texto } : "\u2014";
+    if (j.tipo === "d") {
+      const c = diasDesdeIso(j.ultimoCommit, ahora), r = diasDesdeIso(j.fechaRelease, ahora);
+      return [
+        ["Tipo", TIPO2.d.etiqueta],
+        ["Proyecto", SUBTIPOS[j.subtipo] || j.subtipo],
+        ["Por qu\xE9 lo ves", motivoDe(j)],
+        ["Tus juegos", j.tuyos.join(", ")],
+        ["Plataforma", j.plataforma || "\u2014"],
+        ["Estrellas", miles(j.estrellas)],
+        ["\xDAltimo commit", c === null ? "\u2014" : haceDias(c)],
+        ["\xDAltima versi\xF3n", j.release ? `${j.release}${r === null ? "" : " (" + haceDias(r) + ")"}` : "Sin versi\xF3n publicada"],
+        ["Jugar en el navegador", j.jugableUrl ? enlace2(j.jugableUrl, "Abrir") : "No"],
+        ["\xBFPide tu ROM o archivos?", ASSETS[j.pideAssets] || "Sin dato"],
+        ["Hecho con IA (seg\xFAn la fuente)", j.ia ? "S\xED" : "No"],
+        ["Estado", j.inactivo ? "Inactivo o archivado" : "Activo"],
+        ["Fuente", enlace2(j.url, "Repositorio")]
+      ];
+    }
+    return [
+      ["Tipo", TIPO2.e.etiqueta],
+      ["Estudio", j.estudio || "\u2014"],
+      ["Por qu\xE9 lo ves", motivoDe(j)],
+      ["Tus juegos", j.tuyos.join(", ")],
+      ["Plataformas", j.plataformas && j.plataformas.length ? j.plataformas.join(" \xB7 ") : "\u2014"],
+      ["Fecha", fechaLegible(j)],
+      ["Fuente", enlace2(j.url, "IGDB")]
+    ];
   }
   function itemsDe(juegos, clave, ocultos = {}) {
-    return juegos.filter((j) => !ocultos[j.id] && (clave === "todo" || j.tipo === clave)).sort((a, b) => a.dias - b.dias || (a.id < b.id ? -1 : 1));
+    return juegos.filter((j) => !ocultos[j.id] && TIPO2[j.tipo] && (clave === "todo" ? enNovedades(j) : j.tipo === clave)).sort((a, b) => Math.abs(a.dias) - Math.abs(b.dias) || (a.id < b.id ? -1 : 1));
   }
   function ventana(total, foco, cabe) {
     const n = Math.max(1, cabe | 0);
@@ -15798,12 +15831,18 @@ Toco reintentar ahora.`);
     return Math.max(1, Math.floor((alto + sep) / (fila + sep)));
   }
   function resumen2(juegos, ocultos = {}, guardados = {}) {
-    const v = juegos.filter((j) => !ocultos[j.id]);
+    const v = juegos.filter((j) => TIPO2[j.tipo] && !ocultos[j.id]);
     return {
-      semana: v.filter((j) => j.dias <= 7).length,
-      deEstudios: v.filter((j) => j.tipo === "e").length,
+      semana: v.filter((j) => Math.abs(j.dias) <= 7).length,
+      deEstudios: v.filter((j) => j.tipo === "e" && enNovedades(j)).length,
       guardados: v.filter((j) => guardados[j.id]).length
     };
+  }
+  function edadDatos(generatedAt, ahora) {
+    const t = generatedAt ? new Date(generatedAt).getTime() : NaN;
+    if (!Number.isFinite(t)) return { texto: "sin fecha", vieja: true };
+    const h = Math.max(0, Math.round((ahora - t) / 36e5));
+    return { texto: h < 1 ? "hace <1 h" : h < 48 ? `hace ${h} h` : `hace ${Math.round(h / 24)} d`, vieja: h > 36 };
   }
 
   // modules/gameenhanced/GameEnhancedPage.jsx
@@ -15818,9 +15857,10 @@ Toco reintentar ahora.`);
   var reset = { background: "none", border: 0, padding: 0, color: "inherit", fontFamily: "inherit", fontSize: "inherit", fontWeight: "inherit", lineHeight: "inherit", cursor: "pointer" };
   var botonPri = { minHeight: 44, padding: "0 16px", borderRadius: 8, background: "#fff", color: "#0b0b0c", border: 0, fontFamily: FUENTE3, fontSize: 13, fontWeight: 500, cursor: "pointer" };
   var botonSec = { minHeight: 44, padding: "0 16px", borderRadius: 8, background: "transparent", color: "#eaeaea", border: "1px solid #4a4a50", fontFamily: FUENTE3, fontSize: 13, fontWeight: 500, cursor: "pointer" };
-  var sello = { flex: "none", fontFamily: FUENTE3, fontSize: 10, letterSpacing: "0.14em", border: "1px solid #6a6a70", borderRadius: 4, padding: "2px 6px", color: "#b5b5bb" };
-  function Barra({ pct: pct2 }) {
-    return /* @__PURE__ */ React.createElement("div", { role: "img", "aria-label": `Avance ${pct2} %`, style: { height: 4, background: "#2a2a2e", borderRadius: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${pct2}%`, height: 4, background: ROJO, borderRadius: 2 } }));
+  var sello = { flex: "none", fontFamily: FUENTE3, fontSize: 10, letterSpacing: "0.1em", border: "1px solid #6a6a70", borderRadius: 4, padding: "2px 6px", color: "#b5b5bb" };
+  function Valor({ v }) {
+    if (v && typeof v === "object") return /* @__PURE__ */ React.createElement("a", { href: v.href, target: "_blank", rel: "noopener noreferrer", style: { color: ROJO_TEXTO, textDecoration: "underline" } }, v.texto);
+    return v;
   }
   function Fila({ j, foco, desnuda, expandida, guardado, tono, onClick }) {
     const t = TIPO2[j.tipo];
@@ -15842,20 +15882,20 @@ Toco reintentar ahora.`);
       borderRadius: 10,
       ...desnuda ? { background: "none", padding: "0 10px 0 9px", color: "#fff" } : foco ? { background: "#17171a", borderLeft: `3px solid ${ROJO}`, padding: "0 10px 0 9px", color: "#fff" } : { background: "none", padding: "0 10px 0 12px", color: tono || "#d4d4d8" }
     };
-    return /* @__PURE__ */ React.createElement("button", { onClick, style: estilo, ...foco ? { "aria-expanded": expandida ? "true" : "false" } : {} }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true", style: { flex: "none", width: 40, height: 40, boxSizing: "border-box", borderRadius: 10, background: "#1b1b1f", border: "1px solid #2c2c31", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19 } }, t.emoji), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, j.titulo, guardado ? " \u2605" : ""), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#9a9aa0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, t.etiqueta, " \xB7 ", motivoDe(j))), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 11, color: "#9a9aa0" } }, haceDias(j.dias)));
+    return /* @__PURE__ */ React.createElement("button", { onClick, style: estilo, ...foco ? { "aria-expanded": expandida ? "true" : "false" } : {} }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true", style: { flex: "none", width: 40, height: 40, boxSizing: "border-box", borderRadius: 10, background: "#1b1b1f", border: "1px solid #2c2c31", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19 } }, t.emoji), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, j.titulo, guardado ? " \u2605" : ""), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#9a9aa0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, t.etiqueta, " \xB7 ", motivoDe(j))), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 11, color: "#9a9aa0" } }, cuando(j)));
   }
-  function Tarjeta({ j, guardado, onCerrar, onFicha, onDescartar }) {
-    return /* @__PURE__ */ React.createElement("div", { "data-id": j.id, style: { flex: "none", background: "#17171a", borderLeft: `3px solid ${ROJO}`, borderRadius: 10, paddingBottom: 12 } }, /* @__PURE__ */ React.createElement(Fila, { j, foco: true, desnuda: true, expandida: true, guardado, onClick: onCerrar }), /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 12px 0 61px", display: "flex", flexDirection: "column", gap: 8, fontFamily: FUENTE3, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, j.detalle), j.avance != null && /* @__PURE__ */ React.createElement(Barra, { pct: j.avance }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: onFicha, style: botonPri }, "Abrir ficha"), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa"))));
+  function Tarjeta({ j, ahora, guardado, onCerrar, onFicha, onDescartar }) {
+    return /* @__PURE__ */ React.createElement("div", { "data-id": j.id, style: { flex: "none", background: "#17171a", borderLeft: `3px solid ${ROJO}`, borderRadius: 10, paddingBottom: 12 } }, /* @__PURE__ */ React.createElement(Fila, { j, foco: true, desnuda: true, expandida: true, guardado, onClick: onCerrar }), /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 12px 0 61px", display: "flex", flexDirection: "column", gap: 8, fontFamily: FUENTE3, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, detalleDe(j, ahora)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: onFicha, style: botonPri }, "Abrir ficha"), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa"))));
   }
-  function Ficha({ j, guardado, onVolver, onGuardar, onDescartar }) {
+  function Ficha({ j, ahora, guardado, onVolver, onGuardar, onDescartar }) {
     const t = TIPO2[j.tipo];
-    const filas = [["Tipo", t.etiqueta], ["Por qu\xE9 lo ves", motivoDe(j)], ["Plataforma", j.plataforma], ["Novedad", haceDias(j.dias)]];
-    if (j.pideRom) filas.push(["\xBFPide tu ROM?", j.pideRom]);
-    filas.push(["Fuente", SIMULADO ? "[enlace simulado]" : "\u2014"]);
-    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, fontFamily: FUENTE3, color: "#eaeaea" } }, /* @__PURE__ */ React.createElement("button", { onClick: onVolver, style: { ...reset, alignSelf: "flex-start", minHeight: 44, padding: "0 8px 0 0", fontSize: 14 } }, "\u2190 Volver"), /* @__PURE__ */ React.createElement("span", { style: { alignSelf: "flex-start", fontSize: 11, letterSpacing: "0.12em", color: ROJO_TEXTO, border: `1px solid ${ROJO_TEXTO}`, borderRadius: 4, padding: "2px 6px" } }, t.etiqueta, SIMULADO ? " \xB7 SIMULADO" : ""), /* @__PURE__ */ React.createElement("h2", { style: { fontFamily: CAVEAT, fontWeight: 600, fontSize: 34, lineHeight: 1, color: "#fff", margin: 0 } }, j.titulo), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 14, color: "#c4c4ca" } }, j.detalle), j.avance != null && /* @__PURE__ */ React.createElement(Barra, { pct: j.avance }), /* @__PURE__ */ React.createElement("dl", { style: { margin: 0, display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 14px", fontSize: 13 } }, filas.map(([k, v]) => [/* @__PURE__ */ React.createElement("dt", { key: "k" + k, style: { color: "#9a9aa0" } }, k), /* @__PURE__ */ React.createElement("dd", { key: "v" + k, style: { margin: 0, color: "#eaeaea" } }, v)])), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: onGuardar, "aria-pressed": guardado, style: botonPri }, guardado ? "\u2605 Guardado" : "\u2606 Me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa")));
+    const filas = filasFicha(j, ahora);
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, fontFamily: FUENTE3, color: "#eaeaea" } }, /* @__PURE__ */ React.createElement("button", { onClick: onVolver, style: { ...reset, alignSelf: "flex-start", minHeight: 44, padding: "0 8px 0 0", fontSize: 14 } }, "\u2190 Volver"), /* @__PURE__ */ React.createElement("span", { style: { alignSelf: "flex-start", fontSize: 11, letterSpacing: "0.12em", color: ROJO_TEXTO, border: `1px solid ${ROJO_TEXTO}`, borderRadius: 4, padding: "2px 6px" } }, t.etiqueta), /* @__PURE__ */ React.createElement("h2", { style: { fontFamily: CAVEAT, fontWeight: 600, fontSize: 34, lineHeight: 1, color: "#fff", margin: 0, overflowWrap: "anywhere" } }, j.titulo), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 14, color: "#c4c4ca" } }, detalleDe(j, ahora)), /* @__PURE__ */ React.createElement("dl", { style: { margin: 0, display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 14px", fontSize: 13 } }, filas.map(([k, v]) => [/* @__PURE__ */ React.createElement("dt", { key: "k" + k, style: { color: "#9a9aa0" } }, k), /* @__PURE__ */ React.createElement("dd", { key: "v" + k, style: { margin: 0, color: "#eaeaea", overflowWrap: "anywhere" } }, /* @__PURE__ */ React.createElement(Valor, { v }))])), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: onGuardar, "aria-pressed": guardado, style: botonPri }, guardado ? "\u2605 Guardado" : "\u2606 Me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#9a9aa0" } }, "Datos: ", j.tipo === "d" ? "awesome-decomp-games" : "IGDB"));
   }
   function GameEnhancedPage() {
     const estado = useEstado();
+    const [datos, setDatos] = useState36(null);
+    const [error, setError] = useState36(null);
     const [cat, setCat] = useState36(0);
     const [focos, setFocos] = useState36({});
     const [abierto, setAbierto] = useState36(null);
@@ -15869,6 +15909,8 @@ Toco reintentar ahora.`);
     const ultimaRueda = useRef21(0);
     const tAviso = useRef21(0);
     const vivo = useRef21({});
+    const JUEGOS = datos ? datos.juegos : [];
+    const ahora = Date.now();
     const lista = itemsDe(JUEGOS, CATEGORIAS[cat][0], estado.ocultos);
     const foco = Math.min(focos[cat] || 0, Math.max(0, lista.length - 1));
     const enfocado = lista[foco] || null;
@@ -15931,6 +15973,17 @@ Toco reintentar ahora.`);
       return () => document.removeEventListener("keydown", h);
     }, [mover2]);
     useEffect23(() => () => clearTimeout(tAviso.current), []);
+    async function cargar() {
+      setError(null);
+      try {
+        setDatos(await fetchGameEnhancedData());
+      } catch (e) {
+        setError(e.message || "error");
+      }
+    }
+    useEffect23(() => {
+      cargar();
+    }, []);
     useEffect23(() => {
       if (listaRef.current) listaRef.current.scrollTop = 0;
     }, [expandida, cat]);
@@ -15981,6 +16034,7 @@ Toco reintentar ahora.`);
       setAviso(null);
     }
     const r = resumen2(JUEGOS, estado.ocultos, estado.guardados);
+    const edad = edadDatos(datos && datos.generatedAt, ahora);
     const ancho = { width: "100%", maxWidth: 480, margin: "0 auto", boxSizing: "border-box", position: "relative", padding: "10px 16px 8px" };
     let cuerpo2;
     if (ficha) {
@@ -15988,6 +16042,7 @@ Toco reintentar ahora.`);
         Ficha,
         {
           j: ficha,
+          ahora,
           guardado: !!estado.guardados[ficha.id],
           onVolver: () => setFichaId(null),
           onGuardar: () => alternarGuardado(ficha.id),
@@ -15996,11 +16051,11 @@ Toco reintentar ahora.`);
       );
     } else {
       const v = ventana(lista.length, foco, cabe);
-      cuerpo2 = /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { "aria-live": "polite", style: { flex: "none", height: 30, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, fontFamily: FUENTE3, fontSize: 12, color: "#9a9aa0" } }, aviso ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, "Oculto: ", aviso.titulo), /* @__PURE__ */ React.createElement("button", { onClick: deshacer, style: { ...reset, flex: "none", minHeight: 44, margin: "-8px 0", padding: "0 8px", color: ROJO_TEXTO, textDecoration: "underline" } }, "Deshacer")) : /* @__PURE__ */ React.createElement("span", null, r.semana, " esta semana \xB7 ", r.deEstudios, " de tus estudios \xB7 \u2605 ", r.guardados), SIMULADO && /* @__PURE__ */ React.createElement("span", { style: sello }, "SIMULADO")), /* @__PURE__ */ React.createElement("div", { style: { flex: "none", height: 84, marginTop: 6, display: "flex", alignItems: "flex-start", gap: 8 } }, CATEGORIAS.map(([clave, emoji, nombre], i) => i === cat ? /* @__PURE__ */ React.createElement("button", { key: clave, onClick: clic(() => {
+      cuerpo2 = /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { "aria-live": "polite", style: { flex: "none", height: 30, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, fontFamily: FUENTE3, fontSize: 12, color: "#9a9aa0" } }, aviso ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, "Oculto: ", aviso.titulo), /* @__PURE__ */ React.createElement("button", { onClick: deshacer, style: { ...reset, flex: "none", minHeight: 44, margin: "-8px 0", padding: "0 8px", color: ROJO_TEXTO, textDecoration: "underline" } }, "Deshacer")) : /* @__PURE__ */ React.createElement("span", null, r.semana, " esta semana \xB7 ", r.deEstudios, " de tus estudios \xB7 \u2605 ", r.guardados), datos && /* @__PURE__ */ React.createElement("span", { style: { ...sello, ...edad.vieja ? { color: ROJO_TEXTO, borderColor: ROJO_TEXTO } : {} } }, "DATOS ", edad.texto.toUpperCase())), /* @__PURE__ */ React.createElement("div", { style: { flex: "none", height: 84, marginTop: 6, display: "flex", alignItems: "flex-start", gap: 8 } }, CATEGORIAS.map(([clave, emoji, nombre], i) => i === cat ? /* @__PURE__ */ React.createElement("button", { key: clave, onClick: clic(() => {
       }), "aria-label": `${nombre}, categor\xEDa seleccionada`, style: { ...reset, width: 100, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6, color: "#fff" } }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true", style: { width: 52, height: 52, boxSizing: "border-box", borderRadius: "50%", border: "1.5px solid #eaeaea", background: "rgba(255,255,255,.07)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 } }, emoji), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: CAVEAT, fontWeight: 600, fontSize: 22, lineHeight: 1 } }, nombre)) : /* @__PURE__ */ React.createElement("button", { key: clave, onClick: clic(() => {
         setCat(i);
         setAbierto(null);
-      }), "aria-label": nombre, style: { ...reset, width: 60, height: 52, fontSize: 24, opacity: 0.6 } }, emoji))), /* @__PURE__ */ React.createElement("div", { ref: listaRef, style: { flex: 1, minHeight: 0, marginTop: 6, display: "flex", flexDirection: "column", gap: 5, justifyContent: expandida ? "flex-start" : "space-between", overflowX: "hidden", overflowY: expandida ? "auto" : "hidden", touchAction: expandida ? "pan-y" : "none" } }, lista.length === 0 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 12, fontFamily: FUENTE3, fontSize: 13, color: "#9a9aa0" } }, "No quedan \xEDtems en esta categor\xEDa."), lista.length > 0 && expandida && lista.slice(foco).map((j, i) => i === 0 ? /* @__PURE__ */ React.createElement(Tarjeta, { key: j.id, j, guardado: !!estado.guardados[j.id], onCerrar: clic(() => setAbierto(null)), onFicha: clic(() => setFichaId(j.id)), onDescartar: clic(() => descartar(j)) }) : /* @__PURE__ */ React.createElement(Fila, { key: j.id, j, guardado: !!estado.guardados[j.id], tono: TONOS[Math.min(i - 1, TONOS.length - 1)], onClick: clic(() => tocarFila(j, foco + i)) })), lista.length > 0 && !expandida && lista.slice(v.ini, v.fin).map((j, i) => {
+      }), "aria-label": nombre, style: { ...reset, width: 60, height: 52, fontSize: 24, opacity: 0.6 } }, emoji))), /* @__PURE__ */ React.createElement("div", { ref: listaRef, style: { flex: 1, minHeight: 0, marginTop: 6, display: "flex", flexDirection: "column", gap: 5, justifyContent: expandida ? "flex-start" : "space-between", overflowX: "hidden", overflowY: expandida ? "auto" : "hidden", touchAction: expandida ? "pan-y" : "none" } }, !datos && !error && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 12, fontFamily: FUENTE3, fontSize: 13, color: "#9a9aa0" } }, "Cargando\u2026"), error && /* @__PURE__ */ React.createElement("div", { style: { padding: 12, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", fontFamily: FUENTE3, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, "No se pudieron cargar los datos de Game enhanced (", error, ")."), /* @__PURE__ */ React.createElement("button", { onClick: cargar, style: botonSec }, "Reintentar")), datos && lista.length === 0 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 12, fontFamily: FUENTE3, fontSize: 13, color: "#9a9aa0" } }, CATEGORIAS[cat][0] === "todo" ? "Sin novedades recientes. Mira Decomps o Estudios." : "No quedan \xEDtems en esta categor\xEDa."), lista.length > 0 && expandida && lista.slice(foco).map((j, i) => i === 0 ? /* @__PURE__ */ React.createElement(Tarjeta, { key: j.id, j, ahora, guardado: !!estado.guardados[j.id], onCerrar: clic(() => setAbierto(null)), onFicha: clic(() => setFichaId(j.id)), onDescartar: clic(() => descartar(j)) }) : /* @__PURE__ */ React.createElement(Fila, { key: j.id, j, guardado: !!estado.guardados[j.id], tono: TONOS[Math.min(i - 1, TONOS.length - 1)], onClick: clic(() => tocarFila(j, foco + i)) })), lista.length > 0 && !expandida && lista.slice(v.ini, v.fin).map((j, i) => {
         const idx = v.ini + i;
         return /* @__PURE__ */ React.createElement(Fila, { key: j.id, j, foco: idx === foco, guardado: !!estado.guardados[j.id], tono: TONOS[Math.min(Math.max(0, idx - foco - 1), TONOS.length - 1)], onClick: clic(() => tocarFila(j, idx)) });
       })));
@@ -16056,7 +16111,7 @@ Toco reintentar ahora.`);
   function balizasDeDia(day) {
     return (day?.tasks || []).filter((t) => t.urgent && !t.done && !t.postponed && t.text);
   }
-  function cuando(dias) {
+  function cuando2(dias) {
     return dias === 0 ? "hoy" : dias === 1 ? "ma\xF1ana" : `en ${dias} d\xEDas`;
   }
   function colorCarga(score) {
@@ -16127,7 +16182,7 @@ Toco reintentar ahora.`);
         ...ev,
         enCurso,
         terminado,
-        estado: enCurso ? "en curso" : terminado ? "termin\xF3" : cuando(diasEntre(todayKey, ev.start)),
+        estado: enCurso ? "en curso" : terminado ? "termin\xF3" : cuando2(diasEntre(todayKey, ev.start)),
         finals: finalsKey ? DIA_LARGO[aFecha(finalsKey).getDay()] : null
       };
     });
@@ -16188,10 +16243,10 @@ Toco reintentar ahora.`);
       /* @__PURE__ */ React.createElement(Aro, { score: c.score }, c.num),
       /* @__PURE__ */ React.createElement("span", { className: "dw-ic" }, iconosDia(c, 3)),
       /* @__PURE__ */ React.createElement("i", { className: "dw-kid" + (c.conNinos ? " on" : ""), title: c.conNinos ? "con los ni\xF1os" : "sin los ni\xF1os" })
-    ))), /* @__PURE__ */ React.createElement("div", { className: "dp-info" }, /* @__PURE__ */ React.createElement("div", { className: "dp-lineas" }, /* @__PURE__ */ React.createElement("div", { className: "dp-l1", onClick: r.proxima ? () => abrir(r.proxima.dateKey) : void 0, style: r.proxima ? { cursor: "pointer" } : void 0 }, r.proxima ? /* @__PURE__ */ React.createElement(React.Fragment, null, r.proxima.icono, " ", cuando(r.proxima.dias), " \xB7 ", DIA_LARGO[r.proxima.dow], " ", r.proxima.hora ? r.proxima.hora + " " : "", r.proxima.texto, r.proxima.extra > 0 ? ` +${r.proxima.extra}` : "") : r.hoy ? /* @__PURE__ */ React.createElement(HoyLinea, { hoy: r.hoy }) : /* @__PURE__ */ React.createElement("span", { className: "dash-dim" }, "sin balizas")), r.proxima && r.hoy && /* @__PURE__ */ React.createElement("div", { className: "dp-l2" }, /* @__PURE__ */ React.createElement(HoyLinea, { hoy: r.hoy }))), /* @__PURE__ */ React.createElement("button", { className: "min-btn", onClick: (e) => {
+    ))), /* @__PURE__ */ React.createElement("div", { className: "dp-info" }, /* @__PURE__ */ React.createElement("div", { className: "dp-lineas" }, /* @__PURE__ */ React.createElement("div", { className: "dp-l1", onClick: r.proxima ? () => abrir(r.proxima.dateKey) : void 0, style: r.proxima ? { cursor: "pointer" } : void 0 }, r.proxima ? /* @__PURE__ */ React.createElement(React.Fragment, null, r.proxima.icono, " ", cuando2(r.proxima.dias), " \xB7 ", DIA_LARGO[r.proxima.dow], " ", r.proxima.hora ? r.proxima.hora + " " : "", r.proxima.texto, r.proxima.extra > 0 ? ` +${r.proxima.extra}` : "") : r.hoy ? /* @__PURE__ */ React.createElement(HoyLinea, { hoy: r.hoy }) : /* @__PURE__ */ React.createElement("span", { className: "dash-dim" }, "sin balizas")), r.proxima && r.hoy && /* @__PURE__ */ React.createElement("div", { className: "dp-l2" }, /* @__PURE__ */ React.createElement(HoyLinea, { hoy: r.hoy }))), /* @__PURE__ */ React.createElement("button", { className: "min-btn", onClick: (e) => {
       e.stopPropagation();
       onToggle();
-    }, "aria-label": abierto ? "cerrar resumen" : "abrir resumen" }, abierto ? "\u25B4" : "\u25BE")), abierto && /* @__PURE__ */ React.createElement("div", { className: "dash-det" }, r.hoy && /* @__PURE__ */ React.createElement("div", { className: "dash-hoy" }, /* @__PURE__ */ React.createElement(HoyLinea, { hoy: r.hoy })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "dash-sec" }, "balizas", r.balizasSemana > 0 ? ` \xB7 ${r.balizasSemana} esta semana` : ""), r.agenda.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "dash-dim" }, r.proxima ? `la pr\xF3xima es ${cuando(r.proxima.dias)}` : "sin balizas por delante") : r.agenda.map((d) => /* @__PURE__ */ React.createElement("div", { key: d.k, className: "dq-row" + (d.hoy ? " hoy" : ""), onClick: () => abrir(d.k), style: { cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { className: "dq-d" }, DIA_LARGO[d.dow], " ", d.num), /* @__PURE__ */ React.createElement("span", { className: "dq-t" }, d.balizas.map((b, i) => /* @__PURE__ */ React.createElement("span", { key: i }, b.icono, " ", b.hora ? /* @__PURE__ */ React.createElement("span", { className: "dq-h" }, b.hora, " ") : null, b.texto, b.detalle ? /* @__PURE__ */ React.createElement("span", { className: "dash-dim" }, " \xB7 ", b.detalle) : null)))))), r.eventos.length > 0 && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "dash-sec" }, "eventos"), r.eventos.slice(0, 3).map((ev, i) => /* @__PURE__ */ React.createElement("a", { key: i, className: "dash-ev", href: ev.url, target: "_blank", rel: "noopener", style: { opacity: ev.terminado ? 0.5 : 1 } }, /* @__PURE__ */ React.createElement("b", { style: { background: EVENTO_COLOR[ev.tipo] || "#888" } }), /* @__PURE__ */ React.createElement("span", { className: "dash-ev-n" }, ev.name), /* @__PURE__ */ React.createElement("span", { className: "dash-dim" }, ev.estado, ev.finals && !ev.terminado ? ` \xB7 finals ${ev.finals}` : ""))), r.eventos.length > 3 && /* @__PURE__ */ React.createElement("div", { className: "dash-dim" }, "+", r.eventos.length - 3, " m\xE1s")), r.feriados.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "dash-dim" }, "feriado: ", r.feriados.map((f2) => DIA_LARGO[f2.dow]).join(", "))));
+    }, "aria-label": abierto ? "cerrar resumen" : "abrir resumen" }, abierto ? "\u25B4" : "\u25BE")), abierto && /* @__PURE__ */ React.createElement("div", { className: "dash-det" }, r.hoy && /* @__PURE__ */ React.createElement("div", { className: "dash-hoy" }, /* @__PURE__ */ React.createElement(HoyLinea, { hoy: r.hoy })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "dash-sec" }, "balizas", r.balizasSemana > 0 ? ` \xB7 ${r.balizasSemana} esta semana` : ""), r.agenda.length === 0 ? /* @__PURE__ */ React.createElement("div", { className: "dash-dim" }, r.proxima ? `la pr\xF3xima es ${cuando2(r.proxima.dias)}` : "sin balizas por delante") : r.agenda.map((d) => /* @__PURE__ */ React.createElement("div", { key: d.k, className: "dq-row" + (d.hoy ? " hoy" : ""), onClick: () => abrir(d.k), style: { cursor: "pointer" } }, /* @__PURE__ */ React.createElement("span", { className: "dq-d" }, DIA_LARGO[d.dow], " ", d.num), /* @__PURE__ */ React.createElement("span", { className: "dq-t" }, d.balizas.map((b, i) => /* @__PURE__ */ React.createElement("span", { key: i }, b.icono, " ", b.hora ? /* @__PURE__ */ React.createElement("span", { className: "dq-h" }, b.hora, " ") : null, b.texto, b.detalle ? /* @__PURE__ */ React.createElement("span", { className: "dash-dim" }, " \xB7 ", b.detalle) : null)))))), r.eventos.length > 0 && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "dash-sec" }, "eventos"), r.eventos.slice(0, 3).map((ev, i) => /* @__PURE__ */ React.createElement("a", { key: i, className: "dash-ev", href: ev.url, target: "_blank", rel: "noopener", style: { opacity: ev.terminado ? 0.5 : 1 } }, /* @__PURE__ */ React.createElement("b", { style: { background: EVENTO_COLOR[ev.tipo] || "#888" } }), /* @__PURE__ */ React.createElement("span", { className: "dash-ev-n" }, ev.name), /* @__PURE__ */ React.createElement("span", { className: "dash-dim" }, ev.estado, ev.finals && !ev.terminado ? ` \xB7 finals ${ev.finals}` : ""))), r.eventos.length > 3 && /* @__PURE__ */ React.createElement("div", { className: "dash-dim" }, "+", r.eventos.length - 3, " m\xE1s")), r.feriados.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "dash-dim" }, "feriado: ", r.feriados.map((f2) => DIA_LARGO[f2.dow]).join(", "))));
   }
   var SemanaDashboard_default = SemanaDashboard;
 
