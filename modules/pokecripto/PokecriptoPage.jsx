@@ -6,6 +6,7 @@ import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarC
 import { marcarEdicionLocal } from "../shared/localedit.js";
 import { esDoubleRare, esAceSpec, carpetaDeCat, carpetaDeInv, invEnCarpeta, invDeCarta, rarezaConocida, sobraPorRareza, entradasFaltantes,
   resumenAvance, sumarAvances, serieColeccion, variacionMensual, mesDe, TOTAL_COLECCIONES, NOMBRES_COLECCIONES } from "./lib/colecciones.mjs";
+import { useDesborde } from "../shared/ui.jsx";
 import { isDarkCard, POKECRIPTO_WORKER_URL, POKECRIPTO_AUTH_KEY, getPokecriptoAuth, encolarPokecriptoPending, buscarCartas, armarCartaNueva } from "./alta.js";
 
 // ─── PokeLoader ───────────────────────────────────────────────────────────────
@@ -169,6 +170,18 @@ function BarraSet({conseguidas,total}){
 // Chip discreto de la fila de herramientas de una colección (imprimir / sin precio / variación mensual).
 function ChipHerramienta({onClick,activo,children,title}){
   return <button onClick={onClick} title={title} style={{background:activo?"#2a2a2a":"transparent",border:"1px solid "+(activo?"#555":"#262626"),borderRadius:99,padding:"4px 11px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:activo?"#ddd":"#888",lineHeight:1.2}}>{children}</button>;
+}
+// Marco de cada vista de Pokécripto (lineamiento N1/N3, nov-2026): llena el área libre que deja el shell (.app-fit: encabezado,
+// pestañas y pie fijos), con scroll interno solo cuando el contenido no cabe. Los paneles absolutos (detalle de carta) se
+// posicionan contra este marco, así que tapan solo el módulo y nunca el encabezado, las pestañas ni el pie.
+function MarcoPoke({children,scrollRef}){
+  return(
+    <div style={{flex:1,minHeight:0,position:"relative",display:"flex",flexDirection:"column",background:"#0a0a0a"}}>
+      <div ref={scrollRef} style={{flex:1,minHeight:0,overflowY:"auto",overflowX:"hidden",padding:"16px",boxSizing:"border-box",width:"100%",maxWidth:480,margin:"0 auto"}}>
+        {children}
+      </div>
+    </div>
+  );
 }
 // × de las hojas emergentes (nov-2026): arriba a la derecha, igual en todas; el contenedor debe ser position:relative.
 function BotonCerrar({onClick}){
@@ -501,20 +514,24 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // posición actual bajo la "firma" de la pantalla en la que estás; al
   // cambiar de firma (una navegación real), se restaura la que tenía
   // guardada esa pantalla (0 la primera vez que se entra).
+  // Con el marco .app-fit el scroll es interno (MarcoPoke), ya no el de la ventana: mainRef apunta al contenedor que scrollea.
+  const mainRef = React.useRef(null);
   const scrollPosRef = React.useRef({});
   const lastSigRef = React.useRef(null);
   const navSig = `${view}|${carpetaView||""}|${autocolCarpeta||""}`;
   React.useEffect(()=>{
     if(lastSigRef.current!==null && lastSigRef.current!==navSig){
       const saved=scrollPosRef.current[navSig];
-      requestAnimationFrame(()=>window.scrollTo(0,saved||0));
+      requestAnimationFrame(()=>{ if(mainRef.current) mainRef.current.scrollTop=saved||0; });
     }
     lastSigRef.current=navSig;
   },[navSig]);
   React.useEffect(()=>{
-    const onScroll=()=>{ scrollPosRef.current[navSig]=window.scrollY; };
-    window.addEventListener("scroll",onScroll,{passive:true});
-    return ()=>window.removeEventListener("scroll",onScroll);
+    const el=mainRef.current;
+    if(!el) return undefined;
+    const onScroll=()=>{ scrollPosRef.current[navSig]=el.scrollTop; };
+    el.addEventListener("scroll",onScroll,{passive:true});
+    return ()=>el.removeEventListener("scroll",onScroll);
   },[navSig]);
   const [allSets,        setAllSets]        = React.useState([]);
   const [allSetsLoading, setAllSetsLoading] = React.useState(false);
@@ -1504,6 +1521,10 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [histColecciones,setHistColecciones]=React.useState(leerHistColecciones);
   const [histColAbierto,setHistColAbierto]=React.useState(false);
   const [hojaImprimir,setHojaImprimir]=React.useState(false); // hoja con las opciones de impresión de placeholders
+  // Válvula del lineamiento (4.5): si la pantalla principal recién abierta (sin carpeta, colección, filtros ni detalle) no cabe
+  // en el área libre, aparece scroll y se avisa por consola; es un detector, no una solución.
+  const colapsadoPoke=view==="coleccion"&&!carpetaView&&!autocolCarpeta&&!darkDetailId&&(chipCarpetas.size+chipEstado.size)===0;
+  useDesborde(mainRef,"Pokécripto",colapsadoPoke);
   React.useEffect(()=>{
     const releer=()=>setHistColecciones(leerHistColecciones());
     window.addEventListener("angst:restaurado",releer);
@@ -1851,14 +1872,15 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         style={{position:"absolute",[lado]:4,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.12)",border:"none",borderRadius:14,width:44,height:88,color:"#fff",fontSize:26,cursor:"pointer",zIndex:1}}>{txt}</button>
     );
     return(<>
-      <div onClick={cerrar} style={{position:"fixed",inset:0,zIndex:650,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
-        <div onClick={e=>e.stopPropagation()} style={{width:"min(96vw,460px)",background:"#111",borderRadius:"16px 16px 0 0",padding:"16px 20px 36px",maxHeight:"92vh",overflowY:"auto",boxSizing:"border-box"}}>
-          {/* 1 · barra superior: contador al centro, cierre a la derecha — igual en todos los contextos */}
-          <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"center",marginBottom:8}}>
-            <span/>
+      <div style={{position:"absolute",inset:0,zIndex:650,background:"#111",display:"flex",flexDirection:"column"}}>
+        <div style={{width:"100%",maxWidth:480,margin:"0 auto",flex:1,minHeight:0,display:"flex",flexDirection:"column"}}>
+          {/* 1 · barra superior FIJA (no scrollea): contador al centro y cierre a la derecha, siempre visibles */}
+          <div style={{flex:"none",display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"center",padding:"10px 16px",borderBottom:"1px solid #1f1f1f"}}>
+            <button onClick={cerrar} style={{justifySelf:"start",background:"transparent",border:"none",color:"#888",fontFamily:"'DM Sans',sans-serif",fontSize:12,cursor:"pointer",padding:0}}>← volver</button>
             <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.35)"}}>{nav&&idx>=0?`${idx+1} / ${darkDetailList.length}`:""}</div>
-            <button onClick={cerrar} title="cerrar" style={{justifySelf:"end",background:"transparent",border:"none",color:"#777",fontSize:22,cursor:"pointer",padding:0,lineHeight:1}}>×</button>
+            <button onClick={cerrar} title="cerrar" style={{justifySelf:"end",background:"transparent",border:"none",color:"#999",fontSize:24,cursor:"pointer",padding:0,lineHeight:1}}>×</button>
           </div>
+          <div style={{flex:1,minHeight:0,overflowY:"auto",padding:"12px 20px 36px",boxSizing:"border-box"}}>
           {/* 2 · ilustración con flechas grandes a los lados; tocarla abre el fullscreen */}
           {detalle.image&&<div style={{position:"relative",marginBottom:12}}>
             <img src={detalle.imageHd||detalle.image} alt={detalle.name}
@@ -2025,6 +2047,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             <button onClick={()=>{if(window.confirm(`¿Eliminar ${carta.name}?`)){deleteCarta(carta.id);cerrar();}}}
               style={{width:"100%",background:"transparent",border:"1px dashed #2a2a2a",borderRadius:10,padding:"9px",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#666",cursor:"pointer"}}>eliminar carta</button>
           </>}
+          </div>
         </div>
       </div>
       {/* Venta: hoja oscura por encima del detalle */}
@@ -2114,7 +2137,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // ── VISTA BUSCAR ─────────────────────────────────────────────────────────────
   if(view==="buscar"){
     return(
-      <div style={{padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
+      <MarcoPoke scrollRef={mainRef}>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
           <button onClick={()=>{setView("coleccion");setResults([]);setQuery("");}} style={{background:"transparent",border:"none",fontSize:20,color:"#bbb",cursor:"pointer",padding:0}}>←</button>
           <span style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:"#111"}}>agregar carta</span>
@@ -2246,7 +2269,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             </div>
           </div>
         )}
-      </div>
+      </MarcoPoke>
     );
   }
 
@@ -2259,7 +2282,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const cvView=darkView; const setCvView=setDarkView;
     const gridCols=cvView==="grid_small"?"repeat(auto-fill,minmax(72px,1fr))":cvView==="grid_med"?"repeat(auto-fill,minmax(100px,1fr))":null;
     return(
-      <div style={{background:"#0a0a0a",minHeight:"100vh",padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
+      <MarcoPoke scrollRef={mainRef}>
         {renderZoom()}
         {renderDetalleCarta()}
         {renderRevisionModal()}
@@ -2338,7 +2361,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           </div>
         }
         <div style={{height:32}}/>
-      </div>
+      </MarcoPoke>
     );
   }
 
@@ -2355,7 +2378,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const fmtPctH=n=>(n==null?"nuevo":`${signo(n)}${Math.abs(n).toFixed(1)}%`);
     const colorH=n=>(n==null?"#888":n>0?"#4caf80":n<0?"#e57373":"#888");
     return(
-      <div style={{background:"#0a0a0a",minHeight:"100vh",padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
+      <MarcoPoke scrollRef={mainRef}>
         {renderZoom()}
         {renderDetalleCarta()}
         {renderRevisionModal()}
@@ -2416,7 +2439,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           })}
         </>)}
         <div style={{height:32}}/>
-      </div>
+      </MarcoPoke>
     );
   }
 
@@ -2426,7 +2449,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const tot=avancesColecciones.total;
     const mesActual=mesDe(hoy);
     return(
-      <div style={{background:"#0a0a0a",minHeight:"100vh",padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
+      <MarcoPoke scrollRef={mainRef}>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
           <button onClick={()=>setView("coleccion")} style={{background:"transparent",border:"none",fontSize:20,color:"#444",cursor:"pointer",padding:0}}>←</button>
           <div style={{flex:1,fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff"}}>🗂️ Colecciones</div>
@@ -2460,7 +2483,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           </button>
         ))}
         <div style={{height:32}}/>
-      </div>
+      </MarcoPoke>
     );
   }
 
@@ -2517,7 +2540,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const vmCol=variacionMensual(histColecciones,cat,mesDe(hoy));
 
     return(
-      <div style={{background:"#0a0a0a",minHeight:"100vh",padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
+      <MarcoPoke scrollRef={mainRef}>
         {renderZoom()}
         {renderDarkPriceModal()}
         {renderDetalleCarta()}
@@ -2638,7 +2661,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           );
         })}
         <div style={{height:40}}/>
-      </div>
+      </MarcoPoke>
     );
   }
 
@@ -2648,7 +2671,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const ganMes=vendMes.reduce((s,c)=>s+((c.precioVendidoUSD||0)-(c.costoUSD||0)),0);
 
   return(
-    <div style={{padding:"16px",maxWidth:480,margin:"0 auto",overflowX:"hidden",boxSizing:"border-box"}}>
+    <MarcoPoke scrollRef={mainRef}>
       {!apiKey&&(
         <div style={{background:"#1a1a1a",border:"1px solid #333",borderRadius:12,padding:"12px 14px",marginBottom:12}}>
           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#bbb",marginBottom:8}}>
@@ -2926,7 +2949,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       </div>}
 
       <div style={{height:32}}/>
-    </div>
+    </MarcoPoke>
   );
 }
 
