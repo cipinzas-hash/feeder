@@ -9256,8 +9256,8 @@ ${item.link}`);
       const a = brazo(sh, wr, flipArm);
       const knee = add(hip, [0.28, 0.96], LEN.muslo);
       const ankle = [knee[0] - LEN.pierna * 0.98, knee[1] - 1.2];
-      const pad3 = knee[1] + 1.2;
-      return { pad: pad3, svg: maquina(pad3) + a.svg + cuerpo(sh, hip, headC) + line(hip[0], hip[1], knee[0], knee[1]) + line(knee[0], knee[1], ankle[0], ankle[1]) + line(ankle[0], ankle[1], ankle[0] - 6.5, ankle[1] + 0.8) };
+      const pad4 = knee[1] + 1.2;
+      return { pad: pad4, svg: maquina(pad4) + a.svg + cuerpo(sh, hip, headC) + line(hip[0], hip[1], knee[0], knee[1]) + line(knee[0], knee[1], ankle[0], ankle[1]) + line(ankle[0], ankle[1], ankle[0] - 6.5, ankle[1] + 0.8) };
     };
     const barra = dot(BAR[0], BAR[1], 2.2, GEAR);
     const ini = (() => {
@@ -9318,8 +9318,8 @@ ${item.link}`);
       const a = brazo(sh, wr, 1);
       const knee = add(hip, [0.1, 0.99], LEN.muslo);
       const ankle = [knee[0] - LEN.pierna * 0.98, knee[1] - 1.2];
-      const pad3 = knee[1] + 1.2;
-      return maquina(pad3) + barras + a.svg + cuerpo(sh, hip, headC) + line(hip[0], hip[1], knee[0], knee[1]) + line(knee[0], knee[1], ankle[0], ankle[1]) + line(ankle[0], ankle[1], ankle[0] - 6.5, ankle[1] + 0.8) + musculo(add(sh, unit(sh, a.codo), LEN.brazo * 0.5), 3.8);
+      const pad4 = knee[1] + 1.2;
+      return maquina(pad4) + barras + a.svg + cuerpo(sh, hip, headC) + line(hip[0], hip[1], knee[0], knee[1]) + line(knee[0], knee[1], ankle[0], ankle[1]) + line(ankle[0], ankle[1], ankle[0] - 6.5, ankle[1] + 0.8) + musculo(add(sh, unit(sh, a.codo), LEN.brazo * 0.5), 3.8);
     };
     const ini = cuerpoKneel([62, 20.5], [55, 40], [65.2, 12.7], [62.5, 44]);
     const fin = cuerpoKneel([60.5, 30.5], [53.5, 50], [63.7, 22.7], [62.5, 44]) + arrow(34, 26, 34, 40);
@@ -9416,6 +9416,7 @@ ${item.link}`);
   var VIDEOTECA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/videoteca.json";
   var MUSICA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/musica.json";
   var GAME_ENHANCED_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced.json";
+  var PANORAMAS_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/panoramas.json";
   var CINE_CATEGORIAS = ["Pel\xEDculas", "Series", "Animaci\xF3n"];
   var VITRINA_CATEGORIAS = [...CINE_CATEGORIAS, "Microdocumentales", "Melee", "Conciertos"];
   var MUSIC_CATEGORIA = "Dark scene / M\xFAsica";
@@ -10085,13 +10086,13 @@ ${item.link}`);
   }
   function ProgresionChart({ history, compact, ex }) {
     if (!history || history.length < 2) return null;
-    const W = compact ? 200 : 290, H2 = compact ? 48 : 72, pad3 = 8;
+    const W = compact ? 200 : 290, H2 = compact ? 48 : 72, pad4 = 8;
     const hasPeso = history.some((h) => h.peso);
     const vals = history.map((h) => volEfectivo(h.reps, h.peso, ex));
     const minV = Math.min(...vals) * 0.88, maxV = Math.max(...vals) * 1.12;
     const range = maxV - minV || 1;
-    const px = (i) => pad3 + i / (history.length - 1) * (W - pad3 * 2);
-    const py = (v) => H2 - pad3 - (v - minV) / range * (H2 - pad3 * 2);
+    const px = (i) => pad4 + i / (history.length - 1) * (W - pad4 * 2);
+    const py = (v) => H2 - pad4 - (v - minV) / range * (H2 - pad4 * 2);
     const path = history.map((h, i) => `${i === 0 ? "M" : "L"}${px(i).toFixed(1)},${py(vals[i]).toFixed(1)}`).join(" ");
     const last = vals[vals.length - 1], first = vals[0];
     const up = last >= first;
@@ -10099,7 +10100,7 @@ ${item.link}`);
     const deltaPct = first !== 0 ? ((last - first) / Math.abs(first) * 100).toFixed(0) : null;
     const lastEntry = history[history.length - 1];
     const label = hasPeso ? `${lastEntry.reps}r\xD7${lastEntry.peso}kg` : `${lastEntry.reps}r`;
-    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("svg", { width: W, height: H2, style: { display: "block", overflow: "visible" } }, /* @__PURE__ */ React.createElement("path", { d: path, fill: "none", stroke: color2, strokeWidth: compact ? 1.5 : 2, strokeLinejoin: "round", strokeLinecap: "round" }), history.map((h, i) => /* @__PURE__ */ React.createElement("circle", { key: i, cx: px(i), cy: py(vals[i]), r: compact ? 2 : 3, fill: color2 })), /* @__PURE__ */ React.createElement("text", { x: W - pad3, y: py(last) - 5, textAnchor: "end", fontSize: compact ? 8 : 10, fontFamily: "DM Sans,sans-serif", fill: color2, fontWeight: "700" }, label)), !compact && deltaPct && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: color2, marginTop: 2 } }, up ? "+" : "", deltaPct, "% volumen \xB7 ", history.length, " sesiones"));
+    return /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("svg", { width: W, height: H2, style: { display: "block", overflow: "visible" } }, /* @__PURE__ */ React.createElement("path", { d: path, fill: "none", stroke: color2, strokeWidth: compact ? 1.5 : 2, strokeLinejoin: "round", strokeLinecap: "round" }), history.map((h, i) => /* @__PURE__ */ React.createElement("circle", { key: i, cx: px(i), cy: py(vals[i]), r: compact ? 2 : 3, fill: color2 })), /* @__PURE__ */ React.createElement("text", { x: W - pad4, y: py(last) - 5, textAnchor: "end", fontSize: compact ? 8 : 10, fontFamily: "DM Sans,sans-serif", fill: color2, fontWeight: "700" }, label)), !compact && deltaPct && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: color2, marginTop: 2 } }, up ? "+" : "", deltaPct, "% volumen \xB7 ", history.length, " sesiones"));
   }
   function FloatingRestTimer({ secs, maxSecs, onSkip, onAddTime, onFeed }) {
     return /* @__PURE__ */ React.createElement("div", { onClick: onSkip, style: { position: "fixed", inset: 0, zIndex: 2e3, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: 3, textTransform: "uppercase", marginBottom: 18 } }, "descansando"), /* @__PURE__ */ React.createElement("div", { style: { position: "relative", width: 220, height: 220, marginBottom: 14 } }, /* @__PURE__ */ React.createElement("svg", { width: "220", height: "220", style: { position: "absolute", top: 0, left: 0, transform: "rotate(-90deg)" } }, /* @__PURE__ */ React.createElement("circle", { cx: "110", cy: "110", r: "96", fill: "none", stroke: "#1a1a1a", strokeWidth: "10" }), /* @__PURE__ */ React.createElement(
@@ -14872,8 +14873,8 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     if (rating.tmdb != null) chips.push({ label: "TMDb", value: rating.tmdb.toFixed(1), bg: "#01b4e4", fg: "#000" });
     if (!chips.length) return null;
     const fontSize = size === "lg" ? 12 : 10;
-    const pad3 = size === "lg" ? "5px 10px" : "3px 7px";
-    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" } }, chips.map((c, i) => /* @__PURE__ */ React.createElement("span", { key: i, style: { background: c.bg, color: c.fg, borderRadius: 6, padding: pad3, fontFamily: "'DM Sans',sans-serif", fontSize, fontWeight: 700, display: "flex", gap: 4, alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", null, c.label), /* @__PURE__ */ React.createElement("span", null, c.value))));
+    const pad4 = size === "lg" ? "5px 10px" : "3px 7px";
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" } }, chips.map((c, i) => /* @__PURE__ */ React.createElement("span", { key: i, style: { background: c.bg, color: c.fg, borderRadius: 6, padding: pad4, fontFamily: "'DM Sans',sans-serif", fontSize, fontWeight: 700, display: "flex", gap: 4, alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", null, c.label), /* @__PURE__ */ React.createElement("span", null, c.value))));
   }
   function ReviewBlock({ label, review, color: color2 }) {
     return /* @__PURE__ */ React.createElement("div", { style: { background: "#151515", borderRadius: 10, padding: "10px 12px", marginBottom: 8, borderLeft: `2px solid ${color2}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" } }, label), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, color: color2, fontWeight: 700 } }, review.rating, "/10")), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 } }, review.text), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 6 } }, "\u2014 ", review.author));
@@ -15747,6 +15748,89 @@ Toco reintentar ahora.`);
     )));
   }
 
+  // modules/panoramas/PanoramasPage.jsx
+  var { useState: useState36, useEffect: useEffect23, useMemo: useMemo12 } = React;
+  var ACENTO2 = "#e0a030";
+  var FUENTE3 = "'DM Sans',sans-serif";
+  var MESES2 = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  var DIAS2 = ["dom", "lun", "mar", "mi\xE9", "jue", "vie", "s\xE1b"];
+  var pad3 = (n) => String(n).padStart(2, "0");
+  var claveDe = (d) => `${d.getFullYear()}-${pad3(d.getMonth() + 1)}-${pad3(d.getDate())}`;
+  var aFecha = (k) => /* @__PURE__ */ new Date(k + "T12:00:00");
+  var diasEntre = (a, b) => Math.round((aFecha(b) - aFecha(a)) / 864e5);
+  var corta = (k) => {
+    const d = aFecha(k);
+    return `${d.getDate()} ${MESES2[d.getMonth()]}`;
+  };
+  function agrupar2(eventos, hoy) {
+    const grupos = [
+      { id: "hoy", titulo: "Hoy", items: [] },
+      { id: "manana", titulo: "Ma\xF1ana", items: [] },
+      { id: "semana", titulo: "Esta semana", items: [] },
+      { id: "quincena", titulo: "Pr\xF3ximas dos semanas", items: [] },
+      { id: "luego", titulo: "M\xE1s adelante", items: [] }
+    ];
+    for (const e of eventos) {
+      const d = Math.max(0, diasEntre(hoy, e.inicio));
+      const g = d === 0 ? 0 : d === 1 ? 1 : d <= 7 ? 2 : d <= 21 ? 3 : 4;
+      grupos[g].items.push({ ...e, _dias: d });
+    }
+    for (const g of grupos) g.items.sort((a, b) => a._dias - b._dias || a.titulo.localeCompare(b.titulo, "es"));
+    return grupos.filter((g) => g.items.length);
+  }
+  function Chip2({ children, color: color2, fuerte, onClick, activo }) {
+    const base = { fontFamily: FUENTE3, fontSize: 11, lineHeight: 1, padding: "5px 8px", borderRadius: 10, whiteSpace: "nowrap", border: `1px solid ${color2 || "#444"}`, color: fuerte ? "#111" : color2 || "#bbb", background: fuerte ? color2 : "transparent", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis" };
+    if (onClick) return /* @__PURE__ */ React.createElement("button", { onClick, style: { ...base, flex: "none", maxWidth: "none", overflow: "visible", minHeight: 34, padding: "0 12px", fontSize: 12, cursor: "pointer", background: activo ? ACENTO2 : "transparent", color: activo ? "#111" : "#ccc", borderColor: activo ? ACENTO2 : "#444" } }, children);
+    return /* @__PURE__ */ React.createElement("span", { style: base }, children);
+  }
+  function Tarjeta({ e, hoy, nuevo }) {
+    const d = aFecha(e.inicio);
+    const empezado = e.inicio < hoy;
+    const pideInscripcion = e.inscripcion === true;
+    const conCupos = !pideInscripcion && (e.ventaOnline || e.cupos && e.cupos > 0);
+    return /* @__PURE__ */ React.createElement("a", { href: e.url, target: "_blank", rel: "noopener noreferrer", style: { display: "flex", gap: 10, padding: "10px 12px", background: "#161616", border: `1px solid ${pideInscripcion ? ACENTO2 : "#262626"}`, borderRadius: 8, textDecoration: "none", color: "#eee", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: "none", width: 44, textAlign: "center", fontFamily: FUENTE3 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#888", textTransform: "uppercase" } }, empezado ? "hasta" : DIAS2[d.getDay()]), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20, fontWeight: 700, lineHeight: 1.1 } }, empezado ? aFecha(e.fin).getDate() : d.getDate()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#888", textTransform: "uppercase" } }, MESES2[(empezado ? aFecha(e.fin) : d).getMonth()])), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE3, fontSize: 14, fontWeight: 600, lineHeight: 1.25 } }, e.titulo), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE3, fontSize: 12, color: "#999", marginTop: 3 } }, [e.hora, e.lugar, e.comuna].filter(Boolean).join(" \xB7 ")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 5, marginTop: 6 } }, pideInscripcion && /* @__PURE__ */ React.createElement(Chip2, { color: ACENTO2, fuerte: true }, "\u{1F39F} Requiere inscripci\xF3n"), conCupos && /* @__PURE__ */ React.createElement(Chip2, { color: ACENTO2 }, "\u{1F39F} ", e.ventaOnline ? "Entrada online" : `Cupos ${e.cupos}`), e.gratis === true && /* @__PURE__ */ React.createElement(Chip2, { color: "#4caf50" }, "Gratis"), e.gratis === false && /* @__PURE__ */ React.createElement(Chip2, { color: "#ccc" }, e.precio ? `$${e.precio.toLocaleString("es-CL")}` : "Con costo"), nuevo && /* @__PURE__ */ React.createElement(Chip2, { color: "#5c9cff" }, "\u2728 Nuevo"), e.categoria && /* @__PURE__ */ React.createElement(Chip2, null, e.categoria.length > 26 ? e.categoria.slice(0, 25) + "\u2026" : e.categoria), e.fin !== e.inicio && !e.enCurso && /* @__PURE__ */ React.createElement(Chip2, null, "hasta ", corta(e.fin)), e.rancio && /* @__PURE__ */ React.createElement(Chip2, { color: "#ff9800" }, "dato sin actualizar")), pideInscripcion && e.inscripcionUrl && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 6, fontFamily: FUENTE3, fontSize: 12, color: ACENTO2 } }, "Inscripci\xF3n: ", e.inscripcionUrl.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60))));
+  }
+  function PanoramasPage() {
+    const [datos, setDatos] = useState36(null);
+    const [error, setError] = useState36(false);
+    const [soloGratis, setSoloGratis] = useState36(false);
+    const [soloCupos, setSoloCupos] = useState36(false);
+    const [soloNuevos, setSoloNuevos] = useState36(false);
+    const [comuna, setComuna] = useState36("");
+    const [verCartelera, setVerCartelera] = useState36(false);
+    useEffect23(() => {
+      let vivo = true;
+      fetchJsonSafe(PANORAMAS_JSON_URL).then((d) => {
+        if (!vivo) return;
+        if (d && Array.isArray(d.eventos)) setDatos(d);
+        else setError(true);
+      }).catch(() => vivo && setError(true));
+      return () => {
+        vivo = false;
+      };
+    }, []);
+    const hoy = claveDe(/* @__PURE__ */ new Date());
+    const vm = useMemo12(() => {
+      if (!datos) return null;
+      const todos = datos.eventos.filter((e) => e.fin >= hoy);
+      const primerLote = todos.reduce((m, e) => e.visto && e.visto < m ? e.visto : m, "9999-12-31");
+      const esNuevo2 = (e) => !!e.visto && e.visto > primerLote && diasEntre(e.visto, hoy) <= 3;
+      const comunas = [...new Set(todos.map((e) => e.comuna).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
+      const pasa = (e) => (!soloGratis || e.gratis === true) && (!soloCupos || e.inscripcion === true || e.ventaOnline || e.cupos > 0) && (!soloNuevos || esNuevo2(e)) && (!comuna || e.comuna === comuna);
+      const filtrados = todos.filter(pasa);
+      const puntuales = filtrados.filter((e) => !e.enCurso);
+      const enCartelera = filtrados.filter((e) => e.enCurso).sort((a, b) => a.fin.localeCompare(b.fin));
+      const nNuevos = todos.filter(esNuevo2).length;
+      const rancias = Object.entries(datos.fuentes || {}).filter(([, f2]) => f2.rancio).map(([k]) => k);
+      return { grupos: agrupar2(puntuales, hoy), enCartelera, comunas, esNuevo: esNuevo2, nNuevos, total: filtrados.length, rancias };
+    }, [datos, hoy, soloGratis, soloCupos, soloNuevos, comuna]);
+    const actualizado = datos && datos.generatedAt ? (() => {
+      const h = Math.floor((Date.now() - new Date(datos.generatedAt).getTime()) / 36e5);
+      return h < 1 ? "hace menos de 1 h" : h < 24 ? `hace ${h} h` : `hace ${Math.floor(h / 24)} d`;
+    })() : "";
+    return /* @__PURE__ */ React.createElement("div", { className: "panoramas", style: { color: "#eee", background: "#0d0d0d" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: "none", padding: "10px 12px 6px", fontFamily: FUENTE3 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 700, color: ACENTO2 } }, "Panoramas \xB7 Santiago"), actualizado && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#777" } }, "actualizado ", actualizado)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, overflowX: "auto", padding: "8px 0 2px", WebkitOverflowScrolling: "touch" } }, /* @__PURE__ */ React.createElement(Chip2, { onClick: () => setSoloGratis((v) => !v), activo: soloGratis }, "Gratis"), /* @__PURE__ */ React.createElement(Chip2, { onClick: () => setSoloCupos((v) => !v), activo: soloCupos }, "\u{1F39F} Cupos / inscripci\xF3n"), /* @__PURE__ */ React.createElement(Chip2, { onClick: () => setSoloNuevos((v) => !v), activo: soloNuevos }, "\u2728 Nuevos", vm && vm.nNuevos ? ` (${vm.nNuevos})` : ""), vm && vm.comunas.length > 1 && /* @__PURE__ */ React.createElement("select", { value: comuna, onChange: (e) => setComuna(e.target.value), style: { flex: "none", minHeight: 34, background: comuna ? ACENTO2 : "transparent", color: comuna ? "#111" : "#ccc", border: `1px solid ${comuna ? ACENTO2 : "#444"}`, borderRadius: 10, fontFamily: FUENTE3, fontSize: 12, padding: "0 8px" } }, /* @__PURE__ */ React.createElement("option", { value: "" }, "Todas las comunas"), vm.comunas.map((c) => /* @__PURE__ */ React.createElement("option", { key: c, value: c }, c)))), vm && vm.rancias.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#ff9800", marginTop: 6 } }, "\u26A0 ", vm.rancias.join(", "), ": la \xFAltima actualizaci\xF3n fall\xF3; se muestra lo anterior.")), /* @__PURE__ */ React.createElement("div", { className: "panoramas-body", style: { flex: "1 1 0", minHeight: 0, overflowY: "auto", padding: "4px 12px 16px" } }, error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE3, fontSize: 13, color: "#c66", padding: 12 } }, "No se pudo leer panoramas.json. Si es la primera vez, falta correr el workflow \u201CActualizar panoramas\u201D."), !datos && !error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE3, fontSize: 13, color: "#777", padding: 12 } }, "Cargando\u2026"), vm && vm.total === 0 && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE3, fontSize: 13, color: "#777", padding: 12 } }, "Nada con esos filtros."), vm && vm.grupos.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.id }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE3, fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase", color: "#888", margin: "12px 0 6px" } }, g.titulo, " \xB7 ", g.items.length), g.items.map((e) => /* @__PURE__ */ React.createElement(Tarjeta, { key: e.id, e, hoy, nuevo: vm.esNuevo(e) })))), vm && vm.enCartelera.length > 0 && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("button", { onClick: () => setVerCartelera((v) => !v), style: { width: "100%", minHeight: 40, margin: "14px 0 6px", background: "transparent", border: "1px dashed #444", color: "#aaa", borderRadius: 8, fontFamily: FUENTE3, fontSize: 12, cursor: "pointer" } }, verCartelera ? "\u25BE" : "\u25B8", " Exposiciones y programas en curso (", vm.enCartelera.length, ")"), verCartelera && vm.enCartelera.map((e) => /* @__PURE__ */ React.createElement(Tarjeta, { key: e.id, e, hoy, nuevo: false })))));
+  }
+
   // modules/gameenhanced/logica.js
   var TIPO2 = {
     d: { etiqueta: "DECOMP", emoji: "\u{1F9E9}", motivo: "Porque terminaste " },
@@ -15780,12 +15864,12 @@ Toco reintentar ahora.`);
     const t = iso ? new Date(iso).getTime() : NaN;
     return Number.isFinite(t) ? Math.round((ahora - t) / 864e5) : null;
   }
-  var MESES2 = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  var MESES3 = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
   function fechaLegible(j) {
     if (!j.fecha) return "\u2014";
     if (j.fechaAprox) return `${j.fecha.slice(0, 4)} (fecha por confirmar)`;
     const [a, m, d] = j.fecha.split("-").map(Number);
-    return `${d} ${MESES2[m - 1]} ${a}`;
+    return `${d} ${MESES3[m - 1]} ${a}`;
   }
   function cuando(j) {
     if (j.tipo === "e" && j.dias < 0) return j.fechaAprox ? `en ${j.fecha.slice(0, 4)}` : j.dias < -60 ? `en ${Math.round(-j.dias / 30)} m` : `en ${-j.dias} d`;
@@ -15856,8 +15940,8 @@ Toco reintentar ahora.`);
   }
 
   // modules/gameenhanced/GameEnhancedPage.jsx
-  var { useState: useState36, useEffect: useEffect23, useRef: useRef21, useCallback: useCallback7 } = React;
-  var FUENTE3 = "'DM Sans',sans-serif";
+  var { useState: useState37, useEffect: useEffect24, useRef: useRef21, useCallback: useCallback7 } = React;
+  var FUENTE4 = "'DM Sans',sans-serif";
   var CAVEAT = "'Caveat',cursive";
   var ROJO = "#e5383b";
   var ROJO_TEXTO = "#ff5a5f";
@@ -15865,9 +15949,9 @@ Toco reintentar ahora.`);
   var TONOS = ["#d4d4d8", "#c4c4ca", "#b8b8be", "#acacb2", "#a8a8ae", "#a4a4aa", "#a0a0a6"];
   var AVISO_MS = 6e3;
   var reset = { background: "none", border: 0, padding: 0, color: "inherit", fontFamily: "inherit", fontSize: "inherit", fontWeight: "inherit", lineHeight: "inherit", cursor: "pointer" };
-  var botonPri = { minHeight: 44, padding: "0 16px", borderRadius: 8, background: "#fff", color: "#0b0b0c", border: 0, fontFamily: FUENTE3, fontSize: 13, fontWeight: 500, cursor: "pointer" };
-  var botonSec = { minHeight: 44, padding: "0 16px", borderRadius: 8, background: "transparent", color: "#eaeaea", border: "1px solid #4a4a50", fontFamily: FUENTE3, fontSize: 13, fontWeight: 500, cursor: "pointer" };
-  var sello = { flex: "none", fontFamily: FUENTE3, fontSize: 10, letterSpacing: "0.1em", border: "1px solid #6a6a70", borderRadius: 4, padding: "2px 6px", color: "#b5b5bb" };
+  var botonPri = { minHeight: 44, padding: "0 16px", borderRadius: 8, background: "#fff", color: "#0b0b0c", border: 0, fontFamily: FUENTE4, fontSize: 13, fontWeight: 500, cursor: "pointer" };
+  var botonSec = { minHeight: 44, padding: "0 16px", borderRadius: 8, background: "transparent", color: "#eaeaea", border: "1px solid #4a4a50", fontFamily: FUENTE4, fontSize: 13, fontWeight: 500, cursor: "pointer" };
+  var sello = { flex: "none", fontFamily: FUENTE4, fontSize: 10, letterSpacing: "0.1em", border: "1px solid #6a6a70", borderRadius: 4, padding: "2px 6px", color: "#b5b5bb" };
   function Valor({ v }) {
     if (v && typeof v === "object") return /* @__PURE__ */ React.createElement("a", { href: v.href, target: "_blank", rel: "noopener noreferrer", style: { color: ROJO_TEXTO, textDecoration: "underline" } }, v.texto);
     return v;
@@ -15888,30 +15972,30 @@ Toco reintentar ahora.`);
       borderBottom: 0,
       borderLeft: "0 solid transparent",
       cursor: "pointer",
-      fontFamily: FUENTE3,
+      fontFamily: FUENTE4,
       borderRadius: 10,
       ...desnuda ? { background: "none", padding: "0 10px 0 9px", color: "#fff" } : foco ? { background: "#17171a", borderLeft: `3px solid ${ROJO}`, padding: "0 10px 0 9px", color: "#fff" } : { background: "none", padding: "0 10px 0 12px", color: tono || "#d4d4d8" }
     };
     return /* @__PURE__ */ React.createElement("button", { onClick, style: estilo, ...foco ? { "aria-expanded": expandida ? "true" : "false" } : {} }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true", style: { flex: "none", width: 40, height: 40, boxSizing: "border-box", borderRadius: 10, background: "#1b1b1f", border: "1px solid #2c2c31", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19 } }, t.emoji), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, j.titulo, guardado ? " \u2605" : ""), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#9a9aa0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, t.etiqueta, " \xB7 ", motivoDe(j))), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 11, color: "#9a9aa0" } }, cuando(j)));
   }
-  function Tarjeta({ j, ahora, guardado, onCerrar, onFicha, onDescartar }) {
-    return /* @__PURE__ */ React.createElement("div", { "data-id": j.id, style: { flex: "none", background: "#17171a", borderLeft: `3px solid ${ROJO}`, borderRadius: 10, paddingBottom: 12 } }, /* @__PURE__ */ React.createElement(Fila, { j, foco: true, desnuda: true, expandida: true, guardado, onClick: onCerrar }), /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 12px 0 61px", display: "flex", flexDirection: "column", gap: 8, fontFamily: FUENTE3, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, detalleDe(j, ahora)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: onFicha, style: botonPri }, "Abrir ficha"), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa"))));
+  function Tarjeta2({ j, ahora, guardado, onCerrar, onFicha, onDescartar }) {
+    return /* @__PURE__ */ React.createElement("div", { "data-id": j.id, style: { flex: "none", background: "#17171a", borderLeft: `3px solid ${ROJO}`, borderRadius: 10, paddingBottom: 12 } }, /* @__PURE__ */ React.createElement(Fila, { j, foco: true, desnuda: true, expandida: true, guardado, onClick: onCerrar }), /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 12px 0 61px", display: "flex", flexDirection: "column", gap: 8, fontFamily: FUENTE4, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, detalleDe(j, ahora)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: onFicha, style: botonPri }, "Abrir ficha"), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa"))));
   }
   function Ficha({ j, ahora, guardado, onVolver, onGuardar, onDescartar }) {
     const t = TIPO2[j.tipo];
     const filas = filasFicha(j, ahora);
-    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, fontFamily: FUENTE3, color: "#eaeaea" } }, /* @__PURE__ */ React.createElement("button", { onClick: onVolver, style: { ...reset, alignSelf: "flex-start", minHeight: 44, padding: "0 8px 0 0", fontSize: 14 } }, "\u2190 Volver"), /* @__PURE__ */ React.createElement("span", { style: { alignSelf: "flex-start", fontSize: 11, letterSpacing: "0.12em", color: ROJO_TEXTO, border: `1px solid ${ROJO_TEXTO}`, borderRadius: 4, padding: "2px 6px" } }, t.etiqueta), /* @__PURE__ */ React.createElement("h2", { style: { fontFamily: CAVEAT, fontWeight: 600, fontSize: 34, lineHeight: 1, color: "#fff", margin: 0, overflowWrap: "anywhere" } }, j.titulo), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 14, color: "#c4c4ca" } }, detalleDe(j, ahora)), /* @__PURE__ */ React.createElement("dl", { style: { margin: 0, display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 14px", fontSize: 13 } }, filas.map(([k, v]) => [/* @__PURE__ */ React.createElement("dt", { key: "k" + k, style: { color: "#9a9aa0" } }, k), /* @__PURE__ */ React.createElement("dd", { key: "v" + k, style: { margin: 0, color: "#eaeaea", overflowWrap: "anywhere" } }, /* @__PURE__ */ React.createElement(Valor, { v }))])), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: onGuardar, "aria-pressed": guardado, style: botonPri }, guardado ? "\u2605 Guardado" : "\u2606 Me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#9a9aa0" } }, "Datos: ", j.tipo === "d" ? "awesome-decomp-games" : "IGDB"));
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, fontFamily: FUENTE4, color: "#eaeaea" } }, /* @__PURE__ */ React.createElement("button", { onClick: onVolver, style: { ...reset, alignSelf: "flex-start", minHeight: 44, padding: "0 8px 0 0", fontSize: 14 } }, "\u2190 Volver"), /* @__PURE__ */ React.createElement("span", { style: { alignSelf: "flex-start", fontSize: 11, letterSpacing: "0.12em", color: ROJO_TEXTO, border: `1px solid ${ROJO_TEXTO}`, borderRadius: 4, padding: "2px 6px" } }, t.etiqueta), /* @__PURE__ */ React.createElement("h2", { style: { fontFamily: CAVEAT, fontWeight: 600, fontSize: 34, lineHeight: 1, color: "#fff", margin: 0, overflowWrap: "anywhere" } }, j.titulo), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 14, color: "#c4c4ca" } }, detalleDe(j, ahora)), /* @__PURE__ */ React.createElement("dl", { style: { margin: 0, display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 14px", fontSize: 13 } }, filas.map(([k, v]) => [/* @__PURE__ */ React.createElement("dt", { key: "k" + k, style: { color: "#9a9aa0" } }, k), /* @__PURE__ */ React.createElement("dd", { key: "v" + k, style: { margin: 0, color: "#eaeaea", overflowWrap: "anywhere" } }, /* @__PURE__ */ React.createElement(Valor, { v }))])), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: onGuardar, "aria-pressed": guardado, style: botonPri }, guardado ? "\u2605 Guardado" : "\u2606 Me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#9a9aa0" } }, "Datos: ", j.tipo === "d" ? "awesome-decomp-games" : "IGDB"));
   }
   function GameEnhancedPage() {
     const estado = useEstado();
-    const [datos, setDatos] = useState36(null);
-    const [error, setError] = useState36(null);
-    const [cat, setCat] = useState36(0);
-    const [focos, setFocos] = useState36({});
-    const [abierto, setAbierto] = useState36(null);
-    const [fichaId, setFichaId] = useState36(null);
-    const [aviso, setAviso] = useState36(null);
-    const [cabe, setCabe] = useState36(6);
+    const [datos, setDatos] = useState37(null);
+    const [error, setError] = useState37(null);
+    const [cat, setCat] = useState37(0);
+    const [focos, setFocos] = useState37({});
+    const [abierto, setAbierto] = useState37(null);
+    const [fichaId, setFichaId] = useState37(null);
+    const [aviso, setAviso] = useState37(null);
+    const [cabe, setCabe] = useState37(6);
     const bodyRef = useRef21(null);
     const listaRef = useRef21(null);
     const gesto = useRef21(null);
@@ -15933,7 +16017,7 @@ Toco reintentar ahora.`);
       if (dc) setCat((v.cat + dc + CATEGORIAS.length) % CATEGORIAS.length);
       if (df) setFocos((f2) => ({ ...f2, [v.cat]: Math.max(0, Math.min(v.largo - 1, v.foco + df)) }));
     }, []);
-    useEffect23(() => {
+    useEffect24(() => {
       const el = listaRef.current;
       if (!el) return void 0;
       const medir = () => setCabe(filasQueCaben(el.clientHeight));
@@ -15946,7 +16030,7 @@ Toco reintentar ahora.`);
       ro.observe(el);
       return () => ro.disconnect();
     }, [!!ficha]);
-    useEffect23(() => {
+    useEffect24(() => {
       const el = listaRef.current;
       if (!el) return void 0;
       const h = (e) => {
@@ -15960,7 +16044,7 @@ Toco reintentar ahora.`);
       el.addEventListener("wheel", h, { passive: false });
       return () => el.removeEventListener("wheel", h);
     }, [!!ficha, mover2]);
-    useEffect23(() => {
+    useEffect24(() => {
       const h = (e) => {
         const t = e.target;
         if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
@@ -15982,7 +16066,7 @@ Toco reintentar ahora.`);
       document.addEventListener("keydown", h);
       return () => document.removeEventListener("keydown", h);
     }, [mover2]);
-    useEffect23(() => () => clearTimeout(tAviso.current), []);
+    useEffect24(() => () => clearTimeout(tAviso.current), []);
     async function cargar() {
       setError(null);
       try {
@@ -15991,14 +16075,14 @@ Toco reintentar ahora.`);
         setError(e.message || "error");
       }
     }
-    useEffect23(() => {
+    useEffect24(() => {
       cargar();
     }, []);
-    useEffect23(() => {
+    useEffect24(() => {
       if (listaRef.current) listaRef.current.scrollTop = 0;
     }, [expandida, cat]);
     const expandido = expandida || !!ficha;
-    useEffect23(() => {
+    useEffect24(() => {
       const b = bodyRef.current;
       if (b && !expandido && b.scrollHeight > b.clientHeight + 1) console.warn(`game enhanced desborda ${b.scrollHeight - b.clientHeight} px colapsado`);
     });
@@ -16061,11 +16145,11 @@ Toco reintentar ahora.`);
       );
     } else {
       const v = ventana(lista.length, foco, cabe);
-      cuerpo2 = /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { "aria-live": "polite", style: { flex: "none", height: 30, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, fontFamily: FUENTE3, fontSize: 12, color: "#9a9aa0" } }, aviso ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, "Oculto: ", aviso.titulo), /* @__PURE__ */ React.createElement("button", { onClick: deshacer, style: { ...reset, flex: "none", minHeight: 44, margin: "-8px 0", padding: "0 8px", color: ROJO_TEXTO, textDecoration: "underline" } }, "Deshacer")) : /* @__PURE__ */ React.createElement("span", null, r.semana, " esta semana \xB7 ", r.deEstudios, " de tus estudios \xB7 \u2605 ", r.guardados), datos && /* @__PURE__ */ React.createElement("span", { style: { ...sello, ...edad.vieja ? { color: ROJO_TEXTO, borderColor: ROJO_TEXTO } : {} } }, "DATOS ", edad.texto.toUpperCase())), /* @__PURE__ */ React.createElement("div", { style: { flex: "none", height: 84, marginTop: 6, display: "flex", alignItems: "flex-start", gap: 8 } }, CATEGORIAS.map(([clave, emoji, nombre], i) => i === cat ? /* @__PURE__ */ React.createElement("button", { key: clave, onClick: clic(() => {
+      cuerpo2 = /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { "aria-live": "polite", style: { flex: "none", height: 30, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, fontFamily: FUENTE4, fontSize: 12, color: "#9a9aa0" } }, aviso ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, "Oculto: ", aviso.titulo), /* @__PURE__ */ React.createElement("button", { onClick: deshacer, style: { ...reset, flex: "none", minHeight: 44, margin: "-8px 0", padding: "0 8px", color: ROJO_TEXTO, textDecoration: "underline" } }, "Deshacer")) : /* @__PURE__ */ React.createElement("span", null, r.semana, " esta semana \xB7 ", r.deEstudios, " de tus estudios \xB7 \u2605 ", r.guardados), datos && /* @__PURE__ */ React.createElement("span", { style: { ...sello, ...edad.vieja ? { color: ROJO_TEXTO, borderColor: ROJO_TEXTO } : {} } }, "DATOS ", edad.texto.toUpperCase())), /* @__PURE__ */ React.createElement("div", { style: { flex: "none", height: 84, marginTop: 6, display: "flex", alignItems: "flex-start", gap: 8 } }, CATEGORIAS.map(([clave, emoji, nombre], i) => i === cat ? /* @__PURE__ */ React.createElement("button", { key: clave, onClick: clic(() => {
       }), "aria-label": `${nombre}, categor\xEDa seleccionada`, style: { ...reset, width: 100, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6, color: "#fff" } }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true", style: { width: 52, height: 52, boxSizing: "border-box", borderRadius: "50%", border: "1.5px solid #eaeaea", background: "rgba(255,255,255,.07)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 } }, emoji), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: CAVEAT, fontWeight: 600, fontSize: 22, lineHeight: 1 } }, nombre)) : /* @__PURE__ */ React.createElement("button", { key: clave, onClick: clic(() => {
         setCat(i);
         setAbierto(null);
-      }), "aria-label": nombre, style: { ...reset, width: 60, height: 52, fontSize: 24, opacity: 0.6 } }, emoji))), /* @__PURE__ */ React.createElement("div", { ref: listaRef, style: { flex: 1, minHeight: 0, marginTop: 6, display: "flex", flexDirection: "column", gap: 5, justifyContent: expandida ? "flex-start" : "space-between", overflowX: "hidden", overflowY: expandida ? "auto" : "hidden", touchAction: expandida ? "pan-y" : "none" } }, !datos && !error && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 12, fontFamily: FUENTE3, fontSize: 13, color: "#9a9aa0" } }, "Cargando\u2026"), error && /* @__PURE__ */ React.createElement("div", { style: { padding: 12, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", fontFamily: FUENTE3, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, "No se pudieron cargar los datos de Game enhanced (", error, ")."), /* @__PURE__ */ React.createElement("button", { onClick: cargar, style: botonSec }, "Reintentar")), datos && lista.length === 0 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 12, fontFamily: FUENTE3, fontSize: 13, color: "#9a9aa0" } }, CATEGORIAS[cat][0] === "todo" ? "Sin novedades recientes. Mira Decomps o Estudios." : "No quedan \xEDtems en esta categor\xEDa."), lista.length > 0 && expandida && lista.slice(foco).map((j, i) => i === 0 ? /* @__PURE__ */ React.createElement(Tarjeta, { key: j.id, j, ahora, guardado: !!estado.guardados[j.id], onCerrar: clic(() => setAbierto(null)), onFicha: clic(() => setFichaId(j.id)), onDescartar: clic(() => descartar(j)) }) : /* @__PURE__ */ React.createElement(Fila, { key: j.id, j, guardado: !!estado.guardados[j.id], tono: TONOS[Math.min(i - 1, TONOS.length - 1)], onClick: clic(() => tocarFila(j, foco + i)) })), lista.length > 0 && !expandida && lista.slice(v.ini, v.fin).map((j, i) => {
+      }), "aria-label": nombre, style: { ...reset, width: 60, height: 52, fontSize: 24, opacity: 0.6 } }, emoji))), /* @__PURE__ */ React.createElement("div", { ref: listaRef, style: { flex: 1, minHeight: 0, marginTop: 6, display: "flex", flexDirection: "column", gap: 5, justifyContent: expandida ? "flex-start" : "space-between", overflowX: "hidden", overflowY: expandida ? "auto" : "hidden", touchAction: expandida ? "pan-y" : "none" } }, !datos && !error && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 12, fontFamily: FUENTE4, fontSize: 13, color: "#9a9aa0" } }, "Cargando\u2026"), error && /* @__PURE__ */ React.createElement("div", { style: { padding: 12, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", fontFamily: FUENTE4, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, "No se pudieron cargar los datos de Game enhanced (", error, ")."), /* @__PURE__ */ React.createElement("button", { onClick: cargar, style: botonSec }, "Reintentar")), datos && lista.length === 0 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 12, fontFamily: FUENTE4, fontSize: 13, color: "#9a9aa0" } }, CATEGORIAS[cat][0] === "todo" ? "Sin novedades recientes. Mira Decomps o Estudios." : "No quedan \xEDtems en esta categor\xEDa."), lista.length > 0 && expandida && lista.slice(foco).map((j, i) => i === 0 ? /* @__PURE__ */ React.createElement(Tarjeta2, { key: j.id, j, ahora, guardado: !!estado.guardados[j.id], onCerrar: clic(() => setAbierto(null)), onFicha: clic(() => setFichaId(j.id)), onDescartar: clic(() => descartar(j)) }) : /* @__PURE__ */ React.createElement(Fila, { key: j.id, j, guardado: !!estado.guardados[j.id], tono: TONOS[Math.min(i - 1, TONOS.length - 1)], onClick: clic(() => tocarFila(j, foco + i)) })), lista.length > 0 && !expandida && lista.slice(v.ini, v.fin).map((j, i) => {
         const idx = v.ini + i;
         return /* @__PURE__ */ React.createElement(Fila, { key: j.id, j, foco: idx === foco, guardado: !!estado.guardados[j.id], tono: TONOS[Math.min(Math.max(0, idx - foco - 1), TONOS.length - 1)], onClick: clic(() => tocarFila(j, idx)) });
       })));
@@ -16101,14 +16185,14 @@ Toco reintentar ahora.`);
   var MARCA_POR_ID = Object.fromEntries(MARCAS.map((m) => [m.id, m]));
   var EVENTO_COLOR = { melee: "#ff6600", pokemon: "#ffcc00", sc2: "#1565c0" };
   var VENTANA_BALIZA_DIAS = 60;
-  function aFecha(k) {
+  function aFecha2(k) {
     return /* @__PURE__ */ new Date(k + "T12:00:00");
   }
-  function diasEntre(a, b) {
-    return Math.round((aFecha(b) - aFecha(a)) / 864e5);
+  function diasEntre2(a, b) {
+    return Math.round((aFecha2(b) - aFecha2(a)) / 864e5);
   }
   function sumarDias3(k, n) {
-    const d = aFecha(k);
+    const d = aFecha2(k);
     d.setDate(d.getDate() + n);
     return fmtFull(d);
   }
@@ -16157,7 +16241,7 @@ Toco reintentar ahora.`);
         proxima = {
           dateKey: k,
           dias: i,
-          dow: aFecha(k).getDay(),
+          dow: aFecha2(k).getDay(),
           icono: bs[0].icono,
           texto: bs[0].texto,
           hora: bs[0].hora,
@@ -16168,8 +16252,8 @@ Toco reintentar ahora.`);
     const balizasSemana = weekKeys.reduce((n, k) => k >= todayKey ? n + itemsDe2(k).length : n, 0);
     const semana = weekKeys.map((k) => ({
       k,
-      dow: aFecha(k).getDay(),
-      num: aFecha(k).getDate(),
+      dow: aFecha2(k).getDay(),
+      num: aFecha2(k).getDate(),
       hoy: k === todayKey,
       pasado: k < todayKey,
       marcas: marcasDe(k),
@@ -16192,8 +16276,8 @@ Toco reintentar ahora.`);
         ...ev,
         enCurso,
         terminado,
-        estado: enCurso ? "en curso" : terminado ? "termin\xF3" : cuando2(diasEntre(todayKey, ev.start)),
-        finals: finalsKey ? DIA_LARGO[aFecha(finalsKey).getDay()] : null
+        estado: enCurso ? "en curso" : terminado ? "termin\xF3" : cuando2(diasEntre2(todayKey, ev.start)),
+        finals: finalsKey ? DIA_LARGO[aFecha2(finalsKey).getDay()] : null
       };
     });
     let hoy = null;
@@ -16210,7 +16294,7 @@ Toco reintentar ahora.`);
       };
     }
     const pico = semana.reduce((a, c) => c.score > (a ? a.score : 0) ? c : a, null);
-    const feriados = weekKeys.map((k) => ({ dow: aFecha(k).getDay(), h: getHoliday(aFecha(k)) })).filter((x) => x.h && x.h.type !== "weekend").map((x) => ({ dow: x.dow, label: x.h.label }));
+    const feriados = weekKeys.map((k) => ({ dow: aFecha2(k).getDay(), h: getHoliday(aFecha2(k)) })).filter((x) => x.h && x.h.type !== "weekend").map((x) => ({ dow: x.dow, label: x.h.label }));
     return { proxima, balizasSemana, semana, agenda, eventos: evs, hoy, pico, feriados };
   }
   function iconosDia(c, max) {
@@ -16261,7 +16345,7 @@ Toco reintentar ahora.`);
   var SemanaDashboard_default = SemanaDashboard;
 
   // core/App.jsx
-  var { useState: useState37, useEffect: useEffect24, useRef: useRef22, useMemo: useMemo12, useCallback: useCallback8 } = React;
+  var { useState: useState38, useEffect: useEffect25, useRef: useRef22, useMemo: useMemo13, useCallback: useCallback8 } = React;
   async function localGet(key) {
     const val = localStorage.getItem(key);
     if (val === null) return null;
@@ -16310,39 +16394,39 @@ Toco reintentar ahora.`);
     "el tiempo es el \xFAnico activo que no se recupera."
   ];
   function AngstApp() {
-    const [page, setPage] = useState37(0);
-    const [gastoOpen, setGastoOpen] = useState37(false);
-    const [carritoOpen, setCarritoOpen] = useState37(false);
-    const [menuDatosOpen, setMenuDatosOpen] = useState37(false);
-    const [menuRegOpen, setMenuRegOpen] = useState37(false);
-    const [ingestaOpen, setIngestaOpen] = useState37(false);
-    const [cartaOpen, setCartaOpen] = useState37(false);
-    const [saludReg, setSaludReg] = useState37(null);
-    const [registroTipo, setRegistroTipo] = useState37(null);
-    const [regMsg, setRegMsg] = useState37(null);
+    const [page, setPage] = useState38(0);
+    const [gastoOpen, setGastoOpen] = useState38(false);
+    const [carritoOpen, setCarritoOpen] = useState38(false);
+    const [menuDatosOpen, setMenuDatosOpen] = useState38(false);
+    const [menuRegOpen, setMenuRegOpen] = useState38(false);
+    const [ingestaOpen, setIngestaOpen] = useState38(false);
+    const [cartaOpen, setCartaOpen] = useState38(false);
+    const [saludReg, setSaludReg] = useState38(null);
+    const [registroTipo, setRegistroTipo] = useState38(null);
+    const [regMsg, setRegMsg] = useState38(null);
     const regMsgTimer = useRef22(null);
     const cargarInputRef = useRef22(null);
-    const [dayData, setDayData] = useState37({});
-    const [weekOffset, setWeekOffset] = useState37(0);
-    const [budgets, setBudgets] = useState37({});
-    const [nutria, setNutria] = useState37(makeDefaultNutria());
-    const [fadimanData, setFadimanData] = useState37({});
+    const [dayData, setDayData] = useState38({});
+    const [weekOffset, setWeekOffset] = useState38(0);
+    const [budgets, setBudgets] = useState38({});
+    const [nutria, setNutria] = useState38(makeDefaultNutria());
+    const [fadimanData, setFadimanData] = useState38({});
     const fadimanDataRef = useRef22({});
-    const [nutriLog, setNutriLog] = useState37({});
-    const [ejercicioLog, setEjercicioLog] = useState37({});
+    const [nutriLog, setNutriLog] = useState38({});
+    const [ejercicioLog, setEjercicioLog] = useState38({});
     const nutriLogRef = useRef22({});
-    const [customFoods, setCustomFoods] = useState37({});
+    const [customFoods, setCustomFoods] = useState38({});
     const customFoodsRef = useRef22({});
-    const [foodOverrides, setFoodOverrides] = useState37({});
+    const [foodOverrides, setFoodOverrides] = useState38({});
     const foodOverridesRef = useRef22({});
-    const [customEjercicios, setCustomEjercicios] = useState37({});
+    const [customEjercicios, setCustomEjercicios] = useState38({});
     const customEjerciciosRef = useRef22({});
     const ejercicioLogRef = useRef22({});
-    const [ejercicioDecks, setEjercicioDecks] = useState37([]);
+    const [ejercicioDecks, setEjercicioDecks] = useState38([]);
     const ejercicioDecksRef = useRef22([]);
-    const [calMarks, setCalMarks] = useState37({});
-    const [meleeMajors, setMeleeMajors] = useState37([]);
-    const [custody, setCustody] = useState37({ baseDate: "2026-04-28", withKids: true, overrides: {} });
+    const [calMarks, setCalMarks] = useState38({});
+    const [meleeMajors, setMeleeMajors] = useState38([]);
+    const [custody, setCustody] = useState38({ baseDate: "2026-04-28", withKids: true, overrides: {} });
     const POKEMON_EVENTS = [
       { name: "Lima Special Championships \u{1F1F5}\u{1F1EA}", start: "2026-05-23", end: "2026-05-24", url: "https://www.pokemon.com/us/play-pokemon/pokemon-events/find-a-pokemon-event/" },
       { name: "NAIC \u2014 North America Internationals \u{1F1FA}\u{1F1F8}", start: "2026-06-12", end: "2026-06-14", url: "https://www.pokemon.com/us/play-pokemon/pokemon-events/find-a-pokemon-event/" },
@@ -16353,22 +16437,22 @@ Toco reintentar ahora.`);
     const SC2_EVENTS = [
       { name: "BlizzCon \u2014 Blizzard Classic Cup (SC2) \u{1F3AE}", start: "2026-09-12", end: "2026-09-13", url: "https://blizzcon.com" }
     ];
-    const [editingTask, setEditingTask] = useState37(null);
-    const [editText, setEditText] = useState37("");
-    const [clockOpen, setClockOpen] = useState37(null);
-    const [notifClockOpen, setNotifClockOpen] = useState37(null);
-    const [calOpen, setCalOpen] = useState37(false);
-    const [minimized, setMinimized] = useState37({});
-    const [loaded, setLoaded] = useState37(false);
-    const [notifGranted, setNotifGranted] = useState37(false);
-    const [saved, setSaved] = useState37(false);
-    const [footerIdx, setFooterIdx] = useState37(() => Math.floor(Math.random() * STOIC_PHRASES.length));
-    const [exportOk, setExportOk] = useState37(null);
-    const [loadMsg, setLoadMsg] = useState37(null);
+    const [editingTask, setEditingTask] = useState38(null);
+    const [editText, setEditText] = useState38("");
+    const [clockOpen, setClockOpen] = useState38(null);
+    const [notifClockOpen, setNotifClockOpen] = useState38(null);
+    const [calOpen, setCalOpen] = useState38(false);
+    const [minimized, setMinimized] = useState38({});
+    const [loaded, setLoaded] = useState38(false);
+    const [notifGranted, setNotifGranted] = useState38(false);
+    const [saved, setSaved] = useState38(false);
+    const [footerIdx, setFooterIdx] = useState38(() => Math.floor(Math.random() * STOIC_PHRASES.length));
+    const [exportOk, setExportOk] = useState38(null);
+    const [loadMsg, setLoadMsg] = useState38(null);
     const PODCAST_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
     const PODCAST_AUTH_KEY = "angst-simkl-auth-v1";
-    const [podcastLatest, setPodcastLatest] = useState37(null);
-    const [podcastDispatched, setPodcastDispatched] = useState37(() => {
+    const [podcastLatest, setPodcastLatest] = useState38(null);
+    const [podcastDispatched, setPodcastDispatched] = useState38(() => {
       try {
         const v = localStorage.getItem("angst-podcast-dispatched-v1");
         return v ? JSON.parse(v) : [];
@@ -16376,16 +16460,16 @@ Toco reintentar ahora.`);
         return [];
       }
     });
-    const [nowPlaying, setNowPlaying] = useState37(null);
-    const [podcastMenuOpen, setPodcastMenuOpen] = useState37(false);
-    const [activeShowIdx, setActiveShowIdx] = useState37(0);
-    const [podcastPlaying, setPodcastPlaying] = useState37(false);
-    const [podcastProgress, setPodcastProgress] = useState37({ current: 0, duration: 0 });
-    const [newPodcastNombre, setNewPodcastNombre] = useState37("");
-    const [newPodcastUrl, setNewPodcastUrl] = useState37("");
-    const [addPodcastBusy, setAddPodcastBusy] = useState37(false);
-    const [addPodcastMsg, setAddPodcastMsg] = useState37(null);
-    const [playerPos, setPlayerPos] = useState37(() => {
+    const [nowPlaying, setNowPlaying] = useState38(null);
+    const [podcastMenuOpen, setPodcastMenuOpen] = useState38(false);
+    const [activeShowIdx, setActiveShowIdx] = useState38(0);
+    const [podcastPlaying, setPodcastPlaying] = useState38(false);
+    const [podcastProgress, setPodcastProgress] = useState38({ current: 0, duration: 0 });
+    const [newPodcastNombre, setNewPodcastNombre] = useState38("");
+    const [newPodcastUrl, setNewPodcastUrl] = useState38("");
+    const [addPodcastBusy, setAddPodcastBusy] = useState38(false);
+    const [addPodcastMsg, setAddPodcastMsg] = useState38(null);
+    const [playerPos, setPlayerPos] = useState38(() => {
       try {
         const v = localStorage.getItem("angst-podcast-player-pos-v1");
         if (v) return JSON.parse(v);
@@ -16395,7 +16479,7 @@ Toco reintentar ahora.`);
     });
     const dragState = useRef22(null);
     const podcastAudioRef = useRef22(null);
-    useEffect24(() => {
+    useEffect25(() => {
       fetch("https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/podcast-latest.json", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((d) => {
         if (!d) return;
         setPodcastLatest(d);
@@ -16475,7 +16559,7 @@ Toco reintentar ahora.`);
       setPodcastPlaying(false);
       setPodcastProgress({ current: 0, duration: 0 });
     }
-    useEffect24(() => {
+    useEffect25(() => {
       function onVisibility() {
         if (document.visibilityState === "hidden" && nowPlaying?.guid && podcastAudioRef.current) {
           savePodcastPosition(nowPlaying.guid, podcastAudioRef.current.currentTime);
@@ -16614,40 +16698,40 @@ Toco reintentar ahora.`);
     const weekOffsetRef = useRef22(0);
     const budgetRef = useRef22({});
     const memoriaRef = useRef22({});
-    const [comprasMemoria, setComprasMemoria] = useState37({});
+    const [comprasMemoria, setComprasMemoria] = useState38({});
     const nutriaRef = useRef22(makeDefaultNutria());
     const calMarksRef = useRef22({});
     const routinesRef = useRef22([]);
     const recurringRef = useRef22([]);
     const lastRolloverRef = useRef22(null);
-    const [routines, setRoutines] = useState37([]);
-    const [recurring, setRecurring] = useState37([]);
-    const [lastRollover, setLastRollover] = useState37(null);
-    const [cookingOpts, setCookingOpts] = useState37([...DEFAULT_COOKING_OPTS]);
-    const [aseoOpts, setAseoOpts] = useState37([...DEFAULT_ASEO_OPTS]);
-    const [comprasOpen, setComprasOpen] = useState37(null);
-    const [searchOpen, setSearchOpen] = useState37(false);
-    const [scheduleOpen, setScheduleOpen] = useState37(null);
-    const [liftedTask, setLiftedTask] = useState37(null);
-    const [taskDragTarget, setTaskDragTarget] = useState37(null);
+    const [routines, setRoutines] = useState38([]);
+    const [recurring, setRecurring] = useState38([]);
+    const [lastRollover, setLastRollover] = useState38(null);
+    const [cookingOpts, setCookingOpts] = useState38([...DEFAULT_COOKING_OPTS]);
+    const [aseoOpts, setAseoOpts] = useState38([...DEFAULT_ASEO_OPTS]);
+    const [comprasOpen, setComprasOpen] = useState38(null);
+    const [searchOpen, setSearchOpen] = useState38(false);
+    const [scheduleOpen, setScheduleOpen] = useState38(null);
+    const [liftedTask, setLiftedTask] = useState38(null);
+    const [taskDragTarget, setTaskDragTarget] = useState38(null);
     const holdTimerRef = useRef22(null);
     const taskTouchX = useRef22(0);
     const taskTouchY = useRef22(0);
-    const [openFMenu, setOpenFMenu] = useState37(null);
-    const [kidsHealth, setKidsHealth] = useState37(emptyKidsHealth);
+    const [openFMenu, setOpenFMenu] = useState38(null);
+    const [kidsHealth, setKidsHealth] = useState38(emptyKidsHealth);
     const kidsHealthRef = useRef22(null);
     if (kidsHealthRef.current === null) kidsHealthRef.current = emptyKidsHealth();
-    const calMarksView = useMemo12(() => effectiveMarks(calMarks, kidsHealth.events), [calMarks, kidsHealth]);
-    const [pokeInventario, setPokeInventario] = useState37([]);
+    const calMarksView = useMemo13(() => effectiveMarks(calMarks, kidsHealth.events), [calMarks, kidsHealth]);
+    const [pokeInventario, setPokeInventario] = useState38([]);
     const pokeInventarioRef = useRef22([]);
-    const [pokeCarpetas, setPokeCarpetas] = useState37([...CARPETAS_DEFAULT]);
+    const [pokeCarpetas, setPokeCarpetas] = useState38([...CARPETAS_DEFAULT]);
     const pokeCarpetasRef = useRef22([...CARPETAS_DEFAULT]);
-    const [pokeDarkCatalogo, setPokeDarkCatalogo] = useState37([]);
+    const [pokeDarkCatalogo, setPokeDarkCatalogo] = useState38([]);
     const pokeDarkCatalogoRef = useRef22([]);
-    const [pokePriceCache, setPokePriceCache] = useState37({});
+    const [pokePriceCache, setPokePriceCache] = useState38({});
     const pokePriceCacheRef = useRef22({});
     const TCG_KEY_STORAGE = "angst-tcg-price-key";
-    const [pokeApiKey, setPokeApiKey] = useState37(() => {
+    const [pokeApiKey, setPokeApiKey] = useState38(() => {
       try {
         return localStorage.getItem(TCG_KEY_STORAGE) || "";
       } catch (e) {
@@ -16661,15 +16745,15 @@ Toco reintentar ahora.`);
       }
       setPokeApiKey(k);
     }
-    const [nutriDecks, setNutriDecks] = useState37([]);
+    const [nutriDecks, setNutriDecks] = useState38([]);
     const nutriDecksRef = useRef22([]);
     const ANGST_STATE_WORKER_URL = "https://angst-sync.angst-66394c52.workers.dev";
     const ANGST_STATE_AUTH_KEY = "angst-simkl-auth-v1";
-    const [familiaData, setFamiliaData] = useState37(null);
-    const [familiaOpen, setFamiliaOpen] = useState37(false);
-    const [familiaBusy, setFamiliaBusy] = useState37(false);
-    const [familiaMsg, setFamiliaMsg] = useState37(null);
-    const [familiaVer, setFamiliaVer] = useState37(0);
+    const [familiaData, setFamiliaData] = useState38(null);
+    const [familiaOpen, setFamiliaOpen] = useState38(false);
+    const [familiaBusy, setFamiliaBusy] = useState38(false);
+    const [familiaMsg, setFamiliaMsg] = useState38(null);
+    const [familiaVer, setFamiliaVer] = useState38(0);
     const familiaLastRef = useRef22(0);
     async function cargarFamilia(force) {
       const auth = localStorage.getItem(ANGST_STATE_AUTH_KEY);
@@ -16697,7 +16781,7 @@ Toco reintentar ahora.`);
         setFamiliaBusy(false);
       }
     }
-    useEffect24(() => {
+    useEffect25(() => {
       cargarFamilia(false);
       const onVis = () => {
         if (document.visibilityState === "visible") cargarFamilia(false);
@@ -16750,7 +16834,7 @@ Toco reintentar ahora.`);
     }
     const ANGST_STATE_PATH = "angst-full-state.json";
     const ANGST_STATE_BRANCH = "state-sync";
-    const [stateSyncMsg, setStateSyncMsg] = useState37(null);
+    const [stateSyncMsg, setStateSyncMsg] = useState38(null);
     function markLocalEdit() {
       marcarEdicionLocal();
     }
@@ -16889,7 +16973,7 @@ Toco reintentar ahora.`);
       setTimeout(() => setStateSyncMsg(null), 4e3);
     }
     const autoLeidoRef = useRef22(false);
-    useEffect24(() => {
+    useEffect25(() => {
       if (autoLeidoRef.current) return;
       autoLeidoRef.current = true;
       const auth = getAngstStateAuth();
@@ -16913,57 +16997,57 @@ Toco reintentar ahora.`);
         }
       })();
     }, []);
-    useEffect24(() => {
+    useEffect25(() => {
       dayDataRef.current = dayData;
     }, [dayData]);
-    useEffect24(() => {
+    useEffect25(() => {
       weekOffsetRef.current = weekOffset;
     }, [weekOffset]);
-    useEffect24(() => {
+    useEffect25(() => {
       budgetRef.current = budgets;
     }, [budgets]);
-    useEffect24(() => {
+    useEffect25(() => {
       nutriaRef.current = nutria;
     }, [nutria]);
-    useEffect24(() => {
+    useEffect25(() => {
       calMarksRef.current = calMarks;
     }, [calMarks]);
-    useEffect24(() => {
+    useEffect25(() => {
       routinesRef.current = routines;
     }, [routines]);
-    useEffect24(() => {
+    useEffect25(() => {
       recurringRef.current = recurring;
     }, [recurring]);
-    useEffect24(() => {
+    useEffect25(() => {
       lastRolloverRef.current = lastRollover;
     }, [lastRollover]);
-    useEffect24(() => {
+    useEffect25(() => {
       pokeInventarioRef.current = pokeInventario;
     }, [pokeInventario]);
-    useEffect24(() => {
+    useEffect25(() => {
       pokeCarpetasRef.current = pokeCarpetas;
     }, [pokeCarpetas]);
-    useEffect24(() => {
+    useEffect25(() => {
       pokeDarkCatalogoRef.current = pokeDarkCatalogo;
     }, [pokeDarkCatalogo]);
-    useEffect24(() => {
+    useEffect25(() => {
       pokePriceCacheRef.current = pokePriceCache;
     }, [pokePriceCache]);
-    useEffect24(() => {
+    useEffect25(() => {
       nutriDecksRef.current = nutriDecks;
     }, [nutriDecks]);
-    useEffect24(() => {
+    useEffect25(() => {
       ejercicioDecksRef.current = ejercicioDecks;
     }, [ejercicioDecks]);
-    useEffect24(() => {
+    useEffect25(() => {
       const iv = setInterval(() => setFooterIdx((i) => (i + 1) % STOIC_PHRASES.length), 1e4);
       return () => clearInterval(iv);
     }, []);
     const weekStart = addDays(BASE_DATE, weekOffset * 7);
     const semanaBodyRef = useRef22(null);
     const tabsRef = useRef22(null);
-    const [tabsEdge, setTabsEdge] = useState37("");
-    useEffect24(() => {
+    const [tabsEdge, setTabsEdge] = useState38("");
+    useEffect25(() => {
       const el = tabsRef.current;
       if (!el) return;
       const medir = () => {
@@ -16997,8 +17081,8 @@ Toco reintentar ahora.`);
     }, [page]);
     const semanaKeys = Array.from({ length: 7 }, (_, k) => fmtFull(addDays(weekStart, k)));
     const hayDiaAbierto = semanaKeys.some((k) => !minimized[k]);
-    const [semanaValvula, setSemanaValvula] = useState37(false);
-    const [dashAbierto, setDashAbierto] = useState37(false);
+    const [semanaValvula, setSemanaValvula] = useState38(false);
+    const [dashAbierto, setDashAbierto] = useState38(false);
     const hayAbierto = hayDiaAbierto || dashAbierto;
     function toggleDash() {
       if (!dashAbierto) {
@@ -17041,7 +17125,7 @@ Toco reintentar ahora.`);
       });
     }
     const diaAbiertoKey = semanaKeys.find((k) => !minimized[k]) || null;
-    useEffect24(() => {
+    useEffect25(() => {
       const el = semanaBodyRef.current;
       if (!el || page !== 0 || !diaAbiertoKey) return;
       const card = el.querySelector(`[data-dia="${diaAbiertoKey}"]`);
@@ -17050,7 +17134,7 @@ Toco reintentar ahora.`);
       if (typeof el.scrollTo === "function") el.scrollTo({ top: y, behavior: "smooth" });
       else el.scrollTop = y;
     }, [diaAbiertoKey, page]);
-    useEffect24(() => {
+    useEffect25(() => {
       const el = semanaBodyRef.current;
       if (!el || page !== 0) return;
       if (hayAbierto) {
@@ -17157,7 +17241,7 @@ Toco reintentar ahora.`);
         saveToStorage({ lastRollover: todayKey }, { skipEditMark: true });
       }
     }
-    useEffect24(() => {
+    useEffect25(() => {
       if (!loaded) return;
       function onVisible() {
         if (document.visibilityState === "visible") {
@@ -17169,7 +17253,7 @@ Toco reintentar ahora.`);
       document.addEventListener("visibilitychange", onVisible);
       return () => document.removeEventListener("visibilitychange", onVisible);
     }, [loaded]);
-    useEffect24(() => {
+    useEffect25(() => {
       async function fetchMelee() {
         try {
           const res = await fetch("https://meleemajors.gg/calendar.ics");
@@ -17205,7 +17289,7 @@ Toco reintentar ahora.`);
       }
       fetchMelee();
     }, []);
-    useEffect24(() => {
+    useEffect25(() => {
       async function load() {
         try {
           const r = await localGet("angst-v12");
@@ -18242,6 +18326,7 @@ Toco reintentar ahora.`);
         .musica-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
         .musica-body[data-expandido="true"]{overflow-y:auto;}
         .musica-body[data-expandido="true"]>*{flex:none;}
+        .panoramas{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
         .gameenh{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
         .gameenh-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
         .gameenh-body[data-ficha="true"]{overflow-y:auto;}
@@ -18341,7 +18426,7 @@ Toco reintentar ahora.`);
       const mon = addDays(date, -(dow === 0 ? 6 : dow - 1));
       const diff = Math.round((mon - BASE_DATE) / (7 * 864e5));
       updateWeekOffset(diff);
-    }, onClose: () => setCalOpen(false) }), /* @__PURE__ */ React.createElement("div", { className: "app" + (page === 0 || page === 1 || page === 4 || page === 5 || page === 8 || page === 10 || page === 12 || page === 13 ? " app-fit" : "") }, /* @__PURE__ */ React.createElement("div", { className: "hdr" }, /* @__PURE__ */ React.createElement("div", { className: "hdr-title", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, "angstapp"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexShrink: 0 } }, regMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: regMsg.includes("\u2713") ? "#4caf50" : "#c00", fontSize: 14 } }, regMsg), saved && !regMsg && /* @__PURE__ */ React.createElement("span", { className: "saved-msg" }, "guardado \u2713"), loadMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: loadMsg.startsWith("\u2713") ? "#4caf50" : loadMsg.startsWith("\u26A0") ? "#f0a000" : "#c00", fontSize: 13, maxWidth: 220 } }, loadMsg), exportOk === true && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#4caf50", fontSize: 13 } }, "descargado \u2713"), exportOk === false && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, "error al exportar"), typeof exportOk === "string" && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, exportOk), /* @__PURE__ */ React.createElement("input", { ref: cargarInputRef, type: "file", accept: ".xlsx,.xls,.json", onChange: handleLoad, style: { display: "none" } }), (menuDatosOpen || menuRegOpen) && /* @__PURE__ */ React.createElement("div", { onClick: cerrarMenus, style: { position: "fixed", inset: 0, zIndex: 590 } }), (() => {
+    }, onClose: () => setCalOpen(false) }), /* @__PURE__ */ React.createElement("div", { className: "app" + (page === 0 || page === 1 || page === 4 || page === 5 || page === 8 || page === 10 || page === 12 || page === 13 || page === 14 ? " app-fit" : "") }, /* @__PURE__ */ React.createElement("div", { className: "hdr" }, /* @__PURE__ */ React.createElement("div", { className: "hdr-title", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, "angstapp"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexShrink: 0 } }, regMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: regMsg.includes("\u2713") ? "#4caf50" : "#c00", fontSize: 14 } }, regMsg), saved && !regMsg && /* @__PURE__ */ React.createElement("span", { className: "saved-msg" }, "guardado \u2713"), loadMsg && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: loadMsg.startsWith("\u2713") ? "#4caf50" : loadMsg.startsWith("\u26A0") ? "#f0a000" : "#c00", fontSize: 13, maxWidth: 220 } }, loadMsg), exportOk === true && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#4caf50", fontSize: 13 } }, "descargado \u2713"), exportOk === false && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, "error al exportar"), typeof exportOk === "string" && /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", color: "#c00", fontSize: 13 } }, exportOk), /* @__PURE__ */ React.createElement("input", { ref: cargarInputRef, type: "file", accept: ".xlsx,.xls,.json", onChange: handleLoad, style: { display: "none" } }), (menuDatosOpen || menuRegOpen) && /* @__PURE__ */ React.createElement("div", { onClick: cerrarMenus, style: { position: "fixed", inset: 0, zIndex: 590 } }), (() => {
       const itemMenu = { display: "block", width: "100%", textAlign: "left", background: "transparent", border: "none", borderBottom: "1px dashed #333", color: "#fff", padding: "10px 12px", fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" };
       const caja = { position: "absolute", top: "calc(100% + 4px)", right: 0, width: 230, background: "#222", border: "1px dashed #444", borderRadius: 4, zIndex: 600 };
       return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { className: "disk-btn", onClick: () => {
@@ -18441,7 +18526,7 @@ Toco reintentar ahora.`);
         addPodcastBusy ? "agregando..." : "+ agregar podcast"
       ), addPodcastMsg && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: addPodcastMsg.startsWith("\u2713") ? "#4caf50" : "#f0a000" } }, addPodcastMsg)));
     })()))), (() => {
-      const TABS2 = [{ label: "\u{1F4C5} Semana", emoji: "\u{1F4C5}" }, { label: "\u{1F4B5} Presupuesto", emoji: "\u{1F4B5}" }, { label: "\u{1F4D2} Emprendimientos", emoji: "\u{1F4D2}" }, { label: "\u{1F9E0} mindfulness", emoji: "\u{1F9E0}" }, { label: "\u{1FA7A} salud", emoji: "\u{1FA7A}" }, { label: "\u{1F344} fadiman", emoji: "\u{1F344}" }, { label: "\u{1F957} nutrici\xF3n", emoji: "\u{1F957}" }, { label: "\u{1F3CB}\uFE0F ejercicio", emoji: "\u{1F3CB}\uFE0F" }, { label: "\u{1F0CF} pok\xE9cripto", emoji: "\u{1F0CF}" }, { label: "\u{1F4F0} feed", emoji: "\u{1F4F0}" }, { label: "\u{1F3AC} vitrina", emoji: "\u{1F3AC}" }, { label: "\u{1F331} rutinas", emoji: "\u{1F331}" }, { label: "\u{1F3A7} m\xFAsica", emoji: "\u{1F3A7}" }, { label: "\u{1F3AE} game enhanced", emoji: "\u{1F3AE}" }];
+      const TABS2 = [{ label: "\u{1F4C5} Semana", emoji: "\u{1F4C5}" }, { label: "\u{1F4B5} Presupuesto", emoji: "\u{1F4B5}" }, { label: "\u{1F4D2} Emprendimientos", emoji: "\u{1F4D2}" }, { label: "\u{1F9E0} mindfulness", emoji: "\u{1F9E0}" }, { label: "\u{1FA7A} salud", emoji: "\u{1FA7A}" }, { label: "\u{1F344} fadiman", emoji: "\u{1F344}" }, { label: "\u{1F957} nutrici\xF3n", emoji: "\u{1F957}" }, { label: "\u{1F3CB}\uFE0F ejercicio", emoji: "\u{1F3CB}\uFE0F" }, { label: "\u{1F0CF} pok\xE9cripto", emoji: "\u{1F0CF}" }, { label: "\u{1F4F0} feed", emoji: "\u{1F4F0}" }, { label: "\u{1F3AC} vitrina", emoji: "\u{1F3AC}" }, { label: "\u{1F331} rutinas", emoji: "\u{1F331}" }, { label: "\u{1F3A7} m\xFAsica", emoji: "\u{1F3A7}" }, { label: "\u{1F3AE} game enhanced", emoji: "\u{1F3AE}" }, { label: "\u{1F5D3}\uFE0F panoramas", emoji: "\u{1F5D3}\uFE0F" }];
       const ORDER = [0, 11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 10, 13];
       return /* @__PURE__ */ React.createElement("div", { className: "tabs", ref: tabsRef, "data-edge": tabsEdge, style: { userSelect: "none" } }, ORDER.map((ti) => {
         const tab = TABS2[ti];
@@ -18905,7 +18990,7 @@ Toco reintentar ahora.`);
         apiKey: pokeApiKey,
         saveApiKey: savePokeApiKey
       }
-    ), page === 9 && /* @__PURE__ */ React.createElement(FeedPage_default, null), page === 10 && /* @__PURE__ */ React.createElement(VitrinaPage_default, null), page === 12 && /* @__PURE__ */ React.createElement(MusicaPage, null), page === 13 && /* @__PURE__ */ React.createElement(GameEnhancedPage, null), page === 11 && /* @__PURE__ */ React.createElement(RoutinesPage_default, { routines, onSave: saveRoutines, onAddToDay: (name, emoji) => {
+    ), page === 9 && /* @__PURE__ */ React.createElement(FeedPage_default, null), page === 10 && /* @__PURE__ */ React.createElement(VitrinaPage_default, null), page === 12 && /* @__PURE__ */ React.createElement(MusicaPage, null), page === 13 && /* @__PURE__ */ React.createElement(GameEnhancedPage, null), page === 14 && /* @__PURE__ */ React.createElement(PanoramasPage, null), page === 11 && /* @__PURE__ */ React.createElement(RoutinesPage_default, { routines, onSave: saveRoutines, onAddToDay: (name, emoji) => {
       const tk = fmtFull(/* @__PURE__ */ new Date());
       const nid2 = Date.now();
       const dd = dayDataRef.current || {};

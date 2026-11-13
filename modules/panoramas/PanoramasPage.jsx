@@ -41,8 +41,8 @@ export function agrupar(eventos, hoy) {
 }
 
 function Chip({ children, color, fuerte, onClick, activo }) {
-  const base = { fontFamily: FUENTE, fontSize: 11, lineHeight: 1, padding: "5px 8px", borderRadius: 10, whiteSpace: "nowrap", border: `1px solid ${color || "#444"}`, color: fuerte ? "#111" : (color || "#bbb"), background: fuerte ? color : "transparent" };
-  if (onClick) return <button onClick={onClick} style={{ ...base, minHeight: 34, padding: "0 12px", fontSize: 12, cursor: "pointer", background: activo ? ACENTO : "transparent", color: activo ? "#111" : "#ccc", borderColor: activo ? ACENTO : "#444" }}>{children}</button>;
+  const base = { fontFamily: FUENTE, fontSize: 11, lineHeight: 1, padding: "5px 8px", borderRadius: 10, whiteSpace: "nowrap", border: `1px solid ${color || "#444"}`, color: fuerte ? "#111" : (color || "#bbb"), background: fuerte ? color : "transparent", maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis" };
+  if (onClick) return <button onClick={onClick} style={{ ...base, flex: "none", maxWidth: "none", overflow: "visible", minHeight: 34, padding: "0 12px", fontSize: 12, cursor: "pointer", background: activo ? ACENTO : "transparent", color: activo ? "#111" : "#ccc", borderColor: activo ? ACENTO : "#444" }}>{children}</button>;
   return <span style={base}>{children}</span>;
 }
 
@@ -69,7 +69,7 @@ function Tarjeta({ e, hoy, nuevo }) {
           {e.gratis === true && <Chip color="#4caf50">Gratis</Chip>}
           {e.gratis === false && <Chip color="#ccc">{e.precio ? `$${e.precio.toLocaleString("es-CL")}` : "Con costo"}</Chip>}
           {nuevo && <Chip color="#5c9cff">✨ Nuevo</Chip>}
-          {e.categoria && <Chip>{e.categoria}</Chip>}
+          {e.categoria && <Chip>{e.categoria.length > 26 ? e.categoria.slice(0, 25) + "…" : e.categoria}</Chip>}
           {e.fin !== e.inicio && !e.enCurso && <Chip>hasta {corta(e.fin)}</Chip>}
           {e.rancio && <Chip color="#ff9800">dato sin actualizar</Chip>}
         </div>
@@ -124,7 +124,7 @@ export default function PanoramasPage() {
           <Chip onClick={() => setSoloCupos(v => !v)} activo={soloCupos}>🎟 Cupos / inscripción</Chip>
           <Chip onClick={() => setSoloNuevos(v => !v)} activo={soloNuevos}>✨ Nuevos{vm && vm.nNuevos ? ` (${vm.nNuevos})` : ""}</Chip>
           {vm && vm.comunas.length > 1 && (
-            <select value={comuna} onChange={e => setComuna(e.target.value)} style={{ minHeight: 34, background: comuna ? ACENTO : "transparent", color: comuna ? "#111" : "#ccc", border: `1px solid ${comuna ? ACENTO : "#444"}`, borderRadius: 10, fontFamily: FUENTE, fontSize: 12, padding: "0 8px" }}>
+            <select value={comuna} onChange={e => setComuna(e.target.value)} style={{ flex: "none", minHeight: 34, background: comuna ? ACENTO : "transparent", color: comuna ? "#111" : "#ccc", border: `1px solid ${comuna ? ACENTO : "#444"}`, borderRadius: 10, fontFamily: FUENTE, fontSize: 12, padding: "0 8px" }}>
               <option value="">Todas las comunas</option>
               {vm.comunas.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -148,7 +148,7 @@ export default function PanoramasPage() {
             <button onClick={() => setVerCartelera(v => !v)} style={{ width: "100%", minHeight: 40, margin: "14px 0 6px", background: "transparent", border: "1px dashed #444", color: "#aaa", borderRadius: 8, fontFamily: FUENTE, fontSize: 12, cursor: "pointer" }}>
               {verCartelera ? "▾" : "▸"} Exposiciones y programas en curso ({vm.enCartelera.length})
             </button>
-            {verCartelera && vm.enCartelera.map(e => <Tarjeta key={e.id} e={{ ...e, inicio: hoy }} hoy={hoy} nuevo={false} />)}
+            {verCartelera && vm.enCartelera.map(e => <Tarjeta key={e.id} e={e} hoy={hoy} nuevo={false} />)}
           </div>
         )}
       </div>
