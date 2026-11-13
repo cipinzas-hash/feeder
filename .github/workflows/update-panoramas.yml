@@ -1,0 +1,60 @@
+name: Actualizar panoramas
+
+# Módulo Panoramas (issue #17). Baja eventos culturales de Santiago (Centro Cultural
+# La Moneda y Red Nacional de Museos) y escribe modules/feed/data/panoramas.json.
+# Corre cada 6 horas: la clave del módulo es enterarse de los panoramas con anticipación,
+# y `visto` (la fecha en que se detectó cada evento) solo se acumula si corre seguido.
+# Una fuente que falla NO borra sus eventos anteriores (build-panoramas.mjs los conserva
+# marcados como `rancio`). Solo publica panoramas.json.
+
+on:
+  schedule:
+    - cron: '10 */6 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: panoramas-update
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sincronizar con la punta real de main
+        run: git fetch origin main && git reset --hard origin/main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Construir panoramas.json
+        working-directory: modules/feed
+        run: |
+          set -o pipefail
+          timeout -s TERM -k 15 8m node scripts/build-panoramas.mjs 2>&1 | tee /tmp/panoramas.log
+
+      - name: Commitear panoramas.json si cambió
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add modules/feed/data/panoramas.json
+          git diff --staged --quiet -- modules/feed/data/panoramas.json || { git commit -m "Actualizar panoramas $(date -u +%Y-%m-%dT%H:%MZ)"; committed=1; }
+          pushed=0
+          for i in 1 2 3; do
+            git push && pushed=1 && break
+            echo "push falló, reintentando ($i/3)..."
+            git fetch origin main
+            git reset --soft origin/main
+            git diff --staged --quiet || git commit -m "Actualizar panoramas $(date -u +%Y-%m-%dT%H:%MZ)"
+            sleep 5
+          done
+          if [ "${committed:-0}" -eq 1 ] && [ "$pushed" -ne 1 ]; then
+            echo "::error::se hizo commit local pero el push falló los 3 intentos"
+            exit 1
+          fi
