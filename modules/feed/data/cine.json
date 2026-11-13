@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-13T17:32:45.877Z",
+  "generatedAt": "2026-11-13T23:20:12.827Z",
   "categories": [
     {
       "cat": "Películas",
@@ -664,7 +664,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1153576",
@@ -912,82 +912,6 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1263337",
-          "title": "En el corazón de la bestia",
-          "link": "https://www.themoviedb.org/movie/1263337",
-          "summary": "Tras sobrevivir a un brutal accidente aéreo, el oficial de las Fuerzas Especiales James Belmont y su perro de combate Odín intentan intentarán regresar a la civilización desde un remoto lugar en medio de los parajes salvajes de Alaska.",
-          "image": "https://image.tmdb.org/t/p/w500/h9Ql2vsltCOuf44c28nInxjzL2m.jpg",
-          "pubDate": "2026-09-19",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-19T22:05:00.310Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.5,
-            "rt": 85,
-            "metascore": null,
-            "tmdb": 7.4
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "UkMuGKqAux4",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Brad Pitt",
-              "character": "James Belmont",
-              "order": 0
-            },
-            {
-              "name": "J.K. Simmons",
-              "character": "Watkins",
-              "order": 1
-            },
-            {
-              "name": "Anna Lambe",
-              "character": "Amber",
-              "order": 2
-            },
-            {
-              "name": "Justin Melnick",
-              "character": "Military Soldier",
-              "order": 3
-            },
-            {
-              "name": "Shaun DeZern",
-              "character": "Military Soldier",
-              "order": 4
-            },
-            {
-              "name": "Uber",
-              "character": "Odin",
-              "order": 5
-            },
-            {
-              "name": "Seeka",
-              "character": "Odin",
-              "order": 6
-            },
-            {
-              "name": "Ryker",
-              "character": "Odin",
-              "order": 7
-            },
-            {
-              "name": "Hondo",
-              "character": "Odin",
-              "order": 8
-            }
-          ],
-          "trending": true
-        },
-        {
           "guid": "tmdb-movie-1003596",
           "title": "Vengadores: Doomsday",
           "link": "https://www.themoviedb.org/movie/1003596",
@@ -1064,6 +988,82 @@
               "name": "Wyatt Russell",
               "character": "John Walker",
               "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1263337",
+          "title": "En el corazón de la bestia",
+          "link": "https://www.themoviedb.org/movie/1263337",
+          "summary": "Tras sobrevivir a un brutal accidente aéreo, el oficial de las Fuerzas Especiales James Belmont y su perro de combate Odín intentan intentarán regresar a la civilización desde un remoto lugar en medio de los parajes salvajes de Alaska.",
+          "image": "https://image.tmdb.org/t/p/w500/h9Ql2vsltCOuf44c28nInxjzL2m.jpg",
+          "pubDate": "2026-09-19",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-19T22:05:00.310Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.5,
+            "rt": 85,
+            "metascore": null,
+            "tmdb": 7.4
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "UkMuGKqAux4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Brad Pitt",
+              "character": "James Belmont",
+              "order": 0
+            },
+            {
+              "name": "J.K. Simmons",
+              "character": "Watkins",
+              "order": 1
+            },
+            {
+              "name": "Anna Lambe",
+              "character": "Amber",
+              "order": 2
+            },
+            {
+              "name": "Justin Melnick",
+              "character": "Military Soldier",
+              "order": 3
+            },
+            {
+              "name": "Shaun DeZern",
+              "character": "Military Soldier",
+              "order": 4
+            },
+            {
+              "name": "Uber",
+              "character": "Odin",
+              "order": 5
+            },
+            {
+              "name": "Seeka",
+              "character": "Odin",
+              "order": 6
+            },
+            {
+              "name": "Ryker",
+              "character": "Odin",
+              "order": 7
+            },
+            {
+              "name": "Hondo",
+              "character": "Odin",
+              "order": 8
             }
           ],
           "trending": true
@@ -1164,7 +1164,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.4
+            "tmdb": 6.3
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1245,7 +1245,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 10
+            "tmdb": 8.5
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1312,21 +1312,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1050981",
-          "title": "Siendo Heumann",
-          "link": "https://www.themoviedb.org/movie/1050981",
-          "summary": "Judy Heumann, luchadora, desafiante y harta de que la traten como a una carga, convierte su indignación en una revolución. En 1977, junto con más de 100 manifestantes por los derechos de las personas con discapacidad, manda un mensaje muy firme: El sistema está dañado, no nosotros.",
-          "image": "https://image.tmdb.org/t/p/w500/2NcNYzSD436UlV7Ar8D2Fr5790.jpg",
-          "pubDate": "2026-11-06",
+          "guid": "tmdb-movie-969681",
+          "title": "Spider-Man: Brand New Day",
+          "link": "https://www.themoviedb.org/movie/969681",
+          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad—un Spider-Man a tiempo completo—, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
+          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
+          "pubDate": "2026-07-29",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-11-13T17:32:44.679Z",
+          "firstSeenAt": "2026-10-30T08:12:18.586Z",
           "fullText": null,
           "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.3
+            "imdb": 8,
+            "rt": 90,
+            "metascore": 66,
+            "tmdb": 8.5
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1335,58 +1335,58 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "CQp2pUXLvJk",
+            "key": "P3uI5sLosKU",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Ruth Madeley",
-              "character": "Judith 'Judy' Heumann",
+              "name": "Tom Holland",
+              "character": "Peter Parker / Spider-Man",
               "order": 0
             },
             {
-              "name": "Mark Ruffalo",
-              "character": "Joseph Califano",
+              "name": "Sadie Sink",
+              "character": "Jean Grey",
               "order": 1
             },
             {
-              "name": "Dylan O'Brien",
-              "character": "Evan White",
+              "name": "Tramell Tillman",
+              "character": "William 'Bill' Metzger",
               "order": 2
             },
             {
-              "name": "Madeline Delp",
-              "character": "Kitty Cone",
+              "name": "Zendaya",
+              "character": "MJ",
               "order": 3
             },
             {
-              "name": "Rob Delaney",
-              "character": "Congressman Miller",
+              "name": "Jacob Batalon",
+              "character": "Ned Leeds",
               "order": 4
             },
             {
-              "name": "Ray Fisher",
-              "character": "Chuck Jackson",
+              "name": "Jon Bernthal",
+              "character": "Frank Castle / Punisher",
               "order": 5
             },
             {
-              "name": "Michael Patrick Thornton",
-              "character": "Ed Roberts",
+              "name": "Mark Ruffalo",
+              "character": "Bruce Banner / Hulk",
               "order": 6
             },
             {
-              "name": "Antwan Tolliver",
-              "character": "Brad Lomax",
+              "name": "Florence Pugh",
+              "character": "Yelena Belova / Black Widow",
               "order": 7
             },
             {
-              "name": "Daniel Durant",
-              "character": "Steve McCleeland",
+              "name": "Liza Colón-Zayas",
+              "character": "Detective Jean DeWolff",
               "order": 8
             },
             {
-              "name": "Jon Beavers",
-              "character": "Jim Pechin",
+              "name": "Marisa Tomei",
+              "character": "May Parker",
               "order": 9
             }
           ],
@@ -1472,6 +1472,87 @@
             }
           ],
           "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1050981",
+          "title": "Siendo Heumann",
+          "link": "https://www.themoviedb.org/movie/1050981",
+          "summary": "Judy Heumann, luchadora, desafiante y harta de que la traten como a una carga, convierte su indignación en una revolución. En 1977, junto con más de 100 manifestantes por los derechos de las personas con discapacidad, manda un mensaje muy firme: El sistema está dañado, no nosotros.",
+          "image": "https://image.tmdb.org/t/p/w500/2NcNYzSD436UlV7Ar8D2Fr5790.jpg",
+          "pubDate": "2026-11-06",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-13T17:32:44.679Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "CQp2pUXLvJk",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Ruth Madeley",
+              "character": "Judith 'Judy' Heumann",
+              "order": 0
+            },
+            {
+              "name": "Mark Ruffalo",
+              "character": "Joseph Califano",
+              "order": 1
+            },
+            {
+              "name": "Dylan O'Brien",
+              "character": "Evan White",
+              "order": 2
+            },
+            {
+              "name": "Madeline Delp",
+              "character": "Kitty Cone",
+              "order": 3
+            },
+            {
+              "name": "Rob Delaney",
+              "character": "Congressman Miller",
+              "order": 4
+            },
+            {
+              "name": "Ray Fisher",
+              "character": "Chuck Jackson",
+              "order": 5
+            },
+            {
+              "name": "Michael Patrick Thornton",
+              "character": "Ed Roberts",
+              "order": 6
+            },
+            {
+              "name": "Antwan Tolliver",
+              "character": "Brad Lomax",
+              "order": 7
+            },
+            {
+              "name": "Daniel Durant",
+              "character": "Steve McCleeland",
+              "order": 8
+            },
+            {
+              "name": "Jon Beavers",
+              "character": "Jim Pechin",
+              "order": 9
+            }
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1616687",
@@ -2862,87 +2943,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-movie-969681",
-          "title": "Spider-Man: Brand New Day",
-          "link": "https://www.themoviedb.org/movie/969681",
-          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad—un Spider-Man a tiempo completo—, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
-          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
-          "pubDate": "2026-07-29",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-30T08:12:18.586Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8,
-            "rt": 90,
-            "metascore": 66,
-            "tmdb": 8.5
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "P3uI5sLosKU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Tom Holland",
-              "character": "Peter Parker / Spider-Man",
-              "order": 0
-            },
-            {
-              "name": "Sadie Sink",
-              "character": "Jean Grey",
-              "order": 1
-            },
-            {
-              "name": "Tramell Tillman",
-              "character": "William 'Bill' Metzger",
-              "order": 2
-            },
-            {
-              "name": "Zendaya",
-              "character": "MJ",
-              "order": 3
-            },
-            {
-              "name": "Jacob Batalon",
-              "character": "Ned Leeds",
-              "order": 4
-            },
-            {
-              "name": "Jon Bernthal",
-              "character": "Frank Castle / Punisher",
-              "order": 5
-            },
-            {
-              "name": "Mark Ruffalo",
-              "character": "Bruce Banner / Hulk",
-              "order": 6
-            },
-            {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova / Black Widow",
-              "order": 7
-            },
-            {
-              "name": "Liza Colón-Zayas",
-              "character": "Detective Jean DeWolff",
-              "order": 8
-            },
-            {
-              "name": "Marisa Tomei",
-              "character": "May Parker",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
           "guid": "tmdb-movie-1290418",
           "title": "The Cycle",
           "link": "https://www.themoviedb.org/movie/1290418",
@@ -4295,6 +4295,212 @@
           ]
         },
         {
+          "guid": "tmdb-tv-37678",
+          "title": "The Voice",
+          "link": "https://www.themoviedb.org/tv/37678",
+          "summary": "Los cantantes aficionados compiten por los máximos honores en un concurso de canto de telerrealidad en el que los artistas famosos se emparejan con equipos de cantantes que entrenarán y guiarán hasta que el mejor intérprete quede en pie al final.",
+          "image": "https://image.tmdb.org/t/p/w500/7ah1WExcMkzbq7sARCTmcC23tBr.jpg",
+          "pubDate": "2011-04-26",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-11-13T23:20:11.633Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.5,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 5.9
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-11-16",
+          "numberOfSeasons": 30,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 13,
+              "fechaEstreno": "2011-04-26"
+            },
+            {
+              "numero": 2,
+              "episodios": 21,
+              "fechaEstreno": "2012-02-05"
+            },
+            {
+              "numero": 3,
+              "episodios": 32,
+              "fechaEstreno": "2012-09-10"
+            },
+            {
+              "numero": 4,
+              "episodios": 28,
+              "fechaEstreno": "2013-03-25"
+            },
+            {
+              "numero": 5,
+              "episodios": 27,
+              "fechaEstreno": "2013-09-23"
+            },
+            {
+              "numero": 6,
+              "episodios": 27,
+              "fechaEstreno": "2014-02-24"
+            },
+            {
+              "numero": 7,
+              "episodios": 27,
+              "fechaEstreno": "2014-09-22"
+            },
+            {
+              "numero": 8,
+              "episodios": 29,
+              "fechaEstreno": "2015-02-23"
+            },
+            {
+              "numero": 9,
+              "episodios": 27,
+              "fechaEstreno": "2015-09-21"
+            },
+            {
+              "numero": 10,
+              "episodios": 28,
+              "fechaEstreno": "2016-02-29"
+            },
+            {
+              "numero": 11,
+              "episodios": 26,
+              "fechaEstreno": "2016-09-19"
+            },
+            {
+              "numero": 12,
+              "episodios": 28,
+              "fechaEstreno": "2017-02-27"
+            },
+            {
+              "numero": 13,
+              "episodios": 28,
+              "fechaEstreno": "2017-09-25"
+            },
+            {
+              "numero": 14,
+              "episodios": 29,
+              "fechaEstreno": "2018-02-26"
+            },
+            {
+              "numero": 15,
+              "episodios": 27,
+              "fechaEstreno": "2018-09-24"
+            },
+            {
+              "numero": 16,
+              "episodios": 23,
+              "fechaEstreno": "2019-02-25"
+            },
+            {
+              "numero": 17,
+              "episodios": 27,
+              "fechaEstreno": "2019-09-23"
+            },
+            {
+              "numero": 18,
+              "episodios": 18,
+              "fechaEstreno": "2020-02-24"
+            },
+            {
+              "numero": 19,
+              "episodios": 19,
+              "fechaEstreno": "2020-10-19"
+            },
+            {
+              "numero": 20,
+              "episodios": 18,
+              "fechaEstreno": "2021-03-01"
+            },
+            {
+              "numero": 21,
+              "episodios": 26,
+              "fechaEstreno": "2021-09-20"
+            },
+            {
+              "numero": 22,
+              "episodios": 26,
+              "fechaEstreno": "2022-09-19"
+            },
+            {
+              "numero": 23,
+              "episodios": 19,
+              "fechaEstreno": "2023-03-06"
+            },
+            {
+              "numero": 24,
+              "episodios": 26,
+              "fechaEstreno": "2023-09-25"
+            },
+            {
+              "numero": 25,
+              "episodios": 22,
+              "fechaEstreno": "2024-02-26"
+            },
+            {
+              "numero": 26,
+              "episodios": 22,
+              "fechaEstreno": "2024-09-23"
+            },
+            {
+              "numero": 27,
+              "episodios": 23,
+              "fechaEstreno": "2025-02-03"
+            },
+            {
+              "numero": 28,
+              "episodios": 19,
+              "fechaEstreno": "2025-09-22"
+            },
+            {
+              "numero": 29,
+              "episodios": 10,
+              "fechaEstreno": "2026-02-23"
+            },
+            {
+              "numero": 30,
+              "episodios": 14,
+              "fechaEstreno": "2026-09-21"
+            }
+          ],
+          "currentSeason": 30,
+          "reviews": null,
+          "trailer": {
+            "key": "fBh1SHLs02Q",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Carson Daly",
+              "character": "Self - Host",
+              "order": 0
+            },
+            {
+              "name": "Adam Levine",
+              "character": "Self - Coach",
+              "order": 2
+            },
+            {
+              "name": "Kelly Clarkson",
+              "character": "Self - Coach",
+              "order": 7
+            },
+            {
+              "name": "Queen Latifah",
+              "character": "Self - Coach",
+              "order": 28
+            },
+            {
+              "name": "Riley Green",
+              "character": "Self - Coach",
+              "order": 29
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-22980",
           "title": "Watch What Happens Live with Andy Cohen",
           "link": "https://www.themoviedb.org/tv/22980",
@@ -5530,7 +5736,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 8.2
+            "tmdb": 8.3
           },
           "status": "Returning Series",
           "nextEpisodeDate": "2026-11-18",
@@ -5894,102 +6100,6 @@
           "cast": []
         },
         {
-          "guid": "tmdb-tv-72879",
-          "title": "Demain nous appartient",
-          "link": "https://www.themoviedb.org/tv/72879",
-          "summary": "The story revolves around the people of Sète, France. Their lives are punctuated by family rivalries, romance and scenes from daily life, but also by plots involving police investigations, secrets and betrayals.",
-          "image": "https://image.tmdb.org/t/p/w500/7BjipkA48xXLauTg45QKiOb144a.jpg",
-          "pubDate": "2017-07-17",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-11-13T17:32:45.736Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 5.1,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.3
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-11-13",
-          "numberOfSeasons": 3,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 2020,
-              "fechaEstreno": "2017-07-17"
-            },
-            {
-              "numero": 2,
-              "episodios": 260,
-              "fechaEstreno": "2025-09-01"
-            },
-            {
-              "numero": 3,
-              "episodios": 60,
-              "fechaEstreno": "2026-08-31"
-            }
-          ],
-          "currentSeason": 3,
-          "reviews": null,
-          "trailer": {
-            "key": "fjNxHqcn0rU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Ingrid Chauvin",
-              "character": "Chloé Delcourt",
-              "order": 0
-            },
-            {
-              "name": "Charlotte Valandrey",
-              "character": "Laurence",
-              "order": 1
-            },
-            {
-              "name": "Alexandre Brasseur",
-              "character": "Alex Bertrand",
-              "order": 2
-            },
-            {
-              "name": "Lorie Pester",
-              "character": "Lucie Salducci",
-              "order": 3
-            },
-            {
-              "name": "Samy Gharbi",
-              "character": "Karim Saeed",
-              "order": 4
-            },
-            {
-              "name": "Solène Hébert",
-              "character": "Victoire Lazzari",
-              "order": 5
-            },
-            {
-              "name": "Clément Remiens",
-              "character": "Maxime Delcourt",
-              "order": 6
-            },
-            {
-              "name": "Juliette Tresanini",
-              "character": "Sandrine Lazzari",
-              "order": 7
-            },
-            {
-              "name": "Cyril Garnier",
-              "character": "Thomas Delcourt",
-              "order": 8
-            },
-            {
-              "name": "Luce Mouchel",
-              "character": "Marianne Delcourt",
-              "order": 9
-            }
-          ]
-        },
-        {
           "guid": "tmdb-tv-153312",
           "title": "Tulsa King",
           "link": "https://www.themoviedb.org/tv/153312",
@@ -6086,6 +6196,103 @@
             {
               "name": "James Russo",
               "character": "Quiet Ray Renzetti",
+              "order": 9
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-tv-72879",
+          "title": "Demain nous appartient",
+          "link": "https://www.themoviedb.org/tv/72879",
+          "summary": "The story revolves around the people of Sète, France. Their lives are punctuated by family rivalries, romance and scenes from daily life, but also by plots involving police investigations, secrets and betrayals.",
+          "image": "https://image.tmdb.org/t/p/w500/7BjipkA48xXLauTg45QKiOb144a.jpg",
+          "pubDate": "2017-07-17",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-11-13T17:32:45.736Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 5.1,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.3
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-11-13",
+          "numberOfSeasons": 3,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 2020,
+              "fechaEstreno": "2017-07-17"
+            },
+            {
+              "numero": 2,
+              "episodios": 260,
+              "fechaEstreno": "2025-09-01"
+            },
+            {
+              "numero": 3,
+              "episodios": 60,
+              "fechaEstreno": "2026-08-31"
+            }
+          ],
+          "currentSeason": 3,
+          "reviews": null,
+          "trailer": {
+            "key": "fjNxHqcn0rU",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Ingrid Chauvin",
+              "character": "Chloé Delcourt",
+              "order": 0
+            },
+            {
+              "name": "Charlotte Valandrey",
+              "character": "Laurence",
+              "order": 1
+            },
+            {
+              "name": "Alexandre Brasseur",
+              "character": "Alex Bertrand",
+              "order": 2
+            },
+            {
+              "name": "Lorie Pester",
+              "character": "Lucie Salducci",
+              "order": 3
+            },
+            {
+              "name": "Samy Gharbi",
+              "character": "Karim Saeed",
+              "order": 4
+            },
+            {
+              "name": "Solène Hébert",
+              "character": "Victoire Lazzari",
+              "order": 5
+            },
+            {
+              "name": "Clément Remiens",
+              "character": "Maxime Delcourt",
+              "order": 6
+            },
+            {
+              "name": "Juliette Tresanini",
+              "character": "Sandrine Lazzari",
+              "order": 7
+            },
+            {
+              "name": "Cyril Garnier",
+              "character": "Thomas Delcourt",
+              "order": 8
+            },
+            {
+              "name": "Luce Mouchel",
+              "character": "Marianne Delcourt",
               "order": 9
             }
           ],
