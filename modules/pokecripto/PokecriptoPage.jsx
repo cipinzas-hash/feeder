@@ -371,15 +371,15 @@ function computeTimeframeDeltas(history){
     return {days, pct:(latest.market-ref.market)/ref.market*100};
   });
 }
-function TimeframeDeltas({history, dark}){
+function TimeframeDeltas({history, dark, compact}){
   const deltas = computeTimeframeDeltas(history);
   if(!deltas.length) return null;
   return (
-    <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6,marginBottom:12}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:compact?4:6,marginBottom:compact?0:12}}>
       {deltas.map(({days,pct})=>{
         const up = pct!=null && pct>=0;
         return (
-          <div key={days} style={{background:dark?"#1a1a1a":"#fafafa",border:dark?"none":"1px solid #eee",borderRadius:8,padding:"8px 4px",textAlign:"center"}}>
+          <div key={days} style={{background:dark?"#1a1a1a":"#fafafa",border:dark?"none":"1px solid #eee",borderRadius:8,padding:compact?"4px 2px":"8px 4px",textAlign:"center"}}>
             <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:8,color:dark?"rgba(255,255,255,0.35)":"#bbb",letterSpacing:0.5,marginBottom:3}}>{days}D</div>
             <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:700,color:pct==null?(dark?"rgba(255,255,255,0.2)":"#ddd"):up?(dark?"#4caf80":"#2e7d52"):"#e53935"}}>
               {pct==null?"—":`${up?"+":""}${pct.toFixed(1)}%`}
@@ -1852,204 +1852,184 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const dias=carta?.fechaCompra?Math.round((new Date(hoy+"T12:00:00")-new Date(carta.fechaCompra+"T12:00:00"))/86400000):null;
     const objetivo=carta?.precioObjetivo>0?carta.precioObjetivo:null;
     const objAlcanzado=!!(objetivo&&detalle.tcgMarket!=null&&detalle.tcgMarket<=objetivo);
-    const lbl={fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.35)",letterSpacing:1,textTransform:"uppercase",marginBottom:3};
-    const lblForm={fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#777",marginBottom:5};
+    const f={fontFamily:"'DM Sans',sans-serif"};
+    const lbl={...f,fontSize:8,color:"rgba(255,255,255,0.35)",letterSpacing:1,textTransform:"uppercase"};
+    const lblForm={...f,fontSize:10,color:"#777",marginBottom:5};
     const inputSt={width:"100%",border:"1px dashed #444",borderRadius:6,padding:"6px 8px",fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",boxSizing:"border-box",color:"#fff",background:"#111"};
     const chipSt=act=>({fontFamily:"'DM Sans',sans-serif",fontSize:11,padding:"4px 10px",borderRadius:8,border:"1px dashed "+(act?"#fff":"#444"),background:act?"#fff":"transparent",color:act?"#111":"#999",cursor:"pointer"});
-    const accionSt=(bg,color)=>({flex:1,background:bg,border:bg==="transparent"?"1px dashed #555":"none",borderRadius:10,padding:"12px",fontFamily:"'Caveat',cursive",fontSize:16,color:color||"#fff",cursor:"pointer"});
-    const datos=[];
-    if(esCarpeta){
-      datos.push(["costo",detalle.estado==="hunting"?"sin comprar":detalle.costoUSD?fmtUSD(detalle.costoUSD):"regalo"],["días",dias!=null?`${dias}d`:"—"],["condición",detalle.condicion||"—"]);
-      if((detalle.cantidad||1)>1) datos.push(["cantidad",`×${detalle.cantidad}`]);
-    }else if(esWatch){
-      if(detalle.condicion) datos.push(["condición",detalle.condicion]);
-    }else if(cons&&catalogEntry){
-      if(detalle.condicion) datos.push(["condición",detalle.condicion]);
-      if((detalle.cantidad||1)>1) datos.push(["cantidad",`×${detalle.cantidad}`]);
-    }
-    const flechaImg=(lado,delta,txt)=>(
-      <button onClick={e=>{e.stopPropagation();irADetalle(delta);}}
-        style={{position:"absolute",[lado]:4,top:"50%",transform:"translateY(-50%)",background:"rgba(255,255,255,0.12)",border:"none",borderRadius:14,width:44,height:88,color:"#fff",fontSize:26,cursor:"pointer",zIndex:1}}>{txt}</button>
+    const btnAcc=(bg,color,extra)=>({flex:1,minWidth:0,background:bg,border:bg==="transparent"?"1px dashed #444":"none",borderRadius:10,padding:"10px 6px",...f,fontSize:12,color:color||"#fff",cursor:"pointer",whiteSpace:"nowrap",...extra});
+    // datos propios en una sola línea bajo el precio
+    const datosLinea=[];
+    if(esCarpeta){ if(detalle.condicion) datosLinea.push(detalle.condicion); if((detalle.cantidad||1)>1) datosLinea.push(`×${detalle.cantidad}`); if(dias!=null) datosLinea.push(`${dias}d`); }
+    else if(esWatch){ if(detalle.condicion) datosLinea.push(detalle.condicion); }
+    else if(cons&&catalogEntry){ if(detalle.condicion) datosLinea.push(detalle.condicion); if((detalle.cantidad||1)>1) datosLinea.push(`×${detalle.cantidad}`); }
+    const pagado=detalle.precioUSD||detalle.costoUSD;
+    const flechaLado=(delta,txt)=>(
+      <button onClick={e=>{e.stopPropagation();irADetalle(delta);}} title={delta<0?"anterior":"siguiente"}
+        style={{flex:"none",width:30,height:176,background:"rgba(255,255,255,0.09)",border:"none",borderRadius:12,color:"#fff",fontSize:26,cursor:"pointer"}}>{txt}</button>
     );
+    const metricas=[
+      {label:"ATH",val:ath,date:athDate,color:"#4caf80"},
+      {label:"ATL",val:atl,date:atlDate,color:"#e57373"},
+      {label:`σ ${volLabel||""}`,val:vol?`${vol}%`:null,date:null,color:"#999"},
+    ];
     return(<>
       <div style={{position:"absolute",inset:0,zIndex:650,background:"#111",display:"flex",flexDirection:"column"}}>
         <div style={{width:"100%",maxWidth:480,margin:"0 auto",flex:1,minHeight:0,display:"flex",flexDirection:"column"}}>
-          {/* 1 · barra superior FIJA (no scrollea): contador al centro y cierre a la derecha, siempre visibles */}
+          {/* barra superior FIJA: volver, contador y cierre siempre visibles */}
           <div style={{flex:"none",display:"grid",gridTemplateColumns:"1fr auto 1fr",alignItems:"center",padding:"10px 16px",borderBottom:"1px solid #1f1f1f"}}>
-            <button onClick={cerrar} style={{justifySelf:"start",background:"transparent",border:"none",color:"#888",fontFamily:"'DM Sans',sans-serif",fontSize:12,cursor:"pointer",padding:0}}>← volver</button>
-            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.35)"}}>{nav&&idx>=0?`${idx+1} / ${darkDetailList.length}`:""}</div>
+            <button onClick={cerrar} style={{justifySelf:"start",background:"transparent",border:"none",color:"#888",...f,fontSize:12,cursor:"pointer",padding:0}}>← volver</button>
+            <div style={{...f,fontSize:10,color:"rgba(255,255,255,0.35)"}}>{nav&&idx>=0?`${idx+1} / ${darkDetailList.length}`:""}</div>
             <button onClick={cerrar} title="cerrar" style={{justifySelf:"end",background:"transparent",border:"none",color:"#999",fontSize:24,cursor:"pointer",padding:0,lineHeight:1}}>×</button>
           </div>
-          <div style={{flex:1,minHeight:0,overflowY:"auto",padding:"12px 20px 36px",boxSizing:"border-box"}}>
-          {/* 2 · ilustración con flechas grandes a los lados; tocarla abre el fullscreen */}
-          {detalle.image&&<div style={{position:"relative",marginBottom:12}}>
-            <img src={detalle.imageHd||detalle.image} alt={detalle.name}
-              style={{width:"100%",maxHeight:280,objectFit:"contain",borderRadius:10,cursor:"pointer",filter:cons?"none":"grayscale(1) brightness(0.65)",background:"#000",display:"block"}}
-              {...bindLongPress(detalle.imageHd||detalle.image)}
-              onClick={()=>{setZoomImage(detalle.imageHd||detalle.image);setZoomExtra(null);}}/>
-            {nav&&flechaImg("left",-1,"‹")}
-            {nav&&flechaImg("right",1,"›")}
-          </div>}
-          {/* 3 · título + estado */}
-          <div style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:14}}>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontFamily:"'Caveat',cursive",fontSize:21,fontWeight:700,color:"#fff",lineHeight:1.15}}>{detalle.name}</div>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#777",marginTop:3}}>#{detalle.number} · {detalle.setName}{colLabel?` · ${colLabel}`:""}</div>
-            </div>
-            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,background:est.bg,color:est.color,borderRadius:20,padding:"3px 10px",fontWeight:600,flexShrink:0}}>{est.label}</span>
-          </div>
-          {/* 4 · precio: mercado + rango + revisar; a la derecha pagué / objetivo según el contexto */}
-          <div style={{background:"#1a1a1a",borderRadius:10,padding:"12px 14px",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div>
-              <div style={lbl}>precio de mercado</div>
-              {detalle.tcgMarket
-                ?<div style={{fontFamily:"'Caveat',cursive",fontSize:26,fontWeight:700,color:"#5c9cff"}}>{fmtUSD(detalle.tcgMarket)}</div>
-                :<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"rgba(255,255,255,0.3)"}}>sin precio aún</div>}
-              {detalle.id&&<button onClick={()=>abrirRevisionCarta(detalle.id)} style={{marginTop:4,fontFamily:"'DM Sans',sans-serif",fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.2)",background:"transparent",color:"rgba(255,255,255,0.6)",borderRadius:99,padding:"2px 8px",cursor:"pointer"}}>🔍 revisar precio</button>}
-              {(detalle.tcgLow||detalle.tcgHigh)&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.35)",marginTop:2}}>
-                rango {detalle.tcgLow?fmtUSD(detalle.tcgLow):"—"} – {detalle.tcgHigh?fmtUSD(detalle.tcgHigh):"—"}
-              </div>}
-            </div>
-            {esWatch&&objetivo&&<div style={{textAlign:"right"}}>
-              <div style={lbl}>🎯 objetivo</div>
-              <div style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:objAlcanzado?"#4caf80":"#fff"}}>{fmtUSD(objetivo)}</div>
-              {objAlcanzado&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#4caf80"}}>alcanzado</div>}
-            </div>}
-            {!esWatch&&cons&&(detalle.precioUSD||detalle.costoUSD)>0&&<div style={{textAlign:"right"}}>
-              <div style={lbl}>pagué</div>
-              <div style={{fontFamily:"'Caveat',cursive",fontSize:18,fontWeight:700,color:"#fff"}}>{fmtUSD(detalle.precioUSD||detalle.costoUSD)}</div>
-              {esCarpeta&&detalle.precioVentaUSD>0&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:detalle.tcgMarket?(detalle.precioVentaUSD>detalle.tcgMarket?"#4caf80":"#e57373"):"rgba(255,255,255,0.4)"}}>venta {fmtUSD(detalle.precioVentaUSD)}</div>}
-            </div>}
-          </div>
-          {/* 5 · métricas, variación por periodo y gráfico — mismos en los tres contextos */}
-          {hist.length>=2&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
-            {[
-              {label:"ATH",val:ath,date:athDate,color:"#4caf80"},
-              {label:"ATL",val:atl,date:atlDate,color:"#e57373"},
-              {label:`σ ${volLabel||""}`,val:vol?`${vol}%`:null,date:null,color:"#999"},
-            ].map(({label,val,date,color})=>(
-              <div key={label} style={{background:"#1a1a1a",borderRadius:10,padding:"10px"}}>
-                <div style={{...lbl,marginBottom:4}}>{label}</div>
-                <div style={{fontFamily:"'Caveat',cursive",fontSize:18,fontWeight:700,color:val?color:"rgba(255,255,255,0.2)",lineHeight:1}}>{val?fmtUSD(parseFloat(val)):"—"}</div>
-                {date&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.3)",marginTop:3}}>{fmtDateShort(date)}</div>}
+          {/* cuerpo compacto: todo en una pantalla; la válvula de scroll solo aparece en pantallas muy bajas */}
+          <div style={{flex:1,minHeight:0,overflowY:"auto",padding:"10px 16px 12px",boxSizing:"border-box",display:"flex",flexDirection:"column",gap:8}}>
+            {/* ilustración con flechas grandes a los lados + datos y precio al costado */}
+            <div style={{display:"flex",gap:8,alignItems:"stretch"}}>
+              <div style={{display:"flex",gap:4,flex:"none"}}>
+                {nav&&flechaLado(-1,"‹")}
+                {detalle.image&&<img src={detalle.imageHd||detalle.image} alt={detalle.name}
+                  style={{width:126,height:176,objectFit:"contain",borderRadius:8,cursor:"pointer",filter:cons?"none":"grayscale(1) brightness(0.65)",background:"#000",display:"block"}}
+                  {...bindLongPress(detalle.imageHd||detalle.image)}
+                  onClick={()=>{setZoomImage(detalle.imageHd||detalle.image);setZoomExtra(null);}}/>}
+                {nav&&flechaLado(1,"›")}
               </div>
-            ))}
-          </div>}
-          <TimeframeDeltas history={hist} dark={true}/>
-          {hist.length>=2&&(
-            <div style={{background:"#1a1a1a",borderRadius:10,padding:"12px 14px",marginBottom:12}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                <div style={{...lbl,letterSpacing:2,marginBottom:0}}>historial</div>
-                <div style={{display:"flex",gap:4}}>
-                  {["7d","30d","todo"].map(rg=>(
-                    <button key={rg} onClick={()=>{setDarkDetailRange(rg);setSelectedPoint(null);}}
-                      style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,padding:"2px 7px",borderRadius:8,border:"1px solid",cursor:"pointer",
-                        background:darkDetailRange===rg?"#fff":"transparent",color:darkDetailRange===rg?"#111":"#666",borderColor:darkDetailRange===rg?"#fff":"#333"}}>{rg}</button>
-                  ))}
+              <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:3}}>
+                <div style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:"#fff",lineHeight:1.1,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{detalle.name}</div>
+                <div style={{...f,fontSize:10,color:"#777",lineHeight:1.3}}>#{detalle.number} · {detalle.setName}{colLabel?` · ${colLabel}`:""}</div>
+                <div><span style={{...f,fontSize:9,background:est.bg,color:est.color,borderRadius:20,padding:"2px 9px",fontWeight:600}}>{est.label}</span></div>
+                <div style={{marginTop:2}}>
+                  <div style={lbl}>mercado</div>
+                  {detalle.tcgMarket
+                    ?<div style={{fontFamily:"'Caveat',cursive",fontSize:28,fontWeight:700,color:"#5c9cff",lineHeight:1}}>{fmtUSD(detalle.tcgMarket)}</div>
+                    :<div style={{...f,fontSize:12,color:"rgba(255,255,255,0.3)"}}>sin precio aún</div>}
+                  {(detalle.tcgLow||detalle.tcgHigh)&&<div style={{...f,fontSize:10,color:"rgba(255,255,255,0.35)",marginTop:1}}>rango {detalle.tcgLow?fmtUSD(detalle.tcgLow):"—"} – {detalle.tcgHigh?fmtUSD(detalle.tcgHigh):"—"}</div>}
+                </div>
+                <div style={{...f,fontSize:11,color:"#aaa",display:"flex",gap:8,flexWrap:"wrap"}}>
+                  {esWatch&&objetivo&&<span style={{color:objAlcanzado?"#4caf80":"#ddd"}}>🎯 {fmtUSD(objetivo)}{objAlcanzado?" · alcanzado":""}</span>}
+                  {!esWatch&&cons&&pagado>0&&<span>pagué {fmtUSD(pagado)}</span>}
+                  {esCarpeta&&detalle.precioVentaUSD>0&&<span style={{color:detalle.tcgMarket?(detalle.precioVentaUSD>detalle.tcgMarket?"#4caf80":"#e57373"):"#aaa"}}>venta {fmtUSD(detalle.precioVentaUSD)}</span>}
+                </div>
+                {datosLinea.length>0&&<div style={{...f,fontSize:10,color:"#888"}}>{datosLinea.join(" · ")}</div>}
+                {detalle.notas&&<div style={{fontFamily:"'Caveat',cursive",fontSize:13,color:"rgba(255,255,255,0.5)",fontStyle:"italic",display:"-webkit-box",WebkitLineClamp:1,WebkitBoxOrient:"vertical",overflow:"hidden"}}>"{detalle.notas}"</div>}
+                <div style={{marginTop:"auto"}}>
+                  {detalle.id&&<button onClick={()=>abrirRevisionCarta(detalle.id)} style={{...f,fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.2)",background:"transparent",color:"rgba(255,255,255,0.6)",borderRadius:99,padding:"2px 8px",cursor:"pointer"}}>🔍 revisar precio</button>}
                 </div>
               </div>
-              <PriceChart history={hist} precioVenta={esCarpeta?detalle.precioVentaUSD:esWatch?objetivo:undefined} range={darkDetailRange}
-                onSelectPoint={p=>setSelectedPoint(selectedPoint?.date===p.date&&selectedPoint?.market===p.market?null:p)}
-                selectedPoint={selectedPoint}/>
-              {selectedPoint&&(
-                <div style={{marginTop:10,background:"#1a1a1a",border:"1px dashed #333",borderRadius:8,padding:"10px 12px",display:"flex",alignItems:"center",gap:10}}>
-                  <div style={{flex:1}}>
-                    <div style={{fontFamily:"'Caveat',cursive",fontSize:16,fontWeight:700,color:"#fff"}}>{fmtUSD(selectedPoint.market)}</div>
-                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"rgba(255,255,255,0.4)"}}>{selectedPoint.date}</div>
-                  </div>
-                  {confirmDelSnap?.date===selectedPoint.date&&confirmDelSnap?.market===selectedPoint.market
-                    ?<div style={{display:"flex",gap:6,alignItems:"center"}}>
-                      <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#ff8080"}}>¿borrar?</span>
-                      <button onClick={()=>deleteSnapshot(detalle,selectedPoint)} style={{background:"#e53935",border:"none",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#fff"}}>sí</button>
-                      <button onClick={()=>setConfirmDelSnap(null)} style={{background:"transparent",border:"1px dashed #444",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#999"}}>no</button>
-                    </div>
-                    :<button onClick={()=>setConfirmDelSnap(selectedPoint)} disabled={!detalle.id}
-                      style={{background:"transparent",border:"1px dashed #5a2020",borderRadius:8,padding:"5px 10px",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#e08080",cursor:detalle.id?"pointer":"default"}}>× borrar snapshot</button>}
-                </div>
-              )}
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.25)",marginTop:6,textAlign:"center"}}>{hist.length} snapshots — tocá un punto para seleccionar</div>
             </div>
-          )}
-          {/* 6 · datos propios según el contexto */}
-          {datos.length>0&&<div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>
-            {datos.map(([k,v])=>(
-              <div key={k} style={{background:"#1a1a1a",borderRadius:10,padding:"10px"}}>
-                <div style={{...lbl,marginBottom:4}}>{k}</div>
-                <div style={{fontFamily:"'Caveat',cursive",fontSize:16,fontWeight:700,color:"#fff",lineHeight:1}}>{v}</div>
-              </div>
-            ))}
-          </div>}
-          {detalle.notas&&<div style={{fontFamily:"'Caveat',cursive",fontSize:14,color:"rgba(255,255,255,0.5)",marginBottom:12,fontStyle:"italic"}}>"{detalle.notas}"</div>}
-          {/* 7 · acciones al pie según el contexto */}
-          {ctx==="coleccion"&&catalogEntry&&<button onClick={()=>toggleDark(detalle.cardId)}
-            style={{...accionSt(cons?"transparent":"#2e7d52"),width:"100%",flex:"none",fontSize:17,color:cons?"#999":"#fff"}}>{cons?"↺ volver a hunting":"✓ marcar conseguida"}</button>}
-          {carta&&<>
-            {carta.estado==="hunting"&&<div style={{marginBottom:10}}>
-              <button onClick={()=>updCarta(carta.id,{estado:"sin_publicar",fechaCompra:carta.fechaCompra||hoy})} style={{...accionSt("#7c4dff"),width:"100%",flex:"none"}}>✓ ya la conseguí — pasar a inventario</button>
-            </div>}
-            {esCarpeta&&carta.estado!=="vendida"&&carta.estado!=="hunting"&&<div style={{display:"flex",gap:8,marginBottom:10}}>
-              <button onClick={()=>updCarta(carta.id,{estado:carta.estado==="sin_publicar"?"a_la_venta":"sin_publicar"})} style={accionSt("#2a2a2a")}>{carta.estado==="sin_publicar"?"🏷️ poner a la venta":"📦 quitar de venta"}</button>
-              <button onClick={()=>setVendModal(true)} style={accionSt("#2e7d52")}>✓ registrar venta</button>
-            </div>}
-            {editMode?(
-              <div style={{background:"#1a1a1a",border:"1px dashed #333",borderRadius:12,padding:"14px",marginBottom:10}}>
-                {editFields.carpeta!=="Price Watch"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-                  {[{k:"costoUSD",l:"Costo USD"},{k:"precioVentaUSD",l:"Precio venta USD"}].map(({k,l})=>(
-                    <div key={k}>
-                      <div style={lblForm}>{l}</div>
-                      <input type="number" step="0.01" value={editFields[k]||""} onChange={e=>setEditFields(f=>({...f,[k]:e.target.value}))} style={inputSt}/>
-                    </div>
-                  ))}
-                </div>}
-                {editFields.carpeta!=="Price Watch"&&<div style={{marginBottom:10}}>
-                  <div style={lblForm}>Cantidad</div>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <button onClick={()=>setEditFields(f=>({...f,cantidad:Math.max(1,(f.cantidad||1)-1)}))} style={{width:28,height:28,borderRadius:6,border:"1px dashed #444",background:"transparent",fontSize:16,cursor:"pointer",color:"#ccc"}}>−</button>
-                    <span style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff",minWidth:28,textAlign:"center"}}>{editFields.cantidad||1}</span>
-                    <button onClick={()=>setEditFields(f=>({...f,cantidad:(f.cantidad||1)+1}))} style={{width:28,height:28,borderRadius:6,border:"1px dashed #444",background:"transparent",fontSize:16,cursor:"pointer",color:"#ccc"}}>+</button>
-                  </div>
-                </div>}
-                <div style={{marginBottom:10}}>
-                  <div style={lblForm}>Carpeta</div>
-                  <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                    {cats.map(c=><button key={c} onClick={()=>setEditFields(f=>({...f,carpeta:c}))} style={chipSt(editFields.carpeta===c)}>{c}</button>)}
-                  </div>
+            {/* métricas y variación por periodo en dos filas compactas */}
+            {hist.length>=2&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
+              {metricas.map(({label,val,date,color})=>(
+                <div key={label} style={{background:"#1a1a1a",borderRadius:8,padding:"5px 8px"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",...lbl}}><span>{label}</span>{date&&<span style={{letterSpacing:0}}>{fmtDateShort(date)}</span>}</div>
+                  <div style={{fontFamily:"'Caveat',cursive",fontSize:16,fontWeight:700,color:val?color:"rgba(255,255,255,0.2)",lineHeight:1.1}}>{val?fmtUSD(parseFloat(val)):"—"}</div>
                 </div>
-                <div style={{marginBottom:10}}>
-                  <div style={lblForm}>Condición</div>
+              ))}
+            </div>}
+            <TimeframeDeltas history={hist} dark={true} compact={true}/>
+            {/* gráfico con rangos y borrar snapshot */}
+            {hist.length>=2&&(
+              <div style={{background:"#1a1a1a",borderRadius:10,padding:"8px 12px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                  <div style={{...lbl,letterSpacing:2}}>historial · {hist.length}</div>
                   <div style={{display:"flex",gap:4}}>
-                    {CONDICIONES.map(c=><button key={c} onClick={()=>setEditFields(f=>({...f,condicion:c}))} style={{...chipSt(editFields.condicion===c),flex:1,padding:"5px 4px"}}>{c}</button>)}
+                    {["7d","30d","todo"].map(rg=>(
+                      <button key={rg} onClick={()=>{setDarkDetailRange(rg);setSelectedPoint(null);}}
+                        style={{...f,fontSize:9,padding:"2px 7px",borderRadius:8,border:"1px solid",cursor:"pointer",
+                          background:darkDetailRange===rg?"#fff":"transparent",color:darkDetailRange===rg?"#111":"#666",borderColor:darkDetailRange===rg?"#fff":"#333"}}>{rg}</button>
+                    ))}
                   </div>
                 </div>
-                <div style={{marginBottom:10}}>
-                  <div style={lblForm}>Notas</div>
-                  <textarea value={editFields.notas||""} onChange={e=>setEditFields(f=>({...f,notas:e.target.value}))} rows={2} style={{...inputSt,borderRadius:8,padding:"8px 10px",fontSize:13,resize:"none"}}/>
-                </div>
-                {editFields.carpeta==="Price Watch"&&<div style={{marginBottom:10}}>
-                  <div style={lblForm}>Precio objetivo USD (opcional)</div>
-                  <input type="number" step="0.01" value={editFields.precioObjetivo||""} onChange={e=>setEditFields(f=>({...f,precioObjetivo:e.target.value}))} style={inputSt}/>
-                </div>}
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>{updCarta(carta.id,{costoUSD:parseFloat(editFields.costoUSD)||0,precioVentaUSD:parseFloat(editFields.precioVentaUSD)||0,condicion:editFields.condicion,notas:editFields.notas||"",carpeta:editFields.carpeta,cantidad:editFields.cantidad||1,precioObjetivo:editFields.precioObjetivo?parseFloat(editFields.precioObjetivo):null});
-                    if((editFields.carpeta==="Price Watch")!==(carta.carpeta==="Price Watch")) encolarPokecriptoPending([{id:carta.id,_patch:{carpeta:editFields.carpeta}}]); // el bot refresca Price Watch primero y todos los días
-                    setEditMode(false);}}
-                    style={{flex:1,background:"#fff",border:"none",borderRadius:8,padding:"9px",fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#111",cursor:"pointer",fontWeight:600}}>guardar</button>
-                  <button onClick={()=>setEditMode(false)} style={{background:"transparent",border:"1px dashed #444",borderRadius:8,padding:"9px 14px",fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#999",cursor:"pointer"}}>cancelar</button>
-                </div>
-              </div>
-            ):(
-              <div style={{display:"flex",gap:8,marginBottom:10}}>
-                <button onClick={()=>setEditMode(true)} style={{flex:1,background:"transparent",border:"1px dashed #444",borderRadius:10,padding:"9px",fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#999",cursor:"pointer"}}>{esWatch?"✎ editar objetivo":"✎ editar"}</button>
-                {hist.length>0&&<button onClick={()=>{if(window.confirm(`¿Resetear historial de ${carta.name}? Se borran ${hist.length} snapshots.`))updCarta(carta.id,{priceHistory:[],tcgMarket:null,tcgLow:null,tcgHigh:null,tcgUpdated:null});}}
-                  style={{background:"transparent",border:"1px dashed #5a2020",borderRadius:10,padding:"9px 12px",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#e08080",cursor:"pointer",flexShrink:0}}>↺ resetear historial</button>}
+                <PriceChart history={hist} precioVenta={esCarpeta?detalle.precioVentaUSD:esWatch?objetivo:undefined} range={darkDetailRange}
+                  onSelectPoint={p=>setSelectedPoint(selectedPoint?.date===p.date&&selectedPoint?.market===p.market?null:p)}
+                  selectedPoint={selectedPoint}/>
+                {selectedPoint&&(
+                  <div style={{marginTop:6,display:"flex",alignItems:"center",gap:8,borderTop:"1px dashed #2a2a2a",paddingTop:6}}>
+                    <span style={{fontFamily:"'Caveat',cursive",fontSize:15,fontWeight:700,color:"#fff"}}>{fmtUSD(selectedPoint.market)}</span>
+                    <span style={{...f,fontSize:10,color:"rgba(255,255,255,0.4)",flex:1}}>{selectedPoint.date}</span>
+                    {confirmDelSnap?.date===selectedPoint.date&&confirmDelSnap?.market===selectedPoint.market
+                      ?<>
+                        <span style={{...f,fontSize:11,color:"#ff8080"}}>¿borrar?</span>
+                        <button onClick={()=>deleteSnapshot(detalle,selectedPoint)} style={{background:"#e53935",border:"none",borderRadius:6,padding:"3px 10px",cursor:"pointer",...f,fontSize:11,color:"#fff"}}>sí</button>
+                        <button onClick={()=>setConfirmDelSnap(null)} style={{background:"transparent",border:"1px dashed #444",borderRadius:6,padding:"3px 10px",cursor:"pointer",...f,fontSize:11,color:"#999"}}>no</button>
+                      </>
+                      :<button onClick={()=>setConfirmDelSnap(selectedPoint)} disabled={!detalle.id}
+                        style={{background:"transparent",border:"1px dashed #5a2020",borderRadius:8,padding:"3px 9px",...f,fontSize:10,color:"#e08080",cursor:detalle.id?"pointer":"default"}}>× borrar</button>}
+                  </div>
+                )}
               </div>
             )}
-            <button onClick={()=>{if(window.confirm(`¿Eliminar ${carta.name}?`)){deleteCarta(carta.id);cerrar();}}}
-              style={{width:"100%",background:"transparent",border:"1px dashed #2a2a2a",borderRadius:10,padding:"9px",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:"#666",cursor:"pointer"}}>eliminar carta</button>
-          </>}
+            {/* acciones en una sola fila, según el contexto */}
+            <div style={{display:"flex",gap:6,marginTop:"auto"}}>
+              {ctx==="coleccion"&&catalogEntry&&<button onClick={()=>toggleDark(detalle.cardId)} style={btnAcc(cons?"transparent":"#2e7d52",cons?"#999":"#fff")}>{cons?"↺ volver a hunting":"✓ marcar conseguida"}</button>}
+              {carta&&<>
+                {carta.estado==="hunting"&&<button onClick={()=>updCarta(carta.id,{estado:"sin_publicar",fechaCompra:carta.fechaCompra||hoy})} style={btnAcc("#7c4dff")}>✓ ya la conseguí</button>}
+                {esCarpeta&&carta.estado!=="vendida"&&carta.estado!=="hunting"&&<>
+                  <button onClick={()=>updCarta(carta.id,{estado:carta.estado==="sin_publicar"?"a_la_venta":"sin_publicar"})} style={btnAcc("#2a2a2a")}>{carta.estado==="sin_publicar"?"🏷️ a la venta":"📦 quitar"}</button>
+                  <button onClick={()=>setVendModal(true)} style={btnAcc("#2e7d52")}>✓ vender</button>
+                </>}
+                <button onClick={()=>setEditMode(true)} style={btnAcc("transparent","#999")}>{esWatch?"✎ objetivo":"✎ editar"}</button>
+                <button onClick={()=>{if(window.confirm(`¿Eliminar ${carta.name}?`)){deleteCarta(carta.id);cerrar();}}} title="eliminar carta"
+                  style={btnAcc("transparent","#777",{flex:"none",padding:"10px 12px"})}>🗑</button>
+              </>}
+            </div>
           </div>
         </div>
       </div>
+      {/* Edición: formulario en hoja emergente (lineamiento: los emergentes son para formularios) */}
+      {editMode&&carta&&(
+        <div onClick={()=>setEditMode(false)} style={{position:"fixed",inset:0,zIndex:700,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+          <div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"min(96vw,420px)",background:"#111",borderRadius:"16px 16px 0 0",padding:"22px 20px 28px",maxHeight:"90vh",overflowY:"auto",boxSizing:"border-box"}}>
+            <BotonCerrar onClick={()=>setEditMode(false)}/>
+            <div style={{fontFamily:"'Caveat',cursive",fontSize:20,fontWeight:700,color:"#fff",marginBottom:12}}>✎ {carta.name}</div>
+            {editFields.carpeta!=="Price Watch"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+              {[{k:"costoUSD",l:"Costo USD"},{k:"precioVentaUSD",l:"Precio venta USD"}].map(({k,l})=>(
+                <div key={k}>
+                  <div style={lblForm}>{l}</div>
+                  <input type="number" step="0.01" value={editFields[k]||""} onChange={e=>setEditFields(fl=>({...fl,[k]:e.target.value}))} style={inputSt}/>
+                </div>
+              ))}
+            </div>}
+            {editFields.carpeta!=="Price Watch"&&<div style={{marginBottom:10}}>
+              <div style={lblForm}>Cantidad</div>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <button onClick={()=>setEditFields(fl=>({...fl,cantidad:Math.max(1,(fl.cantidad||1)-1)}))} style={{width:28,height:28,borderRadius:6,border:"1px dashed #444",background:"transparent",fontSize:16,cursor:"pointer",color:"#ccc"}}>−</button>
+                <span style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff",minWidth:28,textAlign:"center"}}>{editFields.cantidad||1}</span>
+                <button onClick={()=>setEditFields(fl=>({...fl,cantidad:(fl.cantidad||1)+1}))} style={{width:28,height:28,borderRadius:6,border:"1px dashed #444",background:"transparent",fontSize:16,cursor:"pointer",color:"#ccc"}}>+</button>
+              </div>
+            </div>}
+            <div style={{marginBottom:10}}>
+              <div style={lblForm}>Carpeta</div>
+              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                {cats.map(c=><button key={c} onClick={()=>setEditFields(fl=>({...fl,carpeta:c}))} style={chipSt(editFields.carpeta===c)}>{c}</button>)}
+              </div>
+            </div>
+            <div style={{marginBottom:10}}>
+              <div style={lblForm}>Condición</div>
+              <div style={{display:"flex",gap:4}}>
+                {CONDICIONES.map(c=><button key={c} onClick={()=>setEditFields(fl=>({...fl,condicion:c}))} style={{...chipSt(editFields.condicion===c),flex:1,padding:"5px 4px"}}>{c}</button>)}
+              </div>
+            </div>
+            <div style={{marginBottom:10}}>
+              <div style={lblForm}>Notas</div>
+              <textarea value={editFields.notas||""} onChange={e=>setEditFields(fl=>({...fl,notas:e.target.value}))} rows={2} style={{...inputSt,borderRadius:8,padding:"8px 10px",fontSize:13,resize:"none"}}/>
+            </div>
+            {editFields.carpeta==="Price Watch"&&<div style={{marginBottom:10}}>
+              <div style={lblForm}>Precio objetivo USD (opcional)</div>
+              <input type="number" step="0.01" value={editFields.precioObjetivo||""} onChange={e=>setEditFields(fl=>({...fl,precioObjetivo:e.target.value}))} style={inputSt}/>
+            </div>}
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>{updCarta(carta.id,{costoUSD:parseFloat(editFields.costoUSD)||0,precioVentaUSD:parseFloat(editFields.precioVentaUSD)||0,condicion:editFields.condicion,notas:editFields.notas||"",carpeta:editFields.carpeta,cantidad:editFields.cantidad||1,precioObjetivo:editFields.precioObjetivo?parseFloat(editFields.precioObjetivo):null});
+                if((editFields.carpeta==="Price Watch")!==(carta.carpeta==="Price Watch")) encolarPokecriptoPending([{id:carta.id,_patch:{carpeta:editFields.carpeta}}]); // el bot refresca Price Watch primero y todos los días
+                setEditMode(false);}}
+                style={{flex:1,background:"#fff",border:"none",borderRadius:8,padding:"10px",...f,fontSize:13,color:"#111",cursor:"pointer",fontWeight:600}}>guardar</button>
+              <button onClick={()=>setEditMode(false)} style={{background:"transparent",border:"1px dashed #444",borderRadius:8,padding:"10px 14px",...f,fontSize:13,color:"#999",cursor:"pointer"}}>cancelar</button>
+            </div>
+            {hist.length>0&&<button onClick={()=>{if(window.confirm(`¿Resetear historial de ${carta.name}? Se borran ${hist.length} snapshots.`)){updCarta(carta.id,{priceHistory:[],tcgMarket:null,tcgLow:null,tcgHigh:null,tcgUpdated:null});setEditMode(false);}}}
+              style={{marginTop:12,width:"100%",background:"transparent",border:"1px dashed #5a2020",borderRadius:8,padding:"8px",...f,fontSize:11,color:"#e08080",cursor:"pointer"}}>↺ resetear historial de precios</button>}
+          </div>
+        </div>
+      )}
       {/* Venta: hoja oscura por encima del detalle */}
       {vendModal&&carta&&(
         <div onClick={()=>setVendModal(false)} style={{position:"fixed",inset:0,zIndex:700,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
@@ -2057,11 +2037,11 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             <BotonCerrar onClick={()=>setVendModal(false)}/>
             <div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff",marginBottom:16}}>✓ registrar venta</div>
             <div style={{marginBottom:12}}>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#777",letterSpacing:2,marginBottom:6}}>PRECIO USD</div>
-              <input autoFocus type="number" step="0.01" value={vendPrecio} onChange={e=>setVendPrecio(e.target.value)} style={{...inputSt,border:"1.5px solid #fff",borderRadius:8,padding:"10px 12px",fontSize:18,fontFamily:"'Caveat',cursive"}}/>
+              <div style={{...f,fontSize:10,color:"#777",letterSpacing:2,marginBottom:6}}>PRECIO USD</div>
+              <input autoFocus type="number" step="0.01" value={vendPrecio} onChange={e=>setVendPrecio(e.target.value)} style={{...inputSt,border:"1.5px solid #444",borderRadius:8,padding:"10px 12px",fontSize:18,fontFamily:"'Caveat',cursive"}}/>
             </div>
             <div style={{marginBottom:16}}>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#777",letterSpacing:2,marginBottom:6}}>FECHA</div>
+              <div style={{...f,fontSize:10,color:"#777",letterSpacing:2,marginBottom:6}}>FECHA</div>
               <input type="date" value={vendFecha} onChange={e=>setVendFecha(e.target.value)} style={{...inputSt,width:"auto",borderRadius:8,padding:"8px 10px"}}/>
             </div>
             <button onClick={()=>{marcarVendida(carta.id,vendPrecio,vendFecha);setVendModal(false);cerrar();}}
