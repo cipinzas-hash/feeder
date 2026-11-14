@@ -2035,7 +2035,7 @@ function AngstApp() {
         {(()=>{
           const TABS=[{label:"📅 Semana",emoji:"📅"},{label:"💵 Presupuesto",emoji:"💵"},{label:"📒 Emprendimientos",emoji:"📒"},{label:"🧠 mindfulness",emoji:"🧠"},{label:"🩺 salud",emoji:"🩺"},{label:"🍄 fadiman",emoji:"🍄"},{label:"🥗 nutrición",emoji:"🥗"},{label:"🏋️ ejercicio",emoji:"🏋️"},{label:"🃏 pokécripto",emoji:"🃏"},{label:"📰 feed",emoji:"📰"},{label:"🎬 vitrina",emoji:"🎬"},{label:"🌱 rutinas",emoji:"🌱"},{label:"🎧 música",emoji:"🎧"},{label:"🎮 game enhanced",emoji:"🎮"},{label:"🗓️ panoramas",emoji:"🗓️"}];
           // Orden visual: Rutinas va justo después de Semana, Música (id 12) justo después de Feed y Game enhanced (id 13) al final. Los ids de página (índice en TABS) no se renumeran.
-          const ORDER=[0,11,1,2,3,4,5,6,7,8,9,12,10,13];
+          const ORDER=[0,11,1,2,3,4,5,6,7,8,9,12,14,10,13];
           return (
             <div className="tabs" ref={tabsRef} data-edge={tabsEdge} style={{userSelect:"none"}}>
               {ORDER.map(ti=>{

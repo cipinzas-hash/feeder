@@ -39,3 +39,12 @@ lo que tiene cupos o pide inscripción y marca lo recién detectado como "nuevo"
 - Municipalidades: Recoleta responde 403 al bot; Quinta Normal no resolvió el dominio probado; Providencia usa otro portal.
 - Agregadores (SeSale!, Panoramas.app): descartados por ahora (duplican a las fuentes primarias y sus condiciones de uso no se han revisado).
 - "Me interesa" y baliza hacia Semana (requiere decidir persistencia, tocaría `core/persistence.js` y el export).
+
+## Cumplimiento del lineamiento (§4.6, verificado en el código y en la app completa — 14-nov-2026)
+Módulo 14 `PanoramasPage`: **cumple**. Rediseñado en esta entrega (la v1 del 13-nov no cumplía: título propio, scroll permanente, y además quedó fuera de `ORDER`, por lo que la pestaña no se veía).
+- N1: sobre `.app-fit` (`page===14` en la lista de `core/App.jsx`); no usa `useAltoLibre` ni `MarcoAngst`; reutiliza `FilaSeccion`, `T_CLARO`, `chip` (fadimanUi) y `useDesborde` (shared/ui).
+- N2: franja de estado arriba (ficha del próximo panorama + filtros) y filas-encabezado que se abren de a una (Hoy, Mañana, Esta semana, Próximas dos semanas, Más adelante, En curso). Sin ventanas emergentes.
+- N3: colapsado no desborda ni scrolla; medido en Chromium móvil (390 px de ancho) con la app completa: área libre 481 / 551 / 631 / 721 px → desborde 0, pie visible, la página no se desliza. Con una fila abierta el scroll vive solo en su cuerpo (a 481 px el cuerpo abierto mide 169 px).
+- R6: sin título propio. R7: Caveat + DM Sans, fondo claro del marco. R8: sin claves de localStorage nuevas; `audit:export` OK.
+- Qué se ve colapsado: ficha del próximo panorama, filtros, y una fila por grupo con su conteo y el primer título. Qué se expande: la lista de tarjetas del grupo.
+- **No probado:** tablet (vertical/horizontal), celular real, y las tipografías Caveat/DM Sans (la prueba usó las de respaldo). Con más de 5 filas a 481 px la ficha se encoge hasta 100 px; si aun así no cabe, actúa la válvula (scroll + `console.warn`).
