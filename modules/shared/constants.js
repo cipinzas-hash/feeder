@@ -12,6 +12,8 @@ export const VIDEOTECA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-ha
 // Módulo de música (oct-2026): lanzamientos + fichas de artista, lo escribe build-musica.mjs.
 export const MUSICA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/musica.json";
 export const GAME_ENHANCED_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced.json";
+// Módulo Panoramas (nov-2026, issue #17): eventos culturales de Santiago, lo escribe build-panoramas.mjs.
+export const PANORAMAS_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/panoramas.json";
 
 // Destacados (vitrina audiovisual) — 3 categorías separadas, cada una su
 // propio carrusel. Ya no participan del swipe round-robin de "Noticias".
