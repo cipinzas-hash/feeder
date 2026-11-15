@@ -8,7 +8,8 @@
 // Las marcas del calendario usan los mismos íconos que el resto de la app
 // (core/ui.jsx: MARK_ICONS_CAL). Las citas de Salud llegan como marca "doctor"
 // (derivada, effectiveMarks) y, además, las citas del día y los tratamientos en
-// curso entran como balizas con su detalle (`saludDe`, saludModel.saludDelDia):
+// curso entran como balizas con su detalle (`saludDe`, saludModel.saludDelDia); los panoramas ⭐
+// (`panoramasDe`, solo la última semana antes del evento) entran igual con el ícono ⭐;
 // cuentan en la próxima baliza, en el total de la semana y en la agenda.
 import { fmtFull, getHoliday } from "./dates.js";
 
@@ -40,7 +41,7 @@ function colorCarga(score) { return score <= 5 ? "#4caf50" : score <= 7 ? "#ff98
 
 // Función pura (exportada para poder probarla sin React).
 function hMin(s) { const [h, m] = String(s).split(":").map(Number); return h * 60 + m; }
-function buildResumen({ todayKey, ahoraMin, weekKeys, dayData, calMarks, eventos, stressFor, conNinosEn, ejercicioHoy, kcalHoy, saludDe }) {
+function buildResumen({ todayKey, ahoraMin, weekKeys, dayData, calMarks, eventos, stressFor, conNinosEn, ejercicioHoy, kcalHoy, saludDe, panoramasDe }) {
   const marcasDe = k => {
     const v = calMarks[k];
     const arr = Array.isArray(v) ? v : (v ? [v] : []);
@@ -55,7 +56,11 @@ function buildResumen({ todayKey, ahoraMin, weekKeys, dayData, calMarks, eventos
     const salud = k >= todayKey && saludDe
       ? saludDe(k).map(s => ({ icono: s.icono, texto: s.texto, hora: s.hora, min: s.hora ? hMin(s.hora) : null, detalle: s.detalle || null }))
       : [];
-    return [...tareas, ...salud].sort((a, b) => (a.min ?? 1e9) - (b.min ?? 1e9));
+    // Panoramas ⭐: ya vienen con su ventana de 7 días resuelta (panoramasDe, modules/panoramas/seleccion.js).
+    const panoramas = k >= todayKey && panoramasDe
+      ? panoramasDe(k).map(p => ({ icono: p.icono, texto: p.texto, hora: p.hora, min: p.hora ? hMin(p.hora) : null, detalle: p.detalle || null }))
+      : [];
+    return [...tareas, ...salud, ...panoramas].sort((a, b) => (a.min ?? 1e9) - (b.min ?? 1e9));
   };
 
   // Próxima baliza: mira hacia adelante desde hoy, también fuera de la semana mostrada.

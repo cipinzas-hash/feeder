@@ -8,6 +8,7 @@ import { rehidratarCineEstado } from "../modules/vitrina/estado.js";
 import { rehidratarOverlay } from "../modules/vitrina/avance.js";
 import { rehidratarMegusta } from "../modules/musica/megusta.js";
 import { rehidratarEstado as rehidratarGameEnhanced } from "../modules/gameenhanced/estado.js";
+import { rehidratarSeleccion as rehidratarPanoramas, useSeleccion as useSeleccionPanoramas, avisosDelDia as avisosPanoramas } from "../modules/panoramas/seleccion.js";
 import { fmt, fmtFull, getHoliday, addDays, weekOffsetFor } from "./dates.js";
 import { nivelRegistro, colorRegistro, barrasRegistro } from "./registro.js";
 import { FamiliaInboxModal } from "./FamiliaInbox.jsx";
@@ -109,6 +110,7 @@ function AngstApp() {
   const ejercicioDecksRef = useRef([]);
   const [calMarks, setCalMarks] = useState({});
   const [meleeMajors, setMeleeMajors] = useState([]);
+  const selPanoramas = useSeleccionPanoramas();   // ⭐ de Panoramas: re-renderiza para que el aviso de Semana siga a la estrella
   const [custody, setCustody] = useState({ baseDate:"2026-04-28", withKids:true, overrides:{} });
 
   const POKEMON_EVENTS = [
@@ -1541,6 +1543,7 @@ function AngstApp() {
     rehidratarOverlay();      // Vitrina: marcas de episodios (overlay de módulo)
     rehidratarMegusta();      // Música: ♥ guardados (caché de módulo)
     rehidratarGameEnhanced(); // Game enhanced: guardados / ocultos (caché de módulo)
+    rehidratarPanoramas();    // Panoramas: ⭐ preseleccionados (caché de módulo)
     if(Array.isArray(d.feedPodcastDispatched)) setPodcastDispatched(d.feedPodcastDispatched); // state de App
     try{ window.dispatchEvent(new Event("angst:restaurado")); }catch(e){} // Pokécripto relee "agotadas"
     setLoadMsg(`✓ Restauración completa desde ${sourceLabel||"backup"}`);
@@ -1672,6 +1675,14 @@ function AngstApp() {
     const hhmm = `${String(ahora.getHours()).padStart(2,"0")}:${String(ahora.getMinutes()).padStart(2,"0")}`;
     mutarDia(fmtFull(ahora), day=>({...day, randomNote: (day.randomNote ? day.randomNote+"\n" : "") + `${hhmm} · ${texto}`}));
   };
+  // Panoramas ⭐ → planificador: tarea normal del día (sin 🚨, visible en Familia: sin "privada"). Devuelve su id
+  // para que Panoramas sepa qué tarea creó y no la duplique.
+  const crearTareaPanorama = ({texto, fecha})=>{
+    const id = Date.now();
+    mutarDia(fecha, day=>({...day, tasks:[...(day.tasks||[]), {id, text:texto, fixed:false, done:false}]}));
+    return id;
+  };
+  const tareaPanoramaExiste = (fecha, id)=>((dayDataRef.current||{})[fecha]?.tasks||[]).some(t=>t.id===id);
   const agregarTareaRapida = ({text, date, urgent})=>{
     mutarDia(date, day=>({...day, tasks:[...(day.tasks||[]), {id:Date.now(), text, fixed:false, done:false, ...(urgent?{urgent:true}:{})}]}));
   };
@@ -2074,6 +2085,7 @@ function AngstApp() {
                   eventos={[...meleeMajors.map(ev=>({...ev,tipo:"melee",url:"https://www.start.gg/"})),...POKEMON_EVENTS.map(ev=>({...ev,tipo:"pokemon"})),...SC2_EVENTS.map(ev=>({...ev,tipo:"sc2"}))]}
                   stressFor={k=>computeStressScore(k, dayData, calMarks, kidsHealth)}
                   saludDe={k=>saludDelDia(kidsHealth, k)}
+                  panoramasDe={k=>avisosPanoramas(selPanoramas, k, fmtFull(new Date()))}
                   conNinosEn={k=>isWithKids(k, custody)}
       ejercicioHoy={Object.values(ejercicioLog[fmtFull(new Date())]||{}).some(v=>v===true||!!(v&&v.done))}
       kcalHoy={(nutriLog[fmtFull(new Date())]||[]).reduce((t,e)=>t+(e.kcal||0)*(e.qty||0),0)}
@@ -2473,7 +2485,7 @@ function AngstApp() {
         {page===10&&<VitrinaPage/>}
         {page===12&&<MusicaPage/>}
         {page===13&&<GameEnhancedPage/>}
-        {page===14&&<PanoramasPage/>}
+        {page===14&&<PanoramasPage onCrearTarea={crearTareaPanorama} tareaExiste={tareaPanoramaExiste}/>}
         {page===11&&<RoutinesPage routines={routines} onSave={saveRoutines} onAddToDay={(name,emoji)=>{const tk=fmtFull(new Date());const nid=Date.now();const dd=dayDataRef.current||{};const d=dd[tk]||makeEmptyDay();const nx={...dd,[tk]:{...d,tasks:[...d.tasks,{id:nid,text:(emoji?emoji+" ":"")+name,fixed:false,done:false}]}};setDayData(nx);dayDataRef.current=nx;saveToStorage({dayData:nx});}}/>}
 
         <div className="ftr">

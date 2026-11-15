@@ -14,14 +14,23 @@
 //    "nuevo" y es la base de enterarse con anticipación.
 //  · Deduplicación entre fuentes por título normalizado + fecha de inicio.
 //
+//  · `detalle` (texto plano del evento, para leerlo dentro de la app sin abrir otra pestaña):
+//    Cloudflare Browser Rendering /markdown sobre la página del evento + limpieza
+//    (lib/panoramas-detalle.mjs). Se lee UNA vez por evento y se hereda entre corridas.
+//    Respaldo: el resumen (excerpt) de la API de CCLM. Si Cloudflare falla por credenciales o
+//    permiso, el build NO se cae: queda el respaldo y el motivo en `lectura` del JSON.
+//
 // Variables: PANORAMAS_OUT (salida), PANORAMAS_HOY (YYYY-MM-DD, para pruebas),
-// PANORAMAS_FIXTURES (directorio con muestras: modo prueba sin red).
+// PANORAMAS_FIXTURES (directorio con muestras: modo prueba sin red),
+// CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_BR_TOKEN (o CLOUDFLARE_API_TOKEN) para el detalle,
+// PANORAMAS_MAX_LECTURAS (páginas a leer por corrida, 25 por defecto).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { leerMarkdown, textoDeHtml, pedirMarkdown } from "./lib/panoramas-detalle.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT = process.env.PANORAMAS_OUT || path.join(__dirname, "..", "data", "panoramas.json");
@@ -136,6 +145,7 @@ function parseCclm(e, tipoRest, etiqueta) {
     cupos, ventaOnline: tk.venta_tickets === true, inscripcion: null, inscripcionUrl: null,
     imagen: og ? og.url : null, fuenteId: "cclm", fuente: "Centro Cultural La Moneda",
     modificado: e.modified || null,
+    ...(textoDeHtml(e.excerpt && e.excerpt.rendered) ? { detalle: textoDeHtml(e.excerpt && e.excerpt.rendered), detalleFuente: "resumen" } : {}),
   };
 }
 async function adaptadorCclm() {
@@ -226,10 +236,52 @@ function deduplicar(lista) {
     const previo = mapa.get(k);
     if (!previo) { mapa.set(k, ev); continue; }
     previo.fuentes.push(...ev.fuentes.filter(f => !previo.fuentes.some(g => g.id === f.id)));
-    for (const campo of ["hora", "lugar", "imagen", "precio", "cupos", "inscripcionUrl"]) if (previo[campo] == null && ev[campo] != null) previo[campo] = ev[campo];
+    for (const campo of ["hora", "lugar", "imagen", "precio", "cupos", "inscripcionUrl", "detalle", "detalleFuente"]) if (previo[campo] == null && ev[campo] != null) previo[campo] = ev[campo];
     if (previo.gratis == null) previo.gratis = ev.gratis;
   }
   return [...mapa.values()];
+}
+
+// ── Detalle del evento (lectura limpia) ──────────────────────────────────────
+const CF_CUENTA = process.env.CLOUDFLARE_ACCOUNT_ID || "";
+const CF_TOKEN = process.env.CLOUDFLARE_BR_TOKEN || process.env.CLOUDFLARE_API_TOKEN || "";
+const MAX_LECTURAS = +process.env.PANORAMAS_MAX_LECTURAS || 25;
+const PRESUPUESTO_MS = 4 * 60 * 1000;   // el workflow corta a los 8 min: la lectura nunca debe llevarse todo el tiempo
+
+async function enriquecerDetalle(todos, previosPorId) {
+  const t0 = Date.now();
+  const est = { activa: !!(CF_CUENTA && CF_TOKEN) && !FIXTURES, intentos: 0, leidos: 0, heredados: 0, vacios: 0, errores: 0, motivo: null };
+  if (!est.activa) est.motivo = FIXTURES ? "modo prueba" : "faltan CLOUDFLARE_ACCOUNT_ID / token";
+  let cortado = false;
+  // Primero lo que viene pronto; las exposiciones en curso (llevan meses abiertas) al final.
+  const orden = [...todos].sort((a, b) => (a.enCurso ? 1 : 0) - (b.enCurso ? 1 : 0) || a.inicio.localeCompare(b.inicio));
+  for (const ev of orden) {
+    const p = previosPorId.get(ev.id);
+    if (p && p.detalle && p.detalleFuente === "cf") { ev.detalle = p.detalle; ev.detalleFuente = "cf"; est.heredados++; continue; }
+    if (!ev.detalle && p && p.detalle) { ev.detalle = p.detalle; ev.detalleFuente = p.detalleFuente || "resumen"; }   // respaldo anterior
+    if (p && p.detalleIntento) ev.detalleIntento = p.detalleIntento;
+    if (!est.activa || cortado || !ev.url || ev.detalleIntento === HOY) continue;            // un intento por evento y por día
+    if (est.intentos >= MAX_LECTURAS) { est.motivo = est.motivo || "tope de lecturas por corrida (el resto va en la próxima)"; continue; }
+    if (Date.now() - t0 > PRESUPUESTO_MS) { cortado = true; est.motivo = "presupuesto de tiempo agotado (el resto va en la próxima)"; continue; }
+    est.intentos++;
+    ev.detalleIntento = HOY;
+    const r = await pedirMarkdown(ev.url, { cuenta: CF_CUENTA, token: CF_TOKEN });
+    if (r.ok) {
+      const txt = leerMarkdown(r.markdown, ev.titulo);
+      if (txt) { ev.detalle = txt; ev.detalleFuente = "cf"; est.leidos++; } else est.vacios++;
+    } else {
+      est.errores++; est.motivo = r.motivo;
+      log(`  ✗ detalle de "${ev.titulo.slice(0, 50)}": ${r.motivo}`);
+      if (r.fatal) {
+        cortado = true; log("  ✗ Cloudflare: se corta la lectura de detalles (credenciales/permiso/límite)");
+        if (p && p.detalleIntento) ev.detalleIntento = p.detalleIntento; else delete ev.detalleIntento;   // no cuenta como intento: al arreglar el token se reintenta en la próxima corrida
+      }
+    }
+    await new Promise(res => setTimeout(res, GAP_MS));
+  }
+  for (const ev of todos) if (!ev.detalle) { delete ev.detalle; delete ev.detalleFuente; }
+  log(`\n== detalle ==\n  intentos ${est.intentos} · leídos ${est.leidos} · heredados ${est.heredados} · sin texto útil ${est.vacios} · errores ${est.errores}${est.motivo ? " · " + est.motivo : ""}`);
+  return { ...est, conDetalle: todos.filter(e => e.detalle).length, total: todos.length };
 }
 
 async function main() {
@@ -262,7 +314,8 @@ async function main() {
   todos = deduplicar(todos);
   todos.sort((a, b) => a.inicio.localeCompare(b.inicio) || a.titulo.localeCompare(b.titulo, "es"));
 
-  const out = { generatedAt: new Date().toISOString(), hoy: HOY, fuentes: fuentesEstado, eventos: todos };
+  const lectura = await enriquecerDetalle(todos, previosPorId);
+  const out = { generatedAt: new Date().toISOString(), hoy: HOY, fuentes: fuentesEstado, lectura, eventos: todos };
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.writeFileSync(OUT, JSON.stringify(out, null, FIXTURES ? 1 : 0));
   log(`\nlisto: ${todos.length} eventos → ${OUT}`);

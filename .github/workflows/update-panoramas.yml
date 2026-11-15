@@ -35,6 +35,14 @@ jobs:
 
       - name: Construir panoramas.json
         working-directory: modules/feed
+        # Detalle del evento (lectura limpia vía Cloudflare Browser Rendering /markdown).
+        # El token necesita el permiso "Browser Rendering - Edit". Si existe el secret
+        # CLOUDFLARE_BR_TOKEN se usa ese; si no, CLOUDFLARE_API_TOKEN (el del Worker).
+        # Sin permiso el build NO falla: queda el resumen de CCLM y el motivo en `lectura`.
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_BR_TOKEN: ${{ secrets.CLOUDFLARE_BR_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set -o pipefail
           timeout -s TERM -k 15 8m node scripts/build-panoramas.mjs 2>&1 | tee /tmp/panoramas.log
