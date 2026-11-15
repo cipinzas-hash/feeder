@@ -5103,21 +5103,14 @@ ${item.link}`);
       return { days, pct: (latest.market - ref.market) / ref.market * 100 };
     });
   }
-  function TimeframeDeltas({ history, dark, compact }) {
-    const deltas = computeTimeframeDeltas(history);
-    if (!deltas.length) return null;
-    return /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: compact ? 4 : 6, marginBottom: compact ? 0 : 12 } }, deltas.map(({ days, pct: pct2 }) => {
-      const up = pct2 != null && pct2 >= 0;
-      return /* @__PURE__ */ React.createElement("div", { key: days, style: { background: dark ? "#1a1a1a" : "#fafafa", border: dark ? "none" : "1px solid #eee", borderRadius: 8, padding: compact ? "4px 2px" : "8px 4px", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 8, color: dark ? "rgba(255,255,255,0.35)" : "#bbb", letterSpacing: 0.5, marginBottom: 3 } }, days, "D"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, color: pct2 == null ? dark ? "rgba(255,255,255,0.2)" : "#ddd" : up ? dark ? "#4caf80" : "#2e7d52" : "#e53935" } }, pct2 == null ? "\u2014" : `${up ? "+" : ""}${pct2.toFixed(1)}%`));
-    }));
-  }
-  function PriceChart({ history, precioVenta, compact, range, onSelectPoint, selectedPoint }) {
+  function PriceChart({ history, precioVenta, compact, range, onSelectPoint, selectedPoint, size, dark }) {
     const pts = (history || []).filter((h) => h.market);
     if (pts.length < 2) return null;
     const metrics = computeHistMetrics(history, range || "todo");
     const filtered = metrics.filtered;
     if (filtered.length < 2) return null;
-    const W = compact ? 180 : 290, H2 = compact ? 44 : 90, padL = 8, padR = 8, padT = 8, padB = compact ? 8 : 20;
+    const padB = compact ? 8 : 20, padL = 8, padR = 8, padT = 8;
+    const W = size ? size.w : compact ? 180 : 290, H2 = size ? Math.max(60, size.h - padB) : compact ? 44 : 90;
     const vals = [...filtered.map((h) => h.market), precioVenta].filter(Boolean);
     const minV = Math.min(...vals) * 0.93, maxV = Math.max(...vals) * 1.07, rng = maxV - minV || 1;
     const t0 = (/* @__PURE__ */ new Date(filtered[0].date + "T12:00:00")).getTime();
@@ -5133,11 +5126,11 @@ ${item.link}`);
     return /* @__PURE__ */ React.createElement(
       "svg",
       {
-        width: "100%",
+        width: size ? W : "100%",
         height: H2 + padB,
         viewBox: `0 0 ${W} ${H2 + padB}`,
         preserveAspectRatio: "xMidYMid meet",
-        style: { display: "block", maxWidth: W, overflow: "visible", cursor: compact ? "default" : "crosshair" },
+        style: { display: "block", maxWidth: size ? "none" : W, overflow: "visible", cursor: compact ? "default" : "crosshair" },
         onClick: compact ? null : (e) => {
           if (!onSelectPoint) return;
           const rect2 = e.currentTarget.getBoundingClientRect();
@@ -5155,7 +5148,7 @@ ${item.link}`);
       },
       !compact && [0.25, 0.5, 0.75].map((f2) => {
         const v = minV + f2 * rng;
-        return /* @__PURE__ */ React.createElement("line", { key: f2, x1: padL, y1: py(v), x2: W - padR, y2: py(v), stroke: "#f0f0f0", strokeWidth: "1" });
+        return /* @__PURE__ */ React.createElement("line", { key: f2, x1: padL, y1: py(v), x2: W - padR, y2: py(v), stroke: dark ? "#262626" : "#f0f0f0", strokeWidth: "1" });
       }),
       precioVenta && !compact && /* @__PURE__ */ React.createElement(
         "line",
@@ -5197,7 +5190,7 @@ ${item.link}`);
             textAnchor: i === 0 ? "start" : i === 2 ? "end" : "middle",
             fontSize: "8",
             fontFamily: "DM Sans,sans-serif",
-            fill: "#bbb"
+            fill: dark ? "#777" : "#bbb"
           },
           fmtDateShort(h.date)
         ));
@@ -5216,6 +5209,25 @@ ${item.link}`);
         fmtUSD(last.market)
       )
     );
+  }
+  function PriceChartFill(props) {
+    const ref = React.useRef(null);
+    const [size, setSize] = React.useState(null);
+    React.useLayoutEffect(() => {
+      const el = ref.current;
+      if (!el) return void 0;
+      const medir = () => {
+        const w = Math.floor(el.clientWidth), h = Math.floor(el.clientHeight);
+        if (w > 40 && h > 40) setSize((prev) => prev && prev.w === w && prev.h === h ? prev : { w, h });
+      };
+      medir();
+      const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(medir) : null;
+      if (ro) ro.observe(el);
+      return () => {
+        if (ro) ro.disconnect();
+      };
+    }, []);
+    return /* @__PURE__ */ React.createElement("div", { ref, style: { position: "absolute", inset: 0 } }, size && /* @__PURE__ */ React.createElement(PriceChart, { ...props, size, dark: true }));
   }
   function PokecriptoPage({ inventario, saveInventario, carpetas, saveCarpetas, darkCatalogo, saveDarkCatalogo, priceCache, savePriceCache, apiKey, saveApiKey }) {
     const inv = inventario || [];
@@ -6463,7 +6475,14 @@ ${item.link}`);
             setZoomExtra(null);
           }
         }
-      ), nav && flechaLado(1, "\u203A")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff", lineHeight: 1.1, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } }, detalle.name), /* @__PURE__ */ React.createElement("div", { style: { ...f2, fontSize: 10, color: "#777", lineHeight: 1.3 } }, "#", detalle.number, " \xB7 ", detalle.setName, colLabel ? ` \xB7 ${colLabel}` : ""), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", { style: { ...f2, fontSize: 9, background: est.bg, color: est.color, borderRadius: 20, padding: "2px 9px", fontWeight: 600 } }, est.label)), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 2 } }, /* @__PURE__ */ React.createElement("div", { style: lbl2 }, "mercado"), detalle.tcgMarket ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 28, fontWeight: 700, color: "#5c9cff", lineHeight: 1 } }, fmtUSD(detalle.tcgMarket)) : /* @__PURE__ */ React.createElement("div", { style: { ...f2, fontSize: 12, color: "rgba(255,255,255,0.3)" } }, "sin precio a\xFAn"), (detalle.tcgLow || detalle.tcgHigh) && /* @__PURE__ */ React.createElement("div", { style: { ...f2, fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 1 } }, "rango ", detalle.tcgLow ? fmtUSD(detalle.tcgLow) : "\u2014", " \u2013 ", detalle.tcgHigh ? fmtUSD(detalle.tcgHigh) : "\u2014")), /* @__PURE__ */ React.createElement("div", { style: { ...f2, fontSize: 11, color: "#aaa", display: "flex", gap: 8, flexWrap: "wrap" } }, esWatch && objetivo && /* @__PURE__ */ React.createElement("span", { style: { color: objAlcanzado ? "#4caf80" : "#ddd" } }, "\u{1F3AF} ", fmtUSD(objetivo), objAlcanzado ? " \xB7 alcanzado" : ""), !esWatch && cons && pagado > 0 && /* @__PURE__ */ React.createElement("span", null, "pagu\xE9 ", fmtUSD(pagado)), esCarpeta && detalle.precioVentaUSD > 0 && /* @__PURE__ */ React.createElement("span", { style: { color: detalle.tcgMarket ? detalle.precioVentaUSD > detalle.tcgMarket ? "#4caf80" : "#e57373" : "#aaa" } }, "venta ", fmtUSD(detalle.precioVentaUSD))), datosLinea.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { ...f2, fontSize: 10, color: "#888" } }, datosLinea.join(" \xB7 ")), detalle.notas && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 13, color: "rgba(255,255,255,0.5)", fontStyle: "italic", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" } }, '"', detalle.notas, '"'), /* @__PURE__ */ React.createElement("div", { style: { marginTop: "auto" } }, detalle.id && /* @__PURE__ */ React.createElement("button", { onClick: () => abrirRevisionCarta(detalle.id), style: { ...f2, fontSize: 9, fontWeight: 700, border: "1px solid rgba(255,255,255,0.2)", background: "transparent", color: "rgba(255,255,255,0.6)", borderRadius: 99, padding: "2px 8px", cursor: "pointer" } }, "\u{1F50D} revisar precio")))), hist.length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 } }, metricas.map(({ label, val, date, color: color2 }) => /* @__PURE__ */ React.createElement("div", { key: label, style: { background: "#1a1a1a", borderRadius: 8, padding: "5px 8px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", ...lbl2 } }, /* @__PURE__ */ React.createElement("span", null, label), date && /* @__PURE__ */ React.createElement("span", { style: { letterSpacing: 0 } }, fmtDateShort(date))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: val ? color2 : "rgba(255,255,255,0.2)", lineHeight: 1.1 } }, val ? fmtUSD(parseFloat(val)) : "\u2014")))), /* @__PURE__ */ React.createElement(TimeframeDeltas, { history: hist, dark: true, compact: true }), hist.length >= 2 && /* @__PURE__ */ React.createElement("div", { style: { background: "#1a1a1a", borderRadius: 10, padding: "8px 12px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { ...lbl2, letterSpacing: 2 } }, "historial \xB7 ", hist.length), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4 } }, ["7d", "30d", "todo"].map((rg) => /* @__PURE__ */ React.createElement(
+      ), nav && flechaLado(1, "\u203A")), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, color: "#fff", lineHeight: 1.1, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } }, detalle.name), /* @__PURE__ */ React.createElement("div", { style: { ...f2, fontSize: 10, color: "#777", lineHeight: 1.3 } }, "#", detalle.number, " \xB7 ", detalle.setName, colLabel ? ` \xB7 ${colLabel}` : ""), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", { style: { ...f2, fontSize: 9, background: est.bg, color: est.color, borderRadius: 20, padding: "2px 9px", fontWeight: 600 } }, est.label)), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 2 } }, /* @__PURE__ */ React.createElement("div", { style: lbl2 }, "mercado"), detalle.tcgMarket ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 28, fontWeight: 700, color: "#5c9cff", lineHeight: 1 } }, fmtUSD(detalle.tcgMarket)) : /* @__PURE__ */ React.createElement("div", { style: { ...f2, fontSize: 12, color: "rgba(255,255,255,0.3)" } }, "sin precio a\xFAn"), (detalle.tcgLow || detalle.tcgHigh) && /* @__PURE__ */ React.createElement("div", { style: { ...f2, fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 1 } }, "rango ", detalle.tcgLow ? fmtUSD(detalle.tcgLow) : "\u2014", " \u2013 ", detalle.tcgHigh ? fmtUSD(detalle.tcgHigh) : "\u2014")), /* @__PURE__ */ React.createElement("div", { style: { ...f2, fontSize: 11, color: "#aaa", display: "flex", gap: 8, flexWrap: "wrap" } }, esWatch && objetivo && /* @__PURE__ */ React.createElement("span", { style: { color: objAlcanzado ? "#4caf80" : "#ddd" } }, "\u{1F3AF} ", fmtUSD(objetivo), objAlcanzado ? " \xB7 alcanzado" : ""), !esWatch && cons && pagado > 0 && /* @__PURE__ */ React.createElement("span", null, "pagu\xE9 ", fmtUSD(pagado)), esCarpeta && detalle.precioVentaUSD > 0 && /* @__PURE__ */ React.createElement("span", { style: { color: detalle.tcgMarket ? detalle.precioVentaUSD > detalle.tcgMarket ? "#4caf80" : "#e57373" : "#aaa" } }, "venta ", fmtUSD(detalle.precioVentaUSD))), datosLinea.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { ...f2, fontSize: 10, color: "#888" } }, datosLinea.join(" \xB7 ")), detalle.notas && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 13, color: "rgba(255,255,255,0.5)", fontStyle: "italic", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" } }, '"', detalle.notas, '"'), /* @__PURE__ */ React.createElement("div", { style: { marginTop: "auto" } }, detalle.id && /* @__PURE__ */ React.createElement("button", { onClick: () => abrirRevisionCarta(detalle.id), style: { ...f2, fontSize: 9, fontWeight: 700, border: "1px solid rgba(255,255,255,0.2)", background: "transparent", color: "rgba(255,255,255,0.6)", borderRadius: 99, padding: "2px 8px", cursor: "pointer" } }, "\u{1F50D} revisar precio")))), hist.length >= 2 && (() => {
+        const deltas = computeTimeframeDeltas(hist);
+        const celdas = [
+          ...metricas.map((m) => ({ label: m.label, txt: m.val ? fmtUSD(parseFloat(m.val)) : "\u2014", color: m.val ? m.color : "rgba(255,255,255,0.2)", sub: m.date ? fmtDateShort(m.date) : "" })),
+          ...deltas.map((d) => ({ label: `${d.days}D`, txt: d.pct == null ? "\u2014" : `${d.pct >= 0 ? "+" : ""}${d.pct.toFixed(1)}%`, color: d.pct == null ? "rgba(255,255,255,0.2)" : d.pct >= 0 ? "#4caf80" : "#e57373", sub: "" }))
+        ];
+        return /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6, flex: "none" } }, celdas.map((c) => /* @__PURE__ */ React.createElement("div", { key: c.label, style: { background: "#1a1a1a", borderRadius: 8, padding: "6px 8px", minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", gap: 4, ...lbl2 } }, /* @__PURE__ */ React.createElement("span", null, c.label), /* @__PURE__ */ React.createElement("span", { style: { letterSpacing: 0 } }, c.sub)), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: c.color, lineHeight: 1.15, whiteSpace: "nowrap" } }, c.txt))));
+      })(), hist.length >= 2 ? /* @__PURE__ */ React.createElement("div", { style: { flex: "1 1 150px", minHeight: 150, background: "#1a1a1a", borderRadius: 10, padding: "8px 12px", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: "none", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { ...lbl2, letterSpacing: 2 } }, "historial \xB7 ", hist.length), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4 } }, ["7d", "30d", "todo"].map((rg) => /* @__PURE__ */ React.createElement(
         "button",
         {
           key: rg,
@@ -6484,8 +6503,8 @@ ${item.link}`);
           }
         },
         rg
-      )))), /* @__PURE__ */ React.createElement(
-        PriceChart,
+      )))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, position: "relative" } }, /* @__PURE__ */ React.createElement(
+        PriceChartFill,
         {
           history: hist,
           precioVenta: esCarpeta ? detalle.precioVentaUSD : esWatch ? objetivo : void 0,
@@ -6493,7 +6512,7 @@ ${item.link}`);
           onSelectPoint: (p) => setSelectedPoint(selectedPoint?.date === p.date && selectedPoint?.market === p.market ? null : p),
           selectedPoint
         }
-      ), selectedPoint && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 6, display: "flex", alignItems: "center", gap: 8, borderTop: "1px dashed #2a2a2a", paddingTop: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 15, fontWeight: 700, color: "#fff" } }, fmtUSD(selectedPoint.market)), /* @__PURE__ */ React.createElement("span", { style: { ...f2, fontSize: 10, color: "rgba(255,255,255,0.4)", flex: 1 } }, selectedPoint.date), confirmDelSnap?.date === selectedPoint.date && confirmDelSnap?.market === selectedPoint.market ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { style: { ...f2, fontSize: 11, color: "#ff8080" } }, "\xBFborrar?"), /* @__PURE__ */ React.createElement("button", { onClick: () => deleteSnapshot(detalle, selectedPoint), style: { background: "#e53935", border: "none", borderRadius: 6, padding: "3px 10px", cursor: "pointer", ...f2, fontSize: 11, color: "#fff" } }, "s\xED"), /* @__PURE__ */ React.createElement("button", { onClick: () => setConfirmDelSnap(null), style: { background: "transparent", border: "1px dashed #444", borderRadius: 6, padding: "3px 10px", cursor: "pointer", ...f2, fontSize: 11, color: "#999" } }, "no")) : /* @__PURE__ */ React.createElement(
+      )), selectedPoint && /* @__PURE__ */ React.createElement("div", { style: { flex: "none", marginTop: 6, display: "flex", alignItems: "center", gap: 8, borderTop: "1px dashed #2a2a2a", paddingTop: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 15, fontWeight: 700, color: "#fff" } }, fmtUSD(selectedPoint.market)), /* @__PURE__ */ React.createElement("span", { style: { ...f2, fontSize: 10, color: "rgba(255,255,255,0.4)", flex: 1 } }, selectedPoint.date), confirmDelSnap?.date === selectedPoint.date && confirmDelSnap?.market === selectedPoint.market ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { style: { ...f2, fontSize: 11, color: "#ff8080" } }, "\xBFborrar?"), /* @__PURE__ */ React.createElement("button", { onClick: () => deleteSnapshot(detalle, selectedPoint), style: { background: "#e53935", border: "none", borderRadius: 6, padding: "3px 10px", cursor: "pointer", ...f2, fontSize: 11, color: "#fff" } }, "s\xED"), /* @__PURE__ */ React.createElement("button", { onClick: () => setConfirmDelSnap(null), style: { background: "transparent", border: "1px dashed #444", borderRadius: 6, padding: "3px 10px", cursor: "pointer", ...f2, fontSize: 11, color: "#999" } }, "no")) : /* @__PURE__ */ React.createElement(
         "button",
         {
           onClick: () => setConfirmDelSnap(selectedPoint),
@@ -6501,7 +6520,7 @@ ${item.link}`);
           style: { background: "transparent", border: "1px dashed #5a2020", borderRadius: 8, padding: "3px 9px", ...f2, fontSize: 10, color: "#e08080", cursor: detalle.id ? "pointer" : "default" }
         },
         "\xD7 borrar"
-      ))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: "auto" } }, ctx === "coleccion" && catalogEntry && /* @__PURE__ */ React.createElement("button", { onClick: () => toggleDark(detalle.cardId), style: btnAcc(cons ? "transparent" : "#2e7d52", cons ? "#999" : "#fff") }, cons ? "\u21BA volver a hunting" : "\u2713 marcar conseguida"), carta && /* @__PURE__ */ React.createElement(React.Fragment, null, carta.estado === "hunting" && /* @__PURE__ */ React.createElement("button", { onClick: () => updCarta(carta.id, { estado: "sin_publicar", fechaCompra: carta.fechaCompra || hoy }), style: btnAcc("#7c4dff") }, "\u2713 ya la consegu\xED"), esCarpeta && carta.estado !== "vendida" && carta.estado !== "hunting" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { onClick: () => updCarta(carta.id, { estado: carta.estado === "sin_publicar" ? "a_la_venta" : "sin_publicar" }), style: btnAcc("#2a2a2a") }, carta.estado === "sin_publicar" ? "\u{1F3F7}\uFE0F a la venta" : "\u{1F4E6} quitar"), /* @__PURE__ */ React.createElement("button", { onClick: () => setVendModal(true), style: btnAcc("#2e7d52") }, "\u2713 vender")), /* @__PURE__ */ React.createElement("button", { onClick: () => setEditMode(true), style: btnAcc("transparent", "#999") }, esWatch ? "\u270E objetivo" : "\u270E editar"), /* @__PURE__ */ React.createElement(
+      ))) : /* @__PURE__ */ React.createElement("div", { style: { flex: "1 1 150px", minHeight: 90, background: "#1a1a1a", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", ...f2, fontSize: 11, color: "rgba(255,255,255,0.3)", textAlign: "center", padding: "0 16px" } }, "el historial aparece cuando haya al menos dos snapshots de precio"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flex: "none" } }, ctx === "coleccion" && catalogEntry && /* @__PURE__ */ React.createElement("button", { onClick: () => toggleDark(detalle.cardId), style: btnAcc(cons ? "transparent" : "#2e7d52", cons ? "#999" : "#fff") }, cons ? "\u21BA volver a hunting" : "\u2713 marcar conseguida"), carta && /* @__PURE__ */ React.createElement(React.Fragment, null, carta.estado === "hunting" && /* @__PURE__ */ React.createElement("button", { onClick: () => updCarta(carta.id, { estado: "sin_publicar", fechaCompra: carta.fechaCompra || hoy }), style: btnAcc("#7c4dff") }, "\u2713 ya la consegu\xED"), esCarpeta && carta.estado !== "vendida" && carta.estado !== "hunting" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { onClick: () => updCarta(carta.id, { estado: carta.estado === "sin_publicar" ? "a_la_venta" : "sin_publicar" }), style: btnAcc("#2a2a2a") }, carta.estado === "sin_publicar" ? "\u{1F3F7}\uFE0F a la venta" : "\u{1F4E6} quitar"), /* @__PURE__ */ React.createElement("button", { onClick: () => setVendModal(true), style: btnAcc("#2e7d52") }, "\u2713 vender")), /* @__PURE__ */ React.createElement("button", { onClick: () => setEditMode(true), style: btnAcc("transparent", "#999") }, esWatch ? "\u270E objetivo" : "\u270E editar"), /* @__PURE__ */ React.createElement(
         "button",
         {
           onClick: () => {

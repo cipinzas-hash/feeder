@@ -392,13 +392,15 @@ function TimeframeDeltas({history, dark, compact}){
 }
 
 // ── Gráfico SVG con eje de fecha real ─────────────────────────────────────────
-function PriceChart({history, precioVenta, compact, range, onSelectPoint, selectedPoint}){
+function PriceChart({history, precioVenta, compact, range, onSelectPoint, selectedPoint, size, dark}){
   const pts=(history||[]).filter(h=>h.market);
   if(pts.length<2) return null;
   const metrics=computeHistMetrics(history,range||"todo");
   const filtered=metrics.filtered;
   if(filtered.length<2) return null;
-  const W=compact?180:290, H=compact?44:90, padL=8, padR=8, padT=8, padB=compact?8:20;
+  const padB=compact?8:20, padL=8, padR=8, padT=8;
+  // `size` ({w,h} medidos por PriceChartFill) hace que el gráfico llene su contenedor; sin él conserva el tamaño fijo de siempre.
+  const W=size?size.w:(compact?180:290), H=size?Math.max(60,size.h-padB):(compact?44:90);
   const vals=[...filtered.map(h=>h.market), precioVenta].filter(Boolean);
   const minV=Math.min(...vals)*0.93, maxV=Math.max(...vals)*1.07, rng=maxV-minV||1;
   const t0=new Date(filtered[0].date+"T12:00:00").getTime();
@@ -412,8 +414,8 @@ function PriceChart({history, precioVenta, compact, range, onSelectPoint, select
   const up=last.market>=first.market;
   const color=precioVenta?(last.market<precioVenta?"#2e7d52":"#e53935"):(up?"#2e7d52":"#e53935");
   return(
-    <svg width="100%" height={H+padB} viewBox={`0 0 ${W} ${H+padB}`} preserveAspectRatio="xMidYMid meet"
-      style={{display:"block",maxWidth:W,overflow:"visible",cursor:compact?"default":"crosshair"}}
+    <svg width={size?W:"100%"} height={H+padB} viewBox={`0 0 ${W} ${H+padB}`} preserveAspectRatio="xMidYMid meet"
+      style={{display:"block",maxWidth:size?"none":W,overflow:"visible",cursor:compact?"default":"crosshair"}}
       onClick={compact?null:e=>{
         if(!onSelectPoint) return;
         const rect=e.currentTarget.getBoundingClientRect();
@@ -428,7 +430,7 @@ function PriceChart({history, precioVenta, compact, range, onSelectPoint, select
       {/* Grid horizontal */}
       {!compact&&[0.25,0.5,0.75].map(f=>{
         const v=minV+f*rng;
-        return <line key={f} x1={padL} y1={py(v)} x2={W-padR} y2={py(v)} stroke="#f0f0f0" strokeWidth="1"/>;
+        return <line key={f} x1={padL} y1={py(v)} x2={W-padR} y2={py(v)} stroke={dark?"#262626":"#f0f0f0"} strokeWidth="1"/>;
       })}
       {/* Línea precio venta */}
       {precioVenta&&!compact&&<line x1={padL} y1={py(precioVenta)} x2={W-padR} y2={py(precioVenta)}
@@ -448,7 +450,7 @@ function PriceChart({history, precioVenta, compact, range, onSelectPoint, select
         const show=[filtered[0], filtered[Math.floor(filtered.length/2)], filtered[filtered.length-1]];
         return show.map((h,i)=>(
           <text key={i} x={px(h.date)} y={H+padB-2} textAnchor={i===0?"start":i===2?"end":"middle"}
-            fontSize="8" fontFamily="DM Sans,sans-serif" fill="#bbb">{fmtDateShort(h.date)}</text>
+            fontSize="8" fontFamily="DM Sans,sans-serif" fill={dark?"#777":"#bbb"}>{fmtDateShort(h.date)}</text>
         ));
       })()}
       {/* Label último valor */}
@@ -458,6 +460,22 @@ function PriceChart({history, precioVenta, compact, range, onSelectPoint, select
       </text>
     </svg>
   );
+}
+
+// Gráfico que llena su contenedor (ancho y alto; el padre debe ser position:relative): mide el recuadro disponible y dibuja a 1:1, sin deformar textos.
+function PriceChartFill(props){
+  const ref=React.useRef(null);
+  const [size,setSize]=React.useState(null);
+  React.useLayoutEffect(()=>{
+    const el=ref.current;
+    if(!el) return undefined;
+    const medir=()=>{ const w=Math.floor(el.clientWidth), h=Math.floor(el.clientHeight); if(w>40&&h>40) setSize(prev=>(prev&&prev.w===w&&prev.h===h)?prev:{w,h}); };
+    medir();
+    const ro=typeof ResizeObserver!=="undefined"?new ResizeObserver(medir):null;
+    if(ro) ro.observe(el);
+    return ()=>{ if(ro) ro.disconnect(); };
+  },[]);
+  return <div ref={ref} style={{position:"absolute",inset:0}}>{size&&<PriceChart {...props} size={size} dark={true}/>}</div>;
 }
 
 // ─── PokecriptoPage ─────────────────────────────────────────────────────────────
@@ -1917,20 +1935,28 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                 </div>
               </div>
             </div>
-            {/* métricas y variación por periodo en dos filas compactas */}
-            {hist.length>=2&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
-              {metricas.map(({label,val,date,color})=>(
-                <div key={label} style={{background:"#1a1a1a",borderRadius:8,padding:"5px 8px"}}>
-                  <div style={{display:"flex",justifyContent:"space-between",...lbl}}><span>{label}</span>{date&&<span style={{letterSpacing:0}}>{fmtDateShort(date)}</span>}</div>
-                  <div style={{fontFamily:"'Caveat',cursive",fontSize:16,fontWeight:700,color:val?color:"rgba(255,255,255,0.2)",lineHeight:1.1}}>{val?fmtUSD(parseFloat(val)):"—"}</div>
+            {/* métricas y variación por periodo: una sola rejilla de 4 columnas (ATH · ATL · σ · 7D / 30D · 90D · 180D · 360D) */}
+            {hist.length>=2&&(()=>{
+              const deltas=computeTimeframeDeltas(hist);
+              const celdas=[
+                ...metricas.map(m=>({label:m.label,txt:m.val?fmtUSD(parseFloat(m.val)):"—",color:m.val?m.color:"rgba(255,255,255,0.2)",sub:m.date?fmtDateShort(m.date):""})),
+                ...deltas.map(d=>({label:`${d.days}D`,txt:d.pct==null?"—":`${d.pct>=0?"+":""}${d.pct.toFixed(1)}%`,color:d.pct==null?"rgba(255,255,255,0.2)":d.pct>=0?"#4caf80":"#e57373",sub:""})),
+              ];
+              return(
+                <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,flex:"none"}}>
+                  {celdas.map(c=>(
+                    <div key={c.label} style={{background:"#1a1a1a",borderRadius:8,padding:"6px 8px",minWidth:0}}>
+                      <div style={{display:"flex",justifyContent:"space-between",gap:4,...lbl}}><span>{c.label}</span><span style={{letterSpacing:0}}>{c.sub}</span></div>
+                      <div style={{fontFamily:"'Caveat',cursive",fontSize:16,fontWeight:700,color:c.color,lineHeight:1.15,whiteSpace:"nowrap"}}>{c.txt}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>}
-            <TimeframeDeltas history={hist} dark={true} compact={true}/>
-            {/* gráfico con rangos y borrar snapshot */}
-            {hist.length>=2&&(
-              <div style={{background:"#1a1a1a",borderRadius:10,padding:"8px 12px"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+              );
+            })()}
+            {/* gráfico: la tarjeta absorbe todo el alto libre y el gráfico la llena de lado a lado */}
+            {hist.length>=2?(
+              <div style={{flex:"1 1 150px",minHeight:150,background:"#1a1a1a",borderRadius:10,padding:"8px 12px",display:"flex",flexDirection:"column"}}>
+                <div style={{flex:"none",display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
                   <div style={{...lbl,letterSpacing:2}}>historial · {hist.length}</div>
                   <div style={{display:"flex",gap:4}}>
                     {["7d","30d","todo"].map(rg=>(
@@ -1940,11 +1966,13 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                     ))}
                   </div>
                 </div>
-                <PriceChart history={hist} precioVenta={esCarpeta?detalle.precioVentaUSD:esWatch?objetivo:undefined} range={darkDetailRange}
-                  onSelectPoint={p=>setSelectedPoint(selectedPoint?.date===p.date&&selectedPoint?.market===p.market?null:p)}
-                  selectedPoint={selectedPoint}/>
+                <div style={{flex:1,minHeight:0,position:"relative"}}>
+                  <PriceChartFill history={hist} precioVenta={esCarpeta?detalle.precioVentaUSD:esWatch?objetivo:undefined} range={darkDetailRange}
+                    onSelectPoint={p=>setSelectedPoint(selectedPoint?.date===p.date&&selectedPoint?.market===p.market?null:p)}
+                    selectedPoint={selectedPoint}/>
+                </div>
                 {selectedPoint&&(
-                  <div style={{marginTop:6,display:"flex",alignItems:"center",gap:8,borderTop:"1px dashed #2a2a2a",paddingTop:6}}>
+                  <div style={{flex:"none",marginTop:6,display:"flex",alignItems:"center",gap:8,borderTop:"1px dashed #2a2a2a",paddingTop:6}}>
                     <span style={{fontFamily:"'Caveat',cursive",fontSize:15,fontWeight:700,color:"#fff"}}>{fmtUSD(selectedPoint.market)}</span>
                     <span style={{...f,fontSize:10,color:"rgba(255,255,255,0.4)",flex:1}}>{selectedPoint.date}</span>
                     {confirmDelSnap?.date===selectedPoint.date&&confirmDelSnap?.market===selectedPoint.market
@@ -1958,9 +1986,13 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                   </div>
                 )}
               </div>
+            ):(
+              <div style={{flex:"1 1 150px",minHeight:90,background:"#1a1a1a",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",...f,fontSize:11,color:"rgba(255,255,255,0.3)",textAlign:"center",padding:"0 16px"}}>
+                el historial aparece cuando haya al menos dos snapshots de precio
+              </div>
             )}
             {/* acciones en una sola fila, según el contexto */}
-            <div style={{display:"flex",gap:6,marginTop:"auto"}}>
+            <div style={{display:"flex",gap:6,flex:"none"}}>
               {ctx==="coleccion"&&catalogEntry&&<button onClick={()=>toggleDark(detalle.cardId)} style={btnAcc(cons?"transparent":"#2e7d52",cons?"#999":"#fff")}>{cons?"↺ volver a hunting":"✓ marcar conseguida"}</button>}
               {carta&&<>
                 {carta.estado==="hunting"&&<button onClick={()=>updCarta(carta.id,{estado:"sin_publicar",fechaCompra:carta.fechaCompra||hoy})} style={btnAcc("#7c4dff")}>✓ ya la conseguí</button>}
