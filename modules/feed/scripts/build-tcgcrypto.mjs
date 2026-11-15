@@ -161,6 +161,7 @@ async function construirYugioh() {
         if (atributo || tipo || texto) { f = { nombre: quitaParentesis(p.name), atributo: atributo.toUpperCase(), tipo, arquetipo: "", texto, cardType: ext(p, "Card Type", "CardType"), atk: ext(p, "Attack"), def: ext(p, "Defense") }; porExt++; }
       }
       if (!f) { sinClasificar++; if (muestraSin.length < 15) muestraSin.push(p.name + " [" + numero + "]"); continue; }
+      if (/token|non-game/i.test(f.cardType || "")) continue;   // fichas y cartas fuera de juego: no son coleccionables
       const colecs = coleccionesYgo(f);
       if (!colecs.length) continue;
       const k = norm(f.nombre || p.name);

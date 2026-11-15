@@ -58,4 +58,36 @@ almacen.set("angst-tcgcrypto-estado-v1", "{roto");
 E.rehidratarEstado();
 assert.equal(E.leerEstado().tcg, "yugioh", "clave corrupta: estado vacío, sin romper");
 
+
+// ── ediciones: la más reciente primero; la carta va en la edición de su versión elegida o de su impresión más reciente ──
+const datos = { sets: ["Vieja", "Media", "Nueva"], setFechas: ["2010-01-01", "2018-05-05", "2025-09-09"], setIds: [1, 2, 3] };
+const rank = L.rankSets(datos);
+assert.deepEqual(rank, [0, 1, 2]);
+assert.deepEqual(L.rankSets({ sets: ["a", "b"], setFechas: ["", ""], setIds: [9, 4] }), [1, 0], "sin fecha, por id de set");
+const tri = { k: "tri", n: "Tri", c: ["dark"], v: [[10, "", 0, "V-001", "Common", 1, 1, 1], [11, "", 2, "N-007", "Rare", 3, 3, 3]] };
+assert.equal(L.versionReferencia(tri, null, rank)[2], 2, "sin elegir: la impresión más reciente");
+assert.equal(L.versionReferencia(tri, { e: "10|" }, rank)[2], 0, "elegida: manda sobre la reciente");
+const g = L.agruparPorEdicion([dm, tri, sin], {}, datos, rank);
+assert.deepEqual(g.map(x => x.nombre), ["Nueva", "Media", "Vieja"].filter(n => g.some(x => x.nombre === n)), "orden de más reciente a más antigua");
+assert.equal(g[0].nombre, "Nueva");
+assert.equal(g.find(x => x.nombre === "Vieja").cartas.length, 1);
+
+// ── filtros de biblioteca: O dentro de un campo, Y entre campos ──
+const a = { k: "a", n: "A", c: ["x"], m: { t: "Monstruo", a: "DARK", lv: 4, ar: "Eldlich" }, v: [[1, "", 0, "1", "R", 1, 1, 1]] };
+const b = { k: "b", n: "B", c: ["x"], m: { t: "Mágica", r: "Quick-Play" }, v: [[2, "", 0, "2", "R", 1, 1, 1]] };
+assert.equal(L.pasaFiltros(a, { t: ["Monstruo"], lv: ["4", "5"] }), true);
+assert.equal(L.pasaFiltros(a, { t: ["Mágica", "Trampa"] }), false);
+assert.equal(L.pasaFiltros(b, { lv: ["4"] }), false, "un campo ausente no pasa un filtro que lo pide");
+assert.equal(L.pasaFiltros(b, {}), true);
+assert.equal(L.cuentaFiltros({ t: ["a", "b"], lv: ["4"], x: [] }), 3);
+assert.deepEqual(L.valoresFiltro([a, b], "t"), ["Mágica", "Monstruo"]);
+assert.deepEqual(L.valoresFiltro([{ m: { lv: 10 }, v: [] }, { m: { lv: 2 }, v: [] }], "lv"), ["2", "10"], "numéricos ordenados como números");
+assert.equal(L.filtrarCartas([a, b], {}, { filtros: { t: ["Monstruo"] } }, sets).length, 1);
+assert.equal(L.filtrarCartas([a, b], {}, { texto: "eldlich" }, sets).length, 1, "el texto busca también en el arquetipo");
+assert.equal(L.urlImagenGrande(5), "https://product-images.tcgplayer.com/fit-in/1000x1000/5.jpg");
+
+// ── vista elegida ──
+E.elegirVista("az"); assert.equal(E.leerEstado().vista, "az");
+E.elegirVista("loquesea"); assert.equal(E.leerEstado().vista, "edicion", "valor desconocido: vuelve a edición");
+
 console.log("tcgcrypto: OK");

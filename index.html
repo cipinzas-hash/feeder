@@ -3786,11 +3786,11 @@ var __angst = (() => {
   // modules/tcgcrypto/estado.js
   var KEY3 = "angst-tcgcrypto-estado-v1";
   var obj = (o) => o && typeof o === "object" && !Array.isArray(o) ? o : {};
-  var VACIO = () => ({ tcg: "yugioh", cartas: {} });
+  var VACIO = () => ({ tcg: "yugioh", vista: "edicion", cartas: {} });
   function leer3() {
     try {
       const v = JSON.parse(globalThis.localStorage.getItem(KEY3));
-      if (v && typeof v === "object" && !Array.isArray(v)) return { tcg: typeof v.tcg === "string" ? v.tcg : "yugioh", cartas: obj(v.cartas) };
+      if (v && typeof v === "object" && !Array.isArray(v)) return { tcg: typeof v.tcg === "string" ? v.tcg : "yugioh", vista: v.vista === "az" ? "az" : "edicion", cartas: obj(v.cartas) };
     } catch (e) {
     }
     return VACIO();
@@ -3811,6 +3811,9 @@ var __angst = (() => {
   }
   function elegirTcg(tcg) {
     guardar3({ ...cache3, tcg });
+  }
+  function elegirVista(vista) {
+    guardar3({ ...cache3, vista: vista === "az" ? "az" : "edicion" });
   }
   var marcaDe = (estado, tcg, colec, k) => obj(obj(obj(estado.cartas)[tcg])[colec])[k] || null;
   var esVacia = (m) => !m.c && !m.e && !(m.q > 1) && !m.cu && !m.nt;
@@ -16571,16 +16574,63 @@ ${url}`);
     return { color: "#e5383b", texto: null };
   }
   var sinTildes3 = (s) => String(s || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
-  function filtrarCartas(cartas, marcas, { texto = "", modo = "todas" } = {}, sets = []) {
+  var valorFiltro = (carta, id) => carta.m && carta.m[id] != null ? String(carta.m[id]) : "";
+  function pasaFiltros(carta, filtros) {
+    for (const id of Object.keys(filtros || {})) {
+      const vals = filtros[id];
+      if (vals && vals.length && !vals.includes(valorFiltro(carta, id))) return false;
+    }
+    return true;
+  }
+  var cuentaFiltros = (filtros) => Object.values(filtros || {}).reduce((a, v) => a + (v ? v.length : 0), 0);
+  function valoresFiltro(cartas, id) {
+    const set = /* @__PURE__ */ new Set();
+    for (const c of cartas) {
+      const v = valorFiltro(c, id);
+      if (v) set.add(v);
+    }
+    const arr = [...set];
+    return arr.every((v) => /^\d+$/.test(v)) ? arr.sort((a, b) => Number(a) - Number(b)) : arr.sort((a, b) => a.localeCompare(b));
+  }
+  function filtrarCartas(cartas, marcas, { texto = "", modo = "todas", filtros = null } = {}, sets = []) {
     const q = sinTildes3(texto).trim();
     return cartas.filter((c) => {
       const tiene = tieneCarta(marcas ? marcas[c.k] : null);
       if (modo === "faltan" && tiene) return false;
       if (modo === "tengo" && !tiene) return false;
+      if (filtros && !pasaFiltros(c, filtros)) return false;
       if (!q) return true;
-      if (sinTildes3(c.n).includes(q)) return true;
+      if (sinTildes3(c.n).includes(q) || c.m && c.m.ar && sinTildes3(c.m.ar).includes(q)) return true;
       return c.v.some((v) => sinTildes3(`${v[3]} ${v[4]} ${sets[v[2]] || ""}`).includes(q));
     });
+  }
+  function rankSets(datos) {
+    const n = datos && datos.sets ? datos.sets.length : 0;
+    const fechas = datos && datos.setFechas || [], ids = datos && datos.setIds || [];
+    const orden = Array.from({ length: n }, (_, i) => i).sort((a, b) => String(fechas[a] || "").localeCompare(String(fechas[b] || "")) || (ids[a] || 0) - (ids[b] || 0) || a - b);
+    const rank = new Array(n);
+    orden.forEach((idx, pos) => {
+      rank[idx] = pos;
+    });
+    return rank;
+  }
+  function versionReferencia(carta, marca, rank) {
+    const el = versionElegida(carta, marca);
+    if (el) return el;
+    let mejor = null;
+    for (const v of carta.v) if (!mejor || (rank[v[2]] ?? -1) > (rank[mejor[2]] ?? -1)) mejor = v;
+    return mejor;
+  }
+  var porNumero = (a, b) => String(a.num).localeCompare(String(b.num), void 0, { numeric: true }) || a.carta.n.localeCompare(b.carta.n);
+  function agruparPorEdicion(cartas, marcas, datos, rank) {
+    const mapa3 = /* @__PURE__ */ new Map();
+    for (const c of cartas) {
+      const v = versionReferencia(c, marcas ? marcas[c.k] : null, rank);
+      if (!v) continue;
+      if (!mapa3.has(v[2])) mapa3.set(v[2], []);
+      mapa3.get(v[2]).push({ carta: c, num: v[3] || "" });
+    }
+    return [...mapa3.entries()].sort((a, b) => (rank[b[0]] ?? -1) - (rank[a[0]] ?? -1)).map(([setIdx, filas]) => ({ setIdx, nombre: datos.sets[setIdx] || "", fecha: datos.setFechas && datos.setFechas[setIdx] || "", cartas: filas.sort(porNumero).map((f2) => f2.carta) }));
   }
   var usd = (n) => n == null ? "\u2014" : "$" + (n >= 100 ? Math.round(n).toLocaleString("en-US") : n.toFixed(2));
   function etiquetaVersion(v, sets) {
@@ -16590,6 +16640,7 @@ ${url}`);
     const u = String(tpl || "").replace("{id}", String(productId));
     return ancho ? u.replace(/_\d+w\./, `_${ancho}w.`) : u;
   }
+  var urlImagenGrande = (productId) => `https://product-images.tcgplayer.com/fit-in/1000x1000/${productId}.jpg`;
   function edadDatos2(generatedAt, ahora) {
     const t = generatedAt ? Date.parse(generatedAt) : NaN;
     if (!Number.isFinite(t)) return { texto: "sin fecha", vieja: true };
@@ -16600,7 +16651,7 @@ ${url}`);
   }
 
   // modules/tcgcrypto/TcgCryptoPage.jsx
-  var { useState: useState38, useEffect: useEffect25, useRef: useRef23 } = React;
+  var { useState: useState38, useEffect: useEffect25, useRef: useRef23, useMemo: useMemo13 } = React;
   var FUENTE4 = "'DM Sans',sans-serif";
   var CAVEAT2 = "'Caveat',cursive";
   var ROJO2 = "#e5383b";
@@ -16637,23 +16688,69 @@ ${url}`);
       /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#9a9aa0" } }, usd(r.valorConseguido), " de ", usd(r.valorTotal), r.sinPrecio ? ` \xB7 ${r.sinPrecio} sin precio` : "")
     );
   }
-  function FilaCarta({ c, marca, datos, onClick }) {
+  function FilaCarta({ c, marca, datos, rank, onClick, onZoom }) {
     const tiene = tieneCarta(marca);
     const el = versionElegida(c, marca);
-    const ref = el || c.v[0];
+    const ref = versionReferencia(c, marca, rank) || c.v[0];
     const precio = precioReferencia(c, marca);
-    return /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { style: { flex: "none", display: "flex", alignItems: "center", gap: 6, width: "100%", boxSizing: "border-box", padding: "4px 10px 4px 4px", borderRadius: 8, background: "#111114", border: `2px solid ${tiene ? VERDE : ROJO2}`, color: "#fff", fontFamily: FUENTE4 } }, /* @__PURE__ */ React.createElement("button", { "aria-label": `ver imagen de ${c.n}`, onClick: onZoom, style: { ...reset2, flex: "none", width: 44, minHeight: 56, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Miniatura, { tpl: datos.imgTpl, pid: ref && ref[0], ancho: 36, alto: 50 })), /* @__PURE__ */ React.createElement("button", { onClick, style: { ...reset2, flex: 1, minWidth: 0, minHeight: 56, display: "flex", alignItems: "center", gap: 10, textAlign: "left", color: "#fff", fontFamily: FUENTE4 } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, c.n), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#9a9aa0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, el ? etiquetaVersion(el, datos.sets) : `${c.v.length} ${c.v.length === 1 ? "versi\xF3n" : "versiones"}`)), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 13, color: precio == null ? "#6a6a70" : "#eaeaea" } }, el || datos.agrupar === "producto" ? usd(precio) : `desde ${usd(precio)}`)));
+  }
+  function Zoom({ zoom, datos, onIdx, onCerrar }) {
+    const { items, idx } = zoom;
+    const it = items[idx];
+    const [falla, setFalla] = useState38(false);
+    useEffect25(() => {
+      setFalla(false);
+    }, [it && it.pid]);
+    useEffect25(() => {
+      const k = (e) => {
+        if (e.key === "Escape") onCerrar();
+      };
+      window.addEventListener("keydown", k);
+      return () => window.removeEventListener("keydown", k);
+    }, []);
+    if (!it) return null;
+    const nav = items.length > 1;
+    const ir = (d) => onIdx((idx + d + items.length) % items.length);
+    const flecha3 = (lado, d, txt) => /* @__PURE__ */ React.createElement(
       "button",
       {
-        onClick,
-        style: { ...reset2, flex: "none", display: "flex", alignItems: "center", gap: 10, width: "100%", boxSizing: "border-box", textAlign: "left", padding: "8px 10px", borderRadius: 8, background: "#111114", border: `2px solid ${tiene ? VERDE : ROJO2}`, color: "#fff", fontFamily: FUENTE4 }
+        "aria-label": d < 0 ? "anterior" : "siguiente",
+        onClick: (e) => {
+          e.stopPropagation();
+          ir(d);
+        },
+        style: { ...reset2, position: "fixed", [lado]: 6, top: "42%", transform: "translateY(-50%)", background: "rgba(255,255,255,0.12)", borderRadius: 16, width: 56, height: 110, color: "#fff", fontSize: 30, zIndex: 2 }
       },
-      /* @__PURE__ */ React.createElement(Miniatura, { tpl: datos.imgTpl, pid: ref && ref[0], ancho: 36, alto: 50 }),
-      /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, c.n), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#9a9aa0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, el ? etiquetaVersion(el, datos.sets) : `${c.v.length} ${c.v.length === 1 ? "versi\xF3n" : "versiones"}`)),
-      /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 13, color: precio == null ? "#6a6a70" : "#eaeaea" } }, el || datos.agrupar === "producto" ? usd(precio) : `desde ${usd(precio)}`)
+      txt
     );
+    return /* @__PURE__ */ React.createElement("div", { onClick: onCerrar, style: { position: "fixed", inset: 0, zIndex: 800, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "12px 0", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        "aria-label": "cerrar",
+        onClick: (e) => {
+          e.stopPropagation();
+          onCerrar();
+        },
+        style: { ...reset2, position: "fixed", top: "calc(12px + env(safe-area-inset-top, 0px))", right: 14, background: "rgba(255,255,255,0.12)", borderRadius: 99, width: 44, height: 44, color: "#fff", fontSize: 22, zIndex: 2 }
+      },
+      "\xD7"
+    ), nav && /* @__PURE__ */ React.createElement("div", { style: { position: "fixed", top: "calc(22px + env(safe-area-inset-top, 0px))", left: 0, right: 0, textAlign: "center", fontFamily: FUENTE4, fontSize: 11, color: "rgba(255,255,255,0.45)", pointerEvents: "none" } }, idx + 1, " / ", items.length), /* @__PURE__ */ React.createElement(
+      "img",
+      {
+        src: falla ? urlImagen(datos.imgTpl, it.pid, 400) : urlImagenGrande(it.pid),
+        alt: it.titulo,
+        onError: () => setFalla(true),
+        style: { maxWidth: "90vw", maxHeight: "68vh", borderRadius: 12, boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }
+      }
+    ), /* @__PURE__ */ React.createElement("div", { onClick: (e) => e.stopPropagation(), style: { marginTop: 12, textAlign: "center", maxWidth: "86vw", fontFamily: FUENTE4 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: CAVEAT2, fontSize: 22, fontWeight: 700, color: "#fff", lineHeight: 1.15 } }, it.titulo), it.sub && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#999", marginTop: 2 } }, it.sub), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, marginTop: 5, display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { style: { color: it.precio != null ? "#5c9cff" : "rgba(255,255,255,0.35)", fontWeight: 700 } }, it.precio != null ? usd(it.precio) : "sin precio"), it.extra && /* @__PURE__ */ React.createElement("span", { style: { color: it.extra.color || "#ccc" } }, it.extra.t))), nav && flecha3("left", -1, "\u2039"), nav && flecha3("right", 1, "\u203A"));
   }
-  function Ficha2({ tcg, colec, c, marca, datos, onVolver }) {
+  function lineaDatos(c) {
+    const m = c.m || {};
+    const partes3 = [m.ct || m.t, m.a, m.r, m.lv != null ? `Nv ${m.lv}` : null, m.atk != null ? `ATK ${m.atk}` : null, m.def != null ? `DEF ${m.def}` : null, m.col, m.f, m.dp ? `DP ${m.dp}` : null].filter(Boolean);
+    return partes3.join(" \xB7 ");
+  }
+  function Ficha2({ tcg, colec, c, marca, datos, onVolver, onZoom }) {
     const tiene = tieneCarta(marca);
     const el = versionElegida(c, marca);
     const ref = el || c.v[0];
@@ -16665,16 +16762,29 @@ ${url}`);
       setNotas(marca && marca.nt || "");
     }, [c.k, colec]);
     const poner = (parche) => ponerMarca(tcg, colec, c.k, parche);
+    const rank = useMemo13(() => rankSets(datos), [datos]);
+    const ordenadas = [...c.v].sort((a, b) => (rank[b[2]] ?? -1) - (rank[a[2]] ?? -1) || (precioVersion(b) ?? -1) - (precioVersion(a) ?? -1));
     const grupos = [];
     const idx = /* @__PURE__ */ new Map();
-    [...c.v].sort((a, b) => String(datos.sets[a[2]]).localeCompare(String(datos.sets[b[2]])) || (precioVersion(b) ?? -1) - (precioVersion(a) ?? -1)).forEach((v) => {
+    ordenadas.forEach((v) => {
       if (!idx.has(v[2])) {
         idx.set(v[2], grupos.length);
         grupos.push({ set: datos.sets[v[2]] || "", filas: [] });
       }
       grupos[idx.get(v[2])].filas.push(v);
     });
-    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14, fontFamily: FUENTE4, color: "#fff" } }, /* @__PURE__ */ React.createElement("button", { onClick: onVolver, style: { ...reset2, alignSelf: "flex-start", minHeight: 44, padding: "0 4px", fontSize: 13, color: "#b5b5bb" } }, "\u2190 volver"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("span", { style: { flex: "none", width: 120, borderRadius: 8, overflow: "hidden", background: "#1b1b1f", border: `2px solid ${tiene ? VERDE : ROJO2}` } }, ref && /* @__PURE__ */ React.createElement("img", { src: urlImagen(datos.imgTpl, ref[0], 400), alt: c.n, style: { width: "100%", display: "block" } })), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: CAVEAT2, fontWeight: 600, fontSize: 26, lineHeight: 1.05 } }, c.n), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#9a9aa0" } }, el ? etiquetaVersion(el, datos.sets) : "sin versi\xF3n elegida"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15 } }, usd(precioReferencia(c, marca)), el ? "" : " (la m\xE1s barata)"))), /* @__PURE__ */ React.createElement("button", { onClick: () => poner({ c: tiene ? 0 : 1 }), style: tiene ? botonSec2 : botonPri2 }, tiene ? "\u2713 La tengo (quitar)" : "Marcar como conseguida"), tiene && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 13, color: "#c4c4ca" } }, "Cantidad"), /* @__PURE__ */ React.createElement("button", { "aria-label": "menos", onClick: () => poner({ q: Math.max(1, q - 1) }), style: { ...botonSec2, minWidth: 44, padding: 0 } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { minWidth: 24, textAlign: "center", fontSize: 15 } }, q), /* @__PURE__ */ React.createElement("button", { "aria-label": "m\xE1s", onClick: () => poner({ q: q + 1 }), style: { ...botonSec2, minWidth: 44, padding: 0 } }, "+")), /* @__PURE__ */ React.createElement(
+    const itemsZoom = ordenadas.map((v) => ({ pid: v[0], titulo: c.n, sub: etiquetaVersion(v, datos.sets), precio: precioVersion(v), extra: el && claveVersion(el) === claveVersion(v) ? { t: "\u2605 elegida", color: "#e6c229" } : null }));
+    const abrirZoom = (v) => onZoom(itemsZoom, Math.max(0, ordenadas.findIndex((x) => claveVersion(x) === claveVersion(v))));
+    const datosCarta = lineaDatos(c);
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14, fontFamily: FUENTE4, color: "#fff" } }, /* @__PURE__ */ React.createElement("button", { onClick: onVolver, style: { ...reset2, alignSelf: "flex-start", minHeight: 44, padding: "0 4px", fontSize: 13, color: "#b5b5bb" } }, "\u2190 volver"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        "aria-label": "ver imagen a pantalla completa",
+        onClick: () => ref && abrirZoom(ref),
+        style: { ...reset2, flex: "none", width: 120, borderRadius: 8, overflow: "hidden", background: "#1b1b1f", border: `2px solid ${tiene ? VERDE : ROJO2}` }
+      },
+      ref && /* @__PURE__ */ React.createElement("img", { src: urlImagen(datos.imgTpl, ref[0], 400), alt: c.n, style: { width: "100%", display: "block" } })
+    ), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: CAVEAT2, fontWeight: 600, fontSize: 26, lineHeight: 1.05 } }, c.n), datosCarta && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#c4c4ca" } }, datosCarta), c.m && c.m.ar && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#9a9aa0" } }, "Arquetipo: ", c.m.ar), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#9a9aa0" } }, el ? etiquetaVersion(el, datos.sets) : "sin versi\xF3n elegida"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15 } }, usd(precioReferencia(c, marca)), el ? "" : " (la m\xE1s barata)"))), /* @__PURE__ */ React.createElement("button", { onClick: () => poner({ c: tiene ? 0 : 1 }), style: tiene ? botonSec2 : botonPri2 }, tiene ? "\u2713 La tengo (quitar)" : "Marcar como conseguida"), tiene && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 13, color: "#c4c4ca" } }, "Cantidad"), /* @__PURE__ */ React.createElement("button", { "aria-label": "menos", onClick: () => poner({ q: Math.max(1, q - 1) }), style: { ...botonSec2, minWidth: 44, padding: 0 } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { minWidth: 24, textAlign: "center", fontSize: 15 } }, q), /* @__PURE__ */ React.createElement("button", { "aria-label": "m\xE1s", onClick: () => poner({ q: q + 1 }), style: { ...botonSec2, minWidth: 44, padding: 0 } }, "+")), /* @__PURE__ */ React.createElement(
       "input",
       {
         inputMode: "decimal",
@@ -16689,31 +16799,48 @@ ${url}`);
       }
     ), /* @__PURE__ */ React.createElement("input", { placeholder: "Notas", value: notas, onChange: (e) => setNotas(e.target.value), onBlur: () => poner({ nt: notas.trim() }), style: campo8 })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: CAVEAT2, fontWeight: 600, fontSize: 20 } }, "Versiones (", c.v.length, ")"), grupos.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.set, style: { display: "flex", flexDirection: "column", gap: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, letterSpacing: "0.06em", color: "#9a9aa0", textTransform: "uppercase", marginTop: 6 } }, g.set), g.filas.map((v) => {
       const elegida = el && claveVersion(el) === claveVersion(v);
-      return /* @__PURE__ */ React.createElement(
+      return /* @__PURE__ */ React.createElement("div", { key: claveVersion(v), style: { display: "flex", alignItems: "center", gap: 4, boxSizing: "border-box", borderRadius: 8, background: elegida ? "#1d1d22" : "#111114", border: `1px solid ${elegida ? "#eaeaea" : "#26262b"}` } }, /* @__PURE__ */ React.createElement(
         "button",
         {
-          key: claveVersion(v),
           onClick: () => poner({ e: elegida ? "" : claveVersion(v) }),
-          style: { ...reset2, display: "flex", alignItems: "center", gap: 10, minHeight: 44, boxSizing: "border-box", padding: "6px 10px", borderRadius: 8, textAlign: "left", background: elegida ? "#1d1d22" : "#111114", border: `1px solid ${elegida ? "#eaeaea" : "#26262b"}`, color: "#fff" }
+          style: { ...reset2, flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10, minHeight: 48, padding: "6px 0 6px 10px", textAlign: "left", color: "#fff" }
         },
         /* @__PURE__ */ React.createElement(Miniatura, { tpl: datos.imgTpl, pid: v[0], ancho: 28, alto: 39 }),
         /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 1 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13 } }, [v[3], v[4]].filter(Boolean).join(" \xB7 ") || "\u2014"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#9a9aa0" } }, v[1] || "sin edici\xF3n", " \xB7 bajo ", usd(v[6]), " \xB7 alto ", usd(v[7]))),
         /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 13 } }, elegida ? "\u2605 " : "", usd(precioVersion(v)))
-      );
+      ), /* @__PURE__ */ React.createElement("button", { "aria-label": "ver esta versi\xF3n a pantalla completa", onClick: () => abrirZoom(v), style: { ...reset2, flex: "none", width: 44, minHeight: 48, fontSize: 16 } }, "\u{1F50D}"));
     })))));
   }
+  function Chip2({ activo, onClick, children, flex }) {
+    return /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        onClick,
+        "aria-pressed": activo,
+        style: { ...reset2, ...flex ? { flex: 1 } : {}, minHeight: 44, padding: "0 12px", borderRadius: 8, textAlign: "center", fontFamily: FUENTE4, fontSize: 13, background: activo ? "#fff" : "transparent", color: activo ? "#0b0b0c" : "#c4c4ca", border: activo ? "1px solid #fff" : "1px solid #3a3a40" }
+      },
+      children
+    );
+  }
+  var mesAnio = (f2) => f2 ? String(f2).slice(0, 7) : "";
   function TcgCryptoPage() {
     const estado = useEstado2();
     const tcg = TCGS.some((t) => t.id === estado.tcg) ? estado.tcg : TCGS[0].id;
+    const vista = estado.vista === "az" ? "az" : "edicion";
     const [datosPor, setDatosPor] = useState38({});
     const [error, setError] = useState38(null);
     const [abierta, setAbierta] = useState38(null);
     const [fichaSel, setFichaSel] = useState38(null);
     const [texto, setTexto] = useState38("");
     const [modo, setModo] = useState38("todas");
+    const [filtros, setFiltros] = useState38({});
+    const [panelFiltros, setPanelFiltros] = useState38(false);
+    const [setsAbiertos, setSetsAbiertos] = useState38({});
     const [limite, setLimite] = useState38(PAGINA);
+    const [zoom, setZoom] = useState38(null);
     const bodyRef = useRef23(null);
     const datos = datosPor[tcg] || null;
+    const rank = useMemo13(() => rankSets(datos), [datos]);
     async function cargar(id) {
       setError(null);
       try {
@@ -16731,11 +16858,20 @@ ${url}`);
       setFichaSel(null);
       setTexto("");
       setModo("todas");
+      setFiltros({});
+      setPanelFiltros(false);
+      setSetsAbiertos({});
       setLimite(PAGINA);
+      setZoom(null);
     }, [tcg]);
     useEffect25(() => {
+      setFiltros({});
+      setPanelFiltros(false);
+      setSetsAbiertos({});
+    }, [abierta]);
+    useEffect25(() => {
       setLimite(PAGINA);
-    }, [abierta, texto, modo]);
+    }, [abierta, texto, modo, filtros, vista]);
     const expandido = abierta !== null || fichaSel !== null;
     useEffect25(() => {
       const b = bodyRef.current;
@@ -16744,10 +16880,22 @@ ${url}`);
     const marcasDe = (colec) => estado.cartas && estado.cartas[tcg] && estado.cartas[tcg][colec] || {};
     const ancho = { width: "100%", maxWidth: 480, margin: "0 auto", boxSizing: "border-box", position: "relative", padding: "10px 16px 8px" };
     const edad = edadDatos2(datos && datos.generatedAt, Date.now());
+    const zoomCartas = (lista, colec, i) => {
+      const marcas = marcasDe(colec);
+      setZoom({
+        idx: i,
+        items: lista.map((c) => {
+          const m = marcas[c.k] || null;
+          const v = versionReferencia(c, m, rank) || c.v[0];
+          const el = versionElegida(c, m);
+          return { pid: v[0], titulo: c.n, sub: etiquetaVersion(v, datos.sets), precio: el ? precioVersion(el) : precioReferencia(c, m), extra: tieneCarta(m) ? { t: "conseguida", color: "#4caf80" } : { t: "falta", color: "#999" } };
+        })
+      });
+    };
     let cuerpo2;
     if (fichaSel && datos) {
       const carta = datos.cartas.find((x) => x.k === fichaSel.k);
-      cuerpo2 = carta ? /* @__PURE__ */ React.createElement(Ficha2, { tcg, colec: fichaSel.colec, c: carta, marca: marcaDe(estado, tcg, fichaSel.colec, carta.k), datos, onVolver: () => setFichaSel(null) }) : /* @__PURE__ */ React.createElement("button", { onClick: () => setFichaSel(null), style: botonSec2 }, "La carta ya no est\xE1 en los datos \xB7 volver");
+      cuerpo2 = carta ? /* @__PURE__ */ React.createElement(Ficha2, { tcg, colec: fichaSel.colec, c: carta, marca: marcaDe(estado, tcg, fichaSel.colec, carta.k), datos, onVolver: () => setFichaSel(null), onZoom: (items, idx) => setZoom({ items, idx }) }) : /* @__PURE__ */ React.createElement("button", { onClick: () => setFichaSel(null), style: botonSec2 }, "La carta ya no est\xE1 en los datos \xB7 volver");
     } else {
       const cols = datos ? datos.colecciones : [];
       let total = 0, tengo = 0, vTot = 0, vCons = 0;
@@ -16760,6 +16908,7 @@ ${url}`);
         vCons += r.valorConseguido;
         return { col: col2, cs, r };
       });
+      const nFiltros = cuentaFiltros(filtros);
       cuerpo2 = /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { flex: "none", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, minHeight: 44 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, TCGS.map((t) => /* @__PURE__ */ React.createElement(
         "button",
         {
@@ -16773,20 +16922,46 @@ ${url}`);
       ))), datos && /* @__PURE__ */ React.createElement("span", { style: { ...sello2, ...edad.vieja ? { color: "#ff5a5f", borderColor: "#ff5a5f" } : {} } }, "DATOS ", edad.texto.toUpperCase())), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, marginTop: 6, display: "flex", flexDirection: "column", gap: 8, overflowX: "hidden", overflowY: expandido ? "auto" : "hidden" } }, !datos && !error && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 12, fontFamily: FUENTE4, fontSize: 13, color: "#9a9aa0" } }, "Cargando\u2026"), error && !datos && /* @__PURE__ */ React.createElement("div", { style: { padding: 12, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", fontFamily: FUENTE4, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, "No se pudieron cargar los datos (", error, ")."), /* @__PURE__ */ React.createElement("button", { onClick: () => cargar(tcg), style: botonSec2 }, "Reintentar")), filas.map(({ col: col2, cs, r }) => {
         const esta = abierta === col2.id;
         if (abierta !== null && !esta) return null;
-        const lista = esta ? filtrarCartas(cs, marcasDe(col2.id), { texto, modo }, datos.sets) : [];
-        return /* @__PURE__ */ React.createElement("div", { key: col2.id, style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement(FilaColeccion, { col: col2, r, abierta: esta, onClick: () => setAbierta(esta ? null : col2.id) }), esta && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { placeholder: "Buscar por nombre, n\xFAmero, set o rareza", value: texto, onChange: (e) => setTexto(e.target.value), style: campo8 }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, [["todas", "Todas"], ["faltan", "Faltan"], ["tengo", "Tengo"]].map(([id, et]) => /* @__PURE__ */ React.createElement(
-          "button",
-          {
-            key: id,
-            onClick: () => setModo(id),
-            "aria-pressed": modo === id,
-            style: { ...reset2, flex: 1, minHeight: 44, borderRadius: 8, textAlign: "center", fontFamily: FUENTE4, fontSize: 13, background: modo === id ? "#fff" : "transparent", color: modo === id ? "#0b0b0c" : "#c4c4ca", border: modo === id ? "1px solid #fff" : "1px solid #3a3a40" }
-          },
-          et
-        ))), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE4, fontSize: 11, color: "#9a9aa0" } }, col2.criterio)), lista.length === 0 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 8, fontFamily: FUENTE4, fontSize: 13, color: "#9a9aa0" } }, "Ninguna carta coincide."), lista.slice(0, limite).map((c) => /* @__PURE__ */ React.createElement(FilaCarta, { key: c.k, c, marca: marcaDe(estado, tcg, col2.id, c.k), datos, onClick: () => setFichaSel({ colec: col2.id, k: c.k }) })), lista.length > limite && /* @__PURE__ */ React.createElement("button", { onClick: () => setLimite((l) => l + PAGINA), style: { ...botonSec2, flex: "none" } }, "Ver m\xE1s (", lista.length - limite, ")")));
+        const marcas = marcasDe(col2.id);
+        const lista = esta ? filtrarCartas(cs, marcas, { texto, modo, filtros }, datos.sets) : [];
+        const hayBusqueda = !!(texto.trim() || nFiltros);
+        let contenido = null;
+        if (esta) {
+          if (vista === "edicion") {
+            const todos = agruparPorEdicion(cs, marcas, datos, rank);
+            const visibles = new Set(lista.map((c) => c.k));
+            const grupos = todos.map((g) => ({ ...g, mostrar: g.cartas.filter((c) => visibles.has(c.k)) })).filter((g) => g.mostrar.length);
+            const auto = hayBusqueda && lista.length <= 80;
+            contenido = /* @__PURE__ */ React.createElement(React.Fragment, null, grupos.slice(0, limite).map((g) => {
+              const abiertoSet = setsAbiertos[g.setIdx] !== void 0 ? setsAbiertos[g.setIdx] : auto;
+              const rg = resumenColeccion(g.cartas, marcas);
+              return /* @__PURE__ */ React.createElement("div", { key: g.setIdx, style: { flex: "none", display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ React.createElement(
+                "button",
+                {
+                  onClick: () => setSetsAbiertos((p) => ({ ...p, [g.setIdx]: !abiertoSet })),
+                  "aria-expanded": abiertoSet ? "true" : "false",
+                  style: { ...reset2, display: "flex", flexDirection: "column", gap: 6, minHeight: 44, boxSizing: "border-box", padding: "8px 10px", borderRadius: 8, textAlign: "left", background: "#17171a", border: "1px solid #2a2a30", color: "#fff", fontFamily: FUENTE4 }
+                },
+                /* @__PURE__ */ React.createElement("span", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true", style: { fontSize: 11, color: "#9a9aa0" } }, abiertoSet ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, g.nombre), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 11, color: "#9a9aa0" } }, mesAnio(g.fecha)), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 12, color: "#b5b5bb" } }, rg.conseguidas, "/", rg.total)),
+                /* @__PURE__ */ React.createElement(Barra, { pct: rg.pct })
+              ), abiertoSet && g.mostrar.map((c, i) => /* @__PURE__ */ React.createElement(FilaCarta, { key: c.k, c, marca: marcas[c.k] || null, datos, rank, onClick: () => setFichaSel({ colec: col2.id, k: c.k }), onZoom: () => zoomCartas(g.mostrar, col2.id, i) })));
+            }), grupos.length > limite && /* @__PURE__ */ React.createElement("button", { onClick: () => setLimite((l) => l + PAGINA), style: { ...botonSec2, flex: "none" } }, "Ver m\xE1s ediciones (", grupos.length - limite, ")"), grupos.length === 0 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 8, fontFamily: FUENTE4, fontSize: 13, color: "#9a9aa0" } }, "Ninguna carta coincide."));
+          } else {
+            contenido = /* @__PURE__ */ React.createElement(React.Fragment, null, lista.length === 0 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 8, fontFamily: FUENTE4, fontSize: 13, color: "#9a9aa0" } }, "Ninguna carta coincide."), lista.slice(0, limite).map((c, i) => /* @__PURE__ */ React.createElement(FilaCarta, { key: c.k, c, marca: marcas[c.k] || null, datos, rank, onClick: () => setFichaSel({ colec: col2.id, k: c.k }), onZoom: () => zoomCartas(lista, col2.id, i) })), lista.length > limite && /* @__PURE__ */ React.createElement("button", { onClick: () => setLimite((l) => l + PAGINA), style: { ...botonSec2, flex: "none" } }, "Ver m\xE1s (", lista.length - limite, ")"));
+          }
+        }
+        return /* @__PURE__ */ React.createElement("div", { key: col2.id, style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement(FilaColeccion, { col: col2, r, abierta: esta, onClick: () => setAbierta(esta ? null : col2.id) }), esta && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { placeholder: "Buscar por nombre, arquetipo, n\xFAmero, set o rareza", value: texto, onChange: (e) => setTexto(e.target.value), style: campo8 }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, [["todas", "Todas"], ["faltan", "Faltan"], ["tengo", "Tengo"]].map(([id, et]) => /* @__PURE__ */ React.createElement(Chip2, { key: id, flex: true, activo: modo === id, onClick: () => setModo(id) }, et))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement(Chip2, { flex: true, activo: vista === "edicion", onClick: () => elegirVista("edicion") }, "Por edici\xF3n"), /* @__PURE__ */ React.createElement(Chip2, { flex: true, activo: vista === "az", onClick: () => elegirVista("az") }, "A\u2013Z"), datos.filtros && datos.filtros.length > 0 && /* @__PURE__ */ React.createElement(Chip2, { flex: true, activo: panelFiltros || nFiltros > 0, onClick: () => setPanelFiltros((p) => !p) }, "Filtros", nFiltros ? ` (${nFiltros})` : "")), panelFiltros && datos.filtros && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10, padding: 10, borderRadius: 8, background: "#111114", border: "1px solid #26262b" } }, datos.filtros.map((f2) => {
+          const vals = valoresFiltro(cs, f2.id);
+          if (!vals.length) return null;
+          const sel = filtros[f2.id] || [];
+          return /* @__PURE__ */ React.createElement("div", { key: f2.id, style: { display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE4, fontSize: 11, letterSpacing: "0.06em", color: "#9a9aa0", textTransform: "uppercase" } }, f2.nombre), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } }, vals.map((v) => /* @__PURE__ */ React.createElement(Chip2, { key: v, activo: sel.includes(v), onClick: () => setFiltros((p) => {
+            const cur = p[f2.id] || [];
+            return { ...p, [f2.id]: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] };
+          }) }, v))));
+        }), nFiltros > 0 && /* @__PURE__ */ React.createElement("button", { onClick: () => setFiltros({}), style: botonSec2 }, "Limpiar filtros")), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE4, fontSize: 11, color: "#9a9aa0" } }, col2.criterio, hayBusqueda || modo !== "todas" ? ` \xB7 ${lista.length} de ${cs.length}` : "")), contenido));
       }), datos && abierta === null && /* @__PURE__ */ React.createElement("div", { style: { flex: "none", marginTop: "auto", paddingTop: 6, fontFamily: FUENTE4, fontSize: 12, color: "#9a9aa0", textAlign: "center" } }, tengo, " de ", total, " cartas \xB7 ", usd(vCons), " de ", usd(vTot))));
     }
-    return /* @__PURE__ */ React.createElement("div", { className: "tcgc", style: { background: FONDO2 } }, /* @__PURE__ */ React.createElement("div", { ref: bodyRef, className: "tcgc-body", "data-expandido": expandido ? "true" : "false", "data-ficha": fichaSel ? "true" : "false", style: ancho }, cuerpo2));
+    return /* @__PURE__ */ React.createElement("div", { className: "tcgc", style: { background: FONDO2 } }, /* @__PURE__ */ React.createElement("div", { ref: bodyRef, className: "tcgc-body", "data-expandido": expandido ? "true" : "false", "data-ficha": fichaSel ? "true" : "false", style: ancho }, cuerpo2), zoom && datos && /* @__PURE__ */ React.createElement(Zoom, { zoom, datos, onIdx: (idx) => setZoom((z) => ({ ...z, idx })), onCerrar: () => setZoom(null) }));
   }
 
   // core/SemanaDashboard.jsx
@@ -16963,7 +17138,7 @@ ${url}`);
   var SemanaDashboard_default = SemanaDashboard;
 
   // core/App.jsx
-  var { useState: useState39, useEffect: useEffect26, useRef: useRef24, useMemo: useMemo13, useCallback: useCallback8 } = React;
+  var { useState: useState39, useEffect: useEffect26, useRef: useRef24, useMemo: useMemo14, useCallback: useCallback8 } = React;
   async function localGet(key) {
     const val = localStorage.getItem(key);
     if (val === null) return null;
@@ -17340,7 +17515,7 @@ ${url}`);
     const [kidsHealth, setKidsHealth] = useState39(emptyKidsHealth);
     const kidsHealthRef = useRef24(null);
     if (kidsHealthRef.current === null) kidsHealthRef.current = emptyKidsHealth();
-    const calMarksView = useMemo13(() => effectiveMarks(calMarks, kidsHealth.events), [calMarks, kidsHealth]);
+    const calMarksView = useMemo14(() => effectiveMarks(calMarks, kidsHealth.events), [calMarks, kidsHealth]);
     const [pokeInventario, setPokeInventario] = useState39([]);
     const pokeInventarioRef = useRef24([]);
     const [pokeCarpetas, setPokeCarpetas] = useState39([...CARPETAS_DEFAULT]);

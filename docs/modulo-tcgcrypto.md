@@ -17,6 +17,18 @@ dorada con "¡completada!" al 100 %), valor conseguido / valor total. Ficha de c
 de mercado, bajo y alto; elegir versión, marcar conseguida, cantidad, costo y notas.
 El valor de una carta es el de la versión elegida; sin elegir, el de la versión más barata con precio.
 
+## Vistas, filtros y pantalla completa
+- Cada colección tiene dos vistas (se recuerda la elegida): **Por edición** (grupos por set, la edición más reciente primero, con su
+  avance x/y y barra; cada edición se abre o cierra) y **A–Z**. En Yu-Gi-Oh!, una carta se ubica en la edición de su versión
+  elegida o, sin elegir, en su impresión más reciente. El orden sale de `setFechas` (fecha de publicación del set en tcgcsv; sin
+  fecha, por `setIds`).
+- Búsqueda de texto (nombre, arquetipo, número, set, rareza), modo Todas/Faltan/Tengo y **Filtros** de biblioteca: el bot declara
+  `filtros` por juego (Yu-Gi-Oh!: tipo de carta, categoría, atributo, tipo/subtipo, nivel/rango; Digimon: tipo, color, nivel, forma)
+  y los datos por carta en `m`. O dentro de un campo, Y entre campos. Con pocos resultados (≤ 80) las ediciones se abren solas.
+- Pantalla completa (como Pokécripto): tocar la miniatura de una carta o la imagen de la ficha, o la 🔍 de una versión. × arriba a la
+  derecha, datos bajo la carta y flechas para recorrer la lista (las cartas mostradas, o las versiones de esa carta).
+- Yu-Gi-Oh!: se excluyen fichas (tokens) y cartas fuera de juego.
+
 ## Datos
 - Bot: `modules/feed/scripts/build-tcgcrypto.mjs` + `.github/workflows/update-tcgcrypto.yml` (diario 21:30 UTC, y a mano).
   Sin secrets. Escribe `modules/feed/data/tcgcrypto-yugioh.json`, `tcgcrypto-digimon.json` y `tcgcrypto-diag.json`
@@ -32,5 +44,5 @@ Colecciones: criterio en `COLECCIONES_YGO` / `coleccionesYgo()` (Yu-Gi-Oh!) o en
 Juego nuevo: función `construir<Juego>()` en el bot (categoría de tcgcsv), una entrada en `TCGS` de `TcgCryptoPage.jsx`.
 
 ## Pendiente respecto de Pokécripto (no replicado todavía)
-Snapshots mensuales del valor por colección, hoja imprimible de placeholders, Price Watch, ficha a pantalla completa,
-carpeta por ilustrador, registro de reverse. Se evalúan al hacer el merge.
+Snapshots mensuales del valor por colección, hoja imprimible de placeholders, Price Watch, carpeta por ilustrador,
+registro de reverse. Tampoco hay aún filtro por rango de ATK/DEF ni búsqueda dentro del texto de efecto. Se evalúan al hacer el merge.

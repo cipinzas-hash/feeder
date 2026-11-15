@@ -2,18 +2,18 @@
 // UNA clave nueva, "angst-tcgcrypto-estado-v1", declarada en LOCAL_KEY_FIELDS (core/persistence.js): viaja en el export
 // 💾 / Angst-data y se rehidrata en restoreFromPayload (rehidratarEstado). No toca ningún dato existente (R8).
 //
-// Forma: { tcg: "yugioh", cartas: { [tcg]: { [coleccion]: { [claveCarta]: marca } } } }
+// Forma: { tcg: "yugioh", vista: "edicion" | "az", cartas: { [tcg]: { [coleccion]: { [claveCarta]: marca } } } }
 // marca = { c: 1 si la tenés, e: "productId|subtipo" de la versión elegida, q: cantidad, cu: costo en USD, nt: notas }
 // Cada colección es INDIVIDUAL (misma regla que Pokécripto, issue #39): la misma carta en dos colecciones son dos marcas.
 const KEY = "angst-tcgcrypto-estado-v1";
 
 const obj = o => (o && typeof o === "object" && !Array.isArray(o) ? o : {});
-const VACIO = () => ({ tcg: "yugioh", cartas: {} });
+const VACIO = () => ({ tcg: "yugioh", vista: "edicion", cartas: {} });
 
 function leer() {
   try {
     const v = JSON.parse(globalThis.localStorage.getItem(KEY));
-    if (v && typeof v === "object" && !Array.isArray(v)) return { tcg: typeof v.tcg === "string" ? v.tcg : "yugioh", cartas: obj(v.cartas) };
+    if (v && typeof v === "object" && !Array.isArray(v)) return { tcg: typeof v.tcg === "string" ? v.tcg : "yugioh", vista: v.vista === "az" ? "az" : "edicion", cartas: obj(v.cartas) };
   } catch (e) { /* clave ausente o corrupta: estado vacío */ }
   return VACIO();
 }
@@ -32,6 +32,7 @@ export function rehidratarEstado() { cache = leer(); oyentes.forEach(fn => fn(ca
 export function leerEstado() { return cache; }
 
 export function elegirTcg(tcg) { guardar({ ...cache, tcg }); }
+export function elegirVista(vista) { guardar({ ...cache, vista: vista === "az" ? "az" : "edicion" }); }
 
 export const marcaDe = (estado, tcg, colec, k) => obj(obj(obj(estado.cartas)[tcg])[colec])[k] || null;
 
