@@ -94,7 +94,7 @@ export async function pedirMarkdown(url, { cuenta, token, fetchFn = fetch, timeo
       signal: c.signal,
     });
     if (r.status === 401 || r.status === 403) return { ok: false, fatal: true, motivo: `HTTP ${r.status} (el token no tiene permiso Browser Rendering - Edit o no es válido)` };
-    if (r.status === 429) return { ok: false, fatal: true, motivo: "HTTP 429 (límite de Cloudflare alcanzado)" };
+    if (r.status === 429) return { ok: false, fatal: true, limite: true, esperaSeg: Number(r.headers && r.headers.get && r.headers.get("retry-after")) || null, motivo: "HTTP 429 (límite de Cloudflare alcanzado)" };
     if (!r.ok) return { ok: false, motivo: `HTTP ${r.status}` };
     const j = await r.json();
     if (!j || j.success === false || typeof j.result !== "string") return { ok: false, motivo: "respuesta sin markdown" };

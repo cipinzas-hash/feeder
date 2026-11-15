@@ -56,7 +56,7 @@ Pedido de Cristopher: marcar panoramas con ⭐, crear uno en el planificador y v
   descripción, ⭐, crear en planificador y "Ver original ↗" como salida. Una tarjeta abierta a la vez.
 - **De dónde sale la descripción (`detalle`).** `build-panoramas.mjs` pide a **Cloudflare Browser Rendering `/markdown`** la página del evento y `lib/panoramas-detalle.mjs` la limpia
   (quita menú, cookies, botones y pie; corta a 2.500 caracteres; probado en `tests/panoramas-detalle.mjs`). Se lee **una vez por evento** y se hereda entre corridas (como `visto`);
-  máximo 25 páginas por corrida y 4 min de presupuesto; primero lo que viene pronto. Respaldo: el `excerpt` de la API de CCLM (`detalleFuente: "resumen"`).
+  máximo 25 páginas por corrida, una cada 11 s (Cloudflare responde 429 si se va más rápido; ante un 429 espera y reintenta una vez) y 4 min de presupuesto; primero lo que viene pronto. Respaldo: el `excerpt` de la API de CCLM (`detalleFuente: "resumen"`).
   - Secrets del workflow: `CLOUDFLARE_ACCOUNT_ID` y `CLOUDFLARE_BR_TOKEN` (si no existe, usa `CLOUDFLARE_API_TOKEN`, el del Worker). El token necesita el permiso **Browser Rendering – Edit**.
   - Si Cloudflare responde 401/403/429 el build **no se cae**: corta la lectura, deja el respaldo y escribe el motivo en `lectura.motivo` del JSON (también `intentos/leidos/heredados/errores/conDetalle`). Una falla de permiso no cuenta como intento del día.
   - **Límite conocido:** el limpiador es genérico (la Red de Museos son decenas de sitios distintos). Se probó con páginas reales de CCLM y con markdown sintético; la calidad en cada museo se mide en la primera corrida real mirando `lectura.conDetalle` / `lectura.vacios`. Sin texto útil la tarjeta muestra el aviso y el enlace al original.

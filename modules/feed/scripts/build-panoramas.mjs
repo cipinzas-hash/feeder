@@ -246,6 +246,7 @@ function deduplicar(lista) {
 const CF_CUENTA = process.env.CLOUDFLARE_ACCOUNT_ID || "";
 const CF_TOKEN = process.env.CLOUDFLARE_BR_TOKEN || process.env.CLOUDFLARE_API_TOKEN || "";
 const MAX_LECTURAS = +process.env.PANORAMAS_MAX_LECTURAS || 25;
+const PAUSA_CF_MS = 11000;              // Cloudflare limita las consultas por minuto: ~5 por minuto evita el 429
 const PRESUPUESTO_MS = 4 * 60 * 1000;   // el workflow corta a los 8 min: la lectura nunca debe llevarse todo el tiempo
 
 async function enriquecerDetalle(todos, previosPorId) {
@@ -265,7 +266,11 @@ async function enriquecerDetalle(todos, previosPorId) {
     if (Date.now() - t0 > PRESUPUESTO_MS) { cortado = true; est.motivo = "presupuesto de tiempo agotado (el resto va en la próxima)"; continue; }
     est.intentos++;
     ev.detalleIntento = HOY;
-    const r = await pedirMarkdown(ev.url, { cuenta: CF_CUENTA, token: CF_TOKEN });
+    let r = await pedirMarkdown(ev.url, { cuenta: CF_CUENTA, token: CF_TOKEN });
+    if (r.limite) {   // 429: espera lo que pida Cloudflare (o 20 s) y reintenta UNA vez antes de rendirse
+      await new Promise(res => setTimeout(res, Math.min((r.esperaSeg || 20), 60) * 1000));
+      r = await pedirMarkdown(ev.url, { cuenta: CF_CUENTA, token: CF_TOKEN });
+    }
     if (r.ok) {
       const txt = leerMarkdown(r.markdown, ev.titulo);
       if (txt) { ev.detalle = txt; ev.detalleFuente = "cf"; est.leidos++; } else est.vacios++;
@@ -277,7 +282,7 @@ async function enriquecerDetalle(todos, previosPorId) {
         if (p && p.detalleIntento) ev.detalleIntento = p.detalleIntento; else delete ev.detalleIntento;   // no cuenta como intento: al arreglar el token se reintenta en la próxima corrida
       }
     }
-    await new Promise(res => setTimeout(res, GAP_MS));
+    await new Promise(res => setTimeout(res, PAUSA_CF_MS));
   }
   for (const ev of todos) if (!ev.detalle) { delete ev.detalle; delete ev.detalleFuente; }
   log(`\n== detalle ==\n  intentos ${est.intentos} · leídos ${est.leidos} · heredados ${est.heredados} · sin texto útil ${est.vacios} · errores ${est.errores}${est.motivo ? " · " + est.motivo : ""}`);
