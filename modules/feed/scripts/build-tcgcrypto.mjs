@@ -106,12 +106,23 @@ async function mapaYgopro() {
   const d = await getJson(YGOPRO, 2);
   const porNombre = new Map(), porCodigo = new Map();
   for (const c of d.data || []) {
-    const ficha = { nombre: c.name, atributo: c.attribute || "", tipo: c.race || "", arquetipo: c.archetype || "", texto: c.desc || "", cardType: c.type || "" };
+    const ficha = { nombre: c.name, atributo: c.attribute || "", tipo: c.race || "", arquetipo: c.archetype || "", texto: c.desc || "", cardType: c.type || "", nivel: c.level ?? null, atk: c.atk ?? null, def: c.def ?? null };
     porNombre.set(norm(c.name), ficha);
     for (const s of c.card_sets || []) if (s.set_code) porCodigo.set(String(s.set_code).toUpperCase(), ficha);
   }
   return { porNombre, porCodigo, total: (d.data || []).length };
 }
+
+// Datos de carta para los filtros del módulo (biblioteca para armar mazos). Claves cortas; el archivo declara `filtros`.
+const familiaYgo = ct => (/spell/i.test(ct) ? "Mágica" : /trap/i.test(ct) ? "Trampa" : /skill/i.test(ct) ? "Skill" : ct ? "Monstruo" : "");
+const numONull = v => (v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? null : Number(v));
+function metaYgo(f) {
+  const m = { t: familiaYgo(f.cardType), ct: f.cardType || "", a: f.atributo || "", r: f.tipo || "", lv: numONull(f.nivel), atk: numONull(f.atk), def: numONull(f.def), ar: f.arquetipo || "" };
+  for (const k of Object.keys(m)) if (m[k] === "" || m[k] === null) delete m[k];
+  return m;
+}
+const FILTROS_YGO = [{ id: "t", nombre: "Tipo de carta" }, { id: "ct", nombre: "Categoría" }, { id: "a", nombre: "Atributo" }, { id: "r", nombre: "Tipo / subtipo" }, { id: "lv", nombre: "Nivel / rango" }];
+const FILTROS_DIGIMON = [{ id: "t", nombre: "Tipo de carta" }, { id: "col", nombre: "Color" }, { id: "lv", nombre: "Nivel" }, { id: "f", nombre: "Forma" }];
 
 const COLECCIONES_YGO = [
   { id: "dark", nombre: "Dark", emoji: "🌑", criterio: "Monstruos de atributo DARK" },
@@ -131,11 +142,12 @@ async function construirYugioh() {
   const d = diag.juegos.yugioh;
   let ygo = null;
   try { ygo = await mapaYgopro(); d.ygoproCartas = ygo.total; } catch (e) { diag.avisos.push("YGOPRODeck no respondió; se clasifica solo con datos de tcgcsv: " + e.message); }
-  const nombresSets = [], cartas = new Map();
+  const nombresSets = [], setFechas = [], setIds = [], cartas = new Map();
   let sinClasificar = 0, porCodigo = 0, porNombre = 0, porExt = 0;
   const muestraSin = [];
   for (const s of sets) {
     const setIdx = nombresSets.push(s.grp.name) - 1;
+    setFechas.push(String(s.grp.publishedOn || "").slice(0, 10)); setIds.push(s.grp.groupId);
     const precios = new Map();
     for (const r of s.precios) { if (!precios.has(r.productId)) precios.set(r.productId, []); precios.get(r.productId).push(r); }
     for (const p of s.productos) {
@@ -145,15 +157,15 @@ async function construirYugioh() {
       if (ygo && numero) { f = ygo.porCodigo.get(numero.toUpperCase()) || null; if (f) porCodigo++; }
       if (!f && ygo) { f = ygo.porNombre.get(norm(p.name)) || null; if (f) porNombre++; }
       if (!f) {
-        const atributo = ext(p, "Attribute"), tipo = ext(p, "Monster Type", "Race", "Type"), texto = ext(p, "Description", "Card Text", "Text");
-        if (atributo || tipo || texto) { f = { nombre: quitaParentesis(p.name), atributo: atributo.toUpperCase(), tipo, arquetipo: "", texto }; porExt++; }
+        const atributo = ext(p, "Attribute"), tipo = ext(p, "MonsterType", "Monster Type", "Race", "Type"), texto = ext(p, "Description", "Card Text", "Text");
+        if (atributo || tipo || texto) { f = { nombre: quitaParentesis(p.name), atributo: atributo.toUpperCase(), tipo, arquetipo: "", texto, cardType: ext(p, "Card Type", "CardType"), atk: ext(p, "Attack"), def: ext(p, "Defense") }; porExt++; }
       }
       if (!f) { sinClasificar++; if (muestraSin.length < 15) muestraSin.push(p.name + " [" + numero + "]"); continue; }
       const colecs = coleccionesYgo(f);
       if (!colecs.length) continue;
       const k = norm(f.nombre || p.name);
       let c = cartas.get(k);
-      if (!c) { c = { k, n: f.nombre || quitaParentesis(p.name), c: colecs, v: [] }; cartas.set(k, c); }
+      if (!c) { c = { k, n: f.nombre || quitaParentesis(p.name), c: colecs, m: metaYgo(f), v: [] }; cartas.set(k, c); }
       const filas = precios.get(p.productId) || [null];
       for (const r of filas) {
         c.v.push([p.productId, r ? r.subTypeName || "" : "", setIdx, numero, rareza, r2(precioDe(r)), r2(r && r.lowPrice), r2(r && r.highPrice)]);
@@ -162,7 +174,9 @@ async function construirYugioh() {
   }
   Object.assign(d, { cartas: cartas.size, versiones: [...cartas.values()].reduce((a, c) => a + c.v.length, 0), clasificadasPorCodigo: porCodigo, clasificadasPorNombre: porNombre, clasificadasPorTcgcsv: porExt, sinClasificar, muestraSinClasificar: muestraSin });
   d.porColeccion = Object.fromEntries(COLECCIONES_YGO.map(x => [x.id, [...cartas.values()].filter(c => c.c.includes(x.id)).length]));
-  return { tcg: "yugioh", nombre: "Yu-Gi-Oh!", emoji: "🃏", agrupar: "nombre", imgTpl: plantillaImagen(sets), colecciones: COLECCIONES_YGO, sets: nombresSets, cartas: [...cartas.values()].sort((a, b) => a.n.localeCompare(b.n)) };
+  d.setsConFecha = setFechas.filter(Boolean).length;
+  d.muestraMeta = [...cartas.values()].slice(0, 3).map(c => c.m);
+  return { tcg: "yugioh", nombre: "Yu-Gi-Oh!", emoji: "🃏", agrupar: "nombre", imgTpl: plantillaImagen(sets), colecciones: COLECCIONES_YGO, filtros: FILTROS_YGO, sets: nombresSets, setFechas, setIds, cartas: [...cartas.values()].sort((a, b) => a.n.localeCompare(b.n)) };
 }
 
 // ── Digimon: el catálogo sale de tcgcsv (cada arte es un producto distinto) ─────────────────────────────────────────
@@ -172,24 +186,29 @@ const COLECCIONES_DIGIMON = [
 async function construirDigimon() {
   const sets = await leerCategoria(63, "digimon");
   const d = diag.juegos.digimon;
-  const nombresSets = [], cartas = new Map();
+  const nombresSets = [], setFechas = [], setIds = [], cartas = new Map();
   for (const s of sets) {
     const setIdx = nombresSets.push(s.grp.name) - 1;
+    setFechas.push(String(s.grp.publishedOn || "").slice(0, 10)); setIds.push(s.grp.groupId);
     const precios = new Map();
     for (const r of s.precios) { if (!precios.has(r.productId)) precios.set(r.productId, []); precios.get(r.productId).push(r); }
     for (const p of s.productos) {
       if (!esCartaSuelta(p) || !/\bnumemon\b/i.test(p.name || "")) continue;
       const numero = ext(p, "Number"), rareza = ext(p, "Rarity");
       const k = String(p.productId);
-      const c = { k, n: p.name, c: ["numemon"], v: [] };
+      const m = { t: ext(p, "CardType"), col: ext(p, "Color"), lv: ext(p, "LevelLv"), dp: ext(p, "DigimonPowerDP"), f: ext(p, "DigimonForm"), a: ext(p, "DigimonAttribute"), r: ext(p, "DigimonType") };
+      for (const kk of Object.keys(m)) if (!m[kk]) delete m[kk];
+      const c = { k, n: p.name, c: ["numemon"], m, v: [] };
       for (const r of precios.get(p.productId) || [null]) c.v.push([p.productId, r ? r.subTypeName || "" : "", setIdx, numero, rareza, r2(precioDe(r)), r2(r && r.lowPrice), r2(r && r.highPrice)]);
       cartas.set(k, c);
     }
   }
   d.cartas = cartas.size;
+  d.setsConFecha = setFechas.filter(Boolean).length;
+  d.muestraMeta = [...cartas.values()].slice(0, 3).map(c => c.m);
   d.versiones = [...cartas.values()].reduce((a, c) => a + c.v.length, 0);
   d.muestraNombres = [...cartas.values()].slice(0, 12).map(c => c.n);
-  return { tcg: "digimon", nombre: "Digimon", emoji: "🐉", agrupar: "producto", imgTpl: plantillaImagen(sets), colecciones: COLECCIONES_DIGIMON, sets: nombresSets, cartas: [...cartas.values()].sort((a, b) => a.n.localeCompare(b.n)) };
+  return { tcg: "digimon", nombre: "Digimon", emoji: "🐉", agrupar: "producto", imgTpl: plantillaImagen(sets), colecciones: COLECCIONES_DIGIMON, filtros: FILTROS_DIGIMON, sets: nombresSets, setFechas, setIds, cartas: [...cartas.values()].sort((a, b) => a.n.localeCompare(b.n)) };
 }
 
 // ── Escritura ───────────────────────────────────────────────────────────────────────────────────────────────────────
