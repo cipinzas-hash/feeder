@@ -1,17 +1,17 @@
 {
  "version": 1,
- "generatedAt": "2026-11-14T15:19:01.464Z",
+ "generatedAt": "2026-11-15T15:50:41.676Z",
  "fuentes": {
   "decomps": {
    "ok": true,
-   "actualizado": "2026-11-14T15:19:01.464Z",
-   "generadoPorLaFuente": "2026-11-14T10:49:02Z",
-   "proyectosEnLaFuente": 2837,
+   "actualizado": "2026-11-15T15:50:41.676Z",
+   "generadoPorLaFuente": "2026-11-15T11:16:00Z",
+   "proyectosEnLaFuente": 2855,
    "proyectos": 61
   },
   "igdb": {
    "ok": true,
-   "actualizado": "2026-11-14T15:19:01.464Z",
+   "actualizado": "2026-11-15T15:50:41.676Z",
    "terminadosConDesarrolladora": 70,
    "estudios": 55,
    "estudiosConsultados": 55,
@@ -22,15 +22,141 @@
  },
  "decomps": [
   {
+   "id": "d-metroidret-mzm",
+   "tipo": "d",
+   "titulo": "Metroid: Zero Mission",
+   "subtipo": "decompilation",
+   "plataforma": "GBA",
+   "estrellas": 163,
+   "ultimoCommit": "2026-11-15T04:04:30Z",
+   "release": null,
+   "fechaRelease": null,
+   "url": "https://github.com/metroidret/mzm",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": false,
+   "inactivo": false,
+   "tuyos": [
+    "Metroid: Zero Mission"
+   ],
+   "tuJuego": "Metroid: Zero Mission",
+   "dias": 0
+  },
+  {
+   "id": "d-mstan-supermarioworldrecomp",
+   "tipo": "d",
+   "titulo": "Super Mario World (SuperMarioWorldRecomp)",
+   "subtipo": "static-recomp",
+   "plataforma": "SNES",
+   "estrellas": 178,
+   "ultimoCommit": "2026-11-15T06:15:11Z",
+   "release": "v0.15.10",
+   "fechaRelease": "2026-11-15T06:15:20Z",
+   "url": "https://github.com/mstan/SuperMarioWorldRecomp",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [
+    "Super Mario World"
+   ],
+   "tuJuego": "Super Mario World",
+   "dias": 0
+  },
+  {
+   "id": "d-tmcleroy-soulcalibur2-recomp",
+   "tipo": "d",
+   "titulo": "Soulcalibur II (Soulcalibur II Recomp)",
+   "subtipo": "static-recomp",
+   "plataforma": "og xbox",
+   "estrellas": 162,
+   "ultimoCommit": "2026-11-15T05:44:33Z",
+   "release": "v0.4.0-beta.1",
+   "fechaRelease": "2026-11-10T02:22:27Z",
+   "url": "https://github.com/tmcleroy/soulcalibur2-recomp",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [
+    "SoulCalibur II"
+   ],
+   "tuJuego": "SoulCalibur II",
+   "dias": 0
+  },
+  {
+   "id": "d-jackpoison-prog-ringout",
+   "tipo": "d",
+   "titulo": "Soulcalibur II (Ring Out)",
+   "subtipo": "static-recomp",
+   "plataforma": "GameCube",
+   "estrellas": 193,
+   "ultimoCommit": "2026-11-15T01:30:15Z",
+   "release": "v2.0",
+   "fechaRelease": "2026-11-15T01:32:01Z",
+   "url": "https://github.com/jackpoison-prog/RingOut",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [
+    "SoulCalibur II"
+   ],
+   "tuJuego": "SoulCalibur II",
+   "dias": 1
+  },
+  {
+   "id": "d-metroidret-mf",
+   "tipo": "d",
+   "titulo": "Metroid Fusion",
+   "subtipo": "decompilation",
+   "plataforma": "GBA",
+   "estrellas": 83,
+   "ultimoCommit": "2026-11-14T21:14:05Z",
+   "release": null,
+   "fechaRelease": null,
+   "url": "https://github.com/metroidret/mf",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": false,
+   "inactivo": false,
+   "tuyos": [
+    "Metroid Fusion"
+   ],
+   "tuJuego": "Metroid Fusion",
+   "dias": 1
+  },
+  {
+   "id": "d-mstan-supermarioland2recomp",
+   "tipo": "d",
+   "titulo": "Super Mario Land 2: 6 Golden Coins (SuperMarioLand2Recomp)",
+   "subtipo": "static-recomp",
+   "plataforma": "Game Boy",
+   "estrellas": 22,
+   "ultimoCommit": "2026-11-14T21:52:28Z",
+   "release": "v0.2.0",
+   "fechaRelease": "2026-10-19T02:58:07Z",
+   "url": "https://github.com/mstan/SuperMarioLand2Recomp",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": false,
+   "inactivo": false,
+   "tuyos": [
+    "Super Mario Land 2: 6 Golden Coins"
+   ],
+   "tuJuego": "Super Mario Land 2: 6 Golden Coins",
+   "dias": 1
+  },
+  {
    "id": "d-ravencaio-tlou-remastered-pc",
    "tipo": "d",
    "titulo": "The Last of Us Remastered (tlou-remastered-pc)",
    "subtipo": "engine-remake",
    "plataforma": "PS4",
-   "estrellas": 344,
-   "ultimoCommit": "2026-11-14T03:40:04Z",
-   "release": "v0.2.3",
-   "fechaRelease": "2026-11-14T03:44:07Z",
+   "estrellas": 346,
+   "ultimoCommit": "2026-11-14T16:55:56Z",
+   "release": "v0.2.4",
+   "fechaRelease": "2026-11-14T16:56:09Z",
    "url": "https://github.com/ravencaio/tlou-remastered-pc",
    "jugableUrl": null,
    "pideAssets": null,
@@ -40,7 +166,7 @@
     "The Last of Us"
    ],
    "tuJuego": "The Last of Us",
-   "dias": 0
+   "dias": 1
   },
   {
    "id": "d-simon3sarkis-super-odyssey-pc-recomp",
@@ -48,10 +174,10 @@
    "titulo": "Super Mario Odyssey (Super Odyssey PC Recomp)",
    "subtipo": "static-recomp",
    "plataforma": "Switch",
-   "estrellas": 286,
-   "ultimoCommit": "2026-11-14T04:52:37Z",
-   "release": "v0.2.9",
-   "fechaRelease": "2026-11-14T00:57:11Z",
+   "estrellas": 317,
+   "ultimoCommit": "2026-11-14T19:24:22Z",
+   "release": "v0.2.10",
+   "fechaRelease": "2026-11-14T19:45:05Z",
    "url": "https://github.com/Simon3Sarkis/super-odyssey-pc-recomp",
    "jugableUrl": null,
    "pideAssets": null,
@@ -61,7 +187,7 @@
     "Super Mario Odyssey"
    ],
    "tuJuego": "Super Mario Odyssey",
-   "dias": 0
+   "dias": 1
   },
   {
    "id": "d-alexbeavs-ps1-ports-final-fantasy-ix-recomp",
@@ -82,7 +208,7 @@
     "Final Fantasy IX"
    ],
    "tuJuego": "Final Fantasy IX",
-   "dias": 1
+   "dias": 2
   },
   {
    "id": "d-maurizi-ff9-3ds",
@@ -90,7 +216,7 @@
    "titulo": "Final Fantasy IX (ff9-3ds)",
    "subtipo": "decompilation",
    "plataforma": "PS1",
-   "estrellas": 22,
+   "estrellas": 24,
    "ultimoCommit": "2026-11-13T17:52:24Z",
    "release": "v0.2.3",
    "fechaRelease": "2026-11-13T19:38:27Z",
@@ -103,28 +229,7 @@
     "Final Fantasy IX"
    ],
    "tuJuego": "Final Fantasy IX",
-   "dias": 1
-  },
-  {
-   "id": "d-metroidret-mzm",
-   "tipo": "d",
-   "titulo": "Metroid: Zero Mission",
-   "subtipo": "decompilation",
-   "plataforma": "GBA",
-   "estrellas": 164,
-   "ultimoCommit": "2026-11-13T15:00:47Z",
-   "release": null,
-   "fechaRelease": null,
-   "url": "https://github.com/metroidret/mzm",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": false,
-   "inactivo": false,
-   "tuyos": [
-    "Metroid: Zero Mission"
-   ],
-   "tuJuego": "Metroid: Zero Mission",
-   "dias": 1
+   "dias": 2
   },
   {
    "id": "d-reshaped-sonic-adventure",
@@ -132,7 +237,7 @@
    "titulo": "Sonic Adventure",
    "subtipo": "decompilation",
    "plataforma": "Dreamcast",
-   "estrellas": 46,
+   "estrellas": 47,
    "ultimoCommit": "2026-11-13T22:06:54Z",
    "release": null,
    "fechaRelease": null,
@@ -145,28 +250,7 @@
     "Sonic Adventure"
    ],
    "tuJuego": "Sonic Adventure",
-   "dias": 1
-  },
-  {
-   "id": "d-tmcleroy-soulcalibur2-recomp",
-   "tipo": "d",
-   "titulo": "Soulcalibur II (Soulcalibur II Recomp)",
-   "subtipo": "static-recomp",
-   "plataforma": "og xbox",
-   "estrellas": 160,
-   "ultimoCommit": "2026-11-13T17:20:40Z",
-   "release": "v0.4.0-beta.1",
-   "fechaRelease": "2026-11-10T02:22:27Z",
-   "url": "https://github.com/tmcleroy/soulcalibur2-recomp",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [
-    "SoulCalibur II"
-   ],
-   "tuJuego": "SoulCalibur II",
-   "dias": 1
+   "dias": 2
   },
   {
    "id": "d-estebanpdn-zelda-alttp-3ds",
@@ -174,7 +258,7 @@
    "titulo": "The Legend of Zelda: A Link to the Past (3DS port)",
    "subtipo": "source-port",
    "plataforma": "SNES",
-   "estrellas": 795,
+   "estrellas": 796,
    "ultimoCommit": "2026-11-12T16:08:28Z",
    "release": "v4.1",
    "fechaRelease": "2026-11-11T05:20:13Z",
@@ -187,49 +271,7 @@
     "The Legend of Zelda: A Link to the Past"
    ],
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 2
-  },
-  {
-   "id": "d-jackpoison-prog-ringout",
-   "tipo": "d",
-   "titulo": "Soulcalibur II (Ring Out)",
-   "subtipo": "static-recomp",
-   "plataforma": "GameCube",
-   "estrellas": 193,
-   "ultimoCommit": "2026-11-12T20:40:25Z",
-   "release": "v1.7",
-   "fechaRelease": "2026-10-27T23:47:51Z",
-   "url": "https://github.com/jackpoison-prog/RingOut",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [
-    "SoulCalibur II"
-   ],
-   "tuJuego": "SoulCalibur II",
-   "dias": 2
-  },
-  {
-   "id": "d-metroidret-mf",
-   "tipo": "d",
-   "titulo": "Metroid Fusion",
-   "subtipo": "decompilation",
-   "plataforma": "GBA",
-   "estrellas": 83,
-   "ultimoCommit": "2026-11-12T20:46:34Z",
-   "release": null,
-   "fechaRelease": null,
-   "url": "https://github.com/metroidret/mf",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": false,
-   "inactivo": false,
-   "tuyos": [
-    "Metroid Fusion"
-   ],
-   "tuJuego": "Metroid Fusion",
-   "dias": 2
+   "dias": 3
   },
   {
    "id": "d-deez-coder-smo-android-port",
@@ -237,7 +279,7 @@
    "titulo": "Super Mario Odyssey (SMO Android Port)",
    "subtipo": "source-port",
    "plataforma": "Switch",
-   "estrellas": 79,
+   "estrellas": 82,
    "ultimoCommit": "2026-11-11T15:15:44Z",
    "release": "B0.3",
    "fechaRelease": "2026-11-11T15:54:15Z",
@@ -250,49 +292,7 @@
     "Super Mario Odyssey"
    ],
    "tuJuego": "Super Mario Odyssey",
-   "dias": 3
-  },
-  {
-   "id": "d-lamb2k-re4dc",
-   "tipo": "d",
-   "titulo": "Resident Evil 4 (Dreamcast port, re4dc)",
-   "subtipo": "source-port",
-   "plataforma": "Dreamcast",
-   "estrellas": 45,
-   "ultimoCommit": "2026-11-11T03:35:15Z",
-   "release": null,
-   "fechaRelease": null,
-   "url": "https://github.com/lamb2k/re4dc",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [
-    "Resident Evil 4"
-   ],
-   "tuJuego": "Resident Evil 4",
-   "dias": 3
-  },
-  {
-   "id": "d-mstan-supermarioworldrecomp",
-   "tipo": "d",
-   "titulo": "Super Mario World (SuperMarioWorldRecomp)",
-   "subtipo": "static-recomp",
-   "plataforma": "SNES",
-   "estrellas": 176,
-   "ultimoCommit": "2026-11-09T18:34:25Z",
-   "release": "v0.15.9",
-   "fechaRelease": "2026-11-11T04:36:49Z",
-   "url": "https://github.com/mstan/SuperMarioWorldRecomp",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [
-    "Super Mario World"
-   ],
-   "tuJuego": "Super Mario World",
-   "dias": 3
+   "dias": 4
   },
   {
    "id": "d-ecwolfengine-ecwolf",
@@ -300,7 +300,7 @@
    "titulo": "Wolfenstein 3D (ECWolf)",
    "subtipo": "decompilation",
    "plataforma": "PC",
-   "estrellas": 63,
+   "estrellas": 64,
    "ultimoCommit": "2026-11-08T17:33:08Z",
    "release": "1.4.2",
    "fechaRelease": "2026-11-10T22:50:13Z",
@@ -313,7 +313,28 @@
     "Wolfenstein 3D"
    ],
    "tuJuego": "Wolfenstein 3D",
-   "dias": 4
+   "dias": 5
+  },
+  {
+   "id": "d-lamb2k-re4dc",
+   "tipo": "d",
+   "titulo": "Resident Evil 4 (Dreamcast port, re4dc)",
+   "subtipo": "source-port",
+   "plataforma": "Dreamcast",
+   "estrellas": 47,
+   "ultimoCommit": "2026-11-11T03:35:15Z",
+   "release": null,
+   "fechaRelease": null,
+   "url": "https://github.com/lamb2k/re4dc",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [
+    "Resident Evil 4"
+   ],
+   "tuJuego": "Resident Evil 4",
+   "dias": 5
   },
   {
    "id": "d-palaceswitcher-smw-nes-disassembly",
@@ -334,7 +355,7 @@
     "Super Mario World"
    ],
    "tuJuego": "Super Mario World",
-   "dias": 4
+   "dias": 5
   },
   {
    "id": "d-fabiangreffrath-wolf4sdl",
@@ -355,7 +376,7 @@
     "Wolfenstein 3D"
    ],
    "tuJuego": "Wolfenstein 3D",
-   "dias": 5
+   "dias": 6
   },
   {
    "id": "d-mstan-zeldaalttpsnesrecomp",
@@ -376,7 +397,7 @@
     "The Legend of Zelda: A Link to the Past"
    ],
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 8
+   "dias": 9
   },
   {
    "id": "d-yeoldpress-alttp-dx",
@@ -397,7 +418,7 @@
     "The Legend of Zelda: A Link to the Past"
    ],
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 13
+   "dias": 14
   },
   {
    "id": "d-rinnegatamante-crash-team-racing-high-octane",
@@ -418,7 +439,7 @@
     "Crash Team Racing"
    ],
    "tuJuego": "Crash Team Racing",
-   "dias": 14
+   "dias": 15
   },
   {
    "id": "d-countallegrex-sa1-psp",
@@ -439,7 +460,7 @@
     "Sonic Adventure"
    ],
    "tuJuego": "Sonic Adventure",
-   "dias": 17
+   "dias": 18
   },
   {
    "id": "d-coz-0-smo-recomp",
@@ -447,7 +468,7 @@
    "titulo": "Super Mario Odyssey (smo-recomp)",
    "subtipo": "static-recomp",
    "plataforma": "Switch",
-   "estrellas": 91,
+   "estrellas": 94,
    "ultimoCommit": "2026-10-28T14:37:50Z",
    "release": null,
    "fechaRelease": null,
@@ -460,7 +481,7 @@
     "Super Mario Odyssey"
    ],
    "tuJuego": "Super Mario Odyssey",
-   "dias": 17
+   "dias": 18
   },
   {
    "id": "d-rrika-cdcenginedxhr",
@@ -468,7 +489,7 @@
    "titulo": "Deus Ex: Human Revolution",
    "subtipo": "decompilation",
    "plataforma": "PC",
-   "estrellas": 330,
+   "estrellas": 331,
    "ultimoCommit": "2026-10-28T19:52:19Z",
    "release": null,
    "fechaRelease": null,
@@ -481,28 +502,7 @@
     "Deus Ex: Human Revolution"
    ],
    "tuJuego": "Deus Ex: Human Revolution",
-   "dias": 17
-  },
-  {
-   "id": "d-mstan-supermarioland2recomp",
-   "tipo": "d",
-   "titulo": "Super Mario Land 2: 6 Golden Coins (SuperMarioLand2Recomp)",
-   "subtipo": "static-recomp",
-   "plataforma": "Game Boy",
-   "estrellas": 22,
-   "ultimoCommit": "2026-10-19T02:54:10Z",
-   "release": "v0.2.0",
-   "fechaRelease": "2026-10-19T02:58:07Z",
-   "url": "https://github.com/mstan/SuperMarioLand2Recomp",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": false,
-   "inactivo": false,
-   "tuyos": [
-    "Super Mario Land 2: 6 Golden Coins"
-   ],
-   "tuJuego": "Super Mario Land 2: 6 Golden Coins",
-   "dias": 27
+   "dias": 18
   },
   {
    "id": "d-sonicfreak1337-sarecomp",
@@ -510,7 +510,7 @@
    "titulo": "Sonic Adventure",
    "subtipo": "static-recomp",
    "plataforma": "Dreamcast",
-   "estrellas": 126,
+   "estrellas": 127,
    "ultimoCommit": "2026-10-18T20:10:32Z",
    "release": "v0.52.1",
    "fechaRelease": "2026-10-18T20:12:45Z",
@@ -523,7 +523,7 @@
     "Sonic Adventure"
    ],
    "tuJuego": "Sonic Adventure",
-   "dias": 27
+   "dias": 28
   },
   {
    "id": "d-swiftshine-key",
@@ -544,7 +544,7 @@
     "Kirby’s Epic Yarn"
    ],
    "tuJuego": "Kirby’s Epic Yarn",
-   "dias": 31
+   "dias": 32
   },
   {
    "id": "d-technicallycomputers-metal-slug-x-recomp",
@@ -565,7 +565,7 @@
     "Metal Slug X"
    ],
    "tuJuego": "Metal Slug X",
-   "dias": 35
+   "dias": 36
   },
   {
    "id": "d-ctr-tools-ctr-native",
@@ -586,7 +586,7 @@
     "Crash Team Racing"
    ],
    "tuJuego": "Crash Team Racing",
-   "dias": 40
+   "dias": 41
   },
   {
    "id": "d-adonis-singh-re4",
@@ -594,7 +594,7 @@
    "titulo": "Resident Evil 4",
    "subtipo": "decompilation",
    "plataforma": "GameCube",
-   "estrellas": 389,
+   "estrellas": 393,
    "ultimoCommit": "2026-10-02T12:31:01Z",
    "release": null,
    "fechaRelease": null,
@@ -607,7 +607,7 @@
     "Resident Evil 4"
    ],
    "tuJuego": "Resident Evil 4",
-   "dias": 43
+   "dias": 44
   },
   {
    "id": "d-snesrev-zelda3",
@@ -615,7 +615,7 @@
    "titulo": "The Legend of Zelda: A Link to the Past (zelda3)",
    "subtipo": "engine-remake",
    "plataforma": "SNES",
-   "estrellas": 5011,
+   "estrellas": 5014,
    "ultimoCommit": "2026-10-02T23:58:23Z",
    "release": "v0.3",
    "fechaRelease": "2023-08-17T01:18:40Z",
@@ -628,7 +628,7 @@
     "The Legend of Zelda: A Link to the Past"
    ],
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 43
+   "dias": 44
   },
   {
    "id": "d-monsterdruide1-odysseydecomp",
@@ -649,7 +649,7 @@
     "Super Mario Odyssey"
    ],
    "tuJuego": "Super Mario Odyssey",
-   "dias": 46
+   "dias": 47
   },
   {
    "id": "d-fishb0nes98-tekken3recompiled",
@@ -657,7 +657,7 @@
    "titulo": "Tekken 3 (Tekken3Recompiled)",
    "subtipo": "static-recomp",
    "plataforma": "Arcade",
-   "estrellas": 86,
+   "estrellas": 87,
    "ultimoCommit": "2026-09-23T15:02:50Z",
    "release": null,
    "fechaRelease": null,
@@ -670,7 +670,7 @@
     "Tekken 3"
    ],
    "tuJuego": "Tekken 3",
-   "dias": 52
+   "dias": 53
   },
   {
    "id": "d-elliotttate-dkc1recomp",
@@ -678,7 +678,7 @@
    "titulo": "Donkey Kong Country (DKC1Recomp)",
    "subtipo": "static-recomp",
    "plataforma": "SNES",
-   "estrellas": 303,
+   "estrellas": 305,
    "ultimoCommit": "2026-09-15T01:08:12Z",
    "release": "v0.0.17",
    "fechaRelease": "2026-09-19T16:19:27Z",
@@ -691,7 +691,7 @@
     "Donkey Kong Country"
    ],
    "tuJuego": "Donkey Kong Country",
-   "dias": 56
+   "dias": 57
   },
   {
    "id": "d-ragnaroek-iron-wolf",
@@ -712,7 +712,7 @@
     "Wolfenstein 3D"
    ],
    "tuJuego": "Wolfenstein 3D",
-   "dias": 56
+   "dias": 57
   },
   {
    "id": "d-spannerisms-jpdasm",
@@ -733,7 +733,7 @@
     "The Legend of Zelda: A Link to the Past"
    ],
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 60
+   "dias": 61
   },
   {
    "id": "d-player124413-sonic-generations-recomp-android-and-pc-edition",
@@ -754,7 +754,7 @@
     "Sonic Generations"
    ],
    "tuJuego": "Sonic Generations",
-   "dias": 61
+   "dias": 62
   },
   {
    "id": "d-sp00nznet-tokyojungle",
@@ -775,7 +775,7 @@
     "Tokyo Jungle"
    ],
    "tuJuego": "Tokyo Jungle",
-   "dias": 69
+   "dias": 70
   },
   {
    "id": "d-omegakatana92-kirby-dream-land-recomp",
@@ -796,7 +796,7 @@
     "Kirby’s Dream Land"
    ],
    "tuJuego": "Kirby’s Dream Land",
-   "dias": 76
+   "dias": 77
   },
   {
    "id": "d-isofrieze-smwdisx",
@@ -817,7 +817,7 @@
     "Super Mario World"
    ],
    "tuJuego": "Super Mario World",
-   "dias": 86
+   "dias": 87
   },
   {
    "id": "d-nyperyuhgard-ctr-pc-port",
@@ -838,7 +838,7 @@
     "Crash Team Racing"
    ],
    "tuJuego": "Crash Team Racing",
-   "dias": 103
+   "dias": 104
   },
   {
    "id": "d-ctr-tools-ctr-modsdk",
@@ -859,7 +859,7 @@
     "Crash Team Racing"
    ],
    "tuJuego": "Crash Team Racing",
-   "dias": 132
+   "dias": 133
   },
   {
    "id": "d-patataofcourse-rhgold",
@@ -880,7 +880,7 @@
     "Rhythm Heaven (DS)"
    ],
    "tuJuego": "Rhythm Heaven (DS)",
-   "dias": 146
+   "dias": 147
   },
   {
    "id": "d-entroper-ff1disassembly",
@@ -888,7 +888,7 @@
    "titulo": "Final Fantasy",
    "subtipo": "disassembly",
    "plataforma": "NES",
-   "estrellas": 110,
+   "estrellas": 111,
    "ultimoCommit": "2026-06-06T00:52:59Z",
    "release": null,
    "fechaRelease": null,
@@ -901,7 +901,7 @@
     "Final Fantasy (Remaster)"
    ],
    "tuJuego": "Final Fantasy (Remaster)",
-   "dias": 162
+   "dias": 163
   },
   {
    "id": "d-luigi587-generationsdecomp",
@@ -922,7 +922,7 @@
     "Sonic Generations"
    ],
    "tuJuego": "Sonic Generations",
-   "dias": 363
+   "dias": 364
   },
   {
    "id": "d-soulcalibur-ii-research-group-scii-re",
@@ -943,7 +943,7 @@
     "SoulCalibur II"
    ],
    "tuJuego": "SoulCalibur II",
-   "dias": 371
+   "dias": 372
   },
   {
    "id": "d-jhdev2006-super-mario-world-remastered-public",
@@ -964,7 +964,7 @@
     "Super Mario World"
    ],
    "tuJuego": "Super Mario World",
-   "dias": 549
+   "dias": 550
   },
   {
    "id": "d-doldecomp-sadx",
@@ -986,7 +986,7 @@
     "Sonic Adventure"
    ],
    "tuJuego": "Sonic Adventure DX Director’s Cut",
-   "dias": 835
+   "dias": 836
   },
   {
    "id": "d-waterdish-zelda3-android",
@@ -1007,7 +1007,7 @@
     "The Legend of Zelda: A Link to the Past"
    ],
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 895
+   "dias": 896
   },
   {
    "id": "d-jmxamongusmodder-cuphead-decomp",
@@ -1028,7 +1028,7 @@
     "Cuphead"
    ],
    "tuJuego": "Cuphead",
-   "dias": 1055
+   "dias": 1056
   },
   {
    "id": "d-snesrev-smw",
@@ -1036,7 +1036,7 @@
    "titulo": "Super Mario World (snesrev: smw)",
    "subtipo": "decompilation",
    "plataforma": "SNES",
-   "estrellas": 651,
+   "estrellas": 652,
    "ultimoCommit": "2023-08-16T22:29:54Z",
    "release": "v0.1",
    "fechaRelease": "2023-08-16T22:38:38Z",
@@ -1049,7 +1049,7 @@
     "Super Mario World"
    ],
    "tuJuego": "Super Mario World",
-   "dias": 1186
+   "dias": 1187
   },
   {
    "id": "d-stephini-smas-launcher",
@@ -1070,7 +1070,7 @@
     "Super Mario World"
    ],
    "tuJuego": "Super Mario World",
-   "dias": 1213
+   "dias": 1214
   },
   {
    "id": "d-everything8215-ff2",
@@ -1091,7 +1091,7 @@
     "Final Fantasy II (Remaster)"
    ],
    "tuJuego": "Final Fantasy II (Remaster)",
-   "dias": 1440
+   "dias": 1441
   },
   {
    "id": "d-yoshifanatic1-donkey-kong-country-1-disassembly",
@@ -1112,7 +1112,7 @@
     "Donkey Kong Country"
    ],
    "tuJuego": "Donkey Kong Country",
-   "dias": 1819
+   "dias": 1820
   },
   {
    "id": "d-daniele-rapagnani-alephone-android",
@@ -1133,7 +1133,7 @@
     "Marathon"
    ],
    "tuJuego": "Marathon",
-   "dias": 2003
+   "dias": 2004
   },
   {
    "id": "d-yoshifanatic1-smw-smas-smasw-disassembly",
@@ -1154,7 +1154,7 @@
     "Super Mario World"
    ],
    "tuJuego": "Super Mario World",
-   "dias": 2081
+   "dias": 2082
   },
   {
    "id": "d-jiggeryponkery-ff1-mmc5",
@@ -1175,7 +1175,7 @@
     "Final Fantasy (Remaster)"
    ],
    "tuJuego": "Final Fantasy (Remaster)",
-   "dias": 2113
+   "dias": 2114
   },
   {
    "id": "d-galaxyhaxz-smw-src",
@@ -1196,7 +1196,7 @@
     "Super Mario World"
    ],
    "tuJuego": "Super Mario World",
-   "dias": 2177
+   "dias": 2178
   },
   {
    "id": "d-huderlem-kirbydreamland",
@@ -1217,7 +1217,7 @@
     "Kirby’s Dream Land"
    ],
    "tuJuego": "Kirby’s Dream Land",
-   "dias": 2342
+   "dias": 2343
   },
   {
    "id": "d-benwenger-finalfantasydisassembly",
@@ -1238,7 +1238,7 @@
     "Final Fantasy (Remaster)"
    ],
    "tuJuego": "Final Fantasy (Remaster)",
-   "dias": 2597
+   "dias": 2598
   },
   {
    "id": "d-walkingeyerobot-alttp-disassembly",
@@ -1259,7 +1259,7 @@
     "The Legend of Zelda: A Link to the Past"
    ],
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 2911
+   "dias": 2912
   },
   {
    "id": "d-gnaghi-smwdisc",
@@ -1280,7 +1280,7 @@
     "Super Mario World"
    ],
    "tuJuego": "Super Mario World",
-   "dias": 4315
+   "dias": 4316
   },
   {
    "id": "d-sonicretro-sad-disasm",
@@ -1301,7 +1301,7 @@
     "Sonic Adventure"
    ],
    "tuJuego": "Sonic Adventure",
-   "dias": 4730
+   "dias": 4731
   }
  ],
  "estudios": [
@@ -1323,7 +1323,7 @@
    ],
    "estudio": "FreakZone Games",
    "tuJuego": "The Angry Video Game Nerd Adventures",
-   "dias": 13
+   "dias": 14
   },
   {
    "id": "e-176043",
@@ -1345,7 +1345,7 @@
    ],
    "estudio": "Nintendo R&D1",
    "tuJuego": "Super Mario Land 2: 6 Golden Coins",
-   "dias": 103
+   "dias": 104
   },
   {
    "id": "e-410642",
@@ -1365,7 +1365,7 @@
    ],
    "estudio": "Nintendo",
    "tuJuego": "Rhythm Heaven Megamix",
-   "dias": 134
+   "dias": 135
   },
   {
    "id": "e-417186",
@@ -1388,7 +1388,7 @@
    ],
    "estudio": "HAL Laboratory",
    "tuJuego": "Kirby’s Dream Land 2",
-   "dias": -227
+   "dias": -226
   },
   {
    "id": "e-325611",
@@ -1412,7 +1412,7 @@
    ],
    "estudio": "Naughty Dog",
    "tuJuego": "Crash Team Racing",
-   "dias": -411
+   "dias": -410
   },
   {
    "id": "e-347662",
@@ -1433,7 +1433,7 @@
    ],
    "estudio": "Drinkbox Studios",
    "tuJuego": "Guacamelee!",
-   "dias": -411
+   "dias": -410
   },
   {
    "id": "e-387020",
@@ -1455,7 +1455,7 @@
    ],
    "estudio": "Dimps",
    "tuJuego": "Sonic Generations",
-   "dias": -411
+   "dias": -410
   },
   {
    "id": "e-417647",
@@ -1476,7 +1476,7 @@
    ],
    "estudio": "Blizzard Entertainment",
    "tuJuego": "StarCraft II: Heart of the Swarm",
-   "dias": -867
+   "dias": -866
   }
  ]
 }
