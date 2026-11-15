@@ -1,7 +1,7 @@
 import { PANORAMAS_JSON_URL, fetchJsonSafe } from "../shared/constants.js";
 import { useDesborde } from "../shared/ui.jsx";
 import { FilaSeccion, F_HAND, F_SANS, T_CLARO as T, chip } from "../fadiman/fadimanUi.jsx";
-import { useSeleccion, alternarEstrella, marcarTarea, sincronizarCon, vigentes, diaDeTarea, textoTarea } from "./seleccion.js";
+import { useSeleccion, alternarEstrella, marcarTarea, sincronizarCon, vigentes, diaDeTarea, textoTarea, textoCompartir } from "./seleccion.js";
 
 const { useState, useEffect, useMemo, useRef } = React;
 
@@ -61,11 +61,13 @@ function Etiqueta({ children, color, fuerte }) {
 
 function Etiquetas({ e, nuevo }) {
   const pide = e.inscripcion === true;
-  const cupos = !pide && (e.ventaOnline || (e.cupos && e.cupos > 0));
+  // "maximo_entradas" de CCLM es un tope configurado (50 en casi todo), no cupos disponibles: el número solo
+  // se muestra cuando hay inscripción previa o venta de entradas online; si no, no dice nada útil.
+  const n = e.cupos && e.cupos > 0 ? ` · ${e.cupos} cupos` : "";
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 6 }}>
-      {pide && <Etiqueta color={ACENTO} fuerte>🎟 Requiere inscripción</Etiqueta>}
-      {cupos && <Etiqueta color={ACENTO}>🎟 {e.ventaOnline ? "Entrada online" : `Cupos ${e.cupos}`}</Etiqueta>}
+      {pide && <Etiqueta color={ACENTO} fuerte>🎟 Requiere inscripción{n}</Etiqueta>}
+      {!pide && e.ventaOnline && <Etiqueta color={ACENTO}>🎟 Entrada online{n}</Etiqueta>}
       {e.gratis === true && <Etiqueta color="#2e7d32">Gratis</Etiqueta>}
       {e.gratis === false && <Etiqueta>{e.precio ? `$${e.precio.toLocaleString("es-CL")}` : "Con costo"}</Etiqueta>}
       {nuevo && <Etiqueta color="#1565c0">✨ Nuevo</Etiqueta>}
@@ -89,6 +91,17 @@ const dato = { fontFamily: F_SANS, fontSize: 12, color: T.dim, lineHeight: 1.4, 
 
 // Detalle desplegado dentro de la propia tarjeta (patrón de Feed: el texto ya viene en el JSON).
 function Detalle({ e, entrada, tareaOk, onCrear }) {
+  const [aviso, setAviso] = useState(null);
+  // Menú nativo de compartir del celular; donde no exista, copia el texto al portapapeles.
+  const compartir = async () => {
+    const { titulo, texto, url } = textoCompartir(e);
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) { await navigator.share({ title: titulo, text: texto, url }); return; }
+    } catch (err) { if (err && err.name === "AbortError") return; }   // cerró el menú: no es un error
+    try { await navigator.clipboard.writeText(`${texto}\n${url}`); setAviso("Copiado ✓"); }
+    catch (err) { setAviso("No se pudo copiar"); }
+    setTimeout(() => setAviso(null), 2200);
+  };
   const cuando = e.enCurso ? `en curso · hasta ${corta(e.fin)}` : e.fin !== e.inicio ? `${corta(e.inicio)} → ${corta(e.fin)}` : corta(e.inicio);
   const costo = e.gratis === true ? "Gratis" : e.gratis === false ? (e.precio ? `$${e.precio.toLocaleString("es-CL")}` : "Con costo") : null;
   const filas = [["Cuándo", [cuando, e.hora].filter(Boolean).join(" · ")], ["Dónde", [e.lugar, e.direccion].filter(Boolean).join(" — ")], ["Costo", costo]].filter(f => f[1]);
@@ -109,6 +122,7 @@ function Detalle({ e, entrada, tareaOk, onCrear }) {
             ? <span style={{ ...chip(T, true), minHeight: 34, display: "inline-flex", alignItems: "center" }}>✓ En el planificador · {corta(entrada.tarea.dia)}</span>
             : <button onClick={onCrear} style={{ ...chip(T, false), minHeight: 34, borderColor: ACENTO }}>📅 Crear en planificador</button>)
           : <span style={{ ...dato, margin: 0, fontStyle: "italic" }}>Marca ⭐ para poder crearlo en el planificador</span>}
+        <button onClick={compartir} style={{ ...chip(T, false), minHeight: 34 }}>{aviso || "↗ Compartir"}</button>
         <a href={e.url} target="_blank" rel="noopener noreferrer" style={{ marginLeft: "auto", fontFamily: F_SANS, fontSize: 12, color: T.dim, textDecoration: "underline" }}>Ver original ↗</a>
       </div>
     </div>
@@ -176,7 +190,7 @@ export default function PanoramasPage({ onCrearTarea, tareaExiste }) {
     const primerLote = delJson.reduce((m, e) => (e.visto && e.visto < m ? e.visto : m), "9999-12-31");
     const esNuevo = e => !!e.visto && e.visto > primerLote && diasEntre(e.visto, hoy) <= 3;
     const comunas = [...new Set(todos.map(e => e.comuna).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
-    const pasa = e => (!soloGratis || e.gratis === true) && (!soloCupos || e.inscripcion === true || e.ventaOnline || e.cupos > 0) && (!soloNuevos || esNuevo(e)) && (!comuna || e.comuna === comuna);
+    const pasa = e => (!soloGratis || e.gratis === true) && (!soloCupos || e.inscripcion === true || e.ventaOnline) && (!soloNuevos || esNuevo(e)) && (!comuna || e.comuna === comuna);
     const filtrados = todos.filter(pasa);
     const grupos = agrupar(filtrados.filter(e => !e.enCurso), hoy);
     const enCurso = filtrados.filter(e => e.enCurso).sort((a, b) => a.fin.localeCompare(b.fin));

@@ -1,7 +1,7 @@
 // Lectura limpia del detalle de un evento (modules/feed/scripts/lib/panoramas-detalle.mjs).
 // Cloudflare /markdown entrega la página entera; el limpiador debe dejar solo el texto del evento.
 import assert from "node:assert/strict";
-import { leerMarkdown, textoDeHtml, pedirMarkdown, MAX_DETALLE } from "../modules/feed/scripts/lib/panoramas-detalle.mjs";
+import { leerMarkdown, textoDeHtml, pedirMarkdown, pideInscripcion, MAX_DETALLE } from "../modules/feed/scripts/lib/panoramas-detalle.mjs";
 
 const PAGINA = `
 [Saltar al contenido](#main)
@@ -87,4 +87,19 @@ assert(textoDeHtml("<p>" + "Descripción del evento en La Moneda. ".repeat(4) + 
   assert.equal(visto.o.headers.Authorization, "Bearer tok");
   assert.equal(JSON.parse(visto.o.body).url, "https://x.cl/e");
 }
+// 8. Inscripción previa leída del texto (con negaciones; casos reales de panoramas.json)
+assert.equal(pideInscripcion("Modera: Juvenal Barría.  Actividad gratuita, no requiere inscripción previa."), false, "CCLM: NO requiere (no es un sí)");
+assert.equal(pideInscripcion("Los/as interesados/as en asistir a la inauguración deben inscribirse en el formulario adjunto abajo."), true, "Museos: deben inscribirse");
+assert.equal(pideInscripcion("Taller con inscripción previa en el sitio web."), true);
+assert.equal(pideInscripcion("Requiere inscripción previa. Cupos limitados."), true);
+assert.equal(pideInscripcion("Entrada liberada, sin inscripción."), false);
+assert.equal(pideInscripcion("Es necesaria la inscripción previa."), true);
+assert.equal(pideInscripcion("Inscríbete aquí para participar."), true);
+assert.equal(pideInscripcion("Se recomienda reserva previa para grupos."), null, "recomendación ≠ requisito");
+assert.equal(pideInscripcion("Una exposición sobre la inscripción de los nombres en la piedra."), null, "palabra suelta, sin pedirla");
+assert.equal(pideInscripcion("No requiere inscripción. Los niños deben inscribirse en el taller aparte."), true, "un sí en otra oración gana a un no");
+assert.equal(pideInscripcion("No olvides la inscripción previa antes del viernes."), true, "\"no olvides\" no es una negación");
+assert.equal(pideInscripcion("Sin necesidad de inscripción previa."), false);
+assert.equal(pideInscripcion(""), null);
+assert.equal(pideInscripcion(null), null);
 console.log("OK panoramas-detalle");

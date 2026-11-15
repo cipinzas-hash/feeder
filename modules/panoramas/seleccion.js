@@ -34,6 +34,13 @@ export function copiaDe(ev) {
   return c;
 }
 
+// Lo que se comparte de un evento: título, una línea (cuándo · hora · lugar) y el enlace al original.
+export function textoCompartir(ev) {
+  const cuando = ev.enCurso ? `en curso hasta ${fechaCorta(ev.fin)}` : ev.fin !== ev.inicio ? `${fechaCorta(ev.inicio)} → ${fechaCorta(ev.fin)}` : fechaCorta(ev.inicio);
+  const linea = [cuando, ev.hora, ev.lugar].filter(Boolean).join(" · ");
+  return { titulo: ev.titulo, texto: `${ev.titulo}\n${linea}`, url: ev.url };
+}
+
 // ── Estado (caché de módulo + oyentes, como Game enhanced) ───────────────────
 const mapa = o => (o && typeof o === "object" && !Array.isArray(o) ? o : {});
 

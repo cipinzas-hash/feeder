@@ -30,7 +30,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { leerMarkdown, textoDeHtml, pedirMarkdown } from "./lib/panoramas-detalle.mjs";
+import { leerMarkdown, textoDeHtml, pedirMarkdown, pideInscripcion } from "./lib/panoramas-detalle.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT = process.env.PANORAMAS_OUT || path.join(__dirname, "..", "data", "panoramas.json");
@@ -285,6 +285,14 @@ async function enriquecerDetalle(todos, previosPorId) {
     await new Promise(res => setTimeout(res, PAUSA_CF_MS));
   }
   for (const ev of todos) if (!ev.detalle) { delete ev.detalle; delete ev.detalleFuente; }
+  // "Requiere inscripción": el marcado de la fuente casi nunca lo dice; la descripción sí ("deben inscribirse…",
+  // "inscripción previa"). Se lee del texto (con negaciones) y se recalcula cada corrida: el detalle se hereda.
+  for (const ev of todos) {
+    if (!ev.detalle || ev.inscripcion === true) continue;
+    const r = pideInscripcion(ev.detalle);
+    if (r === true) { ev.inscripcion = true; ev.inscripcionFuente = "texto"; }
+    else if (r === false && ev.inscripcion == null) { ev.inscripcion = false; ev.inscripcionFuente = "texto"; }
+  }
   log(`\n== detalle ==\n  intentos ${est.intentos} · leídos ${est.leidos} · heredados ${est.heredados} · sin texto útil ${est.vacios} · errores ${est.errores}${est.motivo ? " · " + est.motivo : ""}`);
   return { ...est, conDetalle: todos.filter(e => e.detalle).length, total: todos.length };
 }

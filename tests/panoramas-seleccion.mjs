@@ -9,7 +9,7 @@ globalThis.localStorage = { getItem: k => (almacen.has(k) ? almacen.get(k) : nul
 const KEY = "angst-panoramas-seleccion-v1";
 
 const S = await import("../modules/panoramas/seleccion.js");
-const { alternarEstrella, marcarTarea, sincronizarCon, leerSeleccion, rehidratarSeleccion, vigentes, diaDeTarea, textoTarea, avisosDelDia, diasEntre, sumarDias } = S;
+const { textoCompartir, alternarEstrella, marcarTarea, sincronizarCon, leerSeleccion, rehidratarSeleccion, vigentes, diaDeTarea, textoTarea, avisosDelDia, diasEntre, sumarDias } = S;
 
 const HOY = "2026-11-14";
 const ev = (id, inicio, extra = {}) => ({ id, titulo: "Evento " + id, url: "https://x.cl/" + id, inicio, fin: extra.fin || inicio, hora: "19:00", lugar: "Teatro", comuna: "Santiago", visto: "2026-11-01", _dias: 3, ...extra });
@@ -77,6 +77,12 @@ assert.equal(avisosDelDia(est, "2026-11-20", HOY).length, 0, "otro día: nada");
 const av = avisosDelDia(est, "2026-11-21", HOY)[0];
 assert.deepEqual(av, { icono: "⭐", texto: "Evento f", hora: "10:00", detalle: "Teatro" }, "hora de inicio del rango");
 assert.equal(avisosDelDia({ sel: { g: { ev: ev("g", "2026-11-21", { hora: null }) } } }, "2026-11-21", HOY)[0].hora, null, "sin hora no inventa una");
+
+// 7b. texto para compartir: título + (cuándo · hora · lugar) + enlace al original
+assert.deepEqual(textoCompartir(ev("s", "2026-11-22")), { titulo: "Evento s", texto: "Evento s\ndom 22 nov · 19:00 · Teatro", url: "https://x.cl/s" });
+assert(textoCompartir(ev("s", "2026-11-22", { fin: "2026-11-24" })).texto.includes("dom 22 nov → mar 24 nov"), "rango");
+assert(textoCompartir(ev("s", "2026-10-01", { fin: "2027-01-03", enCurso: true })).texto.includes("en curso hasta dom 3 ene"), "en curso");
+assert.equal(textoCompartir(ev("s", "2026-11-22", { hora: null, lugar: null })).texto, "Evento s\ndom 22 nov", "sin hora ni lugar no deja separadores sueltos");
 
 // 8. fechas
 assert.equal(diasEntre("2026-11-14", "2026-11-21"), 7);

@@ -75,6 +75,23 @@ export function leerMarkdown(markdown, titulo = "") {
   return detalle.length >= MIN_DETALLE ? detalle : "";
 }
 
+// ¿El texto dice que hay que inscribirse antes? true = lo pide · false = dice expresamente que no · null = no lo menciona.
+// Oración por oración: "Actividad gratuita, no requiere inscripción previa." es un NO, no un sí.
+const PIDE_INSCRIPCION = /(inscripci[oó]n(?:es)? previa|previa inscripci[oó]n|requiere(?:n)?\s+(?:de\s+)?(?:una\s+)?(?:previa\s+)?(?:inscripci[oó]n|reserva)|(?:es\s+)?(?:necesari[oa]|obligatori[oa])\s+(?:la\s+|una\s+)?(?:previa\s+)?(?:inscripci[oó]n|reserva)|(?:necesario|obligatorio)\s+inscrib|deb(?:e|en|es)\s+inscrib(?:ir|irte|irse)|inscr[ií]be(?:te|se|n)\b|reserva previa|previa reserva|con inscripci[oó]n)/i;
+const NIEGA_INSCRIPCION = /\b(?:no|sin|ni)\s+(?:(?:es\s+|se\s+)?(?:requiere\w*|necesit\w+|necesari\w+|exige\w*|hace\s+falta|tiene\s+que|hay\s+que)\s+)?(?:(?:de|una|la|previa|necesidad\s+de)\s+)*(?:inscri|reserva)/i;
+const SUAVE = /(recomienda|recomend|sugier|sugerimos|opcional|si lo deseas|puedes)/i;   // "se recomienda reservar" no es un requisito
+
+export function pideInscripcion(texto) {
+  if (typeof texto !== "string" || !texto) return null;
+  let nego = false;
+  for (const frase of texto.split(/(?<=[.!?])\s+|\n+/)) {
+    if (SUAVE.test(frase)) continue;
+    if (NIEGA_INSCRIPCION.test(frase)) { nego = true; continue; }
+    if (PIDE_INSCRIPCION.test(frase)) return true;
+  }
+  return nego ? false : null;
+}
+
 // HTML del resumen de WordPress (excerpt.rendered) → texto plano. Es el respaldo de CCLM.
 export function textoDeHtml(html) {
   const t = String(html || "").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&#8211;|&#8212;/g, "–").replace(/&#8217;|&#8216;/g, "'").replace(/&hellip;|\[&hellip;\]/g, "…").replace(/&#\d+;|&[a-z]+;/g, " ").replace(/\s+/g, " ").trim();

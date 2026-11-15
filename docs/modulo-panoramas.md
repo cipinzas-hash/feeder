@@ -52,6 +52,12 @@ Pedido de Cristopher: marcar panoramas con ⭐, crear uno en el planificador y v
   si la tarea se borra del planificador, el botón vuelve a ofrecer crearla.
 - **Aviso en Semana.** `avisosDelDia` (seleccion.js) entra a las balizas del dashboard por `panoramasDe` (ícono ⭐), **solo el día de inicio del evento y solo desde 7 días antes**
   (la baliza 🚨 normal mira 60 días; los panoramas, a propósito, solo la última semana). Cuenta en la próxima baliza, el total de la semana y la agenda. Todo ⭐ avisa; no hace falta haber creado la tarea.
+- **Cupos e inscripción (15-nov-2026).** `cupos` viene de `maximo_entradas` de CCLM: es un tope configurado (50 en casi todas las exposiciones y actividades), **no cupos disponibles**. La etiqueta con número
+  aparece solo con **inscripción previa** ("🎟 Requiere inscripción · N cupos") o **entrada online** ("🎟 Entrada online · N cupos"); sin eso no se muestra nada. El filtro "🎟 Cupos / inscripción" deja pasar solo esos dos casos.
+  Como el marcado de la fuente casi nunca dice que hay que inscribirse, `build-panoramas` lo lee de la descripción (`pideInscripcion`, `lib/panoramas-detalle.mjs`): oración por oración, con negaciones
+  ("no requiere inscripción previa" = NO) y sin contar recomendaciones ("se recomienda reservar"); queda `inscripcionFuente: "texto"`. Se recalcula cada corrida porque el detalle se hereda.
+- **Compartir.** Botón "↗ Compartir" en el detalle: menú nativo del celular (`navigator.share`: título, línea cuándo · hora · lugar y enlace al original); si el navegador no lo tiene, copia el texto al portapapeles ("Copiado ✓").
+  Comparte el enlace de la fuente, no uno de la app (no hay enlaces propios por evento).
 - **Detalle en la app.** Tocar una tarjeta (o el título de la ficha "Próximo panorama") despliega el detalle ahí mismo, sin pestaña nueva ni ventana emergente (N2): imagen, cuándo/dónde/costo, inscripción,
   descripción, ⭐, crear en planificador y "Ver original ↗" como salida. Una tarjeta abierta a la vez.
 - **De dónde sale la descripción (`detalle`).** `build-panoramas.mjs` pide a **Cloudflare Browser Rendering `/markdown`** la página del evento y `lib/panoramas-detalle.mjs` la limpia

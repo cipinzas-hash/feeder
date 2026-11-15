@@ -3827,6 +3827,12 @@ var __angst = (() => {
     c.enCurso = diasEntre(ev.inicio, ev.fin) > 45;
     return c;
   }
+  function textoCompartir(ev) {
+    const cuando4 = ev.enCurso ? `en curso hasta ${fechaCorta(ev.fin)}` : ev.fin !== ev.inicio ? `${fechaCorta(ev.inicio)} \u2192 ${fechaCorta(ev.fin)}` : fechaCorta(ev.inicio);
+    const linea = [cuando4, ev.hora, ev.lugar].filter(Boolean).join(" \xB7 ");
+    return { titulo: ev.titulo, texto: `${ev.titulo}
+${linea}`, url: ev.url };
+  }
   var mapa2 = (o) => o && typeof o === "object" && !Array.isArray(o) ? o : {};
   function leer3() {
     try {
@@ -15949,8 +15955,8 @@ Toco reintentar ahora.`);
   }
   function Etiquetas({ e, nuevo }) {
     const pide = e.inscripcion === true;
-    const cupos = !pide && (e.ventaOnline || e.cupos && e.cupos > 0);
-    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 5, marginTop: 6 } }, pide && /* @__PURE__ */ React.createElement(Etiqueta, { color: ACENTO2, fuerte: true }, "\u{1F39F} Requiere inscripci\xF3n"), cupos && /* @__PURE__ */ React.createElement(Etiqueta, { color: ACENTO2 }, "\u{1F39F} ", e.ventaOnline ? "Entrada online" : `Cupos ${e.cupos}`), e.gratis === true && /* @__PURE__ */ React.createElement(Etiqueta, { color: "#2e7d32" }, "Gratis"), e.gratis === false && /* @__PURE__ */ React.createElement(Etiqueta, null, e.precio ? `$${e.precio.toLocaleString("es-CL")}` : "Con costo"), nuevo && /* @__PURE__ */ React.createElement(Etiqueta, { color: "#1565c0" }, "\u2728 Nuevo"), e.categoria && /* @__PURE__ */ React.createElement(Etiqueta, null, e.categoria.length > 26 ? e.categoria.slice(0, 25) + "\u2026" : e.categoria), e.fin !== e.inicio && !e.enCurso && /* @__PURE__ */ React.createElement(Etiqueta, null, "hasta ", corta(e.fin)), e.rancio && /* @__PURE__ */ React.createElement(Etiqueta, { color: "#c77700" }, "dato sin actualizar"));
+    const n = e.cupos && e.cupos > 0 ? ` \xB7 ${e.cupos} cupos` : "";
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 5, marginTop: 6 } }, pide && /* @__PURE__ */ React.createElement(Etiqueta, { color: ACENTO2, fuerte: true }, "\u{1F39F} Requiere inscripci\xF3n", n), !pide && e.ventaOnline && /* @__PURE__ */ React.createElement(Etiqueta, { color: ACENTO2 }, "\u{1F39F} Entrada online", n), e.gratis === true && /* @__PURE__ */ React.createElement(Etiqueta, { color: "#2e7d32" }, "Gratis"), e.gratis === false && /* @__PURE__ */ React.createElement(Etiqueta, null, e.precio ? `$${e.precio.toLocaleString("es-CL")}` : "Con costo"), nuevo && /* @__PURE__ */ React.createElement(Etiqueta, { color: "#1565c0" }, "\u2728 Nuevo"), e.categoria && /* @__PURE__ */ React.createElement(Etiqueta, null, e.categoria.length > 26 ? e.categoria.slice(0, 25) + "\u2026" : e.categoria), e.fin !== e.inicio && !e.enCurso && /* @__PURE__ */ React.createElement(Etiqueta, null, "hasta ", corta(e.fin)), e.rancio && /* @__PURE__ */ React.createElement(Etiqueta, { color: "#c77700" }, "dato sin actualizar"));
   }
   function Estrella({ activa, onClick }) {
     return /* @__PURE__ */ React.createElement(
@@ -15969,13 +15975,33 @@ Toco reintentar ahora.`);
   }
   var dato = { fontFamily: F_SANS2, fontSize: 12, color: T_CLARO.dim, lineHeight: 1.4, margin: "0 0 3px" };
   function Detalle({ e, entrada, tareaOk, onCrear }) {
+    const [aviso, setAviso] = useState36(null);
+    const compartir = async () => {
+      const { titulo, texto, url } = textoCompartir(e);
+      try {
+        if (typeof navigator !== "undefined" && navigator.share) {
+          await navigator.share({ title: titulo, text: texto, url });
+          return;
+        }
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+      }
+      try {
+        await navigator.clipboard.writeText(`${texto}
+${url}`);
+        setAviso("Copiado \u2713");
+      } catch (err) {
+        setAviso("No se pudo copiar");
+      }
+      setTimeout(() => setAviso(null), 2200);
+    };
     const cuando4 = e.enCurso ? `en curso \xB7 hasta ${corta(e.fin)}` : e.fin !== e.inicio ? `${corta(e.inicio)} \u2192 ${corta(e.fin)}` : corta(e.inicio);
     const costo = e.gratis === true ? "Gratis" : e.gratis === false ? e.precio ? `$${e.precio.toLocaleString("es-CL")}` : "Con costo" : null;
     const filas = [["Cu\xE1ndo", [cuando4, e.hora].filter(Boolean).join(" \xB7 ")], ["D\xF3nde", [e.lugar, e.direccion].filter(Boolean).join(" \u2014 ")], ["Costo", costo]].filter((f2) => f2[1]);
     const parrafos = e.detalle ? e.detalle.split(/\n\n+/).filter(Boolean) : [];
     return /* @__PURE__ */ React.createElement("div", { style: { padding: "0 12px 12px", borderTop: `1px dashed ${T_CLARO.line}` } }, e.imagen && /* @__PURE__ */ React.createElement("img", { src: e.imagen, alt: "", loading: "lazy", onError: (ev) => {
       ev.currentTarget.style.display = "none";
-    }, style: { display: "block", width: "100%", maxHeight: 170, objectFit: "cover", borderRadius: 8, margin: "10px 0 8px" } }), /* @__PURE__ */ React.createElement("div", { style: { marginTop: e.imagen ? 0 : 10 } }, filas.map(([k, v]) => /* @__PURE__ */ React.createElement("p", { key: k, style: dato }, /* @__PURE__ */ React.createElement("b", { style: { color: T_CLARO.txt } }, k, ":"), " ", v)), e.inscripcion === true && e.inscripcionUrl && /* @__PURE__ */ React.createElement("p", { style: dato }, /* @__PURE__ */ React.createElement("b", { style: { color: "#8a5a00" } }, "Inscripci\xF3n:"), " ", /* @__PURE__ */ React.createElement("a", { href: e.inscripcionUrl, target: "_blank", rel: "noopener noreferrer", style: { color: "#8a5a00", wordBreak: "break-all" } }, e.inscripcionUrl.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60), " \u2197"))), parrafos.length > 0 ? /* @__PURE__ */ React.createElement("div", { style: { margin: "8px 0 4px" } }, parrafos.map((t, i) => /* @__PURE__ */ React.createElement("p", { key: i, style: { fontFamily: F_SANS2, fontSize: 13, color: T_CLARO.txt, lineHeight: 1.5, margin: "0 0 8px" } }, t))) : /* @__PURE__ */ React.createElement("p", { style: { ...dato, fontStyle: "italic", margin: "8px 0 4px" } }, "Esta fuente no entreg\xF3 una descripci\xF3n; el original la tiene."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 8 } }, entrada ? tareaOk ? /* @__PURE__ */ React.createElement("span", { style: { ...chip(T_CLARO, true), minHeight: 34, display: "inline-flex", alignItems: "center" } }, "\u2713 En el planificador \xB7 ", corta(entrada.tarea.dia)) : /* @__PURE__ */ React.createElement("button", { onClick: onCrear, style: { ...chip(T_CLARO, false), minHeight: 34, borderColor: ACENTO2 } }, "\u{1F4C5} Crear en planificador") : /* @__PURE__ */ React.createElement("span", { style: { ...dato, margin: 0, fontStyle: "italic" } }, "Marca \u2B50 para poder crearlo en el planificador"), /* @__PURE__ */ React.createElement("a", { href: e.url, target: "_blank", rel: "noopener noreferrer", style: { marginLeft: "auto", fontFamily: F_SANS2, fontSize: 12, color: T_CLARO.dim, textDecoration: "underline" } }, "Ver original \u2197")));
+    }, style: { display: "block", width: "100%", maxHeight: 170, objectFit: "cover", borderRadius: 8, margin: "10px 0 8px" } }), /* @__PURE__ */ React.createElement("div", { style: { marginTop: e.imagen ? 0 : 10 } }, filas.map(([k, v]) => /* @__PURE__ */ React.createElement("p", { key: k, style: dato }, /* @__PURE__ */ React.createElement("b", { style: { color: T_CLARO.txt } }, k, ":"), " ", v)), e.inscripcion === true && e.inscripcionUrl && /* @__PURE__ */ React.createElement("p", { style: dato }, /* @__PURE__ */ React.createElement("b", { style: { color: "#8a5a00" } }, "Inscripci\xF3n:"), " ", /* @__PURE__ */ React.createElement("a", { href: e.inscripcionUrl, target: "_blank", rel: "noopener noreferrer", style: { color: "#8a5a00", wordBreak: "break-all" } }, e.inscripcionUrl.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60), " \u2197"))), parrafos.length > 0 ? /* @__PURE__ */ React.createElement("div", { style: { margin: "8px 0 4px" } }, parrafos.map((t, i) => /* @__PURE__ */ React.createElement("p", { key: i, style: { fontFamily: F_SANS2, fontSize: 13, color: T_CLARO.txt, lineHeight: 1.5, margin: "0 0 8px" } }, t))) : /* @__PURE__ */ React.createElement("p", { style: { ...dato, fontStyle: "italic", margin: "8px 0 4px" } }, "Esta fuente no entreg\xF3 una descripci\xF3n; el original la tiene."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 8 } }, entrada ? tareaOk ? /* @__PURE__ */ React.createElement("span", { style: { ...chip(T_CLARO, true), minHeight: 34, display: "inline-flex", alignItems: "center" } }, "\u2713 En el planificador \xB7 ", corta(entrada.tarea.dia)) : /* @__PURE__ */ React.createElement("button", { onClick: onCrear, style: { ...chip(T_CLARO, false), minHeight: 34, borderColor: ACENTO2 } }, "\u{1F4C5} Crear en planificador") : /* @__PURE__ */ React.createElement("span", { style: { ...dato, margin: 0, fontStyle: "italic" } }, "Marca \u2B50 para poder crearlo en el planificador"), /* @__PURE__ */ React.createElement("button", { onClick: compartir, style: { ...chip(T_CLARO, false), minHeight: 34 } }, aviso || "\u2197 Compartir"), /* @__PURE__ */ React.createElement("a", { href: e.url, target: "_blank", rel: "noopener noreferrer", style: { marginLeft: "auto", fontFamily: F_SANS2, fontSize: 12, color: T_CLARO.dim, textDecoration: "underline" } }, "Ver original \u2197")));
   }
   function Tarjeta({ e, hoy, nuevo, abierta, onToggle, entrada, onEstrella, tareaOk, onCrear }) {
     const d = aFecha2(e.inicio);
@@ -16042,7 +16068,7 @@ Toco reintentar ahora.`);
       const primerLote = delJson.reduce((m, e) => e.visto && e.visto < m ? e.visto : m, "9999-12-31");
       const esNuevo2 = (e) => !!e.visto && e.visto > primerLote && diasEntre2(e.visto, hoy) <= 3;
       const comunas = [...new Set(todos.map((e) => e.comuna).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
-      const pasa = (e) => (!soloGratis || e.gratis === true) && (!soloCupos || e.inscripcion === true || e.ventaOnline || e.cupos > 0) && (!soloNuevos || esNuevo2(e)) && (!comuna || e.comuna === comuna);
+      const pasa = (e) => (!soloGratis || e.gratis === true) && (!soloCupos || e.inscripcion === true || e.ventaOnline) && (!soloNuevos || esNuevo2(e)) && (!comuna || e.comuna === comuna);
       const filtrados = todos.filter(pasa);
       const grupos = agrupar2(filtrados.filter((e) => !e.enCurso), hoy);
       const enCurso = filtrados.filter((e) => e.enCurso).sort((a, b) => a.fin.localeCompare(b.fin));
