@@ -141,6 +141,7 @@ export const LOCAL_KEY_FIELDS = {
   gcalInbox: "angst-gcal-inbox-v1",                       // bandeja Familia → Angst: eventos ya pasados a tarea o ignorados (el sync borra de Google los importados)
   musicaMegusta: "angst-musica-megusta-v1",                // ♥ de Música: lanzamientos guardados (de ahí sale el directorio de artistas)
   gameEnhancedEstado: "angst-game-enhanced-estado-v1",     // Game enhanced: ítems guardados ("me interesa") y ocultos ("no me interesa")
+  tcgcryptoEstado: "angst-tcgcrypto-estado-v1",            // tcgcrypto: cartas conseguidas, versión elegida, cantidad, costo y notas por colección de cada TCG (clave nueva, issue #42)
   panoramasSeleccion: "angst-panoramas-seleccion-v1",      // Panoramas: ⭐ preseleccionados (copia del evento + tarea creada en el planificador); clave nueva, OK explícito del usuario 14-nov-2026 (R8)
 };
 

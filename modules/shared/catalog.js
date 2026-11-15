@@ -1,4 +1,4 @@
-import { CINE_JSON_URL, FEED_JSON_URL, FORMATO_BY_CATEGORIA, GAME_ENHANCED_JSON_URL, MELEE_JSON_URL, MUSIC_CATEGORIA, MUSICA_JSON_URL, VIDEOTECA_JSON_URL, VITRINA_CATEGORIAS, fetchJsonSafe } from "./constants.js";
+import { CINE_JSON_URL, FEED_JSON_URL, FORMATO_BY_CATEGORIA, GAME_ENHANCED_JSON_URL, MELEE_JSON_URL, MUSIC_CATEGORIA, MUSICA_JSON_URL, VIDEOTECA_JSON_URL, VITRINA_CATEGORIAS, fetchJsonSafe, tcgcryptoJsonUrl } from "./constants.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -83,6 +83,13 @@ export async function fetchGameEnhancedData() {
   const d = await fetchJsonSafe(GAME_ENHANCED_JSON_URL);
   if (!d || !Array.isArray(d.decomps) || !Array.isArray(d.estudios)) throw new Error("no se pudo leer game-enhanced.json");
   return { juegos: [...d.decomps, ...d.estudios], generatedAt: d.generatedAt || null, fuentes: d.fuentes || {} };
+}
+
+// tcgcrypto: catálogo + precios por set y versión de UN juego (tcgcrypto-<juego>.json). Archivo propio por juego.
+export async function fetchTcgCryptoData(tcg) {
+  const d = await fetchJsonSafe(tcgcryptoJsonUrl(tcg));
+  if (!d || !Array.isArray(d.cartas) || !Array.isArray(d.colecciones) || !Array.isArray(d.sets)) throw new Error(`no se pudo leer tcgcrypto-${tcg}.json`);
+  return d;
 }
 
 export async function fetchMusicaData() {

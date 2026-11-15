@@ -8,6 +8,7 @@ import { rehidratarCineEstado } from "../modules/vitrina/estado.js";
 import { rehidratarOverlay } from "../modules/vitrina/avance.js";
 import { rehidratarMegusta } from "../modules/musica/megusta.js";
 import { rehidratarEstado as rehidratarGameEnhanced } from "../modules/gameenhanced/estado.js";
+import { rehidratarEstado as rehidratarTcgCrypto } from "../modules/tcgcrypto/estado.js";
 import { rehidratarSeleccion as rehidratarPanoramas, useSeleccion as useSeleccionPanoramas, avisosDelDia as avisosPanoramas } from "../modules/panoramas/seleccion.js";
 import { fmt, fmtFull, getHoliday, addDays, weekOffsetFor } from "./dates.js";
 import { nivelRegistro, colorRegistro, barrasRegistro } from "./registro.js";
@@ -35,6 +36,7 @@ import VitrinaPage from "../modules/vitrina/VitrinaPage.jsx";
 import MusicaPage from "../modules/musica/MusicaPage.jsx";
 import PanoramasPage from "../modules/panoramas/PanoramasPage.jsx";
 import GameEnhancedPage from "../modules/gameenhanced/GameEnhancedPage.jsx";
+import TcgCryptoPage from "../modules/tcgcrypto/TcgCryptoPage.jsx";
 import SemanaDashboard from "./SemanaDashboard.jsx";
 
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
@@ -1544,6 +1546,7 @@ function AngstApp() {
     rehidratarMegusta();      // Música: ♥ guardados (caché de módulo)
     rehidratarGameEnhanced(); // Game enhanced: guardados / ocultos (caché de módulo)
     rehidratarPanoramas();    // Panoramas: ⭐ preseleccionados (caché de módulo)
+    rehidratarTcgCrypto();    // tcgcrypto: cartas conseguidas por colección (caché de módulo)
     if(Array.isArray(d.feedPodcastDispatched)) setPodcastDispatched(d.feedPodcastDispatched); // state de App
     try{ window.dispatchEvent(new Event("angst:restaurado")); }catch(e){} // Pokécripto relee "agotadas"
     setLoadMsg(`✓ Restauración completa desde ${sourceLabel||"backup"}`);
@@ -1860,6 +1863,10 @@ function AngstApp() {
         .gameenh-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
         .gameenh-body[data-ficha="true"]{overflow-y:auto;}
         .gameenh-body[data-ficha="true"]>*{flex:none;}
+        .tcgc{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
+        .tcgc-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
+        .tcgc-body[data-ficha="true"]{overflow-y:auto;}
+        .tcgc-body[data-ficha="true"]>*{flex:none;}
         .semana{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
         .semana-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
         .semana-body[data-expandido="true"],.semana-body[data-valvula="true"]{overflow-y:auto;}
@@ -1944,7 +1951,7 @@ function AngstApp() {
       {familiaOpen&&<FamiliaInboxModal items={familiaPend} onImport={familiaPasar} onIgnore={familiaIgnorar} onImportAll={familiaPasarTodos} onIgnoreAll={familiaIgnorarTodos} onRefresh={()=>cargarFamilia(true)} onClose={()=>setFamiliaOpen(false)} cargando={familiaBusy} mensaje={familiaMsg} generadoEn={familiaData?.generatedAt}/>}
       {calOpen&&<CalendarModal weekStart={weekStart} marks={calMarksView} onMark={handleMark} dayData={dayData} calMarks={calMarksView} kidsHealth={kidsHealth} onWeekSelect={date=>{const dow=date.getDay();const mon=addDays(date,-(dow===0?6:dow-1));const diff=Math.round((mon-BASE_DATE)/(7*86400000));updateWeekOffset(diff);}} onClose={()=>setCalOpen(false)}/>}
 
-      <div className={"app"+((page===0||page===1||page===4||page===5||page===8||page===10||page===12||page===13||page===14)?" app-fit":"")}>
+      <div className={"app"+((page===0||page===1||page===4||page===5||page===8||page===10||page===12||page===13||page===14||page===15)?" app-fit":"")}>
         <div className="hdr">
           <div className="hdr-title" style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>angstapp</div>
           <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
@@ -2044,9 +2051,9 @@ function AngstApp() {
         </div>
 
         {(()=>{
-          const TABS=[{label:"📅 Semana",emoji:"📅"},{label:"💵 Presupuesto",emoji:"💵"},{label:"📒 Emprendimientos",emoji:"📒"},{label:"🧠 mindfulness",emoji:"🧠"},{label:"🩺 salud",emoji:"🩺"},{label:"🍄 fadiman",emoji:"🍄"},{label:"🥗 nutrición",emoji:"🥗"},{label:"🏋️ ejercicio",emoji:"🏋️"},{label:"🃏 pokécripto",emoji:"🃏"},{label:"📰 feed",emoji:"📰"},{label:"🎬 vitrina",emoji:"🎬"},{label:"🌱 rutinas",emoji:"🌱"},{label:"🎧 música",emoji:"🎧"},{label:"🎮 game enhanced",emoji:"🎮"},{label:"🗓️ panoramas",emoji:"🗓️"}];
-          // Orden visual: Rutinas va justo después de Semana, Música (id 12) justo después de Feed y Game enhanced (id 13) al final. Los ids de página (índice en TABS) no se renumeran.
-          const ORDER=[0,11,1,2,3,4,5,6,7,8,9,12,14,10,13];
+          const TABS=[{label:"📅 Semana",emoji:"📅"},{label:"💵 Presupuesto",emoji:"💵"},{label:"📒 Emprendimientos",emoji:"📒"},{label:"🧠 mindfulness",emoji:"🧠"},{label:"🩺 salud",emoji:"🩺"},{label:"🍄 fadiman",emoji:"🍄"},{label:"🥗 nutrición",emoji:"🥗"},{label:"🏋️ ejercicio",emoji:"🏋️"},{label:"🃏 pokécripto",emoji:"🃏"},{label:"📰 feed",emoji:"📰"},{label:"🎬 vitrina",emoji:"🎬"},{label:"🌱 rutinas",emoji:"🌱"},{label:"🎧 música",emoji:"🎧"},{label:"🎮 game enhanced",emoji:"🎮"},{label:"🗓️ panoramas",emoji:"🗓️"},{label:"🎴 tcgcrypto",emoji:"🎴"}];
+          // Orden visual: Rutinas va justo después de Semana, tcgcrypto (id 15) justo después de Pokécripto, Música (id 12) justo después de Feed y Game enhanced (id 13) al final. Los ids de página (índice en TABS) no se renumeran.
+          const ORDER=[0,11,1,2,3,4,5,6,7,8,15,9,12,14,10,13];
           return (
             <div className="tabs" ref={tabsRef} data-edge={tabsEdge} style={{userSelect:"none"}}>
               {ORDER.map(ti=>{
@@ -2485,6 +2492,7 @@ function AngstApp() {
         {page===10&&<VitrinaPage/>}
         {page===12&&<MusicaPage/>}
         {page===13&&<GameEnhancedPage/>}
+        {page===15&&<TcgCryptoPage/>}
         {page===14&&<PanoramasPage onCrearTarea={crearTareaPanorama} tareaExiste={tareaPanoramaExiste}/>}
         {page===11&&<RoutinesPage routines={routines} onSave={saveRoutines} onAddToDay={(name,emoji)=>{const tk=fmtFull(new Date());const nid=Date.now();const dd=dayDataRef.current||{};const d=dd[tk]||makeEmptyDay();const nx={...dd,[tk]:{...d,tasks:[...d.tasks,{id:nid,text:(emoji?emoji+" ":"")+name,fixed:false,done:false}]}};setDayData(nx);dayDataRef.current=nx;saveToStorage({dayData:nx});}}/>}
 
