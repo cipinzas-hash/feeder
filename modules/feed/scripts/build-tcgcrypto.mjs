@@ -104,13 +104,15 @@ function plantillaImagen(sets) {
 // ── Yu-Gi-Oh!: clasificación con YGOPRODeck (respaldo: datos propios del producto en tcgcsv) ────────────────────────
 async function mapaYgopro() {
   const d = await getJson(YGOPRO, 2);
-  const porNombre = new Map(), porCodigo = new Map();
+  const porNombre = new Map(), porCodigo = new Map(), lista = [];
   for (const c of d.data || []) {
     const ficha = { nombre: c.name, atributo: c.attribute || "", tipo: c.race || "", arquetipo: c.archetype || "", texto: c.desc || "", cardType: c.type || "", nivel: c.level ?? null, atk: c.atk ?? null, def: c.def ?? null };
+    ficha.impresiones = (c.card_sets || []).length;
+    lista.push(ficha);
     porNombre.set(norm(c.name), ficha);
     for (const s of c.card_sets || []) if (s.set_code) porCodigo.set(String(s.set_code).toUpperCase(), ficha);
   }
-  return { porNombre, porCodigo, total: (d.data || []).length };
+  return { porNombre, porCodigo, lista, total: (d.data || []).length };
 }
 
 // Datos de carta para los filtros del módulo (biblioteca para armar mazos). Claves cortas; el archivo declara `filtros`.
@@ -144,7 +146,7 @@ async function construirYugioh() {
   try { ygo = await mapaYgopro(); d.ygoproCartas = ygo.total; } catch (e) { diag.avisos.push("YGOPRODeck no respondió; se clasifica solo con datos de tcgcsv: " + e.message); }
   const nombresSets = [], setFechas = [], setIds = [], cartas = new Map();
   let sinClasificar = 0, porCodigo = 0, porNombre = 0, porExt = 0;
-  const muestraSin = [];
+  const muestraSin = [], vistos = new Set();
   for (const s of sets) {
     const setIdx = nombresSets.push(s.grp.name) - 1;
     setFechas.push(String(s.grp.publishedOn || "").slice(0, 10)); setIds.push(s.grp.groupId);
@@ -162,6 +164,7 @@ async function construirYugioh() {
       }
       if (!f) { sinClasificar++; if (muestraSin.length < 15) muestraSin.push(p.name + " [" + numero + "]"); continue; }
       if (/token|non-game/i.test(f.cardType || "")) continue;   // fichas y cartas fuera de juego: no son coleccionables
+      vistos.add(norm(f.nombre || p.name));
       const colecs = coleccionesYgo(f);
       if (!colecs.length) continue;
       const k = norm(f.nombre || p.name);
@@ -176,6 +179,20 @@ async function construirYugioh() {
   Object.assign(d, { cartas: cartas.size, versiones: [...cartas.values()].reduce((a, c) => a + c.v.length, 0), clasificadasPorCodigo: porCodigo, clasificadasPorNombre: porNombre, clasificadasPorTcgcsv: porExt, sinClasificar, muestraSinClasificar: muestraSin });
   d.porColeccion = Object.fromEntries(COLECCIONES_YGO.map(x => [x.id, [...cartas.values()].filter(c => c.c.includes(x.id)).length]));
   d.setsConFecha = setFechas.filter(Boolean).length;
+  d.cartasDistintasEnTcgcsv = vistos.size;
+  if (ygo) {
+    // Cobertura frente a YGOPRODeck: ¿cuántas cartas de cada criterio existen allá, tienen impresiones y llegaron acá?
+    const mide = (nombre, pred) => {
+      const todas = ygo.lista.filter(pred);
+      const conSets = todas.filter(f => f.impresiones > 0);
+      const llegaron = conSets.filter(f => cartas.has(norm(f.nombre)));
+      const vistasTcg = conSets.filter(f => vistos.has(norm(f.nombre)));
+      d["cobertura_" + nombre] = { enYgopro: todas.length, conImpresiones: conSets.length, vistasEnTcgcsv: vistasTcg.length, enNuestroArchivo: llegaron.length, muestraNoVistas: conSets.filter(f => !vistos.has(norm(f.nombre))).slice(0, 20).map(f => f.nombre), muestraVistasPeroFuera: vistasTcg.filter(f => !cartas.has(norm(f.nombre))).slice(0, 10).map(f => f.nombre) };
+    };
+    mide("zombieTipo", f => f.tipo === "Zombie" && /monster/i.test(f.cardType));
+    mide("zombieTexto", f => /\bzombie\b/i.test(f.texto));
+    mide("dark", f => f.atributo === "DARK");
+  }
   d.muestraMeta = [...cartas.values()].slice(0, 3).map(c => c.m);
   return { tcg: "yugioh", nombre: "Yu-Gi-Oh!", emoji: "🃏", agrupar: "nombre", imgTpl: plantillaImagen(sets), colecciones: COLECCIONES_YGO, filtros: FILTROS_YGO, sets: nombresSets, setFechas, setIds, cartas: [...cartas.values()].sort((a, b) => a.n.localeCompare(b.n)) };
 }
