@@ -67,10 +67,15 @@ assert.deepEqual(L.rankSets({ sets: ["a", "b"], setFechas: ["", ""], setIds: [9,
 const tri = { k: "tri", n: "Tri", c: ["dark"], v: [[10, "", 0, "V-001", "Common", 1, 1, 1], [11, "", 2, "N-007", "Rare", 3, 3, 3]] };
 assert.equal(L.versionReferencia(tri, null, rank)[2], 2, "sin elegir: la impresión más reciente");
 assert.equal(L.versionReferencia(tri, { e: "10|" }, rank)[2], 0, "elegida: manda sobre la reciente");
-const g = L.agruparPorEdicion([dm, tri, sin], {}, datos, rank);
-assert.deepEqual(g.map(x => x.nombre), ["Nueva", "Media", "Vieja"].filter(n => g.some(x => x.nombre === n)), "orden de más reciente a más antigua");
-assert.equal(g[0].nombre, "Nueva");
-assert.equal(g.find(x => x.nombre === "Vieja").cartas.length, 1);
+const g = L.agruparPorEdicion([dm, tri, sin], datos, rank);
+assert.deepEqual(g.map(x => x.nombre), ["Nueva", "Media", "Vieja"], "todas las ediciones con alguna impresión, la más reciente primero");
+assert.deepEqual(g.find(x => x.nombre === "Vieja").cartas.map(c => c.k), ["dark magician", "sin precio", "tri"], "dentro de la edición, por número");
+// una carta aparece en CADA edición donde se imprimió (no solo en la más reciente)
+assert.ok(g.find(x => x.nombre === "Vieja").cartas.some(c => c.k === "tri"), "tri está en su edición antigua");
+assert.ok(g.find(x => x.nombre === "Nueva").cartas.some(c => c.k === "tri"), "…y también en la nueva");
+assert.equal(g.find(x => x.nombre === "Nueva").filas[0].vs.length, 1, "vs = versiones de la carta en esa edición");
+assert.equal(L.versionEnEdicion(tri.v, { e: "11|" })[0], 11, "la elegida representa a la carta en su edición");
+assert.equal(L.versionEnEdicion([tri.v[0]], { e: "11|" })[0], 10, "si la elegida no es de esa edición, la primera del set");
 
 // ── filtros de biblioteca: O dentro de un campo, Y entre campos ──
 const a = { k: "a", n: "A", c: ["x"], m: { t: "Monstruo", a: "DARK", lv: 4, ar: "Eldlich" }, v: [[1, "", 0, "1", "R", 1, 1, 1]] };

@@ -19,9 +19,10 @@ El valor de una carta es el de la versión elegida; sin elegir, el de la versió
 
 ## Vistas, filtros y pantalla completa
 - Cada colección tiene dos vistas (se recuerda la elegida): **Por edición** (grupos por set, la edición más reciente primero, con su
-  avance x/y y barra; cada edición se abre o cierra) y **A–Z**. En Yu-Gi-Oh!, una carta se ubica en la edición de su versión
-  elegida o, sin elegir, en su impresión más reciente. El orden sale de `setFechas` (fecha de publicación del set en tcgcsv; sin
-  fecha, por `setIds`).
+  avance x/y y barra; cada edición se abre o cierra) y **A–Z**. En la vista por edición una carta aparece en **cada** edición donde
+  tiene alguna impresión (con el número y las rarezas de ESA edición y su precio; ★ marca la versión elegida). La propiedad es por
+  carta, no por impresión: si la tienes, cuenta en todas las ediciones donde aparece. El orden sale de `setFechas` (fecha de
+  publicación del set en tcgcsv, que en reimpresiones de fecha puede ser reciente; sin fecha, por `setIds`).
 - Búsqueda de texto (nombre, arquetipo, número, set, rareza), modo Todas/Faltan/Tengo y **Filtros** de biblioteca: el bot declara
   `filtros` por juego (Yu-Gi-Oh!: tipo de carta, categoría, atributo, tipo/subtipo, nivel/rango; Digimon: tipo, color, nivel, forma)
   y los datos por carta en `m`. O dentro de un campo, Y entre campos. Con pocos resultados (≤ 80) las ediciones se abren solas.

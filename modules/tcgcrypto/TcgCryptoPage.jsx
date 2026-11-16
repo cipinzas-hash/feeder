@@ -3,7 +3,7 @@ import { useEstado, elegirTcg, elegirVista, marcaDe, ponerMarca } from "./estado
 import {
   claveVersion, precioVersion, versionElegida, precioReferencia, tieneCarta, cartasDeColeccion,
   resumenColeccion, tramoBarra, filtrarCartas, usd, etiquetaVersion, urlImagen, urlImagenGrande, edadDatos,
-  rankSets, versionReferencia, agruparPorEdicion, valoresFiltro, cuentaFiltros,
+  rankSets, versionReferencia, versionEnEdicion, agruparPorEdicion, valoresFiltro, cuentaFiltros,
 } from "./logica.js";
 
 const { useState, useEffect, useRef, useMemo } = React;
@@ -78,11 +78,26 @@ function FilaColeccion({ col, r, abierta, onClick }) {
   );
 }
 
-function FilaCarta({ c, marca, datos, rank, onClick, onZoom }) {
+function FilaCarta({ c, marca, datos, rank, vs, onClick, onZoom }) {
   const tiene = tieneCarta(marca);
   const el = versionElegida(c, marca);
-  const ref = versionReferencia(c, marca, rank) || c.v[0];
-  const precio = precioReferencia(c, marca);
+  // `vs` (vista por edición): solo las impresiones de esa edición; sin `vs` (A–Z): la carta entera.
+  const enSet = vs && vs.length ? vs : null;
+  const ref = enSet ? versionEnEdicion(enSet, marca) : (versionReferencia(c, marca, rank) || c.v[0]);
+  const elAca = enSet ? !!(el && enSet.some(v => claveVersion(v) === claveVersion(el))) : !!el;
+  let precio, etiqueta, desde;
+  if (enSet) {
+    const ps = enSet.map(precioVersion).filter(p => p != null);
+    precio = elAca ? precioVersion(el) : (ps.length ? Math.min(...ps) : null);
+    desde = !elAca && enSet.length > 1;
+    const nums = [...new Set(enSet.map(v => v[3]).filter(Boolean))].join(", ");
+    const rars = [...new Set(enSet.map(v => v[4]).filter(Boolean))].join(" / ");
+    etiqueta = `${elAca ? "★ " : ""}${[nums, rars].filter(Boolean).join(" · ") || "—"}`;
+  } else {
+    precio = precioReferencia(c, marca);
+    desde = !el && datos.agrupar !== "producto";
+    etiqueta = el ? etiquetaVersion(el, datos.sets) : `${c.v.length} ${c.v.length === 1 ? "versión" : "versiones"}`;
+  }
   return (
     <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 6, width: "100%", boxSizing: "border-box", padding: "4px 10px 4px 4px", borderRadius: 8, background: "#111114", border: `2px solid ${tiene ? VERDE : ROJO}`, color: "#fff", fontFamily: FUENTE }}>
       <button aria-label={`ver imagen de ${c.n}`} onClick={onZoom} style={{ ...reset, flex: "none", width: 44, minHeight: 56, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -91,11 +106,9 @@ function FilaCarta({ c, marca, datos, rank, onClick, onZoom }) {
       <button onClick={onClick} style={{ ...reset, flex: 1, minWidth: 0, minHeight: 56, display: "flex", alignItems: "center", gap: 10, textAlign: "left", color: "#fff", fontFamily: FUENTE }}>
         <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
           <span style={{ fontSize: 14, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.n}</span>
-          <span style={{ fontSize: 11, color: "#9a9aa0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {el ? etiquetaVersion(el, datos.sets) : `${c.v.length} ${c.v.length === 1 ? "versión" : "versiones"}`}
-          </span>
+          <span style={{ fontSize: 11, color: "#9a9aa0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{etiqueta}</span>
         </span>
-        <span style={{ flex: "none", fontSize: 13, color: precio == null ? "#6a6a70" : "#eaeaea" }}>{el || datos.agrupar === "producto" ? usd(precio) : `desde ${usd(precio)}`}</span>
+        <span style={{ flex: "none", fontSize: 13, color: precio == null ? "#6a6a70" : "#eaeaea" }}>{desde ? `desde ${usd(precio)}` : usd(precio)}</span>
       </button>
     </div>
   );
@@ -281,16 +294,16 @@ export default function TcgCryptoPage() {
   const ancho = { width: "100%", maxWidth: 480, margin: "0 auto", boxSizing: "border-box", position: "relative", padding: "10px 16px 8px" };
   const edad = edadDatos(datos && datos.generatedAt, Date.now());
 
-  // Pantalla completa de una lista de cartas: la imagen de la versión que las ubica (elegida o más reciente).
-  const zoomCartas = (lista, colec, i) => {
+  // Pantalla completa de una lista: `entradas` = [{ c, v }]; sin `v`, la versión que ubica a la carta (elegida o más reciente).
+  const zoomCartas = (entradas, colec, i) => {
     const marcas = marcasDe(colec);
     setZoom({
       idx: i,
-      items: lista.map(c => {
+      items: entradas.map(({ c, v: vEnt }) => {
         const m = marcas[c.k] || null;
-        const v = versionReferencia(c, m, rank) || c.v[0];
+        const v = vEnt || versionReferencia(c, m, rank) || c.v[0];
         const el = versionElegida(c, m);
-        return { pid: v[0], titulo: c.n, sub: etiquetaVersion(v, datos.sets), precio: el ? precioVersion(el) : precioReferencia(c, m), extra: tieneCarta(m) ? { t: "conseguida", color: "#4caf80" } : { t: "falta", color: "#999" } };
+        return { pid: v[0], titulo: c.n, sub: etiquetaVersion(v, datos.sets), precio: el && claveVersion(el) === claveVersion(v) ? precioVersion(el) : (vEnt ? precioVersion(v) : precioReferencia(c, m)), extra: tieneCarta(m) ? { t: "conseguida", color: "#4caf80" } : { t: "falta", color: "#999" } };
       }),
     });
   };
@@ -339,9 +352,9 @@ export default function TcgCryptoPage() {
             let contenido = null;
             if (esta) {
               if (vista === "edicion") {
-                const todos = agruparPorEdicion(cs, marcas, datos, rank);
+                const todos = agruparPorEdicion(cs, datos, rank);
                 const visibles = new Set(lista.map(c => c.k));
-                const grupos = todos.map(g => ({ ...g, mostrar: g.cartas.filter(c => visibles.has(c.k)) })).filter(g => g.mostrar.length);
+                const grupos = todos.map(g => ({ ...g, mostrar: g.filas.filter(f => visibles.has(f.carta.k)) })).filter(g => g.mostrar.length);
                 const auto = hayBusqueda && lista.length <= 80;   // pocos resultados: todo abierto, sin tener que ir set por set
                 contenido = (
                   <>
@@ -360,7 +373,7 @@ export default function TcgCryptoPage() {
                             </span>
                             <Barra pct={rg.pct} />
                           </button>
-                          {abiertoSet && g.mostrar.map((c, i) => <FilaCarta key={c.k} c={c} marca={marcas[c.k] || null} datos={datos} rank={rank} onClick={() => setFichaSel({ colec: col.id, k: c.k })} onZoom={() => zoomCartas(g.mostrar, col.id, i)} />)}
+                          {abiertoSet && g.mostrar.map((f, i) => <FilaCarta key={f.carta.k} c={f.carta} vs={f.vs} marca={marcas[f.carta.k] || null} datos={datos} rank={rank} onClick={() => setFichaSel({ colec: col.id, k: f.carta.k })} onZoom={() => zoomCartas(g.mostrar.map(x => ({ c: x.carta, v: versionEnEdicion(x.vs, marcas[x.carta.k]) })), col.id, i)} />)}
                         </div>
                       );
                     })}
@@ -372,7 +385,7 @@ export default function TcgCryptoPage() {
                 contenido = (
                   <>
                     {lista.length === 0 && <p style={{ margin: 0, padding: 8, fontFamily: FUENTE, fontSize: 13, color: "#9a9aa0" }}>Ninguna carta coincide.</p>}
-                    {lista.slice(0, limite).map((c, i) => <FilaCarta key={c.k} c={c} marca={marcas[c.k] || null} datos={datos} rank={rank} onClick={() => setFichaSel({ colec: col.id, k: c.k })} onZoom={() => zoomCartas(lista, col.id, i)} />)}
+                    {lista.slice(0, limite).map((c, i) => <FilaCarta key={c.k} c={c} marca={marcas[c.k] || null} datos={datos} rank={rank} onClick={() => setFichaSel({ colec: col.id, k: c.k })} onZoom={() => zoomCartas(lista.map(x => ({ c: x })), col.id, i)} />)}
                     {lista.length > limite && <button onClick={() => setLimite(l => l + PAGINA)} style={{ ...botonSec, flex: "none" }}>Ver más ({lista.length - limite})</button>}
                   </>
                 );

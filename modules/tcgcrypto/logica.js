@@ -115,19 +115,34 @@ export function versionReferencia(carta, marca, rank) {
 
 const porNumero = (a, b) => String(a.num).localeCompare(String(b.num), undefined, { numeric: true }) || a.carta.n.localeCompare(b.carta.n);
 
-// Grupos por edición, la más reciente primero. Cada grupo: { setIdx, nombre, fecha, cartas } con las cartas ordenadas
-// por número dentro de la edición. El avance (x/y) se calcula sobre el grupo completo, no sobre lo filtrado.
-export function agruparPorEdicion(cartas, marcas, datos, rank) {
+// Grupos por edición, la más reciente primero. Una carta aparece en CADA edición donde tiene alguna impresión (así no falta
+// ninguna edición ni se esconden las antiguas). Cada grupo: { setIdx, nombre, fecha, filas, cartas }; `filas` = [{ carta, vs, num }]
+// con `vs` = las versiones de esa carta en esa edición, ordenadas por número. El avance x/y se calcula sobre `cartas`
+// (todas las del grupo, no solo lo filtrado) y la propiedad de la carta es por CARTA, no por impresión.
+export function agruparPorEdicion(cartas, datos, rank) {
   const mapa = new Map();
   for (const c of cartas) {
-    const v = versionReferencia(c, marcas ? marcas[c.k] : null, rank);
-    if (!v) continue;
-    if (!mapa.has(v[2])) mapa.set(v[2], []);
-    mapa.get(v[2]).push({ carta: c, num: v[3] || "" });
+    for (const v of c.v) {
+      let g = mapa.get(v[2]);
+      if (!g) { g = new Map(); mapa.set(v[2], g); }
+      let f = g.get(c.k);
+      if (!f) { f = { carta: c, vs: [], num: v[3] || "" }; g.set(c.k, f); }
+      f.vs.push(v);
+      if (v[3] && (!f.num || String(v[3]).localeCompare(String(f.num), undefined, { numeric: true }) < 0)) f.num = v[3];
+    }
   }
   return [...mapa.entries()]
-    .sort((a, b) => (rank[b[0]] ?? -1) - (rank[a[0]] ?? -1))
-    .map(([setIdx, filas]) => ({ setIdx, nombre: datos.sets[setIdx] || "", fecha: (datos.setFechas && datos.setFechas[setIdx]) || "", cartas: filas.sort(porNumero).map(f => f.carta) }));
+    .sort((x, y) => (rank[y[0]] ?? -1) - (rank[x[0]] ?? -1))
+    .map(([setIdx, g]) => {
+      const filas = [...g.values()].sort(porNumero);
+      return { setIdx, nombre: datos.sets[setIdx] || "", fecha: (datos.setFechas && datos.setFechas[setIdx]) || "", filas, cartas: filas.map(f => f.carta) };
+    });
+}
+
+// Versión que representa a la carta dentro de una edición: la elegida si es de esa edición; si no, la primera de ese set.
+export function versionEnEdicion(vs, marca) {
+  if (marca && marca.e) { const el = vs.find(v => claveVersion(v) === marca.e); if (el) return el; }
+  return vs[0];
 }
 
 export const usd = n => (n == null ? "—" : "$" + (n >= 100 ? Math.round(n).toLocaleString("en-US") : n.toFixed(2)));

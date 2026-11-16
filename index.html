@@ -16622,15 +16622,35 @@ ${url}`);
     return mejor;
   }
   var porNumero = (a, b) => String(a.num).localeCompare(String(b.num), void 0, { numeric: true }) || a.carta.n.localeCompare(b.carta.n);
-  function agruparPorEdicion(cartas, marcas, datos, rank) {
+  function agruparPorEdicion(cartas, datos, rank) {
     const mapa3 = /* @__PURE__ */ new Map();
     for (const c of cartas) {
-      const v = versionReferencia(c, marcas ? marcas[c.k] : null, rank);
-      if (!v) continue;
-      if (!mapa3.has(v[2])) mapa3.set(v[2], []);
-      mapa3.get(v[2]).push({ carta: c, num: v[3] || "" });
+      for (const v of c.v) {
+        let g = mapa3.get(v[2]);
+        if (!g) {
+          g = /* @__PURE__ */ new Map();
+          mapa3.set(v[2], g);
+        }
+        let f2 = g.get(c.k);
+        if (!f2) {
+          f2 = { carta: c, vs: [], num: v[3] || "" };
+          g.set(c.k, f2);
+        }
+        f2.vs.push(v);
+        if (v[3] && (!f2.num || String(v[3]).localeCompare(String(f2.num), void 0, { numeric: true }) < 0)) f2.num = v[3];
+      }
     }
-    return [...mapa3.entries()].sort((a, b) => (rank[b[0]] ?? -1) - (rank[a[0]] ?? -1)).map(([setIdx, filas]) => ({ setIdx, nombre: datos.sets[setIdx] || "", fecha: datos.setFechas && datos.setFechas[setIdx] || "", cartas: filas.sort(porNumero).map((f2) => f2.carta) }));
+    return [...mapa3.entries()].sort((x, y) => (rank[y[0]] ?? -1) - (rank[x[0]] ?? -1)).map(([setIdx, g]) => {
+      const filas = [...g.values()].sort(porNumero);
+      return { setIdx, nombre: datos.sets[setIdx] || "", fecha: datos.setFechas && datos.setFechas[setIdx] || "", filas, cartas: filas.map((f2) => f2.carta) };
+    });
+  }
+  function versionEnEdicion(vs, marca) {
+    if (marca && marca.e) {
+      const el = vs.find((v) => claveVersion(v) === marca.e);
+      if (el) return el;
+    }
+    return vs[0];
   }
   var usd = (n) => n == null ? "\u2014" : "$" + (n >= 100 ? Math.round(n).toLocaleString("en-US") : n.toFixed(2));
   function etiquetaVersion(v, sets) {
@@ -16688,12 +16708,26 @@ ${url}`);
       /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#9a9aa0" } }, usd(r.valorConseguido), " de ", usd(r.valorTotal), r.sinPrecio ? ` \xB7 ${r.sinPrecio} sin precio` : "")
     );
   }
-  function FilaCarta({ c, marca, datos, rank, onClick, onZoom }) {
+  function FilaCarta({ c, marca, datos, rank, vs, onClick, onZoom }) {
     const tiene = tieneCarta(marca);
     const el = versionElegida(c, marca);
-    const ref = versionReferencia(c, marca, rank) || c.v[0];
-    const precio = precioReferencia(c, marca);
-    return /* @__PURE__ */ React.createElement("div", { style: { flex: "none", display: "flex", alignItems: "center", gap: 6, width: "100%", boxSizing: "border-box", padding: "4px 10px 4px 4px", borderRadius: 8, background: "#111114", border: `2px solid ${tiene ? VERDE : ROJO2}`, color: "#fff", fontFamily: FUENTE4 } }, /* @__PURE__ */ React.createElement("button", { "aria-label": `ver imagen de ${c.n}`, onClick: onZoom, style: { ...reset2, flex: "none", width: 44, minHeight: 56, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Miniatura, { tpl: datos.imgTpl, pid: ref && ref[0], ancho: 36, alto: 50 })), /* @__PURE__ */ React.createElement("button", { onClick, style: { ...reset2, flex: 1, minWidth: 0, minHeight: 56, display: "flex", alignItems: "center", gap: 10, textAlign: "left", color: "#fff", fontFamily: FUENTE4 } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, c.n), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#9a9aa0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, el ? etiquetaVersion(el, datos.sets) : `${c.v.length} ${c.v.length === 1 ? "versi\xF3n" : "versiones"}`)), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 13, color: precio == null ? "#6a6a70" : "#eaeaea" } }, el || datos.agrupar === "producto" ? usd(precio) : `desde ${usd(precio)}`)));
+    const enSet = vs && vs.length ? vs : null;
+    const ref = enSet ? versionEnEdicion(enSet, marca) : versionReferencia(c, marca, rank) || c.v[0];
+    const elAca = enSet ? !!(el && enSet.some((v) => claveVersion(v) === claveVersion(el))) : !!el;
+    let precio, etiqueta, desde;
+    if (enSet) {
+      const ps = enSet.map(precioVersion).filter((p) => p != null);
+      precio = elAca ? precioVersion(el) : ps.length ? Math.min(...ps) : null;
+      desde = !elAca && enSet.length > 1;
+      const nums = [...new Set(enSet.map((v) => v[3]).filter(Boolean))].join(", ");
+      const rars = [...new Set(enSet.map((v) => v[4]).filter(Boolean))].join(" / ");
+      etiqueta = `${elAca ? "\u2605 " : ""}${[nums, rars].filter(Boolean).join(" \xB7 ") || "\u2014"}`;
+    } else {
+      precio = precioReferencia(c, marca);
+      desde = !el && datos.agrupar !== "producto";
+      etiqueta = el ? etiquetaVersion(el, datos.sets) : `${c.v.length} ${c.v.length === 1 ? "versi\xF3n" : "versiones"}`;
+    }
+    return /* @__PURE__ */ React.createElement("div", { style: { flex: "none", display: "flex", alignItems: "center", gap: 6, width: "100%", boxSizing: "border-box", padding: "4px 10px 4px 4px", borderRadius: 8, background: "#111114", border: `2px solid ${tiene ? VERDE : ROJO2}`, color: "#fff", fontFamily: FUENTE4 } }, /* @__PURE__ */ React.createElement("button", { "aria-label": `ver imagen de ${c.n}`, onClick: onZoom, style: { ...reset2, flex: "none", width: 44, minHeight: 56, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Miniatura, { tpl: datos.imgTpl, pid: ref && ref[0], ancho: 36, alto: 50 })), /* @__PURE__ */ React.createElement("button", { onClick, style: { ...reset2, flex: 1, minWidth: 0, minHeight: 56, display: "flex", alignItems: "center", gap: 10, textAlign: "left", color: "#fff", fontFamily: FUENTE4 } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, c.n), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#9a9aa0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, etiqueta)), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 13, color: precio == null ? "#6a6a70" : "#eaeaea" } }, desde ? `desde ${usd(precio)}` : usd(precio))));
   }
   function Zoom({ zoom, datos, onIdx, onCerrar }) {
     const { items, idx } = zoom;
@@ -16880,15 +16914,15 @@ ${url}`);
     const marcasDe = (colec) => estado.cartas && estado.cartas[tcg] && estado.cartas[tcg][colec] || {};
     const ancho = { width: "100%", maxWidth: 480, margin: "0 auto", boxSizing: "border-box", position: "relative", padding: "10px 16px 8px" };
     const edad = edadDatos2(datos && datos.generatedAt, Date.now());
-    const zoomCartas = (lista, colec, i) => {
+    const zoomCartas = (entradas, colec, i) => {
       const marcas = marcasDe(colec);
       setZoom({
         idx: i,
-        items: lista.map((c) => {
+        items: entradas.map(({ c, v: vEnt }) => {
           const m = marcas[c.k] || null;
-          const v = versionReferencia(c, m, rank) || c.v[0];
+          const v = vEnt || versionReferencia(c, m, rank) || c.v[0];
           const el = versionElegida(c, m);
-          return { pid: v[0], titulo: c.n, sub: etiquetaVersion(v, datos.sets), precio: el ? precioVersion(el) : precioReferencia(c, m), extra: tieneCarta(m) ? { t: "conseguida", color: "#4caf80" } : { t: "falta", color: "#999" } };
+          return { pid: v[0], titulo: c.n, sub: etiquetaVersion(v, datos.sets), precio: el && claveVersion(el) === claveVersion(v) ? precioVersion(el) : vEnt ? precioVersion(v) : precioReferencia(c, m), extra: tieneCarta(m) ? { t: "conseguida", color: "#4caf80" } : { t: "falta", color: "#999" } };
         })
       });
     };
@@ -16928,9 +16962,9 @@ ${url}`);
         let contenido = null;
         if (esta) {
           if (vista === "edicion") {
-            const todos = agruparPorEdicion(cs, marcas, datos, rank);
+            const todos = agruparPorEdicion(cs, datos, rank);
             const visibles = new Set(lista.map((c) => c.k));
-            const grupos = todos.map((g) => ({ ...g, mostrar: g.cartas.filter((c) => visibles.has(c.k)) })).filter((g) => g.mostrar.length);
+            const grupos = todos.map((g) => ({ ...g, mostrar: g.filas.filter((f2) => visibles.has(f2.carta.k)) })).filter((g) => g.mostrar.length);
             const auto = hayBusqueda && lista.length <= 80;
             contenido = /* @__PURE__ */ React.createElement(React.Fragment, null, grupos.slice(0, limite).map((g) => {
               const abiertoSet = setsAbiertos[g.setIdx] !== void 0 ? setsAbiertos[g.setIdx] : auto;
@@ -16944,10 +16978,10 @@ ${url}`);
                 },
                 /* @__PURE__ */ React.createElement("span", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true", style: { fontSize: 11, color: "#9a9aa0" } }, abiertoSet ? "\u25BE" : "\u25B8"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, g.nombre), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 11, color: "#9a9aa0" } }, mesAnio(g.fecha)), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 12, color: "#b5b5bb" } }, rg.conseguidas, "/", rg.total)),
                 /* @__PURE__ */ React.createElement(Barra, { pct: rg.pct })
-              ), abiertoSet && g.mostrar.map((c, i) => /* @__PURE__ */ React.createElement(FilaCarta, { key: c.k, c, marca: marcas[c.k] || null, datos, rank, onClick: () => setFichaSel({ colec: col2.id, k: c.k }), onZoom: () => zoomCartas(g.mostrar, col2.id, i) })));
+              ), abiertoSet && g.mostrar.map((f2, i) => /* @__PURE__ */ React.createElement(FilaCarta, { key: f2.carta.k, c: f2.carta, vs: f2.vs, marca: marcas[f2.carta.k] || null, datos, rank, onClick: () => setFichaSel({ colec: col2.id, k: f2.carta.k }), onZoom: () => zoomCartas(g.mostrar.map((x) => ({ c: x.carta, v: versionEnEdicion(x.vs, marcas[x.carta.k]) })), col2.id, i) })));
             }), grupos.length > limite && /* @__PURE__ */ React.createElement("button", { onClick: () => setLimite((l) => l + PAGINA), style: { ...botonSec2, flex: "none" } }, "Ver m\xE1s ediciones (", grupos.length - limite, ")"), grupos.length === 0 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 8, fontFamily: FUENTE4, fontSize: 13, color: "#9a9aa0" } }, "Ninguna carta coincide."));
           } else {
-            contenido = /* @__PURE__ */ React.createElement(React.Fragment, null, lista.length === 0 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 8, fontFamily: FUENTE4, fontSize: 13, color: "#9a9aa0" } }, "Ninguna carta coincide."), lista.slice(0, limite).map((c, i) => /* @__PURE__ */ React.createElement(FilaCarta, { key: c.k, c, marca: marcas[c.k] || null, datos, rank, onClick: () => setFichaSel({ colec: col2.id, k: c.k }), onZoom: () => zoomCartas(lista, col2.id, i) })), lista.length > limite && /* @__PURE__ */ React.createElement("button", { onClick: () => setLimite((l) => l + PAGINA), style: { ...botonSec2, flex: "none" } }, "Ver m\xE1s (", lista.length - limite, ")"));
+            contenido = /* @__PURE__ */ React.createElement(React.Fragment, null, lista.length === 0 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 8, fontFamily: FUENTE4, fontSize: 13, color: "#9a9aa0" } }, "Ninguna carta coincide."), lista.slice(0, limite).map((c, i) => /* @__PURE__ */ React.createElement(FilaCarta, { key: c.k, c, marca: marcas[c.k] || null, datos, rank, onClick: () => setFichaSel({ colec: col2.id, k: c.k }), onZoom: () => zoomCartas(lista.map((x) => ({ c: x })), col2.id, i) })), lista.length > limite && /* @__PURE__ */ React.createElement("button", { onClick: () => setLimite((l) => l + PAGINA), style: { ...botonSec2, flex: "none" } }, "Ver m\xE1s (", lista.length - limite, ")"));
           }
         }
         return /* @__PURE__ */ React.createElement("div", { key: col2.id, style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement(FilaColeccion, { col: col2, r, abierta: esta, onClick: () => setAbierta(esta ? null : col2.id) }), esta && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { placeholder: "Buscar por nombre, arquetipo, n\xFAmero, set o rareza", value: texto, onChange: (e) => setTexto(e.target.value), style: campo8 }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, [["todas", "Todas"], ["faltan", "Faltan"], ["tengo", "Tengo"]].map(([id, et]) => /* @__PURE__ */ React.createElement(Chip2, { key: id, flex: true, activo: modo === id, onClick: () => setModo(id) }, et))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement(Chip2, { flex: true, activo: vista === "edicion", onClick: () => elegirVista("edicion") }, "Por edici\xF3n"), /* @__PURE__ */ React.createElement(Chip2, { flex: true, activo: vista === "az", onClick: () => elegirVista("az") }, "A\u2013Z"), datos.filtros && datos.filtros.length > 0 && /* @__PURE__ */ React.createElement(Chip2, { flex: true, activo: panelFiltros || nFiltros > 0, onClick: () => setPanelFiltros((p) => !p) }, "Filtros", nFiltros ? ` (${nFiltros})` : "")), panelFiltros && datos.filtros && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10, padding: 10, borderRadius: 8, background: "#111114", border: "1px solid #26262b" } }, datos.filtros.map((f2) => {
