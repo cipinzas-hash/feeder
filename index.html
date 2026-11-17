@@ -1520,8 +1520,8 @@ var __angst = (() => {
   }
   function weekOffsetFor(dateKey) {
     const [y, m, d] = dateKey.split("-").map(Number);
-    const dias = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(2026, 1, 21)) / 864e5);
-    return Math.floor(dias / 7);
+    const dias2 = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(2026, 1, 21)) / 864e5);
+    return Math.floor(dias2 / 7);
   }
 
   // core/format.js
@@ -3145,16 +3145,16 @@ var __angst = (() => {
   }
   function diasParaEstreno(item) {
     if (!item.pubDate) return null;
-    const dias = Math.ceil((new Date(item.pubDate).getTime() - Date.now()) / 864e5);
-    return dias >= 0 ? dias : null;
+    const dias2 = Math.ceil((new Date(item.pubDate).getTime() - Date.now()) / 864e5);
+    return dias2 >= 0 ? dias2 : null;
   }
   function esTrending(item) {
     return !!item.trending;
   }
   function diasHasta(fechaISO2) {
     if (!fechaISO2) return null;
-    const dias = Math.ceil((new Date(fechaISO2).getTime() - Date.now()) / 864e5);
-    return dias;
+    const dias2 = Math.ceil((new Date(fechaISO2).getTime() - Date.now()) / 864e5);
+    return dias2;
   }
 
   // modules/shared/episodios.js
@@ -4083,10 +4083,10 @@ ${linea}`, url: ev.url };
     const d = normalizarDecisiones(dec);
     return { ...d, ignored: { ...d.ignored, [eventId]: ahora } };
   }
-  function podar(dec, events, ahora = Date.now(), dias = 45) {
+  function podar(dec, events, ahora = Date.now(), dias2 = 45) {
     const d = normalizarDecisiones(dec);
     const vivos = new Set((Array.isArray(events) ? events : []).map((e) => e.id));
-    const limite = ahora - dias * 864e5;
+    const limite = ahora - dias2 * 864e5;
     const filtrar = (obj2, ts) => Object.fromEntries(Object.entries(obj2).filter(([id, v]) => vivos.has(id) || ts(v) > limite));
     return { imported: filtrar(d.imported, (v) => v?.at || 0), ignored: filtrar(d.ignored, (v) => Number(v) || 0) };
   }
@@ -4096,8 +4096,8 @@ ${linea}`, url: ev.url };
   function elegirVariante(cands) {
     let lista = cands || [];
     if (lista.length > 1) {
-      const conPrecio = lista.filter((c) => Number(c.market) > 0);
-      if (conPrecio.length && conPrecio.length < lista.length) lista = conPrecio;
+      const conPrecio2 = lista.filter((c) => Number(c.market) > 0);
+      if (conPrecio2.length && conPrecio2.length < lista.length) lista = conPrecio2;
     }
     if (lista.length > 1) {
       const conRareza = lista.filter(tieneRareza);
@@ -4170,8 +4170,7 @@ ${linea}`, url: ev.url };
       const nameNorm = normName(name), numNorm = normNum(number);
       const setCodeLow = (setCode || "").toLowerCase();
       const aFila = (c) => {
-        const nm2 = c.prices?.raw?.near_mint?.tcgplayer, lp2 = c.prices?.raw?.lightly_played?.tcgplayer;
-        return { tcgId: c.id, variant: c.variant || null, rarity: c.rarity || null, market: (nm2 || lp2)?.market || null, _c: c };
+        return { tcgId: c.id, variant: c.variant || null, rarity: c.rarity || null, market: precioDeCarta(c)?.market || null, _c: c };
       };
       const mismoSetApi = (c) => {
         const ids = [c.set?.ptcgoCode, c.set?.id].filter(Boolean).map((x) => String(x).toLowerCase());
@@ -4187,17 +4186,19 @@ ${linea}`, url: ev.url };
       }
       const ordenados = cards.map((c, i) => ({ c, i, p: (numNorm && normNum(c.number) === numNorm ? 100 : 0) + (mismoSetApi(c) ? 50 : 0) })).sort((x, y) => y.p - x.p || x.i - y.i).map((x) => x.c);
       const candidatos = ordenados.slice(0, 10).map((c) => {
-        const nm2 = c.prices?.raw?.near_mint?.tcgplayer, lp2 = c.prices?.raw?.lightly_played?.tcgplayer;
-        const best2 = nm2 || lp2;
+        const nm = c.prices?.raw?.near_mint?.tcgplayer, lp = c.prices?.raw?.lightly_played?.tcgplayer;
+        const best2 = nm || lp;
         return { name: c.name, number: c.number, setId: c.set?.id, setCode: c.set?.ptcgoCode, variant: c.variant || null, tieneRaw: !!best2, market: best2?.market || null, low: best2?.low || null, high: best2?.high || null };
       });
       if (!match) return { query: q, candidatos, matchEncontrado: false };
-      const nm = match.prices?.raw?.near_mint?.tcgplayer, lp = match.prices?.raw?.lightly_played?.tcgplayer;
-      const best = nm || lp;
+      const pc = precioDeCarta(match);
+      const best = pc || match.prices?.raw?.near_mint?.tcgplayer || match.prices?.raw?.lightly_played?.tcgplayer;
       return {
         query: q,
         candidatos,
         matchEncontrado: true,
+        base: pc?.base || null,
+        variant: match.variant || null,
         matchNombre: match.name,
         matchNumero: match.number,
         tcgId: match.id || null,
@@ -4213,10 +4214,15 @@ ${linea}`, url: ev.url };
       return { error: e.message };
     }
   }
-  function precioDeApi(c) {
+  function precioDeCarta(c) {
     const nm = c?.prices?.raw?.near_mint?.tcgplayer, lp = c?.prices?.raw?.lightly_played?.tcgplayer;
-    const best = nm || lp;
-    return best?.market ? { market: best.market, low: best.low || null, high: best.high || null } : null;
+    if (nm?.market) return { market: nm.market, low: nm.low || null, high: nm.high || null, base: "nm" };
+    if (lp?.market) return { market: lp.market, low: lp.low || null, high: lp.high || null, base: "lp" };
+    return null;
+  }
+  function precioDeApi(c) {
+    const p = precioDeCarta(c);
+    return p ? { ...p, variant: c?.variant || null, rarity: c?.rarity || null } : null;
   }
   async function fetchTCGBatch(ids, apiKey) {
     const lista = [...new Set((ids || []).filter(Boolean))].slice(0, 20);
@@ -4251,7 +4257,7 @@ ${linea}`, url: ev.url };
       }
       const data = await r.json();
       const porId = /* @__PURE__ */ new Map();
-      for (const c of data.data || []) if (c?.id) porId.set(c.id, { ...precioDeApi(c) || {}, tieneCarta: true, setKeys: c.set ? Object.keys(c.set) : [] });
+      for (const c of data.data || []) if (c?.id) porId.set(c.id, { ...precioDeApi(c) || {}, tcgId: c.id, tieneCarta: true, setKeys: c.set ? Object.keys(c.set) : [] });
       return { ok: true, porId, pedidos: lista.length, status: r.status, rate };
     } catch (e) {
       return { ok: false, status: 0, error: e.message };
@@ -4300,12 +4306,12 @@ ${linea}`, url: ev.url };
   }
   async function fetchTCGPrice(name, setName, number, setCode, apiKey) {
     const price = await fetchTCGPriceDiag(name, setName, number, setCode, apiKey);
-    return price?.match ? { market: price.market, low: price.low, high: price.high, tcgId: price.tcgId || null } : null;
+    return price?.match ? { market: price.market, low: price.low, high: price.high, tcgId: price.tcgId || null, base: price.base || null, variant: price.variant || null } : null;
   }
-  function addSnapshot(history, market, low, high, dateISO, src) {
+  function addSnapshot(history, market, low, high, dateISO, src, campos) {
     const today = dateISO || (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
     const h = history || [];
-    const extra = src ? { src } : {};
+    const extra = { ...src ? { src } : {}, ...campos || {} };
     if (h.length && h[h.length - 1].date === today)
       return h.map((x, i) => i === h.length - 1 ? { ...x, market, low, high, ...extra } : x);
     return [...h, { date: today, market, low: low || null, high: high || null, ...extra }];
@@ -4314,7 +4320,7 @@ ${linea}`, url: ev.url };
     return !a?.src || !b?.src || a.src === b.src;
   }
   async function refreshPrecio(carta, apiKey, permitirFallback = true, opts = {}) {
-    let market = null, low = null, high = null, fuente = null, tcgId = null, usoTcg = false, src = null;
+    let market = null, low = null, high = null, fuente = null, tcgId = null, usoTcg = false, src = null, base = null, variant = null;
     if (opts.usarTcgId && carta.tcgId && apiKey) {
       usoTcg = true;
       const r = await fetchTCGBatch([carta.tcgId], apiKey);
@@ -4326,8 +4332,10 @@ ${linea}`, url: ev.url };
         fuente = "tcgpricelookup(id)";
         tcgId = carta.tcgId;
         src = "tpl";
+        base = p.base || null;
+        variant = p.variant || null;
       }
-      if (market) return { market, low, high, fuente, tcgId, usoTcg, src };
+      if (market) return { market, low, high, fuente, tcgId, usoTcg, src, base, variant };
     }
     if (carta.cardId && !opts.soloTcg) {
       try {
@@ -4354,17 +4362,91 @@ ${linea}`, url: ev.url };
         fuente = ov ? "tcgpricelookup(override)" : "tcgpricelookup";
         tcgId = p.tcgId || null;
         src = "tpl";
+        base = p.base || null;
+        variant = p.variant || null;
       }
     }
-    return { market, low, high, fuente, tcgId, usoTcg, src };
+    return { market, low, high, fuente, tcgId, usoTcg, src, base, variant };
+  }
+
+  // modules/pokecripto/lib/historial.mjs
+  var UMBRAL_CORTE = { ratio: 1.25, abs: 0.1 };
+  var UMBRAL_DELGADO = 1.5;
+  var VENTANA_MEDIANA = 7;
+  var num = (x) => typeof x === "number" && Number.isFinite(x) ? x : null;
+  var conPrecio = (p) => !!p && !!p.date && num(p.market) != null && p.market > 0;
+  var porFecha = (a, b) => String(a.date).localeCompare(String(b.date));
+  var dias = (a, b) => Math.abs(Date.parse(String(a).slice(0, 10) + "T12:00:00Z") - Date.parse(String(b).slice(0, 10) + "T12:00:00Z")) / 864e5;
+  function esCostura(a, b) {
+    const ma = num(a?.market), mb = num(b?.market);
+    if (!ma || !mb || ma <= 0) return false;
+    const r = mb / ma;
+    if (!((r >= UMBRAL_CORTE.ratio || r <= 1 / UMBRAL_CORTE.ratio) && Math.abs(mb - ma) >= UMBRAL_CORTE.abs)) return false;
+    const fuente = (a.src || "") !== (b.src || "");
+    const base = !!a.base && !!b.base && a.base !== b.base;
+    const tid = !!a.tid && !!b.tid && a.tid !== b.tid;
+    return fuente || base || tid;
+  }
+  function marcarCortes(history) {
+    const h = Array.isArray(history) ? history : [];
+    if (h.length < 2) return h;
+    const idx = h.map((p, i) => ({ p, i })).filter((x) => conPrecio(x.p)).sort((x, y) => porFecha(x.p, y.p));
+    const marcar = /* @__PURE__ */ new Set();
+    for (let k = 1; k < idx.length; k++) {
+      if (!idx[k].p.corte && esCostura(idx[k - 1].p, idx[k].p)) marcar.add(idx[k].i);
+    }
+    return marcar.size ? h.map((p, i) => marcar.has(i) ? { ...p, corte: true } : p) : h;
+  }
+  function ultimoSegmento(history) {
+    const pts = (Array.isArray(history) ? history : []).filter(conPrecio).sort(porFecha);
+    let ini = 0;
+    for (let i = 0; i < pts.length; i++) if (pts[i].corte) ini = i;
+    return pts.slice(ini);
+  }
+  function esMercadoDelgado(history) {
+    const pts = (Array.isArray(history) ? history : []).filter(conPrecio).sort(porFecha);
+    for (let i = pts.length - 1; i >= 0; i--) {
+      const { low, high, market } = pts[i];
+      if (num(low) != null && num(high) != null && low > 0 && high >= low) return (high - low) / market >= UMBRAL_DELGADO;
+    }
+    return false;
+  }
+  var mediana = (v) => {
+    const s = [...v].sort((a, b) => a - b);
+    const m = s.length >> 1;
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  };
+  function serieSuave(history, ventana2 = VENTANA_MEDIANA) {
+    const pts = (Array.isArray(history) ? history : []).filter(conPrecio).sort(porFecha);
+    const out = [];
+    let tramo = [];
+    for (const p of pts) {
+      if (p.corte) tramo = [];
+      if (p.agg) {
+        out.push({ ...p, crudo: p.market });
+        tramo = [];
+        continue;
+      }
+      tramo.push(p);
+      const cola = tramo.slice(-ventana2).filter((q) => dias(q.date, p.date) <= 10);
+      out.push({ ...p, crudo: p.market, market: cola.length >= 3 ? Math.round(mediana(cola.map((q) => q.market)) * 100) / 100 : p.market });
+    }
+    return out;
+  }
+  function extrasSnapshot({ tid, variant, base } = {}) {
+    const e = {};
+    if (tid) e.tid = tid;
+    if (variant) e.var = variant;
+    if (base) e.base = base;
+    return e;
   }
 
   // modules/pokecripto/lib/review.mjs
   function unirHistorial(local, remoto) {
-    const porFecha = /* @__PURE__ */ new Map();
-    for (const h of Array.isArray(local) ? local : []) if (h && h.date) porFecha.set(h.date, h);
-    for (const h of Array.isArray(remoto) ? remoto : []) if (h && h.date) porFecha.set(h.date, h);
-    return [...porFecha.values()].sort((a, b) => a.date.localeCompare(b.date));
+    const porFecha2 = /* @__PURE__ */ new Map();
+    for (const h of Array.isArray(local) ? local : []) if (h && h.date) porFecha2.set(h.date, h);
+    for (const h of Array.isArray(remoto) ? remoto : []) if (h && h.date) porFecha2.set(h.date, h);
+    return [...porFecha2.values()].sort((a, b) => a.date.localeCompare(b.date));
   }
   function mergePreciosBot(local, remote2) {
     const porId = /* @__PURE__ */ new Map();
@@ -4417,7 +4499,7 @@ ${linea}`, url: ev.url };
     return out;
   }
   function planBusquedas(carta) {
-    const num2 = String(carta?.number || "").trim();
+    const num3 = String(carta?.number || "").trim();
     const vars = variantesNombre(carta?.name);
     const plan = [];
     const add2 = (q) => {
@@ -4425,7 +4507,7 @@ ${linea}`, url: ev.url };
       if (s && !plan.some((p) => p.q.toLowerCase() === s.toLowerCase())) plan.push({ q: s });
     };
     vars.forEach((v, i) => {
-      add2(num2 ? `${v} ${num2}` : v);
+      add2(num3 ? `${v} ${num3}` : v);
       if (i === 0 && carta?.set) add2(`${v} ${carta.set}`);
     });
     vars.forEach((v) => add2(v));
@@ -4450,10 +4532,10 @@ ${linea}`, url: ev.url };
     return `${(c.setId || c.setCode || "").toLowerCase()}|${normNum(c.number)}|${normName(c.name)}`;
   }
   function rankCandidatos(carta, candidatos) {
-    const num2 = normNum(carta?.number), nom = normName(carta?.name);
+    const num3 = normNum(carta?.number), nom = normName(carta?.name);
     return (candidatos || []).map((c, i) => {
       let p = 0;
-      if (num2 && normNum(c.number) === num2) p += 100;
+      if (num3 && normNum(c.number) === num3) p += 100;
       if (mismoSet(carta, c)) p += 50;
       if (nom && normName(c.name) === nom) p += 20;
       if (c.market != null) p += 5;
@@ -4483,10 +4565,10 @@ ${linea}`, url: ev.url };
     return !(Number.isFinite(t) && Number.isFinite(tot)) || t === tot;
   }
   function matchAutomatico(carta, candidatos, totalSet) {
-    const num2 = normNum(carta?.number), nom = normName(carta?.name);
-    if (!num2 || !nom) return null;
+    const num3 = normNum(carta?.number), nom = normName(carta?.name);
+    if (!num3 || !nom) return null;
     const conocemosSet = !!(carta?.setCode || carta?.set);
-    const ok = (candidatos || []).filter((c) => c.market != null && normNum(c.number) === num2 && nombresCompatibles(carta.name, c.name) && // el mismo nombre+número puede ser una reimpresión de otro set con otro precio (la "variante
+    const ok = (candidatos || []).filter((c) => c.market != null && normNum(c.number) === num3 && nombresCompatibles(carta.name, c.name) && // el mismo nombre+número puede ser una reimpresión de otro set con otro precio (la "variante
     // equivocada" que el bot evita): si ambos lados traen datos de set, tienen que calzar (código o
     // nombre). Si el candidato no trae ningún dato de set, no hay con qué contrastar y se acepta.
     (!conocemosSet || !tieneDatosDeSet(c) || mismoSet(carta, c)) && totalCompatible(c, totalSet));
@@ -4510,10 +4592,10 @@ ${linea}`, url: ev.url };
     const b = String(n ?? "").split("/")[0].trim();
     return /^\d+$/.test(b) ? String(parseInt(b, 10)) : b;
   }
-  function urlsDeSetNumero(set, num2) {
-    if (!set || !num2) return [];
+  function urlsDeSetNumero(set, num3) {
+    if (!set || !num3) return [];
     const s = String(set).toLowerCase();
-    return [`https://images.pokemontcg.io/${s}/${num2}.png`, `https://images.scrydex.com/pokemon/${s}-${num2}/small`];
+    return [`https://images.pokemontcg.io/${s}/${num3}.png`, `https://images.scrydex.com/pokemon/${s}-${num3}/small`];
   }
   function urlsFoto({ image, cardId, setId, setCode, number }) {
     const urls = [];
@@ -4522,8 +4604,8 @@ ${linea}`, url: ev.url };
       const i = String(cardId).lastIndexOf("-");
       urls.push(...urlsDeSetNumero(String(cardId).slice(0, i), String(cardId).slice(i + 1)));
     }
-    const num2 = numeroBase(number);
-    for (const set of [setId, setCode]) urls.push(...urlsDeSetNumero(set, num2));
+    const num3 = numeroBase(number);
+    for (const set of [setId, setCode]) urls.push(...urlsDeSetNumero(set, num3));
     return [...new Set(urls)];
   }
 
@@ -4590,12 +4672,12 @@ ${linea}`, url: ev.url };
     return out;
   }
   function resumenAvance(items, esConseguida) {
-    let total = 0, conseguidas = 0, valorTotal = 0, valorConseguido = 0, conPrecio = 0;
+    let total = 0, conseguidas = 0, valorTotal = 0, valorConseguido = 0, conPrecio2 = 0;
     for (const d of items || []) {
       total++;
       const tiene = d?.tcgMarket != null && Number.isFinite(Number(d.tcgMarket));
       const v = tiene ? Number(d.tcgMarket) : 0;
-      if (tiene) conPrecio++;
+      if (tiene) conPrecio2++;
       valorTotal += v;
       if (esConseguida(d)) {
         conseguidas++;
@@ -4607,7 +4689,7 @@ ${linea}`, url: ev.url };
       conseguidas,
       valorTotal,
       valorConseguido,
-      conPrecio,
+      conPrecio: conPrecio2,
       pct: total ? Math.round(conseguidas / total * 100) : 0,
       pctValor: valorTotal > 0 ? Math.round(valorConseguido / valorTotal * 100) : 0
     };
@@ -5148,7 +5230,7 @@ ${item.link}`);
   }
   var TIMEFRAME_WINDOWS = [7, 30, 90, 180, 360];
   function computeTimeframeDeltas(history) {
-    const todos = (history || []).filter((h) => h.market).sort((a, b) => a.date.localeCompare(b.date));
+    const todos = ultimoSegmento(esMercadoDelgado(history) ? serieSuave(history) : history || []);
     if (!todos.length) return [];
     const latest = todos[todos.length - 1];
     const pts = todos.filter((p) => fuenteCompatible(p, latest));
@@ -5180,7 +5262,11 @@ ${item.link}`);
     const tRng = t1 - t0 || 1;
     const px = (d) => padL + ((/* @__PURE__ */ new Date(d + "T12:00:00")).getTime() - t0) / tRng * (W - padL - padR);
     const py = (v) => padT + H2 - padB - (v - minV) / rng * (H2 - padT - padB);
-    const path = filtered.map((h, i) => `${i === 0 ? "M" : "L"}${px(h.date).toFixed(1)},${py(h.market).toFixed(1)}`).join(" ");
+    const delgado = esMercadoDelgado(history);
+    const fechasF = new Set(filtered.map((h) => h.date));
+    const lineaPts = delgado ? serieSuave(history).filter((h) => fechasF.has(h.date)) : filtered;
+    const path = lineaPts.map((h, i) => `${i === 0 || h.corte ? "M" : "L"}${px(h.date).toFixed(1)},${py(h.market).toFixed(1)}`).join(" ");
+    const cortes = filtered.filter((h, i) => i > 0 && h.corte);
     const last = filtered[filtered.length - 1];
     const first = filtered[0];
     const up = last.market >= first.market;
@@ -5225,7 +5311,9 @@ ${item.link}`);
           opacity: "0.5"
         }
       ),
+      !compact && cortes.map((h, i) => /* @__PURE__ */ React.createElement("line", { key: "c" + i, x1: px(h.date), y1: padT, x2: px(h.date), y2: H2 - padB, stroke: dark ? "#555" : "#ccc", strokeWidth: "1", strokeDasharray: "2,3" }, /* @__PURE__ */ React.createElement("title", null, "Cambio de fuente: la l\xEDnea no se une a lo anterior"))),
       /* @__PURE__ */ React.createElement("path", { d: path, fill: "none", stroke: color2, strokeWidth: compact ? 1.5 : 2, strokeLinejoin: "round", strokeLinecap: "round" }),
+      delgado && !compact && /* @__PURE__ */ React.createElement("text", { x: padL + 2, y: padT + 7, fontSize: "8", fontFamily: "DM Sans,sans-serif", fill: dark ? "#777" : "#bbb" }, "mediana 7 d \xB7 mercado delgado"),
       filtered.map((h, i) => {
         const isSel = selectedPoint && selectedPoint.date === h.date && selectedPoint.market === h.market;
         return /* @__PURE__ */ React.createElement(
@@ -5237,7 +5325,8 @@ ${item.link}`);
             r: isSel ? 5 : compact ? 1.5 : 2.5,
             fill: isSel ? "#fff" : color2,
             stroke: isSel ? color2 : "none",
-            strokeWidth: isSel ? 2 : 0
+            strokeWidth: isSel ? 2 : 0,
+            opacity: delgado && !isSel ? 0.35 : 1
           }
         );
       }),
@@ -5836,7 +5925,7 @@ ${item.link}`);
       const soloTcg = !!carta.tcgId || (carta.priceHistory || []).some((h) => h.src === "tpl");
       const r = await refreshPrecio(carta, apiKey, true, { usarTcgId: true, soloTcg });
       if (!r.market) return null;
-      const newHist = addSnapshot(carta.priceHistory, r.market, r.low, r.high, hoy, r.src);
+      const newHist = marcarCortes(addSnapshot(carta.priceHistory, r.market, r.low, r.high, hoy, r.src, extrasSnapshot({ tid: r.tcgId || carta.tcgId, variant: r.variant, base: r.base })));
       saveInventario((prev) => (Array.isArray(prev) ? prev : []).map((c) => c.id === carta.id ? { ...c, tcgMarket: r.market, tcgLow: r.low, tcgHigh: r.high, tcgUpdated: hoy, priceHistory: newHist, ...r.tcgId && r.tcgId !== c.tcgId ? { tcgId: r.tcgId } : {} } : c));
       return r;
     }
@@ -5929,9 +6018,9 @@ ${item.link}`);
       };
       const numFmt = (d) => {
         const n = String(d.number || "");
-        const num2 = /^\d+$/.test(n) ? n.padStart(3, "0") : n;
+        const num3 = /^\d+$/.test(n) ? n.padStart(3, "0") : n;
         const t = totalDeSet(d);
-        return "#" + num2 + (t ? "/" + String(t).padStart(3, "0") : "");
+        return "#" + num3 + (t ? "/" + String(t).padStart(3, "0") : "");
       };
       const ordenadas = [...cartas].sort((a, b) => String(a.releaseDate || "").localeCompare(String(b.releaseDate || "")) || String(a.setName || "").localeCompare(String(b.setName || "")) || String(a.number || "").localeCompare(String(b.number || ""), void 0, { numeric: true }));
       const paginas = [];
@@ -6259,7 +6348,7 @@ ${item.link}`);
     }
     function revAplicar(cartaId, c, conOverride) {
       const ov = { name: c.name, number: c.number, setId: c.setId || null, setCode: c.setCode || null, tcgId: c.tcgId || null };
-      saveInventario((prev) => (prev || []).map((x) => x.id === cartaId ? { ...x, tcgMarket: c.market, tcgLow: c.low, tcgHigh: c.high, tcgUpdated: hoy, priceHistory: addSnapshot(x.priceHistory, c.market, c.low, c.high, hoy, "tpl"), ...c.tcgId ? { tcgId: c.tcgId } : {}, ...conOverride ? { tcgOverride: ov } : {} } : x));
+      saveInventario((prev) => (prev || []).map((x) => x.id === cartaId ? { ...x, tcgMarket: c.market, tcgLow: c.low, tcgHigh: c.high, tcgUpdated: hoy, priceHistory: marcarCortes(addSnapshot(x.priceHistory, c.market, c.low, c.high, hoy, "tpl", extrasSnapshot({ tid: c.tcgId, variant: c.variant, base: c.base }))), ...c.tcgId ? { tcgId: c.tcgId } : {}, ...conOverride ? { tcgOverride: ov } : {} } : x));
       return ov;
     }
     function guardarOverrideRemoto(cartaId, ov) {
@@ -6364,8 +6453,8 @@ ${item.link}`);
     async function revBuscarFoto(c) {
       const k = claveCandidato(c);
       setRevImgs((m) => ({ ...m, [k]: { buscando: true } }));
-      const num2 = String(c.number || "").split("/")[0];
-      const intentos = [`name:"${c.name}" number:${num2}${c.setCode ? ` set.ptcgoCode:${c.setCode}` : ""}`, `name:"${c.name}" number:${num2}`];
+      const num3 = String(c.number || "").split("/")[0];
+      const intentos = [`name:"${c.name}" number:${num3}${c.setCode ? ` set.ptcgoCode:${c.setCode}` : ""}`, `name:"${c.name}" number:${num3}`];
       let res = { url: null, error: null };
       for (const q of intentos) {
         try {
@@ -6487,7 +6576,7 @@ ${item.link}`);
       };
       const est = ctx === "coleccion" ? cons ? { label: "conseguida", bg: "rgba(76,175,128,0.16)", color: "#4caf80" } : { label: "falta", bg: "#222", color: "#888" } : ESTADOS[detalle.estado] || ESTADOS.sin_publicar;
       const colLabel = detalle.carpeta || (catalogEntry ? carpetaDeCat(catalogEntry) : "");
-      const dias = carta?.fechaCompra ? Math.round((/* @__PURE__ */ new Date(hoy + "T12:00:00") - /* @__PURE__ */ new Date(carta.fechaCompra + "T12:00:00")) / 864e5) : null;
+      const dias2 = carta?.fechaCompra ? Math.round((/* @__PURE__ */ new Date(hoy + "T12:00:00") - /* @__PURE__ */ new Date(carta.fechaCompra + "T12:00:00")) / 864e5) : null;
       const objetivo = carta?.precioObjetivo > 0 ? carta.precioObjetivo : null;
       const objAlcanzado = !!(objetivo && detalle.tcgMarket != null && detalle.tcgMarket <= objetivo);
       const f2 = { fontFamily: "'DM Sans',sans-serif" };
@@ -6500,7 +6589,7 @@ ${item.link}`);
       if (esCarpeta) {
         if (detalle.condicion) datosLinea.push(detalle.condicion);
         if ((detalle.cantidad || 1) > 1) datosLinea.push(`\xD7${detalle.cantidad}`);
-        if (dias != null) datosLinea.push(`${dias}d`);
+        if (dias2 != null) datosLinea.push(`${dias2}d`);
       } else if (esWatch) {
         if (detalle.condicion) datosLinea.push(detalle.condicion);
       } else if (cons && catalogEntry) {
@@ -6653,15 +6742,15 @@ ${item.link}`);
             const cur = hist[i];
             if (cur.market == null || cur.date !== fecha2) continue;
             const prev = i > 0 ? hist[i - 1] : null;
-            const ok = prev?.market && fuenteCompatible(prev, cur);
+            const ok = prev?.market && fuenteCompatible(prev, cur) && !cur.corte;
             entradas.push({ carta: c, prevMarket: prev?.market ?? null, newMarket: cur.market, delta: ok ? pct2(cur.market, prev.market) : null });
           }
         }
       } else if (fechas.length) {
-        const dias = parseInt(histPeriodo, 10);
-        const corte = new Date(/* @__PURE__ */ new Date(fechas[0] + "T12:00:00") - dias * 864e5).toISOString().slice(0, 10);
+        const dias2 = parseInt(histPeriodo, 10);
+        const corte = new Date(/* @__PURE__ */ new Date(fechas[0] + "T12:00:00") - dias2 * 864e5).toISOString().slice(0, 10);
         for (const c of base) {
-          const hist = (c.priceHistory || []).filter((h) => h.market != null);
+          const hist = ultimoSegmento(c.priceHistory || []);
           if (!hist.length) continue;
           const cur = hist[hist.length - 1];
           const antes2 = hist.filter((h) => h.date <= corte);
@@ -8023,40 +8112,40 @@ ${item.link}`);
   };
   var deMin = (min) => `${pad3(Math.floor(min / 60) % 24)}:${pad3(Math.round(min % 60))}`;
   var prom = (xs) => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
-  var num = (v) => typeof v === "number" && isFinite(v) && v > 0 ? v : null;
+  var num2 = (v) => typeof v === "number" && isFinite(v) && v > 0 ? v : null;
   function serie(diario, escala, hasta, n) {
     return rangoDias(hasta, n).map((d) => {
       const e = diario.dias[d];
-      return { d, v: e ? num(e[escala]) : null, evento: !!(e && e.evento), tomo: !!(e && e.tomo) };
+      return { d, v: e ? num2(e[escala]) : null, evento: !!(e && e.evento), tomo: !!(e && e.tomo) };
     });
   }
   function resumen(diario, hasta, n) {
-    const dias = rangoDias(hasta, n);
+    const dias2 = rangoDias(hasta, n);
     const claves = Object.keys(diario.dias).sort();
     const primero = claves[0] || null;
-    const enRango = dias.filter((d) => primero && d >= primero);
+    const enRango = dias2.filter((d) => primero && d >= primero);
     const entradas = enRango.map((d) => [d, diario.dias[d]]).filter(([, e]) => e);
     const tomas = enRango.filter((d) => diario.dias[d] && diario.dias[d].tomo).length;
     const promedios = {};
     for (const { k } of ESCALAS_RESUMEN) {
-      const xs = entradas.map(([, e]) => num(e[k])).filter((v) => v != null);
-      promedios[k] = { avg: prom(xs), n: xs.length, base: diario.base ? num(diario.base[k]) : null };
+      const xs = entradas.map(([, e]) => num2(e[k])).filter((v) => v != null);
+      promedios[k] = { avg: prom(xs), n: xs.length, base: diario.base ? num2(diario.base[k]) : null };
     }
     const efectos = {};
     for (const { k } of EFECTOS) {
       efectos[k] = entradas.filter(([, e]) => (e.efectos || []).includes(k)).length;
     }
     const otros = entradas.filter(([, e]) => (e.efectoOtro || "").trim()).map(([d, e]) => ({ d, t: e.efectoOtro.trim() }));
-    const horas = entradas.map(([, e]) => num(e.suenoHoras)).filter((v) => v != null);
+    const horas = entradas.map(([, e]) => num2(e.suenoHoras)).filter((v) => v != null);
     const rebotes = entradas.map(([, e]) => typeof e.rebote === "number" ? e.rebote : null).filter((v) => v != null);
     const ini = entradas.map(([, e]) => aMin(e.efIni)).filter((v) => v != null);
     const fin = entradas.map(([, e]) => aMin(e.efFin)).filter((v) => v != null);
     const eventos = entradas.filter(([, e]) => (e.evento || "").trim()).map(([d, e]) => ({ d, t: e.evento.trim() }));
-    const pulso = entradas.map(([, e]) => num(e.pulso)).filter((v) => v != null);
+    const pulso = entradas.map(([, e]) => num2(e.pulso)).filter((v) => v != null);
     return {
       hasta,
       n,
-      desde: dias[0],
+      desde: dias2[0],
       diasEnRango: enRango.length,
       conRegistro: entradas.length,
       tomas,
@@ -8082,7 +8171,7 @@ ${item.link}`);
       (e.tomo ? grupos.con : grupos.sin).push(d);
     }
     const resumenGrupo = (ds) => {
-      const foco = ds.map((d) => num(diario.dias[d].foco)).filter((v) => v != null);
+      const foco = ds.map((d) => num2(diario.dias[d].foco)).filter((v) => v != null);
       const cr = ds.map((d) => cruzFor ? cruzFor(d) : null).filter(Boolean);
       const tareas = cr.filter((c) => c.tareasTotal > 0).map((c) => c.tareasHechas / c.tareasTotal);
       const estres = cr.map((c) => c.estres).filter((v) => typeof v === "number");
@@ -10383,8 +10472,8 @@ ${item.link}`);
       const d = Math.round(toDisplay(Math.max(0, kg - base), "lb"));
       return base > 0 ? `${d} lb de discos (${kg.toFixed(1)} kg total)` : `${d} lb de discos`;
     }
-    const num2 = `${toDisplay(kg, unit2)} ${unit2}` + (unit2 === "kg" ? ` (${Math.round(toDisplay(kg, "lb"))} lb)` : ` (${kg.toFixed(1)} kg)`);
-    return ex.weightStep < 0 ? `asistencia ${num2}` : num2;
+    const num3 = `${toDisplay(kg, unit2)} ${unit2}` + (unit2 === "kg" ? ` (${Math.round(toDisplay(kg, "lb"))} lb)` : ` (${kg.toFixed(1)} kg)`);
+    return ex.weightStep < 0 ? `asistencia ${num3}` : num3;
   }
   function fmtPesoSerie(kg, ex, unit2) {
     if (kg == null) return "";
@@ -12509,15 +12598,15 @@ ${item.link}`);
     const [notas, setNotas] = useState21(() => Object.fromEntries((guardado && guardado.filas || []).filter((f2) => f2.nota).map((f2) => [f2.sec + "|" + f2.rowId, f2.nota])));
     const [error, setError] = useState21("");
     const [copiado, setCopiado] = useState21(false);
-    const num2 = (v) => v === void 0 || v === "" ? null : parseInt(String(v).replace(/\D/g, "")) || 0;
+    const num3 = (v) => v === void 0 || v === "" ? null : parseInt(String(v).replace(/\D/g, "")) || 0;
     const rend = useMemo8(() => rendicion(budgets, periodo), [budgets, periodo]);
-    const completo = !!filas && filas.every((f2) => num2(conteos[f2.sec + "|" + f2.rowId]) !== null);
+    const completo = !!filas && filas.every((f2) => num3(conteos[f2.sec + "|" + f2.rowId]) !== null);
     const totEsperado = filas ? filas.reduce((s, f2) => s + f2.esperado, 0) : 0;
-    const totContado = filas ? filas.reduce((s, f2) => s + (num2(conteos[f2.sec + "|" + f2.rowId]) || 0), 0) : 0;
+    const totContado = filas ? filas.reduce((s, f2) => s + (num3(conteos[f2.sec + "|" + f2.rowId]) || 0), 0) : 0;
     function guardar5() {
       const c = {};
       (filas || []).forEach((f2) => {
-        const v = num2(conteos[f2.sec + "|" + f2.rowId]);
+        const v = num3(conteos[f2.sec + "|" + f2.rowId]);
         if (v !== null) c[f2.sec + "|" + f2.rowId] = v;
       });
       const r = guardarArqueo(budgets, periodo, { fecha: fecha2, conteos: c, notas });
@@ -12551,9 +12640,9 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     const tabBtn = (id, txt) => /* @__PURE__ */ React.createElement("button", { onClick: () => setTab(id), style: { flex: 1, padding: "9px 0", background: tab === id ? "#fff" : "transparent", color: tab === id ? "#111" : "#888", border: "none", borderRadius: "8px 8px 0 0", fontFamily: "'Caveat',cursive", fontSize: 18, fontWeight: 700, cursor: "pointer" } }, txt);
     return /* @__PURE__ */ React.createElement(Ventana, { onClose, ancho: 540, z: 1e3 }, /* @__PURE__ */ React.createElement("div", { style: { background: "#111", padding: "12px 18px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 } }, "\u{1F50D} Cierre del per\xEDodo"), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 10, color: "#777", letterSpacing: 1 } }, etiquetaPeriodo(periodo))), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "#888", fontSize: 24, cursor: "pointer", lineHeight: 1 } }, "\xD7")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 8 } }, tabBtn("arqueo", "Arqueo"), tabBtn("rendicion", "Rendici\xF3n"))), /* @__PURE__ */ React.createElement("div", { style: { overflowY: "auto", padding: "14px 18px 18px" } }, !filas && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#999", padding: "16px 0" } }, "Los sobres no est\xE1n iniciados en este per\xEDodo: toca \u{1F9FE} en Presupuesto."), filas && tab === "arqueo" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#777", lineHeight: 1.5, marginBottom: 10 } }, "Cuenta el efectivo que hay en cada sobre y escr\xEDbelo: lo que cuentes es lo que arranca el per\xEDodo siguiente como saldo de arrastre. Si no cuadra con los registros, el cierre igual se guarda y la diferencia queda documentada."), guardado && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#070", background: "#f3fbf3", border: "1px dashed #b5deb5", borderRadius: 6, padding: "6px 10px", marginBottom: 10 } }, "Arqueo guardado el ", fechaCorta4(guardado.fecha), ". Puedes rehacerlo."), filas.map((f2) => {
       const k = f2.sec + "|" + f2.rowId;
-      const c = num2(conteos[k]);
+      const c = num3(conteos[k]);
       const dif = c === null ? null : c - f2.esperado;
-      return /* @__PURE__ */ React.createElement("div", { key: k, style: { padding: "10px 0", borderBottom: "1px dashed #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 14, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f2.emoji, " ", f2.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#999" } }, "deber\xEDa haber ", /* @__PURE__ */ React.createElement("b", { style: { color: "#555" } }, fmtCLP(f2.esperado)))), /* @__PURE__ */ React.createElement("input", { inputMode: "numeric", placeholder: "contado", value: conteos[k] === void 0 || conteos[k] === "" ? "" : fmtCLP(num2(conteos[k])), onChange: (e) => {
+      return /* @__PURE__ */ React.createElement("div", { key: k, style: { padding: "10px 0", borderBottom: "1px dashed #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 14, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f2.emoji, " ", f2.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#999" } }, "deber\xEDa haber ", /* @__PURE__ */ React.createElement("b", { style: { color: "#555" } }, fmtCLP(f2.esperado)))), /* @__PURE__ */ React.createElement("input", { inputMode: "numeric", placeholder: "contado", value: conteos[k] === void 0 || conteos[k] === "" ? "" : fmtCLP(num3(conteos[k])), onChange: (e) => {
         setConteos({ ...conteos, [k]: e.target.value });
         setError("");
       }, style: campo4 })), dif !== null && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: colorDif(dif), textAlign: "right", marginTop: 4 } }, dif === 0 ? "cuadra" : `diferencia ${signo(dif)}`), dif !== null && dif !== 0 && /* @__PURE__ */ React.createElement("input", { placeholder: "\xBFa qu\xE9 se debe? (opcional)", value: notas[k] || "", onChange: (e) => setNotas({ ...notas, [k]: e.target.value }), style: { ...campo4, width: "100%", textAlign: "left", fontSize: 12, marginTop: 6, padding: "6px 8px" } }));
@@ -13541,9 +13630,9 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     const [verGastos, setVerGastos] = useState27(false);
     const del = useMemo10(() => gastosDelDia(budgets, dia), [budgets, dia]);
     const grupos = useMemo10(() => {
-      const dias = Object.keys(dayData || {}).sort().map((k) => ({ key: k, titulo: etiquetaDia2(k, hoy), vencido: k < hoy, items: (dayData[k] && dayData[k].compras || []).filter((i) => !i.done) })).filter((g) => g.items.length > 0);
+      const dias2 = Object.keys(dayData || {}).sort().map((k) => ({ key: k, titulo: etiquetaDia2(k, hoy), vencido: k < hoy, items: (dayData[k] && dayData[k].compras || []).filter((i) => !i.done) })).filter((g) => g.items.length > 0);
       const comprados = (dayData && dayData[hoy] && dayData[hoy].compras || []).filter((i) => i.done);
-      return comprados.length ? [...dias, { key: hoy, titulo: "Comprado hoy \xB7 toca la casilla para deshacer", items: comprados }] : dias;
+      return comprados.length ? [...dias2, { key: hoy, titulo: "Comprado hoy \xB7 toca la casilla para deshacer", items: comprados }] : dias2;
     }, [dayData, hoy]);
     const pendientes2 = grupos.filter((g) => !g.titulo.startsWith("Comprado")).reduce((s, g) => s + g.items.length, 0);
     const sinPrecio = grupos.filter((g) => !g.titulo.startsWith("Comprado")).reduce((s, g) => s + g.items.filter((i) => montoCompra(i) === 0).length, 0);
@@ -15378,8 +15467,8 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
         let diasHastaEstreno = function(it) {
           if (esPelicula) return esEnProduccion(it) ? diasParaEstreno(it) : null;
           if (!it.nextEpisodeDate) return null;
-          const dias = Math.ceil((new Date(it.nextEpisodeDate).getTime() - Date.now()) / 864e5);
-          return dias >= 0 ? dias : null;
+          const dias2 = Math.ceil((new Date(it.nextEpisodeDate).getTime() - Date.now()) / 864e5);
+          return dias2 >= 0 ? dias2 : null;
         };
         arr = arr.filter((it) => diasHastaEstreno(it) != null);
         arr.sort((a, b) => diasHastaEstreno(a) - diasHastaEstreno(b));
@@ -15818,10 +15907,10 @@ Toco reintentar ahora.`);
     if (!iso) return "";
     const d = new Date(iso);
     if (isNaN(d)) return "";
-    const dias = Math.floor((Date.now() - d.getTime()) / 864e5);
-    if (dias <= 0) return "hoy";
-    if (dias === 1) return "ayer";
-    if (dias < 14) return `hace ${dias} d`;
+    const dias2 = Math.floor((Date.now() - d.getTime()) / 864e5);
+    if (dias2 <= 0) return "hoy";
+    if (dias2 === 1) return "ayer";
+    if (dias2 < 14) return `hace ${dias2} d`;
     return `${d.getDate()} ${MESES2[d.getMonth()]}`;
   }
   var TIPO = { album: "\xE1lbum", ep: "EP", single: "single", video: "video", reedicion: "reedici\xF3n" };
@@ -15989,7 +16078,7 @@ Toco reintentar ahora.`);
     const d = aFecha2(k);
     return `${DIAS3[d.getDay()]} ${d.getDate()} ${MESES3[d.getMonth()]}`;
   };
-  var cuando = (dias) => dias <= 0 ? "hoy" : dias === 1 ? "ma\xF1ana" : `en ${dias} d\xEDas`;
+  var cuando = (dias2) => dias2 <= 0 ? "hoy" : dias2 === 1 ? "ma\xF1ana" : `en ${dias2} d\xEDas`;
   function agrupar2(eventos, hoy) {
     const grupos = [
       { id: "hoy", titulo: "Hoy", items: [] },
@@ -17031,8 +17120,8 @@ ${url}`);
   function balizasDeDia(day) {
     return (day?.tasks || []).filter((t) => t.urgent && !t.done && !t.postponed && t.text);
   }
-  function cuando3(dias) {
-    return dias === 0 ? "hoy" : dias === 1 ? "ma\xF1ana" : `en ${dias} d\xEDas`;
+  function cuando3(dias2) {
+    return dias2 === 0 ? "hoy" : dias2 === 1 ? "ma\xF1ana" : `en ${dias2} d\xEDas`;
   }
   function colorCarga(score) {
     return score <= 5 ? "#4caf50" : score <= 7 ? "#ff9800" : "#f44336";

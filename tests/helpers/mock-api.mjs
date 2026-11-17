@@ -12,6 +12,9 @@ for (let i = 1; i <= 130; i++) BD.push(carta("t-bet-" + i, "Card" + i, `${String
 BD.push(carta("t-alp-7r", "Var", "007/010", "alp", "Alpha", "ALP", 0.9, "Reverse Holofoil"), carta("t-alp-7n", "Var", "007/010", "alp", "Alpha", "ALP", 0.2, "Normal"));
 BD.push(carta("t-guard", "Guard", "001/010", "alp", "Alpha", "ALP", 5, "Normal"));
 BD.push(carta("t-hist", "Hist", "001/010", "alp", "Alpha", "ALP", 8, "Holofoil"));
+// lote 1 (16-nov-2026): una carta que hoy solo trae Lightly Played, y otra para probar el marcado de cortes
+const lpSolo = (id, market) => ({ ...carta(id, "Lp" + id, "001/010", "alp", "Alpha", "ALP", null), prices: { raw: { lightly_played: { tcgplayer: { market, low: market / 2, high: market * 2 } } } } });
+BD.push(lpSolo("t-lp1", 1.2), lpSolo("t-lp2", 1.2), carta("t-cort", "Cort", "001/010", "alp", "Alpha", "ALP", 5.1, "Holofoil"));
 BD.push(carta("t-ov-9", "Weird Name ex", "009/050", "gam", "Gamma", "GAM", 7));
 BD.push(carta("t-sol-5", "Solo", "005/100", "del", "Delta Species", "DEL", 3.3), carta("t-sol2-5", "Solo", "005/100", "del2", "Otro Set", "DE2", 9));
 BD.push(carta("t-par-6", "Par", "006/100", "del", "Delta Species", "DEL", 4.4)); // se cosecha en la búsqueda de "Solo 5"? no: solo aparece si el nombre coincide

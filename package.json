@@ -19,7 +19,8 @@
     "test:musica": "node tests/musica.mjs && node tests/musica-megusta.mjs",
     "test:gameenhanced": "node tests/gameenhanced.mjs",
     "test:panoramas": "node tests/panoramas-detalle.mjs && node tests/panoramas-seleccion.mjs",
-    "test:tcgcrypto": "node tests/tcgcrypto-logica.mjs"
+    "test:tcgcrypto": "node tests/tcgcrypto-logica.mjs",
+    "test:pokecripto-historial": "node tests/pokecripto-historial.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"

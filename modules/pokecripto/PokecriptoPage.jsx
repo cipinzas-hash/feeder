@@ -2,6 +2,7 @@
 // (build-pokecripto.mjs) -- se importa acá para que cliente y bot nunca
 // diverjan en matching/normalización (issue #9).
 import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPrice, fetchTCGCandidatos, addSnapshot, refreshPrecio as refreshPrecioCompartido, fuenteCompatible } from "./lib/pricing.mjs";
+import { marcarCortes, ultimoSegmento, esMercadoDelgado, serieSuave, extrasSnapshot } from "./lib/historial.mjs";
 import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarCandidatos, matchAutomatico, mergeOverrides, claveCandidato, urlsFoto, mismoSet } from "./lib/review.mjs";
 import { marcarEdicionLocal } from "../shared/localedit.js";
 import { esDoubleRare, esAceSpec, carpetaDeCat, carpetaDeInv, invEnCarpeta, invDeCarta, rarezaConocida, sobraPorRareza, entradasFaltantes,
@@ -354,7 +355,9 @@ function computeHistMetrics(history, range){
 // "el snapshot más próximo a esa fecha aunque sea posterior".
 const TIMEFRAME_WINDOWS = [7, 30, 90, 180, 360];
 function computeTimeframeDeltas(history){
-  const todos = (history||[]).filter(h=>h.market).sort((a,b)=>a.date.localeCompare(b.date));
+  // Lote 1 (16-nov-2026): solo se compara dentro del tramo posterior al último corte (la costura entre dos fuentes no es un
+  // movimiento del mercado) y, en cartas de mercado delgado (rango bajo-alto muy ancho), con la mediana móvil de 7 días.
+  const todos = ultimoSegmento(esMercadoDelgado(history) ? serieSuave(history) : (history||[]));
   if(!todos.length) return [];
   const latest = todos[todos.length-1];
   // 12-oct-2026: solo se compara contra snapshots de la misma fuente (src) que el último; los viejos sin src
@@ -408,7 +411,13 @@ function PriceChart({history, precioVenta, compact, range, onSelectPoint, select
   const tRng=t1-t0||1;
   const px=d=>padL+((new Date(d+"T12:00:00").getTime()-t0)/tRng)*(W-padL-padR);
   const py=v=>padT+H-padB-((v-minV)/rng)*(H-padT-padB);
-  const path=filtered.map((h,i)=>`${i===0?"M":"L"}${px(h.date).toFixed(1)},${py(h.market).toFixed(1)}`).join(" ");
+  // Lote 1: la línea no cruza un corte (cambio de fuente/base) y, en mercado delgado, dibuja la mediana móvil de 7 días
+  // (los puntos crudos quedan tenues; el dato original no se toca).
+  const delgado=esMercadoDelgado(history);
+  const fechasF=new Set(filtered.map(h=>h.date));
+  const lineaPts=delgado?serieSuave(history).filter(h=>fechasF.has(h.date)):filtered;
+  const path=lineaPts.map((h,i)=>`${(i===0||h.corte)?"M":"L"}${px(h.date).toFixed(1)},${py(h.market).toFixed(1)}`).join(" ");
+  const cortes=filtered.filter((h,i)=>i>0&&h.corte);
   const last=filtered[filtered.length-1];
   const first=filtered[0];
   const up=last.market>=first.market;
@@ -435,14 +444,17 @@ function PriceChart({history, precioVenta, compact, range, onSelectPoint, select
       {/* Línea precio venta */}
       {precioVenta&&!compact&&<line x1={padL} y1={py(precioVenta)} x2={W-padR} y2={py(precioVenta)}
         stroke={color} strokeWidth="1" strokeDasharray="3,3" opacity="0.5"/>}
+      {/* Cortes: marcas verticales donde la línea no se une (cambio de fuente / base) */}
+      {!compact&&cortes.map((h,i)=><line key={"c"+i} x1={px(h.date)} y1={padT} x2={px(h.date)} y2={H-padB} stroke={dark?"#555":"#ccc"} strokeWidth="1" strokeDasharray="2,3"><title>Cambio de fuente: la línea no se une a lo anterior</title></line>)}
       {/* Línea de precio */}
       <path d={path} fill="none" stroke={color} strokeWidth={compact?1.5:2} strokeLinejoin="round" strokeLinecap="round"/>
+      {delgado&&!compact&&<text x={padL+2} y={padT+7} fontSize="8" fontFamily="DM Sans,sans-serif" fill={dark?"#777":"#bbb"}>mediana 7 d · mercado delgado</text>}
       {/* Puntos */}
       {filtered.map((h,i)=>{
         const isSel=selectedPoint&&selectedPoint.date===h.date&&selectedPoint.market===h.market;
         return(
           <circle key={i} cx={px(h.date)} cy={py(h.market)} r={isSel?5:compact?1.5:2.5}
-            fill={isSel?"#fff":color} stroke={isSel?color:"none"} strokeWidth={isSel?2:0}/>
+            fill={isSel?"#fff":color} stroke={isSel?color:"none"} strokeWidth={isSel?2:0} opacity={delgado&&!isSel?0.35:1}/>
         );
       })}
       {/* Labels eje X */}
@@ -1121,7 +1133,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const soloTcg=!!carta.tcgId||(carta.priceHistory||[]).some(h=>h.src==="tpl");
     const r=await refreshPrecioCompartido(carta,apiKey,true,{usarTcgId:true,soloTcg});
     if(!r.market) return null;
-    const newHist=addSnapshot(carta.priceHistory,r.market,r.low,r.high,hoy,r.src);
+    const newHist=marcarCortes(addSnapshot(carta.priceHistory,r.market,r.low,r.high,hoy,r.src,extrasSnapshot({tid:r.tcgId||carta.tcgId,variant:r.variant,base:r.base})));
     saveInventario(prev=>(Array.isArray(prev)?prev:[]).map(c=>c.id===carta.id
       ?{...c,tcgMarket:r.market,tcgLow:r.low,tcgHigh:r.high,tcgUpdated:hoy,priceHistory:newHist,...(r.tcgId&&r.tcgId!==c.tcgId?{tcgId:r.tcgId}:{})}:c));
     return r;
@@ -1600,7 +1612,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   function revAplicar(cartaId,c,conOverride){
     const ov={name:c.name,number:c.number,setId:c.setId||null,setCode:c.setCode||null,tcgId:c.tcgId||null};
     // saveInventario con función: siempre sobre el inventario más reciente (no el de este render)
-    saveInventario(prev=>(prev||[]).map(x=>x.id===cartaId?{...x,tcgMarket:c.market,tcgLow:c.low,tcgHigh:c.high,tcgUpdated:hoy,priceHistory:addSnapshot(x.priceHistory,c.market,c.low,c.high,hoy,"tpl"),...(c.tcgId?{tcgId:c.tcgId}:{}),...(conOverride?{tcgOverride:ov}:{})}:x));
+    saveInventario(prev=>(prev||[]).map(x=>x.id===cartaId?{...x,tcgMarket:c.market,tcgLow:c.low,tcgHigh:c.high,tcgUpdated:hoy,priceHistory:marcarCortes(addSnapshot(x.priceHistory,c.market,c.low,c.high,hoy,"tpl",extrasSnapshot({tid:c.tcgId,variant:c.variant,base:c.base}))),...(c.tcgId?{tcgId:c.tcgId}:{}),...(conOverride?{tcgOverride:ov}:{})}:x));
     return ov;
   }
   function guardarOverrideRemoto(cartaId,ov){
@@ -2108,7 +2120,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           const cur=hist[i];
           if(cur.market==null||cur.date!==fecha) continue;
           const prev=i>0?hist[i-1]:null;
-          const ok=prev?.market&&fuenteCompatible(prev,cur);
+          const ok=prev?.market&&fuenteCompatible(prev,cur)&&!cur.corte;
           entradas.push({carta:c,prevMarket:prev?.market??null,newMarket:cur.market,delta:ok?pct(cur.market,prev.market):null});
         }
       }
@@ -2116,7 +2128,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       const dias=parseInt(histPeriodo,10);
       const corte=new Date(new Date(fechas[0]+"T12:00:00")-dias*86400000).toISOString().slice(0,10);
       for(const c of base){
-        const hist=(c.priceHistory||[]).filter(h=>h.market!=null);
+        const hist=ultimoSegmento(c.priceHistory||[]); // lote 1: solo el tramo posterior al último corte
         if(!hist.length) continue;
         const cur=hist[hist.length-1];
         const antes=hist.filter(h=>h.date<=corte);

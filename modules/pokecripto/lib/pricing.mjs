@@ -102,8 +102,7 @@ export async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey, 
     // desempata por código o nombre de set; si quedan cartas de varios sets sin poder decidir, no se empareja;
     // 3) entre variantes se elige con elegirVariante (la que tiene precio y rareza antes que la Normal vacía).
     const aFila = c => {
-      const nm = c.prices?.raw?.near_mint?.tcgplayer, lp = c.prices?.raw?.lightly_played?.tcgplayer;
-      return { tcgId: c.id, variant: c.variant || null, rarity: c.rarity || null, market: (nm || lp)?.market || null, _c: c };
+      return { tcgId: c.id, variant: c.variant || null, rarity: c.rarity || null, market: precioDeCarta(c)?.market || null, _c: c };
     };
     const mismoSetApi = c => {
       const ids = [c.set?.ptcgoCode, c.set?.id].filter(Boolean).map(x => String(x).toLowerCase());
@@ -126,10 +125,11 @@ export async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey, 
       return { name: c.name, number: c.number, setId: c.set?.id, setCode: c.set?.ptcgoCode, variant: c.variant || null, tieneRaw: !!best, market: best?.market || null, low: best?.low || null, high: best?.high || null };
     });
     if (!match) return { query: q, candidatos, matchEncontrado: false };
-    const nm = match.prices?.raw?.near_mint?.tcgplayer, lp = match.prices?.raw?.lightly_played?.tcgplayer;
-    const best = nm || lp;
+    const pc = precioDeCarta(match);
+    const best = pc || match.prices?.raw?.near_mint?.tcgplayer || match.prices?.raw?.lightly_played?.tcgplayer;
     return {
       query: q, candidatos, matchEncontrado: true,
+      base: pc?.base || null, variant: match.variant || null,
       matchNombre: match.name, matchNumero: match.number,
       tcgId: match.id || null, // UUID de la carta: permite precios por lote en las próximas corridas
       preciosDisponibles: Object.keys(match.prices || {}),
@@ -146,10 +146,18 @@ export async function fetchTCGPriceDiag(name, setName, number, setCode, apiKey, 
 // diarios de cientos de cartas caben en el cupo gratis.
 // Si la API responde con error de plan/credencial (401/402/403) o de otro tipo, se devuelve {ok:false}
 // y quien llama debe volver al método carta por carta sin reventar la corrida.
-export function precioDeApi(c) {
+// Lote 1 (16-nov-2026): el precio es el Near Mint (base "nm"). Solo si ese día la API no trae NM con market se usa el
+// Lightly Played, y queda marcado base:"lp" para que quien guarda decida (ver conservarNM en historial.mjs). Antes
+// `nm || lp` alternaba entre los dos niveles según el día y dibujaba vaivenes entre dos valores fijos.
+export function precioDeCarta(c) {
   const nm = c?.prices?.raw?.near_mint?.tcgplayer, lp = c?.prices?.raw?.lightly_played?.tcgplayer;
-  const best = nm || lp;
-  return best?.market ? { market: best.market, low: best.low || null, high: best.high || null } : null;
+  if (nm?.market) return { market: nm.market, low: nm.low || null, high: nm.high || null, base: "nm" };
+  if (lp?.market) return { market: lp.market, low: lp.low || null, high: lp.high || null, base: "lp" };
+  return null;
+}
+export function precioDeApi(c) {
+  const p = precioDeCarta(c);
+  return p ? { ...p, variant: c?.variant || null, rarity: c?.rarity || null } : null;
 }
 export async function fetchTCGBatch(ids, apiKey) {
   const lista = [...new Set((ids || []).filter(Boolean))].slice(0, 20);
@@ -175,7 +183,7 @@ export async function fetchTCGBatch(ids, apiKey) {
     }
     const data = await r.json();
     const porId = new Map();
-    for (const c of (data.data || [])) if (c?.id) porId.set(c.id, { ...(precioDeApi(c) || {}), tieneCarta: true, setKeys: c.set ? Object.keys(c.set) : [] });
+    for (const c of (data.data || [])) if (c?.id) porId.set(c.id, { ...(precioDeApi(c) || {}), tcgId: c.id, tieneCarta: true, setKeys: c.set ? Object.keys(c.set) : [] });
     return { ok: true, porId, pedidos: lista.length, status: r.status, rate };
   } catch (e) { return { ok: false, status: 0, error: e.message }; }
 }
@@ -223,17 +231,19 @@ export async function fetchTCGCandidatos(q, apiKey) {
 
 export async function fetchTCGPrice(name, setName, number, setCode, apiKey) {
   const price = await fetchTCGPriceDiag(name, setName, number, setCode, apiKey);
-  return price?.match ? { market: price.market, low: price.low, high: price.high, tcgId: price.tcgId || null } : null;
+  return price?.match ? { market: price.market, low: price.low, high: price.high, tcgId: price.tcgId || null, base: price.base || null, variant: price.variant || null } : null;
 }
 
 // src (12-oct-2026): fuente del precio. "tpl" = tcgpricelookup.com (Near Mint raw de TCGplayer),
 // "ptcg" = pokemontcg.io (primer precio disponible: holofoil > reverse > normal...). Son criterios distintos:
 // mezclados en un mismo historial producían alternancias falsas (0,06 -> 0,26 -> 0,06 en cartas comunes).
 // Sin src = snapshot viejo, de fuente desconocida.
-export function addSnapshot(history, market, low, high, dateISO, src) {
+// Lote 1 (16-nov-2026): `campos` opcional = {tid, var, base} (ver extrasSnapshot en historial.mjs): el tcgId, la variante
+// y la base (NM/LP) con que se tomó el precio, para poder explicar un salto después. Los snapshots viejos no los tienen.
+export function addSnapshot(history, market, low, high, dateISO, src, campos) {
   const today = dateISO || new Date().toISOString().slice(0, 10);
   const h = history || [];
-  const extra = src ? { src } : {};
+  const extra = { ...(src ? { src } : {}), ...(campos || {}) };
   if (h.length && h[h.length - 1].date === today)
     return h.map((x, i) => i === h.length - 1 ? { ...x, market, low, high, ...extra } : x);
   return [...h, { date: today, market, low: low || null, high: high || null, ...extra }];
@@ -275,6 +285,7 @@ export function compactarHistorial(history, hoyISO, diasDiarios = 30) {
     }
     const agg = { date: pts[pts.length - 1].date, market: nPrecio ? Math.round((suma / nPrecio) * 100) / 100 : null, low, high, n, agg: true };
     if (srcs.size === 1 && [...srcs][0]) agg.src = [...srcs][0];
+    if (pts[0].corte) agg.corte = true; // la costura queda antes de este mes: no se pierde al compactar
     meses.push(agg);
   }
   return [...meses, ...recientes];
@@ -305,15 +316,15 @@ export function fuenteCompatible(a, b) {
 // el respaldo desde afuera, carta por carta, según el cupo que le quede
 // en ESE momento -- no según de antemano.
 export async function refreshPrecio(carta, apiKey, permitirFallback = true, opts = {}) {
-  let market = null, low = null, high = null, fuente = null, tcgId = null, usoTcg = false, src = null;
+  let market = null, low = null, high = null, fuente = null, tcgId = null, usoTcg = false, src = null, base = null, variant = null;
   // usarTcgId (12-oct-2026): el cliente, al refrescar UNA carta que ya tiene tcgId, la pide directo por id
   // (sin ambigüedad de matching). El bot NO lo usa: sus cartas con tcgId ya pasaron por la fase por lote.
   if (opts.usarTcgId && carta.tcgId && apiKey) {
     usoTcg = true;
     const r = await fetchTCGBatch([carta.tcgId], apiKey);
     const p = r.ok ? r.porId.get(carta.tcgId) : null;
-    if (p?.market) { market = p.market; low = p.low || null; high = p.high || null; fuente = "tcgpricelookup(id)"; tcgId = carta.tcgId; src = "tpl"; }
-    if (market) return { market, low, high, fuente, tcgId, usoTcg, src };
+    if (p?.market) { market = p.market; low = p.low || null; high = p.high || null; fuente = "tcgpricelookup(id)"; tcgId = carta.tcgId; src = "tpl"; base = p.base || null; variant = p.variant || null; }
+    if (market) return { market, low, high, fuente, tcgId, usoTcg, src, base, variant };
   }
   // soloTcg (15-oct-2026): pokemontcg.io solo da el PRIMER precio de una carta recién agregada. Una carta que ya tiene
   // snapshots de tcgpricelookup se refresca solo en esa fuente, para no volver a mezclar criterios en su historial.
@@ -331,7 +342,7 @@ export async function refreshPrecio(carta, apiKey, permitirFallback = true, opts
     const p = ov
       ? await fetchTCGPrice(ov.name, carta.set, ov.number, ov.setId || ov.setCode, apiKey)
       : await fetchTCGPrice(carta.name, carta.set, carta.number, carta.setCode, apiKey);
-    if (p?.market) { market = p.market; low = p.low || null; high = p.high || null; fuente = ov ? "tcgpricelookup(override)" : "tcgpricelookup"; tcgId = p.tcgId || null; src = "tpl"; }
+    if (p?.market) { market = p.market; low = p.low || null; high = p.high || null; fuente = ov ? "tcgpricelookup(override)" : "tcgpricelookup"; tcgId = p.tcgId || null; src = "tpl"; base = p.base || null; variant = p.variant || null; }
   }
-  return { market, low, high, fuente, tcgId, usoTcg, src };
+  return { market, low, high, fuente, tcgId, usoTcg, src, base, variant };
 }

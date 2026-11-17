@@ -28,6 +28,7 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { fetchTCGBatch, addSnapshot, compactarHistorial } from "../../pokecripto/lib/pricing.mjs";
+import { marcarCortes, contarCortes, conservarNM, extrasSnapshot } from "../../pokecripto/lib/historial.mjs";
 import { aplicarOverrides, normalizarOverridesRemotos, fusionarPending, prioridadCarta } from "../../pokecripto/lib/review.mjs";
 import { fetchTCGPagina, fetchTCGSets, fetchTCGSetPagina, slugParaSet, paginasDeSet, claveCarta, PAUSA_RAFAGA_MS, asignarTcgIds, agruparPorSet, debeSaltarse, actualizarEstadoSet, presupuestoDescubrimiento, sumarDias, cupoRestante } from "../../pokecripto/lib/discovery.mjs";
 
@@ -104,6 +105,15 @@ async function main() {
     if (Array.isArray(h) && h.length > 1) { const n = compactarHistorial(h, hoy); if (n.length !== h.length) { compactados += h.length - n.length; c.priceHistory = n; } }
   }
   if (compactados) console.log(`✓ Historial compactado: ${compactados} snapshot(s) menos`);
+  // Lote 1 (16-nov-2026): marca como corte las costuras entre fuentes / bases / tcgId (saltos que no son del mercado).
+  // Idempotente: solo agrega marcas; el gráfico y las variaciones no cruzan un corte.
+  let cortesNuevos = 0;
+  for (const c of base) {
+    const antes = contarCortes(c.priceHistory);
+    const m = marcarCortes(c.priceHistory);
+    if (m !== c.priceHistory) { c.priceHistory = m; cortesNuevos += contarCortes(m) - antes; }
+  }
+  if (cortesNuevos) console.log(`✓ Historial: ${cortesNuevos} costura(s) de fuente marcada(s) como corte`);
   const tomados = new Map(); // tcgId -> cardId que lo tiene (guarda: un tcgId es una carta de un set)
   for (const c of base) if (c.tcgId) tomados.set(c.tcgId, claveCarta(c));
   const actualizadas = new Map(); // id -> campos de precio / intento de HOY
@@ -149,7 +159,8 @@ async function main() {
 
   const snapshotDe = (carta, m, src) => ({
     tcgMarket: m.market, tcgLow: m.low ?? null, tcgHigh: m.high ?? null, tcgUpdated: hoy,
-    priceHistory: compactarHistorial(addSnapshot(carta.priceHistory, m.market, m.low ?? null, m.high ?? null, hoy, src), hoy),
+    priceHistory: compactarHistorial(marcarCortes(addSnapshot(carta.priceHistory, m.market, m.low ?? null, m.high ?? null, hoy, src,
+      extrasSnapshot({ tid: m.tcgId || tcgIdDe(carta), variant: m.variant, base: m.base }))), hoy),
   });
 
   // ── 1. DESCUBRIMIENTO de tcgId por set (set=<slug>) ───────────────────
@@ -240,7 +251,7 @@ async function main() {
   const filasPorTcg = new Map();
   for (const c of conTcgId) { const t = tcgIdDe(c); if (!filasPorTcg.has(t)) filasPorTcg.set(t, []); filasPorTcg.get(t).push(c); }
   const idsUnicos = [...filasPorTcg.keys()];
-  let batchLlamadas = 0, batchOk = 0, batchSinPrecio = 0, batchActivo = !!TCG_API_KEY && idsUnicos.length > 0;
+  let batchLlamadas = 0, batchOk = 0, batchSinPrecio = 0, batchConservadas = 0, batchActivo = !!TCG_API_KEY && idsUnicos.length > 0;
   console.log(`Por lote: ${conTcgId.length} fila(s) con tcgId, ${idsUnicos.length} tcgId distinto(s) (${Math.ceil(idsUnicos.length / BATCH_TAMANO)} consulta(s) para todos, tope ${BATCH_MAX_LLAMADAS})`);
   for (let i = 0; batchActivo && i < idsUnicos.length && batchLlamadas < BATCH_MAX_LLAMADAS && hayCupo(); i += BATCH_TAMANO) {
     const grupoIds = idsUnicos.slice(i, i + BATCH_TAMANO);
@@ -252,6 +263,8 @@ async function main() {
       const p = r.porId.get(t);
       for (const carta of filasPorTcg.get(t)) {
         if (!p || !p.market) { batchSinPrecio++; continue; }
+        // Base NM (lote 1): si hoy la API solo trae Lightly Played y la carta venía de NM, se conserva el último NM.
+        if (conservarNM(carta, p, hoy)) { batchConservadas++; actualizadas.set(carta.id, { tcgIntento: hoy }); continue; }
         actualizadas.set(carta.id, snapshotDe(carta, p, "tpl"));
         batchOk++; okCount++;
       }
@@ -259,8 +272,8 @@ async function main() {
     if (batchLlamadas % 10 === 0) guardar("lotes");
     if (i + BATCH_TAMANO < idsUnicos.length) await sleep(BATCH_PAUSA_MS);
   }
-  console.log(`✓ Por lote: ${batchOk} snapshot(s) con ${batchLlamadas} consulta(s)${batchSinPrecio ? `, ${batchSinPrecio} sin precio en la API (pasan a la rotación)` : ""}`);
-  resumen.lotes = { llamadas: batchLlamadas, snapshots: batchOk, sinPrecio: batchSinPrecio, pendientesPorTope: Math.max(0, conTcgId.length - batchOk - batchSinPrecio) };
+  console.log(`✓ Por lote: ${batchOk} snapshot(s) con ${batchLlamadas} consulta(s)${batchSinPrecio ? `, ${batchSinPrecio} sin precio en la API (pasan a la rotación)` : ""}${batchConservadas ? `, ${batchConservadas} con solo LP hoy (se conserva el último NM)` : ""}`);
+  resumen.lotes = { llamadas: batchLlamadas, snapshots: batchOk, sinPrecio: batchSinPrecio, pendientesPorTope: Math.max(0, conTcgId.length - batchOk - batchSinPrecio - batchConservadas), conservadasNM: batchConservadas };
   guardar("lotes");
 
   // ── 3. BÚSQUEDA individual (solo tcgpricelookup): cartas sin tcgId ───────

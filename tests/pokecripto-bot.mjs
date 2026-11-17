@@ -25,6 +25,11 @@ const inv = [
   c("hist", "Hist", "1", "Alpha", "alp", { tcgId: "t-hist", tcgMarket: 8, tcgUpdated: dia(-60), priceHistory: [
     { date: dia(-90), market: 1, low: 0.5, high: 2, src: "tpl" }, { date: dia(-80), market: 3, low: 0.4, high: 4, src: "tpl" },
     { date: dia(-60), market: 2, low: 1, high: 3, src: "tpl" }] }),
+  // lote 1: base NM. lp1 venía de NM hace 1 día y hoy la API solo trae LP -> se conserva; lp2 lleva 20 días sin precio -> se acepta LP.
+  c("lp1", "Lp1", "1", "Alpha", "alp", { tcgId: "t-lp1", tcgMarket: 3, tcgUpdated: dia(-1), priceHistory: [{ date: dia(-1), market: 3, low: 2, high: 4, src: "tpl", base: "nm" }] }),
+  c("lp2", "Lp2", "1", "Alpha", "alp", { tcgId: "t-lp2", tcgMarket: 3, tcgUpdated: dia(-20), priceHistory: [{ date: dia(-20), market: 3, low: 2, high: 4, src: "tpl", base: "nm" }] }),
+  // lote 1: costura vieja (snapshot sin fuente -> tpl) = corte; y los snapshots nuevos registran tcgId/variante/base
+  c("cort", "Cort", "1", "Alpha", "alp", { tcgId: "t-cort", tcgMarket: 1, tcgUpdated: dia(-2), priceHistory: [{ date: dia(-3), market: 1, low: null, high: null }, { date: dia(-2), market: 5, low: 4, high: 6, src: "tpl" }] }),
   c("old", "Foo", "1", "Alpha", "alp", { tcgId: "t-alp-1", tcgMarket: 1, tcgUpdated: "2026-09-01", priceHistory: [{ date: "2026-09-01", market: 1, low: null, high: null }] }),
 ];
 writeFileSync(P("inv.json"), JSON.stringify(inv));
@@ -54,6 +59,20 @@ t("descubrimiento por set: asigna tcgId y trae el snapshot de una vez, con src t
   assert.equal(por.a1.tcgId, "t-alp-1"); assert.equal(por.a1.tcgMarket, 1.5);
   assert.equal(por.a1.priceHistory.at(-1).src, "tpl");
   assert.equal(por.a3.tcgId, "t-alp-3"); assert.equal(por.a3.tcgMarket, null); // la API la tiene pero sin precio
+});
+t("lote 1 · base NM: con solo LP hoy se conserva el último NM (sin snapshot nuevo); pasados 14 días se acepta el LP marcado base lp", () => {
+  const hoy = new Date().toISOString().slice(0, 10);
+  assert.equal(por.lp1.priceHistory.length, 1); assert.equal(por.lp1.tcgMarket, 3); assert.equal(por.lp1.tcgIntento, hoy);
+  assert.equal(por.lp2.priceHistory.length, 2); assert.equal(por.lp2.tcgMarket, 1.2);
+  const u = por.lp2.priceHistory.at(-1); assert.equal(u.base, "lp"); assert.equal(u.tid, "t-lp2"); assert.equal(u.src, "tpl");
+});
+t("lote 1 · cada snapshot nuevo guarda tcgId, variante y base; y la costura sin fuente -> tpl queda marcada como corte", () => {
+  const u = por.hist.priceHistory.at(-1);
+  assert.equal(u.tid, "t-hist"); assert.equal(u.var, "Holofoil"); assert.equal(u.base, "nm");
+  const h = por.cort.priceHistory.filter(x => !x.agg);
+  assert.ok(!h[0].corte); assert.equal(h[1].corte, true);                    // 1 -> 5 (sin fuente -> tpl): costura
+  assert.ok(!h.at(-1).corte);                                                 // 5 -> 5,1 (misma fuente): mercado
+  assert.ok(/costura\(s\) de fuente marcada/.test(out));
 });
 t("paginación: una carta del número 120 se encuentra en la página 2", () => {
   assert.equal(por.b120.tcgId, "t-bet-120"); assert.ok(log().some(l => l === "SETCARDS slug=pokemon--bet offset=100"));

@@ -10,7 +10,7 @@
 // el nombre del set traiga cartas de ese set, y que acepte `page`. Por eso: si la paginación no aporta ids
 // nuevos se corta sola, y si las primeras consultas no emparejan nada el bot desactiva el descubrimiento
 // en esa corrida (ver build-pokecripto.mjs). Todo queda en el log.
-import { normNum, normName, TCG_BASE } from "./pricing.mjs";
+import { normNum, normName, TCG_BASE, precioDeCarta } from "./pricing.mjs";
 import { mismoSet, normSet } from "./review.mjs";
 import { elegirVariante } from "./variantes.mjs";
 
@@ -18,12 +18,12 @@ export const POR_PAGINA = 100;
 
 // Normaliza una carta devuelta por la API (misma forma que fetchTCGCandidatos).
 export function normalizarResultado(c) {
-  const best = c?.prices?.raw?.near_mint?.tcgplayer || c?.prices?.raw?.lightly_played?.tcgplayer;
+  const best = precioDeCarta(c);
   return {
     tcgId: c?.id || null,
     name: c?.name, number: c?.number,
     setId: c?.set?.id || null, setCode: c?.set?.ptcgoCode || null, setName: c?.set?.name || null,
-    market: best?.market || null, low: best?.low || null, high: best?.high || null,
+    market: best?.market || null, low: best?.low || null, high: best?.high || null, base: best?.base || null,
     variant: c?.variant || null, rarity: c?.rarity || null,
   };
 }

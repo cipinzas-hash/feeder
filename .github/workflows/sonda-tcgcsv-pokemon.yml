@@ -1,0 +1,79 @@
+name: Sonda tcgcsv Pokémon
+
+# Lote 1 "precios limpios" (16-nov-2026): mide si tcgcsv.com (espejo de TCGplayer) puede dar los precios de Pokémon y el
+# historial mensual desde 2024. SOLO LEE (inventario, tcgcsv): no escribe datos. Deja el informe agregado en
+# docs/sonda-tcgcsv-pokemon.md (commit a la misma rama) y el detalle por fila como artefacto del workflow (no se commitea:
+# es el inventario). Corre a mano (Run workflow) y al subir cambios al script en la rama precios-limpios.
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [precios-limpios]
+    paths:
+      - modules/feed/scripts/sonda-tcgcsv-pokemon.mjs
+      - .github/workflows/sonda-tcgcsv-pokemon.yml
+
+concurrency:
+  group: sonda-tcgcsv-pokemon
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout feeder (rama que disparó el workflow)
+        uses: actions/checkout@v4
+        with:
+          path: feeder
+
+      - name: Checkout Angst-data (solo lectura del inventario)
+        uses: actions/checkout@v4
+        with:
+          repository: cipinzas-hash/Angst-data
+          token: ${{ secrets.WORKER_GITHUB_PAT }}
+          path: angst-data
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar 7z (los archivos históricos de tcgcsv vienen en .7z)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
+
+      - name: Correr la sonda
+        working-directory: feeder
+        env:
+          POKECRIPTO_INVENTARIO_PATH: ${{ github.workspace }}/angst-data/pokecripto-inventario.json
+          SONDA_DETALLE_PATH: ${{ runner.temp }}/sonda-tcgcsv-pokemon-detalle.json
+        run: |
+          set -o pipefail
+          timeout -s TERM -k 15 20m node modules/feed/scripts/sonda-tcgcsv-pokemon.mjs 2>&1 | tee ${{ runner.temp }}/sonda.log
+
+      - name: Subir el detalle por fila (artefacto, 7 días)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonda-tcgcsv-pokemon-detalle
+          path: |
+            ${{ runner.temp }}/sonda-tcgcsv-pokemon-detalle.json
+            ${{ runner.temp }}/sonda.log
+          retention-days: 7
+
+      - name: Commitear el informe agregado a la misma rama
+        if: always()
+        working-directory: feeder
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/sonda-tcgcsv-pokemon.md
+          git diff --staged --quiet && { echo "sin cambios en el informe"; exit 0; }
+          git commit -m "Sonda tcgcsv Pokémon $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git push && break
+            echo "push falló, reintentando ($i/3)..."
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+          done

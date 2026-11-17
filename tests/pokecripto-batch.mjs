@@ -10,8 +10,11 @@ const carta = (id, market) => ({ id, name: "X", set: { id: "s", name: "S", slug:
 const resp = (status, body, headers = {}) => ({ ok: status >= 200 && status < 300, status, headers: { get: k => headers[k.toLowerCase()] ?? null, forEach: f => Object.entries(headers).forEach(([k, v]) => f(v, k)) }, json: async () => body, text: async () => JSON.stringify(body) });
 
 await t("precioDeApi: Near Mint de TCGplayer, si no Lightly Played, si no nada", () => {
-  assert.deepEqual(precioDeApi(carta("a", 5)), { market: 5, low: 4, high: 6 });
-  assert.deepEqual(precioDeApi({ prices: { raw: { lightly_played: { tcgplayer: { market: 2 } } } } }), { market: 2, low: null, high: null });
+  // Lote 1 (16-nov-2026): además del precio devuelve la base ("nm"/"lp") y la variante/rareza que declara la API.
+  assert.deepEqual(precioDeApi(carta("a", 5)), { market: 5, low: 4, high: 6, base: "nm", variant: null, rarity: null });
+  assert.deepEqual(precioDeApi({ prices: { raw: { lightly_played: { tcgplayer: { market: 2 } } } } }), { market: 2, low: null, high: null, base: "lp", variant: null, rarity: null });
+  // NM presente pero sin market -> cae a LP, marcado como "lp" (antes quedaba sin precio)
+  assert.equal(precioDeApi({ prices: { raw: { near_mint: { tcgplayer: { market: null } }, lightly_played: { tcgplayer: { market: 3 } } } } }).base, "lp");
   assert.equal(precioDeApi({ prices: { raw: { near_mint: { ebay: { market: 9 } } } } }), null);
   assert.equal(precioDeApi({}), null);
 });
