@@ -1,98 +1,7 @@
 {
  "version": 1,
- "generatedAt": "2026-11-17T00:11:48.971Z",
+ "generatedAt": "2026-11-17T17:50:34.123Z",
  "readmes": {
-  "d-alexbeavs-ps1-ports-final-fantasy-ix-recomp": {
-   "repo": "alexbeavs-ps1-ports/final-fantasy-ix-recomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
-   "recortado": false,
-   "bloques": [
-    [
-     "h",
-     "Final Fantasy IX Recompiled"
-    ],
-    [
-     "p",
-     "This release candidate uses PSXRecomp and the shared recomp-ui launcher. You must supply your own SLUS-01251 game disc and SCPH-1001 (USA) BIOS. The package contains no game disc, retail BIOS, generated retail game code, or saved game."
-    ],
-    [
-     "p",
-     "BIOS: SCPH-1001 (USA) retail BIOS, 524288 bytes, SHA-256 71af94d1e47a68c11e8fdb9f8368040601514a42a5a399cda48c7d3bff1e99d3. Supply your own dump; releases do not use OpenBIOS."
-    ],
-    [
-     "h",
-     "Status"
-    ],
-    [
-     "p",
-     "Latest release: v0.1.4, built on psxrecomp pin I 0.1.23."
-    ],
-    [
-     "li",
-     "Packages for Windows x64, Linux x64, macOS Apple Silicon and macOS Intel passed the CI build and package checks."
-    ],
-    [
-     "li",
-     "Replay check: on Windows, a build on pin I 0.1.23 played 2 of 2 recorded routes to the end without a crash. That check compares memory, not the picture, and is not a play test."
-    ],
-    [
-     "li",
-     "Not claimed: full-game completion, audio fidelity or multiplayer. Setup and gameplay reports from Linux, macOS and Steam Deck are welcome."
-    ],
-    [
-     "p",
-     "Known issues for the current version are in its release notes."
-    ],
-    [
-     "h",
-     "Setup"
-    ],
-    [
-     "li",
-     "Extract the complete setup ZIP into a writable folder."
-    ],
-    [
-     "li",
-     "Start Final_Fantasy_IX_Recompiled (.exe on Windows)."
-    ],
-    [
-     "li",
-     "Select your CUE file and the required BIOS in the setup wizard."
-    ],
-    [
-     "li",
-     "Run Generate & rebuild and wait for the game to start."
-    ],
-    [
-     "p",
-     "On Windows, the setup wizard can download the portable build tools. On Linux and macOS, install CMake, Ninja, Python 3, and a C/C++ compiler first. Keep the CUE and all files it references together. The BIOS must be 524288 bytes with SHA-256 71af94d1e47a68c11e8fdb9f8368040601514a42a5a399cda48c7d3bff1e99d3."
-    ],
-    [
-     "h",
-     "Candidate status"
-    ],
-    [
-     "p",
-     "Version 0.1.0 is being prepared for September 7, 2026. Package setup and gameplay acceptance are pending; native build checks do not establish gameplay support. The exact source and dependency identities are in project-manifest.toml. See feasibility and validation for the tested scope."
-    ],
-    [
-     "h",
-     "About this project"
-    ],
-    [
-     "p",
-     "This project was developed with AI assistance. AI assists with code, documentation, and investigation; Alex tests the game and makes release decisions. Validation claims describe only the tests actually performed."
-    ],
-    [
-     "h",
-     "Credits and licenses"
-    ],
-    [
-     "p",
-     "Framework: PSXRecomp. Launcher: recomp-ui. Their licenses and dependency notices remain in the corresponding source directories. The original game and its trademarks belong to their respective owners."
-    ]
-   ]
-  },
   "d-fabiangreffrath-intenseflow": {
    "repo": "fabiangreffrath/intenseflow",
    "actualizado": "2026-11-17T00:11:48.971Z",
@@ -193,367 +102,6 @@
     [
      "p",
      "On Windows, the directory of the executable is searched instead of 2. and 3."
-    ]
-   ]
-  },
-  "d-metroidret-mzm": {
-   "repo": "metroidret/mzm",
-   "actualizado": "2026-11-17T00:11:48.971Z",
-   "recortado": false,
-   "bloques": [
-    [
-     "h",
-     "Metroid - Zero Mission Decomp"
-    ],
-    [
-     "p",
-     "This is a work in progress decompilation of Metroid - Zero Mission."
-    ],
-    [
-     "p",
-     "2718/2721 functions decompiled (99.89%, 3 left)"
-    ],
-    [
-     "p",
-     "0x76b014/0x76b014 bytes of data not in blobs (100%, 0 left)"
-    ],
-    [
-     "p",
-     "This repository can be used to build multiple ROMs. The ROMs are named like this: mzm_{region}.gba (or mzm_{region}_debug.gba)"
-    ],
-    [
-     "p",
-     "Region indicates which region the ROM targets:"
-    ],
-    [
-     "li",
-     "us: USA, North America sha1: 5de8536afe1f0078ee6fe1089f890e8c7aa0a6e8"
-    ],
-    [
-     "li",
-     "eu: Europe sha1: 0fd107445a42e6f3a3e5ce8c865f412583179903"
-    ],
-    [
-     "li",
-     "jp: Japan sha1: 096f07685a3dc9286e71aa0b761f233b5efa2fcd"
-    ],
-    [
-     "li",
-     "cn: China (Not yet supported)"
-    ],
-    [
-     "li",
-     "us_beta: USA beta version sha1: 58986c4d6f2e5ccdc04936cc8b7c9d378570710c"
-    ],
-    [
-     "li",
-     "eu_beta: Europe beta version sha1: 3c0b7ccd303c30ac5c4ffc9fb0aa7137a533ad69"
-    ],
-    [
-     "p",
-     "Debug simply indicates whether the ROM contains the debug features, it is optional."
-    ],
-    [
-     "p",
-     "The default built ROM is mzm_us.gba"
-    ],
-    [
-     "p",
-     "Discords:"
-    ],
-    [
-     "li",
-     "https://discord.gg/2MGB9Xbr9y Metroidret"
-    ],
-    [
-     "li",
-     "https://discord.gg/WtekHKb MAGConst"
-    ],
-    [
-     "h",
-     "Dependencies"
-    ],
-    [
-     "li",
-     "agbcc"
-    ],
-    [
-     "li",
-     "binutils-arm-none-eabi"
-    ],
-    [
-     "li",
-     "A baserom for each ROM desired to be built (i.e.mzm_us_baserom.gba if you wish to build mzm_us.gba)."
-    ],
-    [
-     "li",
-     "python3"
-    ],
-    [
-     "li",
-     "g++"
-    ],
-    [
-     "h",
-     "Setup"
-    ],
-    [
-     "li",
-     "WINDOWS ONLY: Install and setup WSL"
-    ],
-    [
-     "li",
-     "Run sudo apt update just in case"
-    ],
-    [
-     "li",
-     "Install binutils-arm-none-eabi by running this command: sudo apt install binutils-arm-none-eabi or sudo dnf install arm-none-eabi-binutils-cs"
-    ],
-    [
-     "li",
-     "Install git by running this command: sudo apt install git or sudo dnf install git"
-    ],
-    [
-     "li",
-     "Install make by running this command: sudo apt install make or sudo dnf install make"
-    ],
-    [
-     "li",
-     "Clone agbcc by running this command: git clone https://github.com/jiangzhengwenjz/agbcc.git"
-    ],
-    [
-     "li",
-     "Enter the agbcc folder (run cd agbcc) and build it (run ./build.sh)"
-    ],
-    [
-     "li",
-     "Either:"
-    ],
-    [
-     "li",
-     "Install agbcc into this project (by using its ./install.sh script, where is the path to the root of this repository), or"
-    ],
-    [
-     "li",
-     "Add agbcc to your path (export PATH=\" :$PATH\", where is the full path to the agbcc directory)"
-    ],
-    [
-     "h",
-     "Build"
-    ],
-    [
-     "li",
-     "Run make tidy if necessary"
-    ],
-    [
-     "li",
-     "Use make tidy DATA=1 to remove data as well"
-    ],
-    [
-     "li",
-     "Run the data extractor if necessary: make extract"
-    ],
-    [
-     "li",
-     "For regions other than us, specify it using REGION (ex: REGION=jp)"
-    ],
-    [
-     "li",
-     "Also run python3 tools/extractor.py -d if you want to build a ROM with debug features"
-    ],
-    [
-     "li",
-     "Run make (using the -j option is recommended to speed up the process)"
-    ],
-    [
-     "li",
-     "To build another version of the ROM you can do either of the following:"
-    ],
-    [
-     "li",
-     "Specify it directly (ex: make us_debug for the US ROM with debug features)"
-    ],
-    [
-     "li",
-     "Specify the flags, REGION (takes the region name, defaults to us) and DEBUG (takes 0 or 1, defaults to 0)"
-    ],
-    [
-     "li",
-     "Optionally, you can combine the commands to make it easier: make extract && make -j"
-    ],
-    [
-     "h",
-     "Contributing"
-    ],
-    [
-     "p",
-     "See CONTRIBUTING.md"
-    ]
-   ]
-  },
-  "d-ravencaio-tlou-remastered-pc": {
-   "repo": "ravencaio/tlou-remastered-pc",
-   "actualizado": "2026-11-17T00:11:48.971Z",
-   "recortado": true,
-   "bloques": [
-    [
-     "h",
-     "The Last of Us Remastered — PC port"
-    ],
-    [
-     "p",
-     "Runs the PS4 The Last of Us Remastered (CUSA00552, with its update 1.11) natively on Windows. The game's own x86-64 code runs directly on the PC; a runtime supplies the PS4 system libraries, and a Vulkan renderer (the shadPS4 video core) executes the PS4 GPU work."
-    ],
-    [
-     "p",
-     "Discord Server : https://discord.gg/9mnjjezcNj"
-    ],
-    [
-     "p",
-     "No game files are in this repository. You need your own copy of the game (the dumped CUSA00552 folder, and its update). This project is not affiliated with Sony Interactive Entertainment or Naughty Dog."
-    ],
-    [
-     "h",
-     "Why"
-    ],
-    [
-     "p",
-     "Why The Last Of Us Remastered (PS4 version) is superior to The Last Of Us Part I (remake)?"
-    ],
-    [
-     "li",
-     "The PS4 remaster preserves the artistic style of the PS3 version and just improves the resolution and graphics."
-    ],
-    [
-     "li",
-     "Last version with multiplayer support, having multiplayer code is much easier to implement community/unofficial multiplayer"
-    ],
-    [
-     "li",
-     "Use less resources and storage space (no 4K textures, less polygons, no ray-tracing) than the remake version, which has a history of performance problems and poor optimization on PC."
-    ],
-    [
-     "h",
-     "Status"
-    ],
-    [
-     "p",
-     "Work in progress, reported playable from start to finish by a player, with one crash along the way that is not fixed yet (a workaround is under Known issues), and with rough edges."
-    ],
-    [
-     "li",
-     "Frame rate: on a laptop with a Core i7-8750H and a GTX 1050 Ti Mobile (4 GB), 60 FPS in light"
-    ],
-    [
-     "p",
-     "areas and about 40-44 FPS in the heaviest area tested, where the CPU side of the renderer is the limit (the draw recording thread at about 87%): lowering the resolution barely helps there."
-    ],
-    [
-     "li",
-     "Frame pacing: frame times swing while the game runs below its limit, and a fixed 30 FPS limit"
-    ],
-    [
-     "p",
-     "(launcher, or the in-game menu) makes motion clearly more even."
-    ],
-    [
-     "li",
-     "Known issues:"
-    ],
-    [
-     "li",
-     "NPCs moving in jumps or bobbing up and down (GitHub #57, #63): the game read some results of"
-    ],
-    [
-     "p",
-     "its GPU memory copy shader (Cs_MemCpy) a frame late. They are read back now; in a save where they jumped every time, they stopped. Tested on one save and one GPU so far: report it if they still jump somewhere (GOW3_TLOU_MEMCPY_READBACK=0 turns the fix off for comparison). Thanks to KyrieFrost, whose experimental patch in #63 pointed at that shader."
-    ],
-    [
-     "li",
-     "A frame that compiles many new shaders can pause the game for a moment, mostly the first time"
-    ],
-    [
-     "p",
-     "an area is played. The game's own frame watchdog is patched from 2 s to 20 s for that (TLOU_FIXES=none leaves the game unpatched). If a load ever hangs, start with GOW3_FRAMES_IN_FLIGHT=0 (slower)."
-    ],
-    [
-     "li",
-     "Pistol and rifle shots that went through scenery with no effect (firefly pendants that could"
-    ],
-    [
-     "p",
-     "not be shot down, GitHub #29, #45; walls that took no bullet holes from a pistol or rifle while a shotgun marked them) are fixed. The game asks the GPU, with an occlusion query, whether a character is under the crosshair; while one is, the player's bullets ignore scenery so thin cover in front of a target does not stop them. The runtime made up the answers to occlusion queries (always \"visible\"), so the bullets ignored scenery all the time; the queries are now real Vulkan occlusion queries (GOW3_OCCLUSION_QUERIES=0 goes back to the made-up answers). The bullet impacts' mesh ray casts (and the…"
-    ],
-    [
-     "li",
-     "On NVIDIA graphics cards older than Turing (GTX 900 and 10 series), the game's cloth solver for"
-    ]
-   ]
-  },
-  "d-reshaped-sonic-adventure": {
-   "repo": "reshaped/sonic-adventure",
-   "actualizado": "2026-11-17T00:11:48.971Z",
-   "recortado": true,
-   "bloques": [
-    [
-     "h",
-     "sonic-adventure"
-    ],
-    [
-     "p",
-     "The first complete matching decompilation of a retail Dreamcast game, including all of the Katana SDK code it links: Sonic Adventure, the original Japanese release, HDR-0001, version 1.007."
-    ],
-    [
-     "p",
-     "100% of the game's code builds from source, byte for byte."
-    ],
-    [
-     "p",
-     "*\\*SHC's assembly for 14 of the C sources matches once shckit patches it (Patched R10). Accounting explains the percentages.*"
-    ],
-    [
-     "p",
-     "Most of the assembly was handwritten in the original, not compiled from C. Compiler analysis and original symbol names already provide evidence of handwritten origins for 62.4% of its instructions and data."
-    ],
-    [
-     "h",
-     "Build"
-    ],
-    [
-     "p",
-     "Tested on x86-64 Linux with GNU make 4.3 and Python 3.8. The matching build and PC game run on x86-64 Linux. macOS supports make dc, make dc-disc, make dc-check, make test, make lint and make format, tested on Apple silicon with macOS 26.6, GNU make 4.4.1 and Xcode's Python 3.9.6. The Dreamcast port reads disc data through offsets the matching build records and checks on Linux (Stub and full builds)."
-    ],
-    [
-     "p",
-     "On macOS, install Xcode's command-line tools and GNU make. Apple's make is 3.81; Homebrew installs GNU make as gmake. Use gmake wherever the commands below say make, from a terminal running natively rather than under Rosetta 2:"
-    ],
-    [
-     "p",
-     "The builds need a C compiler (cc by default, or set CC), sha256sum and cmp. The matching build also needs timeout; its first run downloads wibo and three releases of Hitachi's SHC. The Dreamcast port builds its GCC toolchain on first use and needs c++. Downloads need curl and tar, with gzip or xz where tar uses them. The first make lint or make format installs pinned clang-format and clang-tidy wheels into a Python venv, requiring curl, Python's ensurepip (python3-venv on Debian and Ubuntu) and pip 20.3 or later. The wheels support x86-64 Linux and macOS. Downloads are checked against…"
-    ],
-    [
-     "p",
-     "Bring your own disc: the Japanese release, HDR-0001, version 1.007. None of the disc's files are in this repository. Put 1ST_READ.BIN, LOADER.BIN and SONICADV/ in orig/, named as on the disc, or put the disc's .gdi and its tracks there. Then:"
-    ],
-    [
-     "p",
-     "make compiles every binary's code, reads the data its sources declare from your disc, and checks each binary it rebuilds against the original, PRS compression and all. They land under build/, at the disc's own paths. make checks 1ST_READ.BIN, LOADER.BIN and each file it reads from SONICADV/ against SHA256SUMS before reading it. This is a matching build, so an edit that changes a byte of output fails it."
-    ],
-    [
-     "p",
-     "make check needs no disc. It compiles the sources it can check without the disc, using placeholders for imported data where needed, and checks each linked source against its recorded hash, but builds no complete binary. Checks says what each goal shows, and make help lists them all."
-    ],
-    [
-     "p",
-     "make dc builds the sources with GCC 16.2 and links every image anew, under build/dc/ at the disc's paths. It needs the disc but neither SHC nor wibo. Its first run builds binutils and GCC from source (Toolchain); their logs are in build/toolchain/. make dc-disc needs the disc's .gdi and its tracks in orig/, not its files alone. The port's features describes what it adds."
-    ],
-    [
-     "p",
-     "make dc-check needs neither disc nor SHC. It builds the port's disc-independent objects and writes build/dc/check.txt: hashes of those objects, SH4ZAM's archive, the toolchain's libgcc.a and two compression results. Compare the file across hosts at the same commit, with the same SH_ELF (Checks). Its first run builds the toolchain and fetches SH4ZAM, as make dc does."
-    ],
-    [
-     "p",
-     "make pc builds the game from your disc, and make play runs it in a window. The engine's build goals need Python 3.9 or later; a window needs SDL3 and Vulkan. Checks lists the other host requirements, and Build goals lists the engine's commands."
     ]
    ]
   },
@@ -693,216 +241,6 @@
     [
      "li",
      "Your game: the folder that holds the extracted exefs and romfs folders of your own Super Mario"
-    ]
-   ]
-  },
-  "d-tmcleroy-soulcalibur2-recomp": {
-   "repo": "tmcleroy/soulcalibur2-recomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
-   "recortado": true,
-   "bloques": [
-    [
-     "h",
-     "Soulcalibur II Recomp"
-    ],
-    [
-     "p",
-     "Join me on Discord"
-    ],
-    [
-     "p",
-     "All three console exclusives in one game: Spawn, Link and Heihachi. Soulcalibur II came out on the Xbox with Spawn, on the GameCube with Link and on the PlayStation 2 with Heihachi, and none of those releases had more than one of them. This port has all three on the same select screen, in every mode, against each other."
-    ],
-    [
-     "p",
-     "An unofficial native port of Soulcalibur II (Xbox) for macOS, Linux (Steam Deck and Steam Machine included), Windows and Android. It is a static recompilation of the Xbox game: its program is translated ahead of time into C and runs on a native runtime, with no emulator. It adds a training mode, online play with rollback, a free camera with a pause, widescreen, higher resolutions and shaders."
-    ],
-    [
-     "p",
-     "No game files are included. Your own Soulcalibur II Xbox disc image is the only one you need to play: the USA disc, or the European one (Europe, Australia), which plays in English, German, French, Spanish or Italian (the Language feature; on macOS, Windows and Linux, not yet Android). Link and Heihachi are optional: give the launcher your own GameCube disc, PlayStation 2 disc, or both, to add them. This project cannot help you get any of them."
-    ],
-    [
-     "h",
-     "Spawn, Link and Heihachi together"
-    ],
-    [
-     "p",
-     "The Xbox game has Spawn. Link and Heihachi are converted on your machine from your GameCube and PlayStation 2 discs (models, moves, weapons, voices, select-screen art and endings) and stand beside him: in Arcade, VS, the Extra modes, Weapon Master, and the Museum's profiles, theaters and Art Gallery."
-    ],
-    [
-     "h",
-     "Training"
-    ],
-    [
-     "p",
-     "Hit boxes (the game's own collision shapes: where each fighter can be hit, and its weapon and limbs, red while an attack is live), frame data (startup, active, recovery, advantage on hit or guard) with a frame meter, an input display and a combo readout down each fighter's side, start over (the round as it began, one key), a dummy that records and replays what you show it (in Practice or VS Battle), health refill and infinite time; with save states, pause and frame advance, and slow motion from the in-game menu. See docs/PLAYING.md."
-    ],
-    [
-     "h",
-     "Online play"
-    ],
-    [
-     "p",
-     "Two players, each on their own machine. Host from the launcher or from the in-game menu while you play, and give the other player the match's code (or find each other in the lobby, or invite them from the launcher's waiting room); join with the code. Fights use rollback; the menus wait for both players. During a match: both players' names, the ping, and a chat (T). A dropped connection waits for the other player to come back with the same code. See docs/online.md."
-    ],
-    [
-     "h",
-     "Free camera and photo mode"
-    ],
-    [
-     "p",
-     "Switched on in the launcher: \\ (backquote) or a click of the right stick takes the game's camera and flies it, in fights and menus. P (or Start while flying) pauses the fight while the camera goes on flying; . (or White) steps a frame; H (or Black) hides the life bars and timer; F12 saves a screenshot."
-    ],
-    [
-     "h",
-     "And"
-    ],
-    [
-     "li",
-     "Widescreen (the game's own 16:9 mode) and resolutions up to 8x (5120x3840)."
-    ],
-    [
-     "li",
-     "HD textures: the GameCube version's HD texture pack for Dolphin, from your own download, matched to the Xbox's"
-    ],
-    [
-     "p",
-     "textures when you import it; or dump the game's textures and make your own."
-    ],
-    [
-     "li",
-     "Shaders: RetroArch's CRT and scanline shaders (CRT Royale, CRT Guest, CRT Lottes and more) at the Xbox's 480"
-    ],
-    [
-     "p",
-     "lines, or your own preset."
-    ],
-    [
-     "li",
-     "An endless battle: in any fight, the game plays both fighters for as long as you like (touch the controls to"
-    ],
-    [
-     "p",
-     "take one over)."
-    ],
-    [
-     "li",
-     "An in-game menu (Esc, F1 or a gamepad's Back): save states, speed, training, cheats (no damage, one-hit"
-    ],
-    [
-     "p",
-     "knockouts, everything unlocked), online, sound, quit."
-    ],
-    [
-     "li",
-     "Android: the launcher and the game in one app for 64-bit phones and tablets (Android 10 or later, Vulkan),"
-    ],
-    [
-     "p",
-     "with touch controls (a stick, the four attack buttons, Start and the menu) beside any gamepad."
-    ]
-   ]
-  },
-  "d-jackpoison-prog-ringout": {
-   "repo": "jackpoison-prog/RingOut",
-   "actualizado": "2026-11-17T00:11:48.971Z",
-   "recortado": true,
-   "bloques": [
-    [
-     "h",
-     "Ring Out"
-    ],
-    [
-     "p",
-     "A native PC port of a GameCube fighting game (disc ID GRSEAF), produced by static recompilation rather than emulation: the disc's PowerPC executable is translated ahead of time into C, compiled for x86-64, and run as native code inside a Dolphin-derived runtime that provides the graphics, audio, input and hardware emulation around it."
-    ],
-    [
-     "p",
-     "No game data and no game code are distributed here. You supply a disc image you already own; setup extracts it and recompiles it on your machine."
-    ],
-    [
-     "p",
-     "This is still early. Expect rough edges: the game is playable start to finish, but features arrive before their polish does, and something that worked last release can break in the next one. Polish is planned throughout rather than saved up for a 1.0 — and bug reports genuinely help, because most of what gets fixed here was found by someone hitting it."
-    ],
-    [
-     "h",
-     "Status"
-    ],
-    [
-     "p",
-     "Fully playable — boots to menu and through gameplay. Every block of the game's own executable runs as native code; the recompiler translates 535,368 instructions with 0 unknown opcodes and no interpreter fallback inside them."
-    ],
-    [
-     "p",
-     "What the interpreter does still cover is the PowerPC exception vectors — 0x500 (external interrupt), 0xC00 (system call), 0x800 (FP unavailable). Those handlers are written into low RAM by the OS at boot rather than living in the disc's executable, so there is no recompiled code to dispatch to and the interpreter runs them until control returns. They account for about 0.7% of executed steps, steadily, because interrupts fire for the life of the session — but only 0.2% of cycles, so there is nothing to win by recompiling them. An earlier version of this page claimed \"zero interpreter…"
-    ],
-    [
-     "p",
-     "Rendering is Vulkan on the GPU, with the CPU emulation and the runtime on separate cores."
-    ],
-    [
-     "p",
-     "Steam Deck: supported, with its own package, and it runs in both Desktop and Game Mode at 45–49 fps in a match. Two ways to get a module onto it, so it works whether or not the Deck is the only machine you have:"
-    ],
-    [
-     "li",
-     "Build it on the Deck. Install a toolchain once and SteamOS compiles its own"
-    ],
-    [
-     "p",
-     "module, needing no bundled libraries at all — no second computer anywhere in the process. Tested end to end on SteamOS 3.8.25. This is also the way to get the full PGO win there, since clang 20 cannot read the shipped profiles."
-    ],
-    [
-     "li",
-     "Build it on a desktop and copy it over. No toolchain on the Deck at all, if"
-    ],
-    [
-     "p",
-     "you have another Linux machine to hand."
-    ],
-    [
-     "p",
-     "dist/RingOut-1.0-deck/BUILD-ON-THE-DECK.md walks through the first route, and ships inside the Deck package too."
-    ],
-    [
-     "p",
-     "Netplay: working. Delay-based (not rollback) over a deterministic dual-core setup, with a lobby showing live ping and per-player game status; two peers stayed byte-identical over 6,470 frames."
-    ],
-    [
-     "h",
-     "Getting it"
-    ],
-    [
-     "p",
-     "From the Releases page. Each is named for the release you download, so below is that release's number:"
-    ],
-    [
-     "p",
-     "The Deck package ships no module, so you build one and copy game/ and bin/gGRSEAF_recomp.so into it. You can do that on the Deck itself — download both zips, since the Linux one is what carries module-src/ and does the building — or on a desktop if you have one. setup.sh --deck installs the result into the Deck package for you when it can see it. Add RingOut to Steam as a non-Steam game to launch it from Game Mode."
-    ],
-    [
-     "p",
-     "For desktop, unzip and run:"
-    ],
-    [
-     "p",
-     "On first run it asks for your disc image (.iso / .gcm / .nkit.iso / .rvz), then extracts and recompiles it — several minutes, once, with each stage numbered as it starts (==> 1/3 Extracting disc, 2/3 recompiling, 3/3 building the module; --pgo adds a fourth) and a closing line saying whether a PGO profile was used. Every run after that starts straight away. You can also pass the image directly:"
-    ],
-    [
-     "h",
-     "Requirements"
-    ],
-    [
-     "li",
-     "A GameCube disc image you already own"
-    ],
-    [
-     "li",
-     "cmake, ninja, python3, and clang (or gcc)"
-    ],
-    [
-     "li",
-     "Arch: sudo pacman -S cmake ninja clang python"
     ]
    ]
   },
@@ -1113,90 +451,443 @@
     ]
    ]
   },
-  "d-mstan-supermarioland2recomp": {
-   "repo": "mstan/SuperMarioLand2Recomp",
+  "d-ragnaroek-iron-wolf": {
+   "repo": "Ragnaroek/iron-wolf",
+   "actualizado": "2026-11-17T00:11:48.971Z",
+   "recortado": false,
+   "bloques": [
+    [
+     "h",
+     "Iron Wolf"
+    ],
+    [
+     "p",
+     "Wolfenstein 3D in Rust"
+    ],
+    [
+     "p",
+     "The goal is to have a pixel, mod-friendly perfect recreation of Wolfenstein 3D in Rust."
+    ],
+    [
+     "p",
+     "E1M1 Demo"
+    ],
+    [
+     "h",
+     "Playing Iron Wolf"
+    ],
+    [
+     "p",
+     "just run-sdl-shareware should work out of the box on a cloned repo. It will run the shareware version, that is also checked in along with the code as testdata."
+    ],
+    [
+     "p",
+     "Alternatively you can play the web version here:"
+    ],
+    [
+     "p",
+     "If you have a copy of the full game files you can upload them there and play the full version in your browser:"
+    ],
+    [
+     "h",
+     "Configuration File"
+    ],
+    [
+     "p",
+     "A config file is optional. Copy the default_iw_config.toml as iw_config.toml and put it next to the Iron Wolf exectuable file. The options are described as comments in the default config file."
+    ]
+   ]
+  },
+  "d-tmcleroy-soulcalibur2-recomp": {
+   "repo": "tmcleroy/soulcalibur2-recomp",
    "actualizado": "2026-11-17T00:11:48.971Z",
    "recortado": true,
    "bloques": [
     [
+     "h",
+     "Soulcalibur II Recomp"
+    ],
+    [
      "p",
-     "Dedicated to my good friend and mentor, Julien."
+     "Join me on Discord"
+    ],
+    [
+     "p",
+     "All three console exclusives in one game: Spawn, Link and Heihachi. Soulcalibur II came out on the Xbox with Spawn, on the GameCube with Link and on the PlayStation 2 with Heihachi, and none of those releases had more than one of them. This port has all three on the same select screen, in every mode, against each other."
+    ],
+    [
+     "p",
+     "An unofficial native port of Soulcalibur II (Xbox) for macOS, Linux (Steam Deck and Steam Machine included), Windows and Android. It is a static recompilation of the Xbox game: its program is translated ahead of time into C and runs on a native runtime, with no emulator. It adds a training mode, online play with rollback, a free camera with a pause, widescreen, higher resolutions and shaders."
+    ],
+    [
+     "p",
+     "No game files are included. Your own Soulcalibur II Xbox disc image is the only one you need to play: the USA disc, or the European one (Europe, Australia), which plays in English, German, French, Spanish or Italian (the Language feature; on macOS, Windows and Linux, not yet Android). Link and Heihachi are optional: give the launcher your own GameCube disc, PlayStation 2 disc, or both, to add them. This project cannot help you get any of them."
     ],
     [
      "h",
-     "Windows and Linux desktop CMake build"
+     "Spawn, Link and Heihachi together"
     ],
     [
      "p",
-     "The desktop CMake entry point uses the gbcllr revision pinned in games.json, the shared GB/GBC launcher and native presentation services. Gameplay executes the original cartridge unchanged. One runtime supports enhanced Fit/color presentation and stock play with the enhancement disabled in Mods. Existing saved mod/aspect choices and native saves are kept."
-    ],
-    [
-     "p",
-     "Obtain gbcllr at engine_revision and initialize its pinned submodules. Supply the original V1.0 cartridge with SHA256 42045a1642f77b568534ab85b9db93c8a33d2b95c38ae84c987f497e8d52f97f, a matching DMG boot ROM, and the native color data described by the engine's qa/SML2-COLOR.md. The color donor supplies presentation data; its guest code does not run in this desktop path. Requires CMake 3.24+, Ninja, Python 3.11+, SDL2/OpenGL and GCC or Clang with GNU C extensions (MinGW-w64 on Windows)."
-    ],
-    [
-     "p",
-     "Open Play.cmd (Windows) or Play.sh (Linux) beside gbcllr-run. The title's qualified instruction/audio/picture/clock profile is selected automatically; there is no backend choice to configure. Fresh enhanced profiles use Fit and color, while explicit saved choices remain authoritative. Save states are specific to the current build; native in-game saves remain supported."
-    ],
-    [
-     "p",
-     "This addition preserves the existing Android and legacy source workflows below. It does not migrate Android to gbcllr or change the legacy engine/UI pins."
+     "The Xbox game has Spawn. Link and Heihachi are converted on your machine from your GameCube and PlayStation 2 discs (models, moves, weapons, voices, select-screen art and endings) and stand beside him: in Arcade, VS, the Extra modes, Weapon Master, and the Museum's profiles, theaters and Art Gallery."
     ],
     [
      "h",
-     "Existing Android and legacy workflows"
+     "Training"
     ],
     [
      "p",
-     "Release v0.2.0 requires original boot firmware: the 256-byte DMG BIOS for faithful mode and the 2304-byte CGB BIOS for DX. Select it under Settings > System before Play. No ROM or BIOS is distributed. Previous savestates are incompatible; battery saves remain compatible."
-    ],
-    [
-     "p",
-     "The Android ARM64 APK imports the supported V1.0 ROM and firmware once, then prefills the shared launcher. Its Mods page selects DX and widescreen. The Touch controls toggle reveals the pad and Rewind; gamepads also work. Android device gameplay validation was waived for this release. Source builds use the shared host instructions."
-    ],
-    [
-     "p",
-     "Static recompilation of the Game Boy title Super Mario Land 2 - 6 Golden Coins (UE) (V1.0) (CRC32 D5EC24E4) to native code via gbrecompiled, with the shared recomp-ui launcher."
-    ],
-    [
-     "p",
-     "One executable, two recompiled bodies of that one cart: the faithful V1.0 build, and Super Mario Land 2 DX v1.8.1 derived from the same ROM in memory at boot. The launcher's Mods page picks between them — see DX.md."
-    ],
-    [
-     "li",
-     "super_mario_land_2.toml — faithful body (primary project)"
-    ],
-    [
-     "li",
-     "super_mario_land_2_dx.toml — DX body (V1.0 + recomp/patches/sml2dx_v181.bps)"
-    ],
-    [
-     "li",
-     "extras.c — game hooks (launcher name/platform, ROM CRC gate, mods)"
-    ],
-    [
-     "li",
-     "recomp/launcher/boxart.tga — launcher box art"
-    ],
-    [
-     "li",
-     "ADAPTIVE.md — opt-in adaptive widescreen mod (see Mods in the launcher)"
-    ],
-    [
-     "p",
-     "The ROM is not included; supply your own at roms/Super Mario Land 2 - 6 Golden Coins (UE) (V1.0) [!].gb. That is the only ROM this build accepts, for either body — the DX image is derived from it and is never asked for."
-    ],
-    [
-     "p",
-     "The default native BIOS build needs private dmg_boot.bin (256 bytes) and cgb_boot.bin (2304 bytes) under gb-recompiled/boot_roms/, or a CMake GBRECOMP_BIOS_DIR path. Select the DMG BIOS for the faithful game and the CGB BIOS for DX in Settings → System. The launcher remembers both paths and rechecks the requirement when the DX option changes. Firmware is not included."
-    ],
-    [
-     "p",
-     "Hold R to rewind. File states and rb-engine rewind now restore the adaptive camera, actor/spawn tracking and frozen transition image with guest state. Version-1 states are incompatible. Both bodies passed 6,500-frame strict routes at 16:9 and 32:9, including pause/resume and save/rewind checks with zero interpreter execution; this is route coverage, not a complete playthrough."
+     "Hit boxes (the game's own collision shapes: where each fighter can be hit, and its weapon and limbs, red while an attack is live), frame data (startup, active, recovery, advantage on hit or guard) with a frame meter, an input display and a combo readout down each fighter's side, start over (the round as it began, one key), a dummy that records and replays what you show it (in Practice or VS Battle), health refill and infinite time; with save states, pause and frame advance, and slow motion from the in-game menu. See docs/PLAYING.md."
     ],
     [
      "h",
-     "Screenshots"
+     "Online play"
+    ],
+    [
+     "p",
+     "Two players, each on their own machine. Host from the launcher or from the in-game menu while you play, and give the other player the match's code (or find each other in the lobby, or invite them from the launcher's waiting room); join with the code. Fights use rollback; the menus wait for both players. During a match: both players' names, the ping, and a chat (T). A dropped connection waits for the other player to come back with the same code. See docs/online.md."
+    ],
+    [
+     "h",
+     "Free camera and photo mode"
+    ],
+    [
+     "p",
+     "Switched on in the launcher: \\ (backquote) or a click of the right stick takes the game's camera and flies it, in fights and menus. P (or Start while flying) pauses the fight while the camera goes on flying; . (or White) steps a frame; H (or Black) hides the life bars and timer; F12 saves a screenshot."
+    ],
+    [
+     "h",
+     "And"
+    ],
+    [
+     "li",
+     "Widescreen (the game's own 16:9 mode) and resolutions up to 8x (5120x3840)."
+    ],
+    [
+     "li",
+     "HD textures: the GameCube version's HD texture pack for Dolphin, from your own download, matched to the Xbox's"
+    ],
+    [
+     "p",
+     "textures when you import it; or dump the game's textures and make your own."
+    ],
+    [
+     "li",
+     "Shaders: RetroArch's CRT and scanline shaders (CRT Royale, CRT Guest, CRT Lottes and more) at the Xbox's 480"
+    ],
+    [
+     "p",
+     "lines, or your own preset."
+    ],
+    [
+     "li",
+     "An endless battle: in any fight, the game plays both fighters for as long as you like (touch the controls to"
+    ],
+    [
+     "p",
+     "take one over)."
+    ],
+    [
+     "li",
+     "An in-game menu (Esc, F1 or a gamepad's Back): save states, speed, training, cheats (no damage, one-hit"
+    ],
+    [
+     "p",
+     "knockouts, everything unlocked), online, sound, quit."
+    ],
+    [
+     "li",
+     "Android: the launcher and the game in one app for 64-bit phones and tablets (Android 10 or later, Vulkan),"
+    ],
+    [
+     "p",
+     "with touch controls (a stick, the four attack buttons, Start and the menu) beside any gamepad."
+    ]
+   ]
+  },
+  "d-alexbeavs-ps1-ports-final-fantasy-ix-recomp": {
+   "repo": "alexbeavs-ps1-ports/final-fantasy-ix-recomp",
+   "actualizado": "2026-11-17T00:11:48.971Z",
+   "recortado": false,
+   "bloques": [
+    [
+     "h",
+     "Final Fantasy IX Recompiled"
+    ],
+    [
+     "p",
+     "This release candidate uses PSXRecomp and the shared recomp-ui launcher. You must supply your own SLUS-01251 game disc and SCPH-1001 (USA) BIOS. The package contains no game disc, retail BIOS, generated retail game code, or saved game."
+    ],
+    [
+     "p",
+     "BIOS: SCPH-1001 (USA) retail BIOS, 524288 bytes, SHA-256 71af94d1e47a68c11e8fdb9f8368040601514a42a5a399cda48c7d3bff1e99d3. Supply your own dump; releases do not use OpenBIOS."
+    ],
+    [
+     "h",
+     "Status"
+    ],
+    [
+     "p",
+     "Latest release: v0.1.4, built on psxrecomp pin I 0.1.23."
+    ],
+    [
+     "li",
+     "Packages for Windows x64, Linux x64, macOS Apple Silicon and macOS Intel passed the CI build and package checks."
+    ],
+    [
+     "li",
+     "Replay check: on Windows, a build on pin I 0.1.23 played 2 of 2 recorded routes to the end without a crash. That check compares memory, not the picture, and is not a play test."
+    ],
+    [
+     "li",
+     "Not claimed: full-game completion, audio fidelity or multiplayer. Setup and gameplay reports from Linux, macOS and Steam Deck are welcome."
+    ],
+    [
+     "p",
+     "Known issues for the current version are in its release notes."
+    ],
+    [
+     "h",
+     "Setup"
+    ],
+    [
+     "li",
+     "Extract the complete setup ZIP into a writable folder."
+    ],
+    [
+     "li",
+     "Start Final_Fantasy_IX_Recompiled (.exe on Windows)."
+    ],
+    [
+     "li",
+     "Select your CUE file and the required BIOS in the setup wizard."
+    ],
+    [
+     "li",
+     "Run Generate & rebuild and wait for the game to start."
+    ],
+    [
+     "p",
+     "On Windows, the setup wizard can download the portable build tools. On Linux and macOS, install CMake, Ninja, Python 3, and a C/C++ compiler first. Keep the CUE and all files it references together. The BIOS must be 524288 bytes with SHA-256 71af94d1e47a68c11e8fdb9f8368040601514a42a5a399cda48c7d3bff1e99d3."
+    ],
+    [
+     "h",
+     "Candidate status"
+    ],
+    [
+     "p",
+     "Version 0.1.0 is being prepared for September 7, 2026. Package setup and gameplay acceptance are pending; native build checks do not establish gameplay support. The exact source and dependency identities are in project-manifest.toml. See feasibility and validation for the tested scope."
+    ],
+    [
+     "h",
+     "About this project"
+    ],
+    [
+     "p",
+     "This project was developed with AI assistance. AI assists with code, documentation, and investigation; Alex tests the game and makes release decisions. Validation claims describe only the tests actually performed."
+    ],
+    [
+     "h",
+     "Credits and licenses"
+    ],
+    [
+     "p",
+     "Framework: PSXRecomp. Launcher: recomp-ui. Their licenses and dependency notices remain in the corresponding source directories. The original game and its trademarks belong to their respective owners."
+    ]
+   ]
+  },
+  "d-metroidret-mzm": {
+   "repo": "metroidret/mzm",
+   "actualizado": "2026-11-17T00:11:48.971Z",
+   "recortado": false,
+   "bloques": [
+    [
+     "h",
+     "Metroid - Zero Mission Decomp"
+    ],
+    [
+     "p",
+     "This is a work in progress decompilation of Metroid - Zero Mission."
+    ],
+    [
+     "p",
+     "2718/2721 functions decompiled (99.89%, 3 left)"
+    ],
+    [
+     "p",
+     "0x76b014/0x76b014 bytes of data not in blobs (100%, 0 left)"
+    ],
+    [
+     "p",
+     "This repository can be used to build multiple ROMs. The ROMs are named like this: mzm_{region}.gba (or mzm_{region}_debug.gba)"
+    ],
+    [
+     "p",
+     "Region indicates which region the ROM targets:"
+    ],
+    [
+     "li",
+     "us: USA, North America sha1: 5de8536afe1f0078ee6fe1089f890e8c7aa0a6e8"
+    ],
+    [
+     "li",
+     "eu: Europe sha1: 0fd107445a42e6f3a3e5ce8c865f412583179903"
+    ],
+    [
+     "li",
+     "jp: Japan sha1: 096f07685a3dc9286e71aa0b761f233b5efa2fcd"
+    ],
+    [
+     "li",
+     "cn: China (Not yet supported)"
+    ],
+    [
+     "li",
+     "us_beta: USA beta version sha1: 58986c4d6f2e5ccdc04936cc8b7c9d378570710c"
+    ],
+    [
+     "li",
+     "eu_beta: Europe beta version sha1: 3c0b7ccd303c30ac5c4ffc9fb0aa7137a533ad69"
+    ],
+    [
+     "p",
+     "Debug simply indicates whether the ROM contains the debug features, it is optional."
+    ],
+    [
+     "p",
+     "The default built ROM is mzm_us.gba"
+    ],
+    [
+     "p",
+     "Discords:"
+    ],
+    [
+     "li",
+     "https://discord.gg/2MGB9Xbr9y Metroidret"
+    ],
+    [
+     "li",
+     "https://discord.gg/WtekHKb MAGConst"
+    ],
+    [
+     "h",
+     "Dependencies"
+    ],
+    [
+     "li",
+     "agbcc"
+    ],
+    [
+     "li",
+     "binutils-arm-none-eabi"
+    ],
+    [
+     "li",
+     "A baserom for each ROM desired to be built (i.e.mzm_us_baserom.gba if you wish to build mzm_us.gba)."
+    ],
+    [
+     "li",
+     "python3"
+    ],
+    [
+     "li",
+     "g++"
+    ],
+    [
+     "h",
+     "Setup"
+    ],
+    [
+     "li",
+     "WINDOWS ONLY: Install and setup WSL"
+    ],
+    [
+     "li",
+     "Run sudo apt update just in case"
+    ],
+    [
+     "li",
+     "Install binutils-arm-none-eabi by running this command: sudo apt install binutils-arm-none-eabi or sudo dnf install arm-none-eabi-binutils-cs"
+    ],
+    [
+     "li",
+     "Install git by running this command: sudo apt install git or sudo dnf install git"
+    ],
+    [
+     "li",
+     "Install make by running this command: sudo apt install make or sudo dnf install make"
+    ],
+    [
+     "li",
+     "Clone agbcc by running this command: git clone https://github.com/jiangzhengwenjz/agbcc.git"
+    ],
+    [
+     "li",
+     "Enter the agbcc folder (run cd agbcc) and build it (run ./build.sh)"
+    ],
+    [
+     "li",
+     "Either:"
+    ],
+    [
+     "li",
+     "Install agbcc into this project (by using its ./install.sh script, where is the path to the root of this repository), or"
+    ],
+    [
+     "li",
+     "Add agbcc to your path (export PATH=\" :$PATH\", where is the full path to the agbcc directory)"
+    ],
+    [
+     "h",
+     "Build"
+    ],
+    [
+     "li",
+     "Run make tidy if necessary"
+    ],
+    [
+     "li",
+     "Use make tidy DATA=1 to remove data as well"
+    ],
+    [
+     "li",
+     "Run the data extractor if necessary: make extract"
+    ],
+    [
+     "li",
+     "For regions other than us, specify it using REGION (ex: REGION=jp)"
+    ],
+    [
+     "li",
+     "Also run python3 tools/extractor.py -d if you want to build a ROM with debug features"
+    ],
+    [
+     "li",
+     "Run make (using the -j option is recommended to speed up the process)"
+    ],
+    [
+     "li",
+     "To build another version of the ROM you can do either of the following:"
+    ],
+    [
+     "li",
+     "Specify it directly (ex: make us_debug for the US ROM with debug features)"
+    ],
+    [
+     "li",
+     "Specify the flags, REGION (takes the region name, defaults to us) and DEBUG (takes 0 or 1, defaults to 0)"
+    ],
+    [
+     "li",
+     "Optionally, you can combine the commands to make it easier: make extract && make -j"
+    ],
+    [
+     "h",
+     "Contributing"
+    ],
+    [
+     "p",
+     "See CONTRIBUTING.md"
     ]
    ]
   },
@@ -1324,6 +1015,362 @@
     [
      "li",
      "Start a fresh game session and reproduce the problem. The recorder captures"
+    ]
+   ]
+  },
+  "d-ravencaio-tlou-remastered-pc": {
+   "repo": "ravencaio/tlou-remastered-pc",
+   "actualizado": "2026-11-17T00:11:48.971Z",
+   "recortado": true,
+   "bloques": [
+    [
+     "h",
+     "The Last of Us Remastered — PC port"
+    ],
+    [
+     "p",
+     "Runs the PS4 The Last of Us Remastered (CUSA00552, with its update 1.11) natively on Windows. The game's own x86-64 code runs directly on the PC; a runtime supplies the PS4 system libraries, and a Vulkan renderer (the shadPS4 video core) executes the PS4 GPU work."
+    ],
+    [
+     "p",
+     "Discord Server : https://discord.gg/9mnjjezcNj"
+    ],
+    [
+     "p",
+     "No game files are in this repository. You need your own copy of the game (the dumped CUSA00552 folder, and its update). This project is not affiliated with Sony Interactive Entertainment or Naughty Dog."
+    ],
+    [
+     "h",
+     "Why"
+    ],
+    [
+     "p",
+     "Why The Last Of Us Remastered (PS4 version) is superior to The Last Of Us Part I (remake)?"
+    ],
+    [
+     "li",
+     "The PS4 remaster preserves the artistic style of the PS3 version and just improves the resolution and graphics."
+    ],
+    [
+     "li",
+     "Last version with multiplayer support, having multiplayer code is much easier to implement community/unofficial multiplayer"
+    ],
+    [
+     "li",
+     "Use less resources and storage space (no 4K textures, less polygons, no ray-tracing) than the remake version, which has a history of performance problems and poor optimization on PC."
+    ],
+    [
+     "h",
+     "Status"
+    ],
+    [
+     "p",
+     "Work in progress, reported playable from start to finish by a player, with one crash along the way that is not fixed yet (a workaround is under Known issues), and with rough edges."
+    ],
+    [
+     "li",
+     "Frame rate: on a laptop with a Core i7-8750H and a GTX 1050 Ti Mobile (4 GB), 60 FPS in light"
+    ],
+    [
+     "p",
+     "areas and about 40-44 FPS in the heaviest area tested, where the CPU side of the renderer is the limit (the draw recording thread at about 87%): lowering the resolution barely helps there."
+    ],
+    [
+     "li",
+     "Frame pacing: frame times swing while the game runs below its limit, and a fixed 30 FPS limit"
+    ],
+    [
+     "p",
+     "(launcher, or the in-game menu) makes motion clearly more even."
+    ],
+    [
+     "li",
+     "Known issues:"
+    ],
+    [
+     "li",
+     "NPCs moving in jumps or bobbing up and down (GitHub #57, #63): the game read some results of"
+    ],
+    [
+     "p",
+     "its GPU memory copy shader (Cs_MemCpy) a frame late. They are read back now; in a save where they jumped every time, they stopped. Tested on one save and one GPU so far: report it if they still jump somewhere (GOW3_TLOU_MEMCPY_READBACK=0 turns the fix off for comparison). Thanks to KyrieFrost, whose experimental patch in #63 pointed at that shader."
+    ],
+    [
+     "li",
+     "A frame that compiles many new shaders can pause the game for a moment, mostly the first time"
+    ],
+    [
+     "p",
+     "an area is played. The game's own frame watchdog is patched from 2 s to 20 s for that (TLOU_FIXES=none leaves the game unpatched). If a load ever hangs, start with GOW3_FRAMES_IN_FLIGHT=0 (slower)."
+    ],
+    [
+     "li",
+     "Pistol and rifle shots that went through scenery with no effect (firefly pendants that could"
+    ],
+    [
+     "p",
+     "not be shot down, GitHub #29, #45; walls that took no bullet holes from a pistol or rifle while a shotgun marked them) are fixed. The game asks the GPU, with an occlusion query, whether a character is under the crosshair; while one is, the player's bullets ignore scenery so thin cover in front of a target does not stop them. The runtime made up the answers to occlusion queries (always \"visible\"), so the bullets ignored scenery all the time; the queries are now real Vulkan occlusion queries (GOW3_OCCLUSION_QUERIES=0 goes back to the made-up answers). The bullet impacts' mesh ray casts (and the…"
+    ],
+    [
+     "li",
+     "On NVIDIA graphics cards older than Turing (GTX 900 and 10 series), the game's cloth solver for"
+    ]
+   ]
+  },
+  "d-reshaped-sonic-adventure": {
+   "repo": "reshaped/sonic-adventure",
+   "actualizado": "2026-11-17T00:11:48.971Z",
+   "recortado": true,
+   "bloques": [
+    [
+     "h",
+     "sonic-adventure"
+    ],
+    [
+     "p",
+     "The first complete matching decompilation of a retail Dreamcast game, including all of the Katana SDK code it links: Sonic Adventure, the original Japanese release, HDR-0001, version 1.007."
+    ],
+    [
+     "p",
+     "100% of the game's code builds from source, byte for byte."
+    ],
+    [
+     "p",
+     "*\\*SHC's assembly for 14 of the C sources matches once shckit patches it (Patched R10). Accounting explains the percentages.*"
+    ],
+    [
+     "p",
+     "Most of the assembly was handwritten in the original, not compiled from C. Compiler analysis and original symbol names already provide evidence of handwritten origins for 62.4% of its instructions and data."
+    ],
+    [
+     "h",
+     "Build"
+    ],
+    [
+     "p",
+     "Tested on x86-64 Linux with GNU make 4.3 and Python 3.8. The matching build and PC game run on x86-64 Linux. macOS supports make dc, make dc-disc, make dc-check, make test, make lint and make format, tested on Apple silicon with macOS 26.6, GNU make 4.4.1 and Xcode's Python 3.9.6. The Dreamcast port reads disc data through offsets the matching build records and checks on Linux (Stub and full builds)."
+    ],
+    [
+     "p",
+     "On macOS, install Xcode's command-line tools and GNU make. Apple's make is 3.81; Homebrew installs GNU make as gmake. Use gmake wherever the commands below say make, from a terminal running natively rather than under Rosetta 2:"
+    ],
+    [
+     "p",
+     "The builds need a C compiler (cc by default, or set CC), sha256sum and cmp. The matching build also needs timeout; its first run downloads wibo and three releases of Hitachi's SHC. The Dreamcast port builds its GCC toolchain on first use and needs c++. Downloads need curl and tar, with gzip or xz where tar uses them. The first make lint or make format installs pinned clang-format and clang-tidy wheels into a Python venv, requiring curl, Python's ensurepip (python3-venv on Debian and Ubuntu) and pip 20.3 or later. The wheels support x86-64 Linux and macOS. Downloads are checked against…"
+    ],
+    [
+     "p",
+     "Bring your own disc: the Japanese release, HDR-0001, version 1.007. None of the disc's files are in this repository. Put 1ST_READ.BIN, LOADER.BIN and SONICADV/ in orig/, named as on the disc, or put the disc's .gdi and its tracks there. Then:"
+    ],
+    [
+     "p",
+     "make compiles every binary's code, reads the data its sources declare from your disc, and checks each binary it rebuilds against the original, PRS compression and all. They land under build/, at the disc's own paths. make checks 1ST_READ.BIN, LOADER.BIN and each file it reads from SONICADV/ against SHA256SUMS before reading it. This is a matching build, so an edit that changes a byte of output fails it."
+    ],
+    [
+     "p",
+     "make check needs no disc. It compiles the sources it can check without the disc, using placeholders for imported data where needed, and checks each linked source against its recorded hash, but builds no complete binary. Checks says what each goal shows, and make help lists them all."
+    ],
+    [
+     "p",
+     "make dc builds the sources with GCC 16.2 and links every image anew, under build/dc/ at the disc's paths. It needs the disc but neither SHC nor wibo. Its first run builds binutils and GCC from source (Toolchain); their logs are in build/toolchain/. make dc-disc needs the disc's .gdi and its tracks in orig/, not its files alone. The port's features describes what it adds."
+    ],
+    [
+     "p",
+     "make dc-check needs neither disc nor SHC. It builds the port's disc-independent objects and writes build/dc/check.txt: hashes of those objects, SH4ZAM's archive, the toolchain's libgcc.a and two compression results. Compare the file across hosts at the same commit, with the same SH_ELF (Checks). Its first run builds the toolchain and fetches SH4ZAM, as make dc does."
+    ],
+    [
+     "p",
+     "make pc builds the game from your disc, and make play runs it in a window. The engine's build goals need Python 3.9 or later; a window needs SDL3 and Vulkan. Checks lists the other host requirements, and Build goals lists the engine's commands."
+    ]
+   ]
+  },
+  "d-jackpoison-prog-ringout": {
+   "repo": "jackpoison-prog/RingOut",
+   "actualizado": "2026-11-17T00:11:48.971Z",
+   "recortado": true,
+   "bloques": [
+    [
+     "h",
+     "Ring Out"
+    ],
+    [
+     "p",
+     "A native PC port of a GameCube fighting game (disc ID GRSEAF), produced by static recompilation rather than emulation: the disc's PowerPC executable is translated ahead of time into C, compiled for x86-64, and run as native code inside a Dolphin-derived runtime that provides the graphics, audio, input and hardware emulation around it."
+    ],
+    [
+     "p",
+     "No game data and no game code are distributed here. You supply a disc image you already own; setup extracts it and recompiles it on your machine."
+    ],
+    [
+     "p",
+     "This is still early. Expect rough edges: the game is playable start to finish, but features arrive before their polish does, and something that worked last release can break in the next one. Polish is planned throughout rather than saved up for a 1.0 — and bug reports genuinely help, because most of what gets fixed here was found by someone hitting it."
+    ],
+    [
+     "h",
+     "Status"
+    ],
+    [
+     "p",
+     "Fully playable — boots to menu and through gameplay. Every block of the game's own executable runs as native code; the recompiler translates 535,368 instructions with 0 unknown opcodes and no interpreter fallback inside them."
+    ],
+    [
+     "p",
+     "What the interpreter does still cover is the PowerPC exception vectors — 0x500 (external interrupt), 0xC00 (system call), 0x800 (FP unavailable). Those handlers are written into low RAM by the OS at boot rather than living in the disc's executable, so there is no recompiled code to dispatch to and the interpreter runs them until control returns. They account for about 0.7% of executed steps, steadily, because interrupts fire for the life of the session — but only 0.2% of cycles, so there is nothing to win by recompiling them. An earlier version of this page claimed \"zero interpreter…"
+    ],
+    [
+     "p",
+     "Rendering is Vulkan on the GPU, with the CPU emulation and the runtime on separate cores."
+    ],
+    [
+     "p",
+     "Steam Deck: supported, with its own package, and it runs in both Desktop and Game Mode at 45–49 fps in a match. Two ways to get a module onto it, so it works whether or not the Deck is the only machine you have:"
+    ],
+    [
+     "li",
+     "Build it on the Deck. Install a toolchain once and SteamOS compiles its own"
+    ],
+    [
+     "p",
+     "module, needing no bundled libraries at all — no second computer anywhere in the process. Tested end to end on SteamOS 3.8.25. This is also the way to get the full PGO win there, since clang 20 cannot read the shipped profiles."
+    ],
+    [
+     "li",
+     "Build it on a desktop and copy it over. No toolchain on the Deck at all, if"
+    ],
+    [
+     "p",
+     "you have another Linux machine to hand."
+    ],
+    [
+     "p",
+     "dist/RingOut-1.0-deck/BUILD-ON-THE-DECK.md walks through the first route, and ships inside the Deck package too."
+    ],
+    [
+     "p",
+     "Netplay: working. Delay-based (not rollback) over a deterministic dual-core setup, with a lobby showing live ping and per-player game status; two peers stayed byte-identical over 6,470 frames."
+    ],
+    [
+     "h",
+     "Getting it"
+    ],
+    [
+     "p",
+     "From the Releases page. Each is named for the release you download, so below is that release's number:"
+    ],
+    [
+     "p",
+     "The Deck package ships no module, so you build one and copy game/ and bin/gGRSEAF_recomp.so into it. You can do that on the Deck itself — download both zips, since the Linux one is what carries module-src/ and does the building — or on a desktop if you have one. setup.sh --deck installs the result into the Deck package for you when it can see it. Add RingOut to Steam as a non-Steam game to launch it from Game Mode."
+    ],
+    [
+     "p",
+     "For desktop, unzip and run:"
+    ],
+    [
+     "p",
+     "On first run it asks for your disc image (.iso / .gcm / .nkit.iso / .rvz), then extracts and recompiles it — several minutes, once, with each stage numbered as it starts (==> 1/3 Extracting disc, 2/3 recompiling, 3/3 building the module; --pgo adds a fourth) and a closing line saying whether a PGO profile was used. Every run after that starts straight away. You can also pass the image directly:"
+    ],
+    [
+     "h",
+     "Requirements"
+    ],
+    [
+     "li",
+     "A GameCube disc image you already own"
+    ],
+    [
+     "li",
+     "cmake, ninja, python3, and clang (or gcc)"
+    ],
+    [
+     "li",
+     "Arch: sudo pacman -S cmake ninja clang python"
+    ]
+   ]
+  },
+  "d-mstan-supermarioland2recomp": {
+   "repo": "mstan/SuperMarioLand2Recomp",
+   "actualizado": "2026-11-17T00:11:48.971Z",
+   "recortado": true,
+   "bloques": [
+    [
+     "p",
+     "Dedicated to my good friend and mentor, Julien."
+    ],
+    [
+     "h",
+     "Windows and Linux desktop CMake build"
+    ],
+    [
+     "p",
+     "The desktop CMake entry point uses the gbcllr revision pinned in games.json, the shared GB/GBC launcher and native presentation services. Gameplay executes the original cartridge unchanged. One runtime supports enhanced Fit/color presentation and stock play with the enhancement disabled in Mods. Existing saved mod/aspect choices and native saves are kept."
+    ],
+    [
+     "p",
+     "Obtain gbcllr at engine_revision and initialize its pinned submodules. Supply the original V1.0 cartridge with SHA256 42045a1642f77b568534ab85b9db93c8a33d2b95c38ae84c987f497e8d52f97f, a matching DMG boot ROM, and the native color data described by the engine's qa/SML2-COLOR.md. The color donor supplies presentation data; its guest code does not run in this desktop path. Requires CMake 3.24+, Ninja, Python 3.11+, SDL2/OpenGL and GCC or Clang with GNU C extensions (MinGW-w64 on Windows)."
+    ],
+    [
+     "p",
+     "Open Play.cmd (Windows) or Play.sh (Linux) beside gbcllr-run. The title's qualified instruction/audio/picture/clock profile is selected automatically; there is no backend choice to configure. Fresh enhanced profiles use Fit and color, while explicit saved choices remain authoritative. Save states are specific to the current build; native in-game saves remain supported."
+    ],
+    [
+     "p",
+     "This addition preserves the existing Android and legacy source workflows below. It does not migrate Android to gbcllr or change the legacy engine/UI pins."
+    ],
+    [
+     "h",
+     "Existing Android and legacy workflows"
+    ],
+    [
+     "p",
+     "Release v0.2.0 requires original boot firmware: the 256-byte DMG BIOS for faithful mode and the 2304-byte CGB BIOS for DX. Select it under Settings > System before Play. No ROM or BIOS is distributed. Previous savestates are incompatible; battery saves remain compatible."
+    ],
+    [
+     "p",
+     "The Android ARM64 APK imports the supported V1.0 ROM and firmware once, then prefills the shared launcher. Its Mods page selects DX and widescreen. The Touch controls toggle reveals the pad and Rewind; gamepads also work. Android device gameplay validation was waived for this release. Source builds use the shared host instructions."
+    ],
+    [
+     "p",
+     "Static recompilation of the Game Boy title Super Mario Land 2 - 6 Golden Coins (UE) (V1.0) (CRC32 D5EC24E4) to native code via gbrecompiled, with the shared recomp-ui launcher."
+    ],
+    [
+     "p",
+     "One executable, two recompiled bodies of that one cart: the faithful V1.0 build, and Super Mario Land 2 DX v1.8.1 derived from the same ROM in memory at boot. The launcher's Mods page picks between them — see DX.md."
+    ],
+    [
+     "li",
+     "super_mario_land_2.toml — faithful body (primary project)"
+    ],
+    [
+     "li",
+     "super_mario_land_2_dx.toml — DX body (V1.0 + recomp/patches/sml2dx_v181.bps)"
+    ],
+    [
+     "li",
+     "extras.c — game hooks (launcher name/platform, ROM CRC gate, mods)"
+    ],
+    [
+     "li",
+     "recomp/launcher/boxart.tga — launcher box art"
+    ],
+    [
+     "li",
+     "ADAPTIVE.md — opt-in adaptive widescreen mod (see Mods in the launcher)"
+    ],
+    [
+     "p",
+     "The ROM is not included; supply your own at roms/Super Mario Land 2 - 6 Golden Coins (UE) (V1.0) [!].gb. That is the only ROM this build accepts, for either body — the DX image is derived from it and is never asked for."
+    ],
+    [
+     "p",
+     "The default native BIOS build needs private dmg_boot.bin (256 bytes) and cgb_boot.bin (2304 bytes) under gb-recompiled/boot_roms/, or a CMake GBRECOMP_BIOS_DIR path. Select the DMG BIOS for the faithful game and the CGB BIOS for DX in Settings → System. The launcher remembers both paths and rechecks the requirement when the DX option changes. Firmware is not included."
+    ],
+    [
+     "p",
+     "Hold R to rewind. File states and rb-engine rewind now restore the adaptive camera, actor/spawn tracking and frozen transition image with guest state. Version-1 states are incompatible. Both bodies passed 6,500-frame strict routes at 16:9 and 32:9, including pause/resume and save/rewind checks with zero interpreter execution; this is route coverage, not a complete playthrough."
+    ],
+    [
+     "h",
+     "Screenshots"
     ]
    ]
   },
@@ -4298,72 +4345,6 @@
     ]
    ]
   },
-  "d-ragnaroek-iron-wolf": {
-   "repo": "Ragnaroek/iron-wolf",
-   "actualizado": "2026-11-17T00:11:48.971Z",
-   "recortado": false,
-   "bloques": [
-    [
-     "h",
-     "Iron Wolf"
-    ],
-    [
-     "p",
-     "Wolfenstein 3D in Rust"
-    ],
-    [
-     "p",
-     "The goal is to have a pixel, mod-friendly perfect recreation of Wolfenstein 3D in Rust."
-    ],
-    [
-     "p",
-     "E1M1 Demo"
-    ],
-    [
-     "h",
-     "Playing Iron Wolf"
-    ],
-    [
-     "p",
-     "just run-sdl-shareware should work out of the box on a cloned repo. It will run the shareware version, that is also checked in along with the code as testdata."
-    ],
-    [
-     "p",
-     "Alternatively you can play the web version here:"
-    ],
-    [
-     "p",
-     "If you have a copy of the full game files you can upload them there and play the full version in your browser:"
-    ],
-    [
-     "h",
-     "Configuration File"
-    ],
-    [
-     "p",
-     "A config file is optional. Copy the default_iw_config.toml as iw_config.toml and put it next to the Iron Wolf exectuable file. The options are described as comments in the default config file."
-    ]
-   ]
-  },
-  "d-player124413-sonic-generations-recomp-android-and-pc-edition": {
-   "repo": "Player124413/Sonic-Generations-recomp-android-and-pc-edition",
-   "actualizado": "2026-11-17T00:11:48.971Z",
-   "recortado": false,
-   "bloques": [
-    [
-     "p",
-     "sonicgenerations -- Android project sources android/ launcher app (Gradle project) port/ recompiled game (generated C++ + src + *.toml) Build: run tools/android_sdk.sh (needs android/sdk), then cd android && ./gradlew assembleRelease -PrexName=sonicgenerations -PrexPortDir=$PWD/../port -PrexSdkDir=$PWD/sdk/rexglue-sdk"
-    ],
-    [
-     "p",
-     "I’m working on the Sonic Generations recompilation for PC and android, but I don't know what to do about the Android version—the game lags and has graphical glitches. Please help me fix the issues with the Android port; I would be incredibly grateful. Everything should work perfectly on PC, though."
-    ],
-    [
-     "p",
-     "To start the recompilation, you need to download Sonic Generations (USA, Europe).iso."
-    ]
-   ]
-  },
   "d-spannerisms-jpdasm": {
    "repo": "spannerisms/jpdasm",
    "actualizado": "2026-11-17T00:11:48.971Z",
@@ -4504,6 +4485,25 @@
     [
      "li",
      "The .ly files in the resources/music/ directory can be compiled with LilyPond."
+    ]
+   ]
+  },
+  "d-player124413-sonic-generations-recomp-android-and-pc-edition": {
+   "repo": "Player124413/Sonic-Generations-recomp-android-and-pc-edition",
+   "actualizado": "2026-11-17T00:11:48.971Z",
+   "recortado": false,
+   "bloques": [
+    [
+     "p",
+     "sonicgenerations -- Android project sources android/ launcher app (Gradle project) port/ recompiled game (generated C++ + src + *.toml) Build: run tools/android_sdk.sh (needs android/sdk), then cd android && ./gradlew assembleRelease -PrexName=sonicgenerations -PrexPortDir=$PWD/../port -PrexSdkDir=$PWD/sdk/rexglue-sdk"
+    ],
+    [
+     "p",
+     "I’m working on the Sonic Generations recompilation for PC and android, but I don't know what to do about the Android version—the game lags and has graphical glitches. Please help me fix the issues with the Android port; I would be incredibly grateful. Everything should work perfectly on PC, though."
+    ],
+    [
+     "p",
+     "To start the recompilation, you need to download Sonic Generations (USA, Europe).iso."
     ]
    ]
   },
