@@ -44,6 +44,16 @@ Sufijos entre paréntesis más frecuentes en los nombres de producto de Pokémon
 
 Filas del inventario cuyo mismo nombre y número tiene un producto hermano con sello/promo en el mismo set: **0** (0 %). Precio del hermano con sello ÷ precio del producto elegido: sin datos. En 0 de esas filas el precio actual de tcgpricelookup está más cerca del hermano con sello que del producto elegido (posible emparejamiento contaminado).
 
+Filas con **cualquier** hermano entre paréntesis (mismo nombre y número en el set): 52. Sufijos: Energy Symbol Pattern (19) · Delta Species (12) · Dusk Ball (9) · Poke Ball (4) · Team Rocket (2) · Friend Ball (2) · Charmander (2) · Pikachu (2) · Squirtle (2) · Peelable Ditto (2).
+
+Las 30 filas «solo con sello»: sufijos Delta Species (12) · Charmander (2) · Pikachu (2) · Squirtle (2) · Team Plasma (2) · Top (1) · Bottom (1) · H22 (1); ejemplos: Croconaw δ 27 (Dragon Frontiers); Flaaffy δ 30 (Dragon Frontiers); Chikorita δ 44 (Dragon Frontiers); Ekans δ 47 (Dragon Frontiers); Darkrai & Cresselia LEGEND 99 (30th Celebration: Classic Collection); Darkrai & Cresselia LEGEND 100 (30th Celebration: Classic Collection).
+
+### Filas sin emparejar, por set del inventario
+
+- **sin_set** (38): Scarlet & Violet (9) · 151 (6) · Sword & Shield (4) · Sun & Moon (3) · Scarlet & Violet Black Star Promos (2) · Wizards Black Star Promos (2) · XY (2) · McDonald's Collection 2015 (2)
+- **sin_numero** (10): Expedition Base Set (8) · Generations (2)
+- **sin_nombre** (13): Expedition Base Set (9) · Delta Reign (3) · 30th Celebration (1)
+
 ## 4. Precio tcgcsv vs tcgpricelookup actual (tcgMarket)
 
 - Con la regla automática de acabado: mediana 1 · p10 0.92 · p90 1.13 · n=885; dentro de ±10 %: 82 %; dentro de ±25 %: 93 %.
