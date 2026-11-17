@@ -8,6 +8,7 @@ import { rehidratarCineEstado } from "../modules/vitrina/estado.js";
 import { rehidratarOverlay } from "../modules/vitrina/avance.js";
 import { rehidratarMegusta } from "../modules/musica/megusta.js";
 import { rehidratarEstado as rehidratarGameEnhanced } from "../modules/gameenhanced/estado.js";
+import { rehidratarRegistro as rehidratarGameEnhancedRegistro } from "../modules/gameenhanced/registro.js";
 import { rehidratarEstado as rehidratarTcgCrypto } from "../modules/tcgcrypto/estado.js";
 import { rehidratarSeleccion as rehidratarPanoramas, useSeleccion as useSeleccionPanoramas, avisosDelDia as avisosPanoramas } from "../modules/panoramas/seleccion.js";
 import { fmt, fmtFull, getHoliday, addDays, weekOffsetFor } from "./dates.js";
@@ -1545,6 +1546,7 @@ function AngstApp() {
     rehidratarOverlay();      // Vitrina: marcas de episodios (overlay de módulo)
     rehidratarMegusta();      // Música: ♥ guardados (caché de módulo)
     rehidratarGameEnhanced(); // Game enhanced: guardados / ocultos (caché de módulo)
+    rehidratarGameEnhancedRegistro(); // Game enhanced: registro de juegos (caché de módulo)
     rehidratarPanoramas();    // Panoramas: ⭐ preseleccionados (caché de módulo)
     rehidratarTcgCrypto();    // tcgcrypto: cartas conseguidas por colección (caché de módulo)
     if(Array.isArray(d.feedPodcastDispatched)) setPodcastDispatched(d.feedPodcastDispatched); // state de App

@@ -10,6 +10,8 @@ globalThis.localStorage = {
 const L = await import("../modules/gameenhanced/logica.js");
 const P = await import("../modules/feed/scripts/lib/game-enhanced-lib.mjs");
 const { alternarGuardado, ocultar, deshacerOcultar, leerEstado, rehidratarEstado } = await import("../modules/gameenhanced/estado.js");
+const R = await import("../modules/gameenhanced/registro.js");
+const C = await import("../modules/gameenhanced/lib/claves.mjs");
 const fs = await import("node:fs");
 const TERMINADOS = JSON.parse(fs.readFileSync(new URL("../modules/gameenhanced/data/terminados.json", import.meta.url), "utf8")).juegos;
 const KEY = "angst-game-enhanced-estado-v1";
@@ -99,7 +101,7 @@ assert(!todo.some(j => j.id === "d-e" || j.id === "e-9" || j.id === "e-8"), "fue
 assert.equal(L.itemsDe(J, "d").length, 3, "Decomps muestra todos, también el inactivo");
 assert.equal(L.itemsDe(J, "e").length, 3, "Estudios muestra todos");
 assert.equal(L.itemsDe(J, "todo", { "d-b": 1 }).some(j => j.id === "d-b"), false, "los ocultos no aparecen");
-assert.deepEqual(L.CATEGORIAS.map(c => c[0]), ["todo", "d", "e"]);
+assert.deepEqual(L.CATEGORIAS.map(c => c[0]), ["todo", "d", "e", "terminado", "quiero", "pendiente"]);
 assert.equal(L.motivoDe(J[0]), "Porque terminaste Wolfenstein 3D");
 assert.equal(L.motivoDe(J.find(j => j.id === "e-2")), "Del estudio detrás de A");
 
@@ -117,17 +119,20 @@ assert.deepEqual(fd.find(f => f[0] === "Jugar en el navegador")[1], { href: "htt
 assert.equal(fd.find(f => f[0] === "¿Pide tu ROM o archivos?")[1], "Sí, con tu propia copia");
 assert.equal(fd.find(f => f[0] === "Última versión")[1], "v3 (hace 5 d)");
 assert.deepEqual(fe.find(f => f[0] === "Fuente")[1], { href: "https://igdb.example/2", texto: "IGDB" });
-assert.equal(L.filasFicha({ ...J[0], url: "javascript:alert(1)" }, AHORA).find(f => f[0] === "Fuente")[1], "—", "solo enlaces https");
+assert.equal(L.filasFicha({ ...J[0], url: "javascript:alert(1)" }, AHORA).find(f => f[0] === "Fuente"), undefined, "solo enlaces https (si no, la fila no aparece)");
+assert(![...fd, ...fe].some(f => f[1] === "—" || f[1] === "Sin dato" || f[1] === undefined), "la ficha no muestra filas vacías");
+const sinDatos = L.filasFicha({ ...J[0], jugableUrl: null, pideAssets: null, ia: false, release: null, plataforma: null, ultimoCommit: null }, AHORA).map(f => f[0]);
+assert(!sinDatos.includes("Jugar en el navegador") && !sinDatos.includes("¿Pide tu ROM o archivos?") && !sinDatos.includes("Última versión") && !sinDatos.includes("Hecho con IA (según la fuente)") && !sinDatos.includes("Plataforma"), "sin dato → sin fila");
 
 assert.deepEqual(L.ventana(19, 0, 8), { ini: 0, fin: 8 }, "foco arriba");
 assert.deepEqual(L.ventana(19, 18, 8), { ini: 11, fin: 19 }, "cerca del final la ventana retrocede: sin hueco muerto");
 assert.deepEqual(L.ventana(3, 2, 8), { ini: 0, fin: 3 });
 assert.deepEqual(L.ventana(0, 0, 8), { ini: 0, fin: 0 });
 assert.deepEqual(L.ventana(10, 4, 0), { ini: 4, fin: 5 }, "al menos una fila");
-assert.equal(L.filasQueCaben(0), 1);
-assert.equal(L.filasQueCaben(498), 8, "área libre de referencia (~457×810): 8 filas enteras");
-assert.equal(L.filasQueCaben(116), 1);
-assert.equal(L.filasQueCaben(117), 2);
+assert.equal(L.filasXmb(0), 1);
+assert.equal(L.filasXmb(498), 8, "área libre de referencia (~457×810): enfocado + 7 filas enteras");
+assert.equal(L.filasXmb(L.XMB.foco + L.XMB.aire + L.XMB.fila + L.XMB.sep - 1), 1, "una fila a medias no cuenta");
+assert.equal(L.filasXmb(L.XMB.foco + L.XMB.aire + L.XMB.fila + L.XMB.sep), 2);
 
 const r = L.resumen(J, { "d-b": 1 }, { "d-a": 1, "d-b": 1 });
 assert.equal(r.guardados, 1, "un guardado oculto no cuenta");
@@ -169,4 +174,119 @@ assert.deepEqual(leerEstado(), { guardados: {}, ocultos: {} }, "formas inválida
 almacen.delete(KEY);
 rehidratarEstado();
 
-console.log("OK gameenhanced: cruce con decomps e IGDB, lógica de lista y estado persistente");
+// ── claves del registro ─────────────────────────────────────────────────────
+assert.equal(C.idRegistro("Metroid Fusion"), "r-metroidfusion");
+assert.equal(C.idRegistro("  metroid   FUSION! "), "r-metroidfusion", "mayúsculas, espacios y signos no importan");
+assert.equal(C.idRegistro("Pokémon"), C.idRegistro("Pokemon"), "tildes no importan");
+assert(C.idRegistro("ペルソナ5").startsWith("r-") && C.idRegistro("ペルソナ5") !== C.idRegistro("ニーア"), "títulos sin letras latinas tienen clave propia");
+assert.equal(C.idRegistro("   "), null);
+
+// ── registro (Angst es la fuente) ───────────────────────────────────────────
+const KR = "angst-game-enhanced-registro-v1";
+assert.deepEqual(R.leerRegistro(), { v: 1, sembrado: null, juegos: {} }, "sin datos previos: registro vacío");
+R.sembrar([{ titulo: "Metroid Fusion", busqueda: "Metroid Fusion" }, { titulo: "Wolfenstein 3D", busqueda: "Wolfenstein 3D" }]);
+assert.equal(Object.keys(R.leerRegistro().juegos).length, 2, "semilla: cada terminado entra al registro");
+assert(Object.values(R.leerRegistro().juegos).every(j => j.estado === "terminado"), "la semilla son terminados");
+assert(R.leerRegistro().sembrado, "queda marcada como sembrada");
+assert(JSON.parse(almacen.get(KR)).juegos["r-metroidfusion"], "persiste en la clave declarada");
+const sem1 = R.leerRegistro().sembrado;
+R.quitarJuego("r-metroidfusion");
+R.sembrar([{ titulo: "Metroid Fusion" }]);
+assert.equal(R.leerRegistro().sembrado, sem1, "la semilla no se vuelve a cargar");
+assert(!R.leerRegistro().juegos["r-metroidfusion"], "lo quitado no reaparece");
+
+const res = R.agregarJuego({ titulo: "Hollow Knight", estado: "quiero", plataforma: "Switch" });
+assert.equal(res.id, "r-hollowknight"); assert.equal(res.previo, null);
+assert.equal(R.leerRegistro().juegos[res.id].estado, "quiero");
+const res2 = R.agregarJuego({ titulo: "hollow knight!", estado: "pendiente" });
+assert.equal(res2.previo.estado, "quiero", "mismo título: actualiza y devuelve lo previo para deshacer");
+assert.equal(R.leerRegistro().juegos[res.id].estado, "pendiente");
+assert.equal(R.leerRegistro().juegos[res.id].titulo, "Hollow Knight", "conserva el título original");
+assert.equal(R.leerRegistro().juegos[res.id].plataforma, "Switch", "conserva lo ya anotado");
+assert.equal(R.agregarJuego({ titulo: "  ", estado: "quiero" }), null, "título vacío: nada");
+assert.equal(R.agregarJuego({ titulo: "X Y", estado: "otro" }), null, "estado inválido: nada");
+R.editarJuego(res.id, { estado: "terminado", fecha: "2026-11-10", nota: "Muy bueno" });
+const e1 = R.leerRegistro().juegos[res.id];
+assert(e1.estado === "terminado" && e1.fecha === "2026-11-10" && e1.nota === "Muy bueno");
+R.editarJuego(res.id, { nota: "", fecha: "no-es-fecha" });
+assert(!("nota" in R.leerRegistro().juegos[res.id]) && !("fecha" in R.leerRegistro().juegos[res.id]), "vacío o inválido borra el campo");
+const quitado = R.quitarJuego(res.id);
+assert(!R.leerRegistro().juegos[res.id]);
+R.restaurarJuego(quitado);
+assert(R.leerRegistro().juegos[res.id], "restaurar devuelve el juego");
+
+almacen.set(KR, JSON.stringify({ v: 1, sembrado: 5, juegos: { a: { titulo: "Zelda", estado: "quiero", agregado: 1 }, b: { titulo: "", estado: "quiero" }, c: { titulo: "Roto", estado: "xx" }, d: 7 } }));
+R.rehidratarRegistro();
+assert.deepEqual(Object.keys(R.leerRegistro().juegos), ["r-zelda"], "rehidrata y descarta entradas inválidas");
+almacen.set(KR, "{no es json");
+R.rehidratarRegistro();
+assert.deepEqual(R.leerRegistro(), { v: 1, sembrado: null, juegos: {} }, "clave corrupta: registro vacío sin romper");
+almacen.delete(KR);
+R.rehidratarRegistro();
+
+// ── lista del registro ──────────────────────────────────────────────────────
+const REG = { v: 1, sembrado: 1, juegos: {
+  "r-a": { id: "r-a", titulo: "Alfa", estado: "terminado", agregado: 1000, actualizado: 1000, fecha: "2026-10-01", plataforma: "PS5", nota: "Genial" },
+  "r-b": { id: "r-b", titulo: "Beta", estado: "terminado", agregado: 1000, actualizado: 1000 },
+  "r-c": { id: "r-c", titulo: "Gamma", estado: "terminado", agregado: 1000, actualizado: 1000, fecha: "2026-11-05" },
+  "r-d": { id: "r-d", titulo: "Delta", estado: "quiero", agregado: AHORA - 3 * 86400000, actualizado: AHORA - 3 * 86400000 },
+  "r-e": { id: "r-e", titulo: "Épsilon", estado: "pendiente", agregado: AHORA - 86400000, actualizado: AHORA - 86400000 },
+} };
+const ter = L.itemsDe([], "terminado", {}, REG, AHORA);
+assert.deepEqual(ter.map(j => j.id), ["r-c", "r-a", "r-b"], "terminados: por fecha de término, los sin fecha al final");
+assert(ter.every(j => j.tipo === "r"));
+assert.deepEqual(L.itemsDe([], "quiero", {}, REG, AHORA).map(j => j.id), ["r-d"]);
+assert.deepEqual(L.itemsDe([], "pendiente", {}, REG, AHORA).map(j => j.id), ["r-e"]);
+assert.deepEqual(L.itemsDe([], "quiero", {}, null, AHORA), [], "sin registro: vacío");
+assert.equal(L.itemsDe(J, "todo", {}, REG, AHORA).some(j => j.tipo === "r"), false, "Novedades no mezcla el registro");
+assert.equal(L.cuando(ter[2]), "", "terminado sin fecha: sin texto de tiempo");
+assert.match(L.cuando(ter[0]), /^hace [78] d$/, "terminado el 5-nov, medido el 12-nov (según la hora del día)");
+assert.equal(L.cuando(L.itemsDe([], "quiero", {}, REG, AHORA)[0]), "hace 3 d");
+assert.equal(L.motivoDe(ter[0]), "Terminado");
+assert.match(L.detalleDe(ter[1], AHORA), /🏁 Terminado · PS5 · terminado el 1 oct 2026 · Genial/);
+const fr = L.filasFicha(ter[1], AHORA, { generos: ["RPG"], lanzamiento: "2020-05-01", plataformas: ["PS5"], url: "https://igdb.example/x" });
+assert(fr.some(f => f[0] === "Géneros" && f[1] === "RPG") && fr.some(f => f[0] === "Lanzamiento" && f[1] === "1 may 2020") && fr.some(f => f[0] === "Terminado el"));
+const rs = L.resumen(J, {}, {}, REG);
+assert.deepEqual([rs.terminados, rs.quiero, rs.pendientes], [3, 1, 1], "conteos del registro");
+assert.deepEqual([L.esCategoriaRegistro("terminado"), L.esCategoriaRegistro("d"), L.esCategoriaRegistro("todo")], [true, false, false]);
+
+// ── portadas ────────────────────────────────────────────────────────────────
+assert.equal(L.portadaUrl("co1abc"), "https://images.igdb.com/igdb/image/upload/t_cover_big/co1abc.jpg");
+assert.equal(L.portadaUrl("co1abc", "t_cover_small"), "https://images.igdb.com/igdb/image/upload/t_cover_small/co1abc.jpg");
+assert.equal(L.portadaUrl("../x"), null, "solo ids de letras y números");
+assert.equal(L.portadaUrl(null), null);
+const FICHAS = { "r-wolfenstein3d": { portada: "co9" }, "r-a": { portada: "coA" } };
+assert.equal(L.portadaDe(ter[1], FICHAS), "coA", "juego del registro: su ficha");
+assert.equal(L.portadaDe({ tipo: "e", portada: "coE" }, FICHAS), "coE", "estudio: la suya");
+assert.equal(L.portadaDe({ tipo: "d", tuJuego: "Wolfenstein 3D" }, FICHAS), "co9", "decomp: la del juego tuyo que lo motiva");
+assert.equal(L.portadaDe({ tipo: "d", tuJuego: "Nada" }, FICHAS), null);
+
+// ── pipeline: README, fichas, registro ──────────────────────────────────────
+const md = "# Proyecto\n\n[![CI](https://x/badge.svg)](https://x) Una **decompilación** de [Zelda](https://z.example) <img src=\"a.png\">.\n\n<!-- oculto -->\n## Compilar\n\n- Instala `make`\n- Corre `make all`\n\n```sh\nmake all\n```\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n## Vacío\n## Licencia\n\nMIT";
+const rm = P.readmeABloques(md);
+assert.deepEqual(rm.bloques, [["h", "Proyecto"], ["p", "Una decompilación de Zelda ."], ["h", "Compilar"], ["li", "Instala make"], ["li", "Corre make all"], ["h", "Licencia"], ["p", "MIT"]], "README a texto plano: sin insignias, HTML, código, tablas ni títulos vacíos");
+assert.equal(rm.recortado, false);
+const largo = P.readmeABloques("# T\n\n" + Array.from({ length: 80 }, (_, i) => `Párrafo número ${i} con bastante texto para ocupar espacio en la ficha.`).join("\n\n"));
+assert(largo.recortado && largo.bloques.reduce((n, [, x]) => n + x.length, 0) <= 3800, "README largo: recortado y acotado");
+assert.deepEqual(P.readmeABloques("").bloques, []);
+assert.equal(P.repoDeUrl("https://github.com/owner/repo"), "owner/repo");
+assert.equal(P.repoDeUrl("https://github.com/owner/repo.git"), "owner/repo");
+assert.equal(P.repoDeUrl("https://github.com/owner/repo/tree/main"), "owner/repo");
+assert.equal(P.repoDeUrl("https://gitlab.com/owner/repo"), null);
+assert.equal(P.repoDeUrl("javascript:alert(1)"), null);
+const fi = P.fichaDeIgdb({ id: 7, name: "Zelda", summary: "x ".repeat(500), cover: { image_id: "co1x" }, genres: [{ name: "Aventura" }], platforms: [{ abbreviation: "Switch" }], first_release_date: 1488499200, url: "https://www.igdb.com/games/z" });
+assert.equal(fi.portada, "co1x"); assert.equal(fi.lanzamiento, "2017-03-03"); assert(fi.resumen.length <= 701 && fi.resumen.endsWith("…"));
+assert.deepEqual([fi.generos, fi.plataformas], [["Aventura"], ["Switch"]]);
+assert.equal(P.fichaDeIgdb({ id: 1, name: "X", cover: { image_id: "../mal" }, url: "http://no-https" }).portada, null, "image_id inseguro se descarta");
+assert.equal(P.fichaDeIgdb({ id: 1, name: "X", url: "http://no-https" }).url, null);
+assert.equal(P.fichaDeIgdb(null), null);
+const lista = P.listaDeRegistro({ gameEnhancedRegistro: { juegos: { a: { titulo: "A", estado: "terminado" }, b: { titulo: "B", estado: "quiero" }, c: { titulo: "", estado: "terminado" }, d: { titulo: "D", estado: "?" } } } });
+assert.deepEqual(lista.map(e => e.titulo), ["A", "B"]);
+assert.equal(P.listaDeRegistro({}), null, "estado sin registro: null (usa la semilla)");
+assert.equal(P.listaDeRegistro({ gameEnhancedRegistro: null }), null);
+assert.deepEqual(P.listaDeRegistro({ gameEnhancedRegistro: { juegos: {} } }), [], "registro vacío a propósito: lista vacía");
+assert.deepEqual(P.terminadosDe(lista), [{ titulo: "A", busqueda: "A" }], "solo los terminados alimentan el cruce");
+const ie = P.itemsDeEstudios([{ estudio: { nombre: "E", tuyos: ["A"] }, juegos: [{ id: 5, name: "Nuevo", game_type: 0, first_release_date: Date.UTC(2026, 10, 20) / 1000, summary: "Un juego.", cover: { image_id: "coN" }, genres: [{ name: "RPG" }], url: "https://igdb.example/5" }] }], AHORA);
+assert(ie.length === 1 && ie[0].portada === "coN" && ie[0].resumen === "Un juego." && ie[0].generos[0] === "RPG", "estudios llevan portada, resumen y géneros");
+
+console.log("OK gameenhanced: cruce con decomps e IGDB, lógica de lista, ficha limpia, XMB, registro y README");

@@ -1,4 +1,4 @@
-import { CINE_JSON_URL, FEED_JSON_URL, FORMATO_BY_CATEGORIA, GAME_ENHANCED_JSON_URL, MELEE_JSON_URL, MUSIC_CATEGORIA, MUSICA_JSON_URL, VIDEOTECA_JSON_URL, VITRINA_CATEGORIAS, fetchJsonSafe, tcgcryptoJsonUrl } from "./constants.js";
+import { CINE_JSON_URL, FEED_JSON_URL, FORMATO_BY_CATEGORIA, GAME_ENHANCED_JSON_URL, GAME_ENHANCED_FICHAS_URL, GAME_ENHANCED_READMES_URL, MELEE_JSON_URL, MUSIC_CATEGORIA, MUSICA_JSON_URL, VIDEOTECA_JSON_URL, VITRINA_CATEGORIAS, fetchJsonSafe, tcgcryptoJsonUrl } from "./constants.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -82,7 +82,18 @@ export async function fetchVitrinaData() {
 export async function fetchGameEnhancedData() {
   const d = await fetchJsonSafe(GAME_ENHANCED_JSON_URL);
   if (!d || !Array.isArray(d.decomps) || !Array.isArray(d.estudios)) throw new Error("no se pudo leer game-enhanced.json");
-  return { juegos: [...d.decomps, ...d.estudios], generatedAt: d.generatedAt || null, fuentes: d.fuentes || {} };
+  return { juegos: [...d.decomps, ...d.estudios], generatedAt: d.generatedAt || null, fuentes: d.fuentes || {}, semilla: Array.isArray(d.semilla) ? d.semilla : [] };
+}
+
+// Fichas de IGDB de los juegos del registro (portada, resumen, géneros) y README de cada decomp en texto plano.
+// Son complementos: si no cargan, el módulo sigue funcionando sin portadas / sin el detalle del proyecto.
+export async function fetchGameEnhancedFichas() {
+  const d = await fetchJsonSafe(GAME_ENHANCED_FICHAS_URL);
+  return d && d.fichas && typeof d.fichas === "object" ? d.fichas : {};
+}
+export async function fetchGameEnhancedReadmes() {
+  const d = await fetchJsonSafe(GAME_ENHANCED_READMES_URL);
+  return d && d.readmes && typeof d.readmes === "object" ? d.readmes : {};
 }
 
 // tcgcrypto: catálogo + precios por set y versión de UN juego (tcgcrypto-<juego>.json). Archivo propio por juego.

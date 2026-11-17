@@ -1,16 +1,30 @@
+import { idRegistro } from "./lib/claves.mjs";
+
 // ─── Lógica pura de Game enhanced (sin React ni red, probada en tests/gameenhanced.mjs) ─────────
 // Tipos que hoy tienen fuente real: d (decomps, ports y recompilaciones) y e (juegos nuevos de los
 // estudios). Versiones web y sucesores espirituales quedaron fuera hasta tener fuente (sonda 11-nov-2026).
+// r = juego del registro propio (terminado / quiero jugar / pendiente), issue #43.
 export const TIPO = {
   d: { etiqueta: "DECOMP", emoji: "🧩", motivo: "Porque terminaste " },
   e: { etiqueta: "ESTUDIO", emoji: "🏢", motivo: "Del estudio detrás de " },
+  r: { etiqueta: "JUEGO", emoji: "🎮", motivo: "" },
 };
+
+export const ESTADOS_INFO = {
+  terminado: { emoji: "🏁", etiqueta: "Terminado" },
+  quiero: { emoji: "🎯", etiqueta: "Quiero jugar" },
+  pendiente: { emoji: "⏳", etiqueta: "Pendiente" },
+};
+export const esCategoriaRegistro = clave => Object.prototype.hasOwnProperty.call(ESTADOS_INFO, clave);
 
 // [clave de filtro, emoji, nombre]. "todo" = Novedades: lo que se movió hace poco, mezclado.
 export const CATEGORIAS = [
   ["todo", "✨", "Novedades"],
   ["d", "🧩", "Decomps"],
   ["e", "🏢", "Estudios"],
+  ["terminado", "🏁", "Terminados"],
+  ["quiero", "🎯", "Quiero jugar"],
+  ["pendiente", "⏳", "Pendientes"],
 ];
 
 export const SUBTIPOS = {
@@ -22,9 +36,9 @@ const ASSETS = { byo: "Sí, con tu propia copia", instant: "No, se juega al inst
 // Ventana de "Novedades": decomps con actividad en los últimos 90 días (y no inactivos); juegos de
 // estudios lanzados hace ≤120 días o que salen en ≤240. Las categorías Decomps y Estudios muestran todo.
 const VENTANA = { decompDias: 90, pasadoEstudio: 120, futuroEstudio: 240 };
-export const enNovedades = j => (j.tipo === "d" ? !j.inactivo && j.dias <= VENTANA.decompDias : j.dias >= -VENTANA.futuroEstudio && j.dias <= VENTANA.pasadoEstudio);
+export const enNovedades = j => (j.tipo === "r" ? false : j.tipo === "d" ? !j.inactivo && j.dias <= VENTANA.decompDias : j.dias >= -VENTANA.futuroEstudio && j.dias <= VENTANA.pasadoEstudio);
 
-export const motivoDe = j => TIPO[j.tipo].motivo + j.tuJuego;
+export const motivoDe = j => (j.tipo === "r" ? ESTADOS_INFO[j.estado].etiqueta : TIPO[j.tipo].motivo + j.tuJuego);
 
 export function haceDias(n) {
   if (n <= 0) return "hoy";
@@ -49,6 +63,7 @@ export function fechaLegible(j) {
 
 // Texto corto a la derecha de cada fila.
 export function cuando(j) {
+  if (j.tipo === "r") return j.estado === "terminado" && !j.fecha ? "" : haceDias(j.dias);
   if (j.tipo === "e" && j.dias < 0) return j.fechaAprox ? `en ${j.fecha.slice(0, 4)}` : j.dias < -60 ? `en ${Math.round(-j.dias / 30)} m` : `en ${-j.dias} d`;
   return j.dias >= 9999 ? "—" : haceDias(j.dias);
 }
@@ -57,6 +72,10 @@ const miles = n => (typeof n === "number" ? n.toLocaleString("es-CL") : "—");
 
 // Línea de detalle de la tarjeta expandida.
 export function detalleDe(j, ahora) {
+  if (j.tipo === "r") {
+    const ei = ESTADOS_INFO[j.estado];
+    return [`${ei.emoji} ${ei.etiqueta}`, j.plataforma, j.estado === "terminado" && j.fecha ? `terminado el ${fechaLegible(j)}` : null, j.nota ? (j.nota.length > 80 ? j.nota.slice(0, 79) + "…" : j.nota) : null].filter(Boolean).join(" · ");
+  }
   if (j.tipo === "d") {
     const c = diasDesdeIso(j.ultimoCommit, ahora);
     return [SUBTIPOS[j.subtipo] || j.subtipo, j.plataforma, `⭐ ${miles(j.estrellas)}`, c === null ? null : `último commit ${haceDias(c)}`, j.inactivo ? "inactivo" : null, j.ia ? "hecho con IA según la fuente" : null].filter(Boolean).join(" · ");
@@ -64,33 +83,56 @@ export function detalleDe(j, ahora) {
   return [j.plataformas && j.plataformas.length ? j.plataformas.join(" · ") : null, j.dias < 0 ? `sale ${j.fechaAprox ? "en " + j.fecha.slice(0, 4) : fechaLegible(j)}` : `salió ${fechaLegible(j)}`].filter(Boolean).join(" · ");
 }
 
-// Filas de la ficha: [etiqueta, texto | { href, texto }].
-export function filasFicha(j, ahora) {
-  const enlace = (href, texto) => (typeof href === "string" && href.startsWith("https://") ? { href, texto } : "—");
+// Filas de la ficha: [etiqueta, texto | { href, texto }]. Solo filas con dato: nada de "Sin dato" ni "No" de relleno.
+// `igdb` = ficha de IGDB del juego del registro (portada, resumen, géneros…), si el pipeline ya la armó.
+export function filasFicha(j, ahora, igdb = null) {
+  const enlace = (href, texto) => (typeof href === "string" && href.startsWith("https://") ? { href, texto } : null);
+  const filas = [];
+  const add = (k, v) => { if (v !== null && v !== undefined && v !== "" && v !== "—") filas.push([k, v]); };
   if (j.tipo === "d") {
     const c = diasDesdeIso(j.ultimoCommit, ahora), r = diasDesdeIso(j.fechaRelease, ahora);
-    return [
-      ["Tipo", TIPO.d.etiqueta], ["Proyecto", SUBTIPOS[j.subtipo] || j.subtipo], ["Por qué lo ves", motivoDe(j)],
-      ["Tus juegos", j.tuyos.join(", ")], ["Plataforma", j.plataforma || "—"], ["Estrellas", miles(j.estrellas)],
-      ["Último commit", c === null ? "—" : haceDias(c)],
-      ["Última versión", j.release ? `${j.release}${r === null ? "" : " (" + haceDias(r) + ")"}` : "Sin versión publicada"],
-      ["Jugar en el navegador", j.jugableUrl ? enlace(j.jugableUrl, "Abrir") : "No"],
-      ["¿Pide tu ROM o archivos?", ASSETS[j.pideAssets] || "Sin dato"],
-      ["Hecho con IA (según la fuente)", j.ia ? "Sí" : "No"], ["Estado", j.inactivo ? "Inactivo o archivado" : "Activo"],
-      ["Fuente", enlace(j.url, "Repositorio")],
-    ];
+    add("Proyecto", SUBTIPOS[j.subtipo] || j.subtipo); add("Por qué lo ves", motivoDe(j)); add("Tus juegos", (j.tuyos || []).join(", "));
+    add("Plataforma", j.plataforma); add("Estrellas", typeof j.estrellas === "number" ? miles(j.estrellas) : null);
+    add("Último commit", c === null ? null : haceDias(c));
+    add("Última versión", j.release ? `${j.release}${r === null ? "" : " (" + haceDias(r) + ")"}` : null);
+    add("Jugar en el navegador", j.jugableUrl ? enlace(j.jugableUrl, "Abrir") : null);
+    add("¿Pide tu ROM o archivos?", ASSETS[j.pideAssets] && j.pideAssets !== "unknown" ? ASSETS[j.pideAssets] : null);
+    add("Hecho con IA (según la fuente)", j.ia ? "Sí" : null); add("Estado", j.inactivo ? "Inactivo o archivado" : "Activo");
+    add("Fuente", enlace(j.url, "Repositorio"));
+    return filas;
   }
-  return [
-    ["Tipo", TIPO.e.etiqueta], ["Estudio", j.estudio || "—"], ["Por qué lo ves", motivoDe(j)], ["Tus juegos", j.tuyos.join(", ")],
-    ["Plataformas", j.plataformas && j.plataformas.length ? j.plataformas.join(" · ") : "—"], ["Fecha", fechaLegible(j)],
-    ["Fuente", enlace(j.url, "IGDB")],
-  ];
+  if (j.tipo === "e") {
+    add("Estudio", j.estudio); add("Por qué lo ves", motivoDe(j)); add("Tus juegos", (j.tuyos || []).join(", "));
+    add("Géneros", (j.generos || []).join(" · ")); add("Plataformas", j.plataformas && j.plataformas.length ? j.plataformas.join(" · ") : null);
+    add("Fecha", j.fecha ? fechaLegible(j) : null); add("Fuente", enlace(j.url, "IGDB"));
+    return filas;
+  }
+  const ei = ESTADOS_INFO[j.estado];
+  add("Estado", `${ei.emoji} ${ei.etiqueta}`); add("Plataforma", j.plataforma);
+  add("Terminado el", j.estado === "terminado" && j.fecha ? fechaLegible(j) : null);
+  if (igdb) {
+    add("Géneros", (igdb.generos || []).join(" · ")); add("Lanzamiento", igdb.lanzamiento ? fechaLegible({ fecha: igdb.lanzamiento }) : null);
+    add("Plataformas (IGDB)", (igdb.plataformas || []).join(" · ")); add("Fuente", enlace(igdb.url, "IGDB"));
+  }
+  return filas;
+}
+
+// Juegos del registro de un estado, como ítems de lista: los terminados por fecha de término (o, sin fecha, por cuándo
+// se tocaron), los demás por última actualización; los más recientes primero.
+export function itemsRegistro(registro, estado, ahora = Date.now()) {
+  const marca = j => (j.fecha ? new Date(j.fecha).getTime() : j.actualizado || 0);
+  return Object.values((registro && registro.juegos) || {})
+    .filter(j => j.estado === estado)
+    .map(j => ({ ...j, tipo: "r", dias: marca(j) ? Math.round((ahora - marca(j)) / 86400000) : 9999 }))
+    .sort((a, b) => marca(b) - marca(a) || (a.titulo.toLowerCase() < b.titulo.toLowerCase() ? -1 : 1));
 }
 
 // Ítems de una categoría, sin los ocultos, los más cercanos a hoy primero (pasados y futuros por igual).
-export function itemsDe(juegos, clave, ocultos = {}) {
+// Las categorías del registro (terminado / quiero / pendiente) salen del registro propio, no de los datos del pipeline.
+export function itemsDe(juegos, clave, ocultos = {}, registro = null, ahora = Date.now()) {
+  if (esCategoriaRegistro(clave)) return itemsRegistro(registro, clave, ahora);
   return juegos
-    .filter(j => !ocultos[j.id] && TIPO[j.tipo] && (clave === "todo" ? enNovedades(j) : j.tipo === clave))
+    .filter(j => !ocultos[j.id] && (j.tipo === "d" || j.tipo === "e") && (clave === "todo" ? enNovedades(j) : j.tipo === clave))
     .sort((a, b) => Math.abs(a.dias) - Math.abs(b.dias) || (a.id < b.id ? -1 : 1));
 }
 
@@ -102,19 +144,37 @@ export function ventana(total, foco, cabe) {
   return { ini, fin: Math.min(total, ini + n) };
 }
 
-// Cuántas filas enteras caben en `alto` px (fila + separación).
-export function filasQueCaben(alto, fila = 56, sep = 5) {
-  return Math.max(1, Math.floor((alto + sep) / (fila + sep)));
+// Cuántas filas enteras caben en `alto` px con el diseño XMB: una fila enfocada (grande, con aire arriba y abajo)
+// y las demás más chicas. Conservador: nunca cuenta una fila a medias (N3).
+export const XMB = { foco: 78, fila: 50, sep: 4, aire: 14 };
+export function filasXmb(alto, { foco = XMB.foco, fila = XMB.fila, sep = XMB.sep, aire = XMB.aire } = {}) {
+  return Math.max(1, 1 + Math.floor((alto - foco - aire) / (fila + sep)));
 }
 
 // Franja de estado: lo que se consulta a diario.
-export function resumen(juegos, ocultos = {}, guardados = {}) {
-  const v = juegos.filter(j => TIPO[j.tipo] && !ocultos[j.id]);
+export function resumen(juegos, ocultos = {}, guardados = {}, registro = null) {
+  const v = juegos.filter(j => (j.tipo === "d" || j.tipo === "e") && !ocultos[j.id]);
+  const reg = Object.values((registro && registro.juegos) || {});
   return {
     semana: v.filter(j => Math.abs(j.dias) <= 7).length,
     deEstudios: v.filter(j => j.tipo === "e" && enNovedades(j)).length,
     guardados: v.filter(j => guardados[j.id]).length,
+    terminados: reg.filter(j => j.estado === "terminado").length,
+    quiero: reg.filter(j => j.estado === "quiero").length,
+    pendientes: reg.filter(j => j.estado === "pendiente").length,
   };
+}
+
+// Portada de IGDB: image_id → URL (solo ids de letras y números). `tam`: t_cover_small (90 px), t_cover_big (264 px).
+export const portadaUrl = (imageId, tam = "t_cover_big") => (typeof imageId === "string" && /^[a-z0-9]+$/i.test(imageId) ? `https://images.igdb.com/igdb/image/upload/${tam}/${imageId}.jpg` : null);
+
+// image_id de la portada de un ítem: la suya (estudios), la ficha del registro (juegos del registro) o la del juego
+// tuyo que motiva el decomp (así los decomps también muestran portada).
+export function portadaDe(j, fichas = {}) {
+  if (j.tipo === "e") return j.portada || null;
+  if (j.tipo === "r") return (fichas[j.id] && fichas[j.id].portada) || null;
+  const id = idRegistro(j.tuJuego);
+  return (id && fichas[id] && fichas[id].portada) || null;
 }
 
 // Antigüedad de los datos para el sello de la franja.

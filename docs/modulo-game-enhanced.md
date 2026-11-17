@@ -1,45 +1,42 @@
 # Módulo 🎮 Game enhanced (nov-2026)
 
-**Qué es.** Un módulo de novedades de juegos para "estar listo cuando un proyecto me mueva las cuerdas". Cada ítem dice **por qué lo ves** ("porque terminaste X", "del estudio detrás de X") a partir de los 71 juegos terminados de Cristopher (`modules/gameenhanced/data/terminados.json`, de su Stash, 10-nov-2026).
+**Qué es.** Un módulo de novedades de juegos para "estar listo cuando un proyecto me mueva las cuerdas". Cada ítem dice **por qué lo ves** ("porque terminaste X", "del estudio detrás de X") a partir de los juegos que Cristopher marcó como terminados. Desde el 16-nov-2026 (issue #43) además es su **registro de juegos**: 🏁 terminados, 🎯 quiero jugar y ⏳ pendientes. **Angst es la fuente primaria**; no hay conexión con Stash. Los 71 terminados que ya estaban en el repo (`modules/gameenhanced/data/terminados.json`, 10-nov-2026) se cargaron una sola vez como semilla.
 
 **Fase 1 (datos reales): Decomps y Estudios.** Versiones web y sucesores espirituales quedaron fuera hasta tener fuente (ver `docs/sonda-game-enhanced.md`: ninguna versión web casa con su lista y las noticias casi no traen "sucesor espiritual").
 
 ## Pantalla
 - **Montaje (N1):** pestaña 🎮 `game enhanced`, id **13** (sin renumerar; `ORDER` la deja al final), sobre `.app-fit`. Clases `.gameenh` / `.gameenh-body` en `core/App.jsx`.
-- **Patrón (N2):** menú en cruz inspirado en el de la PSX, aprobado por Cristopher como excepción justificada (carrusel que escala, como Vitrina). Franja de estado (`N esta semana · N de tus estudios · ★ N` + sello `DATOS HACE N H`, en rojo si pasan de 36 h) · 3 categorías en horizontal (✨ Novedades, 🧩 Decomps, 🏢 Estudios) · ítems en vertical con el enfocado fijo arriba.
-- **Colapsado (N3):** solo filas de una línea, sin scroll. La lista es un carrusel (deslizar, rueda, ↑↓). Se muestran las filas **enteras** que caben (se mide solo el contenedor de la lista con `ResizeObserver`); el sobrante se reparte entre filas.
-- **Expandido:** tocar la fila del cruce la abre en línea (una a la vez); ahí nace el scroll interno. Tarjeta: detalle, **Abrir ficha** y **No me interesa**. La **ficha** muestra los datos, enlace a la fuente (solo `https://`, `noopener`), ☆ Me interesa y No me interesa.
+- **Patrón (N2):** navegación al estilo XMB de PSP/PS3 (excepción de patrón aprobada por Cristopher: menú en cruz el 10-nov-2026, redirigido al XMB el 16-nov-2026). Franja de estado (`N esta semana · 🏁 N · 🎯 N · ⏳ N · ★ N` + sello `DATOS HACE N H`, en rojo si pasan de 36 h) · **eje horizontal** de 6 categorías (✨ Novedades, 🧩 Decomps, 🏢 Estudios, 🏁 Terminados, 🎯 Quiero jugar, ⏳ Pendientes): el ícono activo queda fijo (más grande, con su nombre en Caveat) y los demás se deslizan y se atenúan con la distancia · **columna** de ítems colgando de ese ícono: el enfocado es más grande (portada de 62 px, título de 17 px, subtítulo) con aire arriba y abajo; los demás, de 38 px y atenuados por distancia · fondo oscuro con ondas suaves (quietas con "reducir movimiento"). Paleta de los módulos oscuros de Angst (acento oliva `#aac756`, bordes punteados); sin el rojo propio de la versión anterior.
+- **Registro:** en las 3 categorías del registro aparece el botón **＋** (abre la `Ventana` compartida: título, estado, plataforma y, si es terminado, fecha). Agregar un título que ya existe actualiza su estado. Toda alta y todo "Quitar" avisa en la franja con **Deshacer**. En la ficha de un juego del registro se edita estado, fecha, plataforma y nota.
+- **Colapsado (N3):** solo filas, sin scroll. La lista es un carrusel (deslizar, rueda, ↑↓). Se muestran las filas **enteras** que caben (`filasXmb`: una enfocada + las demás; se mide solo el contenedor de la lista con `ResizeObserver`); el sobrante se reparte entre filas.
+- **Expandido:** tocar la fila enfocada la abre en línea (una a la vez); ahí nace el scroll interno. Tarjeta: detalle y **Abrir ficha**, más **No me interesa** (decomps y estudios), **🎯 Quiero jugar** (estudios) o **Quitar** (registro). La **ficha** muestra portada, resumen, el **README del proyecto en texto plano** (decomps: se lee sin salir a GitHub; el enlace al repositorio queda como secundario), solo las filas que tienen dato (sin "Sin dato" ni "No" de relleno), ☆ Me interesa y No me interesa.
 - **No me interesa:** oculta el ítem, le quita el guardado y avisa en la franja (no flotante) con **Deshacer** por 6 s, que devuelve también el guardado previo.
 - Sin título propio (R6); Caveat + DM Sans y emojis (R7). Si no cargan los datos: mensaje y botón **Reintentar**.
 
 ## Datos
-Los arma `modules/feed/scripts/build-game-enhanced.mjs` (funciones puras en `scripts/lib/game-enhanced-lib.mjs`) y los publica en `modules/feed/data/game-enhanced.json` el workflow `update-game-enhanced.yml` (diario 08:40 UTC + manual). La app lo lee con `fetchGameEnhancedData()` (`modules/shared/catalog.js`). Cada fuente falla por separado: si una cae, se conserva lo anterior de esa fuente y queda el error en `fuentes`.
+Los arma `modules/feed/scripts/build-game-enhanced.mjs` (funciones puras en `scripts/lib/game-enhanced-lib.mjs`) y los publica en `modules/feed/data/game-enhanced.json` el workflow `update-game-enhanced.yml` (diario 08:40 UTC + manual). La app lo lee con `fetchGameEnhancedData()` (`modules/shared/catalog.js`); `game-enhanced-fichas.json` y `game-enhanced-readmes.json` son complementos (si no cargan, el módulo sigue sin portadas / sin README).
+- **Terminados:** el workflow hace checkout de `Angst-data` (rama `state-sync`, secret `WORKER_GITHUB_PAT`, solo lectura) y el script lee el campo `gameEnhancedRegistro` de `angst-full-state.json` (`ANGST_STATE_PATH`). Con registro, los terminados salen de ahí; mientras el estado no traiga el campo (antes del primer 📤) se usa la semilla. Si el archivo existe pero no se puede leer, la corrida **aborta** para no pisar datos con la semilla. Por eso un juego marcado como terminado en Angst solo amplía los cruces tras subirlo con 📤 y la siguiente corrida diaria (o una manual).
+- **Fichas** (`game-enhanced-fichas.json`): para cada juego del registro (terminado, quiero o pendiente) se busca en IGDB y se guarda portada (`image_id`), resumen, géneros, plataformas, lanzamiento y enlace bajo el id `r-<título normalizado>` (`lib/claves.mjs`, compartido por cliente y pipeline). Los estudios llevan portada, resumen y géneros dentro de su propio ítem; los decomps muestran la portada del juego tuyo que los motiva.
+- **README** (`game-enhanced-readmes.json`): para cada decomp en GitHub se pide `/repos/{repo}/readme` con el `GITHUB_TOKEN` del workflow y se convierte a bloques de texto plano (títulos, párrafos, listas; sin imágenes, insignias, HTML, código ni tablas; ~3.800 caracteres como máximo, "texto resumido" si se recortó). Se reutiliza si tiene menos de 6 días; ante un límite de la API se conserva lo anterior. Cada fuente falla por separado: si una cae, se conserva lo anterior de esa fuente y queda el error en `fuentes`.
 - **Decomps** (`awesome-decomp-games`, `data/games.json`, se actualiza a diario): un proyecto casa con un terminado si su título **sin el paréntesis final** (nombre del repo o port) es el mismo título, o ese título más una edición (Remastered, HD, DX…). No se cruza por saga ni por "contiene" (mezclaba secuelas). Se descartan las herramientas. Novedad = lo más reciente entre el último commit y la última versión. Ficha: tipo de proyecto, plataforma, estrellas, último commit/versión, jugable en navegador, "pide ROM", bandera de IA de la fuente, estado.
 - **Estudios** (IGDB, secrets `IGDB_CLIENT_ID` / `IGDB_CLIENT_SECRET`): se busca cada terminado, se toman sus desarrolladoras y se piden sus juegos de los últimos 150 días a los próximos 30 meses. Solo cuentan juegos principales, expansiones independientes y remakes; fuera DLC, paquetes, mods, remasterizaciones, ediciones ampliadas, ports, "Arcade Archives" y "Master Collection" (el ruido de Namco, SNK, Konami…). IGDB marca el 31-dic cuando solo se conoce el año: se muestra como año ("en 2027").
 - **Novedades** (ventana): decomps activos con actividad en ≤90 días; juegos de estudios lanzados hace ≤120 días o que salen en ≤240. Decomps y Estudios muestran todo. Orden: cercanía a hoy, pasados y futuros por igual.
 - **Lo que la fuente NO trae** (por eso no está en la pantalla): % de progreso de los decomps, fecha de alta de cada proyecto, versiones web de sus títulos, seguidores/expectativa en IGDB (campos vacíos).
 
 ## Datos persistidos (R8)
-UNA clave nueva, `angst-game-enhanced-estado-v1`: `{ guardados: {id: ts}, ocultos: {id: ts} }` (ids `d-…` y `e-…`). Declarada en `LOCAL_KEY_FIELDS.gameEnhancedEstado` (`core/persistence.js`) → viaja en el export 💾 / Angst-data; `restoreFromPayload` la rehidrata con `rehidratarGameEnhanced()`. No migra ni toca datos existentes. Quedan ids `sim-*` huérfanos de la maqueta simulada si Cristopher marcó alguno: son inertes.
+**Registro (16-nov-2026, #43):** clave nueva `angst-game-enhanced-registro-v1` → `{ v: 1, sembrado: ts | null, juegos: { [r-<título>]: { id, titulo, busqueda, estado: "terminado" | "quiero" | "pendiente", plataforma?, fecha?, nota?, agregado, actualizado } } }`. Declarada en `LOCAL_KEY_FIELDS.gameEnhancedRegistro`; `restoreFromPayload` la rehidrata con `rehidratarGameEnhancedRegistro()`. `sembrado` evita volver a cargar la semilla si se quitan juegos. No migra ni toca la clave siguiente.
+
+**Estado previo:** UNA clave, `angst-game-enhanced-estado-v1`: `{ guardados: {id: ts}, ocultos: {id: ts} }` (ids `d-…` y `e-…`). Declarada en `LOCAL_KEY_FIELDS.gameEnhancedEstado` (`core/persistence.js`) → viaja en el export 💾 / Angst-data; `restoreFromPayload` la rehidrata con `rehidratarGameEnhanced()`. No migra ni toca datos existentes. Quedan ids `sim-*` huérfanos de la maqueta simulada si Cristopher marcó alguno: son inertes.
 
 ## Validación
-- `node tests/gameenhanced.mjs` (cruce con decomps e IGDB, filtros, orden, ventanas, enlaces, estado, rehidratación) y `npm run audit:export`: OK.
-- Bundle por módulo sin `useAltoLibre`, `MarcoAngst`, `window.innerHeight`, `position: fixed` ni `100vh`.
-- Arranque de la app completa (jsdom) con los datos: pestaña, categorías, expandir, ficha, guardar, ocultar/deshacer, error y reintento.
-- **Chromium real**, colapsado: sin scroll de módulo ni de página, pie visible y sin hueco bajo la última fila; al expandir nace el scroll interno.
-
-| Viewport | Alto libre | Filas |
-|---|---|---|
-| 457×810 | ~649 px | 8 |
-| 412×915 | 744 px | 9 |
-| 360×640 | 469 px | 5 |
-| 480×560 | 399 px (mínimo medido) | 4 |
-| 820×1180 | 1010 px | 14 |
-
-  No se midió en el celular de Cristopher: su captura es el criterio de aceptación (lineamiento 4.6).
+- `node tests/gameenhanced.mjs` (cruce con decomps e IGDB, filtros, orden, ventanas, `filasXmb`, ficha sin filas vacías, registro: semilla, alta/edición/quitar/restaurar, rehidratación, lista por estado, portadas, README a texto plano, fichas IGDB, lectura del registro) y `npm run audit:export`: OK.
+- Prueba de humo del render real (React + jsdom, datos reales): 6 categorías, franja con 71 terminados sembrados, alta con Deshacer persistida en la clave, categoría vacía, ficha de decomp con README, botón 🎯 Quiero jugar en estudios.
+- **Sin medir todavía en dispositivo real**: la tabla de filas por viewport del menú anterior ya no vale (el XMB tiene filas de otra altura). La captura de Cristopher en celular y tablet es el criterio de aceptación (lineamiento 4.6); la válvula de desborde avisa por consola si colapsado desborda.
 
 ## Pendiente / decisiones abiertas
 - Versiones web y sucesores espirituales: faltan fuentes.
+- Alta de juegos: solo por título a mano; la portada y el resumen llegan en la siguiente corrida diaria. Un buscador con autocompletado de IGDB necesitaría el Worker `angst-sync` (IGDB no se puede llamar desde el navegador).
+- Horas jugadas o puntaje en el registro: no pedidos.
 - "No me interesa" es por ítem; falta decidir si también debe silenciar el proyecto o el estudio.
 - Proyectos con bandera de IA de la fuente se muestran marcados (no se ocultan): decidir si se filtran.
 - Nombre de la pestaña ("game enhanced") y su posición (al final) son provisorios.

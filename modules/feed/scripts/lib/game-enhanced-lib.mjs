@@ -1,5 +1,7 @@
 // ─── Funciones puras del pipeline de Game enhanced (probadas en tests/gameenhanced.mjs) ─────────────
 // Sin red ni disco: reciben datos ya descargados. Las usa build-game-enhanced.mjs.
+import { ESTADOS_REGISTRO } from "../../../gameenhanced/lib/claves.mjs";
+
 export const DIA = 86400000;
 
 export const norm = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -94,6 +96,8 @@ export function itemsDeEstudios(porEstudio, ahora) {
         fechaAprox: fechaAproximada(g.first_release_date),
         plataformas: (g.platforms || []).map(p => p.abbreviation).filter(Boolean).slice(0, 6),
         url: g.url || null, estudios: [], tuyos: [],
+        portada: imagenIgdb(g.cover), resumen: recortarTexto(g.summary, 500) || null,
+        generos: (g.genres || []).map(x => x.name).filter(Boolean).slice(0, 4),
       };
       if (!it.estudios.includes(estudio.nombre)) it.estudios.push(estudio.nombre);
       for (const t of estudio.tuyos) if (!it.tuyos.includes(t)) it.tuyos.push(t);
@@ -104,4 +108,93 @@ export function itemsDeEstudios(porEstudio, ahora) {
     ...it, estudio: it.estudios.join(" / "), tuJuego: it.tuyos[0],
     dias: Math.round((ahora - new Date(it.fecha + "T00:00:00Z").getTime()) / DIA),
   })).sort((a, b) => Math.abs(a.dias) - Math.abs(b.dias) || (a.id < b.id ? -1 : 1));
+}
+
+// ── 3) Fichas de IGDB, README de los proyectos y registro de Angst ─────────────────────────────
+export function recortarTexto(s, max) {
+  const t = String(s || "").replace(/\s+/g, " ").trim();
+  if (t.length <= max) return t;
+  const corte = t.slice(0, max), i = corte.lastIndexOf(" ");
+  return (i > max * 0.6 ? corte.slice(0, i) : corte).replace(/[\s.,;:!?-]+$/, "") + "…";
+}
+
+// image_id de la portada de IGDB (solo letras y números, para poder armar la URL con seguridad).
+export function imagenIgdb(cover) {
+  const id = cover && cover.image_id;
+  return typeof id === "string" && /^[a-z0-9]+$/i.test(id) ? id : null;
+}
+
+// Ficha de un juego del registro a partir del resultado de buscarlo en IGDB.
+export function fichaDeIgdb(g) {
+  if (!g) return null;
+  return {
+    igdbId: g.id ?? null, nombre: g.name || null, portada: imagenIgdb(g.cover), resumen: recortarTexto(g.summary, 700) || null,
+    generos: (g.genres || []).map(x => x.name).filter(Boolean).slice(0, 4),
+    plataformas: (g.platforms || []).map(p => p.abbreviation).filter(Boolean).slice(0, 6),
+    lanzamiento: g.first_release_date ? new Date(g.first_release_date * 1000).toISOString().slice(0, 10) : null,
+    url: typeof g.url === "string" && g.url.startsWith("https://") ? g.url : null,
+  };
+}
+
+// "owner/repo" de una URL de GitHub; null para cualquier otro sitio.
+export function repoDeUrl(url) {
+  const m = /^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+?)(?:\.git)?(?:[/?#].*)?$/.exec(String(url || ""));
+  return m ? `${m[1]}/${m[2]}` : null;
+}
+
+const ENTIDADES = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": "\"", "&#39;": "'", "&nbsp;": " " };
+function limpiarLinea(s) {
+  return String(s)
+    .replace(/&(?:amp|lt|gt|quot|nbsp|#39);/g, e => ENTIDADES[e])
+    .replace(/\*\*|__|`/g, "")
+    .replace(/(^|\s)[*_]([^*_\n]+)[*_](?=\s|$|[.,;:!?])/g, "$1$2")
+    .replace(/\s+/g, " ").trim();
+}
+
+// README en Markdown → bloques de texto plano [["h", t] | ["p", t] | ["li", t]] para leerlo dentro de la app.
+// Quita imágenes, insignias, HTML, bloques de código, tablas y enlaces sueltos; conserva títulos, párrafos y listas.
+export function readmeABloques(md, { max = 3800, maxBloque = 600 } = {}) {
+  let t = String(md || "").replace(/\r/g, "");
+  t = t.replace(/<!--[\s\S]*?-->/g, "").replace(/```[\s\S]*?```/g, "").replace(/```[\s\S]*$/, "").replace(/~~~[\s\S]*?~~~/g, "");
+  t = t.replace(/!\[[^\]]*\]\([^)]*\)/g, "").replace(/!\[[^\]]*\]\[[^\]]*\]/g, "");
+  t = t.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/\[([^\]]+)\]\[[^\]]*\]/g, "$1");
+  t = t.replace(/<[^>]+>/g, " ");
+  const bloques = [];
+  let parrafo = [];
+  const cerrar = () => { if (parrafo.length) bloques.push(["p", limpiarLinea(parrafo.join(" "))]); parrafo = []; };
+  for (const cruda of t.split("\n")) {
+    const l = cruda.trim();
+    if (!l) { cerrar(); continue; }
+    if (/^\[[^\]]+\]:\s*\S+/.test(l) || /^\|/.test(l) || /^[-=|:\s]{3,}$/.test(l) || /^https?:\/\/\S+$/.test(l)) { cerrar(); continue; }
+    const h = /^#{1,6}\s+(.*)$/.exec(l);
+    if (h) { cerrar(); bloques.push(["h", limpiarLinea(h[1].replace(/#+\s*$/, ""))]); continue; }
+    const li = /^(?:[-*+]|\d+[.)])\s+(.*)$/.exec(l);
+    if (li) { cerrar(); bloques.push(["li", limpiarLinea(li[1])]); continue; }
+    parrafo.push(l.replace(/^>\s?/, ""));
+  }
+  cerrar();
+  const utiles = bloques.filter(([, x]) => /[\p{L}\p{N}]/u.test(x));
+  const sinTitulosVacios = utiles.filter(([k], i) => k !== "h" || (utiles[i + 1] && utiles[i + 1][0] !== "h"));
+  const salida = [];
+  let total = 0, recortado = false;
+  for (const [k, x] of sinTitulosVacios) {
+    const texto = x.length > maxBloque ? recortarTexto(x, maxBloque) : x;
+    if (texto !== x) recortado = true;
+    if (total + texto.length > max) { recortado = true; break; }
+    salida.push([k, texto]);
+    total += texto.length;
+  }
+  return { bloques: salida, recortado };
+}
+
+// Registro de Angst (campo gameEnhancedRegistro del estado en Angst-data) → lista de juegos válidos.
+// null = el estado no trae registro todavía (se usa la semilla); [] = registro vacío a propósito.
+export function listaDeRegistro(estado) {
+  const r = estado && estado.gameEnhancedRegistro;
+  if (!r || typeof r !== "object" || !r.juegos || typeof r.juegos !== "object" || Array.isArray(r.juegos)) return null;
+  return Object.values(r.juegos).filter(e => e && typeof e.titulo === "string" && e.titulo.trim() && ESTADOS_REGISTRO.includes(e.estado));
+}
+
+export function terminadosDe(lista) {
+  return lista.filter(e => e.estado === "terminado").map(e => ({ titulo: e.titulo, busqueda: e.busqueda || e.titulo }));
 }

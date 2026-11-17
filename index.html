@@ -1577,8 +1577,8 @@ var __angst = (() => {
     });
     return { v: 1, items };
   }
-  function buscarSugerencias(mem, texto, limite = 4) {
-    const q = claveNombre(texto);
+  function buscarSugerencias(mem, texto2, limite = 4) {
+    const q = claveNombre(texto2);
     if (!q || !tieneMemoria(mem)) return [];
     const r = [];
     for (const [k, m] of Object.entries(mem.items)) {
@@ -1674,7 +1674,7 @@ var __angst = (() => {
       }
       return true;
     }
-    function guardar5() {
+    function guardar6() {
       if (!prepararCategoria()) return;
       acciones.guardar(campos());
     }
@@ -1708,7 +1708,7 @@ var __angst = (() => {
     }, placeholder: "$0", style: { ...campo, textAlign: "right" } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 14, fontWeight: 700, color: noAlcanza ? "#c00" : "#111", paddingBottom: 9, minWidth: 70, textAlign: "right" } }, total ? fmtCLP(total) : "\u2014")), /* @__PURE__ */ React.createElement(SelectorCategoria, { info, cat, setCat, nueva, setNueva, destNueva, setDestNueva, alCambiar: limpiar }), info.activo && bolsillos.length > 1 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: rotulo }, "Sub-partida"), /* @__PURE__ */ React.createElement("select", { value: bolsillo ? String(bolsillo.subId) : "", onChange: (e) => {
       setSubSel(e.target.value);
       limpiar();
-    }, style: campo }, bolsillos.map((b) => /* @__PURE__ */ React.createElement("option", { key: String(b.subId), value: String(b.subId) }, b.emoji, " ", b.label, " \xB7 saldo ", fmtCLP(b.saldo))))), /* @__PURE__ */ React.createElement(DescuentaDe, { info: { ...info, saldo }, total }), err && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 12, color: "#c00", marginTop: 6 } }, err), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: comprado, disabled: noAlcanza, style: { ...boton(true), background: noAlcanza ? "#ccc" : "#111", cursor: noAlcanza ? "default" : "pointer" } }, "Comprado \u2713"), /* @__PURE__ */ React.createElement("button", { onClick: guardar5, style: boton(false) }, "Guardar"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { ...boton(false), flex: "0 0 auto", padding: "9px 12px" } }, "\xD7")), info.activo && /* @__PURE__ */ React.createElement("button", { onClick: sinGasto, style: { background: "transparent", border: "none", color: "#aaa", fontFamily: F, fontSize: 11, cursor: "pointer", marginTop: 6, padding: 0, textDecoration: "underline" } }, "marcar comprado sin descontar"));
+    }, style: campo }, bolsillos.map((b) => /* @__PURE__ */ React.createElement("option", { key: String(b.subId), value: String(b.subId) }, b.emoji, " ", b.label, " \xB7 saldo ", fmtCLP(b.saldo))))), /* @__PURE__ */ React.createElement(DescuentaDe, { info: { ...info, saldo }, total }), err && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F, fontSize: 12, color: "#c00", marginTop: 6 } }, err), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: comprado, disabled: noAlcanza, style: { ...boton(true), background: noAlcanza ? "#ccc" : "#111", cursor: noAlcanza ? "default" : "pointer" } }, "Comprado \u2713"), /* @__PURE__ */ React.createElement("button", { onClick: guardar6, style: boton(false) }, "Guardar"), /* @__PURE__ */ React.createElement("button", { onClick: onClose, style: { ...boton(false), flex: "0 0 auto", padding: "9px 12px" } }, "\xD7")), info.activo && /* @__PURE__ */ React.createElement("button", { onClick: sinGasto, style: { background: "transparent", border: "none", color: "#aaa", fontFamily: F, fontSize: 11, cursor: "pointer", marginTop: 6, padding: 0, textDecoration: "underline" } }, "marcar comprado sin descontar"));
   }
 
   // modules/presupuesto/ListaCompras.jsx
@@ -1717,7 +1717,7 @@ var __angst = (() => {
   var enlace = { background: "transparent", border: "none", color: "#999", fontFamily: F2, fontSize: 11, cursor: "pointer", padding: "6px 0 0", textDecoration: "underline" };
   var nuevoId = () => Date.now().toString() + Math.random().toString(36).slice(2, 5);
   function NuevaCompra({ api, onAdd, autoFocus, pendientes: pendientes2 }) {
-    const [texto, setTexto] = useState2("");
+    const [texto2, setTexto] = useState2("");
     const [abierto, setAbierto] = useState2(false);
     const [cant, setCant] = useState2("1");
     const [precio, setPrecio] = useState2("");
@@ -1729,7 +1729,7 @@ var __angst = (() => {
     const info = api.info(catEf, cat === "__nueva" ? destNueva : void 0);
     const cantNum = parseFloat(String(cant).replace(",", ".")) > 0 ? parseFloat(String(cant).replace(",", ".")) : 1;
     const precioNum = parseInt(String(precio).replace(/\D/g, "")) || 0;
-    const q = texto.trim();
+    const q = texto2.trim();
     const sugs = q && api.sugerir ? api.sugerir(q) : [];
     const exacto = sugs.length && sugs[0].score >= 3 ? sugs[0].m : null;
     const dup = q ? (pendientes2 || []).find((x) => !x.done && claveNombre(x.text) === claveNombre(q)) : null;
@@ -1792,7 +1792,7 @@ var __angst = (() => {
     return /* @__PURE__ */ React.createElement("div", { style: { paddingBottom: 8, marginBottom: 6, borderBottom: "1px solid #f0f0f0" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement(
       "input",
       {
-        value: texto,
+        value: texto2,
         onChange: (e) => {
           setTexto(e.target.value);
           setErr("");
@@ -2995,6 +2995,8 @@ var __angst = (() => {
     // ♥ de Música: lanzamientos guardados (de ahí sale el directorio de artistas)
     gameEnhancedEstado: "angst-game-enhanced-estado-v1",
     // Game enhanced: ítems guardados ("me interesa") y ocultos ("no me interesa")
+    gameEnhancedRegistro: "angst-game-enhanced-registro-v1",
+    // Game enhanced: registro de juegos (terminados / quiero jugar / pendientes), Angst es la fuente (#43)
     tcgcryptoEstado: "angst-tcgcrypto-estado-v1",
     // tcgcrypto: cartas conseguidas, versión elegida, cantidad, costo y notas por colección de cada TCG (clave nueva, issue #42)
     panoramasSeleccion: "angst-panoramas-seleccion-v1"
@@ -3783,14 +3785,53 @@ var __angst = (() => {
     return e;
   }
 
-  // modules/tcgcrypto/estado.js
-  var KEY3 = "angst-tcgcrypto-estado-v1";
-  var obj = (o) => o && typeof o === "object" && !Array.isArray(o) ? o : {};
-  var VACIO = () => ({ tcg: "yugioh", vista: "edicion", cartas: {} });
+  // modules/gameenhanced/lib/claves.mjs
+  var ESTADOS_REGISTRO = ["terminado", "quiero", "pendiente"];
+  function claveTitulo(titulo) {
+    const t = String(titulo || "").trim();
+    const n = t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (n.length >= 2) return n;
+    return Array.from(t.toLowerCase()).map((c) => c.codePointAt(0).toString(36)).join("-").slice(0, 60);
+  }
+  function idRegistro(titulo) {
+    const k = claveTitulo(titulo);
+    return k ? "r-" + k : null;
+  }
+
+  // modules/gameenhanced/registro.js
+  var KEY3 = "angst-game-enhanced-registro-v1";
+  var VACIO = () => ({ v: 1, sembrado: null, juegos: {} });
+  var texto = (v, max) => typeof v === "string" ? v.trim().slice(0, max) : "";
+  var fechaOk = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
+  function juegoValido(e) {
+    if (!e || typeof e !== "object" || typeof e.titulo !== "string" || !e.titulo.trim() || !ESTADOS_REGISTRO.includes(e.estado)) return null;
+    const id = idRegistro(e.titulo);
+    if (!id) return null;
+    const j = {
+      id,
+      titulo: e.titulo.trim().slice(0, 120),
+      busqueda: texto(e.busqueda, 120) || e.titulo.trim().slice(0, 120),
+      estado: e.estado,
+      agregado: Number.isFinite(e.agregado) ? e.agregado : 0,
+      actualizado: Number.isFinite(e.actualizado) ? e.actualizado : Number.isFinite(e.agregado) ? e.agregado : 0
+    };
+    const p = texto(e.plataforma, 60), n = texto(e.nota, 600), f2 = fechaOk(e.fecha);
+    if (p) j.plataforma = p;
+    if (n) j.nota = n;
+    if (f2) j.fecha = f2;
+    return j;
+  }
   function leer3() {
     try {
       const v = JSON.parse(globalThis.localStorage.getItem(KEY3));
-      if (v && typeof v === "object" && !Array.isArray(v)) return { tcg: typeof v.tcg === "string" ? v.tcg : "yugioh", vista: v.vista === "az" ? "az" : "edicion", cartas: obj(v.cartas) };
+      if (v && typeof v === "object" && !Array.isArray(v)) {
+        const juegos = {};
+        for (const e of Object.values(v.juegos && typeof v.juegos === "object" ? v.juegos : {})) {
+          const j = juegoValido(e);
+          if (j) juegos[j.id] = j;
+        }
+        return { v: 1, sembrado: Number.isFinite(v.sembrado) ? v.sembrado : null, juegos };
+      }
     } catch (e) {
     }
     return VACIO();
@@ -3805,40 +3846,116 @@ var __angst = (() => {
     }
     oyentes3.forEach((fn) => fn(next));
   }
-  function rehidratarEstado2() {
+  function rehidratarRegistro() {
     cache3 = leer3();
     oyentes3.forEach((fn) => fn(cache3));
   }
+  function agregarJuego({ titulo, estado, plataforma, fecha: fecha2, nota }) {
+    const t = texto(titulo, 120);
+    const id = idRegistro(t);
+    if (!id || !ESTADOS_REGISTRO.includes(estado)) return null;
+    const previo = cache3.juegos[id] || null;
+    const ahora = Date.now();
+    const j = juegoValido({ ...previo || {}, id, titulo: previo ? previo.titulo : t, busqueda: previo ? previo.busqueda : t, estado, plataforma: plataforma ?? (previo && previo.plataforma), fecha: fecha2 ?? (previo && previo.fecha), nota: nota ?? (previo && previo.nota), agregado: previo ? previo.agregado : ahora, actualizado: ahora });
+    guardar3({ ...cache3, juegos: { ...cache3.juegos, [id]: j } });
+    return { id, previo };
+  }
+  function editarJuego(id, cambios) {
+    const j = cache3.juegos[id];
+    if (!j) return;
+    const n = juegoValido({ ...j, ...cambios, actualizado: Date.now() });
+    if (!n) return;
+    for (const k of ["plataforma", "fecha", "nota"]) if (k in cambios && !cambios[k]) delete n[k];
+    guardar3({ ...cache3, juegos: { ...cache3.juegos, [id]: n } });
+  }
+  function quitarJuego(id) {
+    const j = cache3.juegos[id];
+    if (!j) return null;
+    const juegos = { ...cache3.juegos };
+    delete juegos[id];
+    guardar3({ ...cache3, juegos });
+    return j;
+  }
+  function restaurarJuego(j) {
+    const v = juegoValido(j);
+    if (v) guardar3({ ...cache3, juegos: { ...cache3.juegos, [v.id]: v } });
+  }
+  function sembrar(lista) {
+    if (cache3.sembrado != null || !Array.isArray(lista) || !lista.length) return;
+    const ahora = Date.now();
+    const juegos = { ...cache3.juegos };
+    for (const t of lista) {
+      const j = juegoValido({ titulo: t.titulo, busqueda: t.busqueda, estado: "terminado", agregado: ahora, actualizado: ahora });
+      if (j && !juegos[j.id]) juegos[j.id] = j;
+    }
+    guardar3({ v: 1, sembrado: ahora, juegos });
+  }
+  function useRegistro() {
+    const [r, setR] = React.useState(cache3);
+    React.useEffect(() => {
+      oyentes3.add(setR);
+      setR(cache3);
+      return () => oyentes3.delete(setR);
+    }, []);
+    return r;
+  }
+
+  // modules/tcgcrypto/estado.js
+  var KEY4 = "angst-tcgcrypto-estado-v1";
+  var obj = (o) => o && typeof o === "object" && !Array.isArray(o) ? o : {};
+  var VACIO2 = () => ({ tcg: "yugioh", vista: "edicion", cartas: {} });
+  function leer4() {
+    try {
+      const v = JSON.parse(globalThis.localStorage.getItem(KEY4));
+      if (v && typeof v === "object" && !Array.isArray(v)) return { tcg: typeof v.tcg === "string" ? v.tcg : "yugioh", vista: v.vista === "az" ? "az" : "edicion", cartas: obj(v.cartas) };
+    } catch (e) {
+    }
+    return VACIO2();
+  }
+  var cache4 = leer4();
+  var oyentes4 = /* @__PURE__ */ new Set();
+  function guardar4(next) {
+    cache4 = next;
+    try {
+      globalThis.localStorage.setItem(KEY4, JSON.stringify(next));
+    } catch (e) {
+    }
+    oyentes4.forEach((fn) => fn(next));
+  }
+  function rehidratarEstado2() {
+    cache4 = leer4();
+    oyentes4.forEach((fn) => fn(cache4));
+  }
   function elegirTcg(tcg) {
-    guardar3({ ...cache3, tcg });
+    guardar4({ ...cache4, tcg });
   }
   function elegirVista(vista) {
-    guardar3({ ...cache3, vista: vista === "az" ? "az" : "edicion" });
+    guardar4({ ...cache4, vista: vista === "az" ? "az" : "edicion" });
   }
   var marcaDe = (estado, tcg, colec, k) => obj(obj(obj(estado.cartas)[tcg])[colec])[k] || null;
   var esVacia = (m) => !m.c && !m.e && !(m.q > 1) && !m.cu && !m.nt;
   function ponerMarca(tcg, colec, k, parche) {
-    const porTcg = { ...obj(cache3.cartas[tcg]) };
+    const porTcg = { ...obj(cache4.cartas[tcg]) };
     const porColec = { ...obj(porTcg[colec]) };
     const m = { ...porColec[k] || {}, ...parche };
     for (const campo9 of Object.keys(m)) if (m[campo9] === void 0 || m[campo9] === null || m[campo9] === "" || m[campo9] === 0) delete m[campo9];
     if (esVacia(m)) delete porColec[k];
     else porColec[k] = m;
     porTcg[colec] = porColec;
-    guardar3({ ...cache3, cartas: { ...cache3.cartas, [tcg]: porTcg } });
+    guardar4({ ...cache4, cartas: { ...cache4.cartas, [tcg]: porTcg } });
   }
   function useEstado2() {
-    const [e, setE] = React.useState(cache3);
+    const [e, setE] = React.useState(cache4);
     React.useEffect(() => {
-      oyentes3.add(setE);
-      setE(cache3);
-      return () => oyentes3.delete(setE);
+      oyentes4.add(setE);
+      setE(cache4);
+      return () => oyentes4.delete(setE);
     }, []);
     return e;
   }
 
   // modules/panoramas/seleccion.js
-  var KEY4 = "angst-panoramas-seleccion-v1";
+  var KEY5 = "angst-panoramas-seleccion-v1";
   var CAMPOS = [
     "id",
     "titulo",
@@ -3890,9 +4007,9 @@ var __angst = (() => {
 ${linea}`, url: ev.url };
   }
   var mapa2 = (o) => o && typeof o === "object" && !Array.isArray(o) ? o : {};
-  function leer4() {
+  function leer5() {
     try {
-      const v = JSON.parse(globalThis.localStorage.getItem(KEY4));
+      const v = JSON.parse(globalThis.localStorage.getItem(KEY5));
       if (v && typeof v === "object" && !Array.isArray(v)) {
         const sel = {};
         for (const [id, x] of Object.entries(mapa2(v.sel))) if (x && x.ev && x.ev.inicio && x.ev.fin) sel[id] = x;
@@ -3902,36 +4019,36 @@ ${linea}`, url: ev.url };
     }
     return { sel: {} };
   }
-  var cache4 = leer4();
-  var oyentes4 = /* @__PURE__ */ new Set();
-  function guardar4(next) {
-    cache4 = next;
+  var cache5 = leer5();
+  var oyentes5 = /* @__PURE__ */ new Set();
+  function guardar5(next) {
+    cache5 = next;
     try {
-      globalThis.localStorage.setItem(KEY4, JSON.stringify(next));
+      globalThis.localStorage.setItem(KEY5, JSON.stringify(next));
     } catch (e) {
     }
-    oyentes4.forEach((fn) => fn(next));
+    oyentes5.forEach((fn) => fn(next));
   }
   function rehidratarSeleccion() {
-    cache4 = leer4();
-    oyentes4.forEach((fn) => fn(cache4));
+    cache5 = leer5();
+    oyentes5.forEach((fn) => fn(cache5));
   }
   function alternarEstrella(ev) {
-    const sel = { ...cache4.sel };
+    const sel = { ...cache5.sel };
     if (sel[ev.id]) delete sel[ev.id];
     else sel[ev.id] = { marca: Date.now(), ev: copiaDe(ev), tarea: null };
-    guardar4({ sel });
+    guardar5({ sel });
   }
   function marcarTarea(id, tarea) {
-    const x = cache4.sel[id];
+    const x = cache5.sel[id];
     if (!x) return;
-    guardar4({ sel: { ...cache4.sel, [id]: { ...x, tarea } } });
+    guardar5({ sel: { ...cache5.sel, [id]: { ...x, tarea } } });
   }
   function sincronizarCon(eventos, hoy) {
     const frescos = new Map((eventos || []).map((e) => [e.id, e]));
     let cambio = false;
     const sel = {};
-    for (const [id, x] of Object.entries(cache4.sel)) {
+    for (const [id, x] of Object.entries(cache5.sel)) {
       if (x.ev.fin < sumarDias(hoy, -RETENCION_DIAS)) {
         cambio = true;
         continue;
@@ -3947,14 +4064,14 @@ ${linea}`, url: ev.url };
       }
       sel[id] = x;
     }
-    if (cambio) guardar4({ sel });
+    if (cambio) guardar5({ sel });
   }
   function useSeleccion() {
-    const [e, setE] = React.useState(cache4);
+    const [e, setE] = React.useState(cache5);
     React.useEffect(() => {
-      oyentes4.add(setE);
-      setE(cache4);
-      return () => oyentes4.delete(setE);
+      oyentes5.add(setE);
+      setE(cache5);
+      return () => oyentes5.delete(setE);
     }, []);
     return e;
   }
@@ -5298,7 +5415,7 @@ ${item.link}`);
       return b.includes("Price Watch") ? b : [...b, "Price Watch"];
     }, [carpetas]);
     const darkCat = darkCatalogo || [];
-    const cache5 = priceCache || {};
+    const cache6 = priceCache || {};
     const hoy = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
     const alertasWatch = inv.filter((c) => c.carpeta === "Price Watch" && c.estado !== "vendida" && c.precioObjetivo > 0 && c.tcgMarket != null && c.tcgMarket <= c.precioObjetivo);
     const [view, setView] = React.useState("coleccion");
@@ -5560,7 +5677,7 @@ ${item.link}`);
     }, [allSets]);
     React.useEffect(() => {
       if (!darkSetsScope.length) return;
-      const lastSync = cache5._lastResyncDate;
+      const lastSync = cache6._lastResyncDate;
       if (lastSync && Date.now() - new Date(lastSync).getTime() < RESYNC_INTERVAL_MS) return;
       resyncAbort.current = false;
       setResyncStatus("running");
@@ -5660,7 +5777,7 @@ ${item.link}`);
     }, [allSets]);
     React.useEffect(() => {
       if (!allSets.length) return;
-      const lastSync = cache5._lastResyncIlustradorDate;
+      const lastSync = cache6._lastResyncIlustradorDate;
       if (lastSync && Date.now() - new Date(lastSync).getTime() < RESYNC_INTERVAL_MS) return;
       resyncAbort.current = false;
       setResyncStatus("running");
@@ -6706,7 +6823,7 @@ ${item.link}`);
         }
       ), /* @__PURE__ */ React.createElement("button", { onClick: doSearch, style: { background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontFamily: "'Caveat',cursive", fontSize: 15, cursor: "pointer" } }, "buscar")), renderZoom(), /* @__PURE__ */ React.createElement(PokeLoader, { active: loading }), !loading && searchErr && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: 16, fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#c00" } }, searchErr), results.map((card) => {
         const p = getPrimaryPrice(card);
-        const cacheEntry = cache5[card.id];
+        const cacheEntry = cache6[card.id];
         const tcgPrice = cacheEntry?.lastMarket || p?.market || null;
         const yaInv = inv.some((c) => c.cardId === card.id && c.carpeta !== "Price Watch");
         const yaWatch = inv.some((c) => c.cardId === card.id && c.carpeta === "Price Watch");
@@ -8002,19 +8119,19 @@ ${item.link}`);
   }
   function conCampo(diario, clave, campo9, valor, protocolo) {
     const previo = diario.dias[clave];
-    const entrada = { ...previo || {}, [campo9]: valor };
-    if (!previo && protocolo != null) entrada.protocolo = !!protocolo;
-    return { ...diario, dias: { ...diario.dias, [clave]: entrada } };
+    const entrada2 = { ...previo || {}, [campo9]: valor };
+    if (!previo && protocolo != null) entrada2.protocolo = !!protocolo;
+    return { ...diario, dias: { ...diario.dias, [clave]: entrada2 } };
   }
   function conBase(diario, campo9, valor) {
     return { ...diario, base: { ...diario.base || {}, [campo9]: valor } };
   }
-  function alternarEfecto(entrada, clave) {
-    const actual = entrada && entrada.efectos || [];
+  function alternarEfecto(entrada2, clave) {
+    const actual = entrada2 && entrada2.efectos || [];
     return actual.includes(clave) ? actual.filter((x) => x !== clave) : [...actual, clave];
   }
-  function hayAlerta(entrada) {
-    return (entrada && entrada.efectos || []).some((e) => EFECTOS_ALERTA.includes(e));
+  function hayAlerta(entrada2) {
+    return (entrada2 && entrada2.efectos || []).some((e) => EFECTOS_ALERTA.includes(e));
   }
   var aMin = (hhmm2) => {
     if (!hhmm2 || !/^\d{1,2}:\d{2}$/.test(hhmm2)) return null;
@@ -8298,13 +8415,13 @@ ${item.link}`);
     const r = resumen(diario, hoy, rango);
     const cmp = compararToma(diario, hoy, rango, cruzFor);
     const pts = serie(diario, escala, hoy, rango);
-    const texto = () => textoResumen(diario, hoy, rango, cruzFor);
+    const texto2 = () => textoResumen(diario, hoy, rango, cruzFor);
     const ok = (m) => {
       setAviso(m);
       setTimeout(() => setAviso(""), 2500);
     };
     function copiar() {
-      const t = texto();
+      const t = texto2();
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => ok("copiado"), () => ok("no se pudo copiar"));
       else {
         const ta = document.createElement("textarea");
@@ -8322,7 +8439,7 @@ ${item.link}`);
     }
     function descargar() {
       const a = document.createElement("a");
-      a.href = URL.createObjectURL(new Blob([texto()], { type: "text/plain;charset=utf-8" }));
+      a.href = URL.createObjectURL(new Blob([texto2()], { type: "text/plain;charset=utf-8" }));
       a.download = `seguimiento-${hoy}.txt`;
       document.body.appendChild(a);
       a.click();
@@ -8402,11 +8519,11 @@ ${item.link}`);
       if (over > 1 !== desborda) setDesborda(over > 1);
     });
     const save = (updates) => saveData({ ...data, ...updates });
-    const guardar5 = (nuevo) => save({ fadimanDiario: nuevo });
-    const set = (campo9, valor) => guardar5(conCampo(diario, fecha2, campo9, valor, esProtocolo));
+    const guardar6 = (nuevo) => save({ fadimanDiario: nuevo });
+    const set = (campo9, valor) => guardar6(conCampo(diario, fecha2, campo9, valor, esProtocolo));
     const setNum = (campo9, txt) => set(campo9, txt === "" ? null : parseFloat(txt));
-    const setBase = (campo9, valor) => guardar5(conBase(diario, campo9, valor));
-    const setMg = (txt) => guardar5({ ...diario, cfg: { ...diario.cfg, mg: txt === "" ? 10 : parseFloat(txt) } });
+    const setBase = (campo9, valor) => guardar6(conBase(diario, campo9, valor));
+    const setMg = (txt) => guardar6({ ...diario, cfg: { ...diario.cfg, mg: txt === "" ? 10 : parseFloat(txt) } });
     function marcarToma() {
       if (e.tomo) {
         set("tomo", false);
@@ -8415,7 +8532,7 @@ ${item.link}`);
       let d = conCampo(diario, fecha2, "tomo", true, esProtocolo);
       if (!e.hora && fecha2 === hoy) d = conCampo(d, fecha2, "hora", horaLocal(), esProtocolo);
       if (!e.mg) d = conCampo(d, fecha2, "mg", diario.cfg.mg, esProtocolo);
-      guardar5(d);
+      guardar6(d);
     }
     const saveLog = (dateKey, field, val) => save({ fadimanLogs: { ...logs, [dateKey]: { ...logs[dateKey] || {}, [field]: val } } });
     function iniciar(startDate) {
@@ -9637,6 +9754,8 @@ ${item.link}`);
   var VIDEOTECA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/videoteca.json";
   var MUSICA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/musica.json";
   var GAME_ENHANCED_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced.json";
+  var GAME_ENHANCED_FICHAS_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced-fichas.json";
+  var GAME_ENHANCED_READMES_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced-readmes.json";
   var tcgcryptoJsonUrl = (tcg) => `https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/tcgcrypto-${tcg}.json`;
   var PANORAMAS_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/panoramas.json";
   var CINE_CATEGORIAS = ["Pel\xEDculas", "Series", "Animaci\xF3n"];
@@ -9741,7 +9860,15 @@ ${item.link}`);
   async function fetchGameEnhancedData() {
     const d = await fetchJsonSafe(GAME_ENHANCED_JSON_URL);
     if (!d || !Array.isArray(d.decomps) || !Array.isArray(d.estudios)) throw new Error("no se pudo leer game-enhanced.json");
-    return { juegos: [...d.decomps, ...d.estudios], generatedAt: d.generatedAt || null, fuentes: d.fuentes || {} };
+    return { juegos: [...d.decomps, ...d.estudios], generatedAt: d.generatedAt || null, fuentes: d.fuentes || {}, semilla: Array.isArray(d.semilla) ? d.semilla : [] };
+  }
+  async function fetchGameEnhancedFichas() {
+    const d = await fetchJsonSafe(GAME_ENHANCED_FICHAS_URL);
+    return d && d.fichas && typeof d.fichas === "object" ? d.fichas : {};
+  }
+  async function fetchGameEnhancedReadmes() {
+    const d = await fetchJsonSafe(GAME_ENHANCED_READMES_URL);
+    return d && d.readmes && typeof d.readmes === "object" ? d.readmes : {};
   }
   async function fetchTcgCryptoData(tcg) {
     const d = await fetchJsonSafe(tcgcryptoJsonUrl(tcg));
@@ -11264,12 +11391,12 @@ ${item.link}`);
       setSizeKey("M");
       setPaso("porcion");
     }
-    function guardar5(items, texto) {
+    function guardar6(items, texto2) {
       const nuevos = items.map((e) => ({ ...e, meal, uid: Date.now() + Math.random() }));
       saveNutriLog({ ...nutriLog, [dk]: [...nutriLog[dk] || [], ...nuevos] });
-      if (onGuardado) onGuardado(`${texto} \u2713`);
+      if (onGuardado) onGuardado(`${texto2} \u2713`);
       if (permanecer) {
-        setHechos((h) => [...h, texto]);
+        setHechos((h) => [...h, texto2]);
         reiniciar();
       } else onClose();
     }
@@ -11291,7 +11418,7 @@ ${item.link}`);
         setPaso("bandeja");
         return;
       }
-      guardar5([entry], `${comida.label} \xB7 ${food.name}`);
+      guardar6([entry], `${comida.label} \xB7 ${food.name}`);
     }
     function confirmarEstimada() {
       const e = armarEntradaEstimada(est, meal);
@@ -11302,7 +11429,7 @@ ${item.link}`);
         setPaso("bandeja");
         return;
       }
-      guardar5([e], `${comida.label} \xB7 ${e.name}`);
+      guardar6([e], `${comida.label} \xB7 ${e.name}`);
     }
     function abrirBandeja(items, nombre, mealId) {
       setBandeja(items.map((e) => ({ ...e })));
@@ -11388,7 +11515,7 @@ ${item.link}`);
       }, style: { ...chip2(false), fontSize: 13 } }, "+ agregar alimento"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: F4, fontSize: 13, color: "#111", fontWeight: 700 } }, kcalBandeja, " kcal")), /* @__PURE__ */ React.createElement(
         "button",
         {
-          onClick: () => guardar5(bandeja, `${comida.label} \xB7 ${titulo || `${bandeja.length} alimento${bandeja.length === 1 ? "" : "s"}`}`),
+          onClick: () => guardar6(bandeja, `${comida.label} \xB7 ${titulo || `${bandeja.length} alimento${bandeja.length === 1 ? "" : "s"}`}`),
           disabled: !bandeja.length,
           style: { ...btnPrincipal, opacity: bandeja.length ? 1 : 0.4 }
         },
@@ -12115,9 +12242,9 @@ ${item.link}`);
       if (typeof max === "number") r = Math.min(max, r);
       return r;
     };
-    const leer5 = (s) => parseInt(String(s).replace(/\D/g, "")) || 0;
+    const leer6 = (s) => parseInt(String(s).replace(/\D/g, "")) || 0;
     function commit() {
-      onSave(acotar(leer5(txt)));
+      onSave(acotar(leer6(txt)));
       setEd(false);
     }
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 2, justifyContent: "flex-end" } }, /* @__PURE__ */ React.createElement("button", { style: btnFlecha, onClick: () => onSave(acotar(value - 1e3)) }, "\u2039"), ed ? /* @__PURE__ */ React.createElement(
@@ -12127,7 +12254,7 @@ ${item.link}`);
         value: txt,
         onChange: (e) => {
           setTxt(e.target.value);
-          onSave(acotar(leer5(e.target.value)));
+          onSave(acotar(leer6(e.target.value)));
         },
         onBlur: commit,
         onKeyDown: (e) => {
@@ -12514,7 +12641,7 @@ ${item.link}`);
     const completo = !!filas && filas.every((f2) => num2(conteos[f2.sec + "|" + f2.rowId]) !== null);
     const totEsperado = filas ? filas.reduce((s, f2) => s + f2.esperado, 0) : 0;
     const totContado = filas ? filas.reduce((s, f2) => s + (num2(conteos[f2.sec + "|" + f2.rowId]) || 0), 0) : 0;
-    function guardar5() {
+    function guardar6() {
       const c = {};
       (filas || []).forEach((f2) => {
         const v = num2(conteos[f2.sec + "|" + f2.rowId]);
@@ -12557,7 +12684,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
         setConteos({ ...conteos, [k]: e.target.value });
         setError("");
       }, style: campo4 })), dif !== null && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: colorDif(dif), textAlign: "right", marginTop: 4 } }, dif === 0 ? "cuadra" : `diferencia ${signo(dif)}`), dif !== null && dif !== 0 && /* @__PURE__ */ React.createElement("input", { placeholder: "\xBFa qu\xE9 se debe? (opcional)", value: notas[k] || "", onChange: (e) => setNotas({ ...notas, [k]: e.target.value }), style: { ...campo4, width: "100%", textAlign: "left", fontSize: 12, marginTop: 6, padding: "6px 8px" } }));
-    }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "12px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#777" } }, "Esperado ", fmtCLP(totEsperado), " \xB7 contado ", fmtCLP(totContado)), completo && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: colorDif(totContado - totEsperado) } }, totContado === totEsperado ? "todo cuadra" : `diferencia ${signo(totContado - totEsperado)}`)), /* @__PURE__ */ React.createElement("div", { style: { ...rotulo4, margin: "10px 0 4px" } }, "Fecha del arqueo"), /* @__PURE__ */ React.createElement("input", { type: "date", value: fecha2, onChange: (e) => setFecha(e.target.value || fechaISO(/* @__PURE__ */ new Date())), style: { ...campo4, width: "100%", textAlign: "left" } }), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#c00", marginTop: 12 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: guardar5, disabled: !completo, style: { width: "100%", marginTop: 14, padding: "13px", background: completo ? "#111" : "#ccc", color: "#fff", border: "none", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, cursor: completo ? "pointer" : "default" } }, guardado ? "Guardar de nuevo" : "Guardar arqueo")), filas && tab === "rendicion" && rend && /* @__PURE__ */ React.createElement(React.Fragment, null, rend.arqueoFecha ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#777", marginBottom: 8 } }, "Arqueo del ", fechaCorta4(rend.arqueoFecha), ".") : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#a60", background: "#fffaf0", border: "1px dashed #e0b070", borderRadius: 6, padding: "6px 10px", marginBottom: 8 } }, "Falta el arqueo de este per\xEDodo: hazlo en la pesta\xF1a Arqueo."), rend.filas.map((f2) => /* @__PURE__ */ React.createElement("div", { key: f2.sec + f2.row.id, style: { padding: "10px 0", borderBottom: "1px dashed #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: FUENTE, fontSize: 14, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f2.row.emoji, " ", f2.row.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 15, fontWeight: 700, color: f2.saldo < 0 ? "#c00" : "#111" } }, fmtCLP(f2.saldo))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#999", marginTop: 3, lineHeight: 1.5 } }, "asignado ", fmtCLP(f2.asignado), " \xB7 gastado ", fmtCLP(f2.gastado), f2.prestamoRecibido > 0 && ` \xB7 pidi\xF3 ${fmtCLP(f2.prestamoRecibido)}`, f2.prestamoDado > 0 && ` \xB7 prest\xF3 ${fmtCLP(f2.prestamoDado)}`, f2.devPagada > 0 && ` \xB7 devolvi\xF3 ${fmtCLP(f2.devPagada)}`, f2.devRecibida > 0 && ` \xB7 le devolvieron ${fmtCLP(f2.devRecibida)}`), f2.arqueo && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: colorDif(f2.arqueo.diferencia), marginTop: 3 } }, "arqueo: contado ", fmtCLP(f2.arqueo.contado), " de ", fmtCLP(f2.arqueo.esperado), " \xB7 ", f2.arqueo.diferencia === 0 ? "cuadra" : `diferencia ${signo(f2.arqueo.diferencia)}`, f2.arqueo.nota ? ` \xB7 ${f2.arqueo.nota}` : ""), (f2.deudas.debe > 0 || f2.deudas.teDeben > 0) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#a60", marginTop: 2 } }, f2.deudas.debe > 0 && `Debe ${fmtCLP(f2.deudas.debe)}. `, f2.deudas.teDeben > 0 && `Le deben ${fmtCLP(f2.deudas.teDeben)}.`), f2.gastos.length > 0 && /* @__PURE__ */ React.createElement("details", { style: { marginTop: 4 } }, /* @__PURE__ */ React.createElement("summary", { style: { fontFamily: FUENTE, fontSize: 11, color: "#666", cursor: "pointer" } }, f2.gastos.length, " gasto", f2.gastos.length > 1 ? "s" : ""), f2.gastos.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.id, style: { fontFamily: FUENTE, fontSize: 12, color: "#444", padding: "3px 0 3px 8px", display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#999", width: 44, flexShrink: 0 } }, fechaCorta4(g.fecha)), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0 } }, g.sub, g.nota ? ` \xB7 ${g.nota}` : "", g.prestamoId ? " \u{1F4B3}" : ""), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, fmtCLP(g.monto))))))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "14px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#555" } }, "Asignado ", fmtCLP(rend.totales.asignado), " \xB7 gastado ", fmtCLP(rend.totales.gastado)), rend.totales.diferencia !== null && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: colorDif(rend.totales.diferencia) } }, rend.totales.diferencia === 0 ? "todo cuadra" : `diferencia ${signo(rend.totales.diferencia)}`)), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#c00", marginTop: 8 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: copiar, style: { width: "100%", marginTop: 14, padding: "11px", background: "transparent", color: "#555", border: "1px dashed #bbb", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 18, cursor: "pointer" } }, copiado ? "\u2713 copiado" : "Copiar rendici\xF3n"))));
+    }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "12px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#777" } }, "Esperado ", fmtCLP(totEsperado), " \xB7 contado ", fmtCLP(totContado)), completo && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: colorDif(totContado - totEsperado) } }, totContado === totEsperado ? "todo cuadra" : `diferencia ${signo(totContado - totEsperado)}`)), /* @__PURE__ */ React.createElement("div", { style: { ...rotulo4, margin: "10px 0 4px" } }, "Fecha del arqueo"), /* @__PURE__ */ React.createElement("input", { type: "date", value: fecha2, onChange: (e) => setFecha(e.target.value || fechaISO(/* @__PURE__ */ new Date())), style: { ...campo4, width: "100%", textAlign: "left" } }), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#c00", marginTop: 12 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: guardar6, disabled: !completo, style: { width: "100%", marginTop: 14, padding: "13px", background: completo ? "#111" : "#ccc", color: "#fff", border: "none", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 20, fontWeight: 700, cursor: completo ? "pointer" : "default" } }, guardado ? "Guardar de nuevo" : "Guardar arqueo")), filas && tab === "rendicion" && rend && /* @__PURE__ */ React.createElement(React.Fragment, null, rend.arqueoFecha ? /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#777", marginBottom: 8 } }, "Arqueo del ", fechaCorta4(rend.arqueoFecha), ".") : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: "#a60", background: "#fffaf0", border: "1px dashed #e0b070", borderRadius: 6, padding: "6px 10px", marginBottom: 8 } }, "Falta el arqueo de este per\xEDodo: hazlo en la pesta\xF1a Arqueo."), rend.filas.map((f2) => /* @__PURE__ */ React.createElement("div", { key: f2.sec + f2.row.id, style: { padding: "10px 0", borderBottom: "1px dashed #eee" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, fontFamily: FUENTE, fontSize: 14, color: "#222", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f2.row.emoji, " ", f2.row.label), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 15, fontWeight: 700, color: f2.saldo < 0 ? "#c00" : "#111" } }, fmtCLP(f2.saldo))), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#999", marginTop: 3, lineHeight: 1.5 } }, "asignado ", fmtCLP(f2.asignado), " \xB7 gastado ", fmtCLP(f2.gastado), f2.prestamoRecibido > 0 && ` \xB7 pidi\xF3 ${fmtCLP(f2.prestamoRecibido)}`, f2.prestamoDado > 0 && ` \xB7 prest\xF3 ${fmtCLP(f2.prestamoDado)}`, f2.devPagada > 0 && ` \xB7 devolvi\xF3 ${fmtCLP(f2.devPagada)}`, f2.devRecibida > 0 && ` \xB7 le devolvieron ${fmtCLP(f2.devRecibida)}`), f2.arqueo && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 12, color: colorDif(f2.arqueo.diferencia), marginTop: 3 } }, "arqueo: contado ", fmtCLP(f2.arqueo.contado), " de ", fmtCLP(f2.arqueo.esperado), " \xB7 ", f2.arqueo.diferencia === 0 ? "cuadra" : `diferencia ${signo(f2.arqueo.diferencia)}`, f2.arqueo.nota ? ` \xB7 ${f2.arqueo.nota}` : ""), (f2.deudas.debe > 0 || f2.deudas.teDeben > 0) && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 11, color: "#a60", marginTop: 2 } }, f2.deudas.debe > 0 && `Debe ${fmtCLP(f2.deudas.debe)}. `, f2.deudas.teDeben > 0 && `Le deben ${fmtCLP(f2.deudas.teDeben)}.`), f2.gastos.length > 0 && /* @__PURE__ */ React.createElement("details", { style: { marginTop: 4 } }, /* @__PURE__ */ React.createElement("summary", { style: { fontFamily: FUENTE, fontSize: 11, color: "#666", cursor: "pointer" } }, f2.gastos.length, " gasto", f2.gastos.length > 1 ? "s" : ""), f2.gastos.map((g) => /* @__PURE__ */ React.createElement("div", { key: g.id, style: { fontFamily: FUENTE, fontSize: 12, color: "#444", padding: "3px 0 3px 8px", display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { color: "#999", width: 44, flexShrink: 0 } }, fechaCorta4(g.fecha)), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0 } }, g.sub, g.nota ? ` \xB7 ${g.nota}` : "", g.prestamoId ? " \u{1F4B3}" : ""), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, fmtCLP(g.monto))))))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "14px 0 2px", fontFamily: FUENTE } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#555" } }, "Asignado ", fmtCLP(rend.totales.asignado), " \xB7 gastado ", fmtCLP(rend.totales.gastado)), rend.totales.diferencia !== null && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: colorDif(rend.totales.diferencia) } }, rend.totales.diferencia === 0 ? "todo cuadra" : `diferencia ${signo(rend.totales.diferencia)}`)), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE, fontSize: 13, color: "#c00", marginTop: 8 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: copiar, style: { width: "100%", marginTop: 14, padding: "11px", background: "transparent", color: "#555", border: "1px dashed #bbb", borderRadius: 8, fontFamily: "'Caveat',cursive", fontSize: 18, cursor: "pointer" } }, copiado ? "\u2713 copiado" : "Copiar rendici\xF3n"))));
   }
 
   // modules/presupuesto/ruedaGeometria.js
@@ -13199,7 +13326,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     const [err, setErr] = useState25("");
     const efectiva = sel || (cats.length === 0 ? "__nueva" : "");
     const cat = efectiva === "__nueva" ? nueva.trim() : efectiva;
-    function guardar5() {
+    function guardar6() {
       const r = categorizarGasto(budgets, periodo, gasto.id, cat);
       if (r.error) {
         setErr(r.error);
@@ -13219,11 +13346,11 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
         role: "button",
         tabIndex: 0,
         "aria-label": "Guardar categor\xEDa",
-        onClick: () => cat && guardar5(),
+        onClick: () => cat && guardar6(),
         onKeyDown: (e) => {
           if ((e.key === "Enter" || e.key === " ") && cat) {
             e.preventDefault();
-            guardar5();
+            guardar6();
           }
         },
         style: { flexShrink: 0, background: cat ? "#111" : "#ccc", color: "#fff", borderRadius: 8, padding: "8px 14px", fontFamily: C4, fontSize: 17, fontWeight: 700, cursor: cat ? "pointer" : "default", userSelect: "none", display: "flex", alignItems: "center" }
@@ -13572,7 +13699,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
   var fmtUSD2 = (n) => "$" + parseFloat(n || 0).toFixed(2);
   function AgregarCartaModal({ inventario, carpetas, priceCache, saveInventario, permanecer, onClose, onGuardado }) {
     const inv = inventario || [];
-    const cache5 = priceCache || {};
+    const cache6 = priceCache || {};
     const hoy = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
     const cats = useMemo11(() => {
       const b = carpetas || [...CARPETAS_DEFAULT];
@@ -13602,13 +13729,13 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       }
       setCargando(false);
     }
-    const precioDe = (c) => cache5[c.id] && cache5[c.id].lastMarket || (getPrimaryPrice(c) || {}).market || null;
+    const precioDe = (c) => cache6[c.id] && cache6[c.id].lastMarket || (getPrimaryPrice(c) || {}).market || null;
     function elegir(c) {
       setCarta(c);
       const carpetaBase = isDarkCard(c) && carpetasNormales.includes("Dark Collection") ? "Dark Collection" : carpetasNormales[0] || "MLP";
       setForm((f2) => ({ ...f2, destino: ultima ? ultima.destino : "inventario", carpeta: ultima ? ultima.carpeta : carpetaBase, cantidad: 1, costoUSD: "", precioObjetivo: "" }));
     }
-    function guardar5() {
+    function guardar6() {
       const precio = precioDe(carta);
       const nueva = armarCartaNueva(carta, { ...form, precioVentaUSD: precio ? precio.toFixed(2) : "", fechaCompra: hoy, notas: "" }, cats, hoy);
       try {
@@ -13640,7 +13767,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
             style: { flex: 1, padding: "8px 0", background: form.destino === k ? "#111" : "transparent", color: form.destino === k ? "#fff" : "#999", border: "none", cursor: "pointer", fontFamily: C5, fontSize: 14, fontWeight: 700 }
           },
           l
-        ))), !watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Carpeta"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, carpetasNormales.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, carpeta: c })), style: chip3(form.carpeta === c) }, c)))), watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "\u{1F3AF} Me avisa cuando baje a (USD, opcional)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.precioObjetivo, onChange: (e) => setForm((f2) => ({ ...f2, precioObjetivo: e.target.value })), placeholder: "ej: 2.50", style: campo6 })), form.destino === "inventario" && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Lo que pagu\xE9 USD (0 si fue regalo)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.costoUSD, onChange: (e) => setForm((f2) => ({ ...f2, costoUSD: e.target.value })), placeholder: "ej: 8.50", style: campo6 })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: Math.max(1, (f2.cantidad || 1) - 1) })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: C5, fontSize: 24, fontWeight: 700, color: "#111", minWidth: 28, textAlign: "center" } }, form.cantidad || 1), /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: (f2.cantidad || 1) + 1 })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "+")))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Condici\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, CONDICIONES2.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, condicion: c })), style: { ...chip3(form.condicion === c), flex: 1, padding: "6px 4px" } }, c)))), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F10, fontSize: 12, color: "#c00", marginBottom: 10 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: guardar5, style: { width: "100%", background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "14px", fontFamily: C5, fontSize: 18, cursor: "pointer", marginBottom: 8 } }, "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
+        ))), !watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Carpeta"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, carpetasNormales.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, carpeta: c })), style: chip3(form.carpeta === c) }, c)))), watch && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "\u{1F3AF} Me avisa cuando baje a (USD, opcional)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.precioObjetivo, onChange: (e) => setForm((f2) => ({ ...f2, precioObjetivo: e.target.value })), placeholder: "ej: 2.50", style: campo6 })), form.destino === "inventario" && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Lo que pagu\xE9 USD (0 si fue regalo)"), /* @__PURE__ */ React.createElement("input", { type: "number", step: "0.01", value: form.costoUSD, onChange: (e) => setForm((f2) => ({ ...f2, costoUSD: e.target.value })), placeholder: "ej: 8.50", style: campo6 })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Cantidad"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: Math.max(1, (f2.cantidad || 1) - 1) })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: C5, fontSize: 24, fontWeight: 700, color: "#111", minWidth: 28, textAlign: "center" } }, form.cantidad || 1), /* @__PURE__ */ React.createElement("button", { onClick: () => setForm((f2) => ({ ...f2, cantidad: (f2.cantidad || 1) + 1 })), style: { width: 32, height: 32, borderRadius: 8, border: "1px dashed #ddd", background: "transparent", fontSize: 18, cursor: "pointer", color: "#555" } }, "+")))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: rotulo5 }, "Condici\xF3n"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, CONDICIONES2.map((c) => /* @__PURE__ */ React.createElement("button", { key: c, onClick: () => setForm((f2) => ({ ...f2, condicion: c })), style: { ...chip3(form.condicion === c), flex: 1, padding: "6px 4px" } }, c)))), error && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F10, fontSize: 12, color: "#c00", marginBottom: 10 } }, error), /* @__PURE__ */ React.createElement("button", { onClick: guardar6, style: { width: "100%", background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "14px", fontFamily: C5, fontSize: 18, cursor: "pointer", marginBottom: 8 } }, "guardar"), /* @__PURE__ */ React.createElement("button", { onClick: () => {
           setCarta(null);
           setError(null);
         }, style: { width: "100%", background: "transparent", color: "#999", border: "none", padding: "8px", fontFamily: F10, fontSize: 12, cursor: "pointer" } }, "volver a la b\xFAsqueda"))
@@ -13675,7 +13802,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
   var chip4 = (activo, color2) => ({ fontFamily: F11, fontSize: 12, padding: "6px 12px", borderRadius: 14, border: "1px dashed " + (activo && color2 ? color2 : "#ddd"), background: activo ? color2 || "#111" : "transparent", color: activo ? "#fff" : "#555", cursor: "pointer" });
   var TITULOS = { nota: "\u{1F4DD} nota r\xE1pida", tarea: "\u2705 nueva tarea", compra: "\u{1F6D2} compras de hoy" };
   function RegistroRapido({ tipo, onNota, onTarea, compras, onGuardado, onClose }) {
-    const [texto, setTexto] = useState29("");
+    const [texto2, setTexto] = useState29("");
     const [urgente, setUrgente] = useState29(false);
     const [dia, setDia] = useState29("hoy");
     const [fecha2, setFecha] = useState29(fmtFull(/* @__PURE__ */ new Date()));
@@ -13685,9 +13812,9 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
       if (dia === "manana") return fmtFull(new Date(Date.now() + 864e5));
       return fecha2;
     };
-    const puede = texto.trim().length > 0 && (tipo !== "tarea" || dia !== "fecha" || !!fecha2);
-    function guardar5() {
-      const t = texto.trim();
+    const puede = texto2.trim().length > 0 && (tipo !== "tarea" || dia !== "fecha" || !!fecha2);
+    function guardar6() {
+      const t = texto2.trim();
       if (!t) return;
       let aviso;
       if (tipo === "nota") {
@@ -13705,7 +13832,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     const enter = (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        guardar5();
+        guardar6();
       }
     };
     if (tipo === "compra") {
@@ -13728,7 +13855,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     return /* @__PURE__ */ React.createElement(VentanaArriba, { onClose, ancho: 440 }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: C6, fontSize: 22, fontWeight: 700, color: "#111", marginBottom: 10 } }, TITULOS[tipo]), /* @__PURE__ */ React.createElement(Hechos, { hechos }), tipo === "nota" ? /* @__PURE__ */ React.createElement(
       "textarea",
       {
-        value: texto,
+        value: texto2,
         onChange: (e) => setTexto(e.target.value),
         autoFocus: true,
         rows: 3,
@@ -13738,7 +13865,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     ) : /* @__PURE__ */ React.createElement(
       "input",
       {
-        value: texto,
+        value: texto2,
         onChange: (e) => setTexto(e.target.value),
         onKeyDown: enter,
         autoFocus: true,
@@ -13748,7 +13875,7 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     ), tipo === "tarea" && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setDia("hoy"), style: chip4(dia === "hoy") }, "hoy"), /* @__PURE__ */ React.createElement("button", { onClick: () => setDia("manana"), style: chip4(dia === "manana") }, "ma\xF1ana"), /* @__PURE__ */ React.createElement("button", { onClick: () => setDia("fecha"), style: chip4(dia === "fecha") }, "otro d\xEDa"), /* @__PURE__ */ React.createElement("button", { onClick: () => setUrgente((u) => !u), style: { ...chip4(urgente, "#ff3b30"), marginLeft: "auto" } }, urgente ? "\u{1F534} urgente" : "urgente")), dia === "fecha" && /* @__PURE__ */ React.createElement("input", { type: "date", value: fecha2, onChange: (e) => setFecha(e.target.value), style: { marginTop: 10, border: "1px dashed #ccc", borderRadius: 8, padding: "8px 10px", fontFamily: F11, fontSize: 14, color: "#111" } })), /* @__PURE__ */ React.createElement(
       "button",
       {
-        onClick: guardar5,
+        onClick: guardar6,
         disabled: !puede,
         style: { width: "100%", background: "#111", color: "#fff", border: "none", borderRadius: 8, padding: "13px", fontFamily: C6, fontSize: 18, cursor: "pointer", opacity: puede ? 1 : 0.4, marginBottom: 8 }
       },
@@ -14975,18 +15102,18 @@ Total asignado ${fmtCLP(rend.totales.asignado)} \xB7 gastado ${fmtCLP(rend.total
     ctx.closePath();
   }
   function disponerResena(ctx, nota, maxW, maxH) {
-    const texto = `\u201C${nota.trim()}\u201D`;
+    const texto2 = `\u201C${nota.trim()}\u201D`;
     const fuente = (size2) => `italic 400 ${size2}px 'DM Sans', sans-serif`;
     for (let size2 = 44; size2 >= 26; size2 -= 2) {
       ctx.font = fuente(size2);
       const lh2 = Math.round(size2 * 1.42);
-      const lines2 = wrapCanvasText(ctx, texto, maxW);
+      const lines2 = wrapCanvasText(ctx, texto2, maxW);
       if (lines2.length * lh2 <= maxH) return { size: size2, lh: lh2, lines: lines2 };
     }
     const size = 26, lh = Math.round(size * 1.42);
     ctx.font = fuente(size);
     const max = Math.max(1, Math.floor(maxH / lh));
-    const lines = wrapCanvasText(ctx, texto, maxW).slice(0, max);
+    const lines = wrapCanvasText(ctx, texto2, maxW).slice(0, max);
     let ultima = lines[lines.length - 1];
     while (ultima && ctx.measureText(ultima + "\u2026").width > maxW) ultima = ultima.replace(/\s*\S+$/, "");
     lines[lines.length - 1] = (ultima || "") + "\u2026";
@@ -15886,7 +16013,7 @@ Toco reintentar ahora.`);
       setTitulo(`${nombre} \u2014 ${d.titulo || ""}`);
       if (playerRef.current && playerRef.current.scrollIntoView) playerRef.current.scrollIntoView({ block: "start", behavior: "smooth" });
     }
-    const enlace2 = (href, texto) => href ? /* @__PURE__ */ React.createElement("a", { key: texto, href, target: "_blank", rel: "noopener noreferrer", style: { fontFamily: FUENTE2, fontSize: 12, fontWeight: 700, color: "#e5def7", textDecoration: "none", border: "1px solid #2f2745", borderRadius: 10, padding: "7px 12px" } }, texto, " \u2197") : null;
+    const enlace2 = (href, texto2) => href ? /* @__PURE__ */ React.createElement("a", { key: texto2, href, target: "_blank", rel: "noopener noreferrer", style: { fontFamily: FUENTE2, fontSize: 12, fontWeight: 700, color: "#e5def7", textDecoration: "none", border: "1px solid #2f2745", borderRadius: 10, padding: "7px 12px" } }, texto2, " \u2197") : null;
     return /* @__PURE__ */ React.createElement("div", { style: { padding: "10px 16px 22px", display: "flex", flexDirection: "column", gap: 14 } }, /* @__PURE__ */ React.createElement("button", { onClick: onVolver, style: { alignSelf: "flex-start", background: "transparent", border: "none", color: "#8a80a6", fontFamily: FUENTE2, fontSize: 13, cursor: "pointer", padding: "4px 0" } }, "\u2190 ", volverA || "lanzamientos"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, alignItems: "center" } }, artista?.foto ? /* @__PURE__ */ React.createElement("img", { src: artista.foto, alt: "", loading: "lazy", onError: quitarCaratula, style: { width: 84, height: 84, borderRadius: "50%", objectFit: "cover", border: `2px solid ${ACENTO}`, flex: "none", background: "#16121f" } }) : /* @__PURE__ */ React.createElement("div", { style: { width: 84, height: 84, borderRadius: "50%", border: `2px solid ${ACENTO}`, flex: "none", display: "flex", alignItems: "center", justifyContent: "center", color: ACENTO, fontSize: 30, background: "#16121f" } }, "\u266A"), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, artista?.logo ? /* @__PURE__ */ React.createElement("img", { src: artista.logo, alt: nombre, loading: "lazy", onError: quitarCaratula, style: { maxWidth: "100%", maxHeight: 54, objectFit: "contain", display: "block" } }) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 30, fontWeight: 700, color: "#fff", lineHeight: 1.02, overflowWrap: "anywhere" } }, nombre), artista?.logo && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 12, color: "#8a80a6", marginTop: 2 } }, nombre), meta && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 12, color: "#9d93b8", marginTop: 4 } }, meta))), tags.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" }, title: inferido ? "g\xE9nero inferido de las noticias, no confirmado" : void 0 }, tags.map((t) => /* @__PURE__ */ React.createElement(Chip, { key: t, style: inferido ? CHIP_INFERIDO : void 0 }, t))), /* @__PURE__ */ React.createElement("div", { ref: playerRef, style: { scrollMarginTop: 8 } }, player ? /* @__PURE__ */ React.createElement(Reproductor, { player, titulo }) : /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 12, color: "#7d7396", border: "1px dashed #2f2745", borderRadius: 8, padding: "14px 12px", textAlign: "center" } }, "elige un disco para escucharlo"), titulo && player && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 11, color: "#7d7396", marginTop: 6, overflowWrap: "anywhere" } }, titulo)), bio && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 13, lineHeight: 1.5, color: "#cfc7e6", whiteSpace: "pre-line", overflowWrap: "anywhere", ...bioAbierta ? {} : { display: "-webkit-box", WebkitLineClamp: 5, WebkitBoxOrient: "vertical", overflow: "hidden" } } }, bio), bio.length > 260 && /* @__PURE__ */ React.createElement("button", { onClick: () => setBioAbierta(!bioAbierta), style: { background: "transparent", border: "none", color: ACENTO, fontFamily: FUENTE2, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: "6px 0 0" } }, bioAbierta ? "leer menos" : "leer m\xE1s"), !artista?.bandcamp?.bio && artista?.wiki && /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 10, color: "#6a6180", marginTop: 2 } }, "texto de Wikipedia (", artista.wiki.lang, ")")), discos.length > 0 && /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#8a80a6", marginBottom: 8 } }, "discograf\xEDa \xB7 ", bc.totalDiscos > discos.length ? `${discos.length} de ${bc.totalDiscos}` : discos.length, bc.pagina === "sello" && /* @__PURE__ */ React.createElement("span", { style: { textTransform: "none", letterSpacing: 0, fontWeight: 500 } }, " \xB7 del cat\xE1logo de su sello")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 } }, discos.map((d) => {
       const activo = player && player.tipo === "bandcamp" && player.id === d.id;
       return /* @__PURE__ */ React.createElement("button", { key: `${d.tipo}-${d.id}`, onClick: () => elegir(d), style: { background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "left", minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { aspectRatio: "1 / 1", borderRadius: 8, overflow: "hidden", background: "#16121f", border: `2px solid ${activo ? ACENTO : "#2a2438"}` } }, d.arte && /* @__PURE__ */ React.createElement("img", { src: d.arte, alt: "", loading: "lazy", onError: quitarCaratula, style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } })), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: FUENTE2, fontSize: 11, lineHeight: 1.25, color: activo ? "#fff" : "#b9afd6", marginTop: 5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", overflowWrap: "anywhere" } }, d.titulo));
@@ -16036,20 +16163,20 @@ Toco reintentar ahora.`);
     );
   }
   var dato = { fontFamily: F_SANS2, fontSize: 12, color: T_CLARO.dim, lineHeight: 1.4, margin: "0 0 3px" };
-  function Detalle({ e, entrada, tareaOk, onCrear }) {
+  function Detalle({ e, entrada: entrada2, tareaOk, onCrear }) {
     const [aviso, setAviso] = useState36(null);
     const compartir = async () => {
-      const { titulo, texto, url } = textoCompartir(e);
+      const { titulo, texto: texto2, url } = textoCompartir(e);
       try {
         if (typeof navigator !== "undefined" && navigator.share) {
-          await navigator.share({ title: titulo, text: texto, url });
+          await navigator.share({ title: titulo, text: texto2, url });
           return;
         }
       } catch (err) {
         if (err && err.name === "AbortError") return;
       }
       try {
-        await navigator.clipboard.writeText(`${texto}
+        await navigator.clipboard.writeText(`${texto2}
 ${url}`);
         setAviso("Copiado \u2713");
       } catch (err) {
@@ -16063,9 +16190,9 @@ ${url}`);
     const parrafos = e.detalle ? e.detalle.split(/\n\n+/).filter(Boolean) : [];
     return /* @__PURE__ */ React.createElement("div", { style: { padding: "0 12px 12px", borderTop: `1px dashed ${T_CLARO.line}` } }, e.imagen && /* @__PURE__ */ React.createElement("img", { src: e.imagen, alt: "", loading: "lazy", onError: (ev) => {
       ev.currentTarget.style.display = "none";
-    }, style: { display: "block", width: "100%", maxHeight: 170, objectFit: "cover", borderRadius: 8, margin: "10px 0 8px" } }), /* @__PURE__ */ React.createElement("div", { style: { marginTop: e.imagen ? 0 : 10 } }, filas.map(([k, v]) => /* @__PURE__ */ React.createElement("p", { key: k, style: dato }, /* @__PURE__ */ React.createElement("b", { style: { color: T_CLARO.txt } }, k, ":"), " ", v)), e.inscripcion === true && e.inscripcionUrl && /* @__PURE__ */ React.createElement("p", { style: dato }, /* @__PURE__ */ React.createElement("b", { style: { color: "#8a5a00" } }, "Inscripci\xF3n:"), " ", /* @__PURE__ */ React.createElement("a", { href: e.inscripcionUrl, target: "_blank", rel: "noopener noreferrer", style: { color: "#8a5a00", wordBreak: "break-all" } }, e.inscripcionUrl.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60), " \u2197"))), parrafos.length > 0 ? /* @__PURE__ */ React.createElement("div", { style: { margin: "8px 0 4px" } }, parrafos.map((t, i) => /* @__PURE__ */ React.createElement("p", { key: i, style: { fontFamily: F_SANS2, fontSize: 13, color: T_CLARO.txt, lineHeight: 1.5, margin: "0 0 8px" } }, t))) : /* @__PURE__ */ React.createElement("p", { style: { ...dato, fontStyle: "italic", margin: "8px 0 4px" } }, "Esta fuente no entreg\xF3 una descripci\xF3n; el original la tiene."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 8 } }, entrada ? tareaOk ? /* @__PURE__ */ React.createElement("span", { style: { ...chip(T_CLARO, true), minHeight: 34, display: "inline-flex", alignItems: "center" } }, "\u2713 En el planificador \xB7 ", corta(entrada.tarea.dia)) : /* @__PURE__ */ React.createElement("button", { onClick: onCrear, style: { ...chip(T_CLARO, false), minHeight: 34, borderColor: ACENTO2 } }, "\u{1F4C5} Crear en planificador") : /* @__PURE__ */ React.createElement("span", { style: { ...dato, margin: 0, fontStyle: "italic" } }, "Marca \u2B50 para poder crearlo en el planificador"), /* @__PURE__ */ React.createElement("button", { onClick: compartir, style: { ...chip(T_CLARO, false), minHeight: 34 } }, aviso || "\u2197 Compartir"), /* @__PURE__ */ React.createElement("a", { href: e.url, target: "_blank", rel: "noopener noreferrer", style: { marginLeft: "auto", fontFamily: F_SANS2, fontSize: 12, color: T_CLARO.dim, textDecoration: "underline" } }, "Ver original \u2197")));
+    }, style: { display: "block", width: "100%", maxHeight: 170, objectFit: "cover", borderRadius: 8, margin: "10px 0 8px" } }), /* @__PURE__ */ React.createElement("div", { style: { marginTop: e.imagen ? 0 : 10 } }, filas.map(([k, v]) => /* @__PURE__ */ React.createElement("p", { key: k, style: dato }, /* @__PURE__ */ React.createElement("b", { style: { color: T_CLARO.txt } }, k, ":"), " ", v)), e.inscripcion === true && e.inscripcionUrl && /* @__PURE__ */ React.createElement("p", { style: dato }, /* @__PURE__ */ React.createElement("b", { style: { color: "#8a5a00" } }, "Inscripci\xF3n:"), " ", /* @__PURE__ */ React.createElement("a", { href: e.inscripcionUrl, target: "_blank", rel: "noopener noreferrer", style: { color: "#8a5a00", wordBreak: "break-all" } }, e.inscripcionUrl.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60), " \u2197"))), parrafos.length > 0 ? /* @__PURE__ */ React.createElement("div", { style: { margin: "8px 0 4px" } }, parrafos.map((t, i) => /* @__PURE__ */ React.createElement("p", { key: i, style: { fontFamily: F_SANS2, fontSize: 13, color: T_CLARO.txt, lineHeight: 1.5, margin: "0 0 8px" } }, t))) : /* @__PURE__ */ React.createElement("p", { style: { ...dato, fontStyle: "italic", margin: "8px 0 4px" } }, "Esta fuente no entreg\xF3 una descripci\xF3n; el original la tiene."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 8 } }, entrada2 ? tareaOk ? /* @__PURE__ */ React.createElement("span", { style: { ...chip(T_CLARO, true), minHeight: 34, display: "inline-flex", alignItems: "center" } }, "\u2713 En el planificador \xB7 ", corta(entrada2.tarea.dia)) : /* @__PURE__ */ React.createElement("button", { onClick: onCrear, style: { ...chip(T_CLARO, false), minHeight: 34, borderColor: ACENTO2 } }, "\u{1F4C5} Crear en planificador") : /* @__PURE__ */ React.createElement("span", { style: { ...dato, margin: 0, fontStyle: "italic" } }, "Marca \u2B50 para poder crearlo en el planificador"), /* @__PURE__ */ React.createElement("button", { onClick: compartir, style: { ...chip(T_CLARO, false), minHeight: 34 } }, aviso || "\u2197 Compartir"), /* @__PURE__ */ React.createElement("a", { href: e.url, target: "_blank", rel: "noopener noreferrer", style: { marginLeft: "auto", fontFamily: F_SANS2, fontSize: 12, color: T_CLARO.dim, textDecoration: "underline" } }, "Ver original \u2197")));
   }
-  function Tarjeta({ e, hoy, nuevo, abierta, onToggle, entrada, onEstrella, tareaOk, onCrear }) {
+  function Tarjeta({ e, hoy, nuevo, abierta, onToggle, entrada: entrada2, onEstrella, tareaOk, onCrear }) {
     const d = aFecha2(e.inicio);
     const empezado = e.inicio < hoy;
     const pide = e.inscripcion === true;
@@ -16091,8 +16218,8 @@ ${url}`);
       },
       /* @__PURE__ */ React.createElement("div", { style: { flex: "none", width: 42, textAlign: "center", fontFamily: F_SANS2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: T_CLARO.faint, textTransform: "uppercase" } }, empezado ? "hasta" : DIAS3[d.getDay()]), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_HAND2, fontSize: 24, fontWeight: 700, lineHeight: 1 } }, ref.getDate()), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: T_CLARO.faint, textTransform: "uppercase" } }, MESES3[ref.getMonth()])),
       /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS2, fontSize: 14, fontWeight: 600, lineHeight: 1.25 } }, e.titulo), /* @__PURE__ */ React.createElement("div", { style: { fontFamily: F_SANS2, fontSize: 12, color: T_CLARO.dim, marginTop: 3 } }, [e.hora, e.lugar, e.comuna].filter(Boolean).join(" \xB7 ")), /* @__PURE__ */ React.createElement(Etiquetas, { e, nuevo })),
-      /* @__PURE__ */ React.createElement(Estrella, { activa: !!entrada, onClick: onEstrella })
-    ), abierta && /* @__PURE__ */ React.createElement(Detalle, { e, entrada, tareaOk, onCrear }));
+      /* @__PURE__ */ React.createElement(Estrella, { activa: !!entrada2, onClick: onEstrella })
+    ), abierta && /* @__PURE__ */ React.createElement(Detalle, { e, entrada: entrada2, tareaOk, onCrear }));
   }
   function PanoramasPage({ onCrearTarea, tareaExiste }) {
     const seleccion = useSeleccion();
@@ -16187,12 +16314,22 @@ ${url}`);
   // modules/gameenhanced/logica.js
   var TIPO2 = {
     d: { etiqueta: "DECOMP", emoji: "\u{1F9E9}", motivo: "Porque terminaste " },
-    e: { etiqueta: "ESTUDIO", emoji: "\u{1F3E2}", motivo: "Del estudio detr\xE1s de " }
+    e: { etiqueta: "ESTUDIO", emoji: "\u{1F3E2}", motivo: "Del estudio detr\xE1s de " },
+    r: { etiqueta: "JUEGO", emoji: "\u{1F3AE}", motivo: "" }
   };
+  var ESTADOS_INFO = {
+    terminado: { emoji: "\u{1F3C1}", etiqueta: "Terminado" },
+    quiero: { emoji: "\u{1F3AF}", etiqueta: "Quiero jugar" },
+    pendiente: { emoji: "\u23F3", etiqueta: "Pendiente" }
+  };
+  var esCategoriaRegistro = (clave) => Object.prototype.hasOwnProperty.call(ESTADOS_INFO, clave);
   var CATEGORIAS = [
     ["todo", "\u2728", "Novedades"],
     ["d", "\u{1F9E9}", "Decomps"],
-    ["e", "\u{1F3E2}", "Estudios"]
+    ["e", "\u{1F3E2}", "Estudios"],
+    ["terminado", "\u{1F3C1}", "Terminados"],
+    ["quiero", "\u{1F3AF}", "Quiero jugar"],
+    ["pendiente", "\u23F3", "Pendientes"]
   ];
   var SUBTIPOS = {
     decompilation: "Decompilaci\xF3n",
@@ -16204,8 +16341,8 @@ ${url}`);
   };
   var ASSETS = { byo: "S\xED, con tu propia copia", instant: "No, se juega al instante", demo: "Solo la demo", unknown: "Sin dato" };
   var VENTANA = { decompDias: 90, pasadoEstudio: 120, futuroEstudio: 240 };
-  var enNovedades = (j) => j.tipo === "d" ? !j.inactivo && j.dias <= VENTANA.decompDias : j.dias >= -VENTANA.futuroEstudio && j.dias <= VENTANA.pasadoEstudio;
-  var motivoDe = (j) => TIPO2[j.tipo].motivo + j.tuJuego;
+  var enNovedades = (j) => j.tipo === "r" ? false : j.tipo === "d" ? !j.inactivo && j.dias <= VENTANA.decompDias : j.dias >= -VENTANA.futuroEstudio && j.dias <= VENTANA.pasadoEstudio;
+  var motivoDe = (j) => j.tipo === "r" ? ESTADOS_INFO[j.estado].etiqueta : TIPO2[j.tipo].motivo + j.tuJuego;
   function haceDias(n) {
     if (n <= 0) return "hoy";
     if (n === 1) return "ayer";
@@ -16225,65 +16362,101 @@ ${url}`);
     return `${d} ${MESES4[m - 1]} ${a}`;
   }
   function cuando2(j) {
+    if (j.tipo === "r") return j.estado === "terminado" && !j.fecha ? "" : haceDias(j.dias);
     if (j.tipo === "e" && j.dias < 0) return j.fechaAprox ? `en ${j.fecha.slice(0, 4)}` : j.dias < -60 ? `en ${Math.round(-j.dias / 30)} m` : `en ${-j.dias} d`;
     return j.dias >= 9999 ? "\u2014" : haceDias(j.dias);
   }
   var miles = (n) => typeof n === "number" ? n.toLocaleString("es-CL") : "\u2014";
   function detalleDe(j, ahora) {
+    if (j.tipo === "r") {
+      const ei = ESTADOS_INFO[j.estado];
+      return [`${ei.emoji} ${ei.etiqueta}`, j.plataforma, j.estado === "terminado" && j.fecha ? `terminado el ${fechaLegible(j)}` : null, j.nota ? j.nota.length > 80 ? j.nota.slice(0, 79) + "\u2026" : j.nota : null].filter(Boolean).join(" \xB7 ");
+    }
     if (j.tipo === "d") {
       const c = diasDesdeIso(j.ultimoCommit, ahora);
       return [SUBTIPOS[j.subtipo] || j.subtipo, j.plataforma, `\u2B50 ${miles(j.estrellas)}`, c === null ? null : `\xFAltimo commit ${haceDias(c)}`, j.inactivo ? "inactivo" : null, j.ia ? "hecho con IA seg\xFAn la fuente" : null].filter(Boolean).join(" \xB7 ");
     }
     return [j.plataformas && j.plataformas.length ? j.plataformas.join(" \xB7 ") : null, j.dias < 0 ? `sale ${j.fechaAprox ? "en " + j.fecha.slice(0, 4) : fechaLegible(j)}` : `sali\xF3 ${fechaLegible(j)}`].filter(Boolean).join(" \xB7 ");
   }
-  function filasFicha(j, ahora) {
-    const enlace2 = (href, texto) => typeof href === "string" && href.startsWith("https://") ? { href, texto } : "\u2014";
+  function filasFicha(j, ahora, igdb = null) {
+    const enlace2 = (href, texto2) => typeof href === "string" && href.startsWith("https://") ? { href, texto: texto2 } : null;
+    const filas = [];
+    const add2 = (k, v) => {
+      if (v !== null && v !== void 0 && v !== "" && v !== "\u2014") filas.push([k, v]);
+    };
     if (j.tipo === "d") {
       const c = diasDesdeIso(j.ultimoCommit, ahora), r = diasDesdeIso(j.fechaRelease, ahora);
-      return [
-        ["Tipo", TIPO2.d.etiqueta],
-        ["Proyecto", SUBTIPOS[j.subtipo] || j.subtipo],
-        ["Por qu\xE9 lo ves", motivoDe(j)],
-        ["Tus juegos", j.tuyos.join(", ")],
-        ["Plataforma", j.plataforma || "\u2014"],
-        ["Estrellas", miles(j.estrellas)],
-        ["\xDAltimo commit", c === null ? "\u2014" : haceDias(c)],
-        ["\xDAltima versi\xF3n", j.release ? `${j.release}${r === null ? "" : " (" + haceDias(r) + ")"}` : "Sin versi\xF3n publicada"],
-        ["Jugar en el navegador", j.jugableUrl ? enlace2(j.jugableUrl, "Abrir") : "No"],
-        ["\xBFPide tu ROM o archivos?", ASSETS[j.pideAssets] || "Sin dato"],
-        ["Hecho con IA (seg\xFAn la fuente)", j.ia ? "S\xED" : "No"],
-        ["Estado", j.inactivo ? "Inactivo o archivado" : "Activo"],
-        ["Fuente", enlace2(j.url, "Repositorio")]
-      ];
+      add2("Proyecto", SUBTIPOS[j.subtipo] || j.subtipo);
+      add2("Por qu\xE9 lo ves", motivoDe(j));
+      add2("Tus juegos", (j.tuyos || []).join(", "));
+      add2("Plataforma", j.plataforma);
+      add2("Estrellas", typeof j.estrellas === "number" ? miles(j.estrellas) : null);
+      add2("\xDAltimo commit", c === null ? null : haceDias(c));
+      add2("\xDAltima versi\xF3n", j.release ? `${j.release}${r === null ? "" : " (" + haceDias(r) + ")"}` : null);
+      add2("Jugar en el navegador", j.jugableUrl ? enlace2(j.jugableUrl, "Abrir") : null);
+      add2("\xBFPide tu ROM o archivos?", ASSETS[j.pideAssets] && j.pideAssets !== "unknown" ? ASSETS[j.pideAssets] : null);
+      add2("Hecho con IA (seg\xFAn la fuente)", j.ia ? "S\xED" : null);
+      add2("Estado", j.inactivo ? "Inactivo o archivado" : "Activo");
+      add2("Fuente", enlace2(j.url, "Repositorio"));
+      return filas;
     }
-    return [
-      ["Tipo", TIPO2.e.etiqueta],
-      ["Estudio", j.estudio || "\u2014"],
-      ["Por qu\xE9 lo ves", motivoDe(j)],
-      ["Tus juegos", j.tuyos.join(", ")],
-      ["Plataformas", j.plataformas && j.plataformas.length ? j.plataformas.join(" \xB7 ") : "\u2014"],
-      ["Fecha", fechaLegible(j)],
-      ["Fuente", enlace2(j.url, "IGDB")]
-    ];
+    if (j.tipo === "e") {
+      add2("Estudio", j.estudio);
+      add2("Por qu\xE9 lo ves", motivoDe(j));
+      add2("Tus juegos", (j.tuyos || []).join(", "));
+      add2("G\xE9neros", (j.generos || []).join(" \xB7 "));
+      add2("Plataformas", j.plataformas && j.plataformas.length ? j.plataformas.join(" \xB7 ") : null);
+      add2("Fecha", j.fecha ? fechaLegible(j) : null);
+      add2("Fuente", enlace2(j.url, "IGDB"));
+      return filas;
+    }
+    const ei = ESTADOS_INFO[j.estado];
+    add2("Estado", `${ei.emoji} ${ei.etiqueta}`);
+    add2("Plataforma", j.plataforma);
+    add2("Terminado el", j.estado === "terminado" && j.fecha ? fechaLegible(j) : null);
+    if (igdb) {
+      add2("G\xE9neros", (igdb.generos || []).join(" \xB7 "));
+      add2("Lanzamiento", igdb.lanzamiento ? fechaLegible({ fecha: igdb.lanzamiento }) : null);
+      add2("Plataformas (IGDB)", (igdb.plataformas || []).join(" \xB7 "));
+      add2("Fuente", enlace2(igdb.url, "IGDB"));
+    }
+    return filas;
   }
-  function itemsDe(juegos, clave, ocultos = {}) {
-    return juegos.filter((j) => !ocultos[j.id] && TIPO2[j.tipo] && (clave === "todo" ? enNovedades(j) : j.tipo === clave)).sort((a, b) => Math.abs(a.dias) - Math.abs(b.dias) || (a.id < b.id ? -1 : 1));
+  function itemsRegistro(registro, estado, ahora = Date.now()) {
+    const marca = (j) => j.fecha ? new Date(j.fecha).getTime() : j.actualizado || 0;
+    return Object.values(registro && registro.juegos || {}).filter((j) => j.estado === estado).map((j) => ({ ...j, tipo: "r", dias: marca(j) ? Math.round((ahora - marca(j)) / 864e5) : 9999 })).sort((a, b) => marca(b) - marca(a) || (a.titulo.toLowerCase() < b.titulo.toLowerCase() ? -1 : 1));
+  }
+  function itemsDe(juegos, clave, ocultos = {}, registro = null, ahora = Date.now()) {
+    if (esCategoriaRegistro(clave)) return itemsRegistro(registro, clave, ahora);
+    return juegos.filter((j) => !ocultos[j.id] && (j.tipo === "d" || j.tipo === "e") && (clave === "todo" ? enNovedades(j) : j.tipo === clave)).sort((a, b) => Math.abs(a.dias) - Math.abs(b.dias) || (a.id < b.id ? -1 : 1));
   }
   function ventana(total, foco, cabe) {
     const n = Math.max(1, cabe | 0);
     const ini = Math.min(Math.max(0, foco), Math.max(0, total - n));
     return { ini, fin: Math.min(total, ini + n) };
   }
-  function filasQueCaben(alto, fila = 56, sep = 5) {
-    return Math.max(1, Math.floor((alto + sep) / (fila + sep)));
+  var XMB = { foco: 78, fila: 50, sep: 4, aire: 14 };
+  function filasXmb(alto, { foco = XMB.foco, fila = XMB.fila, sep = XMB.sep, aire = XMB.aire } = {}) {
+    return Math.max(1, 1 + Math.floor((alto - foco - aire) / (fila + sep)));
   }
-  function resumen2(juegos, ocultos = {}, guardados = {}) {
-    const v = juegos.filter((j) => TIPO2[j.tipo] && !ocultos[j.id]);
+  function resumen2(juegos, ocultos = {}, guardados = {}, registro = null) {
+    const v = juegos.filter((j) => (j.tipo === "d" || j.tipo === "e") && !ocultos[j.id]);
+    const reg = Object.values(registro && registro.juegos || {});
     return {
       semana: v.filter((j) => Math.abs(j.dias) <= 7).length,
       deEstudios: v.filter((j) => j.tipo === "e" && enNovedades(j)).length,
-      guardados: v.filter((j) => guardados[j.id]).length
+      guardados: v.filter((j) => guardados[j.id]).length,
+      terminados: reg.filter((j) => j.estado === "terminado").length,
+      quiero: reg.filter((j) => j.estado === "quiero").length,
+      pendientes: reg.filter((j) => j.estado === "pendiente").length
     };
+  }
+  var portadaUrl = (imageId, tam = "t_cover_big") => typeof imageId === "string" && /^[a-z0-9]+$/i.test(imageId) ? `https://images.igdb.com/igdb/image/upload/${tam}/${imageId}.jpg` : null;
+  function portadaDe(j, fichas = {}) {
+    if (j.tipo === "e") return j.portada || null;
+    if (j.tipo === "r") return fichas[j.id] && fichas[j.id].portada || null;
+    const id = idRegistro(j.tuJuego);
+    return id && fichas[id] && fichas[id].portada || null;
   }
   function edadDatos(generatedAt, ahora) {
     const t = generatedAt ? new Date(generatedAt).getTime() : NaN;
@@ -16296,57 +16469,143 @@ ${url}`);
   var { useState: useState37, useEffect: useEffect24, useRef: useRef22, useCallback: useCallback7 } = React;
   var FUENTE3 = "'DM Sans',sans-serif";
   var CAVEAT = "'Caveat',cursive";
-  var ROJO = "#e5383b";
-  var ROJO_TEXTO = "#ff5a5f";
-  var FONDO = "radial-gradient(120% 45% at 15% 20%,rgba(229,56,59,.18),rgba(229,56,59,0) 62%),radial-gradient(110% 40% at 95% 80%,rgba(255,255,255,.06),rgba(255,255,255,0) 60%),#0b0b0c";
-  var TONOS = ["#d4d4d8", "#c4c4ca", "#b8b8be", "#acacb2", "#a8a8ae", "#a4a4aa", "#a0a0a6"];
+  var ACC = "#aac756";
+  var WARN = "#e53935";
+  var DIM = "#9a9aa0";
+  var TXT = "#eaeaea";
   var AVISO_MS = 6e3;
+  var EJE = { ax: 54, paso: 62 };
+  var OPACIDAD = [1, 0.85, 0.7, 0.55, 0.42];
   var reset = { background: "none", border: 0, padding: 0, color: "inherit", fontFamily: "inherit", fontSize: "inherit", fontWeight: "inherit", lineHeight: "inherit", cursor: "pointer" };
   var botonPri = { minHeight: 44, padding: "0 16px", borderRadius: 8, background: "#fff", color: "#0b0b0c", border: 0, fontFamily: FUENTE3, fontSize: 13, fontWeight: 500, cursor: "pointer" };
-  var botonSec = { minHeight: 44, padding: "0 16px", borderRadius: 8, background: "transparent", color: "#eaeaea", border: "1px solid #4a4a50", fontFamily: FUENTE3, fontSize: 13, fontWeight: 500, cursor: "pointer" };
-  var sello = { flex: "none", fontFamily: FUENTE3, fontSize: 10, letterSpacing: "0.1em", border: "1px solid #6a6a70", borderRadius: 4, padding: "2px 6px", color: "#b5b5bb" };
+  var botonSec = { minHeight: 44, padding: "0 16px", borderRadius: 8, background: "transparent", color: TXT, border: "1px dashed #555", fontFamily: FUENTE3, fontSize: 13, fontWeight: 500, cursor: "pointer" };
+  var sello = { flex: "none", fontFamily: FUENTE3, fontSize: 10, letterSpacing: "0.1em", border: "1px dashed #666", borderRadius: 4, padding: "2px 6px", color: "#b5b5bb" };
+  var entrada = { width: "100%", boxSizing: "border-box", minHeight: 44, padding: "10px 12px", borderRadius: 8, background: "#17171a", border: "1px dashed #555", color: TXT, fontFamily: FUENTE3, fontSize: 14, colorScheme: "dark" };
   function Valor({ v }) {
-    if (v && typeof v === "object") return /* @__PURE__ */ React.createElement("a", { href: v.href, target: "_blank", rel: "noopener noreferrer", style: { color: ROJO_TEXTO, textDecoration: "underline" } }, v.texto);
+    if (v && typeof v === "object") return /* @__PURE__ */ React.createElement("a", { href: v.href, target: "_blank", rel: "noopener noreferrer", style: { color: ACC, textDecoration: "underline" } }, v.texto);
     return v;
   }
-  function Fila({ j, foco, desnuda, expandida, guardado, tono, onClick }) {
+  function Ondas() {
+    const quieta = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const mov = (valores, dur) => quieta ? null : /* @__PURE__ */ React.createElement("animateTransform", { attributeName: "transform", type: "translate", values: valores, dur, repeatCount: "indefinite" });
+    return /* @__PURE__ */ React.createElement("svg", { "aria-hidden": "true", viewBox: "0 0 480 800", preserveAspectRatio: "none", style: { position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" } }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: "gex-fondo", x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: "#18181b" }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: "#0b0b0c" }))), /* @__PURE__ */ React.createElement("rect", { width: "480", height: "800", fill: "url(#gex-fondo)" }), /* @__PURE__ */ React.createElement("g", null, /* @__PURE__ */ React.createElement("path", { d: "M-140 360 C -20 270, 110 450, 250 360 S 470 280, 640 380 L640 800 L-140 800Z", fill: "rgba(255,255,255,.03)" }), mov("0 0;-70 12;0 0", "26s")), /* @__PURE__ */ React.createElement("g", null, /* @__PURE__ */ React.createElement("path", { d: "M-140 450 C 0 380, 140 520, 280 440 S 480 390, 640 470 L640 800 L-140 800Z", fill: "rgba(255,255,255,.04)" }), mov("0 0;60 -10;0 0", "32s")), /* @__PURE__ */ React.createElement("g", null, /* @__PURE__ */ React.createElement("path", { d: "M-140 560 C 30 500, 150 620, 300 550 S 500 510, 640 580 L640 800 L-140 800Z", fill: "rgba(170,199,86,.05)" }), mov("0 0;-50 8;0 0", "38s")), /* @__PURE__ */ React.createElement("g", null, /* @__PURE__ */ React.createElement("path", { d: "M-140 400 C -10 330, 120 480, 260 400 S 470 330, 640 420", fill: "none", stroke: "rgba(255,255,255,.07)", strokeWidth: "1.2" }), mov("0 0;80 -14;0 0", "30s")));
+  }
+  function Miniatura({ imagen, emoji, lado, resaltada }) {
+    const [falla, setFalla] = useState37(false);
+    useEffect24(() => {
+      setFalla(false);
+    }, [imagen]);
+    const url = !falla ? portadaUrl(imagen, lado > 48 ? "t_cover_big" : "t_cover_small") : null;
+    return /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true", style: { flex: "none", width: lado, height: lado, boxSizing: "border-box", borderRadius: 10, overflow: "hidden", background: "#1b1b1f", border: resaltada ? "1.5px solid #fff" : "1px solid #2c2c31", boxShadow: resaltada ? "0 0 18px rgba(255,255,255,.22)" : "none", display: "flex", alignItems: "center", justifyContent: "center", fontSize: lado * 0.46, transition: "width .22s ease,height .22s ease,font-size .22s ease" } }, url ? /* @__PURE__ */ React.createElement("img", { src: url, alt: "", loading: "lazy", onError: () => setFalla(true), style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } }) : emoji);
+  }
+  function Eje({ cat, onElegir, mostrarMas, onMas }) {
+    return /* @__PURE__ */ React.createElement("div", { style: { position: "relative", flex: "none", height: 96, marginTop: 4, overflow: "hidden" } }, CATEGORIAS.map(([clave, emoji, nombre], i) => {
+      const act = i === cat;
+      const cx = EJE.ax + (i - cat) * EJE.paso;
+      return /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          key: clave,
+          onClick: () => act ? null : onElegir(i),
+          "aria-label": act ? `${nombre}, categor\xEDa seleccionada` : nombre,
+          "aria-current": act ? "true" : void 0,
+          style: { ...reset, position: "absolute", top: 0, left: 0, width: EJE.paso, height: 60, display: "flex", flexDirection: "column", alignItems: "center", paddingTop: act ? 4 : 12, zIndex: act ? 1 : 2, transform: `translateX(${cx - EJE.paso / 2}px)`, opacity: act ? 1 : Math.max(0.28, 0.62 - Math.abs(i - cat) * 0.07), color: "#fff", transition: "transform .28s cubic-bezier(.2,.8,.2,1),opacity .28s ease,padding .28s ease", cursor: act ? "default" : "pointer", overflow: "visible" }
+        },
+        /* @__PURE__ */ React.createElement("span", { style: { width: act ? 56 : 40, height: act ? 56 : 40, boxSizing: "border-box", borderRadius: "50%", border: act ? "1.5px solid #fff" : "1px solid transparent", background: act ? "rgba(255,255,255,.09)" : "none", display: "flex", alignItems: "center", justifyContent: "center", fontSize: act ? 26 : 22, transition: "width .28s ease,height .28s ease,font-size .28s ease,background .28s ease" } }, emoji),
+        /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true", style: { position: "absolute", top: 64, left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap", fontFamily: CAVEAT, fontWeight: 600, fontSize: 22, lineHeight: 1, opacity: act ? 1 : 0, transition: "opacity .28s ease" } }, nombre)
+      );
+    }), mostrarMas && /* @__PURE__ */ React.createElement("button", { onClick: onMas, "aria-label": "Agregar juego", style: { ...reset, position: "absolute", right: 0, top: 8, width: 44, height: 44, borderRadius: "50%", border: `1px dashed ${ACC}`, color: ACC, fontSize: 24, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3 } }, "\uFF0B"));
+  }
+  var subtitulo = (j, ahora) => j.tipo === "r" ? detalleDe(j, ahora) : `${TIPO2[j.tipo].etiqueta} \xB7 ${motivoDe(j)}`;
+  function FilaX({ j, d, foco, desnuda, expandida, guardado, fichas, ahora, onClick }) {
     const t = TIPO2[j.tipo];
+    const lado = foco ? 62 : 38;
+    const sub2 = foco ? subtitulo(j, ahora) : "";
     const estilo = {
       flex: "none",
       display: "flex",
       alignItems: "center",
       gap: 12,
       width: "100%",
-      height: 56,
       boxSizing: "border-box",
       textAlign: "left",
-      borderTop: 0,
-      borderRight: 0,
-      borderBottom: 0,
-      borderLeft: "0 solid transparent",
+      border: 0,
+      background: "none",
       cursor: "pointer",
       fontFamily: FUENTE3,
-      borderRadius: 10,
-      ...desnuda ? { background: "none", padding: "0 10px 0 9px", color: "#fff" } : foco ? { background: "#17171a", borderLeft: `3px solid ${ROJO}`, padding: "0 10px 0 9px", color: "#fff" } : { background: "none", padding: "0 10px 0 12px", color: tono || "#d4d4d8" }
+      color: "#fff",
+      padding: "0 6px 0 21px",
+      height: foco ? XMB.foco : XMB.fila,
+      margin: foco && !desnuda ? `${XMB.aire / 2}px 0` : 0,
+      opacity: foco ? 1 : OPACIDAD[Math.min(Math.abs(d), OPACIDAD.length - 1)],
+      transition: "height .22s ease,opacity .22s ease,margin .22s ease"
     };
-    return /* @__PURE__ */ React.createElement("button", { onClick, style: estilo, ...foco ? { "aria-expanded": expandida ? "true" : "false" } : {} }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true", style: { flex: "none", width: 40, height: 40, boxSizing: "border-box", borderRadius: 10, background: "#1b1b1f", border: "1px solid #2c2c31", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19 } }, t.emoji), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, j.titulo, guardado ? " \u2605" : ""), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#9a9aa0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, t.etiqueta, " \xB7 ", motivoDe(j))), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 11, color: "#9a9aa0" } }, cuando2(j)));
+    return /* @__PURE__ */ React.createElement("button", { onClick, style: estilo, ...foco ? { "aria-expanded": expandida ? "true" : "false" } : {} }, /* @__PURE__ */ React.createElement("span", { style: { flex: "none", width: 62, display: "flex", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Miniatura, { imagen: portadaDe(j, fichas), emoji: j.tipo === "r" ? ESTADOS_INFO[j.estado].emoji : t.emoji, lado, resaltada: foco })), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: foco ? 17 : 14, fontWeight: foco ? 600 : 500, color: foco ? "#fff" : "#d4d4d8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", transition: "font-size .22s ease" } }, j.titulo, guardado ? " \u2605" : ""), foco && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: DIM, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, sub2)), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 11, color: DIM } }, cuando2(j)));
   }
-  function Tarjeta2({ j, ahora, guardado, onCerrar, onFicha, onDescartar }) {
-    return /* @__PURE__ */ React.createElement("div", { "data-id": j.id, style: { flex: "none", background: "#17171a", borderLeft: `3px solid ${ROJO}`, borderRadius: 10, paddingBottom: 12 } }, /* @__PURE__ */ React.createElement(Fila, { j, foco: true, desnuda: true, expandida: true, guardado, onClick: onCerrar }), /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 12px 0 61px", display: "flex", flexDirection: "column", gap: 8, fontFamily: FUENTE3, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, detalleDe(j, ahora)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: onFicha, style: botonPri }, "Abrir ficha"), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa"))));
+  function Tarjeta2({ j, ahora, guardado, fichas, enRegistro, onCerrar, onFicha, onDescartar, onQuitar, onQuiero }) {
+    return /* @__PURE__ */ React.createElement("div", { "data-id": j.id, style: { flex: "none", margin: `${XMB.aire / 2}px 0`, background: "rgba(23,23,26,.92)", border: "1px dashed #3a3a40", borderRadius: 12, paddingBottom: 12 } }, /* @__PURE__ */ React.createElement(FilaX, { j, d: 0, foco: true, desnuda: true, expandida: true, guardado, fichas, ahora, onClick: onCerrar }), /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 14px 0 95px", display: "flex", flexDirection: "column", gap: 8, fontFamily: FUENTE3, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, detalleDe(j, ahora)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: onFicha, style: botonPri }, "Abrir ficha"), j.tipo === "r" ? /* @__PURE__ */ React.createElement("button", { onClick: onQuitar, style: botonSec }, "Quitar") : /* @__PURE__ */ React.createElement(React.Fragment, null, j.tipo === "e" && !enRegistro && /* @__PURE__ */ React.createElement("button", { onClick: onQuiero, style: botonSec }, "\u{1F3AF} Quiero jugar"), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa")))));
   }
-  function Ficha({ j, ahora, guardado, onVolver, onGuardar, onDescartar }) {
+  function Campo({ etiqueta, valor, onGuardar, multilinea, tipo }) {
+    const [v, setV] = useState37(valor || "");
+    useEffect24(() => {
+      setV(valor || "");
+    }, [valor]);
+    const fin = () => {
+      const n = v.trim();
+      if (n !== (valor || "")) onGuardar(n);
+    };
+    return /* @__PURE__ */ React.createElement("label", { style: { display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: DIM } }, etiqueta, multilinea ? /* @__PURE__ */ React.createElement("textarea", { rows: 3, value: v, maxLength: 600, onChange: (e) => setV(e.target.value), onBlur: fin, style: { ...entrada, minHeight: 80, resize: "vertical" } }) : tipo === "date" ? /* @__PURE__ */ React.createElement("input", { type: "date", value: v, onChange: (e) => {
+      setV(e.target.value);
+      onGuardar(e.target.value);
+    }, style: entrada }) : /* @__PURE__ */ React.createElement("input", { type: "text", value: v, maxLength: 60, onChange: (e) => setV(e.target.value), onBlur: fin, style: entrada }));
+  }
+  function ChipsEstado({ valor, onElegir, claro }) {
+    return /* @__PURE__ */ React.createElement("div", { role: "group", "aria-label": "Estado", style: { display: "flex", gap: 8, flexWrap: "wrap" } }, ESTADOS_REGISTRO.map((e) => {
+      const on = valor === e;
+      const base = claro ? { background: on ? "#111" : "#fff", color: on ? "#fff" : "#111", border: on ? "1px solid #111" : "1px dashed #888" } : { background: on ? "#fff" : "transparent", color: on ? "#0b0b0c" : TXT, border: on ? "1px solid #fff" : "1px dashed #555" };
+      return /* @__PURE__ */ React.createElement("button", { key: e, onClick: () => onElegir(e), "aria-pressed": on, style: { minHeight: 44, padding: "0 12px", borderRadius: 8, fontFamily: FUENTE3, fontSize: 13, fontWeight: 500, cursor: "pointer", ...base } }, ESTADOS_INFO[e].emoji, " ", ESTADOS_INFO[e].etiqueta);
+    }));
+  }
+  var Seccion = ({ children }) => /* @__PURE__ */ React.createElement("h3", { style: { margin: "6px 0 0", fontFamily: CAVEAT, fontWeight: 600, fontSize: 24, lineHeight: 1, color: "#fff" } }, children);
+  function Readme({ readme, cargando: cargando2, repoUrl }) {
+    if (cargando2) return /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 13, color: DIM } }, "Cargando README\u2026");
+    if (!readme || !readme.bloques || !readme.bloques.length) return /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 13, color: DIM } }, "No hay un README legible para este proyecto.");
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, readme.bloques.map(([k, x], i) => k === "h" ? /* @__PURE__ */ React.createElement("h4", { key: i, style: { margin: "6px 0 0", fontFamily: CAVEAT, fontWeight: 600, fontSize: 20, lineHeight: 1.1, color: "#fff" } }, x) : k === "li" ? /* @__PURE__ */ React.createElement("p", { key: i, style: { margin: 0, paddingLeft: 14, textIndent: -14, fontSize: 13, lineHeight: 1.45, color: "#c4c4ca", overflowWrap: "anywhere" } }, "\u2022 ", x) : /* @__PURE__ */ React.createElement("p", { key: i, style: { margin: 0, fontSize: 13, lineHeight: 1.5, color: "#c4c4ca", overflowWrap: "anywhere" } }, x)), readme.recortado && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 12, color: DIM } }, "Texto resumido: el README completo est\xE1 en el repositorio", repoUrl ? /* @__PURE__ */ React.createElement(React.Fragment, null, " (", /* @__PURE__ */ React.createElement("a", { href: repoUrl, target: "_blank", rel: "noopener noreferrer", style: { color: ACC } }, "abrir"), ")") : "", "."));
+  }
+  function Ficha({ j, ahora, igdb, imagen, guardado, enRegistro, readme, cargandoReadme, onVolver, onGuardar, onDescartar, onQuiero, onEditar, onQuitar }) {
     const t = TIPO2[j.tipo];
-    const filas = filasFicha(j, ahora);
-    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, fontFamily: FUENTE3, color: "#eaeaea" } }, /* @__PURE__ */ React.createElement("button", { onClick: onVolver, style: { ...reset, alignSelf: "flex-start", minHeight: 44, padding: "0 8px 0 0", fontSize: 14 } }, "\u2190 Volver"), /* @__PURE__ */ React.createElement("span", { style: { alignSelf: "flex-start", fontSize: 11, letterSpacing: "0.12em", color: ROJO_TEXTO, border: `1px solid ${ROJO_TEXTO}`, borderRadius: 4, padding: "2px 6px" } }, t.etiqueta), /* @__PURE__ */ React.createElement("h2", { style: { fontFamily: CAVEAT, fontWeight: 600, fontSize: 34, lineHeight: 1, color: "#fff", margin: 0, overflowWrap: "anywhere" } }, j.titulo), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 14, color: "#c4c4ca" } }, detalleDe(j, ahora)), /* @__PURE__ */ React.createElement("dl", { style: { margin: 0, display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 14px", fontSize: 13 } }, filas.map(([k, v]) => [/* @__PURE__ */ React.createElement("dt", { key: "k" + k, style: { color: "#9a9aa0" } }, k), /* @__PURE__ */ React.createElement("dd", { key: "v" + k, style: { margin: 0, color: "#eaeaea", overflowWrap: "anywhere" } }, /* @__PURE__ */ React.createElement(Valor, { v }))])), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: onGuardar, "aria-pressed": guardado, style: botonPri }, guardado ? "\u2605 Guardado" : "\u2606 Me interesa"), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa")), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#9a9aa0" } }, "Datos: ", j.tipo === "d" ? "awesome-decomp-games" : "IGDB"));
+    const filas = filasFicha(j, ahora, igdb);
+    const resumenTexto = j.tipo === "e" ? j.resumen : j.tipo === "r" ? igdb && igdb.resumen : null;
+    const sub2 = j.tipo === "r" ? null : detalleDe(j, ahora);
+    const url = imagen ? portadaUrl(imagen, "t_cover_big") : null;
+    return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, fontFamily: FUENTE3, color: TXT } }, /* @__PURE__ */ React.createElement("button", { onClick: onVolver, style: { ...reset, alignSelf: "flex-start", minHeight: 44, padding: "0 8px 0 0", fontSize: 14 } }, "\u2190 Volver"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, alignItems: "flex-start" } }, url && /* @__PURE__ */ React.createElement("img", { src: url, alt: "", style: { flex: "none", width: 96, height: 128, objectFit: "cover", borderRadius: 8, border: "1px solid #2c2c31", background: "#1b1b1f" }, onError: (e) => {
+      e.currentTarget.style.display = "none";
+    } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { alignSelf: "flex-start", fontSize: 11, letterSpacing: "0.12em", color: ACC, border: `1px solid ${ACC}`, borderRadius: 4, padding: "2px 6px" } }, t.etiqueta), /* @__PURE__ */ React.createElement("h2", { style: { fontFamily: CAVEAT, fontWeight: 600, fontSize: 34, lineHeight: 1, color: "#fff", margin: 0, overflowWrap: "anywhere" } }, j.titulo), sub2 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 13, color: "#c4c4ca" } }, sub2))), j.tipo === "r" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, /* @__PURE__ */ React.createElement(ChipsEstado, { valor: j.estado, onElegir: (e) => onEditar({ estado: e }) }), j.estado === "terminado" && /* @__PURE__ */ React.createElement(Campo, { etiqueta: "Terminado el", tipo: "date", valor: j.fecha, onGuardar: (v) => onEditar({ fecha: v }) }), /* @__PURE__ */ React.createElement(Campo, { etiqueta: "Plataforma", valor: j.plataforma, onGuardar: (v) => onEditar({ plataforma: v }) }), /* @__PURE__ */ React.createElement(Campo, { etiqueta: "Nota", multilinea: true, valor: j.nota, onGuardar: (v) => onEditar({ nota: v }) })), resumenTexto && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Seccion, null, "Resumen"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 13, lineHeight: 1.5, color: "#c4c4ca" } }, resumenTexto)), j.tipo === "d" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Seccion, null, "Sobre el proyecto"), /* @__PURE__ */ React.createElement(Readme, { readme, cargando: cargandoReadme, repoUrl: j.url })), filas.length > 0 && /* @__PURE__ */ React.createElement("dl", { style: { margin: 0, display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 14px", fontSize: 13 } }, filas.map(([k, v]) => [/* @__PURE__ */ React.createElement("dt", { key: "k" + k, style: { color: DIM } }, k), /* @__PURE__ */ React.createElement("dd", { key: "v" + k, style: { margin: 0, color: TXT, overflowWrap: "anywhere" } }, /* @__PURE__ */ React.createElement(Valor, { v }))])), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, j.tipo === "r" ? /* @__PURE__ */ React.createElement("button", { onClick: onQuitar, style: botonSec }, "Quitar del registro") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { onClick: onGuardar, "aria-pressed": guardado, style: botonPri }, guardado ? "\u2605 Guardado" : "\u2606 Me interesa"), j.tipo === "e" && (enRegistro ? /* @__PURE__ */ React.createElement("span", { style: { alignSelf: "center", fontSize: 13, color: ACC } }, "\u2713 En tu registro: ", ESTADOS_INFO[enRegistro.estado].etiqueta) : /* @__PURE__ */ React.createElement("button", { onClick: onQuiero, style: botonSec }, "\u{1F3AF} Quiero jugar")), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa"))), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: DIM } }, "Datos: ", j.tipo === "d" ? "awesome-decomp-games y el README del repositorio" : j.tipo === "e" ? "IGDB" : "tu registro" + (igdb ? " e IGDB" : "")));
+  }
+  function FormAgregar({ estadoInicial, existentes, onCancelar, onAgregar }) {
+    const [titulo, setTitulo] = useState37("");
+    const [estado, setEstado] = useState37(estadoInicial);
+    const [plataforma, setPlataforma] = useState37("");
+    const [fecha2, setFecha] = useState37("");
+    const id = idRegistro(titulo.trim());
+    const previo = id ? existentes[id] : null;
+    const campo9 = { width: "100%", boxSizing: "border-box", minHeight: 44, padding: "10px 12px", borderRadius: 8, border: "1px dashed #111", background: "#fff", color: "#111", fontFamily: FUENTE3, fontSize: 15 };
+    const etiq = { display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "#555" };
+    return /* @__PURE__ */ React.createElement(Ventana, { onClose: onCancelar, ancho: 420 }, /* @__PURE__ */ React.createElement(VentanaCabecera, { titulo: "Agregar juego", onClose: onCancelar }), /* @__PURE__ */ React.createElement("div", { style: { padding: 16, display: "flex", flexDirection: "column", gap: 12, overflowY: "auto" } }, /* @__PURE__ */ React.createElement("label", { style: etiq }, "T\xEDtulo", /* @__PURE__ */ React.createElement("input", { type: "text", value: titulo, maxLength: 120, onChange: (e) => setTitulo(e.target.value), style: campo9 })), /* @__PURE__ */ React.createElement(ChipsEstado, { valor: estado, onElegir: setEstado, claro: true }), /* @__PURE__ */ React.createElement("label", { style: etiq }, "Plataforma (opcional)", /* @__PURE__ */ React.createElement("input", { type: "text", value: plataforma, maxLength: 60, onChange: (e) => setPlataforma(e.target.value), style: campo9 })), estado === "terminado" && /* @__PURE__ */ React.createElement("label", { style: etiq }, "Terminado el (opcional)", /* @__PURE__ */ React.createElement("input", { type: "date", value: fecha2, onChange: (e) => setFecha(e.target.value), style: campo9 })), previo && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 12, color: "#555" } }, "Ya est\xE1 en tu registro como \xAB", ESTADOS_INFO[previo.estado].etiqueta, "\xBB: se actualizar\xE1 su estado."), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 12, color: "#777" } }, "La portada y el resumen se agregan solos en la pr\xF3xima actualizaci\xF3n diaria, despu\xE9s de subir a Angst-data con \u{1F4E4}."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, justifyContent: "flex-end" } }, /* @__PURE__ */ React.createElement("button", { onClick: onCancelar, style: { minHeight: 44, padding: "0 16px", borderRadius: 8, background: "#fff", color: "#111", border: "1px dashed #888", fontFamily: FUENTE3, fontSize: 13, cursor: "pointer" } }, "Cancelar"), /* @__PURE__ */ React.createElement("button", { onClick: () => titulo.trim() && onAgregar({ titulo: titulo.trim(), estado, plataforma: plataforma.trim() || void 0, fecha: estado === "terminado" && fecha2 ? fecha2 : void 0 }), disabled: !titulo.trim(), style: { minHeight: 44, padding: "0 16px", borderRadius: 8, background: "#111", color: "#fff", border: 0, fontFamily: FUENTE3, fontSize: 13, fontWeight: 500, cursor: titulo.trim() ? "pointer" : "default", opacity: titulo.trim() ? 1 : 0.4 } }, "Agregar"))));
   }
   function GameEnhancedPage() {
     const estado = useEstado();
+    const registro = useRegistro();
     const [datos, setDatos] = useState37(null);
+    const [fichas, setFichas] = useState37({});
+    const [readmes, setReadmes] = useState37(null);
+    const [cargandoReadme, setCargandoReadme] = useState37(false);
     const [error, setError] = useState37(null);
     const [cat, setCat] = useState37(0);
     const [focos, setFocos] = useState37({});
     const [abierto, setAbierto] = useState37(null);
     const [fichaId, setFichaId] = useState37(null);
+    const [form, setForm] = useState37(null);
     const [aviso, setAviso] = useState37(null);
     const [cabe, setCabe] = useState37(6);
     const bodyRef = useRef22(null);
@@ -16355,15 +16614,18 @@ ${url}`);
     const ultimoGesto = useRef22(0);
     const ultimaRueda = useRef22(0);
     const tAviso = useRef22(0);
+    const pidioReadmes = useRef22(false);
     const vivo = useRef22({});
     const JUEGOS = datos ? datos.juegos : [];
     const ahora = Date.now();
-    const lista = itemsDe(JUEGOS, CATEGORIAS[cat][0], estado.ocultos);
+    const clave = CATEGORIAS[cat][0];
+    const enRegistroCat = esCategoriaRegistro(clave);
+    const lista = itemsDe(JUEGOS, clave, estado.ocultos, registro, ahora);
     const foco = Math.min(focos[cat] || 0, Math.max(0, lista.length - 1));
     const enfocado = lista[foco] || null;
     const expandida = abierto !== null && enfocado !== null && enfocado.id === abierto;
-    const ficha = fichaId !== null ? JUEGOS.find((j) => j.id === fichaId) || null : null;
-    vivo.current = { cat, foco, largo: lista.length, expandida, ficha: !!ficha };
+    const fichaJ = fichaId === null ? null : fichaId.startsWith("r-") ? registro.juegos[fichaId] ? itemsDe([], registro.juegos[fichaId].estado, {}, registro, ahora).find((j) => j.id === fichaId) || null : null : JUEGOS.find((j) => j.id === fichaId) || null;
+    vivo.current = { cat, foco, largo: lista.length, expandida, ficha: !!fichaJ, form: form !== null };
     const mover2 = useCallback7((dc, df) => {
       const v = vivo.current;
       setAbierto(null);
@@ -16373,7 +16635,7 @@ ${url}`);
     useEffect24(() => {
       const el = listaRef.current;
       if (!el) return void 0;
-      const medir = () => setCabe(filasQueCaben(el.clientHeight));
+      const medir = () => setCabe(filasXmb(el.clientHeight));
       medir();
       if (typeof ResizeObserver === "undefined") {
         window.addEventListener("resize", medir);
@@ -16382,7 +16644,7 @@ ${url}`);
       const ro = new ResizeObserver(medir);
       ro.observe(el);
       return () => ro.disconnect();
-    }, [!!ficha]);
+    }, [!!fichaJ]);
     useEffect24(() => {
       const el = listaRef.current;
       if (!el) return void 0;
@@ -16396,12 +16658,13 @@ ${url}`);
       };
       el.addEventListener("wheel", h, { passive: false });
       return () => el.removeEventListener("wheel", h);
-    }, [!!ficha, mover2]);
+    }, [!!fichaJ, mover2]);
     useEffect24(() => {
       const h = (e) => {
         const t = e.target;
         if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
         const v = vivo.current;
+        if (v.form) return;
         if (v.ficha) {
           if (e.key === "Escape") setFichaId(null);
           return;
@@ -16432,9 +16695,22 @@ ${url}`);
       cargar();
     }, []);
     useEffect24(() => {
+      fetchGameEnhancedFichas().then(setFichas).catch(() => {
+      });
+    }, []);
+    useEffect24(() => {
+      if (datos && registro.sembrado == null) sembrar(datos.semilla);
+    }, [datos, registro.sembrado]);
+    useEffect24(() => {
+      if (!fichaJ || fichaJ.tipo !== "d" || pidioReadmes.current) return;
+      pidioReadmes.current = true;
+      setCargandoReadme(true);
+      fetchGameEnhancedReadmes().then(setReadmes).catch(() => setReadmes({})).finally(() => setCargandoReadme(false));
+    }, [fichaJ && fichaJ.tipo]);
+    useEffect24(() => {
       if (listaRef.current) listaRef.current.scrollTop = 0;
     }, [expandida, cat]);
-    const expandido = expandida || !!ficha;
+    const expandido = expandida || !!fichaJ;
     useEffect24(() => {
       const b = bodyRef.current;
       if (b && !expandido && b.scrollHeight > b.clientHeight + 1) console.warn(`game enhanced desborda ${b.scrollHeight - b.clientHeight} px colapsado`);
@@ -16449,7 +16725,7 @@ ${url}`);
     const alSoltar = (e) => {
       const g = gesto.current;
       gesto.current = null;
-      if (!g || ficha) return;
+      if (!g || fichaJ) return;
       const dx = e.clientX - g[0], dy = e.clientY - g[1];
       if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(dy)) {
         ultimoGesto.current = Date.now();
@@ -16466,55 +16742,103 @@ ${url}`);
         setAbierto(null);
       }
     }
+    function avisar(texto2, deshacer2) {
+      clearTimeout(tAviso.current);
+      setAviso({ texto: texto2, deshacer: deshacer2 });
+      tAviso.current = setTimeout(() => setAviso(null), AVISO_MS);
+    }
     function descartar(j) {
       const previo = ocultar(j.id);
       setAbierto(null);
       setFichaId(null);
-      clearTimeout(tAviso.current);
-      setAviso({ id: j.id, titulo: j.titulo, previo });
-      tAviso.current = setTimeout(() => setAviso(null), AVISO_MS);
+      avisar(`Oculto: ${j.titulo}`, () => deshacerOcultar(j.id, previo));
+    }
+    function quitar(j) {
+      const prev = quitarJuego(j.id);
+      setAbierto(null);
+      setFichaId(null);
+      if (prev) avisar(`Quitado: ${j.titulo}`, () => restaurarJuego(prev));
+    }
+    function quiero(j) {
+      const res = agregarJuego({ titulo: j.titulo, estado: "quiero" });
+      if (res) avisar(`En Quiero jugar: ${j.titulo}`, () => res.previo ? restaurarJuego(res.previo) : quitarJuego(res.id));
+    }
+    function agregar(datosForm) {
+      const res = agregarJuego(datosForm);
+      setForm(null);
+      if (!res) return;
+      const i = CATEGORIAS.findIndex((c) => c[0] === datosForm.estado);
+      setCat(i);
+      setFocos((f2) => ({ ...f2, [i]: 0 }));
+      setAbierto(null);
+      avisar(`Agregado a ${ESTADOS_INFO[datosForm.estado].etiqueta}: ${datosForm.titulo}`, () => res.previo ? restaurarJuego(res.previo) : quitarJuego(res.id));
     }
     function deshacer() {
       if (!aviso) return;
-      deshacerOcultar(aviso.id, aviso.previo);
+      aviso.deshacer();
       clearTimeout(tAviso.current);
       setAviso(null);
     }
-    const r = resumen2(JUEGOS, estado.ocultos, estado.guardados);
+    const r = resumen2(JUEGOS, estado.ocultos, estado.guardados, registro);
     const edad = edadDatos(datos && datos.generatedAt, ahora);
     const ancho = { width: "100%", maxWidth: 480, margin: "0 auto", boxSizing: "border-box", position: "relative", padding: "10px 16px 8px" };
+    const guardadoDe = (j) => !!estado.guardados[j.id];
     let cuerpo2;
-    if (ficha) {
+    if (fichaJ) {
+      const igdb = fichaJ.tipo === "r" ? fichas[fichaJ.id] || null : null;
       cuerpo2 = /* @__PURE__ */ React.createElement(
         Ficha,
         {
-          j: ficha,
+          j: fichaJ,
           ahora,
-          guardado: !!estado.guardados[ficha.id],
+          igdb,
+          imagen: portadaDe(fichaJ, fichas),
+          guardado: guardadoDe(fichaJ),
+          enRegistro: fichaJ.tipo === "e" ? registro.juegos[idRegistro(fichaJ.titulo)] || null : null,
+          readme: readmes ? readmes[fichaJ.id] : null,
+          cargandoReadme,
           onVolver: () => setFichaId(null),
-          onGuardar: () => alternarGuardado(ficha.id),
-          onDescartar: () => descartar(ficha)
+          onGuardar: () => alternarGuardado(fichaJ.id),
+          onDescartar: () => descartar(fichaJ),
+          onQuiero: () => quiero(fichaJ),
+          onEditar: (cambios) => editarJuego(fichaJ.id, cambios),
+          onQuitar: () => quitar(fichaJ)
         }
       );
     } else {
       const v = ventana(lista.length, foco, cabe);
-      cuerpo2 = /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { "aria-live": "polite", style: { flex: "none", height: 30, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, fontFamily: FUENTE3, fontSize: 12, color: "#9a9aa0" } }, aviso ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, "Oculto: ", aviso.titulo), /* @__PURE__ */ React.createElement("button", { onClick: deshacer, style: { ...reset, flex: "none", minHeight: 44, margin: "-8px 0", padding: "0 8px", color: ROJO_TEXTO, textDecoration: "underline" } }, "Deshacer")) : /* @__PURE__ */ React.createElement("span", null, r.semana, " esta semana \xB7 ", r.deEstudios, " de tus estudios \xB7 \u2605 ", r.guardados), datos && /* @__PURE__ */ React.createElement("span", { style: { ...sello, ...edad.vieja ? { color: ROJO_TEXTO, borderColor: ROJO_TEXTO } : {} } }, "DATOS ", edad.texto.toUpperCase())), /* @__PURE__ */ React.createElement("div", { style: { flex: "none", height: 84, marginTop: 6, display: "flex", alignItems: "flex-start", gap: 8 } }, CATEGORIAS.map(([clave, emoji, nombre], i) => i === cat ? /* @__PURE__ */ React.createElement("button", { key: clave, onClick: clic(() => {
-      }), "aria-label": `${nombre}, categor\xEDa seleccionada`, style: { ...reset, width: 100, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6, color: "#fff" } }, /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true", style: { width: 52, height: 52, boxSizing: "border-box", borderRadius: "50%", border: "1.5px solid #eaeaea", background: "rgba(255,255,255,.07)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 } }, emoji), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: CAVEAT, fontWeight: 600, fontSize: 22, lineHeight: 1 } }, nombre)) : /* @__PURE__ */ React.createElement("button", { key: clave, onClick: clic(() => {
+      const fila = (j, idx, props) => /* @__PURE__ */ React.createElement(FilaX, { key: j.id, j, d: idx - foco, guardado: guardadoDe(j), fichas, ahora, onClick: clic(() => tocarFila(j, idx)), ...props });
+      cuerpo2 = /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { "aria-live": "polite", style: { flex: "none", height: 30, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, fontFamily: FUENTE3, fontSize: 12, color: DIM } }, aviso ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, aviso.texto), /* @__PURE__ */ React.createElement("button", { onClick: deshacer, style: { ...reset, flex: "none", minHeight: 44, margin: "-8px 0", padding: "0 8px", color: ACC, textDecoration: "underline" } }, "Deshacer")) : /* @__PURE__ */ React.createElement("span", { style: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, r.semana, " esta semana \xB7 \u{1F3C1} ", r.terminados, " \xB7 \u{1F3AF} ", r.quiero, " \xB7 \u23F3 ", r.pendientes, " \xB7 \u2605 ", r.guardados), datos && /* @__PURE__ */ React.createElement("span", { style: { ...sello, ...edad.vieja ? { color: WARN, borderColor: WARN } : {} } }, "DATOS ", edad.texto.toUpperCase())), /* @__PURE__ */ React.createElement(Eje, { cat, onElegir: (i) => {
         setCat(i);
         setAbierto(null);
-      }), "aria-label": nombre, style: { ...reset, width: 60, height: 52, fontSize: 24, opacity: 0.6 } }, emoji))), /* @__PURE__ */ React.createElement("div", { ref: listaRef, style: { flex: 1, minHeight: 0, marginTop: 6, display: "flex", flexDirection: "column", gap: 5, justifyContent: expandida ? "flex-start" : "space-between", overflowX: "hidden", overflowY: expandida ? "auto" : "hidden", touchAction: expandida ? "pan-y" : "none" } }, !datos && !error && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 12, fontFamily: FUENTE3, fontSize: 13, color: "#9a9aa0" } }, "Cargando\u2026"), error && /* @__PURE__ */ React.createElement("div", { style: { padding: 12, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", fontFamily: FUENTE3, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, "No se pudieron cargar los datos de Game enhanced (", error, ")."), /* @__PURE__ */ React.createElement("button", { onClick: cargar, style: botonSec }, "Reintentar")), datos && lista.length === 0 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 12, fontFamily: FUENTE3, fontSize: 13, color: "#9a9aa0" } }, CATEGORIAS[cat][0] === "todo" ? "Sin novedades recientes. Mira Decomps o Estudios." : "No quedan \xEDtems en esta categor\xEDa."), lista.length > 0 && expandida && lista.slice(foco).map((j, i) => i === 0 ? /* @__PURE__ */ React.createElement(Tarjeta2, { key: j.id, j, ahora, guardado: !!estado.guardados[j.id], onCerrar: clic(() => setAbierto(null)), onFicha: clic(() => setFichaId(j.id)), onDescartar: clic(() => descartar(j)) }) : /* @__PURE__ */ React.createElement(Fila, { key: j.id, j, guardado: !!estado.guardados[j.id], tono: TONOS[Math.min(i - 1, TONOS.length - 1)], onClick: clic(() => tocarFila(j, foco + i)) })), lista.length > 0 && !expandida && lista.slice(v.ini, v.fin).map((j, i) => {
+      }, mostrarMas: enRegistroCat, onMas: () => setForm(clave) }), /* @__PURE__ */ React.createElement("div", { ref: listaRef, style: { flex: 1, minHeight: 0, marginTop: 2, display: "flex", flexDirection: "column", gap: XMB.sep, justifyContent: expandida ? "flex-start" : "space-between", overflowX: "hidden", overflowY: expandida ? "auto" : "hidden", touchAction: expandida ? "pan-y" : "none" } }, !enRegistroCat && !datos && !error && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 12, fontFamily: FUENTE3, fontSize: 13, color: DIM } }, "Cargando\u2026"), !enRegistroCat && error && /* @__PURE__ */ React.createElement("div", { style: { padding: 12, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", fontFamily: FUENTE3, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, "No se pudieron cargar los datos de Game enhanced (", error, ")."), /* @__PURE__ */ React.createElement("button", { onClick: cargar, style: botonSec }, "Reintentar")), lista.length === 0 && (enRegistroCat || datos) && /* @__PURE__ */ React.createElement("div", { style: { padding: 12, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", fontFamily: FUENTE3, fontSize: 13, color: DIM } }, /* @__PURE__ */ React.createElement("span", null, enRegistroCat ? `A\xFAn no hay juegos en \xAB${CATEGORIAS[cat][2]}\xBB.` : clave === "todo" ? "Sin novedades recientes. Mira Decomps o Estudios." : "No quedan \xEDtems en esta categor\xEDa."), enRegistroCat && /* @__PURE__ */ React.createElement("button", { onClick: () => setForm(clave), style: botonSec }, "\uFF0B Agregar juego")), lista.length > 0 && expandida && lista.slice(foco).map((j, i) => i === 0 ? /* @__PURE__ */ React.createElement(
+        Tarjeta2,
+        {
+          key: j.id,
+          j,
+          ahora,
+          guardado: guardadoDe(j),
+          fichas,
+          enRegistro: j.tipo === "e" ? registro.juegos[idRegistro(j.titulo)] || null : null,
+          onCerrar: clic(() => setAbierto(null)),
+          onFicha: clic(() => setFichaId(j.id)),
+          onDescartar: clic(() => descartar(j)),
+          onQuitar: clic(() => quitar(j)),
+          onQuiero: clic(() => quiero(j))
+        }
+      ) : fila(j, foco + i)), lista.length > 0 && !expandida && lista.slice(v.ini, v.fin).map((j, i) => {
         const idx = v.ini + i;
-        return /* @__PURE__ */ React.createElement(Fila, { key: j.id, j, foco: idx === foco, guardado: !!estado.guardados[j.id], tono: TONOS[Math.min(Math.max(0, idx - foco - 1), TONOS.length - 1)], onClick: clic(() => tocarFila(j, idx)) });
+        return fila(j, idx, { foco: idx === foco });
       })));
     }
-    return /* @__PURE__ */ React.createElement("div", { className: "gameenh", style: { background: FONDO } }, /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { className: "gameenh", style: { background: "#0b0b0c", position: "relative", overflow: "hidden" } }, /* @__PURE__ */ React.createElement(Ondas, null), /* @__PURE__ */ React.createElement(
       "div",
       {
         ref: bodyRef,
         className: "gameenh-body",
         "data-expandido": expandido ? "true" : "false",
-        "data-ficha": ficha ? "true" : "false",
-        style: ancho,
+        "data-ficha": fichaJ ? "true" : "false",
+        style: { ...ancho, zIndex: 1 },
         onPointerDown: alPresionar,
         onPointerUp: alSoltar,
         onPointerCancel: () => {
@@ -16522,7 +16846,7 @@ ${url}`);
         }
       },
       cuerpo2
-    ));
+    ), form !== null && /* @__PURE__ */ React.createElement(FormAgregar, { estadoInicial: form, existentes: registro.juegos, onCancelar: () => setForm(null), onAgregar: agregar }));
   }
 
   // modules/tcgcrypto/logica.js
@@ -16592,8 +16916,8 @@ ${url}`);
     const arr = [...set];
     return arr.every((v) => /^\d+$/.test(v)) ? arr.sort((a, b) => Number(a) - Number(b)) : arr.sort((a, b) => a.localeCompare(b));
   }
-  function filtrarCartas(cartas, marcas, { texto = "", modo = "todas", filtros = null } = {}, sets = []) {
-    const q = sinTildes3(texto).trim();
+  function filtrarCartas(cartas, marcas, { texto: texto2 = "", modo = "todas", filtros = null } = {}, sets = []) {
+    const q = sinTildes3(texto2).trim();
     return cartas.filter((c) => {
       const tiene = tieneCarta(marcas ? marcas[c.k] : null);
       if (modo === "faltan" && tiene) return false;
@@ -16674,9 +16998,9 @@ ${url}`);
   var { useState: useState38, useEffect: useEffect25, useRef: useRef23, useMemo: useMemo13 } = React;
   var FUENTE4 = "'DM Sans',sans-serif";
   var CAVEAT2 = "'Caveat',cursive";
-  var ROJO2 = "#e5383b";
+  var ROJO = "#e5383b";
   var VERDE = "#4caf50";
-  var FONDO2 = "radial-gradient(120% 45% at 15% 20%,rgba(229,56,59,.18),rgba(229,56,59,0) 62%),radial-gradient(110% 40% at 95% 80%,rgba(255,255,255,.06),rgba(255,255,255,0) 60%),#0b0b0c";
+  var FONDO = "radial-gradient(120% 45% at 15% 20%,rgba(229,56,59,.18),rgba(229,56,59,0) 62%),radial-gradient(110% 40% at 95% 80%,rgba(255,255,255,.06),rgba(255,255,255,0) 60%),#0b0b0c";
   var TCGS = [{ id: "yugioh", emoji: "\u{1F0CF}", nombre: "Yu-Gi-Oh!" }, { id: "digimon", emoji: "\u{1F409}", nombre: "Digimon" }];
   var PAGINA = 40;
   var reset2 = { background: "none", border: 0, padding: 0, color: "inherit", fontFamily: "inherit", fontSize: "inherit", fontWeight: "inherit", lineHeight: "inherit", cursor: "pointer" };
@@ -16688,7 +17012,7 @@ ${url}`);
     const t = tramoBarra(pct2);
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, height: 6, borderRadius: 3, background: "#26262b", overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { width: `${Math.min(100, pct2)}%`, height: "100%", background: t.color } })), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", minWidth: 34, textAlign: "right", fontFamily: FUENTE4, fontSize: 12, color: t.color } }, t.texto || `${pct2}%`));
   }
-  function Miniatura({ tpl, pid, ancho, alto }) {
+  function Miniatura2({ tpl, pid, ancho, alto }) {
     const [ok, setOk] = useState38(true);
     useEffect25(() => {
       setOk(true);
@@ -16727,7 +17051,7 @@ ${url}`);
       desde = !el && datos.agrupar !== "producto";
       etiqueta = el ? etiquetaVersion(el, datos.sets) : `${c.v.length} ${c.v.length === 1 ? "versi\xF3n" : "versiones"}`;
     }
-    return /* @__PURE__ */ React.createElement("div", { style: { flex: "none", display: "flex", alignItems: "center", gap: 6, width: "100%", boxSizing: "border-box", padding: "4px 10px 4px 4px", borderRadius: 8, background: "#111114", border: `2px solid ${tiene ? VERDE : ROJO2}`, color: "#fff", fontFamily: FUENTE4 } }, /* @__PURE__ */ React.createElement("button", { "aria-label": `ver imagen de ${c.n}`, onClick: onZoom, style: { ...reset2, flex: "none", width: 44, minHeight: 56, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Miniatura, { tpl: datos.imgTpl, pid: ref && ref[0], ancho: 36, alto: 50 })), /* @__PURE__ */ React.createElement("button", { onClick, style: { ...reset2, flex: 1, minWidth: 0, minHeight: 56, display: "flex", alignItems: "center", gap: 10, textAlign: "left", color: "#fff", fontFamily: FUENTE4 } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, c.n), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#9a9aa0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, etiqueta)), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 13, color: precio == null ? "#6a6a70" : "#eaeaea" } }, desde ? `desde ${usd(precio)}` : usd(precio))));
+    return /* @__PURE__ */ React.createElement("div", { style: { flex: "none", display: "flex", alignItems: "center", gap: 6, width: "100%", boxSizing: "border-box", padding: "4px 10px 4px 4px", borderRadius: 8, background: "#111114", border: `2px solid ${tiene ? VERDE : ROJO}`, color: "#fff", fontFamily: FUENTE4 } }, /* @__PURE__ */ React.createElement("button", { "aria-label": `ver imagen de ${c.n}`, onClick: onZoom, style: { ...reset2, flex: "none", width: 44, minHeight: 56, display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Miniatura2, { tpl: datos.imgTpl, pid: ref && ref[0], ancho: 36, alto: 50 })), /* @__PURE__ */ React.createElement("button", { onClick, style: { ...reset2, flex: 1, minWidth: 0, minHeight: 56, display: "flex", alignItems: "center", gap: 10, textAlign: "left", color: "#fff", fontFamily: FUENTE4 } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, c.n), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#9a9aa0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, etiqueta)), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 13, color: precio == null ? "#6a6a70" : "#eaeaea" } }, desde ? `desde ${usd(precio)}` : usd(precio))));
   }
   function Zoom({ zoom, datos, onIdx, onCerrar }) {
     const { items, idx } = zoom;
@@ -16815,7 +17139,7 @@ ${url}`);
       {
         "aria-label": "ver imagen a pantalla completa",
         onClick: () => ref && abrirZoom(ref),
-        style: { ...reset2, flex: "none", width: 120, borderRadius: 8, overflow: "hidden", background: "#1b1b1f", border: `2px solid ${tiene ? VERDE : ROJO2}` }
+        style: { ...reset2, flex: "none", width: 120, borderRadius: 8, overflow: "hidden", background: "#1b1b1f", border: `2px solid ${tiene ? VERDE : ROJO}` }
       },
       ref && /* @__PURE__ */ React.createElement("img", { src: urlImagen(datos.imgTpl, ref[0], 400), alt: c.n, style: { width: "100%", display: "block" } })
     ), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: CAVEAT2, fontWeight: 600, fontSize: 26, lineHeight: 1.05 } }, c.n), datosCarta && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#c4c4ca" } }, datosCarta), c.m && c.m.ar && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#9a9aa0" } }, "Arquetipo: ", c.m.ar), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#9a9aa0" } }, el ? etiquetaVersion(el, datos.sets) : "sin versi\xF3n elegida"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15 } }, usd(precioReferencia(c, marca)), el ? "" : " (la m\xE1s barata)"))), /* @__PURE__ */ React.createElement("button", { onClick: () => poner({ c: tiene ? 0 : 1 }), style: tiene ? botonSec2 : botonPri2 }, tiene ? "\u2713 La tengo (quitar)" : "Marcar como conseguida"), tiene && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("span", { style: { flex: 1, fontSize: 13, color: "#c4c4ca" } }, "Cantidad"), /* @__PURE__ */ React.createElement("button", { "aria-label": "menos", onClick: () => poner({ q: Math.max(1, q - 1) }), style: { ...botonSec2, minWidth: 44, padding: 0 } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { minWidth: 24, textAlign: "center", fontSize: 15 } }, q), /* @__PURE__ */ React.createElement("button", { "aria-label": "m\xE1s", onClick: () => poner({ q: q + 1 }), style: { ...botonSec2, minWidth: 44, padding: 0 } }, "+")), /* @__PURE__ */ React.createElement(
@@ -16839,7 +17163,7 @@ ${url}`);
           onClick: () => poner({ e: elegida ? "" : claveVersion(v) }),
           style: { ...reset2, flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10, minHeight: 48, padding: "6px 0 6px 10px", textAlign: "left", color: "#fff" }
         },
-        /* @__PURE__ */ React.createElement(Miniatura, { tpl: datos.imgTpl, pid: v[0], ancho: 28, alto: 39 }),
+        /* @__PURE__ */ React.createElement(Miniatura2, { tpl: datos.imgTpl, pid: v[0], ancho: 28, alto: 39 }),
         /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 1 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13 } }, [v[3], v[4]].filter(Boolean).join(" \xB7 ") || "\u2014"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#9a9aa0" } }, v[1] || "sin edici\xF3n", " \xB7 bajo ", usd(v[6]), " \xB7 alto ", usd(v[7]))),
         /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 13 } }, elegida ? "\u2605 " : "", usd(precioVersion(v)))
       ), /* @__PURE__ */ React.createElement("button", { "aria-label": "ver esta versi\xF3n a pantalla completa", onClick: () => abrirZoom(v), style: { ...reset2, flex: "none", width: 44, minHeight: 48, fontSize: 16 } }, "\u{1F50D}"));
@@ -16865,7 +17189,7 @@ ${url}`);
     const [error, setError] = useState38(null);
     const [abierta, setAbierta] = useState38(null);
     const [fichaSel, setFichaSel] = useState38(null);
-    const [texto, setTexto] = useState38("");
+    const [texto2, setTexto] = useState38("");
     const [modo, setModo] = useState38("todas");
     const [filtros, setFiltros] = useState38({});
     const [panelFiltros, setPanelFiltros] = useState38(false);
@@ -16905,7 +17229,7 @@ ${url}`);
     }, [abierta]);
     useEffect25(() => {
       setLimite(PAGINA);
-    }, [abierta, texto, modo, filtros, vista]);
+    }, [abierta, texto2, modo, filtros, vista]);
     const expandido = abierta !== null || fichaSel !== null;
     useEffect25(() => {
       const b = bodyRef.current;
@@ -16957,8 +17281,8 @@ ${url}`);
         const esta = abierta === col2.id;
         if (abierta !== null && !esta) return null;
         const marcas = marcasDe(col2.id);
-        const lista = esta ? filtrarCartas(cs, marcas, { texto, modo, filtros }, datos.sets) : [];
-        const hayBusqueda = !!(texto.trim() || nFiltros);
+        const lista = esta ? filtrarCartas(cs, marcas, { texto: texto2, modo, filtros }, datos.sets) : [];
+        const hayBusqueda = !!(texto2.trim() || nFiltros);
         let contenido = null;
         if (esta) {
           if (vista === "edicion") {
@@ -16984,7 +17308,7 @@ ${url}`);
             contenido = /* @__PURE__ */ React.createElement(React.Fragment, null, lista.length === 0 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 8, fontFamily: FUENTE4, fontSize: 13, color: "#9a9aa0" } }, "Ninguna carta coincide."), lista.slice(0, limite).map((c, i) => /* @__PURE__ */ React.createElement(FilaCarta, { key: c.k, c, marca: marcas[c.k] || null, datos, rank, onClick: () => setFichaSel({ colec: col2.id, k: c.k }), onZoom: () => zoomCartas(lista.map((x) => ({ c: x })), col2.id, i) })), lista.length > limite && /* @__PURE__ */ React.createElement("button", { onClick: () => setLimite((l) => l + PAGINA), style: { ...botonSec2, flex: "none" } }, "Ver m\xE1s (", lista.length - limite, ")"));
           }
         }
-        return /* @__PURE__ */ React.createElement("div", { key: col2.id, style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement(FilaColeccion, { col: col2, r, abierta: esta, onClick: () => setAbierta(esta ? null : col2.id) }), esta && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { placeholder: "Buscar por nombre, arquetipo, n\xFAmero, set o rareza", value: texto, onChange: (e) => setTexto(e.target.value), style: campo8 }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, [["todas", "Todas"], ["faltan", "Faltan"], ["tengo", "Tengo"]].map(([id, et]) => /* @__PURE__ */ React.createElement(Chip2, { key: id, flex: true, activo: modo === id, onClick: () => setModo(id) }, et))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement(Chip2, { flex: true, activo: vista === "edicion", onClick: () => elegirVista("edicion") }, "Por edici\xF3n"), /* @__PURE__ */ React.createElement(Chip2, { flex: true, activo: vista === "az", onClick: () => elegirVista("az") }, "A\u2013Z"), datos.filtros && datos.filtros.length > 0 && /* @__PURE__ */ React.createElement(Chip2, { flex: true, activo: panelFiltros || nFiltros > 0, onClick: () => setPanelFiltros((p) => !p) }, "Filtros", nFiltros ? ` (${nFiltros})` : "")), panelFiltros && datos.filtros && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10, padding: 10, borderRadius: 8, background: "#111114", border: "1px solid #26262b" } }, datos.filtros.map((f2) => {
+        return /* @__PURE__ */ React.createElement("div", { key: col2.id, style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement(FilaColeccion, { col: col2, r, abierta: esta, onClick: () => setAbierta(esta ? null : col2.id) }), esta && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { placeholder: "Buscar por nombre, arquetipo, n\xFAmero, set o rareza", value: texto2, onChange: (e) => setTexto(e.target.value), style: campo8 }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, [["todas", "Todas"], ["faltan", "Faltan"], ["tengo", "Tengo"]].map(([id, et]) => /* @__PURE__ */ React.createElement(Chip2, { key: id, flex: true, activo: modo === id, onClick: () => setModo(id) }, et))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement(Chip2, { flex: true, activo: vista === "edicion", onClick: () => elegirVista("edicion") }, "Por edici\xF3n"), /* @__PURE__ */ React.createElement(Chip2, { flex: true, activo: vista === "az", onClick: () => elegirVista("az") }, "A\u2013Z"), datos.filtros && datos.filtros.length > 0 && /* @__PURE__ */ React.createElement(Chip2, { flex: true, activo: panelFiltros || nFiltros > 0, onClick: () => setPanelFiltros((p) => !p) }, "Filtros", nFiltros ? ` (${nFiltros})` : "")), panelFiltros && datos.filtros && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10, padding: 10, borderRadius: 8, background: "#111114", border: "1px solid #26262b" } }, datos.filtros.map((f2) => {
           const vals = valoresFiltro(cs, f2.id);
           if (!vals.length) return null;
           const sel = filtros[f2.id] || [];
@@ -16995,7 +17319,7 @@ ${url}`);
         }), nFiltros > 0 && /* @__PURE__ */ React.createElement("button", { onClick: () => setFiltros({}), style: botonSec2 }, "Limpiar filtros")), /* @__PURE__ */ React.createElement("span", { style: { fontFamily: FUENTE4, fontSize: 11, color: "#9a9aa0" } }, col2.criterio, hayBusqueda || modo !== "todas" ? ` \xB7 ${lista.length} de ${cs.length}` : "")), contenido));
       }), datos && abierta === null && /* @__PURE__ */ React.createElement("div", { style: { flex: "none", marginTop: "auto", paddingTop: 6, fontFamily: FUENTE4, fontSize: 12, color: "#9a9aa0", textAlign: "center" } }, tengo, " de ", total, " cartas \xB7 ", usd(vCons), " de ", usd(vTot))));
     }
-    return /* @__PURE__ */ React.createElement("div", { className: "tcgc", style: { background: FONDO2 } }, /* @__PURE__ */ React.createElement("div", { ref: bodyRef, className: "tcgc-body", "data-expandido": expandido ? "true" : "false", "data-ficha": fichaSel ? "true" : "false", style: ancho }, cuerpo2), zoom && datos && /* @__PURE__ */ React.createElement(Zoom, { zoom, datos, onIdx: (idx) => setZoom((z) => ({ ...z, idx })), onCerrar: () => setZoom(null) }));
+    return /* @__PURE__ */ React.createElement("div", { className: "tcgc", style: { background: FONDO } }, /* @__PURE__ */ React.createElement("div", { ref: bodyRef, className: "tcgc-body", "data-expandido": expandido ? "true" : "false", "data-ficha": fichaSel ? "true" : "false", style: ancho }, cuerpo2), zoom && datos && /* @__PURE__ */ React.createElement(Zoom, { zoom, datos, onIdx: (idx) => setZoom((z) => ({ ...z, idx })), onCerrar: () => setZoom(null) }));
   }
 
   // core/SemanaDashboard.jsx
@@ -18841,6 +19165,7 @@ ${url}`);
       rehidratarOverlay();
       rehidratarMegusta();
       rehidratarEstado();
+      rehidratarRegistro();
       rehidratarSeleccion();
       rehidratarEstado2();
       if (Array.isArray(d.feedPodcastDispatched)) setPodcastDispatched(d.feedPodcastDispatched);
@@ -18983,14 +19308,14 @@ ${url}`);
         return next;
       });
     };
-    const agregarNotaRapida = (texto) => {
+    const agregarNotaRapida = (texto2) => {
       const ahora = /* @__PURE__ */ new Date();
       const hhmm2 = `${String(ahora.getHours()).padStart(2, "0")}:${String(ahora.getMinutes()).padStart(2, "0")}`;
-      mutarDia(fmtFull(ahora), (day) => ({ ...day, randomNote: (day.randomNote ? day.randomNote + "\n" : "") + `${hhmm2} \xB7 ${texto}` }));
+      mutarDia(fmtFull(ahora), (day) => ({ ...day, randomNote: (day.randomNote ? day.randomNote + "\n" : "") + `${hhmm2} \xB7 ${texto2}` }));
     };
-    const crearTareaPanorama = ({ texto, fecha: fecha2 }) => {
+    const crearTareaPanorama = ({ texto: texto2, fecha: fecha2 }) => {
       const id = Date.now();
-      mutarDia(fecha2, (day) => ({ ...day, tasks: [...day.tasks || [], { id, text: texto, fixed: false, done: false }] }));
+      mutarDia(fecha2, (day) => ({ ...day, tasks: [...day.tasks || [], { id, text: texto2, fixed: false, done: false }] }));
       return id;
     };
     const tareaPanoramaExiste = (fecha2, id) => ((dayDataRef.current || {})[fecha2]?.tasks || []).some((t) => t.id === id);
@@ -19047,9 +19372,9 @@ ${url}`);
         return { patch: { gastoId: null, gastoPeriodo: null } };
       },
       // Memoria de compras: sugerencias al escribir, referencia del último precio (solo referencia: se confirma el de hoy) y aprendizaje al comprar.
-      sugerir: (texto) => buscarSugerencias(comprasMemoria, texto),
-      referencia: (texto) => {
-        const m = comprasMemoria.items && comprasMemoria.items[claveNombre(texto)];
+      sugerir: (texto2) => buscarSugerencias(comprasMemoria, texto2),
+      referencia: (texto2) => {
+        const m = comprasMemoria.items && comprasMemoria.items[claveNombre(texto2)];
         return m ? { ...m, rango: rangoPrecios(m) } : null;
       },
       recordar: (item) => {
