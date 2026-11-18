@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generatedAt": "2026-11-18T12:47:54.356Z",
+ "generatedAt": "2026-11-18T17:29:48.213Z",
  "readmes": {
   "d-fabiangreffrath-intenseflow": {
    "v": 2,
@@ -107,6 +107,98 @@
     ]
    ]
   },
+  "d-simon3sarkis-super-odyssey-pc-recomp": {
+   "v": 2,
+   "repo": "Simon3Sarkis/super-odyssey-pc-recomp",
+   "actualizado": "2026-11-18T12:47:54.356Z",
+   "recortado": true,
+   "estado": {
+    "titulo": "Status",
+    "texto": "Every part, what it means, what holds it back and how the average is calculated: Status."
+   },
+   "bloques": [
+    [
+     "p",
+     "Download · Get started · Status · Known issues · Engineering notes · Issues"
+    ],
+    [
+     "p",
+     "Super Odyssey PC Recomp is a native PC port of Super Mario Odyssey (Nintendo Switch, versions 1.0.0 and 1.4.1) for Windows, Linux and the Steam Deck, made by static recompilation and built on your PC from your own copy of the game."
+    ],
+    [
+     "p",
+     "Screenshots taken in Super Odyssey PC Recomp at 3840 x 2160 (click for full size). The game is © Nintendo; you need your own copy to run it."
+    ],
+    [
+     "p",
+     "[!IMPORTANT] You must bring your own game. This project contains no game files, no game code and no assets - only the installer and the source code. To play, you need the exefs and romfs folders of your own copy of Super Mario Odyssey, already extracted. Instructions for getting game files are not provided, and requests for game files will be closed."
+    ],
+    [
+     "p",
+     "[!NOTE] This is an AI-made project. The code of this port was written by AI: almost all of it by Claude (Anthropic's AI model, through Claude Code), with some fixes and features from OpenAI's Codex. The maintainer doesn't write the code; they direct the work, test every build on Windows and a Steam Deck, and run the releases. See Who made this."
+    ],
+    [
+     "p",
+     "[!WARNING] This is an early preview. The whole game can be played, but there are known issues (see Known issues) and things that still need fixing. If something breaks at a high frame rate, set Performance > Frame rate to 60 for that moment, and please report what you find."
+    ],
+    [
+     "h",
+     "Features"
+    ],
+    [
+     "li",
+     "The whole game from your own copy, versions 1.0.0 and 1.4.1 - no emulator runs while you play"
+    ],
+    [
+     "li",
+     "Frame rates from 60 to 240 FPS, every frame really drawn, with Match display picking the smoothest rate for your screen"
+    ],
+    [
+     "li",
+     "Resolutions up to 4K and beyond (up to 4x the Switch's), and any screen shape: 16:9, 16:10, 21:9, 32:9, 4:3 or Fill, with the HUD at the edges on ultrawide"
+    ],
+    [
+     "li",
+     "Upscaling with NVIDIA DLSS / DLAA, AMD FSR 1 / 2 / 3.1 / 4 and Intel XeSS, the HUD drawn at full resolution over the upscaled picture, plus frame generation (AMD FSR, NVIDIA DLSS beta) and NVIDIA Reflex"
+    ],
+    [
+     "li",
+     "Shaders prepared before you play, and again by themselves after a driver update, so they are not compiled while you play (a rare effect nobody has recorded yet can still hitch once)"
+    ],
+    [
+     "li",
+     "Sharper than the Switch when you want it: FXAA or SMAA, 2x / 4x shadow maps, texture detail, 16x anisotropic filtering, smooth colour gradients, a sharper HUD on large screens - and the Switch's own look by default"
+    ],
+    [
+     "li",
+     "Any controller, with button icons that match it (Xbox, PlayStation, Switch), a Joy-Con pair, motion controls and vibration; keyboard and mouse with a real mouse camera, and the mouse in the game's own menus"
+    ],
+    [
+     "li",
+     "A start screen and settings menu made for controller, mouse and keyboard, where every option says what it does and what is recommended, with button hints drawn for the device you are using - in English, Korean and Brazilian Portuguese"
+    ],
+    [
+     "li",
+     "Steam Deck and PC handhelds: 1280 x 800 at 60 FPS in Gaming Mode"
+    ],
+    [
+     "li",
+     "Built-in updates, RomFS mods, 5.1 surround, a performance overlay, Discord activity (off by default)"
+    ],
+    [
+     "li",
+     "Crash reports you can read: what happened, where, and a signature to match the same crash between players Cap Kingdom at 3840 x 2160 and 120 FPS with the port's own performance overlay (0.4.4, upscaling and anti-aliasing off): the graphics card at 63%, the game using 3% of the CPU and 6.5 GB of RAM. One PC, an RTX 4090 with a Ryzen 9 9950X3D; other PCs and busier places will show other numbers. The start screen and the settings menu (0.4.1): Play first, categories in a sidebar, every option explained."
+    ],
+    [
+     "h",
+     "Status"
+    ],
+    [
+     "p",
+     "Every part, what it means, what holds it back and how the average is calculated: Status."
+    ]
+   ]
+  },
   "d-jackpoison-prog-ringout": {
    "v": 2,
    "repo": "jackpoison-prog/RingOut",
@@ -204,98 +296,6 @@
     [
      "li",
      "Arch: sudo pacman -S cmake ninja clang python"
-    ]
-   ]
-  },
-  "d-simon3sarkis-super-odyssey-pc-recomp": {
-   "v": 2,
-   "repo": "Simon3Sarkis/super-odyssey-pc-recomp",
-   "actualizado": "2026-11-18T12:47:54.356Z",
-   "recortado": true,
-   "estado": {
-    "titulo": "Status",
-    "texto": "Every part, what it means, what holds it back and how the average is calculated: Status."
-   },
-   "bloques": [
-    [
-     "p",
-     "Download · Get started · Status · Known issues · Engineering notes · Issues"
-    ],
-    [
-     "p",
-     "Super Odyssey PC Recomp is a native PC port of Super Mario Odyssey (Nintendo Switch, versions 1.0.0 and 1.4.1) for Windows, Linux and the Steam Deck, made by static recompilation and built on your PC from your own copy of the game."
-    ],
-    [
-     "p",
-     "Screenshots taken in Super Odyssey PC Recomp at 3840 x 2160 (click for full size). The game is © Nintendo; you need your own copy to run it."
-    ],
-    [
-     "p",
-     "[!IMPORTANT] You must bring your own game. This project contains no game files, no game code and no assets - only the installer and the source code. To play, you need the exefs and romfs folders of your own copy of Super Mario Odyssey, already extracted. Instructions for getting game files are not provided, and requests for game files will be closed."
-    ],
-    [
-     "p",
-     "[!NOTE] This is an AI-made project. The code of this port was written by AI: almost all of it by Claude (Anthropic's AI model, through Claude Code), with some fixes and features from OpenAI's Codex. The maintainer doesn't write the code; they direct the work, test every build on Windows and a Steam Deck, and run the releases. See Who made this."
-    ],
-    [
-     "p",
-     "[!WARNING] This is an early preview. The whole game can be played, but there are known issues (see Known issues) and things that still need fixing. If something breaks at a high frame rate, set Performance > Frame rate to 60 for that moment, and please report what you find."
-    ],
-    [
-     "h",
-     "Features"
-    ],
-    [
-     "li",
-     "The whole game from your own copy, versions 1.0.0 and 1.4.1 - no emulator runs while you play"
-    ],
-    [
-     "li",
-     "Frame rates from 60 to 240 FPS, every frame really drawn, with Match display picking the smoothest rate for your screen"
-    ],
-    [
-     "li",
-     "Resolutions up to 4K and beyond (up to 4x the Switch's), and any screen shape: 16:9, 16:10, 21:9, 32:9, 4:3 or Fill, with the HUD at the edges on ultrawide"
-    ],
-    [
-     "li",
-     "Upscaling with NVIDIA DLSS / DLAA, AMD FSR 1 / 2 / 3.1 / 4 and Intel XeSS, the HUD drawn at full resolution over the upscaled picture, plus frame generation (AMD FSR, NVIDIA DLSS beta) and NVIDIA Reflex"
-    ],
-    [
-     "li",
-     "Shaders prepared before you play, and again by themselves after a driver update, so they are not compiled while you play (a rare effect nobody has recorded yet can still hitch once)"
-    ],
-    [
-     "li",
-     "Sharper than the Switch when you want it: FXAA or SMAA, 2x / 4x shadow maps, texture detail, 16x anisotropic filtering, smooth colour gradients, a sharper HUD on large screens - and the Switch's own look by default"
-    ],
-    [
-     "li",
-     "Any controller, with button icons that match it (Xbox, PlayStation, Switch), a Joy-Con pair, motion controls and vibration; keyboard and mouse with a real mouse camera, and the mouse in the game's own menus"
-    ],
-    [
-     "li",
-     "A start screen and settings menu made for controller, mouse and keyboard, where every option says what it does and what is recommended, with button hints drawn for the device you are using - in English, Korean and Brazilian Portuguese"
-    ],
-    [
-     "li",
-     "Steam Deck and PC handhelds: 1280 x 800 at 60 FPS in Gaming Mode"
-    ],
-    [
-     "li",
-     "Built-in updates, RomFS mods, 5.1 surround, a performance overlay, Discord activity (off by default)"
-    ],
-    [
-     "li",
-     "Crash reports you can read: what happened, where, and a signature to match the same crash between players Cap Kingdom at 3840 x 2160 and 120 FPS with the port's own performance overlay (0.4.4, upscaling and anti-aliasing off): the graphics card at 63%, the game using 3% of the CPU and 6.5 GB of RAM. One PC, an RTX 4090 with a Ryzen 9 9950X3D; other PCs and busier places will show other numbers. The start screen and the settings menu (0.4.1): Play first, categories in a sidebar, every option explained."
-    ],
-    [
-     "h",
-     "Status"
-    ],
-    [
-     "p",
-     "Every part, what it means, what holds it back and how the average is calculated: Status."
     ]
    ]
   },
@@ -597,6 +597,151 @@
     ]
    ]
   },
+  "d-ragnaroek-iron-wolf": {
+   "v": 2,
+   "repo": "Ragnaroek/iron-wolf",
+   "actualizado": "2026-11-18T12:47:54.356Z",
+   "recortado": false,
+   "estado": null,
+   "bloques": [
+    [
+     "h",
+     "Iron Wolf"
+    ],
+    [
+     "p",
+     "Wolfenstein 3D in Rust"
+    ],
+    [
+     "p",
+     "The goal is to have a pixel, mod-friendly perfect recreation of Wolfenstein 3D in Rust."
+    ],
+    [
+     "p",
+     "E1M1 Demo"
+    ],
+    [
+     "h",
+     "Playing Iron Wolf"
+    ],
+    [
+     "p",
+     "just run-sdl-shareware should work out of the box on a cloned repo. It will run the shareware version, that is also checked in along with the code as testdata."
+    ],
+    [
+     "p",
+     "Alternatively you can play the web version here:"
+    ],
+    [
+     "p",
+     "If you have a copy of the full game files you can upload them there and play the full version in your browser:"
+    ],
+    [
+     "h",
+     "Configuration File"
+    ],
+    [
+     "p",
+     "A config file is optional. Copy the default_iw_config.toml as iw_config.toml and put it next to the Iron Wolf exectuable file. The options are described as comments in the default config file."
+    ]
+   ]
+  },
+  "d-alexbeavs-ps1-ports-final-fantasy-ix-recomp": {
+   "v": 2,
+   "repo": "alexbeavs-ps1-ports/final-fantasy-ix-recomp",
+   "actualizado": "2026-11-18T12:47:54.356Z",
+   "recortado": false,
+   "estado": {
+    "titulo": "Status",
+    "texto": "Latest release: v0.1.4, built on psxrecomp pin I 0.1.23."
+   },
+   "bloques": [
+    [
+     "h",
+     "Final Fantasy IX Recompiled"
+    ],
+    [
+     "p",
+     "This release candidate uses PSXRecomp and the shared recomp-ui launcher. You must supply your own SLUS-01251 game disc and SCPH-1001 (USA) BIOS. The package contains no game disc, retail BIOS, generated retail game code, or saved game."
+    ],
+    [
+     "p",
+     "BIOS: SCPH-1001 (USA) retail BIOS, 524288 bytes, SHA-256 71af94d1e47a68c11e8fdb9f8368040601514a42a5a399cda48c7d3bff1e99d3. Supply your own dump; releases do not use OpenBIOS."
+    ],
+    [
+     "h",
+     "Status"
+    ],
+    [
+     "p",
+     "Latest release: v0.1.4, built on psxrecomp pin I 0.1.23."
+    ],
+    [
+     "li",
+     "Packages for Windows x64, Linux x64, macOS Apple Silicon and macOS Intel passed the CI build and package checks."
+    ],
+    [
+     "li",
+     "Replay check: on Windows, a build on pin I 0.1.23 played 2 of 2 recorded routes to the end without a crash. That check compares memory, not the picture, and is not a play test."
+    ],
+    [
+     "li",
+     "Not claimed: full-game completion, audio fidelity or multiplayer. Setup and gameplay reports from Linux, macOS and Steam Deck are welcome."
+    ],
+    [
+     "p",
+     "Known issues for the current version are in its release notes."
+    ],
+    [
+     "h",
+     "Setup"
+    ],
+    [
+     "li",
+     "Extract the complete setup ZIP into a writable folder."
+    ],
+    [
+     "li",
+     "Start Final_Fantasy_IX_Recompiled (.exe on Windows)."
+    ],
+    [
+     "li",
+     "Select your CUE file and the required BIOS in the setup wizard."
+    ],
+    [
+     "li",
+     "Run Generate & rebuild and wait for the game to start."
+    ],
+    [
+     "p",
+     "On Windows, the setup wizard can download the portable build tools. On Linux and macOS, install CMake, Ninja, Python 3, and a C/C++ compiler first. Keep the CUE and all files it references together. The BIOS must be 524288 bytes with SHA-256 71af94d1e47a68c11e8fdb9f8368040601514a42a5a399cda48c7d3bff1e99d3."
+    ],
+    [
+     "h",
+     "Candidate status"
+    ],
+    [
+     "p",
+     "Version 0.1.0 is being prepared for September 7, 2026. Package setup and gameplay acceptance are pending; native build checks do not establish gameplay support. The exact source and dependency identities are in project-manifest.toml. See feasibility and validation for the tested scope."
+    ],
+    [
+     "h",
+     "About this project"
+    ],
+    [
+     "p",
+     "This project was developed with AI assistance. AI assists with code, documentation, and investigation; Alex tests the game and makes release decisions. Validation claims describe only the tests actually performed."
+    ],
+    [
+     "h",
+     "Credits and licenses"
+    ],
+    [
+     "p",
+     "Framework: PSXRecomp. Launcher: recomp-ui. Their licenses and dependency notices remain in the corresponding source directories. The original game and its trademarks belong to their respective owners."
+    ]
+   ]
+  },
   "d-metroidret-mzm": {
    "v": 2,
    "repo": "metroidret/mzm",
@@ -791,151 +936,6 @@
     [
      "p",
      "See CONTRIBUTING.md"
-    ]
-   ]
-  },
-  "d-ragnaroek-iron-wolf": {
-   "v": 2,
-   "repo": "Ragnaroek/iron-wolf",
-   "actualizado": "2026-11-18T12:47:54.356Z",
-   "recortado": false,
-   "estado": null,
-   "bloques": [
-    [
-     "h",
-     "Iron Wolf"
-    ],
-    [
-     "p",
-     "Wolfenstein 3D in Rust"
-    ],
-    [
-     "p",
-     "The goal is to have a pixel, mod-friendly perfect recreation of Wolfenstein 3D in Rust."
-    ],
-    [
-     "p",
-     "E1M1 Demo"
-    ],
-    [
-     "h",
-     "Playing Iron Wolf"
-    ],
-    [
-     "p",
-     "just run-sdl-shareware should work out of the box on a cloned repo. It will run the shareware version, that is also checked in along with the code as testdata."
-    ],
-    [
-     "p",
-     "Alternatively you can play the web version here:"
-    ],
-    [
-     "p",
-     "If you have a copy of the full game files you can upload them there and play the full version in your browser:"
-    ],
-    [
-     "h",
-     "Configuration File"
-    ],
-    [
-     "p",
-     "A config file is optional. Copy the default_iw_config.toml as iw_config.toml and put it next to the Iron Wolf exectuable file. The options are described as comments in the default config file."
-    ]
-   ]
-  },
-  "d-alexbeavs-ps1-ports-final-fantasy-ix-recomp": {
-   "v": 2,
-   "repo": "alexbeavs-ps1-ports/final-fantasy-ix-recomp",
-   "actualizado": "2026-11-18T12:47:54.356Z",
-   "recortado": false,
-   "estado": {
-    "titulo": "Status",
-    "texto": "Latest release: v0.1.4, built on psxrecomp pin I 0.1.23."
-   },
-   "bloques": [
-    [
-     "h",
-     "Final Fantasy IX Recompiled"
-    ],
-    [
-     "p",
-     "This release candidate uses PSXRecomp and the shared recomp-ui launcher. You must supply your own SLUS-01251 game disc and SCPH-1001 (USA) BIOS. The package contains no game disc, retail BIOS, generated retail game code, or saved game."
-    ],
-    [
-     "p",
-     "BIOS: SCPH-1001 (USA) retail BIOS, 524288 bytes, SHA-256 71af94d1e47a68c11e8fdb9f8368040601514a42a5a399cda48c7d3bff1e99d3. Supply your own dump; releases do not use OpenBIOS."
-    ],
-    [
-     "h",
-     "Status"
-    ],
-    [
-     "p",
-     "Latest release: v0.1.4, built on psxrecomp pin I 0.1.23."
-    ],
-    [
-     "li",
-     "Packages for Windows x64, Linux x64, macOS Apple Silicon and macOS Intel passed the CI build and package checks."
-    ],
-    [
-     "li",
-     "Replay check: on Windows, a build on pin I 0.1.23 played 2 of 2 recorded routes to the end without a crash. That check compares memory, not the picture, and is not a play test."
-    ],
-    [
-     "li",
-     "Not claimed: full-game completion, audio fidelity or multiplayer. Setup and gameplay reports from Linux, macOS and Steam Deck are welcome."
-    ],
-    [
-     "p",
-     "Known issues for the current version are in its release notes."
-    ],
-    [
-     "h",
-     "Setup"
-    ],
-    [
-     "li",
-     "Extract the complete setup ZIP into a writable folder."
-    ],
-    [
-     "li",
-     "Start Final_Fantasy_IX_Recompiled (.exe on Windows)."
-    ],
-    [
-     "li",
-     "Select your CUE file and the required BIOS in the setup wizard."
-    ],
-    [
-     "li",
-     "Run Generate & rebuild and wait for the game to start."
-    ],
-    [
-     "p",
-     "On Windows, the setup wizard can download the portable build tools. On Linux and macOS, install CMake, Ninja, Python 3, and a C/C++ compiler first. Keep the CUE and all files it references together. The BIOS must be 524288 bytes with SHA-256 71af94d1e47a68c11e8fdb9f8368040601514a42a5a399cda48c7d3bff1e99d3."
-    ],
-    [
-     "h",
-     "Candidate status"
-    ],
-    [
-     "p",
-     "Version 0.1.0 is being prepared for September 7, 2026. Package setup and gameplay acceptance are pending; native build checks do not establish gameplay support. The exact source and dependency identities are in project-manifest.toml. See feasibility and validation for the tested scope."
-    ],
-    [
-     "h",
-     "About this project"
-    ],
-    [
-     "p",
-     "This project was developed with AI assistance. AI assists with code, documentation, and investigation; Alex tests the game and makes release decisions. Validation claims describe only the tests actually performed."
-    ],
-    [
-     "h",
-     "Credits and licenses"
-    ],
-    [
-     "p",
-     "Framework: PSXRecomp. Launcher: recomp-ui. Their licenses and dependency notices remain in the corresponding source directories. The original game and its trademarks belong to their respective owners."
     ]
    ]
   },
@@ -1691,6 +1691,111 @@
     ]
    ]
   },
+  "d-ecwolfengine-ecwolf": {
+   "v": 2,
+   "repo": "ECWolfEngine/ECWolf",
+   "actualizado": "2026-11-18T12:47:54.356Z",
+   "recortado": false,
+   "estado": null,
+   "bloques": [
+    [
+     "p",
+     "ECWolf"
+    ],
+    [
+     "p",
+     "ECWolf is a port of the Wolfenstein 3D engine based of Wolf4SDL. It combines the original Wolfenstein 3D engine with the user experience of ZDoom to create the most user and mod author friendly Wolf3D source port."
+    ],
+    [
+     "p",
+     "Like ZDoom, ECWolf aims to support all games which use the Wolfenstein 3D engine including Blake Stone (coming in ECWolf 3.0), Corridor 7, Operation Body Count, Rise of the Triad, and Super 3D Noah's Ark. ECWolf will also support Macintosh Wolfenstein 3D along with all of its user created missions (coming in ECWolf 2.0)."
+    ],
+    [
+     "li",
+     "Single binary runs all supported games. (Wolfenstein 3D, Spear of Destiny, ...)"
+    ],
+    [
+     "li",
+     "Full support for high resolution modes with aspect ratio correction including wide screen support."
+    ],
+    [
+     "li",
+     "Modern control schemes (WASD + mouse)."
+    ],
+    [
+     "li",
+     "Mac Wolf/S3DNA/ROTT style automap."
+    ],
+    [
+     "li",
+     "Unlimited save slots."
+    ],
+    [
+     "li",
+     "This is actually based on the Wolf3D engine instead of a recreation or forcing into a more modern engine."
+    ],
+    [
+     "li",
+     "Software rendered using the same 8-bit ray casting."
+    ],
+    [
+     "p",
+     "Mod authoring"
+    ],
+    [
+     "li",
+     "Create mods without working with the source code!"
+    ],
+    [
+     "li",
+     "Mods work with all supported platforms including Windows, Mac OS X, and Linux."
+    ],
+    [
+     "li",
+     "Arbitrary high resolution texture, flat, and sprite support."
+    ],
+    [
+     "li",
+     "Unlimited simultaneous moving pushwalls."
+    ],
+    [
+     "li",
+     "Unlimited things."
+    ],
+    [
+     "li",
+     "Unrestricted map size. (Although technical limits restrict GAMEMAPS format to 181x181.)"
+    ],
+    [
+     "li",
+     "Uses scripting formats and data formats similar to those of ZDoom."
+    ],
+    [
+     "li",
+     "Doom editing utilities work with ECWolf. (Except for levels)"
+    ],
+    [
+     "p",
+     "Note that until ECWolf 2.0, while radical changes are not excepted, backwards compatibility for mods will not necessarily be kept. See the wiki for more information."
+    ],
+    [
+     "p",
+     "Links"
+    ],
+    [
+     "li",
+     "Website"
+    ],
+    [
+     "li",
+     "Forums"
+    ],
+    [
+     "li",
+     "Wiki"
+    ]
+   ]
+  },
   "d-lamb2k-re4dc": {
    "v": 2,
    "repo": "lamb2k/re4dc",
@@ -1817,111 +1922,6 @@
     [
      "h",
      "Coming soon: Test 28"
-    ]
-   ]
-  },
-  "d-ecwolfengine-ecwolf": {
-   "v": 2,
-   "repo": "ECWolfEngine/ECWolf",
-   "actualizado": "2026-11-18T12:47:54.356Z",
-   "recortado": false,
-   "estado": null,
-   "bloques": [
-    [
-     "p",
-     "ECWolf"
-    ],
-    [
-     "p",
-     "ECWolf is a port of the Wolfenstein 3D engine based of Wolf4SDL. It combines the original Wolfenstein 3D engine with the user experience of ZDoom to create the most user and mod author friendly Wolf3D source port."
-    ],
-    [
-     "p",
-     "Like ZDoom, ECWolf aims to support all games which use the Wolfenstein 3D engine including Blake Stone (coming in ECWolf 3.0), Corridor 7, Operation Body Count, Rise of the Triad, and Super 3D Noah's Ark. ECWolf will also support Macintosh Wolfenstein 3D along with all of its user created missions (coming in ECWolf 2.0)."
-    ],
-    [
-     "li",
-     "Single binary runs all supported games. (Wolfenstein 3D, Spear of Destiny, ...)"
-    ],
-    [
-     "li",
-     "Full support for high resolution modes with aspect ratio correction including wide screen support."
-    ],
-    [
-     "li",
-     "Modern control schemes (WASD + mouse)."
-    ],
-    [
-     "li",
-     "Mac Wolf/S3DNA/ROTT style automap."
-    ],
-    [
-     "li",
-     "Unlimited save slots."
-    ],
-    [
-     "li",
-     "This is actually based on the Wolf3D engine instead of a recreation or forcing into a more modern engine."
-    ],
-    [
-     "li",
-     "Software rendered using the same 8-bit ray casting."
-    ],
-    [
-     "p",
-     "Mod authoring"
-    ],
-    [
-     "li",
-     "Create mods without working with the source code!"
-    ],
-    [
-     "li",
-     "Mods work with all supported platforms including Windows, Mac OS X, and Linux."
-    ],
-    [
-     "li",
-     "Arbitrary high resolution texture, flat, and sprite support."
-    ],
-    [
-     "li",
-     "Unlimited simultaneous moving pushwalls."
-    ],
-    [
-     "li",
-     "Unlimited things."
-    ],
-    [
-     "li",
-     "Unrestricted map size. (Although technical limits restrict GAMEMAPS format to 181x181.)"
-    ],
-    [
-     "li",
-     "Uses scripting formats and data formats similar to those of ZDoom."
-    ],
-    [
-     "li",
-     "Doom editing utilities work with ECWolf. (Except for levels)"
-    ],
-    [
-     "p",
-     "Note that until ECWolf 2.0, while radical changes are not excepted, backwards compatibility for mods will not necessarily be kept. See the wiki for more information."
-    ],
-    [
-     "p",
-     "Links"
-    ],
-    [
-     "li",
-     "Website"
-    ],
-    [
-     "li",
-     "Forums"
-    ],
-    [
-     "li",
-     "Wiki"
     ]
    ]
   },

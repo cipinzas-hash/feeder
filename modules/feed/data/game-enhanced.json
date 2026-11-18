@@ -1,17 +1,17 @@
 {
  "version": 1,
- "generatedAt": "2026-11-18T12:47:54.356Z",
+ "generatedAt": "2026-11-18T17:29:48.213Z",
  "fuentes": {
   "decomps": {
    "ok": true,
-   "actualizado": "2026-11-18T12:47:54.356Z",
+   "actualizado": "2026-11-18T17:29:48.213Z",
    "generadoPorLaFuente": "2026-11-18T12:08:49Z",
    "proyectosEnLaFuente": 2981,
    "proyectos": 61
   },
   "igdb": {
    "ok": true,
-   "actualizado": "2026-11-18T12:47:54.356Z",
+   "actualizado": "2026-11-18T17:29:48.213Z",
    "fichas": 71,
    "terminadosConDesarrolladora": 70,
    "estudios": 55,
@@ -22,9 +22,9 @@
   },
   "readmes": {
    "ok": true,
-   "actualizado": "2026-11-18T12:47:54.356Z",
-   "pedidos": 61,
-   "reutilizados": 0,
+   "actualizado": "2026-11-18T17:29:48.213Z",
+   "pedidos": 3,
+   "reutilizados": 58,
    "sinReadme": 3,
    "fallos": 0,
    "conReadme": 58,
@@ -340,27 +340,6 @@
    "dias": 0
   },
   {
-   "id": "d-jackpoison-prog-ringout",
-   "tipo": "d",
-   "titulo": "Soulcalibur II (Ring Out)",
-   "subtipo": "static-recomp",
-   "plataforma": "GameCube",
-   "estrellas": 195,
-   "ultimoCommit": "2026-11-18T03:24:44Z",
-   "release": "v2.0",
-   "fechaRelease": "2026-11-15T01:32:01Z",
-   "url": "https://github.com/jackpoison-prog/RingOut",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [
-    "SoulCalibur II"
-   ],
-   "tuJuego": "SoulCalibur II",
-   "dias": 0
-  },
-  {
    "id": "d-simon3sarkis-super-odyssey-pc-recomp",
    "tipo": "d",
    "titulo": "Super Mario Odyssey (Super Odyssey PC Recomp)",
@@ -380,6 +359,27 @@
    ],
    "tuJuego": "Super Mario Odyssey",
    "dias": 0
+  },
+  {
+   "id": "d-jackpoison-prog-ringout",
+   "tipo": "d",
+   "titulo": "Soulcalibur II (Ring Out)",
+   "subtipo": "static-recomp",
+   "plataforma": "GameCube",
+   "estrellas": 195,
+   "ultimoCommit": "2026-11-18T03:24:44Z",
+   "release": "v2.0",
+   "fechaRelease": "2026-11-15T01:32:01Z",
+   "url": "https://github.com/jackpoison-prog/RingOut",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [
+    "SoulCalibur II"
+   ],
+   "tuJuego": "SoulCalibur II",
+   "dias": 1
   },
   {
    "id": "d-tmcleroy-soulcalibur2-recomp",
@@ -424,27 +424,6 @@
    "dias": 2
   },
   {
-   "id": "d-metroidret-mzm",
-   "tipo": "d",
-   "titulo": "Metroid: Zero Mission",
-   "subtipo": "decompilation",
-   "plataforma": "GBA",
-   "estrellas": 163,
-   "ultimoCommit": "2026-11-16T01:06:07Z",
-   "release": null,
-   "fechaRelease": null,
-   "url": "https://github.com/metroidret/mzm",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": false,
-   "inactivo": false,
-   "tuyos": [
-    "Metroid: Zero Mission"
-   ],
-   "tuJuego": "Metroid: Zero Mission",
-   "dias": 2
-  },
-  {
    "id": "d-ragnaroek-iron-wolf",
    "tipo": "d",
    "titulo": "Wolfenstein 3D (Iron Wolf)",
@@ -484,6 +463,27 @@
     "Final Fantasy IX"
    ],
    "tuJuego": "Final Fantasy IX",
+   "dias": 3
+  },
+  {
+   "id": "d-metroidret-mzm",
+   "tipo": "d",
+   "titulo": "Metroid: Zero Mission",
+   "subtipo": "decompilation",
+   "plataforma": "GBA",
+   "estrellas": 163,
+   "ultimoCommit": "2026-11-16T01:06:07Z",
+   "release": null,
+   "fechaRelease": null,
+   "url": "https://github.com/metroidret/mzm",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": false,
+   "inactivo": false,
+   "tuyos": [
+    "Metroid: Zero Mission"
+   ],
+   "tuJuego": "Metroid: Zero Mission",
    "dias": 3
   },
   {
@@ -634,27 +634,6 @@
    "dias": 7
   },
   {
-   "id": "d-lamb2k-re4dc",
-   "tipo": "d",
-   "titulo": "Resident Evil 4 (Dreamcast port, re4dc)",
-   "subtipo": "source-port",
-   "plataforma": "Dreamcast",
-   "estrellas": 48,
-   "ultimoCommit": "2026-11-11T03:35:15Z",
-   "release": null,
-   "fechaRelease": null,
-   "url": "https://github.com/lamb2k/re4dc",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [
-    "Resident Evil 4"
-   ],
-   "tuJuego": "Resident Evil 4",
-   "dias": 7
-  },
-  {
    "id": "d-ecwolfengine-ecwolf",
    "tipo": "d",
    "titulo": "Wolfenstein 3D (ECWolf)",
@@ -673,6 +652,27 @@
     "Wolfenstein 3D"
    ],
    "tuJuego": "Wolfenstein 3D",
+   "dias": 8
+  },
+  {
+   "id": "d-lamb2k-re4dc",
+   "tipo": "d",
+   "titulo": "Resident Evil 4 (Dreamcast port, re4dc)",
+   "subtipo": "source-port",
+   "plataforma": "Dreamcast",
+   "estrellas": 48,
+   "ultimoCommit": "2026-11-11T03:35:15Z",
+   "release": null,
+   "fechaRelease": null,
+   "url": "https://github.com/lamb2k/re4dc",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [
+    "Resident Evil 4"
+   ],
+   "tuJuego": "Resident Evil 4",
    "dias": 8
   },
   {
@@ -904,7 +904,7 @@
     "Crash Team Racing"
    ],
    "tuJuego": "Crash Team Racing",
-   "dias": 43
+   "dias": 44
   },
   {
    "id": "d-adonis-singh-re4",
@@ -1114,7 +1114,7 @@
     "Super Mario World"
    ],
    "tuJuego": "Super Mario World",
-   "dias": 90
+   "dias": 91
   },
   {
    "id": "d-nyperyuhgard-ctr-pc-port",
@@ -1198,7 +1198,7 @@
     "Final Fantasy (Remaster)"
    ],
    "tuJuego": "Final Fantasy (Remaster)",
-   "dias": 165
+   "dias": 166
   },
   {
    "id": "d-luigi587-generationsdecomp",
@@ -1283,7 +1283,7 @@
     "Sonic Adventure"
    ],
    "tuJuego": "Sonic Adventure DX Director’s Cut",
-   "dias": 839
+   "dias": 840
   },
   {
    "id": "d-waterdish-zelda3-android",
@@ -1304,7 +1304,7 @@
     "The Legend of Zelda: A Link to the Past"
    ],
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 898
+   "dias": 899
   },
   {
    "id": "d-jmxamongusmodder-cuphead-decomp",
@@ -1325,7 +1325,7 @@
     "Cuphead"
    ],
    "tuJuego": "Cuphead",
-   "dias": 1059
+   "dias": 1060
   },
   {
    "id": "d-snesrev-smw",
@@ -1388,7 +1388,7 @@
     "Final Fantasy II (Remaster)"
    ],
    "tuJuego": "Final Fantasy II (Remaster)",
-   "dias": 1443
+   "dias": 1444
   },
   {
    "id": "d-yoshifanatic1-donkey-kong-country-1-disassembly",
@@ -1451,7 +1451,7 @@
     "Super Mario World"
    ],
    "tuJuego": "Super Mario World",
-   "dias": 2084
+   "dias": 2085
   },
   {
    "id": "d-jiggeryponkery-ff1-mmc5",
@@ -1577,7 +1577,7 @@
     "Super Mario World"
    ],
    "tuJuego": "Super Mario World",
-   "dias": 4319
+   "dias": 4320
   },
   {
    "id": "d-sonicretro-sad-disasm",
@@ -1598,7 +1598,7 @@
     "Sonic Adventure"
    ],
    "tuJuego": "Sonic Adventure",
-   "dias": 4734
+   "dias": 4735
   }
  ],
  "estudios": [
