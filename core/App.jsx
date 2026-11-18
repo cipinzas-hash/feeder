@@ -1863,8 +1863,6 @@ function AngstApp() {
         .panoramas{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
         .gameenh{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
         .gameenh-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
-        .gameenh-body[data-ficha="true"]{overflow-y:auto;}
-        .gameenh-body[data-ficha="true"]>*{flex:none;}
         .tcgc{flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
         .tcgc-body{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
         .tcgc-body[data-ficha="true"]{overflow-y:auto;}

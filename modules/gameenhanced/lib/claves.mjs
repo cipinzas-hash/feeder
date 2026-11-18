@@ -15,3 +15,9 @@ export function idRegistro(titulo) {
   const k = claveTitulo(titulo);
   return k ? "r-" + k : null;
 }
+
+// "owner/repo" de una URL de GitHub; null para cualquier otro sitio. Lo usan el pipeline (README) y la ficha (releases).
+export function repoDeUrl(url) {
+  const m = /^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+?)(?:\.git)?(?:[/?#].*)?$/.exec(String(url || ""));
+  return m ? `${m[1]}/${m[2]}` : null;
+}

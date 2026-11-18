@@ -1,6 +1,7 @@
 // ─── Funciones puras del pipeline de Game enhanced (probadas en tests/gameenhanced.mjs) ─────────────
 // Sin red ni disco: reciben datos ya descargados. Las usa build-game-enhanced.mjs.
-import { ESTADOS_REGISTRO } from "../../../gameenhanced/lib/claves.mjs";
+import { ESTADOS_REGISTRO, repoDeUrl } from "../../../gameenhanced/lib/claves.mjs";
+export { repoDeUrl };
 
 export const DIA = 86400000;
 
@@ -134,12 +135,6 @@ export function fichaDeIgdb(g) {
     lanzamiento: g.first_release_date ? new Date(g.first_release_date * 1000).toISOString().slice(0, 10) : null,
     url: typeof g.url === "string" && g.url.startsWith("https://") ? g.url : null,
   };
-}
-
-// "owner/repo" de una URL de GitHub; null para cualquier otro sitio.
-export function repoDeUrl(url) {
-  const m = /^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+?)(?:\.git)?(?:[/?#].*)?$/.exec(String(url || ""));
-  return m ? `${m[1]}/${m[2]}` : null;
 }
 
 const ENTIDADES = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": "\"", "&#39;": "'", "&nbsp;": " " };

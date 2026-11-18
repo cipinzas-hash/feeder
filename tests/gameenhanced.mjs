@@ -117,22 +117,40 @@ assert.match(L.detalleDe(J.find(j => j.id === "e-2"), AHORA), /PC · sale 12 dic
 const fd = L.filasFicha(J[0], AHORA), fe = L.filasFicha(J.find(j => j.id === "e-2"), AHORA);
 assert.deepEqual(fd.find(f => f[0] === "Jugar en el navegador")[1], { href: "https://x.example/play", texto: "Abrir" });
 assert.equal(fd.find(f => f[0] === "¿Pide tu ROM o archivos?")[1], "Sí, con tu propia copia");
-assert.equal(fd.find(f => f[0] === "Última versión")[1], "v3 (hace 5 d)");
+assert.deepEqual(fd.find(f => f[0] === "Última versión")[1], { href: "https://github.com/x/ec/releases/tag/v3", texto: "v3 (hace 5 d)" }, "la última versión enlaza a su release");
+assert.deepEqual(fd.find(f => f[0] === "Todas las versiones")[1], { href: "https://github.com/x/ec/releases", texto: "Releases" });
 assert.deepEqual(fe.find(f => f[0] === "Fuente")[1], { href: "https://igdb.example/2", texto: "IGDB" });
 assert.equal(L.filasFicha({ ...J[0], url: "javascript:alert(1)" }, AHORA).find(f => f[0] === "Fuente"), undefined, "solo enlaces https (si no, la fila no aparece)");
 assert(![...fd, ...fe].some(f => f[1] === "—" || f[1] === "Sin dato" || f[1] === undefined), "la ficha no muestra filas vacías");
 const sinDatos = L.filasFicha({ ...J[0], jugableUrl: null, pideAssets: null, ia: false, release: null, plataforma: null, ultimoCommit: null }, AHORA).map(f => f[0]);
 assert(!sinDatos.includes("Jugar en el navegador") && !sinDatos.includes("¿Pide tu ROM o archivos?") && !sinDatos.includes("Última versión") && !sinDatos.includes("Hecho con IA (según la fuente)") && !sinDatos.includes("Plataforma"), "sin dato → sin fila");
 
-assert.deepEqual(L.ventana(19, 0, 8), { ini: 0, fin: 8 }, "foco arriba");
-assert.deepEqual(L.ventana(19, 18, 8), { ini: 11, fin: 19 }, "cerca del final la ventana retrocede: sin hueco muerto");
-assert.deepEqual(L.ventana(3, 2, 8), { ini: 0, fin: 3 });
-assert.deepEqual(L.ventana(0, 0, 8), { ini: 0, fin: 0 });
-assert.deepEqual(L.ventana(10, 4, 0), { ini: 4, fin: 5 }, "al menos una fila");
-assert.equal(L.filasXmb(0), 1);
-assert.equal(L.filasXmb(498), 8, "área libre de referencia (~457×810): enfocado + 7 filas enteras");
-assert.equal(L.filasXmb(L.XMB.foco + L.XMB.aire + L.XMB.fila + L.XMB.sep - 1), 1, "una fila a medias no cuenta");
-assert.equal(L.filasXmb(L.XMB.foco + L.XMB.aire + L.XMB.fila + L.XMB.sep), 2);
+// ── disposición continua del XMB ────────────────────────────────────────────
+const X = L.XMB;
+assert.equal(L.anclaXmb(0), X.aire / 2, "al empezar, el enfocado queda arriba");
+assert.equal(L.anclaXmb(-1), L.anclaXmb(0), "elasticidad por arriba: no se mueve el ancla");
+assert(L.anclaXmb(1) > L.anclaXmb(0) && L.anclaXmb(2) > L.anclaXmb(1), "al avanzar deja ver filas anteriores…");
+assert.equal(L.anclaXmb(9), L.anclaXmb(2), "…hasta X.arriba filas y ahí se queda");
+const f0 = L.disposicion(0, 0);
+assert.deepEqual([f0.t, f0.h, f0.op, f0.y], [1, X.foco, 1, X.aire / 2], "fila enfocada: grande, opaca, arriba");
+const f1 = L.disposicion(1, 0);
+assert.deepEqual([f1.t, f1.h, f1.y], [0, X.fila, X.aire / 2 + X.foco + X.aire], "la siguiente: chica, bajo el enfocado con aire");
+assert.equal(f1.op, 0.85);
+assert.equal(L.disposicion(9, 0).op, L.OPACIDAD[L.OPACIDAD.length - 1], "lejos: opacidad mínima");
+let sinSolape = true, monotono = true;
+for (let f = -0.35; f <= 12.35; f += 0.137) {
+  for (let i = -2; i < 15; i++) {
+    const a = L.disposicion(i, f), b = L.disposicion(i + 1, f);
+    if (b.y < a.y + a.h - 1e-9) sinSolape = false;
+    if (b.y <= a.y) monotono = false;
+    assert(a.t >= 0 && a.t <= 1 && a.op >= 0.42 - 1e-9 && a.op <= 1 + 1e-9 && a.h >= X.fila - 1e-9 && a.h <= X.foco + 1e-9, "t, opacidad y alto dentro de rango");
+  }
+}
+assert(sinSolape, "las filas nunca se pisan, en ninguna posición del arrastre");
+assert(monotono, "el orden vertical se conserva en todo el arrastre");
+const media = L.disposicion(1, 0.5);
+assert(media.t === 0.5 && media.h === (X.fila + X.foco) / 2, "a medio camino: mitad de enfocada");
+assert.equal(L.disposicion(3, 3).y, L.anclaXmb(3), "el enfocado siempre queda en el ancla");
 
 const r = L.resumen(J, { "d-b": 1 }, { "d-a": 1, "d-b": 1 });
 assert.equal(r.guardados, 1, "un guardado oculto no cuenta");
@@ -260,6 +278,25 @@ assert.equal(L.portadaDe(ter[1], FICHAS), "coA", "juego del registro: su ficha")
 assert.equal(L.portadaDe({ tipo: "e", portada: "coE" }, FICHAS), "coE", "estudio: la suya");
 assert.equal(L.portadaDe({ tipo: "d", tuJuego: "Wolfenstein 3D" }, FICHAS), "co9", "decomp: la del juego tuyo que lo motiva");
 assert.equal(L.portadaDe({ tipo: "d", tuJuego: "Nada" }, FICHAS), null);
+
+// ── releases y compartir ────────────────────────────────────────────────────
+assert.deepEqual(L.enlacesRelease({ url: "https://github.com/x/ec", release: "v3" }), { version: "https://github.com/x/ec/releases/tag/v3", todas: "https://github.com/x/ec/releases" });
+assert.equal(L.enlacesRelease({ url: "https://github.com/x/ec", release: null }), null, "sin versión publicada: sin enlaces");
+assert.equal(L.enlacesRelease({ url: "https://gitlab.com/x/ec", release: "v3" }), null, "solo GitHub");
+assert.equal(L.enlacesRelease({ url: "javascript:alert(1)", release: "v3" }), null);
+assert.match(L.enlacesRelease({ url: "https://github.com/x/ec", release: "rel 1/2" }).version, /releases\/tag\/rel%201%2F2$/, "el tag se codifica");
+const sinRel = L.filasFicha({ ...wolf, release: null, fechaRelease: null }, AHORA).map(f => f[0]);
+assert(!sinRel.includes("Última versión") && !sinRel.includes("Todas las versiones"), "sin release: sin filas de versión");
+const cd = L.textoCompartir(wolf, null, AHORA);
+assert.equal(cd.titulo, wolf.titulo); assert.equal(cd.url, "https://github.com/x/ec");
+assert(cd.texto.startsWith(wolf.titulo + "\n") && cd.texto.includes("Última versión v3: https://github.com/x/ec/releases/tag/v3"), "decomp: título, contexto y release");
+const ce = L.textoCompartir({ tipo: "e", titulo: "Nuevo", estudio: "E", fecha: "2027-01-01", dias: -100, url: "https://igdb.example/5", tuyos: ["A"] }, null, AHORA);
+assert.equal(ce.url, "https://igdb.example/5"); assert(ce.texto.startsWith("Nuevo\n"));
+const cr = L.textoCompartir({ tipo: "r", titulo: "Alfa", estado: "terminado", plataforma: "PS5", nota: "mi nota privada" }, { url: "https://www.igdb.com/games/alfa" }, AHORA);
+assert.equal(cr.texto, "Alfa\n🏁 Terminado · PS5", "juego del registro: sin la nota personal");
+assert.equal(cr.url, "https://www.igdb.com/games/alfa");
+assert.equal(L.textoCompartir({ tipo: "r", titulo: "Beta", estado: "quiero" }, null, AHORA).url, null, "sin ficha de IGDB: solo texto");
+assert.equal(L.textoCompartir({ ...wolf, url: "javascript:alert(1)" }, null, AHORA).url, null, "solo enlaces https");
 
 // ── pipeline: README, fichas, registro ──────────────────────────────────────
 const md = "# Proyecto\n\n[![CI](https://x/badge.svg)](https://x) Una **decompilación** de [Zelda](https://z.example) <img src=\"a.png\">.\n\n<!-- oculto -->\n## Compilar\n\n- Instala `make`\n- Corre `make all`\n\n```sh\nmake all\n```\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n## Vacío\n## Licencia\n\nMIT";

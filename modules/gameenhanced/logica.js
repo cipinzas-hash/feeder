@@ -1,4 +1,4 @@
-import { idRegistro } from "./lib/claves.mjs";
+import { idRegistro, repoDeUrl } from "./lib/claves.mjs";
 
 // ─── Lógica pura de Game enhanced (sin React ni red, probada en tests/gameenhanced.mjs) ─────────
 // Tipos que hoy tienen fuente real: d (decomps, ports y recompilaciones) y e (juegos nuevos de los
@@ -83,6 +83,14 @@ export function detalleDe(j, ahora) {
   return [j.plataformas && j.plataformas.length ? j.plataformas.join(" · ") : null, j.dias < 0 ? `sale ${j.fechaAprox ? "en " + j.fecha.slice(0, 4) : fechaLegible(j)}` : `salió ${fechaLegible(j)}`].filter(Boolean).join(" · ");
 }
 
+// Enlaces a los releases de un decomp (solo repos de GitHub con una versión publicada): la página de la última
+// versión y la lista completa. null si no hay repo de GitHub o no hay versión.
+export function enlacesRelease(j) {
+  const repo = repoDeUrl(j.url);
+  if (!repo || !j.release) return null;
+  return { version: `https://github.com/${repo}/releases/tag/${encodeURIComponent(j.release)}`, todas: `https://github.com/${repo}/releases` };
+}
+
 // Filas de la ficha: [etiqueta, texto | { href, texto }]. Solo filas con dato: nada de "Sin dato" ni "No" de relleno.
 // `igdb` = ficha de IGDB del juego del registro (portada, resumen, géneros…), si el pipeline ya la armó.
 export function filasFicha(j, ahora, igdb = null) {
@@ -94,7 +102,9 @@ export function filasFicha(j, ahora, igdb = null) {
     add("Proyecto", SUBTIPOS[j.subtipo] || j.subtipo); add("Por qué lo ves", motivoDe(j)); add("Tus juegos", (j.tuyos || []).join(", "));
     add("Plataforma", j.plataforma); add("Estrellas", typeof j.estrellas === "number" ? miles(j.estrellas) : null);
     add("Último commit", c === null ? null : haceDias(c));
-    add("Última versión", j.release ? `${j.release}${r === null ? "" : " (" + haceDias(r) + ")"}` : null);
+    const rel = enlacesRelease(j), vTexto = j.release ? `${j.release}${r === null ? "" : " (" + haceDias(r) + ")"}` : null;
+    add("Última versión", vTexto && (rel ? enlace(rel.version, vTexto) : vTexto));
+    add("Todas las versiones", rel ? enlace(rel.todas, "Releases") : null);
     add("Jugar en el navegador", j.jugableUrl ? enlace(j.jugableUrl, "Abrir") : null);
     add("¿Pide tu ROM o archivos?", ASSETS[j.pideAssets] && j.pideAssets !== "unknown" ? ASSETS[j.pideAssets] : null);
     add("Hecho con IA (según la fuente)", j.ia ? "Sí" : null); add("Estado", j.inactivo ? "Inactivo o archivado" : "Activo");
@@ -117,6 +127,23 @@ export function filasFicha(j, ahora, igdb = null) {
   return filas;
 }
 
+// Lo que se comparte de un ítem (menú nativo del celular o portapapeles): título, una línea de contexto y el enlace.
+// De un decomp, además, su última versión con el enlace al release. No incluye la nota personal de un juego del registro.
+export function textoCompartir(j, igdb = null, ahora = Date.now()) {
+  const lineas = [j.titulo];
+  let url = null;
+  if (j.tipo === "r") {
+    const ei = ESTADOS_INFO[j.estado];
+    lineas.push([`${ei.emoji} ${ei.etiqueta}`, j.plataforma].filter(Boolean).join(" · "));
+    url = igdb && typeof igdb.url === "string" && igdb.url.startsWith("https://") ? igdb.url : null;
+  } else {
+    lineas.push(detalleDe(j, ahora));
+    if (j.tipo === "d") { const rel = enlacesRelease(j); if (rel) lineas.push(`Última versión ${j.release}: ${rel.version}`); }
+    url = typeof j.url === "string" && j.url.startsWith("https://") ? j.url : null;
+  }
+  return { titulo: j.titulo, texto: lineas.filter(Boolean).join("\n"), url };
+}
+
 // Juegos del registro de un estado, como ítems de lista: los terminados por fecha de término (o, sin fecha, por cuándo
 // se tocaron), los demás por última actualización; los más recientes primero.
 export function itemsRegistro(registro, estado, ahora = Date.now()) {
@@ -136,19 +163,26 @@ export function itemsDe(juegos, clave, ocultos = {}, registro = null, ahora = Da
     .sort((a, b) => Math.abs(a.dias) - Math.abs(b.dias) || (a.id < b.id ? -1 : 1));
 }
 
-// Ventana de filas visibles: el enfocado va arriba, salvo cerca del final, donde la ventana se
-// recorre hacia atrás para no dejar hueco muerto debajo (N3).
-export function ventana(total, foco, cabe) {
-  const n = Math.max(1, cabe | 0);
-  const ini = Math.min(Math.max(0, foco), Math.max(0, total - n));
-  return { ini, fin: Math.min(total, ini + n) };
-}
+// ── Disposición continua del XMB ──────────────────────────────────────────
+// La lista no salta de fila en fila: `f` es la posición (decimal) del foco entre las filas, así el dedo la arrastra
+// libremente y la inercia la frena en una fila entera. Todo es geometría pura: cada fila `i` ocupa [y, y+h] y tiene
+// un grado de "enfocada" `t` (0–1: más grande, con subtítulo) y una opacidad que baja con la distancia.
+export const XMB = { foco: 78, fila: 50, sep: 4, aire: 14, arriba: 2 };
+export const OPACIDAD = [1, 0.85, 0.7, 0.55, 0.42];   // por distancia (en filas) al enfocado
 
-// Cuántas filas enteras caben en `alto` px con el diseño XMB: una fila enfocada (grande, con aire arriba y abajo)
-// y las demás más chicas. Conservador: nunca cuenta una fila a medias (N3).
-export const XMB = { foco: 78, fila: 50, sep: 4, aire: 14 };
-export function filasXmb(alto, { foco = XMB.foco, fila = XMB.fila, sep = XMB.sep, aire = XMB.aire } = {}) {
-  return Math.max(1, 1 + Math.floor((alto - foco - aire) / (fila + sep)));
+// Dónde queda el borde superior del enfocado: arriba del todo al empezar la lista; a medida que se avanza deja
+// ver hasta `arriba` filas anteriores, como el XMB real, y ahí se queda.
+export const anclaXmb = (f, o = XMB) => o.aire / 2 + Math.min(Math.max(f, 0), o.arriba) * (o.fila + o.sep + o.aire);
+
+export function disposicion(i, f, o = XMB) {
+  const d = i - f, a = Math.abs(d);
+  const t = Math.max(0, 1 - a);
+  const paso = o.fila + o.sep, P = paso + o.aire, A = anclaXmb(f, o);
+  const y = d >= 0
+    ? (d <= 1 ? A + d * (o.foco + o.aire) : A + o.foco + o.aire + (d - 1) * paso)
+    : (d >= -1 ? A + d * P : A - P + (d + 1) * paso);
+  const k = Math.min(a, OPACIDAD.length - 1), k0 = Math.floor(k), k1 = Math.min(k0 + 1, OPACIDAD.length - 1);
+  return { y, h: o.fila + (o.foco - o.fila) * t, t, op: OPACIDAD[k0] + (OPACIDAD[k1] - OPACIDAD[k0]) * (k - k0) };
 }
 
 // Franja de estado: lo que se consulta a diario.
