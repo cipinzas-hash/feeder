@@ -155,12 +155,12 @@ function VariacionMes({v}){
 // "¡completada!" en la cabecera. Los colores no se van sumando: cambia la barra entera al cruzar de tramo.
 const TRAMOS_BARRA=["#d9534f","#f0883e","#e6c229","#2e9d62"];
 const ORO_BARRA="linear-gradient(90deg,#b8860b,#ffd54a,#b8860b)";
-function colorBarra(conseguidas,total){
+export function colorBarra(conseguidas,total){
   if(!(total>0)) return TRAMOS_BARRA[0];
   if(conseguidas>=total) return ORO_BARRA;
   return TRAMOS_BARRA[Math.min(3,Math.floor(conseguidas/total*4))];
 }
-function BarraSet({conseguidas,total}){
+export function BarraSet({conseguidas,total}){
   const pct=total>0?Math.min(100,conseguidas/total*100):0;
   return(
     <div title={`${conseguidas}/${total}`} style={{height:6,background:"#1a1a1a",borderRadius:99,overflow:"hidden",marginBottom:8}}>
@@ -169,7 +169,7 @@ function BarraSet({conseguidas,total}){
   );
 }
 // Chip discreto de la fila de herramientas de una colección (imprimir / sin precio / variación mensual).
-function ChipHerramienta({onClick,activo,children,title}){
+export function ChipHerramienta({onClick,activo,children,title}){
   return <button onClick={onClick} title={title} style={{background:activo?"#2a2a2a":"transparent",border:"1px solid "+(activo?"#555":"#262626"),borderRadius:99,padding:"4px 11px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,color:activo?"#ddd":"#888",lineHeight:1.2}}>{children}</button>;
 }
 // Marco de cada vista de Pokécripto (lineamiento N1/N3, nov-2026): llena el área libre que deja el shell (.app-fit: encabezado,
@@ -185,7 +185,7 @@ export function MarcoPoke({children,scrollRef}){
   );
 }
 // × de las hojas emergentes (nov-2026): arriba a la derecha, igual en todas; el contenedor debe ser position:relative.
-function BotonCerrar({onClick}){
+export function BotonCerrar({onClick}){
   return <button onClick={onClick} title="cerrar" style={{position:"absolute",top:10,right:14,background:"transparent",border:"none",color:"#777",fontSize:22,cursor:"pointer",padding:4,lineHeight:1,zIndex:2}}>×</button>;
 }
 // Control segmentado: segmentos iguales a ancho completo (filtros del historial de snapshots).
@@ -228,7 +228,7 @@ function diasDesde(f){ if(!f) return null; const d=Math.round((Date.now()-new Da
 function precioViejo(c){ if(!c||c.tcgMarket==null||c.estado==="vendida") return false; const d=diasDesde(c.tcgUpdated); return d==null||d>7; }
 function marcaViejo(c,fs){ return precioViejo(c)?<div title="Precio sin actualizar: la fuente del bot no tiene esta carta" style={{fontFamily:"'DM Sans',sans-serif",fontSize:fs||9,color:"#d9a441"}}>⏳ {diasDesde(c.tcgUpdated)==null?"sin fecha":diasDesde(c.tcgUpdated)+"d"}</div>:null; }
 function fmtPokeCLP(n){ return "$"+Math.round((n||0)*USD_CLP).toLocaleString("es-CL"); }
-function fmtDateShort(dk){ if(!dk) return ""; const [,m,d]=dk.split("-"); return `${d}/${m}`; }
+export function fmtDateShort(dk){ if(!dk) return ""; const [,m,d]=dk.split("-"); return `${d}/${m}`; }
 
 // Construye la carta de inv correspondiente a una carta recién descubierta
 // del catálogo Dark (o de una colección de ilustrador, ver abajo) — nace en
@@ -313,7 +313,7 @@ function matchIlustrador(card, def, set){
 }
 
 // ── Métricas de historial ──────────────────────────────────────────────────────
-function computeHistMetrics(history, range){
+export function computeHistMetrics(history, range){
   const pts = (history||[]).filter(h=>h.market);
   if(!pts.length) return {ath:null,atl:null,athDate:null,atlDate:null,vol:null,volLabel:null,filtered:[]};
   const now = new Date(pts[pts.length-1].date+"T12:00:00");
@@ -354,7 +354,7 @@ function computeHistMetrics(history, range){
 // más cercano en cualquier dirección) -- "precio vigente hace N días", no
 // "el snapshot más próximo a esa fecha aunque sea posterior".
 const TIMEFRAME_WINDOWS = [7, 30, 90, 180, 360];
-function computeTimeframeDeltas(history){
+export function computeTimeframeDeltas(history){
   // Lote 1 (16-nov-2026): solo se compara dentro del tramo posterior al último corte (la costura entre dos fuentes no es un
   // movimiento del mercado) y, en cartas de mercado delgado (rango bajo-alto muy ancho), con la mediana móvil de 7 días.
   const todos = ultimoSegmento(esMercadoDelgado(history) ? serieSuave(history) : (history||[]));
