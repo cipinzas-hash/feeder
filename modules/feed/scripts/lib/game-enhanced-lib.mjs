@@ -156,15 +156,19 @@ export function readmeABloques(md, { max = 3800, maxBloque = 600 } = {}) {
   t = t.replace(/<[^>]+>/g, " ");
   const bloques = [];
   let parrafo = [];
+  let blancoTrasItem = false;   // hubo una línea en blanco desde la última viñeta
   const cerrar = () => { if (parrafo.length) bloques.push(["p", limpiarLinea(parrafo.join(" "))]); parrafo = []; };
   for (const cruda of t.split("\n")) {
     const l = cruda.trim();
-    if (!l) { cerrar(); continue; }
+    if (!l) { cerrar(); blancoTrasItem = true; continue; }
     if (/^\[[^\]]+\]:\s*\S+/.test(l) || /^\|/.test(l) || /^[-=|:\s]{3,}$/.test(l) || /^https?:\/\/\S+$/.test(l)) { cerrar(); continue; }
     const h = /^#{1,6}\s+(.*)$/.exec(l);
     if (h) { cerrar(); bloques.push(["h", limpiarLinea(h[1].replace(/#+\s*$/, ""))]); continue; }
     const li = /^(?:[-*+]|\d+[.)])\s+(.*)$/.exec(l);
-    if (li) { cerrar(); bloques.push(["li", limpiarLinea(li[1])]); continue; }
+    if (li) { cerrar(); bloques.push(["li", limpiarLinea(li[1])]); blancoTrasItem = false; continue; }
+    // Continuación de una viñeta (línea sangrada, o pegada a la viñeta sin línea en blanco): va en la misma viñeta.
+    const previo = bloques[bloques.length - 1];
+    if (previo && previo[0] === "li" && !parrafo.length && (/^(?: {2,}|\t)/.test(cruda) || !blancoTrasItem)) { previo[1] = limpiarLinea(previo[1] + " " + l.replace(/^>\s?/, "")); continue; }
     parrafo.push(l.replace(/^>\s?/, ""));
   }
   cerrar();
@@ -180,6 +184,27 @@ export function readmeABloques(md, { max = 3800, maxBloque = 600 } = {}) {
     total += texto.length;
   }
   return { bloques: salida, recortado };
+}
+
+// "Estado según el autor": la sección del README que habla del estado o avance del proyecto (Status, Estado, Progress,
+// Roadmap…). Devuelve { titulo, texto } con el título de la sección y su primer párrafo o viñeta, o null si el README no
+// tiene una. Se queda con el texto del autor (no se inventa nada); se calcula sobre el README completo, no sobre el recorte.
+export function estadoDeReadme(md) {
+  const t = String(md || "").replace(/\r/g, "").replace(/<!--[\s\S]*?-->/g, "").replace(/```[\s\S]*?```/g, "").replace(/```[\s\S]*$/, "").replace(/~~~[\s\S]*?~~~/g, "");
+  const lineas = t.split("\n");
+  const SI = /\b(status|estado|progress|progreso|roadmap)\b/i, NO = /\b(build|ci|badge|license|licencia)\b/i;
+  for (let i = 0; i < lineas.length; i++) {
+    const h = /^(#{1,6})\s+(.*)$/.exec(lineas[i].trim());
+    if (!h) continue;
+    const titulo = limpiarLinea(h[2].replace(/#+\s*$/, "").replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/<[^>]+>/g, " "));
+    if (!SI.test(titulo) || NO.test(titulo)) continue;
+    let fin = lineas.length;
+    for (let k = i + 1; k < lineas.length; k++) { const h2 = /^(#{1,6})\s/.exec(lineas[k].trim()); if (h2 && h2[1].length <= h[1].length) { fin = k; break; } }
+    const { bloques } = readmeABloques(lineas.slice(i + 1, fin).join("\n"), { max: 700, maxBloque: 320 });
+    const cuerpo = bloques.find(([k]) => k === "p" || k === "li");
+    return { titulo: recortarTexto(titulo, 140), texto: cuerpo ? cuerpo[1] : "" };
+  }
+  return null;
 }
 
 // Registro de Angst (campo gameEnhancedRegistro del estado en Angst-data) → lista de juegos válidos.

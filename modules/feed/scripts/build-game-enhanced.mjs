@@ -12,7 +12,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { DIA, proyectosDeDecomps, mapaDeEstudios, itemsDeEstudios, fichaDeIgdb, readmeABloques, repoDeUrl, listaDeRegistro, terminadosDe } from "./lib/game-enhanced-lib.mjs";
+import { DIA, proyectosDeDecomps, mapaDeEstudios, itemsDeEstudios, fichaDeIgdb, readmeABloques, estadoDeReadme, repoDeUrl, listaDeRegistro, terminadosDe } from "./lib/game-enhanced-lib.mjs";
 import { idRegistro } from "../../gameenhanced/lib/claves.mjs";
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -67,7 +67,7 @@ async function readmes() {
     const repo = repoDeUrl(p.url);
     if (!repo) continue;
     const prev = readmesPrevios[p.id];
-    if (prev && prev.repo === repo && AHORA - new Date(prev.actualizado).getTime() < 6 * DIA) { nuevos[p.id] = prev; c.reutilizados++; continue; }
+    if (prev && prev.v === 2 && prev.repo === repo && AHORA - new Date(prev.actualizado).getTime() < 6 * DIA) { nuevos[p.id] = prev; c.reutilizados++; continue; }
     if (limite) { if (prev) nuevos[p.id] = prev; continue; }
     c.pedidos++;
     const ctl = new AbortController();
@@ -78,15 +78,16 @@ async function readmes() {
       if (r.status === 404) { c.sinReadme++; continue; }
       if (r.status === 403 || r.status === 429) { limite = true; c.fallos++; if (prev) nuevos[p.id] = prev; console.error(`README ${repo}: límite de la API (HTTP ${r.status}); se conserva lo anterior del resto`); continue; }
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const { bloques, recortado } = readmeABloques(await r.text());
-      if (bloques.length) nuevos[p.id] = { repo, actualizado: new Date(AHORA).toISOString(), recortado, bloques };
+      const md = await r.text();
+      const { bloques, recortado } = readmeABloques(md);
+      if (bloques.length) nuevos[p.id] = { v: 2, repo, actualizado: new Date(AHORA).toISOString(), recortado, estado: estadoDeReadme(md), bloques };
       else c.sinReadme++;
     } catch (e) { c.fallos++; if (prev) nuevos[p.id] = prev; console.error(`README ${repo}: ${e.message}`); }
     finally { clearTimeout(tm); }
   }
   if (!Object.keys(nuevos).length && c.fallos) throw new Error(`ningún README disponible (${c.fallos} fallos)`);
   fs.writeFileSync(SALIDA_READMES, JSON.stringify({ version: 1, generatedAt: out.generatedAt, readmes: nuevos }, null, 1) + "\n");
-  out.fuentes.readmes = { ok: true, actualizado: out.generatedAt, ...c, conReadme: Object.keys(nuevos).length };
+  out.fuentes.readmes = { ok: true, actualizado: out.generatedAt, ...c, conReadme: Object.keys(nuevos).length, conEstado: Object.values(nuevos).filter(x => x.estado).length };
   ok.readmes = true;
 }
 

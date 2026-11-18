@@ -83,6 +83,32 @@ export function detalleDe(j, ahora) {
   return [j.plataformas && j.plataformas.length ? j.plataformas.join(" · ") : null, j.dias < 0 ? `sale ${j.fechaAprox ? "en " + j.fecha.slice(0, 4) : fechaLegible(j)}` : `salió ${fechaLegible(j)}`].filter(Boolean).join(" · ");
 }
 
+// Qué es cada tipo de proyecto, en lenguaje llano (la ficha lo muestra bajo el estado).
+export const GLOSARIO_SUBTIPO = {
+  decompilation: "Reconstruye el código fuente original del juego a partir del programa ya compilado, para poder compilarlo de nuevo (también en PC). No es un emulador.",
+  "static-recomp": "Traduce por adelantado el programa del juego a código nativo de PC, sin emulador. Suele necesitar tus propios archivos del juego.",
+  disassembly: "Analiza el programa del juego y lo documenta instrucción por instrucción. Es la base para estudiarlo o modificarlo, no un juego listo para jugar.",
+  "source-port": "Una versión del juego para equipos modernos, hecha a partir de su código fuente. Normalmente pide los archivos del juego original.",
+  "engine-remake": "Reescribe el motor del juego desde cero para poder jugarlo hoy, usando los datos del juego original.",
+  "browser-port": "Adapta el juego para que corra directamente en el navegador, normalmente con WebAssembly. Puede necesitar los archivos del juego original.",
+};
+
+// Madurez de un decomp con lo que se sabe de verdad (la lista de origen no trae un estado de avance):
+//  🟢 tiene versión publicada o se juega en el navegador · 🟠 detenido: marcado inactivo/archivado o sin cambios hace más
+//  de DETENIDO_DIAS · 🟡 en construcción: activo y sin versión descargable. "Sin versión" no significa "no jugable"
+//  (algunos se compilan desde el código): por eso la etiqueta dice "descargable".
+export const DETENIDO_DIAS = 180;
+export function madurezDecomp(j, ahora) {
+  const c = diasDesdeIso(j.ultimoCommit, ahora), r = diasDesdeIso(j.fechaRelease, ahora);
+  const cambio = c === null ? "sin dato de actividad" : `último cambio ${haceDias(c)}`;
+  const marcado = j.inactivo ? "Marcado como inactivo o archivado en la lista de origen." : null;
+  if (j.jugableUrl) return { nivel: "jugable", emoji: "🟢", etiqueta: "Se juega en el navegador", razon: ["Se puede probar directamente en el navegador.", marcado].filter(Boolean).join(" ") };
+  if (j.release) return { nivel: "version", emoji: "🟢", etiqueta: "Con versión descargable", razon: [`Última versión ${j.release}${r === null ? "" : " (" + haceDias(r) + ")"}.`, marcado].filter(Boolean).join(" ") };
+  if (j.inactivo || (c !== null && c > DETENIDO_DIAS)) return { nivel: "detenido", emoji: "🟠", etiqueta: "Detenido", razon: marcado || `Sin versión descargable y sin cambios desde hace más de ${DETENIDO_DIAS} días (${cambio}).` };
+  if (c === null) return { nivel: "sin-datos", emoji: "⚪", etiqueta: "Sin datos de avance", razon: "No hay versión publicada ni datos de actividad." };
+  return { nivel: "construccion", emoji: "🟡", etiqueta: "En construcción", razon: `Sin versión descargable todavía; ${cambio}.` };
+}
+
 // Enlaces a los releases de un decomp (solo repos de GitHub con una versión publicada): la página de la última
 // versión y la lista completa. null si no hay repo de GitHub o no hay versión.
 export function enlacesRelease(j) {
@@ -107,7 +133,7 @@ export function filasFicha(j, ahora, igdb = null) {
     add("Todas las versiones", rel ? enlace(rel.todas, "Releases") : null);
     add("Jugar en el navegador", j.jugableUrl ? enlace(j.jugableUrl, "Abrir") : null);
     add("¿Pide tu ROM o archivos?", ASSETS[j.pideAssets] && j.pideAssets !== "unknown" ? ASSETS[j.pideAssets] : null);
-    add("Hecho con IA (según la fuente)", j.ia ? "Sí" : null); add("Estado", j.inactivo ? "Inactivo o archivado" : "Activo");
+    add("Hecho con IA (según la fuente)", j.ia ? "Sí" : null); add("Marca en la lista", j.inactivo ? "Inactivo o archivado" : null);
     add("Fuente", enlace(j.url, "Repositorio"));
     return filas;
   }
@@ -138,7 +164,12 @@ export function textoCompartir(j, igdb = null, ahora = Date.now()) {
     url = igdb && typeof igdb.url === "string" && igdb.url.startsWith("https://") ? igdb.url : null;
   } else {
     lineas.push(detalleDe(j, ahora));
-    if (j.tipo === "d") { const rel = enlacesRelease(j); if (rel) lineas.push(`Última versión ${j.release}: ${rel.version}`); }
+    if (j.tipo === "d") {
+      const md = madurezDecomp(j, ahora);
+      lineas.push(`${md.emoji} ${md.etiqueta}`);
+      const rel = enlacesRelease(j);
+      if (rel) lineas.push(`Última versión ${j.release}: ${rel.version}`);
+    }
     url = typeof j.url === "string" && j.url.startsWith("https://") ? j.url : null;
   }
   return { titulo: j.titulo, texto: lineas.filter(Boolean).join("\n"), url };

@@ -123,6 +123,8 @@ assert.deepEqual(fe.find(f => f[0] === "Fuente")[1], { href: "https://igdb.examp
 assert.equal(L.filasFicha({ ...J[0], url: "javascript:alert(1)" }, AHORA).find(f => f[0] === "Fuente"), undefined, "solo enlaces https (si no, la fila no aparece)");
 assert(![...fd, ...fe].some(f => f[1] === "—" || f[1] === "Sin dato" || f[1] === undefined), "la ficha no muestra filas vacías");
 const sinDatos = L.filasFicha({ ...J[0], jugableUrl: null, pideAssets: null, ia: false, release: null, plataforma: null, ultimoCommit: null }, AHORA).map(f => f[0]);
+assert(!L.filasFicha({ ...J[0], inactivo: false }, AHORA).some(f => f[0] === "Estado" || f[0] === "Marca en la lista"), "activo: sin fila de estado engañosa");
+assert.deepEqual(L.filasFicha({ ...J[0], inactivo: true }, AHORA).find(f => f[0] === "Marca en la lista"), ["Marca en la lista", "Inactivo o archivado"], "inactivo: la marca de la lista, con ese nombre");
 assert(!sinDatos.includes("Jugar en el navegador") && !sinDatos.includes("¿Pide tu ROM o archivos?") && !sinDatos.includes("Última versión") && !sinDatos.includes("Hecho con IA (según la fuente)") && !sinDatos.includes("Plataforma"), "sin dato → sin fila");
 
 // ── disposición continua del XMB ────────────────────────────────────────────
@@ -298,6 +300,22 @@ assert.equal(cr.url, "https://www.igdb.com/games/alfa");
 assert.equal(L.textoCompartir({ tipo: "r", titulo: "Beta", estado: "quiero" }, null, AHORA).url, null, "sin ficha de IGDB: solo texto");
 assert.equal(L.textoCompartir({ ...wolf, url: "javascript:alert(1)" }, null, AHORA).url, null, "solo enlaces https");
 
+// ── madurez, glosario ──────────────────────────────────────────────────────
+const base = { tipo: "d", titulo: "T", subtipo: "static-recomp", inactivo: false, release: null, fechaRelease: null, jugableUrl: null, ultimoCommit: dias(72) };
+const M = x => L.madurezDecomp({ ...base, ...x }, AHORA);
+assert.equal(M({}).nivel, "construccion"); assert.equal(M({}).emoji, "🟡");
+assert.match(M({}).razon, /Sin versión descargable todavía; último cambio hace 2 m/);
+assert.equal(M({ release: "v1", fechaRelease: dias(5) }).nivel, "version"); assert.match(M({ release: "v1", fechaRelease: dias(5) }).razon, /Última versión v1 \(hace 5 d\)/);
+assert.equal(M({ jugableUrl: "https://x.example/play" }).nivel, "jugable");
+assert.equal(M({ ultimoCommit: dias(L.DETENIDO_DIAS + 1) }).nivel, "detenido"); assert.equal(M({ ultimoCommit: dias(L.DETENIDO_DIAS - 1) }).nivel, "construccion", "justo bajo el umbral: aún en construcción");
+assert.equal(M({ inactivo: true }).nivel, "detenido"); assert.match(M({ inactivo: true }).razon, /inactivo o archivado/);
+assert.equal(M({ inactivo: true, release: "v2" }).nivel, "version", "con versión publicada manda la versión…");
+assert.match(M({ inactivo: true, release: "v2" }).razon, /inactivo o archivado/, "…pero avisa que el proyecto está inactivo");
+assert.equal(M({ ultimoCommit: null }).nivel, "sin-datos");
+assert.match(M({ release: "v1", fechaRelease: dias(5) }).etiqueta, /descargable/, "no promete que sea jugable");
+for (const k of Object.keys(L.SUBTIPOS)) assert(L.GLOSARIO_SUBTIPO[k] && L.GLOSARIO_SUBTIPO[k].length > 40, "glosario para " + k);
+assert.match(L.textoCompartir({ ...base, id: "d-x", plataforma: "PS3", estrellas: 17, url: "https://github.com/a/b" }, null, AHORA).texto, /🟡 En construcción/, "compartir incluye el estado");
+
 // ── pipeline: README, fichas, registro ──────────────────────────────────────
 const md = "# Proyecto\n\n[![CI](https://x/badge.svg)](https://x) Una **decompilación** de [Zelda](https://z.example) <img src=\"a.png\">.\n\n<!-- oculto -->\n## Compilar\n\n- Instala `make`\n- Corre `make all`\n\n```sh\nmake all\n```\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n## Vacío\n## Licencia\n\nMIT";
 const rm = P.readmeABloques(md);
@@ -306,6 +324,17 @@ assert.equal(rm.recortado, false);
 const largo = P.readmeABloques("# T\n\n" + Array.from({ length: 80 }, (_, i) => `Párrafo número ${i} con bastante texto para ocupar espacio en la ficha.`).join("\n\n"));
 assert(largo.recortado && largo.bloques.reduce((n, [, x]) => n + x.length, 0) <= 3800, "README largo: recortado y acotado");
 assert.deepEqual(P.readmeABloques("").bloques, []);
+const cont = P.readmeABloques("## Hecho\n\n- Una ventana con los píxeles del juego, el comando de limpieza llega\n  al backend D3D12 y la pantalla cambia\n- Segundo ítem\ncontinuación pegada\n\nPárrafo aparte.\n\n- Otro\n\n  con párrafo sangrado");
+assert.deepEqual(cont.bloques, [["h", "Hecho"], ["li", "Una ventana con los píxeles del juego, el comando de limpieza llega al backend D3D12 y la pantalla cambia"], ["li", "Segundo ítem continuación pegada"], ["p", "Párrafo aparte."], ["li", "Otro con párrafo sangrado"]], "las continuaciones de viñeta se quedan en su viñeta");
+// estado según el autor
+const eT = P.estadoDeReadme("# Proyecto\n\nIntro.\n\n## Status: Phase 8 — Boots to a Window, Geometry Not Yet Drawing\n\nThe game boots end-to-end but nothing is drawn yet.\n\n- detalle\n\n## Build\n\nmake");
+assert.deepEqual(eT, { titulo: "Status: Phase 8 — Boots to a Window, Geometry Not Yet Drawing", texto: "The game boots end-to-end but nothing is drawn yet." });
+assert.deepEqual(P.estadoDeReadme("## Estado\n\n- Menús: listo\n- Audio: pendiente"), { titulo: "Estado", texto: "Menús: listo" }, "sin párrafo: la primera viñeta");
+assert.deepEqual(P.estadoDeReadme("## Progress\n\n## Otro\n\ntexto"), { titulo: "Progress", texto: "" }, "sección vacía: solo el título");
+assert.equal(P.estadoDeReadme("## Build status\n\n[![CI](x)](y)\n\n## Uso\n\ntexto"), null, "badges de CI no son el estado del proyecto");
+assert.equal(P.estadoDeReadme("# Proyecto\n\n```\n## Status\n```\n\ntexto"), null, "un título dentro de un bloque de código no cuenta");
+assert.equal(P.estadoDeReadme("## Instalación\n\ntexto"), null);
+assert.equal(P.estadoDeReadme(""), null);
 assert.equal(P.repoDeUrl("https://github.com/owner/repo"), "owner/repo");
 assert.equal(P.repoDeUrl("https://github.com/owner/repo.git"), "owner/repo");
 assert.equal(P.repoDeUrl("https://github.com/owner/repo/tree/main"), "owner/repo");

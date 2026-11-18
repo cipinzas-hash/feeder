@@ -1,6 +1,6 @@
 import { fetchGameEnhancedData, fetchGameEnhancedFichas, fetchGameEnhancedReadmes } from "../shared/catalog.js";
 import { Ventana, VentanaCabecera } from "../shared/ui.jsx";
-import { CATEGORIAS, TIPO, ESTADOS_INFO, esCategoriaRegistro, motivoDe, cuando, detalleDe, filasFicha, edadDatos, itemsDe, XMB, OPACIDAD, disposicion, textoCompartir, resumen, portadaUrl, portadaDe } from "./logica.js";
+import { CATEGORIAS, TIPO, ESTADOS_INFO, GLOSARIO_SUBTIPO, esCategoriaRegistro, motivoDe, cuando, detalleDe, filasFicha, madurezDecomp, edadDatos, itemsDe, XMB, OPACIDAD, disposicion, textoCompartir, resumen, portadaUrl, portadaDe } from "./logica.js";
 import { useEstado, alternarGuardado, ocultar, deshacerOcultar } from "./estado.js";
 import { useRegistro, agregarJuego, editarJuego, quitarJuego, restaurarJuego, sembrar } from "./registro.js";
 import { ESTADOS_REGISTRO, idRegistro } from "./lib/claves.mjs";
@@ -204,6 +204,30 @@ function Readme({ readme, cargando, repoUrl }) {
   );
 }
 
+// Estado de un decomp en una tarjeta arriba de la ficha: semáforo de madurez (con su motivo), lo que dice el autor en
+// su README sobre el avance (textual, tal como lo escribió) y qué tipo de proyecto es, en lenguaje llano.
+function EstadoDecomp({ j, ahora, readme }) {
+  const md = madurezDecomp(j, ahora);
+  const autor = readme && readme.estado;
+  const glosario = GLOSARIO_SUBTIPO[j.subtipo];
+  return (
+    <div data-estado={md.nivel} style={{ display: "flex", flexDirection: "column", gap: 8, padding: 12, borderRadius: 10, background: "rgba(23,23,26,.92)", border: "1px dashed #3a3a40" }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 18 }} aria-hidden="true">{md.emoji}</span>
+        <strong style={{ fontFamily: CAVEAT, fontWeight: 600, fontSize: 24, lineHeight: 1, color: "#fff" }}>{md.etiqueta}</strong>
+      </div>
+      <p style={{ margin: 0, fontSize: 13, color: "#c4c4ca" }}>{md.razon}</p>
+      {autor && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, paddingTop: 8, borderTop: "1px dashed #3a3a40" }}>
+          <span style={{ fontSize: 11, letterSpacing: "0.08em", color: DIM }}>ESTADO SEGÚN EL AUTOR (README, en su idioma)</span>
+          <span style={{ fontSize: 13, color: "#fff", overflowWrap: "anywhere" }}>{autor.titulo}</span>
+          {autor.texto && <span style={{ fontSize: 12, lineHeight: 1.45, color: "#c4c4ca", overflowWrap: "anywhere" }}>{autor.texto}</span>}
+        </div>)}
+      {glosario && <p style={{ margin: 0, paddingTop: 8, borderTop: "1px dashed #3a3a40", fontSize: 12, lineHeight: 1.45, color: DIM }}><strong style={{ color: "#c4c4ca", fontWeight: 500 }}>Qué es este tipo de proyecto:</strong> {glosario}</p>}
+    </div>
+  );
+}
+
 const ETIQUETA_FICHA = { d: "Decomp", e: "Estudio", r: "Juego" };
 // Marco oscuro de la Ventana compartida: el popup de la ficha combina con el XMB, no con el papel de los formularios.
 const MARCO_OSCURO = { background: "#0b0b0c", color: TXT, border: "2px dashed #555", boxShadow: "6px 6px 0 #000" };
@@ -240,6 +264,7 @@ function Ficha({ j, ahora, igdb, imagen, guardado, enRegistro, readme, cargandoR
           {sub && <p style={{ margin: 0, fontSize: 13, color: "#c4c4ca" }}>{sub}</p>}
         </div>
       </div>
+      {j.tipo === "d" && <EstadoDecomp j={j} ahora={ahora} readme={readme} />}
       {j.tipo === "r" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <ChipsEstado valor={j.estado} onElegir={e => onEditar({ estado: e })} />
