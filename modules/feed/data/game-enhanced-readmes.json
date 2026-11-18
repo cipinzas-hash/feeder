@@ -1,11 +1,13 @@
 {
  "version": 1,
- "generatedAt": "2026-11-17T17:50:34.123Z",
+ "generatedAt": "2026-11-18T12:47:54.356Z",
  "readmes": {
   "d-fabiangreffrath-intenseflow": {
+   "v": 2,
    "repo": "fabiangreffrath/intenseflow",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -105,22 +107,127 @@
     ]
    ]
   },
-  "d-simon3sarkis-super-odyssey-pc-recomp": {
-   "repo": "Simon3Sarkis/super-odyssey-pc-recomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+  "d-jackpoison-prog-ringout": {
+   "v": 2,
+   "repo": "jackpoison-prog/RingOut",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": {
+    "titulo": "Status",
+    "texto": "Fully playable — boots to menu and through gameplay. Every block of the game's own executable runs as native code; the recompiler translates 535,368 instructions with 0 unknown opcodes and no interpreter fallback inside them."
+   },
    "bloques": [
     [
      "h",
-     "Super Odyssey PC Recomp"
+     "Ring Out"
     ],
     [
      "p",
-     "A native PC port of Super Mario Odyssey for Windows and Linux, made by static recompilation - from your own copy of the game."
+     "A native PC port of a GameCube fighting game (disc ID GRSEAF), produced by static recompilation rather than emulation: the disc's PowerPC executable is translated ahead of time into C, compiled for x86-64, and run as native code inside a Dolphin-derived runtime that provides the graphics, audio, input and hardware emulation around it."
     ],
     [
      "p",
-     "[!NOTE] This is an AI-made project. The code of this port was written by AI: almost all of it by Claude (Anthropic's AI model, through Claude Code), with some fixes and features from OpenAI's Codex. The maintainer doesn't write the code; they direct the work, test every build on Windows and a Steam Deck, and run the releases. See Who made this."
+     "No game data and no game code are distributed here. You supply a disc image you already own; setup extracts it and recompiles it on your machine."
+    ],
+    [
+     "p",
+     "This is still early. Expect rough edges: the game is playable start to finish, but features arrive before their polish does, and something that worked last release can break in the next one. Polish is planned throughout rather than saved up for a 1.0 — and bug reports genuinely help, because most of what gets fixed here was found by someone hitting it."
+    ],
+    [
+     "h",
+     "Status"
+    ],
+    [
+     "p",
+     "Fully playable — boots to menu and through gameplay. Every block of the game's own executable runs as native code; the recompiler translates 535,368 instructions with 0 unknown opcodes and no interpreter fallback inside them."
+    ],
+    [
+     "p",
+     "What the interpreter does still cover is the PowerPC exception vectors — 0x500 (external interrupt), 0xC00 (system call), 0x800 (FP unavailable). Those handlers are written into low RAM by the OS at boot rather than living in the disc's executable, so there is no recompiled code to dispatch to and the interpreter runs them until control returns. They account for about 0.7% of executed steps, steadily, because interrupts fire for the life of the session — but only 0.2% of cycles, so there is nothing to win by recompiling them. An earlier version of this page claimed \"zero interpreter…"
+    ],
+    [
+     "p",
+     "Rendering is Vulkan on the GPU, with the CPU emulation and the runtime on separate cores."
+    ],
+    [
+     "p",
+     "Steam Deck: supported, with its own package, and it runs in both Desktop and Game Mode at 45–49 fps in a match. Two ways to get a module onto it, so it works whether or not the Deck is the only machine you have:"
+    ],
+    [
+     "li",
+     "Build it on the Deck. Install a toolchain once and SteamOS compiles its own module, needing no bundled libraries at all — no second computer anywhere in the process. Tested end to end on SteamOS 3.8.25. This is also the way to get the full PGO win there, since clang 20 cannot read the shipped profiles."
+    ],
+    [
+     "li",
+     "Build it on a desktop and copy it over. No toolchain on the Deck at all, if you have another Linux machine to hand."
+    ],
+    [
+     "p",
+     "dist/RingOut-1.0-deck/BUILD-ON-THE-DECK.md walks through the first route, and ships inside the Deck package too."
+    ],
+    [
+     "p",
+     "Netplay: working. Delay-based (not rollback) over a deterministic dual-core setup, with a lobby showing live ping and per-player game status; two peers stayed byte-identical over 6,470 frames."
+    ],
+    [
+     "h",
+     "Getting it"
+    ],
+    [
+     "p",
+     "From the Releases page. Each is named for the release you download, so below is that release's number:"
+    ],
+    [
+     "p",
+     "The Deck package ships no module, so you build one and copy game/ and bin/gGRSEAF_recomp.so into it. You can do that on the Deck itself — download both zips, since the Linux one is what carries module-src/ and does the building — or on a desktop if you have one. setup.sh --deck installs the result into the Deck package for you when it can see it. Add RingOut to Steam as a non-Steam game to launch it from Game Mode."
+    ],
+    [
+     "p",
+     "For desktop, unzip and run:"
+    ],
+    [
+     "p",
+     "On first run it asks for your disc image (.iso / .gcm / .nkit.iso / .rvz), then extracts and recompiles it — several minutes, once, with each stage numbered as it starts (==> 1/3 Extracting disc, 2/3 recompiling, 3/3 building the module; --pgo adds a fourth) and a closing line saying whether a PGO profile was used. Every run after that starts straight away. You can also pass the image directly:"
+    ],
+    [
+     "h",
+     "Requirements"
+    ],
+    [
+     "li",
+     "A GameCube disc image you already own"
+    ],
+    [
+     "li",
+     "cmake, ninja, python3, and clang (or gcc)"
+    ],
+    [
+     "li",
+     "Arch: sudo pacman -S cmake ninja clang python"
+    ]
+   ]
+  },
+  "d-simon3sarkis-super-odyssey-pc-recomp": {
+   "v": 2,
+   "repo": "Simon3Sarkis/super-odyssey-pc-recomp",
+   "actualizado": "2026-11-18T12:47:54.356Z",
+   "recortado": true,
+   "estado": {
+    "titulo": "Status",
+    "texto": "Every part, what it means, what holds it back and how the average is calculated: Status."
+   },
+   "bloques": [
+    [
+     "p",
+     "Download · Get started · Status · Known issues · Engineering notes · Issues"
+    ],
+    [
+     "p",
+     "Super Odyssey PC Recomp is a native PC port of Super Mario Odyssey (Nintendo Switch, versions 1.0.0 and 1.4.1) for Windows, Linux and the Steam Deck, made by static recompilation and built on your PC from your own copy of the game."
+    ],
+    [
+     "p",
+     "Screenshots taken in Super Odyssey PC Recomp at 3840 x 2160 (click for full size). The game is © Nintendo; you need your own copy to run it."
     ],
     [
      "p",
@@ -128,126 +235,165 @@
     ],
     [
      "p",
-     "[!WARNING] This is an early preview. The whole game can be played, but there are known issues (see Known issues) and things that still need fixing. Please report what you find."
+     "[!NOTE] This is an AI-made project. The code of this port was written by AI: almost all of it by Claude (Anthropic's AI model, through Claude Code), with some fixes and features from OpenAI's Codex. The maintainer doesn't write the code; they direct the work, test every build on Windows and a Steam Deck, and run the releases. See Who made this."
+    ],
+    [
+     "p",
+     "[!WARNING] This is an early preview. The whole game can be played, but there are known issues (see Known issues) and things that still need fixing. If something breaks at a high frame rate, set Performance > Frame rate to 60 for that moment, and please report what you find."
     ],
     [
      "h",
-     "Current focus"
+     "Features"
     ],
     [
      "li",
-     "The same as on the Switch, at 60 FPS. Every kingdom compared with the Switch version (recordings and"
-    ],
-    [
-     "p",
-     "captures, side by side): rendering, effects, shadows, behaviour and timing. Any difference gets fixed, so that the port plays and looks 1:1 with the original."
+     "The whole game from your own copy, versions 1.0.0 and 1.4.1 - no emulator runs while you play"
     ],
     [
      "li",
-     "No stutter. The shader preparation is being reworked to cover everything the game draws, to finish faster and"
-    ],
-    [
-     "p",
-     "to take far less disk space, so a first visit to a kingdom or effect never hitches. Smooth, stable frame pacing matters more here than higher numbers."
+     "Frame rates from 60 to 240 FPS, every frame really drawn, with Match display picking the smoothest rate for your screen"
     ],
     [
      "li",
-     "The open issues: crashes at start, slow performance on some AMD / Linux setups and handhelds,"
-    ],
-    [
-     "p",
-     "controller fixes."
+     "Resolutions up to 4K and beyond (up to 4x the Switch's), and any screen shape: 16:9, 16:10, 21:9, 32:9, 4:3 or Fill, with the HUD at the edges on ultrawide"
     ],
     [
      "li",
-     "Then 90 and 120 FPS, and new features (frame generation, sharper HUD text, more graphics options, Steam Deck"
+     "Upscaling with NVIDIA DLSS / DLAA, AMD FSR 1 / 2 / 3.1 / 4 and Intel XeSS, the HUD drawn at full resolution over the upscaled picture, plus frame generation (AMD FSR, NVIDIA DLSS beta) and NVIDIA Reflex"
     ],
     [
-     "p",
-     "controller layout)."
+     "li",
+     "Shaders prepared before you play, and again by themselves after a driver update, so they are not compiled while you play (a rare effect nobody has recorded yet can still hitch once)"
     ],
     [
-     "p",
-     "Releases will only go out once they've been tested on Windows and a Steam Deck with both game versions."
+     "li",
+     "Sharper than the Switch when you want it: FXAA or SMAA, 2x / 4x shadow maps, texture detail, 16x anisotropic filtering, smooth colour gradients, a sharper HUD on large screens - and the Switch's own look by default"
+    ],
+    [
+     "li",
+     "Any controller, with button icons that match it (Xbox, PlayStation, Switch), a Joy-Con pair, motion controls and vibration; keyboard and mouse with a real mouse camera, and the mouse in the game's own menus"
+    ],
+    [
+     "li",
+     "A start screen and settings menu made for controller, mouse and keyboard, where every option says what it does and what is recommended, with button hints drawn for the device you are using - in English, Korean and Brazilian Portuguese"
+    ],
+    [
+     "li",
+     "Steam Deck and PC handhelds: 1280 x 800 at 60 FPS in Gaming Mode"
+    ],
+    [
+     "li",
+     "Built-in updates, RomFS mods, 5.1 surround, a performance overlay, Discord activity (off by default)"
+    ],
+    [
+     "li",
+     "Crash reports you can read: what happened, where, and a signature to match the same crash between players Cap Kingdom at 3840 x 2160 and 120 FPS with the port's own performance overlay (0.4.4, upscaling and anti-aliasing off): the graphics card at 63%, the game using 3% of the CPU and 6.5 GB of RAM. One PC, an RTX 4090 with a Ryzen 9 9950X3D; other PCs and busier places will show other numbers. The start screen and the settings menu (0.4.1): Play first, categories in a sidebar, every option explained."
     ],
     [
      "h",
-     "What it is"
+     "Status"
     ],
     [
      "p",
-     "The game's ARM64 code is translated to C ahead of time and compiled into a regular Windows program - no emulator runs while you play. The parts of the Switch the game talks to (kernel, system services, the NVN graphics API, audio) are reimplemented on the PC, with Vulkan for graphics."
-    ],
+     "Every part, what it means, what holds it back and how the average is calculated: Status."
+    ]
+   ]
+  },
+  "d-tmcleroy-soulcalibur2-recomp": {
+   "v": 2,
+   "repo": "tmcleroy/soulcalibur2-recomp",
+   "actualizado": "2026-11-18T12:47:54.356Z",
+   "recortado": true,
+   "estado": null,
+   "bloques": [
     [
-     "li",
-     "Installer that takes your game's extracted exefs and romfs folders (1.0.0, or 1.4.1 with the update applied)"
-    ],
-    [
-     "li",
-     "Every shader compiled ahead of play (and again by itself after a GPU driver or game update), so effects don't"
-    ],
-    [
-     "p",
-     "stutter the first time they appear - see How the shader stutter was solved"
-    ],
-    [
-     "li",
-     "Frame rates from 60 up to 240 FPS, every frame really drawn, with Match display picking the smoothest rate"
+     "h",
+     "Soulcalibur II Recomp"
     ],
     [
      "p",
-     "for your screen"
-    ],
-    [
-     "li",
-     "Up to 4x internal resolution, NVIDIA DLSS / DLAA, AMD FSR 2 / 3.1 / 4, Intel XeSS, FSR 1, SMAA - with"
+     "Join me on Discord"
     ],
     [
      "p",
-     "the HUD drawn at full resolution over the upscaled picture - and frame generation (AMD FSR, NVIDIA DLSS beta) with NVIDIA Reflex"
-    ],
-    [
-     "li",
-     "Any screen shape: 16:9, 16:10, 21:9, 32:9, 4:3 or Fill window, with the HUD at the edges on ultrawide"
-    ],
-    [
-     "li",
-     "Motion controls as on the Switch (the game's 200 Hz sensor history), mouse camera, 5.1 surround"
-    ],
-    [
-     "li",
-     "Keyboard and controller rebinding, RomFS mods, an in-game settings menu, and built-in updates from this page"
+     "All three console exclusives in one game: Spawn, Link and Heihachi. Soulcalibur II came out on the Xbox with Spawn, on the GameCube with Link and on the PlayStation 2 with Heihachi, and none of those releases had more than one of them. This port has all three on the same select screen, in every mode, against each other."
     ],
     [
      "p",
-     "Windows 10 / 11 (x64). Linux and Steam Deck: experimental - an AppImage, see docs/linux.md."
+     "An unofficial native port of Soulcalibur II (Xbox) for macOS, Linux (Steam Deck and Steam Machine included), Windows and Android. It is a static recompilation of the Xbox game: its program is translated ahead of time into C and runs on a native runtime, with no emulator. It adds a training mode, online play with rollback, a free camera with a pause, widescreen, higher resolutions and shaders."
+    ],
+    [
+     "p",
+     "No game files are included. Your own Soulcalibur II Xbox disc image is the only one you need to play: the USA disc, or the European one (Europe, Australia), which plays in English, German, French, Spanish or Italian (the Language feature; on macOS, Windows and Linux, not yet Android). Link and Heihachi are optional: give the launcher your own GameCube disc, PlayStation 2 disc, or both, to add them. This project cannot help you get any of them."
     ],
     [
      "h",
-     "Install"
-    ],
-    [
-     "li",
-     "Download the latest ...-windows.zip from Releases and extract it anywhere"
+     "Spawn, Link and Heihachi together"
     ],
     [
      "p",
-     "you own (for example D:\\Games, not Program Files). Start SuperOdysseyRecomp.exe. It isn't code-signed: if SmartScreen says \"Windows protected your PC\", choose More info, then Run anyway."
+     "The Xbox game has Spawn. Link and Heihachi are converted on your machine from your GameCube and PlayStation 2 discs (models, moves, weapons, voices, select-screen art and endings) and stand beside him: in Arcade, VS, the Extra modes, Weapon Master, and the Museum's profiles, theaters and Art Gallery."
+    ],
+    [
+     "h",
+     "Training"
+    ],
+    [
+     "p",
+     "Hit boxes (the game's own collision shapes: where each fighter can be hit, and its weapon and limbs, red while an attack is live), frame data (startup, active, recovery, advantage on hit or guard) with a frame meter, an input display and a combo readout down each fighter's side, start over (the round as it began, one key), a dummy that records and replays what you show it (in Practice or VS Battle), health refill and infinite time; with save states, pause and frame advance, and slow motion from the in-game menu. See docs/PLAYING.md."
+    ],
+    [
+     "h",
+     "Online play"
+    ],
+    [
+     "p",
+     "Two players, each on their own machine. Host from the launcher or from the in-game menu while you play, and give the other player the match's code (or find each other in the lobby, or invite them from the launcher's waiting room); join with the code. Fights use rollback; the menus wait for both players. During a match: both players' names, the ping, and a chat (T). A dropped connection waits for the other player to come back with the same code. See docs/online.md."
+    ],
+    [
+     "h",
+     "Free camera and photo mode"
+    ],
+    [
+     "p",
+     "Switched on in the launcher: \\ (backquote) or a click of the right stick takes the game's camera and flies it, in fights and menus. P (or Start while flying) pauses the fight while the camera goes on flying; . (or White) steps a frame; H (or Black) hides the life bars and timer; F12 saves a screenshot."
+    ],
+    [
+     "h",
+     "And"
     ],
     [
      "li",
-     "The installer asks for:"
+     "Widescreen (the game's own 16:9 mode) and resolutions up to 8x (5120x3840)."
     ],
     [
      "li",
-     "Your game: the folder that holds the extracted exefs and romfs folders of your own Super Mario"
+     "HD textures: the GameCube version's HD texture pack for Dolphin, from your own download, matched to the Xbox's textures when you import it; or dump the game's textures and make your own."
+    ],
+    [
+     "li",
+     "Shaders: RetroArch's CRT and scanline shaders (CRT Royale, CRT Guest, CRT Lottes and more) at the Xbox's 480 lines, or your own preset."
+    ],
+    [
+     "li",
+     "An endless battle: in any fight, the game plays both fighters for as long as you like (touch the controls to take one over)."
+    ],
+    [
+     "li",
+     "An in-game menu (Esc, F1 or a gamepad's Back): save states, speed, training, cheats (no damage, one-hit knockouts, everything unlocked), online, sound, quit."
+    ],
+    [
+     "li",
+     "Android: the launcher and the game in one app for 64-bit phones and tablets (Android 10 or later, Vulkan), with touch controls (a stick, the four attack buttons, Start and the menu) beside any gamepad."
     ]
    ]
   },
   "d-metroidret-mf": {
+   "v": 2,
    "repo": "metroidret/mf",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -451,255 +597,12 @@
     ]
    ]
   },
-  "d-ragnaroek-iron-wolf": {
-   "repo": "Ragnaroek/iron-wolf",
-   "actualizado": "2026-11-17T00:11:48.971Z",
-   "recortado": false,
-   "bloques": [
-    [
-     "h",
-     "Iron Wolf"
-    ],
-    [
-     "p",
-     "Wolfenstein 3D in Rust"
-    ],
-    [
-     "p",
-     "The goal is to have a pixel, mod-friendly perfect recreation of Wolfenstein 3D in Rust."
-    ],
-    [
-     "p",
-     "E1M1 Demo"
-    ],
-    [
-     "h",
-     "Playing Iron Wolf"
-    ],
-    [
-     "p",
-     "just run-sdl-shareware should work out of the box on a cloned repo. It will run the shareware version, that is also checked in along with the code as testdata."
-    ],
-    [
-     "p",
-     "Alternatively you can play the web version here:"
-    ],
-    [
-     "p",
-     "If you have a copy of the full game files you can upload them there and play the full version in your browser:"
-    ],
-    [
-     "h",
-     "Configuration File"
-    ],
-    [
-     "p",
-     "A config file is optional. Copy the default_iw_config.toml as iw_config.toml and put it next to the Iron Wolf exectuable file. The options are described as comments in the default config file."
-    ]
-   ]
-  },
-  "d-tmcleroy-soulcalibur2-recomp": {
-   "repo": "tmcleroy/soulcalibur2-recomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
-   "recortado": true,
-   "bloques": [
-    [
-     "h",
-     "Soulcalibur II Recomp"
-    ],
-    [
-     "p",
-     "Join me on Discord"
-    ],
-    [
-     "p",
-     "All three console exclusives in one game: Spawn, Link and Heihachi. Soulcalibur II came out on the Xbox with Spawn, on the GameCube with Link and on the PlayStation 2 with Heihachi, and none of those releases had more than one of them. This port has all three on the same select screen, in every mode, against each other."
-    ],
-    [
-     "p",
-     "An unofficial native port of Soulcalibur II (Xbox) for macOS, Linux (Steam Deck and Steam Machine included), Windows and Android. It is a static recompilation of the Xbox game: its program is translated ahead of time into C and runs on a native runtime, with no emulator. It adds a training mode, online play with rollback, a free camera with a pause, widescreen, higher resolutions and shaders."
-    ],
-    [
-     "p",
-     "No game files are included. Your own Soulcalibur II Xbox disc image is the only one you need to play: the USA disc, or the European one (Europe, Australia), which plays in English, German, French, Spanish or Italian (the Language feature; on macOS, Windows and Linux, not yet Android). Link and Heihachi are optional: give the launcher your own GameCube disc, PlayStation 2 disc, or both, to add them. This project cannot help you get any of them."
-    ],
-    [
-     "h",
-     "Spawn, Link and Heihachi together"
-    ],
-    [
-     "p",
-     "The Xbox game has Spawn. Link and Heihachi are converted on your machine from your GameCube and PlayStation 2 discs (models, moves, weapons, voices, select-screen art and endings) and stand beside him: in Arcade, VS, the Extra modes, Weapon Master, and the Museum's profiles, theaters and Art Gallery."
-    ],
-    [
-     "h",
-     "Training"
-    ],
-    [
-     "p",
-     "Hit boxes (the game's own collision shapes: where each fighter can be hit, and its weapon and limbs, red while an attack is live), frame data (startup, active, recovery, advantage on hit or guard) with a frame meter, an input display and a combo readout down each fighter's side, start over (the round as it began, one key), a dummy that records and replays what you show it (in Practice or VS Battle), health refill and infinite time; with save states, pause and frame advance, and slow motion from the in-game menu. See docs/PLAYING.md."
-    ],
-    [
-     "h",
-     "Online play"
-    ],
-    [
-     "p",
-     "Two players, each on their own machine. Host from the launcher or from the in-game menu while you play, and give the other player the match's code (or find each other in the lobby, or invite them from the launcher's waiting room); join with the code. Fights use rollback; the menus wait for both players. During a match: both players' names, the ping, and a chat (T). A dropped connection waits for the other player to come back with the same code. See docs/online.md."
-    ],
-    [
-     "h",
-     "Free camera and photo mode"
-    ],
-    [
-     "p",
-     "Switched on in the launcher: \\ (backquote) or a click of the right stick takes the game's camera and flies it, in fights and menus. P (or Start while flying) pauses the fight while the camera goes on flying; . (or White) steps a frame; H (or Black) hides the life bars and timer; F12 saves a screenshot."
-    ],
-    [
-     "h",
-     "And"
-    ],
-    [
-     "li",
-     "Widescreen (the game's own 16:9 mode) and resolutions up to 8x (5120x3840)."
-    ],
-    [
-     "li",
-     "HD textures: the GameCube version's HD texture pack for Dolphin, from your own download, matched to the Xbox's"
-    ],
-    [
-     "p",
-     "textures when you import it; or dump the game's textures and make your own."
-    ],
-    [
-     "li",
-     "Shaders: RetroArch's CRT and scanline shaders (CRT Royale, CRT Guest, CRT Lottes and more) at the Xbox's 480"
-    ],
-    [
-     "p",
-     "lines, or your own preset."
-    ],
-    [
-     "li",
-     "An endless battle: in any fight, the game plays both fighters for as long as you like (touch the controls to"
-    ],
-    [
-     "p",
-     "take one over)."
-    ],
-    [
-     "li",
-     "An in-game menu (Esc, F1 or a gamepad's Back): save states, speed, training, cheats (no damage, one-hit"
-    ],
-    [
-     "p",
-     "knockouts, everything unlocked), online, sound, quit."
-    ],
-    [
-     "li",
-     "Android: the launcher and the game in one app for 64-bit phones and tablets (Android 10 or later, Vulkan),"
-    ],
-    [
-     "p",
-     "with touch controls (a stick, the four attack buttons, Start and the menu) beside any gamepad."
-    ]
-   ]
-  },
-  "d-alexbeavs-ps1-ports-final-fantasy-ix-recomp": {
-   "repo": "alexbeavs-ps1-ports/final-fantasy-ix-recomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
-   "recortado": false,
-   "bloques": [
-    [
-     "h",
-     "Final Fantasy IX Recompiled"
-    ],
-    [
-     "p",
-     "This release candidate uses PSXRecomp and the shared recomp-ui launcher. You must supply your own SLUS-01251 game disc and SCPH-1001 (USA) BIOS. The package contains no game disc, retail BIOS, generated retail game code, or saved game."
-    ],
-    [
-     "p",
-     "BIOS: SCPH-1001 (USA) retail BIOS, 524288 bytes, SHA-256 71af94d1e47a68c11e8fdb9f8368040601514a42a5a399cda48c7d3bff1e99d3. Supply your own dump; releases do not use OpenBIOS."
-    ],
-    [
-     "h",
-     "Status"
-    ],
-    [
-     "p",
-     "Latest release: v0.1.4, built on psxrecomp pin I 0.1.23."
-    ],
-    [
-     "li",
-     "Packages for Windows x64, Linux x64, macOS Apple Silicon and macOS Intel passed the CI build and package checks."
-    ],
-    [
-     "li",
-     "Replay check: on Windows, a build on pin I 0.1.23 played 2 of 2 recorded routes to the end without a crash. That check compares memory, not the picture, and is not a play test."
-    ],
-    [
-     "li",
-     "Not claimed: full-game completion, audio fidelity or multiplayer. Setup and gameplay reports from Linux, macOS and Steam Deck are welcome."
-    ],
-    [
-     "p",
-     "Known issues for the current version are in its release notes."
-    ],
-    [
-     "h",
-     "Setup"
-    ],
-    [
-     "li",
-     "Extract the complete setup ZIP into a writable folder."
-    ],
-    [
-     "li",
-     "Start Final_Fantasy_IX_Recompiled (.exe on Windows)."
-    ],
-    [
-     "li",
-     "Select your CUE file and the required BIOS in the setup wizard."
-    ],
-    [
-     "li",
-     "Run Generate & rebuild and wait for the game to start."
-    ],
-    [
-     "p",
-     "On Windows, the setup wizard can download the portable build tools. On Linux and macOS, install CMake, Ninja, Python 3, and a C/C++ compiler first. Keep the CUE and all files it references together. The BIOS must be 524288 bytes with SHA-256 71af94d1e47a68c11e8fdb9f8368040601514a42a5a399cda48c7d3bff1e99d3."
-    ],
-    [
-     "h",
-     "Candidate status"
-    ],
-    [
-     "p",
-     "Version 0.1.0 is being prepared for September 7, 2026. Package setup and gameplay acceptance are pending; native build checks do not establish gameplay support. The exact source and dependency identities are in project-manifest.toml. See feasibility and validation for the tested scope."
-    ],
-    [
-     "h",
-     "About this project"
-    ],
-    [
-     "p",
-     "This project was developed with AI assistance. AI assists with code, documentation, and investigation; Alex tests the game and makes release decisions. Validation claims describe only the tests actually performed."
-    ],
-    [
-     "h",
-     "Credits and licenses"
-    ],
-    [
-     "p",
-     "Framework: PSXRecomp. Launcher: recomp-ui. Their licenses and dependency notices remain in the corresponding source directories. The original game and its trademarks belong to their respective owners."
-    ]
-   ]
-  },
   "d-metroidret-mzm": {
+   "v": 2,
    "repo": "metroidret/mzm",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -891,10 +794,160 @@
     ]
    ]
   },
+  "d-ragnaroek-iron-wolf": {
+   "v": 2,
+   "repo": "Ragnaroek/iron-wolf",
+   "actualizado": "2026-11-18T12:47:54.356Z",
+   "recortado": false,
+   "estado": null,
+   "bloques": [
+    [
+     "h",
+     "Iron Wolf"
+    ],
+    [
+     "p",
+     "Wolfenstein 3D in Rust"
+    ],
+    [
+     "p",
+     "The goal is to have a pixel, mod-friendly perfect recreation of Wolfenstein 3D in Rust."
+    ],
+    [
+     "p",
+     "E1M1 Demo"
+    ],
+    [
+     "h",
+     "Playing Iron Wolf"
+    ],
+    [
+     "p",
+     "just run-sdl-shareware should work out of the box on a cloned repo. It will run the shareware version, that is also checked in along with the code as testdata."
+    ],
+    [
+     "p",
+     "Alternatively you can play the web version here:"
+    ],
+    [
+     "p",
+     "If you have a copy of the full game files you can upload them there and play the full version in your browser:"
+    ],
+    [
+     "h",
+     "Configuration File"
+    ],
+    [
+     "p",
+     "A config file is optional. Copy the default_iw_config.toml as iw_config.toml and put it next to the Iron Wolf exectuable file. The options are described as comments in the default config file."
+    ]
+   ]
+  },
+  "d-alexbeavs-ps1-ports-final-fantasy-ix-recomp": {
+   "v": 2,
+   "repo": "alexbeavs-ps1-ports/final-fantasy-ix-recomp",
+   "actualizado": "2026-11-18T12:47:54.356Z",
+   "recortado": false,
+   "estado": {
+    "titulo": "Status",
+    "texto": "Latest release: v0.1.4, built on psxrecomp pin I 0.1.23."
+   },
+   "bloques": [
+    [
+     "h",
+     "Final Fantasy IX Recompiled"
+    ],
+    [
+     "p",
+     "This release candidate uses PSXRecomp and the shared recomp-ui launcher. You must supply your own SLUS-01251 game disc and SCPH-1001 (USA) BIOS. The package contains no game disc, retail BIOS, generated retail game code, or saved game."
+    ],
+    [
+     "p",
+     "BIOS: SCPH-1001 (USA) retail BIOS, 524288 bytes, SHA-256 71af94d1e47a68c11e8fdb9f8368040601514a42a5a399cda48c7d3bff1e99d3. Supply your own dump; releases do not use OpenBIOS."
+    ],
+    [
+     "h",
+     "Status"
+    ],
+    [
+     "p",
+     "Latest release: v0.1.4, built on psxrecomp pin I 0.1.23."
+    ],
+    [
+     "li",
+     "Packages for Windows x64, Linux x64, macOS Apple Silicon and macOS Intel passed the CI build and package checks."
+    ],
+    [
+     "li",
+     "Replay check: on Windows, a build on pin I 0.1.23 played 2 of 2 recorded routes to the end without a crash. That check compares memory, not the picture, and is not a play test."
+    ],
+    [
+     "li",
+     "Not claimed: full-game completion, audio fidelity or multiplayer. Setup and gameplay reports from Linux, macOS and Steam Deck are welcome."
+    ],
+    [
+     "p",
+     "Known issues for the current version are in its release notes."
+    ],
+    [
+     "h",
+     "Setup"
+    ],
+    [
+     "li",
+     "Extract the complete setup ZIP into a writable folder."
+    ],
+    [
+     "li",
+     "Start Final_Fantasy_IX_Recompiled (.exe on Windows)."
+    ],
+    [
+     "li",
+     "Select your CUE file and the required BIOS in the setup wizard."
+    ],
+    [
+     "li",
+     "Run Generate & rebuild and wait for the game to start."
+    ],
+    [
+     "p",
+     "On Windows, the setup wizard can download the portable build tools. On Linux and macOS, install CMake, Ninja, Python 3, and a C/C++ compiler first. Keep the CUE and all files it references together. The BIOS must be 524288 bytes with SHA-256 71af94d1e47a68c11e8fdb9f8368040601514a42a5a399cda48c7d3bff1e99d3."
+    ],
+    [
+     "h",
+     "Candidate status"
+    ],
+    [
+     "p",
+     "Version 0.1.0 is being prepared for September 7, 2026. Package setup and gameplay acceptance are pending; native build checks do not establish gameplay support. The exact source and dependency identities are in project-manifest.toml. See feasibility and validation for the tested scope."
+    ],
+    [
+     "h",
+     "About this project"
+    ],
+    [
+     "p",
+     "This project was developed with AI assistance. AI assists with code, documentation, and investigation; Alex tests the game and makes release decisions. Validation claims describe only the tests actually performed."
+    ],
+    [
+     "h",
+     "Credits and licenses"
+    ],
+    [
+     "p",
+     "Framework: PSXRecomp. Launcher: recomp-ui. Their licenses and dependency notices remain in the corresponding source directories. The original game and its trademarks belong to their respective owners."
+    ]
+   ]
+  },
   "d-mstan-supermarioworldrecomp": {
+   "v": 2,
    "repo": "mstan/SuperMarioWorldRecomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": {
+    "titulo": "Current status: believed fully playable",
+    "texto": "Hand-verified end-to-end through:"
+   },
    "bloques": [
     [
      "h",
@@ -970,27 +1023,15 @@
     ],
     [
      "li",
-     "Download the Windows ZIP or Linux AppImage from"
-    ],
-    [
-     "p",
-     "Releases. Extract the ZIP, or make the AppImage executable."
+     "Download the Windows ZIP or Linux AppImage from Releases. Extract the ZIP, or make the AppImage executable."
     ],
     [
      "li",
-     "Run SuperMarioWorldSNESRecomp.exe or the AppImage. On first launch a file picker asks for your"
-    ],
-    [
-     "p",
-     "legally-obtained Super Mario World (USA) ROM (.sfc / .smc). The path is remembered in rom.cfg next to the exe."
+     "Run SuperMarioWorldSNESRecomp.exe or the AppImage. On first launch a file picker asks for your legally-obtained Super Mario World (USA) ROM (.sfc / .smc). The path is remembered in rom.cfg next to the exe."
     ],
     [
      "li",
-     "Edit keybinds.ini (auto-generated next to the exe on first run)"
-    ],
-    [
-     "p",
-     "to remap keys, then restart."
+     "Edit keybinds.ini (auto-generated next to the exe on first run) to remap keys, then restart."
     ],
     [
      "p",
@@ -1006,22 +1047,19 @@
     ],
     [
      "li",
-     "In the launcher's Mods page, enable SMW Playtest Diagnostics →"
-    ],
-    [
-     "p",
-     "Diagnostic recording. Keep the gameplay mods and settings needed for your reproduction, including native co-op where applicable. Disable run-ahead while recording."
-    ],
-    [
-     "li",
-     "Start a fresh game session and reproduce the problem. The recorder captures"
+     "In the launcher's Mods page, enable SMW Playtest Diagnostics → Diagnostic recording. Keep the gameplay mods and settings needed for your reproduction, including native co-op where applicable. Disable run-ahead while recording."
     ]
    ]
   },
   "d-ravencaio-tlou-remastered-pc": {
+   "v": 2,
    "repo": "ravencaio/tlou-remastered-pc",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": {
+    "titulo": "Status",
+    "texto": "Work in progress, reported playable from start to finish by a player, with one crash along the way that is not fixed yet (a workaround is under Known issues), and with rough edges."
+   },
    "bloques": [
     [
      "h",
@@ -1069,19 +1107,11 @@
     ],
     [
      "li",
-     "Frame rate: on a laptop with a Core i7-8750H and a GTX 1050 Ti Mobile (4 GB), 60 FPS in light"
-    ],
-    [
-     "p",
-     "areas and about 40-44 FPS in the heaviest area tested, where the CPU side of the renderer is the limit (the draw recording thread at about 87%): lowering the resolution barely helps there."
+     "Frame rate: on a laptop with a Core i7-8750H and a GTX 1050 Ti Mobile (4 GB), 60 FPS in light areas and about 40-44 FPS in the heaviest area tested, where the CPU side of the renderer is the limit (the draw recording thread at about 87%): lowering the resolution barely helps there."
     ],
     [
      "li",
-     "Frame pacing: frame times swing while the game runs below its limit, and a fixed 30 FPS limit"
-    ],
-    [
-     "p",
-     "(launcher, or the in-game menu) makes motion clearly more even."
+     "Frame pacing: frame times swing while the game runs below its limit, and a fixed 30 FPS limit (launcher, or the in-game menu) makes motion clearly more even."
     ],
     [
      "li",
@@ -1089,38 +1119,28 @@
     ],
     [
      "li",
-     "NPCs moving in jumps or bobbing up and down (GitHub #57, #63): the game read some results of"
-    ],
-    [
-     "p",
-     "its GPU memory copy shader (Cs_MemCpy) a frame late. They are read back now; in a save where they jumped every time, they stopped. Tested on one save and one GPU so far: report it if they still jump somewhere (GOW3_TLOU_MEMCPY_READBACK=0 turns the fix off for comparison). Thanks to KyrieFrost, whose experimental patch in #63 pointed at that shader."
+     "NPCs moving in jumps or bobbing up and down (GitHub #57, #63): the game read some results of its GPU memory copy shader (Cs_MemCpy) a frame late. They are read back now; in a save where they jumped every time, they stopped. Tested on one save and one GPU so far: report it if they still jump somewhere (GOW3_TLOU_MEMCPY_READBACK=0 turns the fix off for comparison). Thanks to KyrieFrost, whose experimental patch in #63 pointed at that shader."
     ],
     [
      "li",
-     "A frame that compiles many new shaders can pause the game for a moment, mostly the first time"
-    ],
-    [
-     "p",
-     "an area is played. The game's own frame watchdog is patched from 2 s to 20 s for that (TLOU_FIXES=none leaves the game unpatched). If a load ever hangs, start with GOW3_FRAMES_IN_FLIGHT=0 (slower)."
+     "A frame that compiles many new shaders can pause the game for a moment, mostly the first time an area is played. The game's own frame watchdog is patched from 2 s to 20 s for that (TLOU_FIXES=none leaves the game unpatched). If a load ever hangs, start with GOW3_FRAMES_IN_FLIGHT=0 (slower)."
     ],
     [
      "li",
-     "Pistol and rifle shots that went through scenery with no effect (firefly pendants that could"
-    ],
-    [
-     "p",
-     "not be shot down, GitHub #29, #45; walls that took no bullet holes from a pistol or rifle while a shotgun marked them) are fixed. The game asks the GPU, with an occlusion query, whether a character is under the crosshair; while one is, the player's bullets ignore scenery so thin cover in front of a target does not stop them. The runtime made up the answers to occlusion queries (always \"visible\"), so the bullets ignored scenery all the time; the queries are now real Vulkan occlusion queries (GOW3_OCCLUSION_QUERIES=0 goes back to the made-up answers). The bullet impacts' mesh ray casts (and the…"
+     "Pistol and rifle shots that went through scenery with no effect (firefly pendants that could not be shot down, GitHub #29, #45; walls that took no bullet holes from a pistol or rifle while a shotgun marked them) are fixed. The game asks the GPU, with an occlusion query, whether a character is under the crosshair; while one is, the player's bullets ignore scenery so thin cover in front of a target does not stop them. The runtime made up the answers to occlusion queries (always \"visible\"), so the bullets ignored scenery all the time; the queries are now real Vulkan occlusion queries…"
     ],
     [
      "li",
-     "On NVIDIA graphics cards older than Turing (GTX 900 and 10 series), the game's cloth solver for"
+     "On NVIDIA graphics cards older than Turing (GTX 900 and 10 series), the game's cloth solver for its largest cloths (Cs_ClothSimulate512) lost the Vulkan device in Pittsburgh, once Henry and Sam appear: the runtime stopped with Device lost during submit, and Windows' System event log shows nvlddmkm \"SKEDCHECK19_CTA_REGISTER_CONSUMPTION failed\". A replay of that route lost it on 17 of 18 runs, on drivers 582.53 and 582.78, whatever was changed in the shader. Its one workgroup of 512 threads needs all the registers of a multiprocessor; on those cards it now runs as 256 threads that simulate 2…"
     ]
    ]
   },
   "d-reshaped-sonic-adventure": {
+   "v": 2,
    "repo": "reshaped/sonic-adventure",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -1184,113 +1204,12 @@
     ]
    ]
   },
-  "d-jackpoison-prog-ringout": {
-   "repo": "jackpoison-prog/RingOut",
-   "actualizado": "2026-11-17T00:11:48.971Z",
-   "recortado": true,
-   "bloques": [
-    [
-     "h",
-     "Ring Out"
-    ],
-    [
-     "p",
-     "A native PC port of a GameCube fighting game (disc ID GRSEAF), produced by static recompilation rather than emulation: the disc's PowerPC executable is translated ahead of time into C, compiled for x86-64, and run as native code inside a Dolphin-derived runtime that provides the graphics, audio, input and hardware emulation around it."
-    ],
-    [
-     "p",
-     "No game data and no game code are distributed here. You supply a disc image you already own; setup extracts it and recompiles it on your machine."
-    ],
-    [
-     "p",
-     "This is still early. Expect rough edges: the game is playable start to finish, but features arrive before their polish does, and something that worked last release can break in the next one. Polish is planned throughout rather than saved up for a 1.0 — and bug reports genuinely help, because most of what gets fixed here was found by someone hitting it."
-    ],
-    [
-     "h",
-     "Status"
-    ],
-    [
-     "p",
-     "Fully playable — boots to menu and through gameplay. Every block of the game's own executable runs as native code; the recompiler translates 535,368 instructions with 0 unknown opcodes and no interpreter fallback inside them."
-    ],
-    [
-     "p",
-     "What the interpreter does still cover is the PowerPC exception vectors — 0x500 (external interrupt), 0xC00 (system call), 0x800 (FP unavailable). Those handlers are written into low RAM by the OS at boot rather than living in the disc's executable, so there is no recompiled code to dispatch to and the interpreter runs them until control returns. They account for about 0.7% of executed steps, steadily, because interrupts fire for the life of the session — but only 0.2% of cycles, so there is nothing to win by recompiling them. An earlier version of this page claimed \"zero interpreter…"
-    ],
-    [
-     "p",
-     "Rendering is Vulkan on the GPU, with the CPU emulation and the runtime on separate cores."
-    ],
-    [
-     "p",
-     "Steam Deck: supported, with its own package, and it runs in both Desktop and Game Mode at 45–49 fps in a match. Two ways to get a module onto it, so it works whether or not the Deck is the only machine you have:"
-    ],
-    [
-     "li",
-     "Build it on the Deck. Install a toolchain once and SteamOS compiles its own"
-    ],
-    [
-     "p",
-     "module, needing no bundled libraries at all — no second computer anywhere in the process. Tested end to end on SteamOS 3.8.25. This is also the way to get the full PGO win there, since clang 20 cannot read the shipped profiles."
-    ],
-    [
-     "li",
-     "Build it on a desktop and copy it over. No toolchain on the Deck at all, if"
-    ],
-    [
-     "p",
-     "you have another Linux machine to hand."
-    ],
-    [
-     "p",
-     "dist/RingOut-1.0-deck/BUILD-ON-THE-DECK.md walks through the first route, and ships inside the Deck package too."
-    ],
-    [
-     "p",
-     "Netplay: working. Delay-based (not rollback) over a deterministic dual-core setup, with a lobby showing live ping and per-player game status; two peers stayed byte-identical over 6,470 frames."
-    ],
-    [
-     "h",
-     "Getting it"
-    ],
-    [
-     "p",
-     "From the Releases page. Each is named for the release you download, so below is that release's number:"
-    ],
-    [
-     "p",
-     "The Deck package ships no module, so you build one and copy game/ and bin/gGRSEAF_recomp.so into it. You can do that on the Deck itself — download both zips, since the Linux one is what carries module-src/ and does the building — or on a desktop if you have one. setup.sh --deck installs the result into the Deck package for you when it can see it. Add RingOut to Steam as a non-Steam game to launch it from Game Mode."
-    ],
-    [
-     "p",
-     "For desktop, unzip and run:"
-    ],
-    [
-     "p",
-     "On first run it asks for your disc image (.iso / .gcm / .nkit.iso / .rvz), then extracts and recompiles it — several minutes, once, with each stage numbered as it starts (==> 1/3 Extracting disc, 2/3 recompiling, 3/3 building the module; --pgo adds a fourth) and a closing line saying whether a PGO profile was used. Every run after that starts straight away. You can also pass the image directly:"
-    ],
-    [
-     "h",
-     "Requirements"
-    ],
-    [
-     "li",
-     "A GameCube disc image you already own"
-    ],
-    [
-     "li",
-     "cmake, ninja, python3, and clang (or gcc)"
-    ],
-    [
-     "li",
-     "Arch: sudo pacman -S cmake ninja clang python"
-    ]
-   ]
-  },
   "d-mstan-supermarioland2recomp": {
+   "v": 2,
    "repo": "mstan/SuperMarioLand2Recomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": null,
    "bloques": [
     [
      "p",
@@ -1375,9 +1294,11 @@
    ]
   },
   "d-maurizi-ff9-3ds": {
+   "v": 2,
    "repo": "maurizi/ff9-3ds",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -1409,11 +1330,7 @@
     ],
     [
      "li",
-     "ff9-full.cia (about 1.7 GB): install it with a CIA installer such as FBI, then start Final Fantasy IX from the"
-    ],
-    [
-     "p",
-     "HOME Menu."
+     "ff9-full.cia (about 1.7 GB): install it with a CIA installer such as FBI, then start Final Fantasy IX from the HOME Menu."
     ],
     [
      "li",
@@ -1458,9 +1375,11 @@
    ]
   },
   "d-estebanpdn-zelda-alttp-3ds": {
+   "v": 2,
    "repo": "EstebanPdN/zelda-alttp-3ds",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": null,
    "bloques": [
     [
      "p",
@@ -1528,11 +1447,7 @@
     ],
     [
      "li",
-     "Bottom screen: 320x240 live map, dungeon map, gear view, item selection and"
-    ],
-    [
-     "p",
-     "touch settings."
+     "Bottom screen: 320x240 live map, dungeon map, gear view, item selection and touch settings."
     ],
     [
      "li",
@@ -1552,43 +1467,23 @@
     ],
     [
      "li",
-     "Quick diagnostics: press L + R + A to create a dump with memory files,"
-    ],
-    [
-     "p",
-     "physical 400x240/320x240 screen captures, raw display framebuffers and a validated load-state.bin checkpoint. Audio pauses during capture and a DUMP SAVED notice confirms complete success on the top screen."
+     "Quick diagnostics: press L + R + A to create a dump with memory files, physical 400x240/320x240 screen captures, raw display framebuffers and a validated load-state.bin checkpoint. Audio pauses during capture and a DUMP SAVED notice confirms complete success on the top screen."
     ],
     [
      "li",
-     "Developer settings can load the newest dump checkpoint for the active ROM"
-    ],
-    [
-     "p",
-     "profile and optionally show the current FPS on the top screen."
+     "Developer settings can load the newest dump checkpoint for the active ROM profile and optionally show the current FPS on the top screen."
     ],
     [
      "li",
-     "PICA200/Citro2D presentation for both screens with nearest-neighbor sampling"
-    ],
-    [
-     "p",
-     "and RGB565 display output."
+     "PICA200/Citro2D presentation for both screens with nearest-neighbor sampling and RGB565 display output."
     ],
     [
      "li",
-     "PICA200 GPU rendering on Old 3DS, with automatic software fallback for"
-    ],
-    [
-     "p",
-     "unsupported effects. New 3DS uses its existing CPU renderer."
+     "PICA200 GPU rendering on Old 3DS, with automatic software fallback for unsupported effects. New 3DS uses its existing CPU renderer."
     ],
     [
      "li",
-     "Native 400x240 WIDE mode, fixed-camera edge corrections and persistent"
-    ],
-    [
-     "p",
-     "per-ROM display, zoom, turbo and control settings."
+     "Native 400x240 WIDE mode, fixed-camera edge corrections and persistent per-ROM display, zoom, turbo and control settings."
     ],
     [
      "li",
@@ -1596,27 +1491,15 @@
     ],
     [
      "li",
-     "Fixed-step 60 Hz gameplay timing with bounded catch-up instead of making"
-    ],
-    [
-     "p",
-     "game speed depend on when a VBlank wait returns."
+     "Fixed-step 60 Hz gameplay timing with bounded catch-up instead of making game speed depend on when a VBlank wait returns."
     ],
     [
      "li",
-     "Parallel PPU scanline rendering on Core 0 and Core 1, plus Core 2 on New 3DS,"
-    ],
-    [
-     "p",
-     "with persistent tile-row caches and frame-time diagnostics in quick dumps."
+     "Parallel PPU scanline rendering on Core 0 and Core 1, plus Core 2 on New 3DS, with persistent tile-row caches and frame-time diagnostics in quick dumps."
     ],
     [
      "li",
-     "HOME Menu banner uses a lightweight custom CGFX 3D logo model with the"
-    ],
-    [
-     "p",
-     "supplied hover sound converted to a short PCM WAV."
+     "HOME Menu banner uses a lightweight custom CGFX 3D logo model with the supplied hover sound converted to a short PCM WAV."
     ],
     [
      "h",
@@ -1645,9 +1528,14 @@
    ]
   },
   "d-deez-coder-smo-android-port": {
+   "v": 2,
    "repo": "Deez-coder/SMO-android-port",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": {
+    "titulo": "Status: beta 0.3",
+    "texto": "The game boots, plays and saves! Here's how it runs on the two phones we've measured, both on the phone's own driver:"
+   },
    "bloques": [
     [
      "p",
@@ -1683,19 +1571,11 @@
     ],
     [
      "li",
-     "Galaxy S24 Ultra (the dev's phone, Snapdragon 8 Gen 3 / Adreno 750): about 58–60 fps in Cascade at 100% scale, up"
-    ],
-    [
-     "p",
-     "from about 44 in beta 0.2."
+     "Galaxy S24 Ultra (the dev's phone, Snapdragon 8 Gen 3 / Adreno 750): about 58–60 fps in Cascade at 100% scale, up from about 44 in beta 0.2."
     ],
     [
      "li",
-     "Xiaomi 2406APNFAG (u/CAPELINI_W's phone, MediaTek Dimensity 8300 / Mali-G615 MC6): about 40 fps, fairly stable, at"
-    ],
-    [
-     "p",
-     "handheld resolution, with no graphical issues. A 30 fps limit holds steady."
+     "Xiaomi 2406APNFAG (u/CAPELINI_W's phone, MediaTek Dimensity 8300 / Mali-G615 MC6): about 40 fps, fairly stable, at handheld resolution, with no graphical issues. A 30 fps limit holds steady."
     ],
     [
      "p",
@@ -1711,11 +1591,7 @@
     ],
     [
      "li",
-     "Import your own game right in the app: your prod.keys, then your NSP or XCI of 1.0.0 (base game, no update). The keys"
-    ],
-    [
-     "p",
-     "stay in the app's private storage until you remove them."
+     "Import your own game right in the app: your prod.keys, then your NSP or XCI of 1.0.0 (base game, no update). The keys stay in the app's private storage until you remove them."
     ],
     [
      "li",
@@ -1755,11 +1631,7 @@
     ],
     [
      "li",
-     "Uses your phone's own Vulkan driver by default. On Snapdragon you can also load custom AdrenoTools driver packages (like"
-    ],
-    [
-     "p",
-     "Mesa Turnip)."
+     "Uses your phone's own Vulkan driver by default. On Snapdragon you can also load custom AdrenoTools driver packages (like Mesa Turnip)."
     ],
     [
      "p",
@@ -1775,11 +1647,7 @@
     ],
     [
      "li",
-     "The house button on the touch controls (or the controller's Home button, rebindable) opens the in-game menu: change"
-    ],
-    [
-     "p",
-     "settings while the game is paused, restart, or exit. Exit waits for any save in progress, then takes you back to the app's menu."
+     "The house button on the touch controls (or the controller's Home button, rebindable) opens the in-game menu: change settings while the game is paused, restart, or exit. Exit waits for any save in progress, then takes you back to the app's menu."
     ],
     [
      "li",
@@ -1791,11 +1659,7 @@
     ],
     [
      "li",
-     "Advanced → Export logs makes a .zip with the game's logs, a crash log, your settings and your phone model. Every"
-    ],
-    [
-     "p",
-     "10 seconds the log notes the fps, 1% low, CPU clocks, heat, and where each frame's time went (GPU, game logic, shader building), so a slowdown or a stutter on your phone can be tracked down. No saves, keys or game files in there."
+     "Advanced → Export logs makes a .zip with the game's logs, a crash log, your settings and your phone model. Every 10 seconds the log notes the fps, 1% low, CPU clocks, heat, and where each frame's time went (GPU, game logic, shader building), so a slowdown or a stutter on your phone can be tracked down. No saves, keys or game files in there."
     ],
     [
      "h",
@@ -1803,11 +1667,7 @@
     ],
     [
      "li",
-     "Android 11 or newer, 64-bit ARM (older ARMv8.0 phones, like Snapdragon 680 / 665 / 662, use the -armv8.0 APK; the"
-    ],
-    [
-     "p",
-     "app tells you if you need it)"
+     "Android 11 or newer, 64-bit ARM (older ARMv8.0 phones, like Snapdragon 680 / 665 / 662, use the -armv8.0 APK; the app tells you if you need it)"
     ],
     [
      "li",
@@ -1831,10 +1691,141 @@
     ]
    ]
   },
+  "d-lamb2k-re4dc": {
+   "v": 2,
+   "repo": "lamb2k/re4dc",
+   "actualizado": "2026-11-18T12:47:54.356Z",
+   "recortado": true,
+   "estado": null,
+   "bloques": [
+    [
+     "h",
+     "RE4 Dreamcast"
+    ],
+    [
+     "p",
+     "Resident Evil 4 runs on the Sega Dreamcast, from New Game into the castle on Disc 2."
+    ],
+    [
+     "p",
+     "It is the GameCube game's own recovered code, not a remake, drawn by a native Dreamcast renderer. This is an experimental fan test build, not the complete game."
+    ],
+    [
+     "p",
+     "Download Test 27.2 · Known issues · Port notes · Build the port · Decompilation"
+    ],
+    [
+     "h",
+     "What's new in Test 27.2"
+    ],
+    [
+     "p",
+     "A fix for the save crash in issue #66. Everything else is as in Test 27.1. Full details are in the release notes."
+    ],
+    [
+     "li",
+     "Chapter-end save fixed: saving after the chapter 1-1 results no longer freezes and then shows a blue screen. The fix covers every chapter end that sends you on to a new area."
+    ],
+    [
+     "p",
+     "Checked on Flycast with console-like disc timing. Not yet tested on a real console; please tell us in #66 how the end-of-chapter save goes on yours."
+    ],
+    [
+     "h",
+     "What's new in Test 27.1"
+    ],
+    [
+     "p",
+     "Fixes for the console report in issue #66. Everything else is as in Test 27. Full details are in the release notes."
+    ],
+    [
+     "li",
+     "Church graveyard dial: its symbols show again, not blank white discs. The church graveyard dial. Left Test 27, right Test 27.1. Flycast capture."
+    ],
+    [
+     "li",
+     "Title screen: the \"4\" logo and \"resident evil\" show at full strength, and START on the menu starts the game (no second press). The title menu. Left Test 27, right Test 27.1. Flycast capture."
+    ],
+    [
+     "li",
+     "Item pickups: the \"You got\" and \"Take the ...?\" text shows on a plain dark panel. The room behind the item is hidden while the panel is open. Picking up pesetas. Left Test 27, right Test 27.1. Flycast capture."
+    ],
+    [
+     "li",
+     "Save screen: the saved row shows the new save count and time right away. A second save in one visit. Left Test 27, right Test 27.1. Flycast capture."
+    ],
+    [
+     "li",
+     "Fewer crashes: a rare crash on the memory card screen (after a reset, or with the save list open) is fixed."
+    ],
+    [
+     "li",
+     "Safer saving: a late VMU answer no longer hangs the save screen."
+    ],
+    [
+     "li",
+     "Disc reads: when the drive reports \"not ready\", the game waits up to 30 seconds before the DISC READ FAILED screen."
+    ],
+    [
+     "li",
+     "The PS2 sky behind the boot screens (WARNING, CAPCOM and the other logos), the last GameCube picture of the title sequence; Test 27 showed a plain dark green there. The boot screens and the title menu. Left Test 27, right Test 27.1. Flycast capture."
+    ],
+    [
+     "p",
+     "Checked on Flycast. Not yet tested on a real console; please tell us in #66 how saving, pickups and the merchant cave play on yours."
+    ],
+    [
+     "h",
+     "What's new in Test 27"
+    ],
+    [
+     "p",
+     "The PS2 sky in normal play, boss fight fixes, more of the castle on Disc 2, and smoother castle rooms. Full details are in the release notes."
+    ],
+    [
+     "li",
+     "The PS2 sky in normal play in the outdoor rooms, not only in cutscenes. The village. Left before, right Test 27. Flycast capture."
+    ],
+    [
+     "li",
+     "Boss fight fixes: El Gigante's farm cutscenes and his fade at the village now use his PS2 model, and Del Lago keeps his textures after he dies. El Gigante after the fight. Left before (GameCube model), right Test 27 (PS2 model). Flycast capture."
+    ],
+    [
+     "li",
+     "No more El Gigante slowdown after he breaks objects."
+    ],
+    [
+     "li",
+     "Save reload crash guard: reloading a save after dying in the El Gigante fight with Ashley no longer crashes."
+    ],
+    [
+     "li",
+     "More of the castle on Disc 2: the rest of chapter 3-1 with PS2 data, and the rooms of chapters 3-3 and 3-4. In normal play they open up when chapter 3-2 joins them in Test 28. The castle Zealots in the lever room and the Zealot chase now load without a stall. A castle hall from chapter 3-3. Flycast capture."
+    ],
+    [
+     "li",
+     "Smoother castle rooms: the big pauses in four chapter 3-1 rooms are gone (worst frame from up to 615 ms down to under 10 ms in three of them)."
+    ],
+    [
+     "li",
+     "Faster fights at the dam and the village, and smoother music streaming with fewer disc reads."
+    ],
+    [
+     "li",
+     "Radio call read fixed (issue #63): the tester's blue screens stop on an odd memory read, and that read no longer happens when a radio call opens. Not yet tested on a real console; please tell us if radio calls or merchant cutscenes still crash."
+    ],
+    [
+     "h",
+     "Coming soon: Test 28"
+    ]
+   ]
+  },
   "d-ecwolfengine-ecwolf": {
+   "v": 2,
    "repo": "ECWolfEngine/ECWolf",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "p",
@@ -1934,197 +1925,12 @@
     ]
    ]
   },
-  "d-lamb2k-re4dc": {
-   "repo": "lamb2k/re4dc",
-   "actualizado": "2026-11-17T00:11:48.971Z",
-   "recortado": true,
-   "bloques": [
-    [
-     "h",
-     "RE4 Dreamcast"
-    ],
-    [
-     "p",
-     "Resident Evil 4 runs on the Sega Dreamcast, from New Game into the castle on Disc 2."
-    ],
-    [
-     "p",
-     "It is the GameCube game's own recovered code, not a remake, drawn by a native Dreamcast renderer. This is an experimental fan test build, not the complete game."
-    ],
-    [
-     "p",
-     "Download Test 27.2 · Known issues · Port notes · Build the port · Decompilation"
-    ],
-    [
-     "h",
-     "What's new in Test 27.2"
-    ],
-    [
-     "p",
-     "A fix for the save crash in issue #66. Everything else is as in Test 27.1. Full details are in the release notes."
-    ],
-    [
-     "li",
-     "Chapter-end save fixed: saving after the chapter 1-1 results no longer freezes and then shows a blue screen."
-    ],
-    [
-     "p",
-     "The fix covers every chapter end that sends you on to a new area."
-    ],
-    [
-     "p",
-     "Checked on Flycast with console-like disc timing. Not yet tested on a real console; please tell us in #66 how the end-of-chapter save goes on yours."
-    ],
-    [
-     "h",
-     "What's new in Test 27.1"
-    ],
-    [
-     "p",
-     "Fixes for the console report in issue #66. Everything else is as in Test 27. Full details are in the release notes."
-    ],
-    [
-     "li",
-     "Church graveyard dial: its symbols show again, not blank white discs."
-    ],
-    [
-     "p",
-     "The church graveyard dial. Left Test 27, right Test 27.1. Flycast capture."
-    ],
-    [
-     "li",
-     "Title screen: the \"4\" logo and \"resident evil\" show at full strength, and START on the menu starts the game"
-    ],
-    [
-     "p",
-     "(no second press)."
-    ],
-    [
-     "p",
-     "The title menu. Left Test 27, right Test 27.1. Flycast capture."
-    ],
-    [
-     "li",
-     "Item pickups: the \"You got\" and \"Take the ...?\" text shows on a plain dark panel. The room behind the item is"
-    ],
-    [
-     "p",
-     "hidden while the panel is open."
-    ],
-    [
-     "p",
-     "Picking up pesetas. Left Test 27, right Test 27.1. Flycast capture."
-    ],
-    [
-     "li",
-     "Save screen: the saved row shows the new save count and time right away."
-    ],
-    [
-     "p",
-     "A second save in one visit. Left Test 27, right Test 27.1. Flycast capture."
-    ],
-    [
-     "li",
-     "Fewer crashes: a rare crash on the memory card screen (after a reset, or with the save list open) is fixed."
-    ],
-    [
-     "li",
-     "Safer saving: a late VMU answer no longer hangs the save screen."
-    ],
-    [
-     "li",
-     "Disc reads: when the drive reports \"not ready\", the game waits up to 30 seconds before the DISC READ FAILED screen."
-    ],
-    [
-     "li",
-     "The PS2 sky behind the boot screens (WARNING, CAPCOM and the other logos), the last GameCube picture of the title"
-    ],
-    [
-     "p",
-     "sequence; Test 27 showed a plain dark green there."
-    ],
-    [
-     "p",
-     "The boot screens and the title menu. Left Test 27, right Test 27.1. Flycast capture."
-    ],
-    [
-     "p",
-     "Checked on Flycast. Not yet tested on a real console; please tell us in #66 how saving, pickups and the merchant cave play on yours."
-    ],
-    [
-     "h",
-     "What's new in Test 27"
-    ],
-    [
-     "p",
-     "The PS2 sky in normal play, boss fight fixes, more of the castle on Disc 2, and smoother castle rooms. Full details are in the release notes."
-    ],
-    [
-     "li",
-     "The PS2 sky in normal play in the outdoor rooms, not only in cutscenes."
-    ],
-    [
-     "p",
-     "The village. Left before, right Test 27. Flycast capture."
-    ],
-    [
-     "li",
-     "Boss fight fixes: El Gigante's farm cutscenes and his fade at the village now use his PS2 model, and Del Lago"
-    ],
-    [
-     "p",
-     "keeps his textures after he dies."
-    ],
-    [
-     "p",
-     "El Gigante after the fight. Left before (GameCube model), right Test 27 (PS2 model). Flycast capture."
-    ],
-    [
-     "li",
-     "No more El Gigante slowdown after he breaks objects."
-    ],
-    [
-     "li",
-     "Save reload crash guard: reloading a save after dying in the El Gigante fight with Ashley no longer crashes."
-    ],
-    [
-     "li",
-     "More of the castle on Disc 2: the rest of chapter 3-1 with PS2 data, and the rooms of chapters 3-3 and 3-4."
-    ],
-    [
-     "p",
-     "In normal play they open up when chapter 3-2 joins them in Test 28. The castle Zealots in the lever room and the Zealot chase now load without a stall."
-    ],
-    [
-     "p",
-     "A castle hall from chapter 3-3. Flycast capture."
-    ],
-    [
-     "li",
-     "Smoother castle rooms: the big pauses in four chapter 3-1 rooms are gone (worst frame from up to 615 ms down"
-    ],
-    [
-     "p",
-     "to under 10 ms in three of them)."
-    ],
-    [
-     "li",
-     "Faster fights at the dam and the village, and smoother music streaming with fewer disc reads."
-    ],
-    [
-     "li",
-     "Radio call read fixed (issue #63): the tester's blue screens stop on an odd memory read, and that read no longer happens when a radio call opens. Not yet tested on a real console; please tell us if radio calls or merchant cutscenes still crash."
-    ],
-    [
-     "h",
-     "Coming soon: Test 28"
-    ]
-   ]
-  },
   "d-palaceswitcher-smw-nes-disassembly": {
+   "v": 2,
    "repo": "palaceswitcher/SMW-NES-Disassembly",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -2189,9 +1995,14 @@
    ]
   },
   "d-mstan-zeldaalttpsnesrecomp": {
+   "v": 2,
    "repo": "mstan/ZeldaAlttPSNESRecomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": {
+    "titulo": "Current status",
+    "texto": "Hand-verified end-to-end through:"
+   },
    "bloques": [
     [
      "h",
@@ -2239,19 +2050,11 @@
     ],
     [
      "li",
-     "Module 07 (Dungeon) including sword combat — the bug from"
-    ],
-    [
-     "p",
-     "v0.1.0's release-note investigation (camera axis-swap on sword hit) is fixed."
+     "Module 07 (Dungeon) including sword combat — the bug from v0.1.0's release-note investigation (camera axis-swap on sword hit) is fixed."
     ],
     [
      "li",
-     "Audio (HLE SPC upload of the cartridge's stock sound engine) plays"
-    ],
-    [
-     "p",
-     "through title, gameplay, sword/item SFX, and music transitions."
+     "Audio (HLE SPC upload of the cartridge's stock sound engine) plays through title, gameplay, sword/item SFX, and music transitions."
     ],
     [
      "p",
@@ -2279,27 +2082,15 @@
     ],
     [
      "li",
-     "Download the latest release zip from Releases and"
-    ],
-    [
-     "p",
-     "extract it."
+     "Download the latest release zip from Releases and extract it."
     ],
     [
      "li",
-     "Run ZeldaALttPSNESRecomp.exe. On first launch a file picker asks for your"
-    ],
-    [
-     "p",
-     "legally-obtained Legend of Zelda: A Link to the Past (USA) ROM (.sfc / .smc). The expected CRC32 is 0x777AAC2F (no-intro canonical USA dump, 1 MiB, LoROM). 512-byte SMC copier headers are auto-stripped before hashing, so headered or unheadered both work."
+     "Run ZeldaALttPSNESRecomp.exe. On first launch a file picker asks for your legally-obtained Legend of Zelda: A Link to the Past (USA) ROM (.sfc / .smc). The expected CRC32 is 0x777AAC2F (no-intro canonical USA dump, 1 MiB, LoROM). 512-byte SMC copier headers are auto-stripped before hashing, so headered or unheadered both work."
     ],
     [
      "li",
-     "Edit keybinds.ini (auto-generated next to the exe on first run) to"
-    ],
-    [
-     "p",
-     "remap keys, then restart."
+     "Edit keybinds.ini (auto-generated next to the exe on first run) to remap keys, then restart."
     ],
     [
      "p",
@@ -2328,9 +2119,11 @@
    ]
   },
   "d-yeoldpress-alttp-dx": {
+   "v": 2,
    "repo": "YeOldPress/alttp-dx",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -2342,27 +2135,15 @@
     ],
     [
      "li",
-     "CRT filters: seven looks, from clean scanlines to an arcade monitor to"
-    ],
-    [
-     "p",
-     "a composite signal falling apart on a cheap TV, run as real GPU shaders, with curvature, a TV bezel, afterglow and HDR"
+     "CRT filters: seven looks, from clean scanlines to an arcade monitor to a composite signal falling apart on a cheap TV, run as real GPU shaders, with curvature, a TV bezel, afterglow and HDR"
     ],
     [
      "li",
-     "Updates itself: the start menu offers each new version and installs it"
-    ],
-    [
-     "p",
-     "when you say so"
+     "Updates itself: the start menu offers each new version and installs it when you say so"
     ],
     [
      "li",
-     "Widescreen, with a camera that keeps the whole wide picture in the area"
-    ],
-    [
-     "p",
-     "you're in and a HUD that moves out to the edges"
+     "Widescreen, with a camera that keeps the whole wide picture in the area you're in and a HUD that moves out to the edges"
     ],
     [
      "li",
@@ -2374,35 +2155,19 @@
     ],
     [
      "li",
-     "Settings everywhere: a start menu before the game, and the same settings"
-    ],
-    [
-     "p",
-     "inside it, each with a description"
+     "Settings everywhere: a start menu before the game, and the same settings inside it, each with a description"
     ],
     [
      "li",
-     "Achievements: 49 of them, from the story to the secrets to a few"
-    ],
-    [
-     "p",
-     "challenges, with a banner when one unlocks"
+     "Achievements: 49 of them, from the story to the secrets to a few challenges, with a banner when one unlocks"
     ],
     [
      "li",
-     "Quality of life: item switching with L and R, a second item on X, Save"
-    ],
-    [
-     "p",
-     "and Continue, and optional gameplay tweaks and bug fixes"
+     "Quality of life: item switching with L and R, a second item on X, Save and Continue, and optional gameplay tweaks and bug fixes"
     ],
     [
      "li",
-     "Randomizer: play alttpr.com seeds with an item"
-    ],
-    [
-     "p",
-     "tracker that auto updates."
+     "Randomizer: play alttpr.com seeds with an item tracker that auto updates."
     ],
     [
      "li",
@@ -2438,27 +2203,15 @@
     ],
     [
      "li",
-     "Mac: the whole ALTTP-DX.app is swapped for the new one. A file the"
-    ],
-    [
-     "p",
-     "game downloads itself isn't quarantined, so xattr is a one-time thing."
+     "Mac: the whole ALTTP-DX.app is swapped for the new one. A file the game downloads itself isn't quarantined, so xattr is a one-time thing."
     ],
     [
      "li",
-     "Linux: the AppImage is replaced in place, under the same name, so your"
-    ],
-    [
-     "p",
-     "shortcuts keep working."
+     "Linux: the AppImage is replaced in place, under the same name, so your shortcuts keep working."
     ],
     [
      "li",
-     "Windows: the files beside zelda3.exe are replaced, except your"
-    ],
-    [
-     "p",
-     "zelda3.ini."
+     "Windows: the files beside zelda3.exe are replaced, except your zelda3.ini."
     ],
     [
      "p",
@@ -2491,9 +2244,11 @@
    ]
   },
   "d-rinnegatamante-crash-team-racing-high-octane": {
+   "v": 2,
    "repo": "Rinnegatamante/Crash-Team-Racing-High-Octane",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -2718,9 +2473,14 @@
    ]
   },
   "d-countallegrex-sa1-psp": {
+   "v": 2,
    "repo": "countallegrex/sa1-psp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": {
+    "titulo": "Status (paused 2026-10-28)",
+    "texto": "What works, on a PSP-3001 with ARK-4 CFW:"
+   },
    "bloques": [
     [
      "h",
@@ -2748,11 +2508,7 @@
     ],
     [
      "li",
-     "The whole of Sonic's story runs: all 44 tested places (levels, acts,"
-    ],
-    [
-     "p",
-     "adventure fields, bosses) start and play."
+     "The whole of Sonic's story runs: all 44 tested places (levels, acts, adventure fields, bosses) start and play."
     ],
     [
      "li",
@@ -2760,27 +2516,15 @@
     ],
     [
      "li",
-     "Audio works: ADX music and voices, and the sequenced sound effects"
-    ],
-    [
-     "p",
-     "played from the game's own sound banks (docs/m3-audio-report.md)."
+     "Audio works: ADX music and voices, and the sequenced sound effects played from the game's own sound banks (docs/m3-audio-report.md)."
     ],
     [
      "li",
-     "Station Square runs at full speed: ~31.5 ms per game frame against"
-    ],
-    [
-     "p",
-     "the 33.3 ms budget for 30 fps."
+     "Station Square runs at full speed: ~31.5 ms per game frame against the 33.3 ms budget for 30 fps."
     ],
     [
      "li",
-     "Heavy stages run at full game speed with frame skip. Game logic keeps"
-    ],
-    [
-     "p",
-     "real time and pictures are dropped. Emerald Coast needs ~61 ms to draw a frame, so it shows about 9 pictures a second."
+     "Heavy stages run at full game speed with frame skip. Game logic keeps real time and pictures are dropped. Emerald Coast needs ~61 ms to draw a frame, so it shows about 9 pictures a second."
     ],
     [
      "p",
@@ -2788,51 +2532,27 @@
     ],
     [
      "li",
-     "Speed in heavy stages and bosses. Logic alone is over budget in a few"
-    ],
-    [
-     "p",
-     "places, e.g. Sky Deck 3 (~38.5 ms) and Windy Valley 2 (~39 ms); Chaos 0 and Casino 2 sit at about 30-31 ms. The per-place numbers are in devkit/surveys/stage-survey.md and devkit/surveys/fskip-survey.md."
+     "Speed in heavy stages and bosses. Logic alone is over budget in a few places, e.g. Sky Deck 3 (~38.5 ms) and Windy Valley 2 (~39 ms); Chaos 0 and Casino 2 sit at about 30-31 ms. The per-place numbers are in devkit/surveys/stage-survey.md and devkit/surveys/fskip-survey.md."
     ],
     [
      "li",
-     "Texture memory on the card is tighter than under PSPLink. An EBOOT"
-    ],
-    [
-     "p",
-     "started from the Memory Stick gets about 4 MB less user memory than the same code loaded as a PRX through PSPLink. At boot the largest free block is 7680 KB against 11776 KB, so the texture pool gets 6 chunks instead of"
+     "Texture memory on the card is tighter than under PSPLink. An EBOOT started from the Memory Stick gets about 4 MB less user memory than the same code loaded as a PRX through PSPLink. At boot the largest free block is 7680 KB against 11776 KB, so the texture pool gets 6 chunks instead of"
     ],
     [
      "li",
-     "The rest of the blur and dropped detail comes from this. Best lead:"
-    ],
-    [
-     "p",
-     "ARK-4's high-memory option (devkit/tx2/capacity-notes.md). To mimic the card under PSPLink, pass --tex-chunks 6."
+     "The rest of the blur and dropped detail comes from this. Best lead: ARK-4's high-memory option (devkit/tx2/capacity-notes.md). To mimic the card under PSPLink, pass --tex-chunks 6."
     ],
     [
      "li",
-     "Media Engine. The second CPU runs our code, but every Media Engine"
-    ],
-    [
-     "p",
-     "run hangs the next PSPLink reboot, so it is unused (branch me-wip). Only probe it with someone at hand to power-cycle the PSP."
+     "Media Engine. The second CPU runs our code, but every Media Engine run hangs the next PSPLink reboot, so it is unused (branch me-wip). Only probe it with someone at hand to power-cycle the PSP."
     ],
     [
      "li",
-     "PSP replays are not yet deterministic, so tapes are checked bit-for-bit"
-    ],
-    [
-     "p",
-     "on the desktop only."
+     "PSP replays are not yet deterministic, so tapes are checked bit-for-bit on the desktop only."
     ],
     [
      "li",
-     "tools/psp_run.py stages a PRX only when its size or date differs. A"
-    ],
-    [
-     "p",
-     "newer build of the same size can be skipped silently, so touch the PRX before a run. The proper fix is to compare content."
+     "tools/psp_run.py stages a PRX only when its size or date differs. A newer build of the same size can be skipped silently, so touch the PRX before a run. The proper fix is to compare content."
     ],
     [
      "h",
@@ -2840,35 +2560,19 @@
     ],
     [
      "li",
-     "There is no SEGA data in this repository: no disc files, no"
-    ],
-    [
-     "p",
-     "recompiled game code, no SDK material. tools/check_clean.py (pre-commit hook and CI) refuses anything that looks like game data."
+     "There is no SEGA data in this repository: no disc files, no recompiled game code, no SDK material. tools/check_clean.py (pre-commit hook and CI) refuses anything that looks like game data."
     ],
     [
      "li",
-     "You need your own GD-ROM dump of Sonic Adventure US v1.005. Every"
-    ],
-    [
-     "p",
-     "address in recomp/ is specific to that version."
+     "You need your own GD-ROM dump of Sonic Adventure US v1.005. Every address in recomp/ is specific to that version."
     ],
     [
      "li",
-     "Do not ask for game files or dumps in issues. Such requests will be"
-    ],
-    [
-     "p",
-     "closed."
+     "Do not ask for game files or dumps in issues. Such requests will be closed."
     ],
     [
      "li",
-     "No prebuilt EBOOTs are provided. The EBOOT contains the recompiled"
-    ],
-    [
-     "p",
-     "game code, so you build your own from your own dump."
+     "No prebuilt EBOOTs are provided. The EBOOT contains the recompiled game code, so you build your own from your own dump."
     ],
     [
      "h",
@@ -2877,9 +2581,14 @@
    ]
   },
   "d-coz-0-smo-recomp": {
+   "v": 2,
    "repo": "Coz-0/smo-recomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": {
+    "titulo": "Status",
+    "texto": "Early, not finished. Everything below was measured on the development PC (Windows 11, NVIDIA RTX 4090); where something was not checked, it says so."
+   },
    "bloques": [
     [
      "h",
@@ -2919,27 +2628,15 @@
     ],
     [
      "li",
-     "Function list. Every function of the executable, with boundaries from its own unwind tables and symbols (54,214"
-    ],
-    [
-     "p",
-     "in main)."
+     "Function list. Every function of the executable, with boundaries from its own unwind tables and symbols (54,214 in main)."
     ],
     [
      "li",
-     "Lifting. tools/lifter/recomp.py turns each AArch64 function into a C function; clang compiles them into a game"
-    ],
-    [
-     "p",
-     "DLL. A differential test runs sampled instructions both lifted and in the Unicorn emulator: 23,194 of 23,194 equal."
+     "Lifting. tools/lifter/recomp.py turns each AArch64 function into a C function; clang compiles them into a game DLL. A differential test runs sampled instructions both lifted and in the Unicorn emulator: 23,194 of 23,194 equal."
     ],
     [
      "li",
-     "Runtime. runtime/ stands in for the console: threads with the console's three-core scheduling, files and"
-    ],
-    [
-     "p",
-     "journalled saves, NVN graphics on Vulkan with a Maxwell shader translator, the audio renderer, controllers, movies, Help and the offline system services."
+     "Runtime. runtime/ stands in for the console: threads with the console's three-core scheduling, files and journalled saves, NVN graphics on Vulkan with a Maxwell shader translator, the audio renderer, controllers, movies, Help and the offline system services."
     ],
     [
      "p",
@@ -2951,27 +2648,15 @@
     ],
     [
      "li",
-     "Windows 10/11 x64 and a Vulkan 1.3 GPU (developed on NVIDIA; VK_EXT_graphics_pipeline_library,"
-    ],
-    [
-     "p",
-     "VK_EXT_extended_dynamic_state3, VK_EXT_vertex_input_dynamic_state and VK_EXT_depth_clip_control are used)."
+     "Windows 10/11 x64 and a Vulkan 1.3 GPU (developed on NVIDIA; VK_EXT_graphics_pipeline_library, VK_EXT_extended_dynamic_state3, VK_EXT_vertex_input_dynamic_state and VK_EXT_depth_clip_control are used)."
     ],
     [
      "li",
-     "Your own Super Mario Odyssey dump at version 1.4.1: the program with the update, the RomFS with the update applied"
-    ],
-    [
-     "p",
-     "and the update's control data. docs/building.md lists what to dump and how to lay it out."
+     "Your own Super Mario Odyssey dump at version 1.4.1: the program with the update, the RomFS with the update applied and the update's control data. docs/building.md lists what to dump and how to lay it out."
     ],
     [
      "li",
-     "LLVM/clang 9.0.0, Visual Studio 2019 Build Tools (16.11) with Windows SDK 10.0.19041,"
-    ],
-    [
-     "p",
-     "the Vulkan SDK 1.4, SDL3 3.4.18, the WebView2 SDK, Python 3.13."
+     "LLVM/clang 9.0.0, Visual Studio 2019 Build Tools (16.11) with Windows SDK 10.0.19041, the Vulkan SDK 1.4, SDL3 3.4.18, the WebView2 SDK, Python 3.13."
     ],
     [
      "h",
@@ -2987,11 +2672,7 @@
     ],
     [
      "li",
-     "Speed on slower CPUs and GPUs, and shorter stalls the first time a kingdom is visited (its textures and shaders are"
-    ],
-    [
-     "p",
-     "made then)."
+     "Speed on slower CPUs and GPUs, and shorter stalls the first time a kingdom is visited (its textures and shaders are made then)."
     ],
     [
      "li",
@@ -2999,11 +2680,7 @@
     ],
     [
      "li",
-     "Checks on real hardware for the few shader instructions translated from documentation only (SHFL, AL2P, indexed"
-    ],
-    [
-     "p",
-     "IPA)."
+     "Checks on real hardware for the few shader instructions translated from documentation only (SHFL, AL2P, indexed IPA)."
     ],
     [
      "li",
@@ -3027,19 +2704,11 @@
     ],
     [
      "li",
-     "ssbu-recomp: the static recompilation of Super Smash Bros. Ultimate whose"
-    ],
-    [
-     "p",
-     "design, lifter and runtime this project started from (GPL-3.0)."
+     "ssbu-recomp: the static recompilation of Super Smash Bros. Ultimate whose design, lifter and runtime this project started from (GPL-3.0)."
     ],
     [
      "li",
-     "OdysseyDecomp: the decompilation project of Super Mario Odyssey,"
-    ],
-    [
-     "p",
-     "read as a reference only; none of its code is included."
+     "OdysseyDecomp: the decompilation project of Super Mario Odyssey, read as a reference only; none of its code is included."
     ],
     [
      "li",
@@ -3052,9 +2721,11 @@
    ]
   },
   "d-rrika-cdcenginedxhr": {
+   "v": 2,
    "repo": "rrika/cdcEngineDXHR",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -3155,9 +2826,11 @@
    ]
   },
   "d-sonicfreak1337-sarecomp": {
+   "v": 2,
    "repo": "sonicfreak1337/SARecomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": null,
    "bloques": [
     [
      "p",
@@ -3233,11 +2906,7 @@
     ],
     [
      "li",
-     "Import standard Flycast VMU .bin saves through Options → Profiles → Import save."
-    ],
-    [
-     "p",
-     "Import includes available Story and Chao data, shows a preview and backs up the current profile before replacement."
+     "Import standard Flycast VMU .bin saves through Options → Profiles → Import save. Import includes available Story and Chao data, shows a preview and backs up the current profile before replacement."
     ],
     [
      "h",
@@ -3249,19 +2918,11 @@
     ],
     [
      "li",
-     "Broader controller support through SDL gamepad mappings, including controllers"
-    ],
-    [
-     "p",
-     "beyond the Xbox and PlayStation families."
+     "Broader controller support through SDL gamepad mappings, including controllers beyond the Xbox and PlayStation families."
     ],
     [
      "li",
-     "Windows setup offers installation-folder selection and an optional portable"
-    ],
-    [
-     "p",
-     "mode that keeps the game and its user data together."
+     "Windows setup offers installation-folder selection and an optional portable mode that keeps the game and its user data together."
     ],
     [
      "li",
@@ -3293,11 +2954,7 @@
     ],
     [
      "li",
-     "Steam Deck handheld preset: 1280 × 800, native 16:10, fullscreen."
-    ],
-    [
-     "p",
-     "Docked mode supports compatible external display resolutions and aspect ratios."
+     "Steam Deck handheld preset: 1280 × 800, native 16:10, fullscreen. Docked mode supports compatible external display resolutions and aspect ratios."
     ],
     [
      "h",
@@ -3306,9 +2963,11 @@
    ]
   },
   "d-swiftshine-key": {
+   "v": 2,
    "repo": "Swiftshine/key",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -3408,11 +3067,7 @@
     ],
     [
      "li",
-     "Configure:"
-    ],
-    [
-     "p",
-     "To use a version other than RK5E01 (USA), specify it with --version."
+     "Configure: To use a version other than RK5E01 (USA), specify it with --version."
     ],
     [
      "li",
@@ -3445,9 +3100,11 @@
    ]
   },
   "d-technicallycomputers-metal-slug-x-recomp": {
+   "v": 2,
    "repo": "TechnicallyComputers/Metal-Slug-X-Recomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -3524,9 +3181,14 @@
    ]
   },
   "d-ctr-tools-ctr-native": {
+   "v": 2,
    "repo": "CTR-tools/ctr-native",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": {
+    "titulo": "Roadmap",
+    "texto": "Clean up game/ copies strip byte budget hacks and route platform-specific code through CTR_NATIVE"
+   },
    "bloques": [
     [
      "h",
@@ -3594,11 +3256,7 @@
     ],
     [
      "li",
-     "In an MSYS2 terminal:"
-    ],
-    [
-     "p",
-     "If the update asks you to close the terminal, reopen MSYS2 and run the install command."
+     "In an MSYS2 terminal: If the update asks you to close the terminal, reopen MSYS2 and run the install command."
     ],
     [
      "li",
@@ -3787,9 +3445,11 @@
    ]
   },
   "d-adonis-singh-re4": {
+   "v": 2,
    "repo": "adonis-singh/re4",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -3833,11 +3493,7 @@
     ],
     [
      "li",
-     "src/game/ is the game itself. src/em*/ are the enemies, src/wep*/ the weapons, src/pl*/ the"
-    ],
-    [
-     "p",
-     "player characters and src/st*/ the rooms, one REL per room. src/t_*/, src/Tools/ and src/tools/ are the in-game debug editors, src/Sscrn/ the menu screens and src/lib/ the SDK, CRI and runtime libraries."
+     "src/game/ is the game itself. src/em*/ are the enemies, src/wep*/ the weapons, src/pl*/ the player characters and src/st*/ the rooms, one REL per room. src/t_*/, src/Tools/ and src/tools/ are the in-game debug editors, src/Sscrn/ the menu screens and src/lib/ the SDK, CRI and runtime libraries."
     ],
     [
      "li",
@@ -3849,19 +3505,11 @@
     ],
     [
      "li",
-     "tools/ has the build scripts, the compare tools, the SN compiler build and the research kit."
-    ],
-    [
-     "p",
-     "tools/motion_export.py exports the game's animations to glTF and BVH, see tools/motion/README.md."
+     "tools/ has the build scripts, the compare tools, the SN compiler build and the research kit. tools/motion_export.py exports the game's animations to glTF and BVH, see tools/motion/README.md."
     ],
     [
      "li",
-     "docs/overview.md is a guide to how the engine fits together. docs/matching.md explains how the"
-    ],
-    [
-     "p",
-     "matching was done and docs/unit-notes.md has notes per unit. docs/research/ is the detailed log."
+     "docs/overview.md is a guide to how the engine fits together. docs/matching.md explains how the matching was done and docs/unit-notes.md has notes per unit. docs/research/ is the detailed log."
     ],
     [
      "h",
@@ -3886,9 +3534,11 @@
    ]
   },
   "d-snesrev-zelda3": {
+   "v": 2,
    "repo": "snesrev/zelda3",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -3977,9 +3627,11 @@
    ]
   },
   "d-monsterdruide1-odysseydecomp": {
+   "v": 2,
    "repo": "MonsterDruide1/OdysseyDecomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -4055,11 +3707,7 @@
     ],
     [
      "li",
-     "If you are on Ubuntu 18.04, you must"
-    ],
-    [
-     "p",
-     "first update CMake by using the official CMake APT repository."
+     "If you are on Ubuntu 18.04, you must first update CMake by using the official CMake APT repository."
     ],
     [
      "li",
@@ -4083,11 +3731,7 @@
     ],
     [
      "li",
-     "The following Python modules: capstone colorama cxxfilt pyelftools watchdog python-Levenshtein toml ("
-    ],
-    [
-     "p",
-     "install them with pip install ...)"
+     "The following Python modules: capstone colorama cxxfilt pyelftools watchdog python-Levenshtein toml ( install them with pip install ...)"
     ],
     [
      "h",
@@ -4095,27 +3739,15 @@
     ],
     [
      "li",
-     "Clone this repository. If you are using WSL, please clone the repo inside WSL, not on the Windows side (for"
-    ],
-    [
-     "p",
-     "performance reasons)."
+     "Clone this repository. If you are using WSL, please clone the repo inside WSL, not on the Windows side (for performance reasons)."
     ],
     [
      "li",
-     "Run git submodule update --init --recursive"
-    ],
-    [
-     "p",
-     "Next, you'll need to acquire the original 1.0 main NSO executable."
+     "Run git submodule update --init --recursive Next, you'll need to acquire the original 1.0 main NSO executable."
     ],
     [
      "li",
-     "To dump it from a Nintendo Switch,"
-    ],
-    [
-     "p",
-     "follow the instructions on the wiki."
+     "To dump it from a Nintendo Switch, follow the instructions on the wiki."
     ],
     [
      "li",
@@ -4164,9 +3796,11 @@
    ]
   },
   "d-fishb0nes98-tekken3recompiled": {
+   "v": 2,
    "repo": "FishB0nes98/Tekken3Recompiled",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -4194,11 +3828,7 @@
     ],
     [
      "li",
-     "Tekken_3_Recompiled.exe: the hybrid recompilation, retained as a behavior"
-    ],
-    [
-     "p",
-     "and rendering reference while systems are migrated."
+     "Tekken_3_Recompiled.exe: the hybrid recompilation, retained as a behavior and rendering reference while systems are migrated."
     ],
     [
      "p",
@@ -4251,9 +3881,11 @@
    ]
   },
   "d-elliotttate-dkc1recomp": {
+   "v": 2,
    "repo": "elliotttate/DKC1Recomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -4293,11 +3925,7 @@
     ],
     [
      "li",
-     "the exact start and size of every instruction (53,230 instructions /"
-    ],
-    [
-     "p",
-     "126,790 bytes) derived from the asar symbol map — no heuristics;"
+     "the exact start and size of every instruction (53,230 instructions / 126,790 bytes) derived from the asar symbol map — no heuristics;"
     ],
     [
      "li",
@@ -4305,11 +3933,7 @@
     ],
     [
      "li",
-     "complete target lists for the indirect-dispatch sites, extracted from"
-    ],
-    [
-     "p",
-     "the disassembly's own dw jump tables (25 sites, 293 targets — including the 460-entry game-mode dispatcher and the animation-command table);"
+     "complete target lists for the indirect-dispatch sites, extracted from the disassembly's own dw jump tables (25 sites, 293 targets — including the 460-entry game-mode dispatcher and the animation-command table);"
     ],
     [
      "li",
@@ -4346,9 +3970,11 @@
    ]
   },
   "d-spannerisms-jpdasm": {
+   "v": 2,
    "repo": "spannerisms/jpdasm",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -4489,9 +4115,11 @@
    ]
   },
   "d-player124413-sonic-generations-recomp-android-and-pc-edition": {
+   "v": 2,
    "repo": "Player124413/Sonic-Generations-recomp-android-and-pc-edition",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "p",
@@ -4508,9 +4136,14 @@
    ]
   },
   "d-sp00nznet-tokyojungle": {
+   "v": 2,
    "repo": "sp00nznet/tokyojungle",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": {
+    "titulo": "Status: Phase 8 — Boots to a Window, Audio Initialises, Geometry Not Yet Drawing",
+    "texto": "This is the first 3D title to attempt ps3recomp. The game boots end-to-end, opens a D3D12 window, runs its PSN data-install flow, brings up SPURS and all twelve of its SPU job images, loads its game data, and completes audio initialisation. Its own clear colour reaches the screen. It no longer hangs, crashes or exits…"
+   },
    "bloques": [
     [
      "h",
@@ -4570,62 +4203,36 @@
     ],
     [
      "li",
-     "A window with the game's own pixels in it — CELL_GCM CLEAR_SURFACE reaches"
-    ],
-    [
-     "p",
-     "the D3D12 backend and presents; the frame colour is the guest's, not ours"
+     "A window with the game's own pixels in it — CELL_GCM CLEAR_SURFACE reaches the D3D12 backend and presents; the frame colour is the guest's, not ours"
     ],
     [
      "li",
-     "The PS3 data-install flow — the title's installer runs to completion, which"
-    ],
-    [
-     "p",
-     "needed all three of ps3recomp's independent path roots configured (sys_fs syscalls, the cellFs HLE prefix table, and cellGame's content path)"
+     "The PS3 data-install flow — the title's installer runs to completion, which needed all three of ps3recomp's independent path roots configured (sys_fs syscalls, the cellFs HLE prefix table, and cellGame's content path)"
     ],
     [
      "li",
-     "Guest threads actually run — ppu_install_thread_trampoline; without it every"
-    ],
-    [
-     "p",
-     "sys_ppu_thread_create thread spawned, reported FINISHED, and executed nothing"
+     "Guest threads actually run — ppu_install_thread_trampoline; without it every sys_ppu_thread_create thread spawned, reported FINISHED, and executed nothing"
     ],
     [
      "li",
-     "SPURS job chains — the walker handles JOB / SYNC / NEXT / GUARD, and job"
-    ],
-    [
-     "p",
-     "guards are implemented, so a chain waits for its notify instead of running against parameters the game has not filled in yet"
+     "SPURS job chains — the walker handles JOB / SYNC / NEXT / GUARD, and job guards are implemented, so a chain waits for its notify instead of running against parameters the game has not filled in yet"
     ],
     [
      "li",
-     "All 12 SPU images lifted and dispatched — captured with SPU_DUMP_MISS,"
-    ],
-    [
-     "p",
-     "matched by content fingerprint, 4,751 SPU functions, zero dispatch misses. The sound jobs run to completion, read their work descriptors and DMA their results"
+     "All 12 SPU images lifted and dispatched — captured with SPU_DUMP_MISS, matched by content fingerprint, 4,751 SPU functions, zero dispatch misses. The sound jobs run to completion, read their work descriptors and DMA their results"
     ],
     [
      "li",
-     "Every file the boot asks for opens — the disc, hdd-game and app_home roots"
-    ],
-    [
-     "p",
-     "all resolve into the title's real data (input/USRDIR/, 1,053 files); the sound banks load. Zero failed opens across a run"
-    ],
-    [
-     "li",
-     "Complete lifting coverage — all 7,410 functions the binary's .opd table"
+     "Every file the boot asks for opens — the disc, hdd-game and app_home roots all resolve into the title's real data (input/USRDIR/, 1,053 files); the sound banks load. Zero failed opens across a run"
     ]
    ]
   },
   "d-omegakatana92-kirby-dream-land-recomp": {
+   "v": 2,
    "repo": "omegakatana92/Kirby-Dream-Land-Recomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -4910,9 +4517,14 @@
    ]
   },
   "d-isofrieze-smwdisx": {
+   "v": 2,
    "repo": "IsoFrieze/SMWDisX",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": {
+    "titulo": "Status",
+    "texto": "All 5 versions assemble and play exactly like they should!"
+   },
    "bloques": [
     [
      "h",
@@ -5081,9 +4693,14 @@
    ]
   },
   "d-nyperyuhgard-ctr-pc-port": {
+   "v": 2,
    "repo": "NyperYuhgard/CTR-PC-Port",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": {
+    "titulo": "Roadmap",
+    "texto": "Clean up game/ copies strip byte budget hacks and route platform-specific code through CTR_NATIVE"
+   },
    "bloques": [
     [
      "h",
@@ -5155,11 +4772,7 @@
     ],
     [
      "li",
-     "Create an assets/ directory next to the executable for packaged builds, or"
-    ],
-    [
-     "p",
-     "next to the source files for development builds run from build/"
+     "Create an assets/ directory next to the executable for packaged builds, or next to the source files for development builds run from build/"
     ],
     [
      "li",
@@ -5239,11 +4852,7 @@
     ],
     [
      "li",
-     "Host: te aparece la lista de interfaces de red con sus IPs. Elegís la"
-    ],
-    [
-     "p",
-     "que vas a compartir con los demás."
+     "Host: te aparece la lista de interfaces de red con sus IPs. Elegís la que vas a compartir con los demás."
     ],
     [
      "li",
@@ -5251,19 +4860,11 @@
     ],
     [
      "li",
-     "Lobby: SQR para ready. El chat se escribe en una ventana de consola"
-    ],
-    [
-     "p",
-     "separada que se abre automáticamente (con tu teclado de PC, no con el controller). El host arranca con START cuando todos están ready."
+     "Lobby: SQR para ready. El chat se escribe en una ventana de consola separada que se abre automáticamente (con tu teclado de PC, no con el controller). El host arranca con START cuando todos están ready."
     ],
     [
      "li",
-     "Al terminar, el host puede mandar \"volver al lobby\" para jugar otra"
-    ],
-    [
-     "p",
-     "pista sin reconectar."
+     "Al terminar, el host puede mandar \"volver al lobby\" para jugar otra pista sin reconectar."
     ],
     [
      "h",
@@ -5336,9 +4937,11 @@
    ]
   },
   "d-ctr-tools-ctr-modsdk": {
+   "v": 2,
    "repo": "CTR-tools/CTR-ModSDK",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -5447,9 +5050,11 @@
    ]
   },
   "d-patataofcourse-rhgold": {
+   "v": 2,
    "repo": "patataofcourse/rhgold",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "p",
@@ -5482,9 +5087,11 @@
    ]
   },
   "d-entroper-ff1disassembly": {
+   "v": 2,
    "repo": "Entroper/FF1Disassembly",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "p",
@@ -5516,43 +5123,23 @@
     ],
     [
      "li",
-     "build.bat is a batch file to generate a ROM from the source. So just make your changes to"
-    ],
-    [
-     "p",
-     "the asm, run build.bat, and your hack is done! NOTE that build.bat will delete any \"bank_*.bin\" and \"*.o\" files in the root directory as part of its cleanup."
+     "build.bat is a batch file to generate a ROM from the source. So just make your changes to the asm, run build.bat, and your hack is done! NOTE that build.bat will delete any \"bank_*.bin\" and \"*.o\" files in the root directory as part of its cleanup."
     ],
     [
      "li",
-     "macros.inc includes a handful of macros that are [sparesely] used. Really the main ones are the"
-    ],
-    [
-     "p",
-     "CRITPAGECHECK and PAGECHECK which error/warning if a timed loop (branch) crosses a page boundary, as this would screw with the timing of the routine (crossing a page adds another cycle)"
+     "macros.inc includes a handful of macros that are [sparesely] used. Really the main ones are the CRITPAGECHECK and PAGECHECK which error/warning if a timed loop (branch) crosses a page boundary, as this would screw with the timing of the routine (crossing a page adds another cycle)"
     ],
     [
      "li",
-     "Constants.inc includes various constants. Should be self explanitory mostly. I tried to keep the"
-    ],
-    [
-     "p",
-     "number of addresses listed in there to a minimum. The ones that are in there are primarily for addresses that point somewhere in the middle of a block of binary data, so it's hard to create them with labels."
+     "Constants.inc includes various constants. Should be self explanitory mostly. I tried to keep the number of addresses listed in there to a minimum. The ones that are in there are primarily for addresses that point somewhere in the middle of a block of binary data, so it's hard to create them with labels."
     ],
     [
      "li",
-     "variables.inc is the closest thing to a RAM map that I have. It's not really as organized"
-    ],
-    [
-     "p",
-     "as it could be, and some of the names are questionable, but hopefully get the point across well enough."
+     "variables.inc is the closest thing to a RAM map that I have. It's not really as organized as it could be, and some of the names are questionable, but hopefully get the point across well enough."
     ],
     [
      "li",
-     "\"some formats.txt\" is some very sketchy notes I made about some less-than-obvious formats used"
-    ],
-    [
-     "p",
-     "by the game. Specifically tile attributes for overworld and standard maps, and the battle formation data. This is a holdover from when I started this project. As I got further into it, I started putting these descriptions in large block comments in the actual code -- since that seemed to make more sense and was more organized."
+     "\"some formats.txt\" is some very sketchy notes I made about some less-than-obvious formats used by the game. Specifically tile attributes for overworld and standard maps, and the battle formation data. This is a holdover from when I started this project. As I got further into it, I started putting these descriptions in large block comments in the actual code -- since that seemed to make more sense and was more organized."
     ],
     [
      "p",
@@ -5633,9 +5220,11 @@
    ]
   },
   "d-luigi587-generationsdecomp": {
+   "v": 2,
    "repo": "Luigi587/GenerationsDecomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -5660,9 +5249,11 @@
    ]
   },
   "d-soulcalibur-ii-research-group-scii-re": {
+   "v": 2,
    "repo": "Soulcalibur-II-Research-Group/scII_re",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -5675,9 +5266,11 @@
    ]
   },
   "d-jhdev2006-super-mario-world-remastered-public": {
+   "v": 2,
    "repo": "JHDev2006/Super-Mario-World-Remastered-Public",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "p",
@@ -5694,9 +5287,11 @@
    ]
   },
   "d-doldecomp-sadx": {
+   "v": 2,
    "repo": "doldecomp/sadx",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "p",
@@ -5836,11 +5431,7 @@
     ],
     [
      "li",
-     "Configure:"
-    ],
-    [
-     "p",
-     "To use a version other than GXSE8P (NTSC-U Retail), specify --version GASJ8P (NTSC-J Retail), --version GXSP8P (PAL Retail), --version GXSE8P-Demo (NTSC-U Demo), --version Review (NTSC-U \"Review\" prototype), and so on."
+     "Configure: To use a version other than GXSE8P (NTSC-U Retail), specify --version GASJ8P (NTSC-J Retail), --version GXSP8P (PAL Retail), --version GXSE8P-Demo (NTSC-U Demo), --version Review (NTSC-U \"Review\" prototype), and so on."
     ],
     [
      "li",
@@ -5849,9 +5440,11 @@
    ]
   },
   "d-waterdish-zelda3-android": {
+   "v": 2,
    "repo": "Waterdish/zelda3-android",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -5936,9 +5529,11 @@
    ]
   },
   "d-jmxamongusmodder-cuphead-decomp": {
+   "v": 2,
    "repo": "jmxamongusmodder/cuphead-decomp",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -5975,9 +5570,11 @@
    ]
   },
   "d-snesrev-smw": {
+   "v": 2,
    "repo": "snesrev/smw",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": true,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -6046,9 +5643,11 @@
    ]
   },
   "d-stephini-smas-launcher": {
+   "v": 2,
    "repo": "stephini/SMAS_Launcher",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -6185,9 +5784,11 @@
    ]
   },
   "d-everything8215-ff2": {
+   "v": 2,
    "repo": "everything8215/ff2",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -6200,9 +5801,11 @@
    ]
   },
   "d-yoshifanatic1-donkey-kong-country-1-disassembly": {
+   "v": 2,
    "repo": "Yoshifanatic1/Donkey-Kong-Country-1-Disassembly",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "p",
@@ -6231,9 +5834,11 @@
    ]
   },
   "d-daniele-rapagnani-alephone-android": {
+   "v": 2,
    "repo": "daniele-rapagnani/alephone-android",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -6338,9 +5943,11 @@
    ]
   },
   "d-galaxyhaxz-smw-src": {
+   "v": 2,
    "repo": "galaxyhaxz/smw-src",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -6397,9 +6004,11 @@
    ]
   },
   "d-huderlem-kirbydreamland": {
+   "v": 2,
    "repo": "huderlem/kirbydreamland",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -6424,9 +6033,11 @@
    ]
   },
   "d-benwenger-finalfantasydisassembly": {
+   "v": 2,
    "repo": "BenWenger/FinalFantasyDisassembly",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -6439,9 +6050,11 @@
    ]
   },
   "d-gnaghi-smwdisc": {
+   "v": 2,
    "repo": "gnaghi/SMWDisC",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "h",
@@ -6518,9 +6131,11 @@
    ]
   },
   "d-sonicretro-sad-disasm": {
+   "v": 2,
    "repo": "sonicretro/sad_disasm",
-   "actualizado": "2026-11-17T00:11:48.971Z",
+   "actualizado": "2026-11-18T12:47:54.356Z",
    "recortado": false,
+   "estado": null,
    "bloques": [
     [
      "p",
