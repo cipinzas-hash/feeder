@@ -15,6 +15,7 @@ import { nivelRegistro, colorRegistro, barrasRegistro } from "./registro.js";
 import { FamiliaInboxModal } from "./FamiliaInbox.jsx";
 import { leerDecisiones, guardarDecisiones, pendientes as familiaPendientes, fechasDeEvento, tareaDesdeEvento, registrarImportado, registrarIgnorado, podar as podarFamilia } from "./familiaInbox.js";
 import PokecriptoPage, { CARPETAS_DEFAULT } from "../modules/pokecripto/PokecriptoPage.jsx";
+import PokecriptoRaiz from "../modules/pokecripto/PokecriptoRaiz.jsx";
 import SaludPage, { SaludRegistro } from "../modules/salud/SaludPage.jsx";
 import { migrateKidsHealth, emptyKidsHealth, effectiveMarks, citasOnDay, citaLine, saludDelDia } from "../modules/salud/saludModel.js";
 import FadimanPage from "../modules/fadiman/FadimanPage.jsx";
@@ -2468,7 +2469,7 @@ function AngstApp() {
           customEjercicios={customEjercicios} saveCustomEjercicios={d=>{setCustomEjercicios(d);customEjerciciosRef.current=d;saveToStorage({customEjercicios:d});}}
           ejercicioDecks={ejercicioDecks} saveEjercicioDecks={d=>{setEjercicioDecks(d);ejercicioDecksRef.current=d;saveToStorage({ejercicioDecks:d});}}
         />}
-        {page===8&&<PokecriptoPage
+        {page===8&&<PokecriptoRaiz
           inventario={pokeInventario}
           saveInventario={guardarInventario}
           carpetas={pokeCarpetas}

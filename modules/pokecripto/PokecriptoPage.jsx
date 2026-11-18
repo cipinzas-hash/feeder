@@ -132,7 +132,7 @@ function getEstadoDark(entry){
   return entry.conseguida ? "conseguida" : "hunting";
 }
 
-function fmtUSD(n){ return "$"+parseFloat(n||0).toFixed(2); }
+export function fmtUSD(n){ return "$"+parseFloat(n||0).toFixed(2); }
 // Historial mensual de colecciones (issue #40, 10-nov-2026): etiquetas, variación y gráfico mínimo.
 const MESES_ABR=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 function mesLabel(m){ const [a,mm]=String(m||"").split("-"); return (MESES_ABR[(parseInt(mm,10)||1)-1]||"")+" "+a; }
@@ -175,7 +175,7 @@ function ChipHerramienta({onClick,activo,children,title}){
 // Marco de cada vista de Pokécripto (lineamiento N1/N3, nov-2026): llena el área libre que deja el shell (.app-fit: encabezado,
 // pestañas y pie fijos), con scroll interno solo cuando el contenido no cabe. Los paneles absolutos (detalle de carta) se
 // posicionan contra este marco, así que tapan solo el módulo y nunca el encabezado, las pestañas ni el pie.
-function MarcoPoke({children,scrollRef}){
+export function MarcoPoke({children,scrollRef}){
   return(
     <div style={{flex:1,minHeight:0,position:"relative",display:"flex",flexDirection:"column",background:"#0a0a0a"}}>
       <div ref={scrollRef} style={{flex:1,minHeight:0,overflowY:"auto",overflowX:"hidden",padding:"16px",boxSizing:"border-box",width:"100%",maxWidth:480,margin:"0 auto"}}>
@@ -374,7 +374,7 @@ function computeTimeframeDeltas(history){
     return {days, pct:(latest.market-ref.market)/ref.market*100};
   });
 }
-function TimeframeDeltas({history, dark, compact}){
+export function TimeframeDeltas({history, dark, compact}){
   const deltas = computeTimeframeDeltas(history);
   if(!deltas.length) return null;
   return (
@@ -475,7 +475,7 @@ function PriceChart({history, precioVenta, compact, range, onSelectPoint, select
 }
 
 // Gráfico que llena su contenedor (ancho y alto; el padre debe ser position:relative): mide el recuadro disponible y dibuja a 1:1, sin deformar textos.
-function PriceChartFill(props){
+export function PriceChartFill(props){
   const ref=React.useRef(null);
   const [size,setSize]=React.useState(null);
   React.useLayoutEffect(()=>{

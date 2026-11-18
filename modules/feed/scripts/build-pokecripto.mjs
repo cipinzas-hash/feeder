@@ -29,6 +29,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { fetchTCGBatch, addSnapshot, compactarHistorial } from "../../pokecripto/lib/pricing.mjs";
 import { marcarCortes, contarCortes, conservarNM, extrasSnapshot } from "../../pokecripto/lib/historial.mjs";
+import { juegoDe, OTROS_JUEGOS, actualizarPreciosFilas } from "../../pokecripto/lib/juegos.mjs";
 import { aplicarOverrides, normalizarOverridesRemotos, fusionarPending, prioridadCarta } from "../../pokecripto/lib/review.mjs";
 import { fetchTCGPagina, fetchTCGSets, fetchTCGSetPagina, slugParaSet, paginasDeSet, claveCarta, PAUSA_RAFAGA_MS, asignarTcgIds, agruparPorSet, debeSaltarse, actualizarEstadoSet, presupuestoDescubrimiento, sumarDias, cupoRestante } from "../../pokecripto/lib/discovery.mjs";
 
@@ -120,7 +121,16 @@ async function main() {
   const parches = new Map();      // id -> { tcgId } descubierto (puede no traer precio)
   const porId = new Map(base.map(c => [c.id, c]));
   const tcgIdDe = c => parches.get(c.id)?.tcgId || c.tcgId || null;
-  const activas = base.filter(c => c.estado !== "vendida");
+  // Multi-juego (17-nov-2026): las filas de otros juegos (campo `juego`) NO entran a ninguna fase de Pokémon (ni lotes, ni
+  // descubrimiento, ni búsqueda individual: gastarían cupo de tcgpricelookup en cartas que esa API no tiene). Sus precios
+  // salen de los catálogos de tcgcrypto (tcgcsv, los JSON que arma build-tcgcrypto.mjs), sin consultas a ninguna API.
+  const activas = base.filter(c => c.estado !== "vendida" && juegoDe(c) === "pokemon");
+  const catalogosJuegos = {};
+  for (const j of OTROS_JUEGOS) { try { catalogosJuegos[j] = JSON.parse(readFileSync(new URL(`../data/tcgcrypto-${j}.json`, import.meta.url), "utf-8")); } catch (e) { /* sin catálogo ese día: esas filas conservan su precio */ } }
+  const otrasFilas = base.filter(c => juegoDe(c) !== "pokemon");
+  const rj = actualizarPreciosFilas(otrasFilas, catalogosJuegos, hoy);
+  rj.filas.forEach((f, i) => { if (f !== otrasFilas[i]) actualizadas.set(f.id, { tcgMarket: f.tcgMarket, tcgLow: f.tcgLow, tcgHigh: f.tcgHigh, tcgUpdated: f.tcgUpdated, priceHistory: f.priceHistory }); });
+  if (otrasFilas.length) console.log(`✓ Otros juegos: ${otrasFilas.length} fila(s), ${rj.cambiadas} repreciada(s) desde el catálogo de tcgcsv (sin consultas a API)`);
   // Cupo: el contador es POR DÍA (UTC), no por corrida, así dos corridas el mismo día (la programada + una manual) no
   // se pasan del cupo real; además se lee el cupo que reporta la API en las cabeceras cuando las manda.
   let tcgUsadas = estado.cupoDia && estado.cupoDia.fecha === hoy ? (estado.cupoDia.usadas || 0) : 0;

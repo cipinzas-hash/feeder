@@ -4,6 +4,11 @@ import { mkdtempSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { readFileSync as leerJson } from "node:fs";
+const ygoDatos = JSON.parse(leerJson(new URL("../modules/feed/data/tcgcrypto-yugioh.json", import.meta.url), "utf-8"));
+const dgmDatos = JSON.parse(leerJson(new URL("../modules/feed/data/tcgcrypto-digimon.json", import.meta.url), "utf-8"));
+const ygoCarta = ygoDatos.cartas.find(x => x.c.includes("dark") && x.v.some(v => v[5] != null));
+const dgmCarta = dgmDatos.cartas.find(x => x.v.some(v => v[5] != null));
 
 let n = 0;
 const t = (nombre, fn) => { fn(); n++; console.log("✓", nombre); };
@@ -25,6 +30,9 @@ const inv = [
   c("hist", "Hist", "1", "Alpha", "alp", { tcgId: "t-hist", tcgMarket: 8, tcgUpdated: dia(-60), priceHistory: [
     { date: dia(-90), market: 1, low: 0.5, high: 2, src: "tpl" }, { date: dia(-80), market: 3, low: 0.4, high: 4, src: "tpl" },
     { date: dia(-60), market: 2, low: 1, high: 3, src: "tpl" }] }),
+  // multi-juego: filas de otros juegos (no deben consumir cupo ni entrar a las fases de Pokémon; se repreciean del catálogo)
+  c("ygo1", ygoCarta.n, "1", "", "", { juego: "yugioh", cardId: ygoCarta.k, coleccion: "dark", carpeta: "Dark", estado: "en_mano", tcgMarket: 0.01, tcgUpdated: dia(-3), priceHistory: [] }),
+  c("dgm1", dgmCarta.n, "1", "", "", { juego: "digimon", cardId: dgmCarta.k, coleccion: "numemon", carpeta: "Numemon", estado: "hunting", tcgMarket: null, tcgUpdated: null, priceHistory: [] }),
   // lote 1: base NM. lp1 venía de NM hace 1 día y hoy la API solo trae LP -> se conserva; lp2 lleva 20 días sin precio -> se acepta LP.
   c("lp1", "Lp1", "1", "Alpha", "alp", { tcgId: "t-lp1", tcgMarket: 3, tcgUpdated: dia(-1), priceHistory: [{ date: dia(-1), market: 3, low: 2, high: 4, src: "tpl", base: "nm" }] }),
   c("lp2", "Lp2", "1", "Alpha", "alp", { tcgId: "t-lp2", tcgMarket: 3, tcgUpdated: dia(-20), priceHistory: [{ date: dia(-20), market: 3, low: 2, high: 4, src: "tpl", base: "nm" }] }),
@@ -60,6 +68,16 @@ t("descubrimiento por set: asigna tcgId y trae el snapshot de una vez, con src t
   assert.equal(por.a1.priceHistory.at(-1).src, "tpl");
   assert.equal(por.a3.tcgId, "t-alp-3"); assert.equal(por.a3.tcgMarket, null); // la API la tiene pero sin precio
 });
+t("multi-juego: las filas de otros juegos se repreciean del catálogo de tcgcsv (snapshot csv), sin tocar las fases de Pokémon", () => {
+  const hoy = new Date().toISOString().slice(0, 10);
+  const minY = Math.min(...ygoCarta.v.filter(v => v[5] != null).map(v => v[5]));
+  assert.equal(por.ygo1.tcgMarket, minY); assert.equal(por.ygo1.tcgUpdated, hoy);
+  assert.equal(por.ygo1.priceHistory.at(-1).src, "csv"); assert.ok(por.ygo1.priceHistory.at(-1).tid);
+  assert.ok(por.dgm1.tcgMarket > 0); assert.equal(por.dgm1.priceHistory.at(-1).src, "csv");
+  assert.equal(por.ygo1.juego, "yugioh"); assert.equal(por.ygo1.carpeta, "Dark");              // los campos propios sobreviven al canónico
+  assert.ok(!por.ygo1.tcgId && !por.dgm1.tcgId);                                               // nunca buscaron tcgId en tcgpricelookup
+  assert.ok(/Otros juegos: 2 fila\(s\), 2 repreciada\(s\)/.test(out));
+});
 t("lote 1 · base NM: con solo LP hoy se conserva el último NM (sin snapshot nuevo); pasados 14 días se acepta el LP marcado base lp", () => {
   const hoy = new Date().toISOString().slice(0, 10);
   assert.equal(por.lp1.priceHistory.length, 1); assert.equal(por.lp1.tcgMarket, 3); assert.equal(por.lp1.tcgIntento, hoy);
@@ -88,7 +106,7 @@ t("lotes: la carta que ya tenía tcgId se actualiza por lote (20 por consulta) y
 t("una sola fuente: el bot nunca consulta pokemontcg.io; lo que tcgpricelookup no tiene queda sin tocar y pasa al final de la cola", () => {
   assert.ok(!log().some(l => l.startsWith("PTCG")));
   assert.equal(por.g1.tcgMarket, null); assert.equal(por.g1.tcgIntento, new Date().toISOString().slice(0, 10));
-  for (const x of res) for (const h of x.priceHistory) if (h.date === new Date().toISOString().slice(0, 10)) assert.equal(h.src, "tpl");
+  for (const x of res.filter(r => !r.juego)) for (const h of x.priceHistory) if (h.date === new Date().toISOString().slice(0, 10)) assert.equal(h.src, "tpl"); // solo Pokémon: los otros juegos usan el catálogo (src "csv")
 });
 t("la vendida no se toca y no gasta consultas", () => { assert.equal(por.v1.tcgMarket, null); });
 t("resumen de corrida en pokecripto-estado.json", () => {
