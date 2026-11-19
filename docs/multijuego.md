@@ -16,7 +16,7 @@ Yu-Gi-Oh! y Digimon dentro de Pokécripto, con la estructura de Pokécripto: **e
 - **Pantalla de juego** (`PokecriptoJuego.jsx`), con la MISMA estructura de exploración que las colecciones de Pokémon (pedido del 17-nov):
   menú «🗂️ Colecciones» (completación, barra, valor conseguido/total y % del valor, tarjetas por colección); dentro de una colección, tarjeta
   de completación en dos mitades (izquierda n/total, %, valor; derecha chips 🔍 sin precio y 🔎 buscar/filtrar), vistas ⠿ ▦ ≡, cartas
-  **agrupadas por set** (más nuevo primero) con barra de avance, valor por set y «¡completada!», tarjetas con borde verde = conseguida / rojo =
+  **agrupadas por set** (más nuevo primero; una carta aparece en CADA set donde se imprimió —Magic Ruler, Invasion of Chaos…—, no solo bajo su impresión más nueva; con más de 400 impresiones los sets vienen cerrados y se abren al tocar su cabecera, y el panel 🔎 trae un selector de set) con barra de avance, valor por set y «¡completada!», tarjetas con borde verde = conseguida / rojo =
   falta, ✓ y precio; y **al tocar una carta, detalle a pantalla completa** (← volver, contador i/n, flechas ‹ › para recorrer la lista visible,
   zoom de la ilustración, estado, precio de mercado y rango, ATH/ATL/σ y variación 7/30/90/180/360 D, gráfico de precios con 7d/30d/todo y punto
   seleccionable, ✓ marcar conseguida / ↺ volver a hunting, ✎ editar (costo, cantidad, notas) y 🗑 quitar). Añade lo que viene de tcgcrypto:
@@ -27,6 +27,12 @@ Yu-Gi-Oh! y Digimon dentro de Pokécripto, con la estructura de Pokécripto: **e
   juego y el bot cada día. El cambio de versión cambia el `tid`: si el salto es grande, el lote 1 lo marca como corte.
 - **Bot**: las filas de otros juegos NO entran a ninguna fase de Pokémon (lotes, descubrimiento, búsqueda individual: no gastan cupo de
   tcgpricelookup) y se repreciean desde `modules/feed/data/tcgcrypto-{juego}.json`.
+
+## Imágenes
+Vienen del CDN de TCGplayer (`{id}_200w.jpg`), así que **necesitan internet** (la versión offline solo bloquea las consultas de datos, no las imágenes).
+Cada imagen reserva su alto, no envía referer y prueba 200w → 400w → 1000x1000 antes de dejar un marcador con el nombre. Arreglo de un bug: las tarjetas
+se definían dentro del render y se desmontaban en cada refresco de la app (reiniciando la carga); ahora la vista de colección es un componente
+memoizado con tarjetas estables.
 
 ## Qué NO está todavía
 - **Agregar cartas sueltas fuera de una colección** (p. ej. una staple para una carpeta «Staples & Meta» del juego): hoy solo se marcan cartas de las
