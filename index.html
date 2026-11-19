@@ -3801,6 +3801,12 @@ var __angst = (() => {
     const m = /^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+?)(?:\.git)?(?:[/?#].*)?$/.exec(String(url || ""));
     return m ? `${m[1]}/${m[2]}` : null;
   }
+  var SUFIJO_PAREN = /\s*\((?:[^()]|\([^()]*\))*\)\s*$/;
+  function tituloLimpio(titulo) {
+    let t = String(titulo || "");
+    for (let i = 0; i < 3 && SUFIJO_PAREN.test(t); i++) t = t.replace(SUFIJO_PAREN, "");
+    return t;
+  }
 
   // modules/gameenhanced/registro.js
   var KEY3 = "angst-game-enhanced-registro-v1";
@@ -9864,7 +9870,7 @@ ${item.link}`);
   async function fetchGameEnhancedData() {
     const d = await fetchJsonSafe(GAME_ENHANCED_JSON_URL);
     if (!d || !Array.isArray(d.decomps) || !Array.isArray(d.estudios)) throw new Error("no se pudo leer game-enhanced.json");
-    return { juegos: [...d.decomps, ...d.estudios], generatedAt: d.generatedAt || null, fuentes: d.fuentes || {}, semilla: Array.isArray(d.semilla) ? d.semilla : [] };
+    return { juegos: [...d.decomps, ...Array.isArray(d.ports) ? d.ports : [], ...d.estudios], generatedAt: d.generatedAt || null, fuentes: d.fuentes || {}, semilla: Array.isArray(d.semilla) ? d.semilla : [] };
   }
   async function fetchGameEnhancedFichas() {
     const d = await fetchJsonSafe(GAME_ENHANCED_FICHAS_URL);
@@ -16319,8 +16325,11 @@ ${url}`);
   var TIPO2 = {
     d: { etiqueta: "DECOMP", emoji: "\u{1F9E9}", motivo: "Porque terminaste " },
     e: { etiqueta: "ESTUDIO", emoji: "\u{1F3E2}", motivo: "Del estudio detr\xE1s de " },
-    r: { etiqueta: "JUEGO", emoji: "\u{1F3AE}", motivo: "" }
+    r: { etiqueta: "JUEGO", emoji: "\u{1F3AE}", motivo: "" },
+    p: { etiqueta: "PORT", emoji: "\u{1F579}\uFE0F", motivo: "" }
+    // port nativo de un clásico, hecho sobre una decomp (no depende de tu lista)
   };
+  var esProyecto = (j) => j.tipo === "d" || j.tipo === "p";
   var ESTADOS_INFO = {
     terminado: { emoji: "\u{1F3C1}", etiqueta: "Terminado" },
     quiero: { emoji: "\u{1F3AF}", etiqueta: "Quiero jugar" },
@@ -16331,6 +16340,7 @@ ${url}`);
     ["todo", "\u2728", "Novedades"],
     ["d", "\u{1F9E9}", "Decomps"],
     ["e", "\u{1F3E2}", "Estudios"],
+    ["p", "\u{1F579}\uFE0F", "Ports"],
     ["terminado", "\u{1F3C1}", "Terminados"],
     ["quiero", "\u{1F3AF}", "Quiero jugar"],
     ["pendiente", "\u23F3", "Pendientes"]
@@ -16344,9 +16354,9 @@ ${url}`);
     "browser-port": "Port web"
   };
   var ASSETS = { byo: "S\xED, con tu propia copia", instant: "No, se juega al instante", demo: "Solo la demo", unknown: "Sin dato" };
-  var VENTANA = { decompDias: 90, pasadoEstudio: 120, futuroEstudio: 240 };
-  var enNovedades = (j) => j.tipo === "r" ? false : j.tipo === "d" ? !j.inactivo && j.dias <= VENTANA.decompDias : j.dias >= -VENTANA.futuroEstudio && j.dias <= VENTANA.pasadoEstudio;
-  var motivoDe = (j) => j.tipo === "r" ? ESTADOS_INFO[j.estado].etiqueta : TIPO2[j.tipo].motivo + j.tuJuego;
+  var VENTANA = { decompDias: 90, pasadoEstudio: 120, futuroEstudio: 240, portDias: 30 };
+  var enNovedades = (j) => j.tipo === "r" || j.tipo === "p" ? false : j.tipo === "d" ? !j.inactivo && j.dias <= VENTANA.decompDias : j.dias >= -VENTANA.futuroEstudio && j.dias <= VENTANA.pasadoEstudio;
+  var motivoDe = (j) => j.tipo === "r" ? ESTADOS_INFO[j.estado].etiqueta : j.tipo === "p" ? j.tuyos && j.tuyos.length ? `Ya terminaste ${j.tuJuego}` : `Cl\xE1sico de ${j.plataforma}` : TIPO2[j.tipo].motivo + j.tuJuego;
   function haceDias(n) {
     if (n <= 0) return "hoy";
     if (n === 1) return "ayer";
@@ -16376,9 +16386,10 @@ ${url}`);
       const ei = ESTADOS_INFO[j.estado];
       return [`${ei.emoji} ${ei.etiqueta}`, j.plataforma, j.estado === "terminado" && j.fecha ? `terminado el ${fechaLegible(j)}` : null, j.nota ? j.nota.length > 80 ? j.nota.slice(0, 79) + "\u2026" : j.nota : null].filter(Boolean).join(" \xB7 ");
     }
-    if (j.tipo === "d") {
-      const c = diasDesdeIso(j.ultimoCommit, ahora);
-      return [SUBTIPOS[j.subtipo] || j.subtipo, j.plataforma, `\u2B50 ${miles(j.estrellas)}`, c === null ? null : `\xFAltimo commit ${haceDias(c)}`, j.inactivo ? "inactivo" : null, j.ia ? "hecho con IA seg\xFAn la fuente" : null].filter(Boolean).join(" \xB7 ");
+    if (esProyecto(j)) {
+      const c = diasDesdeIso(j.ultimoCommit, ahora), rl = diasDesdeIso(j.fechaRelease, ahora);
+      const actividad = j.tipo === "p" && j.release ? `versi\xF3n ${j.release}${rl === null ? "" : " " + haceDias(rl)}` : c === null ? null : `\xFAltimo commit ${haceDias(c)}`;
+      return [SUBTIPOS[j.subtipo] || j.subtipo, j.plataforma, `\u2B50 ${miles(j.estrellas)}`, actividad, j.inactivo ? "inactivo" : null, j.ia ? "hecho con IA seg\xFAn la fuente" : null].filter(Boolean).join(" \xB7 ");
     }
     return [j.plataformas && j.plataformas.length ? j.plataformas.join(" \xB7 ") : null, j.dias < 0 ? `sale ${j.fechaAprox ? "en " + j.fecha.slice(0, 4) : fechaLegible(j)}` : `sali\xF3 ${fechaLegible(j)}`].filter(Boolean).join(" \xB7 ");
   }
@@ -16412,7 +16423,7 @@ ${url}`);
     const add2 = (k, v) => {
       if (v !== null && v !== void 0 && v !== "" && v !== "\u2014") filas.push([k, v]);
     };
-    if (j.tipo === "d") {
+    if (esProyecto(j)) {
       const c = diasDesdeIso(j.ultimoCommit, ahora), r = diasDesdeIso(j.fechaRelease, ahora);
       add2("Proyecto", SUBTIPOS[j.subtipo] || j.subtipo);
       add2("Por qu\xE9 lo ves", motivoDe(j));
@@ -16461,7 +16472,7 @@ ${url}`);
       url = igdb && typeof igdb.url === "string" && igdb.url.startsWith("https://") ? igdb.url : null;
     } else {
       lineas.push(detalleDe(j, ahora));
-      if (j.tipo === "d") {
+      if (esProyecto(j)) {
         const md = madurezDecomp(j, ahora);
         lineas.push(`${md.emoji} ${md.etiqueta}`);
         const rel = enlacesRelease(j);
@@ -16477,7 +16488,7 @@ ${url}`);
   }
   function itemsDe(juegos, clave, ocultos = {}, registro = null, ahora = Date.now()) {
     if (esCategoriaRegistro(clave)) return itemsRegistro(registro, clave, ahora);
-    return juegos.filter((j) => !ocultos[j.id] && (j.tipo === "d" || j.tipo === "e") && (clave === "todo" ? enNovedades(j) : j.tipo === clave)).sort((a, b) => Math.abs(a.dias) - Math.abs(b.dias) || (a.id < b.id ? -1 : 1));
+    return juegos.filter((j) => !ocultos[j.id] && (esProyecto(j) || j.tipo === "e") && (clave === "todo" ? enNovedades(j) : j.tipo === clave && (j.tipo !== "p" || j.dias <= VENTANA.portDias))).sort((a, b) => Math.abs(a.dias) - Math.abs(b.dias) || (b.estrellas ?? 0) - (a.estrellas ?? 0) || (a.id < b.id ? -1 : 1));
   }
   var XMB = { foco: 78, fila: 50, sep: 4, aire: 14, arriba: 2 };
   var OPACIDAD = [1, 0.85, 0.7, 0.55, 0.42];
@@ -16506,6 +16517,7 @@ ${url}`);
   function portadaDe(j, fichas = {}) {
     if (j.tipo === "e") return j.portada || null;
     if (j.tipo === "r") return fichas[j.id] && fichas[j.id].portada || null;
+    if (!j.tuJuego) return null;
     const id = idRegistro(j.tuJuego);
     return id && fichas[id] && fichas[id].portada || null;
   }
@@ -16597,7 +16609,7 @@ ${url}`);
     return /* @__PURE__ */ React.createElement("button", { onClick, style: estilo, ...foco ? { "aria-expanded": expandida ? "true" : "false" } : {} }, /* @__PURE__ */ React.createElement("span", { style: { flex: "none", width: 62, display: "flex", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(Miniatura, { imagen: portadaDe(j, fichas), emoji: j.tipo === "r" ? ESTADOS_INFO[j.estado].emoji : TIPO2[j.tipo].emoji, lado, resaltada: t > 0.6 })), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14 + 3 * t, fontWeight: t > 0.5 ? 600 : 500, color: t > 0.5 ? "#fff" : "#d4d4d8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, j.titulo, guardado ? " \u2605" : ""), t > 0.02 && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: DIM, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", opacity: t, maxHeight: 16 * t } }, subtitulo(j, ahora))), /* @__PURE__ */ React.createElement("span", { style: { flex: "none", fontSize: 11, color: DIM } }, cuando2(j)));
   }
   function Tarjeta2({ j, ahora, guardado, fichas, enRegistro, onCerrar, onFicha, onDescartar, onQuitar, onQuiero }) {
-    return /* @__PURE__ */ React.createElement("div", { "data-id": j.id, style: { flex: "none", margin: `${XMB.aire / 2}px 0`, background: "rgba(23,23,26,.92)", border: "1px dashed #3a3a40", borderRadius: 12, paddingBottom: 12 } }, /* @__PURE__ */ React.createElement(FilaX, { j, t: 1, alto: XMB.foco, foco: true, expandida: true, guardado, fichas, ahora, onClick: onCerrar }), /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 14px 0 95px", display: "flex", flexDirection: "column", gap: 8, fontFamily: FUENTE3, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, detalleDe(j, ahora)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: onFicha, style: botonPri }, "Abrir ficha"), j.tipo === "r" ? /* @__PURE__ */ React.createElement("button", { onClick: onQuitar, style: botonSec }, "Quitar") : /* @__PURE__ */ React.createElement(React.Fragment, null, j.tipo === "e" && !enRegistro && /* @__PURE__ */ React.createElement("button", { onClick: onQuiero, style: botonSec }, "\u{1F3AF} Quiero jugar"), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa")))));
+    return /* @__PURE__ */ React.createElement("div", { "data-id": j.id, style: { flex: "none", margin: `${XMB.aire / 2}px 0`, background: "rgba(23,23,26,.92)", border: "1px dashed #3a3a40", borderRadius: 12, paddingBottom: 12 } }, /* @__PURE__ */ React.createElement(FilaX, { j, t: 1, alto: XMB.foco, foco: true, expandida: true, guardado, fichas, ahora, onClick: onCerrar }), /* @__PURE__ */ React.createElement("div", { style: { padding: "4px 14px 0 95px", display: "flex", flexDirection: "column", gap: 8, fontFamily: FUENTE3, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, detalleDe(j, ahora)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { onClick: onFicha, style: botonPri }, "Abrir ficha"), j.tipo === "r" ? /* @__PURE__ */ React.createElement("button", { onClick: onQuitar, style: botonSec }, "Quitar") : /* @__PURE__ */ React.createElement(React.Fragment, null, (j.tipo === "e" || j.tipo === "p") && !enRegistro && /* @__PURE__ */ React.createElement("button", { onClick: onQuiero, style: botonSec }, "\u{1F3AF} Quiero jugar"), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa")))));
   }
   function Campo({ etiqueta, valor, onGuardar, multilinea, tipo }) {
     const [v, setV] = useState37(valor || "");
@@ -16632,7 +16644,9 @@ ${url}`);
     const glosario = GLOSARIO_SUBTIPO[j.subtipo];
     return /* @__PURE__ */ React.createElement("div", { "data-estado": md.nivel, style: { display: "flex", flexDirection: "column", gap: 8, padding: 12, borderRadius: 10, background: "rgba(23,23,26,.92)", border: "1px dashed #3a3a40" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18 }, "aria-hidden": "true" }, md.emoji), /* @__PURE__ */ React.createElement("strong", { style: { fontFamily: CAVEAT, fontWeight: 600, fontSize: 24, lineHeight: 1, color: "#fff" } }, md.etiqueta)), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 13, color: "#c4c4ca" } }, md.razon), autor && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4, paddingTop: 8, borderTop: "1px dashed #3a3a40" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, letterSpacing: "0.08em", color: DIM } }, "ESTADO SEG\xDAN EL AUTOR (README, en su idioma)"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: "#fff", overflowWrap: "anywhere" } }, autor.titulo), autor.texto && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, lineHeight: 1.45, color: "#c4c4ca", overflowWrap: "anywhere" } }, autor.texto)), glosario && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, paddingTop: 8, borderTop: "1px dashed #3a3a40", fontSize: 12, lineHeight: 1.45, color: DIM } }, /* @__PURE__ */ React.createElement("strong", { style: { color: "#c4c4ca", fontWeight: 500 } }, "Qu\xE9 es este tipo de proyecto:"), " ", glosario));
   }
-  var ETIQUETA_FICHA = { d: "Decomp", e: "Estudio", r: "Juego" };
+  var ETIQUETA_FICHA = { d: "Decomp", p: "Port", e: "Estudio", r: "Juego" };
+  var registroDe = (j, registro) => (j.tipo === "e" ? registro.juegos[idRegistro(j.titulo)] : j.tipo === "p" ? registro.juegos[idRegistro(tituloLimpio(j.titulo))] : null) || null;
+  var tituloParaRegistro = (j) => j.tipo === "p" ? tituloLimpio(j.titulo) : j.titulo;
   var MARCO_OSCURO = { background: "#0b0b0c", color: TXT, border: "2px dashed #555", boxShadow: "6px 6px 0 #000" };
   function Ficha({ j, ahora, igdb, imagen, guardado, enRegistro, readme, cargandoReadme, onGuardar, onDescartar, onQuiero, onEditar, onQuitar }) {
     const [copiado, setCopiado] = useState37(null);
@@ -16666,7 +16680,7 @@ ${enlace2}` : texto2);
     const botonCompartir = /* @__PURE__ */ React.createElement("button", { onClick: compartir, style: botonSec }, copiado || "\u2197 Compartir");
     return /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, fontFamily: FUENTE3, color: TXT } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, alignItems: "flex-start" } }, url && /* @__PURE__ */ React.createElement("img", { src: url, alt: "", style: { flex: "none", width: 96, height: 128, objectFit: "cover", borderRadius: 8, border: "1px solid #2c2c31", background: "#1b1b1f" }, onError: (e) => {
       e.currentTarget.style.display = "none";
-    } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { alignSelf: "flex-start", fontSize: 11, letterSpacing: "0.12em", color: ACC, border: `1px solid ${ACC}`, borderRadius: 4, padding: "2px 6px" } }, t.etiqueta), /* @__PURE__ */ React.createElement("h2", { style: { fontFamily: CAVEAT, fontWeight: 600, fontSize: 34, lineHeight: 1, color: "#fff", margin: 0, overflowWrap: "anywhere" } }, j.titulo), sub2 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 13, color: "#c4c4ca" } }, sub2))), j.tipo === "d" && /* @__PURE__ */ React.createElement(EstadoDecomp, { j, ahora, readme }), j.tipo === "r" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, /* @__PURE__ */ React.createElement(ChipsEstado, { valor: j.estado, onElegir: (e) => onEditar({ estado: e }) }), j.estado === "terminado" && /* @__PURE__ */ React.createElement(Campo, { etiqueta: "Terminado el", tipo: "date", valor: j.fecha, onGuardar: (v) => onEditar({ fecha: v }) }), /* @__PURE__ */ React.createElement(Campo, { etiqueta: "Plataforma", valor: j.plataforma, onGuardar: (v) => onEditar({ plataforma: v }) }), /* @__PURE__ */ React.createElement(Campo, { etiqueta: "Nota", multilinea: true, valor: j.nota, onGuardar: (v) => onEditar({ nota: v }) })), resumenTexto && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Seccion, null, "Resumen"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 13, lineHeight: 1.5, color: "#c4c4ca" } }, resumenTexto)), j.tipo === "d" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Seccion, null, "Sobre el proyecto"), /* @__PURE__ */ React.createElement(Readme, { readme, cargando: cargandoReadme, repoUrl: j.url })), filas.length > 0 && /* @__PURE__ */ React.createElement("dl", { style: { margin: 0, display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 14px", fontSize: 13 } }, filas.map(([k, v]) => [/* @__PURE__ */ React.createElement("dt", { key: "k" + k, style: { color: DIM } }, k), /* @__PURE__ */ React.createElement("dd", { key: "v" + k, style: { margin: 0, color: TXT, overflowWrap: "anywhere" } }, /* @__PURE__ */ React.createElement(Valor, { v }))])), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, j.tipo === "r" ? /* @__PURE__ */ React.createElement(React.Fragment, null, botonCompartir, /* @__PURE__ */ React.createElement("button", { onClick: onQuitar, style: botonSec }, "Quitar del registro")) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { onClick: onGuardar, "aria-pressed": guardado, style: botonPri }, guardado ? "\u2605 Guardado" : "\u2606 Me interesa"), botonCompartir, j.tipo === "e" && (enRegistro ? /* @__PURE__ */ React.createElement("span", { style: { alignSelf: "center", fontSize: 13, color: ACC } }, "\u2713 En tu registro: ", ESTADOS_INFO[enRegistro.estado].etiqueta) : /* @__PURE__ */ React.createElement("button", { onClick: onQuiero, style: botonSec }, "\u{1F3AF} Quiero jugar")), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa"))), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: DIM } }, "Datos: ", j.tipo === "d" ? "awesome-decomp-games y el README del repositorio" : j.tipo === "e" ? "IGDB" : "tu registro" + (igdb ? " e IGDB" : "")));
+    } }), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { alignSelf: "flex-start", fontSize: 11, letterSpacing: "0.12em", color: ACC, border: `1px solid ${ACC}`, borderRadius: 4, padding: "2px 6px" } }, t.etiqueta), /* @__PURE__ */ React.createElement("h2", { style: { fontFamily: CAVEAT, fontWeight: 600, fontSize: 34, lineHeight: 1, color: "#fff", margin: 0, overflowWrap: "anywhere" } }, j.titulo), sub2 && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 13, color: "#c4c4ca" } }, sub2))), esProyecto(j) && /* @__PURE__ */ React.createElement(EstadoDecomp, { j, ahora, readme }), j.tipo === "r" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, /* @__PURE__ */ React.createElement(ChipsEstado, { valor: j.estado, onElegir: (e) => onEditar({ estado: e }) }), j.estado === "terminado" && /* @__PURE__ */ React.createElement(Campo, { etiqueta: "Terminado el", tipo: "date", valor: j.fecha, onGuardar: (v) => onEditar({ fecha: v }) }), /* @__PURE__ */ React.createElement(Campo, { etiqueta: "Plataforma", valor: j.plataforma, onGuardar: (v) => onEditar({ plataforma: v }) }), /* @__PURE__ */ React.createElement(Campo, { etiqueta: "Nota", multilinea: true, valor: j.nota, onGuardar: (v) => onEditar({ nota: v }) })), resumenTexto && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Seccion, null, "Resumen"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 13, lineHeight: 1.5, color: "#c4c4ca" } }, resumenTexto)), esProyecto(j) && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Seccion, null, "Sobre el proyecto"), /* @__PURE__ */ React.createElement(Readme, { readme, cargando: cargandoReadme, repoUrl: j.url })), filas.length > 0 && /* @__PURE__ */ React.createElement("dl", { style: { margin: 0, display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 14px", fontSize: 13 } }, filas.map(([k, v]) => [/* @__PURE__ */ React.createElement("dt", { key: "k" + k, style: { color: DIM } }, k), /* @__PURE__ */ React.createElement("dd", { key: "v" + k, style: { margin: 0, color: TXT, overflowWrap: "anywhere" } }, /* @__PURE__ */ React.createElement(Valor, { v }))])), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, j.tipo === "r" ? /* @__PURE__ */ React.createElement(React.Fragment, null, botonCompartir, /* @__PURE__ */ React.createElement("button", { onClick: onQuitar, style: botonSec }, "Quitar del registro")) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { onClick: onGuardar, "aria-pressed": guardado, style: botonPri }, guardado ? "\u2605 Guardado" : "\u2606 Me interesa"), botonCompartir, (j.tipo === "e" || j.tipo === "p") && (enRegistro ? /* @__PURE__ */ React.createElement("span", { style: { alignSelf: "center", fontSize: 13, color: ACC } }, "\u2713 En tu registro: ", ESTADOS_INFO[enRegistro.estado].etiqueta) : /* @__PURE__ */ React.createElement("button", { onClick: onQuiero, style: botonSec }, "\u{1F3AF} Quiero jugar")), /* @__PURE__ */ React.createElement("button", { onClick: onDescartar, style: botonSec }, "No me interesa"))), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: DIM } }, "Datos: ", esProyecto(j) ? "awesome-decomp-games y el README del repositorio" : j.tipo === "e" ? "IGDB" : "tu registro" + (igdb ? " e IGDB" : "")));
   }
   function FormAgregar({ estadoInicial, existentes, onCancelar, onAgregar }) {
     const [titulo, setTitulo] = useState37("");
@@ -16884,7 +16898,7 @@ ${enlace2}` : texto2);
       if (datos && registro.sembrado == null) sembrar(datos.semilla);
     }, [datos, registro.sembrado]);
     useEffect24(() => {
-      if (!fichaJ || fichaJ.tipo !== "d" || pidioReadmes.current) return;
+      if (!fichaJ || !esProyecto(fichaJ) || pidioReadmes.current) return;
       pidioReadmes.current = true;
       setCargandoReadme(true);
       fetchGameEnhancedReadmes().then(setReadmes).catch(() => setReadmes({})).finally(() => setCargandoReadme(false));
@@ -16981,8 +16995,9 @@ ${enlace2}` : texto2);
       if (prev) avisar(`Quitado: ${j.titulo}`, () => restaurarJuego(prev));
     }
     function quiero(j) {
-      const res = agregarJuego({ titulo: j.titulo, estado: "quiero" });
-      if (res) avisar(`En Quiero jugar: ${j.titulo}`, () => res.previo ? restaurarJuego(res.previo) : quitarJuego(res.id));
+      const titulo = tituloParaRegistro(j);
+      const res = agregarJuego({ titulo, estado: "quiero" });
+      if (res) avisar(`En Quiero jugar: ${titulo}`, () => res.previo ? restaurarJuego(res.previo) : quitarJuego(res.id));
     }
     function agregar(datosForm) {
       const res = agregarJuego(datosForm);
@@ -17046,7 +17061,7 @@ ${enlace2}` : texto2);
         setAbierto(null);
         ir(i, void 0);
       })(), mostrarMas: enRegistroCat, onMas: () => setForm(clave) }),
-      /* @__PURE__ */ React.createElement("div", { ref: listaRef, style: expandida ? { flex: 1, minHeight: 0, marginTop: 2, display: "flex", flexDirection: "column", gap: XMB.sep, overflowX: "hidden", overflowY: "auto" } : { flex: 1, minHeight: 0, marginTop: 2, position: "relative", overflow: "hidden" } }, !enRegistroCat && !datos && !error && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 12, fontFamily: FUENTE3, fontSize: 13, color: DIM } }, "Cargando\u2026"), !enRegistroCat && error && /* @__PURE__ */ React.createElement("div", { style: { padding: 12, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", fontFamily: FUENTE3, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, "No se pudieron cargar los datos de Game enhanced (", error, ")."), /* @__PURE__ */ React.createElement("button", { onClick: cargar, style: botonSec }, "Reintentar")), lista.length === 0 && (enRegistroCat || datos) && /* @__PURE__ */ React.createElement("div", { style: { padding: 12, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", fontFamily: FUENTE3, fontSize: 13, color: DIM } }, /* @__PURE__ */ React.createElement("span", null, enRegistroCat ? `A\xFAn no hay juegos en \xAB${CATEGORIAS[cat][2]}\xBB.` : clave === "todo" ? "Sin novedades recientes. Mira Decomps o Estudios." : "No quedan \xEDtems en esta categor\xEDa."), enRegistroCat && /* @__PURE__ */ React.createElement("button", { onClick: () => setForm(clave), style: botonSec }, "\uFF0B Agregar juego")), lista.length > 0 && expandida && lista.slice(foco).map((j, i) => i === 0 ? /* @__PURE__ */ React.createElement(
+      /* @__PURE__ */ React.createElement("div", { ref: listaRef, style: expandida ? { flex: 1, minHeight: 0, marginTop: 2, display: "flex", flexDirection: "column", gap: XMB.sep, overflowX: "hidden", overflowY: "auto" } : { flex: 1, minHeight: 0, marginTop: 2, position: "relative", overflow: "hidden" } }, !enRegistroCat && !datos && !error && /* @__PURE__ */ React.createElement("p", { style: { margin: 0, padding: 12, fontFamily: FUENTE3, fontSize: 13, color: DIM } }, "Cargando\u2026"), !enRegistroCat && error && /* @__PURE__ */ React.createElement("div", { style: { padding: 12, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", fontFamily: FUENTE3, fontSize: 13, color: "#c4c4ca" } }, /* @__PURE__ */ React.createElement("span", null, "No se pudieron cargar los datos de Game enhanced (", error, ")."), /* @__PURE__ */ React.createElement("button", { onClick: cargar, style: botonSec }, "Reintentar")), lista.length === 0 && (enRegistroCat || datos) && /* @__PURE__ */ React.createElement("div", { style: { padding: 12, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", fontFamily: FUENTE3, fontSize: 13, color: DIM } }, /* @__PURE__ */ React.createElement("span", null, enRegistroCat ? `A\xFAn no hay juegos en \xAB${CATEGORIAS[cat][2]}\xBB.` : clave === "todo" ? "Sin novedades recientes. Mira Decomps o Estudios." : clave === "p" ? "Sin ports nuevos de cl\xE1sicos en los \xFAltimos 30 d\xEDas." : "No quedan \xEDtems en esta categor\xEDa."), enRegistroCat && /* @__PURE__ */ React.createElement("button", { onClick: () => setForm(clave), style: botonSec }, "\uFF0B Agregar juego")), lista.length > 0 && expandida && lista.slice(foco).map((j, i) => i === 0 ? /* @__PURE__ */ React.createElement(
         Tarjeta2,
         {
           key: j.id,
@@ -17054,7 +17069,7 @@ ${enlace2}` : texto2);
           ahora,
           guardado: guardadoDe(j),
           fichas,
-          enRegistro: j.tipo === "e" ? registro.juegos[idRegistro(j.titulo)] || null : null,
+          enRegistro: registroDe(j, registro),
           onCerrar: clic(() => setAbierto(null)),
           onFicha: clic(() => setFichaId(j.id)),
           onDescartar: clic(() => descartar(j)),
@@ -17070,7 +17085,7 @@ ${enlace2}` : texto2);
         igdb,
         imagen: portadaDe(fichaJ, fichas),
         guardado: guardadoDe(fichaJ),
-        enRegistro: fichaJ.tipo === "e" ? registro.juegos[idRegistro(fichaJ.titulo)] || null : null,
+        enRegistro: registroDe(fichaJ, registro),
         readme: readmes ? readmes[fichaJ.id] : null,
         cargandoReadme,
         onGuardar: () => alternarGuardado(fichaJ.id),

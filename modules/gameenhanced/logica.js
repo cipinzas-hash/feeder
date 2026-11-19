@@ -1,4 +1,5 @@
-import { idRegistro, repoDeUrl } from "./lib/claves.mjs";
+import { idRegistro, repoDeUrl, tituloLimpio } from "./lib/claves.mjs";
+export { tituloLimpio };
 
 // ─── Lógica pura de Game enhanced (sin React ni red, probada en tests/gameenhanced.mjs) ─────────
 // Tipos que hoy tienen fuente real: d (decomps, ports y recompilaciones) y e (juegos nuevos de los
@@ -8,7 +9,11 @@ export const TIPO = {
   d: { etiqueta: "DECOMP", emoji: "🧩", motivo: "Porque terminaste " },
   e: { etiqueta: "ESTUDIO", emoji: "🏢", motivo: "Del estudio detrás de " },
   r: { etiqueta: "JUEGO", emoji: "🎮", motivo: "" },
+  p: { etiqueta: "PORT", emoji: "🕹️", motivo: "" },   // port nativo de un clásico, hecho sobre una decomp (no depende de tu lista)
 };
+
+// decomp (d) y port nativo (p) son proyectos de la misma fuente: comparten ficha, estado, README y release.
+export const esProyecto = j => j.tipo === "d" || j.tipo === "p";
 
 export const ESTADOS_INFO = {
   terminado: { emoji: "🏁", etiqueta: "Terminado" },
@@ -22,6 +27,7 @@ export const CATEGORIAS = [
   ["todo", "✨", "Novedades"],
   ["d", "🧩", "Decomps"],
   ["e", "🏢", "Estudios"],
+  ["p", "🕹️", "Ports"],
   ["terminado", "🏁", "Terminados"],
   ["quiero", "🎯", "Quiero jugar"],
   ["pendiente", "⏳", "Pendientes"],
@@ -35,10 +41,12 @@ const ASSETS = { byo: "Sí, con tu propia copia", instant: "No, se juega al inst
 
 // Ventana de "Novedades": decomps con actividad en los últimos 90 días (y no inactivos); juegos de
 // estudios lanzados hace ≤120 días o que salen en ≤240. Las categorías Decomps y Estudios muestran todo.
-const VENTANA = { decompDias: 90, pasadoEstudio: 120, futuroEstudio: 240 };
-export const enNovedades = j => (j.tipo === "r" ? false : j.tipo === "d" ? !j.inactivo && j.dias <= VENTANA.decompDias : j.dias >= -VENTANA.futuroEstudio && j.dias <= VENTANA.pasadoEstudio);
+const VENTANA = { decompDias: 90, pasadoEstudio: 120, futuroEstudio: 240, portDias: 30 };
+export const enNovedades = j => (j.tipo === "r" || j.tipo === "p" ? false : j.tipo === "d" ? !j.inactivo && j.dias <= VENTANA.decompDias : j.dias >= -VENTANA.futuroEstudio && j.dias <= VENTANA.pasadoEstudio);
 
-export const motivoDe = j => (j.tipo === "r" ? ESTADOS_INFO[j.estado].etiqueta : TIPO[j.tipo].motivo + j.tuJuego);
+export const motivoDe = j => (j.tipo === "r" ? ESTADOS_INFO[j.estado].etiqueta
+  : j.tipo === "p" ? (j.tuyos && j.tuyos.length ? `Ya terminaste ${j.tuJuego}` : `Clásico de ${j.plataforma}`)
+  : TIPO[j.tipo].motivo + j.tuJuego);
 
 export function haceDias(n) {
   if (n <= 0) return "hoy";
@@ -76,9 +84,10 @@ export function detalleDe(j, ahora) {
     const ei = ESTADOS_INFO[j.estado];
     return [`${ei.emoji} ${ei.etiqueta}`, j.plataforma, j.estado === "terminado" && j.fecha ? `terminado el ${fechaLegible(j)}` : null, j.nota ? (j.nota.length > 80 ? j.nota.slice(0, 79) + "…" : j.nota) : null].filter(Boolean).join(" · ");
   }
-  if (j.tipo === "d") {
-    const c = diasDesdeIso(j.ultimoCommit, ahora);
-    return [SUBTIPOS[j.subtipo] || j.subtipo, j.plataforma, `⭐ ${miles(j.estrellas)}`, c === null ? null : `último commit ${haceDias(c)}`, j.inactivo ? "inactivo" : null, j.ia ? "hecho con IA según la fuente" : null].filter(Boolean).join(" · ");
+  if (esProyecto(j)) {
+    const c = diasDesdeIso(j.ultimoCommit, ahora), rl = diasDesdeIso(j.fechaRelease, ahora);
+    const actividad = j.tipo === "p" && j.release ? `versión ${j.release}${rl === null ? "" : " " + haceDias(rl)}` : c === null ? null : `último commit ${haceDias(c)}`;
+    return [SUBTIPOS[j.subtipo] || j.subtipo, j.plataforma, `⭐ ${miles(j.estrellas)}`, actividad, j.inactivo ? "inactivo" : null, j.ia ? "hecho con IA según la fuente" : null].filter(Boolean).join(" · ");
   }
   return [j.plataformas && j.plataformas.length ? j.plataformas.join(" · ") : null, j.dias < 0 ? `sale ${j.fechaAprox ? "en " + j.fecha.slice(0, 4) : fechaLegible(j)}` : `salió ${fechaLegible(j)}`].filter(Boolean).join(" · ");
 }
@@ -123,7 +132,7 @@ export function filasFicha(j, ahora, igdb = null) {
   const enlace = (href, texto) => (typeof href === "string" && href.startsWith("https://") ? { href, texto } : null);
   const filas = [];
   const add = (k, v) => { if (v !== null && v !== undefined && v !== "" && v !== "—") filas.push([k, v]); };
-  if (j.tipo === "d") {
+  if (esProyecto(j)) {
     const c = diasDesdeIso(j.ultimoCommit, ahora), r = diasDesdeIso(j.fechaRelease, ahora);
     add("Proyecto", SUBTIPOS[j.subtipo] || j.subtipo); add("Por qué lo ves", motivoDe(j)); add("Tus juegos", (j.tuyos || []).join(", "));
     add("Plataforma", j.plataforma); add("Estrellas", typeof j.estrellas === "number" ? miles(j.estrellas) : null);
@@ -164,7 +173,7 @@ export function textoCompartir(j, igdb = null, ahora = Date.now()) {
     url = igdb && typeof igdb.url === "string" && igdb.url.startsWith("https://") ? igdb.url : null;
   } else {
     lineas.push(detalleDe(j, ahora));
-    if (j.tipo === "d") {
+    if (esProyecto(j)) {
       const md = madurezDecomp(j, ahora);
       lineas.push(`${md.emoji} ${md.etiqueta}`);
       const rel = enlacesRelease(j);
@@ -190,8 +199,8 @@ export function itemsRegistro(registro, estado, ahora = Date.now()) {
 export function itemsDe(juegos, clave, ocultos = {}, registro = null, ahora = Date.now()) {
   if (esCategoriaRegistro(clave)) return itemsRegistro(registro, clave, ahora);
   return juegos
-    .filter(j => !ocultos[j.id] && (j.tipo === "d" || j.tipo === "e") && (clave === "todo" ? enNovedades(j) : j.tipo === clave))
-    .sort((a, b) => Math.abs(a.dias) - Math.abs(b.dias) || (a.id < b.id ? -1 : 1));
+    .filter(j => !ocultos[j.id] && (esProyecto(j) || j.tipo === "e") && (clave === "todo" ? enNovedades(j) : j.tipo === clave && (j.tipo !== "p" || j.dias <= VENTANA.portDias)))
+    .sort((a, b) => Math.abs(a.dias) - Math.abs(b.dias) || (b.estrellas ?? 0) - (a.estrellas ?? 0) || (a.id < b.id ? -1 : 1));
 }
 
 // ── Disposición continua del XMB ──────────────────────────────────────────
@@ -238,6 +247,7 @@ export const portadaUrl = (imageId, tam = "t_cover_big") => (typeof imageId === 
 export function portadaDe(j, fichas = {}) {
   if (j.tipo === "e") return j.portada || null;
   if (j.tipo === "r") return (fichas[j.id] && fichas[j.id].portada) || null;
+  if (!j.tuJuego) return null;
   const id = idRegistro(j.tuJuego);
   return (id && fichas[id] && fichas[id].portada) || null;
 }

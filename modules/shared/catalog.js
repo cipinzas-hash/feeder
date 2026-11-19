@@ -82,7 +82,7 @@ export async function fetchVitrinaData() {
 export async function fetchGameEnhancedData() {
   const d = await fetchJsonSafe(GAME_ENHANCED_JSON_URL);
   if (!d || !Array.isArray(d.decomps) || !Array.isArray(d.estudios)) throw new Error("no se pudo leer game-enhanced.json");
-  return { juegos: [...d.decomps, ...d.estudios], generatedAt: d.generatedAt || null, fuentes: d.fuentes || {}, semilla: Array.isArray(d.semilla) ? d.semilla : [] };
+  return { juegos: [...d.decomps, ...(Array.isArray(d.ports) ? d.ports : []), ...d.estudios], generatedAt: d.generatedAt || null, fuentes: d.fuentes || {}, semilla: Array.isArray(d.semilla) ? d.semilla : [] };
 }
 
 // Fichas de IGDB de los juegos del registro (portada, resumen, géneros) y README de cada decomp en texto plano.

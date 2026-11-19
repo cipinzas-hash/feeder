@@ -1,7 +1,7 @@
 // ─── Funciones puras del pipeline de Game enhanced (probadas en tests/gameenhanced.mjs) ─────────────
 // Sin red ni disco: reciben datos ya descargados. Las usa build-game-enhanced.mjs.
-import { ESTADOS_REGISTRO, repoDeUrl } from "../../../gameenhanced/lib/claves.mjs";
-export { repoDeUrl };
+import { ESTADOS_REGISTRO, repoDeUrl, tituloLimpio } from "../../../gameenhanced/lib/claves.mjs";
+export { repoDeUrl, tituloLimpio };
 
 export const DIA = 86400000;
 
@@ -19,14 +19,6 @@ export function diasDesde(iso, ahora) {
 // palabra de edición ("Remastered", "HD", "DX"…). Las secuelas NO cuentan (Tekken Tag Tournament 2,
 // Final Fantasy XI…): antes se cruzaba por "contiene" y mezclaba sagas enteras.
 const EDICIONES = new Set(["remastered", "remaster", "hd", "dx", "directorscut", "definitiveedition", "remake", "fullbody", "goldedition", "specialedition"]);
-const SUFIJO_PAREN = /\s*\((?:[^()]|\([^()]*\))*\)\s*$/;
-
-export function tituloLimpio(titulo) {
-  let t = String(titulo || "");
-  for (let i = 0; i < 3 && SUFIJO_PAREN.test(t); i++) t = t.replace(SUFIJO_PAREN, "");
-  return t;
-}
-
 export function casaConTerminado(tituloProyecto, busqueda) {
   const k = norm(tituloLimpio(tituloProyecto)), clave = norm(busqueda);
   if (!clave || !k) return false;
@@ -52,6 +44,33 @@ export function proyectosDeDecomps(juegosFuente, terminados, ahora) {
     const d = [diasDesde(it.ultimoCommit, ahora), diasDesde(it.fechaRelease, ahora)].filter(x => x !== null);
     return { ...it, tuJuego: it.tuyos[0], dias: d.length ? Math.max(0, Math.min(...d)) : 9999 };
   }).sort((a, b) => a.dias - b.dias || (a.id < b.id ? -1 : 1));
+}
+
+// ── 1b) Ports nativos de clásicos (no dependen de tu lista) ──────────────────────────────────
+// Proyectos de la misma fuente que son ports nativos hechos sobre una decompilación / recompilación, de juegos cuya
+// plataforma ORIGINAL es de la era clásica (la fuente no dice a qué consolas se porteó, solo la plataforma de origen).
+// Se quedan los activos con versión publicada reciente y un mínimo de estrellas; el cliente muestra los últimos 30 días.
+// Los que coinciden con un terminado tuyo llevan `tuyos` (la ficha dice "ya lo terminaste"), pero no se ocultan.
+export const TIPOS_PORT = new Set(["source-port", "static-recomp", "engine-remake", "browser-port"]);
+export const PLATAFORMAS_CLASICAS = new Set(["NES", "SNES", "N64", "Game Boy", "Game Boy Color", "GBA", "Genesis", "Master System", "Saturn", "Dreamcast", "PS1", "PS2", "GameCube", "Arcade", "DOS", "Sega CD", "Neo Geo"]);
+export const PORTS = { dias: 90, minEstrellas: 100 };
+
+export function portsNativos(juegosFuente, terminados, ahora, { dias = PORTS.dias, minEstrellas = PORTS.minEstrellas } = {}) {
+  const salida = [];
+  for (const j of juegosFuente) {
+    if (!TIPOS_PORT.has(j.type) || !PLATAFORMAS_CLASICAS.has(j.platform) || j.inactive || j.archived || !j.release) continue;
+    if ((j.stars ?? 0) < minEstrellas) continue;
+    const d = diasDesde(j.release_date, ahora);
+    if (d === null || d > dias) continue;
+    const tuyos = terminados.filter(t => casaConTerminado(j.title, t.busqueda)).map(t => t.titulo);
+    salida.push({
+      id: "p-" + j.id, tipo: "p", titulo: j.title, subtipo: j.type, plataforma: j.platform, estrellas: j.stars ?? null,
+      ultimoCommit: j.last_commit || null, release: j.release, fechaRelease: j.release_date || null,
+      url: j.url || null, jugableUrl: j.play_url || null, pideAssets: j.needs_assets || null,
+      ia: !!j.ai_flag, inactivo: false, tuyos, ...(tuyos.length ? { tuJuego: tuyos[0] } : {}), dias: Math.max(0, d),
+    });
+  }
+  return salida.sort((a, b) => a.dias - b.dias || (b.estrellas ?? 0) - (a.estrellas ?? 0) || (a.id < b.id ? -1 : 1));
 }
 
 // ── 2) IGDB ─────────────────────────────────────────────────────────────────

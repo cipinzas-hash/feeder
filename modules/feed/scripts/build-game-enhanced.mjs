@@ -12,7 +12,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { DIA, proyectosDeDecomps, mapaDeEstudios, itemsDeEstudios, fichaDeIgdb, readmeABloques, estadoDeReadme, repoDeUrl, listaDeRegistro, terminadosDe } from "./lib/game-enhanced-lib.mjs";
+import { DIA, proyectosDeDecomps, portsNativos, mapaDeEstudios, itemsDeEstudios, fichaDeIgdb, readmeABloques, estadoDeReadme, repoDeUrl, listaDeRegistro, terminadosDe } from "./lib/game-enhanced-lib.mjs";
 import { idRegistro } from "../../gameenhanced/lib/claves.mjs";
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -44,7 +44,7 @@ let previo = { decomps: [], estudios: [], fuentes: {} };
 try { previo = { ...previo, ...JSON.parse(fs.readFileSync(SALIDA, "utf8")) }; } catch (e) { /* primera corrida */ }
 const leerPrevio = (ruta, clave) => { try { return JSON.parse(fs.readFileSync(ruta, "utf8"))[clave] || {}; } catch (e) { return {}; } };
 const fichasPrevias = leerPrevio(SALIDA_FICHAS, "fichas"), readmesPrevios = leerPrevio(SALIDA_READMES, "readmes");
-const out = { version: 1, generatedAt: new Date(AHORA).toISOString(), fuentes: { ...(previo.fuentes || {}) }, semilla: SEMILLA.map(t => ({ titulo: t.titulo, busqueda: t.busqueda })), decomps: previo.decomps || [], estudios: previo.estudios || [] };
+const out = { version: 1, generatedAt: new Date(AHORA).toISOString(), fuentes: { ...(previo.fuentes || {}) }, semilla: SEMILLA.map(t => ({ titulo: t.titulo, busqueda: t.busqueda })), decomps: previo.decomps || [], ports: previo.ports || [], estudios: previo.estudios || [] };
 const ok = { decomps: false, readmes: false, estudios: false };
 
 async function decomps() {
@@ -53,17 +53,18 @@ async function decomps() {
   const d = await res.json();
   if (!Array.isArray(d.games)) throw new Error("games.json sin lista games");
   out.decomps = proyectosDeDecomps(d.games, TERMINADOS, AHORA);
-  out.fuentes.decomps = { ok: true, actualizado: out.generatedAt, generadoPorLaFuente: d.generated_at || null, proyectosEnLaFuente: d.games.length, proyectos: out.decomps.length };
+  out.ports = portsNativos(d.games, TERMINADOS, AHORA);
+  out.fuentes.decomps = { ok: true, actualizado: out.generatedAt, generadoPorLaFuente: d.generated_at || null, proyectosEnLaFuente: d.games.length, proyectos: out.decomps.length, ports: out.ports.length };
   ok.decomps = true;
 }
 
-// README de cada decomp (solo repos de GitHub), ya convertido a texto plano. Se reutiliza si tiene menos de 6 días.
+// README de cada decomp y de cada port nativo (solo repos de GitHub), ya convertido a texto plano. Se reutiliza si tiene menos de 6 días.
 async function readmes() {
   const token = process.env.GITHUB_TOKEN;
   const nuevos = {};
   const c = { pedidos: 0, reutilizados: 0, sinReadme: 0, fallos: 0 };
   let limite = false;
-  for (const p of out.decomps) {
+  for (const p of [...out.decomps, ...out.ports]) {
     const repo = repoDeUrl(p.url);
     if (!repo) continue;
     const prev = readmesPrevios[p.id];

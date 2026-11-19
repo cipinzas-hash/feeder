@@ -1,6 +1,6 @@
 import { fetchGameEnhancedData, fetchGameEnhancedFichas, fetchGameEnhancedReadmes } from "../shared/catalog.js";
 import { Ventana, VentanaCabecera } from "../shared/ui.jsx";
-import { CATEGORIAS, TIPO, ESTADOS_INFO, GLOSARIO_SUBTIPO, esCategoriaRegistro, motivoDe, cuando, detalleDe, filasFicha, madurezDecomp, edadDatos, itemsDe, XMB, OPACIDAD, disposicion, textoCompartir, resumen, portadaUrl, portadaDe } from "./logica.js";
+import { CATEGORIAS, TIPO, ESTADOS_INFO, GLOSARIO_SUBTIPO, esCategoriaRegistro, esProyecto, tituloLimpio, motivoDe, cuando, detalleDe, filasFicha, madurezDecomp, edadDatos, itemsDe, XMB, OPACIDAD, disposicion, textoCompartir, resumen, portadaUrl, portadaDe } from "./logica.js";
 import { useEstado, alternarGuardado, ocultar, deshacerOcultar } from "./estado.js";
 import { useRegistro, agregarJuego, editarJuego, quitarJuego, restaurarJuego, sembrar } from "./registro.js";
 import { ESTADOS_REGISTRO, idRegistro } from "./lib/claves.mjs";
@@ -8,7 +8,7 @@ import { ESTADOS_REGISTRO, idRegistro } from "./lib/claves.mjs";
 const { useState, useEffect, useRef } = React;
 
 // ─── Módulo Game enhanced (nov-2026) ────────────────────────────────────────
-// Novedades de juegos que importan (decomps, ports y juegos nuevos de los estudios detrás de lo que
+// Novedades de juegos que importan (decomps, ports nativos de clásicos y juegos nuevos de los estudios detrás de lo que
 // terminaste) + tu registro propio de juegos: 🏁 terminados, 🎯 quiero jugar, ⏳ pendientes.
 //
 // Navegación al estilo XMB de PSP/PS3 (issue #43): una fila de íconos en horizontal cuyo activo queda fijo
@@ -147,7 +147,7 @@ function Tarjeta({ j, ahora, guardado, fichas, enRegistro, onCerrar, onFicha, on
           {j.tipo === "r"
             ? <button onClick={onQuitar} style={botonSec}>Quitar</button>
             : <>
-                {j.tipo === "e" && !enRegistro && <button onClick={onQuiero} style={botonSec}>🎯 Quiero jugar</button>}
+                {(j.tipo === "e" || j.tipo === "p") && !enRegistro && <button onClick={onQuiero} style={botonSec}>🎯 Quiero jugar</button>}
                 <button onClick={onDescartar} style={botonSec}>No me interesa</button>
               </>}
         </div>
@@ -228,7 +228,10 @@ function EstadoDecomp({ j, ahora, readme }) {
   );
 }
 
-const ETIQUETA_FICHA = { d: "Decomp", e: "Estudio", r: "Juego" };
+const ETIQUETA_FICHA = { d: "Decomp", p: "Port", e: "Estudio", r: "Juego" };
+// ¿Ya está en tu registro? Un estudio por su título; un port por el título del juego sin el nombre del proyecto entre paréntesis.
+const registroDe = (j, registro) => (j.tipo === "e" ? registro.juegos[idRegistro(j.titulo)] : j.tipo === "p" ? registro.juegos[idRegistro(tituloLimpio(j.titulo))] : null) || null;
+const tituloParaRegistro = j => (j.tipo === "p" ? tituloLimpio(j.titulo) : j.titulo);
 // Marco oscuro de la Ventana compartida: el popup de la ficha combina con el XMB, no con el papel de los formularios.
 const MARCO_OSCURO = { background: "#0b0b0c", color: TXT, border: "2px dashed #555", boxShadow: "6px 6px 0 #000" };
 
@@ -264,7 +267,7 @@ function Ficha({ j, ahora, igdb, imagen, guardado, enRegistro, readme, cargandoR
           {sub && <p style={{ margin: 0, fontSize: 13, color: "#c4c4ca" }}>{sub}</p>}
         </div>
       </div>
-      {j.tipo === "d" && <EstadoDecomp j={j} ahora={ahora} readme={readme} />}
+      {esProyecto(j) && <EstadoDecomp j={j} ahora={ahora} readme={readme} />}
       {j.tipo === "r" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <ChipsEstado valor={j.estado} onElegir={e => onEditar({ estado: e })} />
@@ -274,7 +277,7 @@ function Ficha({ j, ahora, igdb, imagen, guardado, enRegistro, readme, cargandoR
         </div>
       )}
       {resumenTexto && <><Seccion>Resumen</Seccion><p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "#c4c4ca" }}>{resumenTexto}</p></>}
-      {j.tipo === "d" && <><Seccion>Sobre el proyecto</Seccion><Readme readme={readme} cargando={cargandoReadme} repoUrl={j.url} /></>}
+      {esProyecto(j) && <><Seccion>Sobre el proyecto</Seccion><Readme readme={readme} cargando={cargandoReadme} repoUrl={j.url} /></>}
       {filas.length > 0 && (
         <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 14px", fontSize: 13 }}>
           {filas.map(([k, v]) => [<dt key={"k" + k} style={{ color: DIM }}>{k}</dt>, <dd key={"v" + k} style={{ margin: 0, color: TXT, overflowWrap: "anywhere" }}><Valor v={v} /></dd>])}
@@ -286,11 +289,11 @@ function Ficha({ j, ahora, igdb, imagen, guardado, enRegistro, readme, cargandoR
           : <>
               <button onClick={onGuardar} aria-pressed={guardado} style={botonPri}>{guardado ? "★ Guardado" : "☆ Me interesa"}</button>
               {botonCompartir}
-              {j.tipo === "e" && (enRegistro ? <span style={{ alignSelf: "center", fontSize: 13, color: ACC }}>✓ En tu registro: {ESTADOS_INFO[enRegistro.estado].etiqueta}</span> : <button onClick={onQuiero} style={botonSec}>🎯 Quiero jugar</button>)}
+              {(j.tipo === "e" || j.tipo === "p") && (enRegistro ? <span style={{ alignSelf: "center", fontSize: 13, color: ACC }}>✓ En tu registro: {ESTADOS_INFO[enRegistro.estado].etiqueta}</span> : <button onClick={onQuiero} style={botonSec}>🎯 Quiero jugar</button>)}
               <button onClick={onDescartar} style={botonSec}>No me interesa</button>
             </>}
       </div>
-      <span style={{ fontSize: 11, color: DIM }}>Datos: {j.tipo === "d" ? "awesome-decomp-games y el README del repositorio" : j.tipo === "e" ? "IGDB" : "tu registro" + (igdb ? " e IGDB" : "")}</span>
+      <span style={{ fontSize: 11, color: DIM }}>Datos: {esProyecto(j) ? "awesome-decomp-games y el README del repositorio" : j.tipo === "e" ? "IGDB" : "tu registro" + (igdb ? " e IGDB" : "")}</span>
     </div>
   );
 }
@@ -496,7 +499,7 @@ export default function GameEnhancedPage() {
 
   // README de los decomps: se pide la primera vez que se abre la ficha de uno.
   useEffect(() => {
-    if (!fichaJ || fichaJ.tipo !== "d" || pidioReadmes.current) return;
+    if (!fichaJ || !esProyecto(fichaJ) || pidioReadmes.current) return;
     pidioReadmes.current = true;
     setCargandoReadme(true);
     fetchGameEnhancedReadmes().then(setReadmes).catch(() => setReadmes({})).finally(() => setCargandoReadme(false));
@@ -580,8 +583,9 @@ export default function GameEnhancedPage() {
     if (prev) avisar(`Quitado: ${j.titulo}`, () => restaurarJuego(prev));
   }
   function quiero(j) {
-    const res = agregarJuego({ titulo: j.titulo, estado: "quiero" });
-    if (res) avisar(`En Quiero jugar: ${j.titulo}`, () => (res.previo ? restaurarJuego(res.previo) : quitarJuego(res.id)));
+    const titulo = tituloParaRegistro(j);
+    const res = agregarJuego({ titulo, estado: "quiero" });
+    if (res) avisar(`En Quiero jugar: ${titulo}`, () => (res.previo ? restaurarJuego(res.previo) : quitarJuego(res.id)));
   }
   function agregar(datosForm) {
     const res = agregarJuego(datosForm);
@@ -642,11 +646,11 @@ export default function GameEnhancedPage() {
             </div>)}
           {lista.length === 0 && (enRegistroCat || datos) && (
             <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start", fontFamily: FUENTE, fontSize: 13, color: DIM }}>
-              <span>{enRegistroCat ? `Aún no hay juegos en «${CATEGORIAS[cat][2]}».` : clave === "todo" ? "Sin novedades recientes. Mira Decomps o Estudios." : "No quedan ítems en esta categoría."}</span>
+              <span>{enRegistroCat ? `Aún no hay juegos en «${CATEGORIAS[cat][2]}».` : clave === "todo" ? "Sin novedades recientes. Mira Decomps o Estudios." : clave === "p" ? "Sin ports nuevos de clásicos en los últimos 30 días." : "No quedan ítems en esta categoría."}</span>
               {enRegistroCat && <button onClick={() => setForm(clave)} style={botonSec}>＋ Agregar juego</button>}
             </div>)}
           {lista.length > 0 && expandida && lista.slice(foco).map((j, i) => i === 0
-            ? <Tarjeta key={j.id} j={j} ahora={ahora} guardado={guardadoDe(j)} fichas={fichas} enRegistro={j.tipo === "e" ? registro.juegos[idRegistro(j.titulo)] || null : null}
+            ? <Tarjeta key={j.id} j={j} ahora={ahora} guardado={guardadoDe(j)} fichas={fichas} enRegistro={registroDe(j, registro)}
                 onCerrar={clic(() => setAbierto(null))} onFicha={clic(() => setFichaId(j.id))} onDescartar={clic(() => descartar(j))} onQuitar={clic(() => quitar(j))} onQuiero={clic(() => quiero(j))} />
             : <FilaX key={j.id} j={j} t={0} alto={XMB.fila} op={OPACIDAD[Math.min(i, OPACIDAD.length - 1)]} guardado={guardadoDe(j)} fichas={fichas} ahora={ahora} onClick={clic(() => tocarFila(j, foco + i))} />)}
           {filas}
@@ -657,7 +661,7 @@ export default function GameEnhancedPage() {
           <VentanaCabecera titulo={ETIQUETA_FICHA[fichaJ.tipo]} onClose={cerrarFicha} grande />
           <div style={{ padding: 16, overflowY: "auto", flex: 1, minHeight: 0 }}>
             <Ficha j={fichaJ} ahora={ahora} igdb={igdb} imagen={portadaDe(fichaJ, fichas)} guardado={guardadoDe(fichaJ)}
-              enRegistro={fichaJ.tipo === "e" ? registro.juegos[idRegistro(fichaJ.titulo)] || null : null}
+              enRegistro={registroDe(fichaJ, registro)}
               readme={readmes ? readmes[fichaJ.id] : null} cargandoReadme={cargandoReadme}
               onGuardar={() => alternarGuardado(fichaJ.id)} onDescartar={() => descartar(fichaJ)} onQuiero={() => quiero(fichaJ)}
               onEditar={cambios => editarJuego(fichaJ.id, cambios)} onQuitar={() => quitar(fichaJ)} />

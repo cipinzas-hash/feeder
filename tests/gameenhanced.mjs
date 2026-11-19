@@ -101,7 +101,7 @@ assert(!todo.some(j => j.id === "d-e" || j.id === "e-9" || j.id === "e-8"), "fue
 assert.equal(L.itemsDe(J, "d").length, 3, "Decomps muestra todos, también el inactivo");
 assert.equal(L.itemsDe(J, "e").length, 3, "Estudios muestra todos");
 assert.equal(L.itemsDe(J, "todo", { "d-b": 1 }).some(j => j.id === "d-b"), false, "los ocultos no aparecen");
-assert.deepEqual(L.CATEGORIAS.map(c => c[0]), ["todo", "d", "e", "terminado", "quiero", "pendiente"]);
+assert.deepEqual(L.CATEGORIAS.map(c => c[0]), ["todo", "d", "e", "p", "terminado", "quiero", "pendiente"]);
 assert.equal(L.motivoDe(J[0]), "Porque terminaste Wolfenstein 3D");
 assert.equal(L.motivoDe(J.find(j => j.id === "e-2")), "Del estudio detrás de A");
 
@@ -315,6 +315,50 @@ assert.equal(M({ ultimoCommit: null }).nivel, "sin-datos");
 assert.match(M({ release: "v1", fechaRelease: dias(5) }).etiqueta, /descargable/, "no promete que sea jugable");
 for (const k of Object.keys(L.SUBTIPOS)) assert(L.GLOSARIO_SUBTIPO[k] && L.GLOSARIO_SUBTIPO[k].length > 40, "glosario para " + k);
 assert.match(L.textoCompartir({ ...base, id: "d-x", plataforma: "PS3", estrellas: 17, url: "https://github.com/a/b" }, null, AHORA).texto, /🟡 En construcción/, "compartir incluye el estado");
+
+// ── ports nativos de clásicos ───────────────────────────────────────────────
+const fuentePort = (o) => ({ id: "x", title: "T", type: "source-port", platform: "N64", stars: 500, release: "v1", release_date: dias(5), last_commit: dias(2), url: "https://github.com/a/b", ...o });
+const portsDe = (lista, term = [], opts) => P.portsNativos(lista, term, AHORA, opts);
+assert.equal(portsDe([fuentePort({ id: "a" })]).length, 1, "port nativo, clásico, con versión reciente y estrellas: entra");
+assert.equal(portsDe([fuentePort({ type: "decompilation" })]).length, 0, "una decompilación no es un port jugable");
+assert.equal(portsDe([fuentePort({ type: "disassembly" })]).length, 0);
+for (const t of ["static-recomp", "engine-remake", "browser-port"]) assert.equal(portsDe([fuentePort({ type: t })]).length, 1, t + " cuenta como port nativo");
+assert.equal(portsDe([fuentePort({ platform: "PS5" })]).length, 0, "solo plataformas de origen clásicas");
+assert.equal(portsDe([fuentePort({ platform: "PC" })]).length, 0);
+assert.equal(portsDe([fuentePort({ inactive: true })]).length, 0); assert.equal(portsDe([fuentePort({ archived: true })]).length, 0);
+assert.equal(portsDe([fuentePort({ release: null })]).length, 0, "sin versión publicada: no es una novedad");
+assert.equal(portsDe([fuentePort({ stars: 99 })]).length, 0, "mínimo 100 estrellas"); assert.equal(portsDe([fuentePort({ stars: 100 })]).length, 1);
+assert.equal(portsDe([fuentePort({ stars: null })]).length, 0);
+assert.equal(portsDe([fuentePort({ release_date: dias(91) })]).length, 0, "versión de hace más de 90 días: fuera"); assert.equal(portsDe([fuentePort({ release_date: dias(90) })]).length, 1);
+assert.equal(portsDe([fuentePort({ release_date: null })]).length, 0, "sin fecha de versión: fuera");
+const pp = portsDe([fuentePort({ id: "z1", title: "Zelda (Ship)", release_date: dias(10), stars: 900 }), fuentePort({ id: "z2", title: "Mario", release_date: dias(3), stars: 150 }), fuentePort({ id: "z3", title: "Metroid", release_date: dias(3), stars: 800 })]);
+assert.deepEqual(pp.map(x => x.id), ["p-z3", "p-z2", "p-z1"], "primero la versión más reciente; a igual fecha, más estrellas");
+assert.deepEqual([pp[0].tipo, pp[0].subtipo, pp[0].plataforma, pp[0].release, pp[0].dias, pp[0].estrellas, pp[0].inactivo], ["p", "source-port", "N64", "v1", 3, 800, false]);
+const tu = portsDe([fuentePort({ id: "m", title: "Metroid Fusion (Fusion Port)" })], [{ titulo: "Metroid Fusion", busqueda: "Metroid Fusion" }]);
+assert.deepEqual([tu[0].tuyos, tu[0].tuJuego], [["Metroid Fusion"], "Metroid Fusion"], "si ya lo terminaste, se marca (pero no se oculta)");
+assert.deepEqual(portsDe([fuentePort({ id: "q", title: "Algo distinto" })], [{ titulo: "Metroid Fusion", busqueda: "Metroid Fusion" }])[0].tuyos, []);
+assert(!("tuJuego" in portsDe([fuentePort({})])[0]), "sin coincidencia: sin tuJuego");
+assert.equal(C.tituloLimpio("Mario Kart 64 (SpaghettiKart)"), "Mario Kart 64"); assert.equal(C.tituloLimpio("Sin paréntesis"), "Sin paréntesis");
+// lista de Ports en el cliente
+const PI = [
+  { id: "p-1", tipo: "p", titulo: "Zelda (Ship)", subtipo: "source-port", plataforma: "N64", estrellas: 900, release: "v1", fechaRelease: dias(3), url: "https://github.com/a/zelda", tuyos: [], dias: 3 },
+  { id: "p-2", tipo: "p", titulo: "Mario (PC)", subtipo: "static-recomp", plataforma: "SNES", estrellas: 300, release: "v2", fechaRelease: dias(20), url: "https://github.com/a/mario", tuyos: ["Super Mario World"], tuJuego: "Super Mario World", dias: 20 },
+  { id: "p-3", tipo: "p", titulo: "Viejo", subtipo: "source-port", plataforma: "NES", estrellas: 900, release: "v1", fechaRelease: dias(60), url: "https://github.com/a/viejo", tuyos: [], dias: 60 },
+];
+const lp = L.itemsDe([...J, ...PI], "p", {}, null, AHORA);
+assert.deepEqual(lp.map(j => j.id), ["p-1", "p-2"], "Ports: solo los últimos 30 días, lo más reciente primero");
+assert.equal(L.itemsDe([...J, ...PI], "p", { "p-1": true }, null, AHORA).length, 1, "No me interesa también oculta ports");
+assert.equal(L.itemsDe([...J, ...PI], "todo", {}, null, AHORA).some(j => j.tipo === "p"), false, "Novedades no se llena de ports");
+assert.equal(L.itemsDe([...J, ...PI], "d", {}, null, AHORA).some(j => j.tipo === "p"), false, "ni Decomps");
+assert.equal(L.motivoDe(PI[0]), "Clásico de N64"); assert.equal(L.motivoDe(PI[1]), "Ya terminaste Super Mario World");
+assert.match(L.detalleDe(PI[0], AHORA), /Source port · N64 · ⭐ 900 · versión v1 hace 3 d/, "un port muestra su versión, no el último commit");
+assert.equal(L.cuando(PI[0]), "hace 3 d");
+const fp = L.filasFicha(PI[0], AHORA).map(f => f[0]);
+assert(fp.includes("Última versión") && fp.includes("Todas las versiones") && fp.includes("Fuente"), "ficha de port: versión, releases y repositorio");
+assert.equal(L.madurezDecomp(PI[0], AHORA).nivel, "version", "un port con versión publicada: 🟢");
+assert.match(L.textoCompartir(PI[0], null, AHORA).texto, /🟢 Con versión descargable/);
+assert.equal(L.esProyecto(PI[0]), true); assert.equal(L.esProyecto({ tipo: "e" }), false);
+assert.equal(L.portadaDe(PI[1], { "r-supermarioworld": { portada: "coM" } }), "coM", "un port de un juego tuyo muestra su portada"); assert.equal(L.portadaDe(PI[0], {}), null);
 
 // ── pipeline: README, fichas, registro ──────────────────────────────────────
 const md = "# Proyecto\n\n[![CI](https://x/badge.svg)](https://x) Una **decompilación** de [Zelda](https://z.example) <img src=\"a.png\">.\n\n<!-- oculto -->\n## Compilar\n\n- Instala `make`\n- Corre `make all`\n\n```sh\nmake all\n```\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n## Vacío\n## Licencia\n\nMIT";

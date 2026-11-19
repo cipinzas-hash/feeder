@@ -21,3 +21,12 @@ export function repoDeUrl(url) {
   const m = /^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+?)(?:\.git)?(?:[/?#].*)?$/.exec(String(url || ""));
   return m ? `${m[1]}/${m[2]}` : null;
 }
+
+// Quita los sufijos entre paréntesis de un título de proyecto ("Mario Kart 64 (SpaghettiKart)" → "Mario Kart 64").
+// Lo usan el pipeline (cruce con tus terminados) y la ficha (🎯 Quiero jugar desde un port).
+const SUFIJO_PAREN = /\s*\((?:[^()]|\([^()]*\))*\)\s*$/;
+export function tituloLimpio(titulo) {
+  let t = String(titulo || "");
+  for (let i = 0; i < 3 && SUFIJO_PAREN.test(t); i++) t = t.replace(SUFIJO_PAREN, "");
+  return t;
+}
