@@ -235,7 +235,7 @@ const TOKENS_PLAT = { "3ds": "3DS", n3ds: "3DS", vita: "PS Vita", psvita: "PS Vi
 const FRASES_PLAT = [[/\bnintendo switch\b/g, "Switch"], [/\b(?:ps|playstation) vita\b/g, "PS Vita"], [/\bwii u\b/g, "Wii U"], [/\bnew 3ds\b/g, "3DS"], [/\bplaystation portable\b/g, "PSP"], [/\bxbox 360\b/g, "Xbox 360"]];
 
 export function plataformasDeNombre(texto, { conNx = true } = {}) {
-  let t = String(texto || "").toLowerCase().replace(/[-_/.:()+]+/g, " ");
+  let t = String(texto || "").toLowerCase().replace(/[^a-z0-9]+/g, " ");   // la puntuación ("PSVita,") no pega con la palabra
   const out = new Set();
   for (const [rx, p] of FRASES_PLAT) t = t.replace(rx, () => { out.add(p); return " "; });
   for (const tok of t.split(/\s+/)) { if (!tok || (tok === "nx" && !conNx)) continue; if (TOKENS_PLAT[tok]) out.add(TOKENS_PLAT[tok]); }

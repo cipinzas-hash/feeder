@@ -367,6 +367,8 @@ assert.deepEqual(pn("zelda-alttp-3ds"), ["3DS"]); assert.deepEqual(pn("dusklight
 assert.deepEqual(pn("Wii-U port"), ["Wii U"], "Wii U con guion no se confunde con Wii"); assert.deepEqual(pn("wiiu"), ["Wii U"]);
 assert.deepEqual(pn("melee-Vita"), ["PS Vita"]); assert.deepEqual(pn("PS Vita build"), ["PS Vita"]);
 assert.deepEqual(pn("zelda3-android"), ["Android"], "Android incluido");
+assert.deepEqual(pn("Advanced sourceport of Crash Team Racing for PSVita, PC and Web Browser."), ["PS Vita"], "la puntuación pegada a la palabra no impide detectarla");
+assert.deepEqual(pn("Ports: 3DS/Wii U; (Switch)!"), ["3DS", "Wii U", "Switch"], "separadores y signos varios");
 assert.deepEqual(pn("xbox 360 port"), ["Xbox 360"]); assert.deepEqual(pn("tlou-remastered-ps4"), ["PS4"]);
 assert.deepEqual(pn("switchboard"), [], "una palabra que solo contiene «switch» no cuenta"); assert.deepEqual(pn("android-studio-fix").includes("Android"), true);
 assert.deepEqual(pn("an nx build", { conNx: false }), [], "nx en una descripción no cuenta"); assert.deepEqual(pn("dusklight-nx", { conNx: true }), ["Switch"]);

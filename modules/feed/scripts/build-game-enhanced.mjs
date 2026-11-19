@@ -113,7 +113,7 @@ async function plataformas() {
   };
   for (const [repo, original] of repos) {
     const prev = plataformasPrevias[repo];
-    if (prev && prev.v === 1 && prev.original === original && AHORA - new Date(prev.actualizado).getTime() < 6 * DIA) { nuevos[repo] = prev; c.reutilizados++; continue; }
+    if (prev && prev.v === 2 && prev.original === original && AHORA - new Date(prev.actualizado).getTime() < 6 * DIA) { nuevos[repo] = prev; c.reutilizados++; continue; }
     if (limite) { if (prev) nuevos[repo] = prev; continue; }
     c.pedidos++;
     try {
@@ -121,7 +121,7 @@ async function plataformas() {
       const forks = await gh(`/repos/${repo}/forks?sort=stargazers&per_page=100`);
       if ([ramas.status, forks.status].some(s => s === 403 || s === 429)) { limite = true; c.fallos++; if (prev) nuevos[repo] = prev; console.error(`plataformas ${repo}: límite de la API; se conserva lo anterior del resto`); continue; }
       if (!ramas.json && !forks.json) { c.fallos++; if (prev) nuevos[repo] = prev; continue; }
-      nuevos[repo] = { v: 1, original, actualizado: new Date(AHORA).toISOString(), sugerencias: sugerenciasDePlataformas({ repo, ramas: ramas.json || [], forks: forks.json || [], plataformaOriginal: original }) };
+      nuevos[repo] = { v: 2, original, actualizado: new Date(AHORA).toISOString(), sugerencias: sugerenciasDePlataformas({ repo, ramas: ramas.json || [], forks: forks.json || [], plataformaOriginal: original }) };
     } catch (e) { c.fallos++; if (prev) nuevos[repo] = prev; console.error(`plataformas ${repo}: ${e.message}`); }
   }
   if (!Object.keys(nuevos).length && c.fallos) throw new Error(`ninguna consulta de plataformas funcionó (${c.fallos} fallos)`);
