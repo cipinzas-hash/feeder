@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generatedAt": "2026-11-19T17:36:33.036Z",
+ "generatedAt": "2026-11-19T21:01:24.590Z",
  "readmes": {
   "d-fabiangreffrath-intenseflow": {
    "v": 2,
@@ -104,75 +104,6 @@
     [
      "p",
      "On Windows, the directory of the executable is searched instead of 2. and 3."
-    ]
-   ]
-  },
-  "d-reshaped-sonic-adventure": {
-   "v": 2,
-   "repo": "reshaped/sonic-adventure",
-   "actualizado": "2026-11-18T12:47:54.356Z",
-   "recortado": true,
-   "estado": null,
-   "bloques": [
-    [
-     "h",
-     "sonic-adventure"
-    ],
-    [
-     "p",
-     "The first complete matching decompilation of a retail Dreamcast game, including all of the Katana SDK code it links: Sonic Adventure, the original Japanese release, HDR-0001, version 1.007."
-    ],
-    [
-     "p",
-     "100% of the game's code builds from source, byte for byte."
-    ],
-    [
-     "p",
-     "*\\*SHC's assembly for 14 of the C sources matches once shckit patches it (Patched R10). Accounting explains the percentages.*"
-    ],
-    [
-     "p",
-     "Most of the assembly was handwritten in the original, not compiled from C. Compiler analysis and original symbol names already provide evidence of handwritten origins for 62.4% of its instructions and data."
-    ],
-    [
-     "h",
-     "Build"
-    ],
-    [
-     "p",
-     "Tested on x86-64 Linux with GNU make 4.3 and Python 3.8. The matching build and PC game run on x86-64 Linux. macOS supports make dc, make dc-disc, make dc-check, make test, make lint and make format, tested on Apple silicon with macOS 26.6, GNU make 4.4.1 and Xcode's Python 3.9.6. The Dreamcast port reads disc data through offsets the matching build records and checks on Linux (Stub and full builds)."
-    ],
-    [
-     "p",
-     "On macOS, install Xcode's command-line tools and GNU make. Apple's make is 3.81; Homebrew installs GNU make as gmake. Use gmake wherever the commands below say make, from a terminal running natively rather than under Rosetta 2:"
-    ],
-    [
-     "p",
-     "The builds need a C compiler (cc by default, or set CC), sha256sum and cmp. The matching build also needs timeout; its first run downloads wibo and three releases of Hitachi's SHC. The Dreamcast port builds its GCC toolchain on first use and needs c++. Downloads need curl and tar, with gzip or xz where tar uses them. The first make lint or make format installs pinned clang-format and clang-tidy wheels into a Python venv, requiring curl, Python's ensurepip (python3-venv on Debian and Ubuntu) and pip 20.3 or later. The wheels support x86-64 Linux and macOS. Downloads are checked against…"
-    ],
-    [
-     "p",
-     "Bring your own disc: the Japanese release, HDR-0001, version 1.007. None of the disc's files are in this repository. Put 1ST_READ.BIN, LOADER.BIN and SONICADV/ in orig/, named as on the disc, or put the disc's .gdi and its tracks there. Then:"
-    ],
-    [
-     "p",
-     "make compiles every binary's code, reads the data its sources declare from your disc, and checks each binary it rebuilds against the original, PRS compression and all. They land under build/, at the disc's own paths. make checks 1ST_READ.BIN, LOADER.BIN and each file it reads from SONICADV/ against SHA256SUMS before reading it. This is a matching build, so an edit that changes a byte of output fails it."
-    ],
-    [
-     "p",
-     "make check needs no disc. It compiles the sources it can check without the disc, using placeholders for imported data where needed, and checks each linked source against its recorded hash, but builds no complete binary. Checks says what each goal shows, and make help lists them all."
-    ],
-    [
-     "p",
-     "make dc builds the sources with GCC 16.2 and links every image anew, under build/dc/ at the disc's paths. It needs the disc but neither SHC nor wibo. Its first run builds binutils and GCC from source (Toolchain); their logs are in build/toolchain/. make dc-disc needs the disc's .gdi and its tracks in orig/, not its files alone. The port's features describes what it adds."
-    ],
-    [
-     "p",
-     "make dc-check needs neither disc nor SHC. It builds the port's disc-independent objects and writes build/dc/check.txt: hashes of those objects, SH4ZAM's archive, the toolchain's libgcc.a and two compression results. Compare the file across hosts at the same commit, with the same SH_ELF (Checks). Its first run builds the toolchain and fetches SH4ZAM, as make dc does."
-    ],
-    [
-     "p",
-     "make pc builds the game from your disc, and make play runs it in a window. The engine's build goals need Python 3.9 or later; a window needs SDL3 and Vulkan. Checks lists the other host requirements, and Build goals lists the engine's commands."
     ]
    ]
   },
@@ -429,6 +360,75 @@
     [
      "li",
      "Install the APK and open it."
+    ]
+   ]
+  },
+  "d-reshaped-sonic-adventure": {
+   "v": 2,
+   "repo": "reshaped/sonic-adventure",
+   "actualizado": "2026-11-18T12:47:54.356Z",
+   "recortado": true,
+   "estado": null,
+   "bloques": [
+    [
+     "h",
+     "sonic-adventure"
+    ],
+    [
+     "p",
+     "The first complete matching decompilation of a retail Dreamcast game, including all of the Katana SDK code it links: Sonic Adventure, the original Japanese release, HDR-0001, version 1.007."
+    ],
+    [
+     "p",
+     "100% of the game's code builds from source, byte for byte."
+    ],
+    [
+     "p",
+     "*\\*SHC's assembly for 14 of the C sources matches once shckit patches it (Patched R10). Accounting explains the percentages.*"
+    ],
+    [
+     "p",
+     "Most of the assembly was handwritten in the original, not compiled from C. Compiler analysis and original symbol names already provide evidence of handwritten origins for 62.4% of its instructions and data."
+    ],
+    [
+     "h",
+     "Build"
+    ],
+    [
+     "p",
+     "Tested on x86-64 Linux with GNU make 4.3 and Python 3.8. The matching build and PC game run on x86-64 Linux. macOS supports make dc, make dc-disc, make dc-check, make test, make lint and make format, tested on Apple silicon with macOS 26.6, GNU make 4.4.1 and Xcode's Python 3.9.6. The Dreamcast port reads disc data through offsets the matching build records and checks on Linux (Stub and full builds)."
+    ],
+    [
+     "p",
+     "On macOS, install Xcode's command-line tools and GNU make. Apple's make is 3.81; Homebrew installs GNU make as gmake. Use gmake wherever the commands below say make, from a terminal running natively rather than under Rosetta 2:"
+    ],
+    [
+     "p",
+     "The builds need a C compiler (cc by default, or set CC), sha256sum and cmp. The matching build also needs timeout; its first run downloads wibo and three releases of Hitachi's SHC. The Dreamcast port builds its GCC toolchain on first use and needs c++. Downloads need curl and tar, with gzip or xz where tar uses them. The first make lint or make format installs pinned clang-format and clang-tidy wheels into a Python venv, requiring curl, Python's ensurepip (python3-venv on Debian and Ubuntu) and pip 20.3 or later. The wheels support x86-64 Linux and macOS. Downloads are checked against…"
+    ],
+    [
+     "p",
+     "Bring your own disc: the Japanese release, HDR-0001, version 1.007. None of the disc's files are in this repository. Put 1ST_READ.BIN, LOADER.BIN and SONICADV/ in orig/, named as on the disc, or put the disc's .gdi and its tracks there. Then:"
+    ],
+    [
+     "p",
+     "make compiles every binary's code, reads the data its sources declare from your disc, and checks each binary it rebuilds against the original, PRS compression and all. They land under build/, at the disc's own paths. make checks 1ST_READ.BIN, LOADER.BIN and each file it reads from SONICADV/ against SHA256SUMS before reading it. This is a matching build, so an edit that changes a byte of output fails it."
+    ],
+    [
+     "p",
+     "make check needs no disc. It compiles the sources it can check without the disc, using placeholders for imported data where needed, and checks each linked source against its recorded hash, but builds no complete binary. Checks says what each goal shows, and make help lists them all."
+    ],
+    [
+     "p",
+     "make dc builds the sources with GCC 16.2 and links every image anew, under build/dc/ at the disc's paths. It needs the disc but neither SHC nor wibo. Its first run builds binutils and GCC from source (Toolchain); their logs are in build/toolchain/. make dc-disc needs the disc's .gdi and its tracks in orig/, not its files alone. The port's features describes what it adds."
+    ],
+    [
+     "p",
+     "make dc-check needs neither disc nor SHC. It builds the port's disc-independent objects and writes build/dc/check.txt: hashes of those objects, SH4ZAM's archive, the toolchain's libgcc.a and two compression results. Compare the file across hosts at the same commit, with the same SH_ELF (Checks). Its first run builds the toolchain and fetches SH4ZAM, as make dc does."
+    ],
+    [
+     "p",
+     "make pc builds the game from your disc, and make play runs it in a window. The engine's build goals need Python 3.9 or later; a window needs SDL3 and Vulkan. Checks lists the other host requirements, and Build goals lists the engine's commands."
     ]
    ]
   },
@@ -1268,118 +1268,6 @@
     ]
    ]
   },
-  "d-mstan-supermarioworldrecomp": {
-   "v": 2,
-   "repo": "mstan/SuperMarioWorldRecomp",
-   "actualizado": "2026-11-18T12:47:54.356Z",
-   "recortado": true,
-   "estado": {
-    "titulo": "Current status: believed fully playable",
-    "texto": "Hand-verified end-to-end through:"
-   },
-   "bloques": [
-    [
-     "h",
-     "SuperMarioWorldRecomp"
-    ],
-    [
-     "p",
-     "This recompilation is a byproduct of developing snesrecomp — the games are the proving ground, the framework is the goal. These are in-development previews, not finished ports — expect rough edges, and depth will keep landing over months, not days. My time for any one title is limited, so I ask for your patience. Contributions are welcome — testing, issues, and PRs to the game or framework all help and will accelerate this game's polish. More on the why at: Recomp + AI: 5 Months Later »"
-    ],
-    [
-     "p",
-     "Static recompilation of Super Mario World (SNES) into native C, using the snesrecomp framework. This repo is the per-game side: the runtime, the recompiled C output, the per-game .cfg, and the build glue."
-    ],
-    [
-     "h",
-     "What \"static recompilation\" means here"
-    ],
-    [
-     "p",
-     "The 65816 CPU code from the ROM is statically translated to C — every function the game runs on the SNES's main CPU is a real generated C function in src/gen/. The rest of the SNES is not recompiled — it's hardware. PPU rendering, the APU / SPC700 audio coprocessor, DMA and HDMA channels, hardware register I/O, and bank-mapping all run through a C reimplementation of the SNES hardware in snesrecomp/runner/src/snes/ — a LakeSnes-derived core (the same emulator family the snesrev reverse-engineered ports use), with individual algorithms credited to snes9x. This is the same model other…"
-    ],
-    [
-     "h",
-     "Current status: believed fully playable"
-    ],
-    [
-     "p",
-     "Hand-verified end-to-end through:"
-    ],
-    [
-     "li",
-     "Yoshi's Island (World 1) including Iggy's castle boss."
-    ],
-    [
-     "li",
-     "Donut Plains (World 2) end-to-end."
-    ],
-    [
-     "li",
-     "Vanilla Dome (World 3) in progress at time of writing."
-    ],
-    [
-     "p",
-     "No catastrophic visible regressions surfaced through these worlds. Two runtime tripwires (the M/X claim verifier and the async-cpu->m_flag/x_flag-write detector) are armed at boot and have not latched on the verified worlds. An off-rails event was captured in BufferScrollingTiles_Layer1_VerticalLevel_M1X1 during Donut Plains castle (bank-out-of-range pointer read; runtime mirrors the read to a safe location and gameplay continues) — see ISSUES.md for the bucketed capture and the offrails_get TCP query."
-    ],
-    [
-     "p",
-     "Worlds 4–7 and special content (Star Road, Special World) are not yet hand-verified but are expected to play similarly. If you hit a visible regression, please open an issue with a savestate and the offrails_get / mx_async_check_get JSON snapshots."
-    ],
-    [
-     "p",
-     "Active development; expect:"
-    ],
-    [
-     "li",
-     "Some branches don't build; only main is guaranteed to build."
-    ],
-    [
-     "li",
-     "Internal docs (ISSUES.md, ENHANCEMENTS.md) assume context."
-    ],
-    [
-     "li",
-     "APIs and recompiler output change without notice."
-    ],
-    [
-     "p",
-     "See RELEASE.md for the latest release notes."
-    ],
-    [
-     "h",
-     "Quick start (pre-built release)"
-    ],
-    [
-     "li",
-     "Download the Windows ZIP or Linux AppImage from Releases. Extract the ZIP, or make the AppImage executable."
-    ],
-    [
-     "li",
-     "Run SuperMarioWorldSNESRecomp.exe or the AppImage. On first launch a file picker asks for your legally-obtained Super Mario World (USA) ROM (.sfc / .smc). The path is remembered in rom.cfg next to the exe."
-    ],
-    [
-     "li",
-     "Edit keybinds.ini (auto-generated next to the exe on first run) to remap keys, then restart."
-    ],
-    [
-     "p",
-     "The ROM is never redistributed — supply your own dump."
-    ],
-    [
-     "p",
-     "To play as Captain Falcon, enable Captain Falcon on the launcher's Mods page, select your Super Smash Bros. (USA) v1.0 ROM, and press Play. The included helper prepares Falcon's assets in your user cache on first use. No Python installation or environment setup is required."
-    ],
-    [
-     "h",
-     "Send a reproducible bug report"
-    ],
-    [
-     "li",
-     "In the launcher's Mods page, enable SMW Playtest Diagnostics → Diagnostic recording. Keep the gameplay mods and settings needed for your reproduction, including native co-op where applicable. Disable run-ahead while recording."
-    ]
-   ]
-  },
   "d-ravencaio-tlou-remastered-pc": {
    "v": 2,
    "repo": "ravencaio/tlou-remastered-pc",
@@ -1550,6 +1438,118 @@
     [
      "h",
      "Screenshots"
+    ]
+   ]
+  },
+  "d-mstan-supermarioworldrecomp": {
+   "v": 2,
+   "repo": "mstan/SuperMarioWorldRecomp",
+   "actualizado": "2026-11-18T12:47:54.356Z",
+   "recortado": true,
+   "estado": {
+    "titulo": "Current status: believed fully playable",
+    "texto": "Hand-verified end-to-end through:"
+   },
+   "bloques": [
+    [
+     "h",
+     "SuperMarioWorldRecomp"
+    ],
+    [
+     "p",
+     "This recompilation is a byproduct of developing snesrecomp — the games are the proving ground, the framework is the goal. These are in-development previews, not finished ports — expect rough edges, and depth will keep landing over months, not days. My time for any one title is limited, so I ask for your patience. Contributions are welcome — testing, issues, and PRs to the game or framework all help and will accelerate this game's polish. More on the why at: Recomp + AI: 5 Months Later »"
+    ],
+    [
+     "p",
+     "Static recompilation of Super Mario World (SNES) into native C, using the snesrecomp framework. This repo is the per-game side: the runtime, the recompiled C output, the per-game .cfg, and the build glue."
+    ],
+    [
+     "h",
+     "What \"static recompilation\" means here"
+    ],
+    [
+     "p",
+     "The 65816 CPU code from the ROM is statically translated to C — every function the game runs on the SNES's main CPU is a real generated C function in src/gen/. The rest of the SNES is not recompiled — it's hardware. PPU rendering, the APU / SPC700 audio coprocessor, DMA and HDMA channels, hardware register I/O, and bank-mapping all run through a C reimplementation of the SNES hardware in snesrecomp/runner/src/snes/ — a LakeSnes-derived core (the same emulator family the snesrev reverse-engineered ports use), with individual algorithms credited to snes9x. This is the same model other…"
+    ],
+    [
+     "h",
+     "Current status: believed fully playable"
+    ],
+    [
+     "p",
+     "Hand-verified end-to-end through:"
+    ],
+    [
+     "li",
+     "Yoshi's Island (World 1) including Iggy's castle boss."
+    ],
+    [
+     "li",
+     "Donut Plains (World 2) end-to-end."
+    ],
+    [
+     "li",
+     "Vanilla Dome (World 3) in progress at time of writing."
+    ],
+    [
+     "p",
+     "No catastrophic visible regressions surfaced through these worlds. Two runtime tripwires (the M/X claim verifier and the async-cpu->m_flag/x_flag-write detector) are armed at boot and have not latched on the verified worlds. An off-rails event was captured in BufferScrollingTiles_Layer1_VerticalLevel_M1X1 during Donut Plains castle (bank-out-of-range pointer read; runtime mirrors the read to a safe location and gameplay continues) — see ISSUES.md for the bucketed capture and the offrails_get TCP query."
+    ],
+    [
+     "p",
+     "Worlds 4–7 and special content (Star Road, Special World) are not yet hand-verified but are expected to play similarly. If you hit a visible regression, please open an issue with a savestate and the offrails_get / mx_async_check_get JSON snapshots."
+    ],
+    [
+     "p",
+     "Active development; expect:"
+    ],
+    [
+     "li",
+     "Some branches don't build; only main is guaranteed to build."
+    ],
+    [
+     "li",
+     "Internal docs (ISSUES.md, ENHANCEMENTS.md) assume context."
+    ],
+    [
+     "li",
+     "APIs and recompiler output change without notice."
+    ],
+    [
+     "p",
+     "See RELEASE.md for the latest release notes."
+    ],
+    [
+     "h",
+     "Quick start (pre-built release)"
+    ],
+    [
+     "li",
+     "Download the Windows ZIP or Linux AppImage from Releases. Extract the ZIP, or make the AppImage executable."
+    ],
+    [
+     "li",
+     "Run SuperMarioWorldSNESRecomp.exe or the AppImage. On first launch a file picker asks for your legally-obtained Super Mario World (USA) ROM (.sfc / .smc). The path is remembered in rom.cfg next to the exe."
+    ],
+    [
+     "li",
+     "Edit keybinds.ini (auto-generated next to the exe on first run) to remap keys, then restart."
+    ],
+    [
+     "p",
+     "The ROM is never redistributed — supply your own dump."
+    ],
+    [
+     "p",
+     "To play as Captain Falcon, enable Captain Falcon on the launcher's Mods page, select your Super Smash Bros. (USA) v1.0 ROM, and press Play. The included helper prepares Falcon's assets in your user cache on first use. No Python installation or environment setup is required."
+    ],
+    [
+     "h",
+     "Send a reproducible bug report"
+    ],
+    [
+     "li",
+     "In the launcher's Mods page, enable SMW Playtest Diagnostics → Diagnostic recording. Keep the gameplay mods and settings needed for your reproduction, including native co-op where applicable. Disable run-ahead while recording."
     ]
    ]
   },
@@ -4065,6 +4065,27 @@
     ]
    ]
   },
+  "d-player124413-sonic-generations-recomp-android-and-pc-edition": {
+   "v": 2,
+   "repo": "Player124413/Sonic-Generations-recomp-android-and-pc-edition",
+   "actualizado": "2026-11-18T12:47:54.356Z",
+   "recortado": false,
+   "estado": null,
+   "bloques": [
+    [
+     "p",
+     "sonicgenerations -- Android project sources android/ launcher app (Gradle project) port/ recompiled game (generated C++ + src + *.toml) Build: run tools/android_sdk.sh (needs android/sdk), then cd android && ./gradlew assembleRelease -PrexName=sonicgenerations -PrexPortDir=$PWD/../port -PrexSdkDir=$PWD/sdk/rexglue-sdk"
+    ],
+    [
+     "p",
+     "I’m working on the Sonic Generations recompilation for PC and android, but I don't know what to do about the Android version—the game lags and has graphical glitches. Please help me fix the issues with the Android port; I would be incredibly grateful. Everything should work perfectly on PC, though."
+    ],
+    [
+     "p",
+     "To start the recompilation, you need to download Sonic Generations (USA, Europe).iso."
+    ]
+   ]
+  },
   "d-spannerisms-jpdasm": {
    "v": 2,
    "repo": "spannerisms/jpdasm",
@@ -4207,27 +4228,6 @@
     [
      "li",
      "The .ly files in the resources/music/ directory can be compiled with LilyPond."
-    ]
-   ]
-  },
-  "d-player124413-sonic-generations-recomp-android-and-pc-edition": {
-   "v": 2,
-   "repo": "Player124413/Sonic-Generations-recomp-android-and-pc-edition",
-   "actualizado": "2026-11-18T12:47:54.356Z",
-   "recortado": false,
-   "estado": null,
-   "bloques": [
-    [
-     "p",
-     "sonicgenerations -- Android project sources android/ launcher app (Gradle project) port/ recompiled game (generated C++ + src + *.toml) Build: run tools/android_sdk.sh (needs android/sdk), then cd android && ./gradlew assembleRelease -PrexName=sonicgenerations -PrexPortDir=$PWD/../port -PrexSdkDir=$PWD/sdk/rexglue-sdk"
-    ],
-    [
-     "p",
-     "I’m working on the Sonic Generations recompilation for PC and android, but I don't know what to do about the Android version—the game lags and has graphical glitches. Please help me fix the issues with the Android port; I would be incredibly grateful. Everything should work perfectly on PC, though."
-    ],
-    [
-     "p",
-     "To start the recompilation, you need to download Sonic Generations (USA, Europe).iso."
     ]
    ]
   },
@@ -6356,115 +6356,6 @@
     ]
    ]
   },
-  "p-hero88go-melee-unlocked": {
-   "v": 2,
-   "repo": "Hero88go/melee-unlocked",
-   "actualizado": "2026-11-19T09:50:10.117Z",
-   "recortado": true,
-   "estado": null,
-   "bloques": [
-    [
-     "h",
-     "Melee Unlocked - Beta"
-    ],
-    [
-     "p",
-     "A native Windows build of Super Smash Bros. Melee (NTSC 1.02) with Slippi online play and an unlocked display frame rate. It has two engines, and the launcher lets you pick."
-    ],
-    [
-     "p",
-     "Source Port (the main build). The game is compiled for Windows from C source code, the decompilation of Melee, and built as a native library. No GameCube code is run, emulated or translated. A native runtime stands in for the console around it: the game's drawing commands go to a D3D12 or D3D11 renderer, its sound goes through a native mixer, controllers are read directly, and the game's data is read from your own ISO. Slippi's rollback netplay is written natively too, and it plays against Slippi Dolphin."
-    ],
-    [
-     "p",
-     "Static Recomp. The retail game's own PowerPC code, with Slippi's Gecko codes, translated ahead of time into C++ and run on the same runtime. It is the engine this project started with, and it is kept for the mods that need the game's original code."
-    ],
-    [
-     "p",
-     "On both, the game logic runs at the console's 60 Hz while the display runs at any rate. In-between frames come from the game's own animation data and physics state, not from image interpolation, so an unlocked 200 Hz display shows real intermediate poses with no added latency."
-    ],
-    [
-     "p",
-     "Nothing from the game is included. You supply your own Melee NTSC 1.02 ISO."
-    ],
-    [
-     "p",
-     "No Monetization. No Donos. No Patreon. FREE FOREVER"
-    ],
-    [
-     "p",
-     "Version 0.8.5 added the experimental Mod Update. The launcher includes Source Port and Static Recomp, with an integrated Mods page. Supported 20XX TE saves and Training Mode CE 1.4d1 run on Source Port; Akaneia runs on Static Recomp with matching Direct builds. See the Mod Update notes for installation and compatibility limits."
-    ],
-    [
-     "p",
-     "This project is not affiliated with, endorsed by, or supported by the Slippi team, Nintendo or HAL Laboratory. Slippi netplay compatibility is implemented from Slippi's open source code (GPL). Questions and bugs about this build go to this repository or the Discord below, not to the Slippi team."
-    ],
-    [
-     "p",
-     "v0.8.5 Akaenia/Mod support and more DLSS5 controls https://www.youtube.com/watch?v=126-FcptKMQ"
-    ],
-    [
-     "p",
-     "v0.6.1 DLSS5 Footage can be found here https://www.youtube.com/watch?v=qZXsNr7HmAo"
-    ],
-    [
-     "p",
-     "v0.5.0 Gameplay footage can be found here: https://www.youtube.com/watch?v=JlmTDW6wQms"
-    ],
-    [
-     "h",
-     "Discord / Help"
-    ],
-    [
-     "p",
-     "Discord can be found here https://discord.gg/K7HHs3r8ty And On X https://x.com/MeleeUnlocked"
-    ],
-    [
-     "h",
-     "Screenshots"
-    ],
-    [
-     "p",
-     "Taken in the game with DLAA on, at the window's full resolution. No textures or other game files are included with Melee Unlocked."
-    ],
-    [
-     "h",
-     "Features"
-    ],
-    [
-     "li",
-     "Unlocked frame rate (monitor rate, a fixed cap, or fully unlocked) with sub-frame animation"
-    ],
-    [
-     "li",
-     "Slippi online against regular Slippi Dolphin players, using your Slippi Launcher login"
-    ],
-    [
-     "li",
-     "Subframe rollback (early inputs) between Melee Unlocked players: button presses and stick moves are sent the moment they happen, between frames, so the other game predicts them sooner. Based on Arte's subframe rollback work (see Credits)"
-    ],
-    [
-     "li",
-     "GameCube adapter (WUP-028 with the WinUSB driver), keyboard fallback"
-    ],
-    [
-     "li",
-     "DLSS / DLAA (NVIDIA Streamline), internal resolution up to 8x, SSAA, anisotropic filtering, sharpening, borderless fullscreen, VSync"
-    ],
-    [
-     "li",
-     "Direct3D 12 by default, with a Direct3D 11 renderer for machines where D3D12 will not start (--backend d3d11, or Graphics backend in the PC settings panel; needs a restart, no DLSS)"
-    ],
-    [
-     "li",
-     "\"Low spec\" switch in the PC settings panel: one control that puts internal resolution, anti-aliasing, anisotropic filtering, visual effects, sub-frame animation and the frame cap at their cheapest, for integrated graphics and older laptops. Turning it off restores exactly what you had before. It reduces rendering cost only; the simulation runs at the same price either way."
-    ],
-    [
-     "li",
-     "Widescreen 16:9 (Slippi's own optional code, online safe)"
-    ]
-   ]
-  },
   "p-nautaro-dbz-bt4-tag-team-decomp": {
    "v": 2,
    "repo": "NauTaro/DBZ-BT4-Tag-Team-Decomp",
@@ -6811,6 +6702,115 @@
     ]
    ]
   },
+  "p-hero88go-melee-unlocked": {
+   "v": 2,
+   "repo": "Hero88go/melee-unlocked",
+   "actualizado": "2026-11-19T09:50:10.117Z",
+   "recortado": true,
+   "estado": null,
+   "bloques": [
+    [
+     "h",
+     "Melee Unlocked - Beta"
+    ],
+    [
+     "p",
+     "A native Windows build of Super Smash Bros. Melee (NTSC 1.02) with Slippi online play and an unlocked display frame rate. It has two engines, and the launcher lets you pick."
+    ],
+    [
+     "p",
+     "Source Port (the main build). The game is compiled for Windows from C source code, the decompilation of Melee, and built as a native library. No GameCube code is run, emulated or translated. A native runtime stands in for the console around it: the game's drawing commands go to a D3D12 or D3D11 renderer, its sound goes through a native mixer, controllers are read directly, and the game's data is read from your own ISO. Slippi's rollback netplay is written natively too, and it plays against Slippi Dolphin."
+    ],
+    [
+     "p",
+     "Static Recomp. The retail game's own PowerPC code, with Slippi's Gecko codes, translated ahead of time into C++ and run on the same runtime. It is the engine this project started with, and it is kept for the mods that need the game's original code."
+    ],
+    [
+     "p",
+     "On both, the game logic runs at the console's 60 Hz while the display runs at any rate. In-between frames come from the game's own animation data and physics state, not from image interpolation, so an unlocked 200 Hz display shows real intermediate poses with no added latency."
+    ],
+    [
+     "p",
+     "Nothing from the game is included. You supply your own Melee NTSC 1.02 ISO."
+    ],
+    [
+     "p",
+     "No Monetization. No Donos. No Patreon. FREE FOREVER"
+    ],
+    [
+     "p",
+     "Version 0.8.5 added the experimental Mod Update. The launcher includes Source Port and Static Recomp, with an integrated Mods page. Supported 20XX TE saves and Training Mode CE 1.4d1 run on Source Port; Akaneia runs on Static Recomp with matching Direct builds. See the Mod Update notes for installation and compatibility limits."
+    ],
+    [
+     "p",
+     "This project is not affiliated with, endorsed by, or supported by the Slippi team, Nintendo or HAL Laboratory. Slippi netplay compatibility is implemented from Slippi's open source code (GPL). Questions and bugs about this build go to this repository or the Discord below, not to the Slippi team."
+    ],
+    [
+     "p",
+     "v0.8.5 Akaenia/Mod support and more DLSS5 controls https://www.youtube.com/watch?v=126-FcptKMQ"
+    ],
+    [
+     "p",
+     "v0.6.1 DLSS5 Footage can be found here https://www.youtube.com/watch?v=qZXsNr7HmAo"
+    ],
+    [
+     "p",
+     "v0.5.0 Gameplay footage can be found here: https://www.youtube.com/watch?v=JlmTDW6wQms"
+    ],
+    [
+     "h",
+     "Discord / Help"
+    ],
+    [
+     "p",
+     "Discord can be found here https://discord.gg/K7HHs3r8ty And On X https://x.com/MeleeUnlocked"
+    ],
+    [
+     "h",
+     "Screenshots"
+    ],
+    [
+     "p",
+     "Taken in the game with DLAA on, at the window's full resolution. No textures or other game files are included with Melee Unlocked."
+    ],
+    [
+     "h",
+     "Features"
+    ],
+    [
+     "li",
+     "Unlocked frame rate (monitor rate, a fixed cap, or fully unlocked) with sub-frame animation"
+    ],
+    [
+     "li",
+     "Slippi online against regular Slippi Dolphin players, using your Slippi Launcher login"
+    ],
+    [
+     "li",
+     "Subframe rollback (early inputs) between Melee Unlocked players: button presses and stick moves are sent the moment they happen, between frames, so the other game predicts them sooner. Based on Arte's subframe rollback work (see Credits)"
+    ],
+    [
+     "li",
+     "GameCube adapter (WUP-028 with the WinUSB driver), keyboard fallback"
+    ],
+    [
+     "li",
+     "DLSS / DLAA (NVIDIA Streamline), internal resolution up to 8x, SSAA, anisotropic filtering, sharpening, borderless fullscreen, VSync"
+    ],
+    [
+     "li",
+     "Direct3D 12 by default, with a Direct3D 11 renderer for machines where D3D12 will not start (--backend d3d11, or Graphics backend in the PC settings panel; needs a restart, no DLSS)"
+    ],
+    [
+     "li",
+     "\"Low spec\" switch in the PC settings panel: one control that puts internal resolution, anti-aliasing, anisotropic filtering, visual effects, sub-frame animation and the frame cap at their cheapest, for integrated graphics and older laptops. Turning it off restores exactly what you had before. It reduces rendering cost only; the simulation runs at the same price either way."
+    ],
+    [
+     "li",
+     "Widescreen 16:9 (Slippi's own optional code, online safe)"
+    ]
+   ]
+  },
   "p-madxbio97-sf-pc-port": {
    "v": 2,
    "repo": "Madxbio97/SF-pc-port",
@@ -7033,127 +7033,6 @@
     ]
    ]
   },
-  "p-joeyaw-tpvr": {
-   "v": 2,
-   "repo": "JoeyAW/TPVR",
-   "actualizado": "2026-11-19T09:50:10.117Z",
-   "recortado": true,
-   "estado": null,
-   "bloques": [
-    [
-     "p",
-     "Join the Discord • Sub to my Patreon"
-    ],
-    [
-     "h",
-     "Overview"
-    ],
-    [
-     "p",
-     "TPVR is a vibecoded VR mod for Dusklight, the PC of Twilight Princess. It is not affiliated with the Dusklight team in any way."
-    ],
-    [
-     "p",
-     "It aims to be as accurate as possible to the original game while allowing you to experience the gameplay from a VR perspective."
-    ],
-    [
-     "p",
-     "More on why it uses AI generated code below."
-    ],
-    [
-     "h",
-     "Features"
-    ],
-    [
-     "li",
-     "Full stereoscopic 3D with controller tracking"
-    ],
-    [
-     "li",
-     "Physical sword swinging, shield bashing and aiming (aim with the right hand)"
-    ],
-    [
-     "li",
-     "Quest 2/3 controller bindings; other headsets are untested"
-    ],
-    [
-     "li",
-     "The ability to play the game in flatscreen for parts you want to skip in VR"
-    ],
-    [
-     "h",
-     "Setup"
-    ],
-    [
-     "p",
-     "[!IMPORTANT] TPVR does not provide any copyrighted assets. You must provide your own copy of the original game."
-    ],
-    [
-     "p",
-     "[!IMPORTANT] At a minimum, TPVR requires a GPU with support for D3D12. It is only supported on Windows so far. Your experience with specific hardware, operating systems, VR software and drivers may vary. Virtual Desktop with VDXR is your best bet at the moment."
-    ],
-    [
-     "h",
-     "1. Dump your game"
-    ],
-    [
-     "p",
-     "You must dump your own copy of the game. Please see this article for instructions. After dumping, you can use a program like Dolphin or nodtool to convert the .iso to .rvz to save space."
-    ],
-    [
-     "p",
-     "Dusklight currently supports all commercial discs except for Wii's Korean release."
-    ],
-    [
-     "p",
-     "[!NOTE] Dusklight is based on the Twilight Princess decompilation, which is currently only matching for GameCube. As a result, even when playing Dusklight with a Wii disc, you will be presented with the GameCube version's HUD and certain other specificities."
-    ],
-    [
-     "h",
-     "2. Install TPVR"
-    ],
-    [
-     "p",
-     "Download the latest release, extract the zip file, and run Dusklight.exe with your choice of VR streamer open."
-    ],
-    [
-     "h",
-     "Building"
-    ],
-    [
-     "p",
-     "If you'd like to build TPVR from source, please read the build instructions."
-    ],
-    [
-     "h",
-     "Statement on AI-generated code"
-    ],
-    [
-     "p",
-     "Expand I do not know how to code. The furthest my knowledge goes is a little bit of HTML and CSS. I simply wanted a way to play Twilight Princess in VR and scoured the internet for anyone who mentioned a Dusklight mod/port in the works, but came up with nothing, so I decided to take matters into my own hands with Claude Code. This has taken hours of almost daily work in the last 3 weeks."
-    ],
-    [
-     "p",
-     "I do not condone the usage of AI for writing, \"art\", deepfakes, and music (especially music, screw Suno and its garbage that is polluting streaming services). It should not be people's go-to for asking questions or replacing a search engine; it has repeatedly been shown to hallucinate and take certain statements out of context, spreading misinformation. It should be used as a tool and you must guide that tool."
-    ],
-    [
-     "p",
-     "With that being said, for a task like this, I believe it is acceptable to create a project that does not currently exist by writing the code using AI as long as you actually take the time to refine the experience and do not harm other people's repos or code in the process. In this case, I simply forked Dusklight and modified it in a separate instance over the course of multiple weeks, without pestering the devs with possible spaghetti-code pull requests. I wrote this statement and edited the README in my own words, and I made the logo using Paint.NET despite having very little graphic design…"
-    ],
-    [
-     "p",
-     "I have seen many recent projects spring up in the same vein: vibecoded VR ports of existing games. Everybody is entitled to their own opinion, and different backgrounds will lead people to take different stances. However, I believe that you can either take this VR port of the original game and enjoy it for what it is, regardless of AI or not, or you can simply ignore it and play the game in flatscreen—it's still a fantastic experience."
-    ],
-    [
-     "p",
-     "And yes—I used an em-dash there. You can type it with on your keyboard with Alt+0151. Thanks ChatGPT for ruining informal basic writing."
-    ],
-    [
-     "h",
-     "Credits"
-    ]
-   ]
-  },
   "p-chasem-dev-orre-launcher": {
    "v": 2,
    "repo": "chasem-dev/orre-launcher",
@@ -7291,136 +7170,124 @@
     ]
    ]
   },
-  "p-retroportingtoolkit-f-zeroforever": {
+  "p-joeyaw-tpvr": {
    "v": 2,
-   "repo": "RetroPortingToolKit/F-ZeroForever",
+   "repo": "JoeyAW/TPVR",
    "actualizado": "2026-11-19T09:50:10.117Z",
    "recortado": true,
    "estado": null,
    "bloques": [
     [
-     "h",
-     "F-Zero Forever"
-    ],
-    [
      "p",
-     "The most tracks, most cups, split screen, up to 4p multiplayer, HD mode 7, for F-Zero."
-    ],
-    [
-     "p",
-     "F-Zero Forever is a modern PC conversion of the original SNES anti-gravity racer."
-    ],
-    [
-     "p",
-     "Rather than a predictable port of the game, our ambition was to push the game to new heights, with overwhelming amounts of modes and content, and all the technical improvements we could throw at it."
-    ],
-    [
-     "p",
-     "Our team consists of veteran developers from the RetroPortingToolkit team, and F-Zero modders from the F-Zero Community Grand Prix team. For this special game, we spent over 7 weeks working on new features, daily."
+     "Join the Discord • Sub to my Patreon"
     ],
     [
      "h",
-     "Android"
+     "Overview"
     ],
     [
      "p",
-     "Install the signed APK from the Android and Linux release, then choose your own unmodified F-Zero (USA) .sfc or .smc ROM. No ROM is included."
+     "TPVR is a vibecoded VR mod for Dusklight, the PC of Twilight Princess. It is not affiliated with the Dusklight team in any way."
     ],
     [
      "p",
-     "The Android launcher has native Home, Settings and Mods pages, touch controls and standard gamepad support. Fit to screen and adaptive widescreen default on, with saved choices retained. Android Back opens pause, quick save/load and return to launcher. Portable HD rendering is optional and defaults off on Android. See Android features and building."
+     "It aims to be as accurate as possible to the original game while allowing you to experience the gameplay from a VR perspective."
+    ],
+    [
+     "p",
+     "More on why it uses AI generated code below."
     ],
     [
      "h",
-     "85 races. 17 cups."
+     "Features"
     ],
     [
-     "p",
-     "We worked with the community and combined several of the highest quality rom hacks for the game, including: Community Grand Prix, Astra Velocity, Bower, and MAX. You can even bring your own rom hacks and create your own races. This is the largest combination of tracks EVER for F-Zero."
+     "li",
+     "Full stereoscopic 3D with controller tracking"
     ],
     [
-     "p",
-     "All bundled ROM hack content is included with explicit permission from its authors and creators. AI was not used in any way to modify the ROM hacks or their content. The inclusion of their work in this project should not be taken as a statement of their views on AI."
+     "li",
+     "Physical sword swinging, shield bashing and aiming (aim with the right hand)"
     ],
     [
-     "p",
-     "We made sure to preserve every custom feature that was built for each GP, including CGP's magnets, jumps, and gravity changes, with selectable gameplay rules and Legend difficulty for another challenge."
+     "li",
+     "Quest 2/3 controller bindings; other headsets are untested"
     ],
     [
-     "p",
-     "Bower · Red Canyon III"
-    ],
-    [
-     "p",
-     "MAX · Metal Forest"
-    ],
-    [
-     "p",
-     "CGP · Rainbow Road"
+     "li",
+     "The ability to play the game in flatscreen for parts you want to skip in VR"
     ],
     [
      "h",
-     "Twelve cars."
+     "Setup"
     ],
     [
      "p",
-     "Choose from twelve CGP machines: eight additional vehicles and CGP versions of the original four, each with its authored artwork, handling, energy boosts, and exhaust. Explore separate vehicle packs and original-car rebalances, or enable the optional Satellaview machines!"
+     "[!IMPORTANT] TPVR does not provide any copyrighted assets. You must provide your own copy of the original game."
     ],
     [
      "p",
-     "All twelve cars are enabled by default for fresh single-player settings. Existing profiles keep their saved choices; enable Mods > CGP vehicles to add the eight extra cars. Local and online VS always offer all twelve."
-    ],
-    [
-     "p",
-     "Dragon Bird · CGP roster"
-    ],
-    [
-     "p",
-     "Blue Thunder · Satellaview roster"
+     "[!IMPORTANT] At a minimum, TPVR requires a GPU with support for D3D12. It is only supported on Windows so far. Your experience with specific hardware, operating systems, VR software and drivers may vary. Virtual Desktop with VDXR is your best bet at the moment."
     ],
     [
      "h",
-     "Introducing split-screen and netplay."
+     "1. Dump your game"
     ],
     [
      "p",
-     "We have also added multiplayer! You can play with 2 players via local split-screen, or up to 4 players via online netplay. Each player can compete with their own vehicle, and we made sure that player collisions, bumper traffic, minimaps and race positions work correctly. Configure your players in the launcher, enable Local Multiplayer, then choose VS MODE on the title screen."
+     "You must dump your own copy of the game. Please see this article for instructions. After dumping, you can use a program like Dolphin or nodtool to convert the .iso to .rvz to save space."
     ],
     [
      "p",
-     "Multiplayer supports rollback netcode, LAN discovery, Direct IP, and online lobbies"
+     "Dusklight currently supports all commercial discs except for Wii's Korean release."
+    ],
+    [
+     "p",
+     "[!NOTE] Dusklight is based on the Twilight Princess decompilation, which is currently only matching for GameCube. As a result, even when playing Dusklight with a Wii disc, you will be presented with the GameCube version's HUD and certain other specificities."
     ],
     [
      "h",
-     "So many HD settings."
+     "2. Install TPVR"
     ],
     [
      "p",
-     "HD Mode 7 reconstructs the track perspective with finer sampling at 2×, 4×, or 8× detail, optional edge smoothing, and GPU rendering for every local player. Start at 2× when tuning performance; higher settings are more demanding."
-    ],
-    [
-     "p",
-     "Pair it with 16:9, 21:9, 32:9, or Fit widescreen modes, or keep the classic 4:3 view. Presentation rates from 60 to 360 FPS give high-refresh displays smoother motion, independently of the HD Mode 7 setting."
-    ],
-    [
-     "p",
-     "Room to see the next corner: Forest III in widescreen."
-    ],
-    [
-     "p",
-     "HD Mode 7 options and performance →"
-    ],
-    [
-     "p",
-     "Visuals are upgraded too: it supports any aspect ratio (including 16:9, 21:9, 32:9), unlimited frame rates, and HD Mode 7. It's the prettiest the game has ever looked."
-    ],
-    [
-     "p",
-     "Two racers. Two views. One race."
+     "Download the latest release, extract the zip file, and run Dusklight.exe with your choice of VR streamer open."
     ],
     [
      "h",
-     "Online, with the whole screen to yourself"
+     "Building"
+    ],
+    [
+     "p",
+     "If you'd like to build TPVR from source, please read the build instructions."
+    ],
+    [
+     "h",
+     "Statement on AI-generated code"
+    ],
+    [
+     "p",
+     "Expand I do not know how to code. The furthest my knowledge goes is a little bit of HTML and CSS. I simply wanted a way to play Twilight Princess in VR and scoured the internet for anyone who mentioned a Dusklight mod/port in the works, but came up with nothing, so I decided to take matters into my own hands with Claude Code. This has taken hours of almost daily work in the last 3 weeks."
+    ],
+    [
+     "p",
+     "I do not condone the usage of AI for writing, \"art\", deepfakes, and music (especially music, screw Suno and its garbage that is polluting streaming services). It should not be people's go-to for asking questions or replacing a search engine; it has repeatedly been shown to hallucinate and take certain statements out of context, spreading misinformation. It should be used as a tool and you must guide that tool."
+    ],
+    [
+     "p",
+     "With that being said, for a task like this, I believe it is acceptable to create a project that does not currently exist by writing the code using AI as long as you actually take the time to refine the experience and do not harm other people's repos or code in the process. In this case, I simply forked Dusklight and modified it in a separate instance over the course of multiple weeks, without pestering the devs with possible spaghetti-code pull requests. I wrote this statement and edited the README in my own words, and I made the logo using Paint.NET despite having very little graphic design…"
+    ],
+    [
+     "p",
+     "I have seen many recent projects spring up in the same vein: vibecoded VR ports of existing games. Everybody is entitled to their own opinion, and different backgrounds will lead people to take different stances. However, I believe that you can either take this VR port of the original game and enjoy it for what it is, regardless of AI or not, or you can simply ignore it and play the game in flatscreen—it's still a fantastic experience."
+    ],
+    [
+     "p",
+     "And yes—I used an em-dash there. You can type it with on your keyboard with Alt+0151. Thanks ChatGPT for ruining informal basic writing."
+    ],
+    [
+     "h",
+     "Credits"
     ]
    ]
   },
@@ -7734,111 +7601,136 @@
     ]
    ]
   },
-  "p-mr-finster-vf3-recomp": {
+  "p-retroportingtoolkit-f-zeroforever": {
    "v": 2,
-   "repo": "mr-finster/vf3-recomp",
+   "repo": "RetroPortingToolKit/F-ZeroForever",
    "actualizado": "2026-11-19T09:50:10.117Z",
    "recortado": true,
-   "estado": {
-    "titulo": "Status",
-    "texto": "This is an alpha. Please report anything that looks or plays differently from the arcade in Issues, with the log.txt from the game's data folder."
-   },
+   "estado": null,
    "bloques": [
     [
-     "p",
-     "Virtua Fighter 3 Recomp"
+     "h",
+     "F-Zero Forever"
     ],
     [
      "p",
-     "Virtua Fighter 3 (SEGA, arcade, Model 3, 1996) as a native PC game: the game's own PowerPC program, recompiled to native code, with render scales up to 6x, widescreen and ultrawide, smooth motion up to 120 pictures a second and the 3D on the GPU."
+     "The most tracks, most cups, split screen, up to 4p multiplayer, HD mode 7, for F-Zero."
     ],
     [
      "p",
-     "Play · Download · Trailer · Status · Controls · Report a bug"
+     "F-Zero Forever is a modern PC conversion of the original SNES anti-gravity racer."
     ],
     [
      "p",
-     "Trailer (click to watch on YouTube)"
+     "Rather than a predictable port of the game, our ambition was to push the game to new heights, with overwhelming amounts of modes and content, and all the technical improvements we could throw at it."
     ],
     [
      "p",
-     "[!IMPORTANT] No game files are included: no ROMs and nothing made from them. You need your own dump of the game as MAME's vf3 set (vf3.zip, Revision D). It is read on your computer, and the game's program is recompiled there each time it starts. An unofficial fan project, not made, approved or supported by SEGA, and not affiliated with it."
+     "Our team consists of veteran developers from the RetroPortingToolkit team, and F-Zero modders from the F-Zero Community Grand Prix team. For this special game, we spent over 7 weeks working on new features, daily."
     ],
     [
      "h",
-     "About"
+     "Android"
     ],
     [
      "p",
-     "Virtua Fighter 3 Recomp runs the game's own program, for the board's PowerPC 603e, recompiled to native code (ARM64 or x86-64) from your ROM each time it starts, and checked frame for frame against its own interpreter, which is itself frame-identical to the Supermodel reference on every scripted run (the attract mode, all twelve fighters, a versus match and the test menu: 173,000 frames). The rest of the Model 3 board is this port's own code: the board itself (memory map, IRQs, the 53C810 SCSI controller's DMA, the JTAG chain, EEPROM, inputs), the tile generator and the Real3D Pro-1000 (a…"
+     "Install the signed APK from the Android and Linux release, then choose your own unmodified F-Zero (USA) .sfc or .smc ROM. No ROM is included."
+    ],
+    [
+     "p",
+     "The Android launcher has native Home, Settings and Mods pages, touch controls and standard gamepad support. Fit to screen and adaptive widescreen default on, with saved choices retained. Android Back opens pause, quick save/load and return to launcher. Portable HD rendering is optional and defaults off on Android. See Android features and building."
     ],
     [
      "h",
-     "Status"
+     "85 races. 17 cups."
     ],
     [
      "p",
-     "This is an alpha. Please report anything that looks or plays differently from the arcade in Issues, with the log.txt from the game's data folder."
+     "We worked with the community and combined several of the highest quality rom hacks for the game, including: Community Grand Prix, Astra Velocity, Bower, and MAX. You can even bring your own rom hacks and create your own races. This is the largest combination of tracks EVER for F-Zero."
     ],
     [
      "p",
-     "Known issues: Shun's stage water is the game's own low-resolution 2D art up close."
+     "All bundled ROM hack content is included with explicit permission from its authors and creators. AI was not used in any way to modify the ROM hacks or their content. The inclusion of their work in this project should not be taken as a statement of their views on AI."
     ],
     [
      "p",
-     "Known differences from the reference's pictures: textures far away are softer (the Real3D's own mipmap level choice, as Supermodel's New3D documents it, where the reference build used OpenGL's)."
+     "We made sure to preserve every custom feature that was built for each GP, including CGP's magnets, jumps, and gravity changes, with selectable gameplay rules and Legend difficulty for another challenge."
+    ],
+    [
+     "p",
+     "Bower · Red Canyon III"
+    ],
+    [
+     "p",
+     "MAX · Metal Forest"
+    ],
+    [
+     "p",
+     "CGP · Rainbow Road"
     ],
     [
      "h",
-     "Play"
+     "Twelve cars."
     ],
     [
      "p",
-     "Mac and Windows"
-    ],
-    [
-     "li",
-     "Unzip it (Mac: move Virtua Fighter 3 Recomp to Applications; Windows: the VirtuaFighter3 folder anywhere, not inside Program Files)."
-    ],
-    [
-     "li",
-     "Open it (Windows: VirtuaFighter3.exe)."
-    ],
-    [
-     "li",
-     "Choose your vf3.zip when it asks. A copy is kept, so you only do this once."
+     "Choose from twelve CGP machines: eight additional vehicles and CGP versions of the original four, each with its authored artwork, handling, energy boosts, and exhaust. Explore separate vehicle packs and original-car rebalances, or enable the optional Satellaview machines!"
     ],
     [
      "p",
-     "Steam Deck"
-    ],
-    [
-     "li",
-     "Copy the download to the Deck (e.g. Downloads) and unpack it there: in Desktop Mode, right-click it in the file manager > Extract > Extract archive here. (Unpacking on Windows, or copying the folder through a USB stick, can lose the files' permissions, and then nothing launches.)"
-    ],
-    [
-     "li",
-     "Put your vf3.zip in the VirtuaFighter3/roms folder."
-    ],
-    [
-     "li",
-     "Desktop Mode: Steam > Games > Add a Non-Steam Game to My Library > Browse, set the file type filter to \"All files\", pick the vf3 file in the VirtuaFighter3 folder, Add Selected Programs. In its Properties, set Start In to the VirtuaFighter3 folder (e.g. /home/deck/Downloads/VirtuaFighter3/), and under Compatibility leave \"Force the use of a specific Steam Play compatibility tool\" off: it's a native Linux game, and Proton stops it launching."
-    ],
-    [
-     "li",
-     "Back in Game Mode, launch it from your Library with the default Gamepad layout."
+     "All twelve cars are enabled by default for fresh single-player settings. Existing profiles keep their saved choices; enable Mods > CGP vehicles to add the eight extra cars. Local and online VS always offer all twelve."
     ],
     [
      "p",
-     "The Windows download also runs on the Deck under Proton (add VirtuaFighter3.exe instead, with Proton forced on), but the native Linux build above is the one to use. The Deck package also keeps a copy of your vf3.zip in your user data folder, so an update unpacked into a new folder doesn't ask for it again."
+     "Dragon Bird · CGP roster"
     ],
     [
      "p",
-     "On another x86-64 Linux PC: unpack it anywhere, put vf3.zip in its roms folder and run VirtuaFighter3.sh."
+     "Blue Thunder · Satellaview roster"
+    ],
+    [
+     "h",
+     "Introducing split-screen and netplay."
     ],
     [
      "p",
-     "Portable mode: put a file named portable.txt next to the program (Windows: beside VirtuaFighter3.exe; Mac: beside the app, in the same folder), or in the folder above it, and the game keeps everything in that folder: settings, saves, screenshots, log.txt and the copy of your vf3.zip (in its roms folder), with nothing in your user data folder (%APPDATA%, ~/Library/Application Support). The Linux / Steam Deck build keeps everything in its folder already."
+     "We have also added multiplayer! You can play with 2 players via local split-screen, or up to 4 players via online netplay. Each player can compete with their own vehicle, and we made sure that player collisions, bumper traffic, minimaps and race positions work correctly. Configure your players in the launcher, enable Local Multiplayer, then choose VS MODE on the title screen."
+    ],
+    [
+     "p",
+     "Multiplayer supports rollback netcode, LAN discovery, Direct IP, and online lobbies"
+    ],
+    [
+     "h",
+     "So many HD settings."
+    ],
+    [
+     "p",
+     "HD Mode 7 reconstructs the track perspective with finer sampling at 2×, 4×, or 8× detail, optional edge smoothing, and GPU rendering for every local player. Start at 2× when tuning performance; higher settings are more demanding."
+    ],
+    [
+     "p",
+     "Pair it with 16:9, 21:9, 32:9, or Fit widescreen modes, or keep the classic 4:3 view. Presentation rates from 60 to 360 FPS give high-refresh displays smoother motion, independently of the HD Mode 7 setting."
+    ],
+    [
+     "p",
+     "Room to see the next corner: Forest III in widescreen."
+    ],
+    [
+     "p",
+     "HD Mode 7 options and performance →"
+    ],
+    [
+     "p",
+     "Visuals are upgraded too: it supports any aspect ratio (including 16:9, 21:9, 32:9), unlimited frame rates, and HD Mode 7. It's the prettiest the game has ever looked."
+    ],
+    [
+     "p",
+     "Two racers. Two views. One race."
+    ],
+    [
+     "h",
+     "Online, with the whole screen to yourself"
     ]
    ]
   },
@@ -7967,74 +7859,6 @@
     [
      "p",
      "Built on pret/pokeemerald, pokeemerald-multiplatform by gradenGnostic, and HctrRB's PS Vita port, which brings in the features of Emerald 3DS by ZallaxDev. Fonts: Cinzel and W95FA, both under the SIL Open Font License. The Deck and Windows work was written with an AI coding assistant (Claude Code) under marcoscodas's direction. Full list: docs/CREDITS.md and NOTICE.md. The code is MIT (LICENSE) except the parts derived from Emerald 3DS, which are CC BY-NC-SA 4.0. Pokémon and its game content belong to Nintendo, Creatures Inc. and GAME FREAK inc., and this is a non-commercial fan project."
-    ]
-   ]
-  },
-  "p-mr-finster-vf2-recomp": {
-   "v": 2,
-   "repo": "mr-finster/vf2-recomp",
-   "actualizado": "2026-11-19T09:50:10.117Z",
-   "recortado": true,
-   "estado": {
-    "titulo": "Status",
-    "texto": ""
-   },
-   "bloques": [
-    [
-     "p",
-     "Virtua Fighter 2 Recomp"
-    ],
-    [
-     "p",
-     "Virtua Fighter 2 (SEGA, arcade, Model 2, 1994) as a native PC game: the game's own i960 program, recompiled to native code, with render scales up to 6x, widescreen and smooth motion at any refresh rate."
-    ],
-    [
-     "p",
-     "Play · Download · Trailer · Status · Controls · Report a bug"
-    ],
-    [
-     "p",
-     "The online trailer (click to watch on YouTube)"
-    ],
-    [
-     "p",
-     "[!IMPORTANT] No game files are included: no ROMs and nothing made from them. You need your own dump of the game as MAME's vf2 set (vf2.zip, Version 2.1). It is read on your computer, and the game's program is recompiled there each time it starts. An unofficial fan project, not made, approved or supported by SEGA, and not affiliated with it."
-    ],
-    [
-     "h",
-     "About"
-    ],
-    [
-     "p",
-     "Virtua Fighter 2 Recomp runs the game's own program, for the board's Intel i960 CPU, recompiled to native code (ARM64 or x86-64) from your ROM each time it starts, and checked instruction for instruction, cycle for cycle against MAME's i960 interpreter. Only the i960 program is recompiled: the rest of the Model 2A board (the TGP geometry processor, the geometrizer and polygon renderer, the System 24 tile layers, and the sound board's 68000 and SCSP) runs on code from MAME, inside an SDL 3 host. At 1x you get the arcade's frames and sound as MAME makes them (pixel for pixel on Apple silicon…"
-    ],
-    [
-     "h",
-     "Random fighters"
-    ],
-    [
-     "p",
-     "Menu > Cheats > Player 1 fighter (and Player 2 fighter):"
-    ],
-    [
-     "li",
-     "Random: a new fighter every game, made of three of the cast: its head, body and limbs from the three, and its moves dealt from them a move group at a time (its Punch moves one's, its Kick moves another's, its throws a third's, and so on), so it plays like a mix of them, at the game's own timings. Its stance is the first's and its voice one of theirs, and it gets a name made of theirs on the energy bar (JACPAIWOLF, LIJACPAI)."
-    ],
-    [
-     "li",
-     "Textures: every part is drawn in its own fighter's textures and their colours, as on that fighter: Jacky's vest, Kage's wraps, Pai's and Lau's patterns, belts, boots and bare feet beside its head's face and hair."
-    ],
-    [
-     "li",
-     "Colours: new every game (not part of a seed). A random fighter wears its head's colours, so its face, hair and skin are right and its skin is one tone all over; its clothes' main colour is turned round the colour wheel, or given a theme: cool, warm, two opposite colours, neon, pastel, black and white, black and gold. Its hair (and headband, hood) is given a hue of its own, as in VF1 Recomp, in the fight and on its select portrait; Shun's white hair and Dural's chrome stay as they are. Belts and shoes keep their colours (VF2 shares those between its fighters)."
-    ],
-    [
-     "li",
-     "Seed: type a fighter's name, as seen on an energy bar, to get that fighter again: the same build and the same moves on any machine. A name is the same fighter in every game that has it: VF1 Recomp's 337 names are here with their recipes (the same three, head, voice and moves by group), then VF2's own with Lion or Shun, 678 in all (docs/SEEDS.md; Random draws from the whole book). VF3 Recomp carries this book on in turn (docs/random_book.txt, vf2random --recipes)."
-    ],
-    [
-     "p",
-     "Anything but Normal is picked for you at the select, as in VF1 Recomp: playing alone, or with both players random (offline or online), the select is skipped (who you got is a surprise as the fight comes in); beside a player on Normal, it shows, the Normal player picks as ever and the random one is picked at once: its portrait is its head's, and no name is shown under it. A challenger's select doesn't pick again for a player already in, whose portrait is their random fighter's own head and hair in its colours. The attract shows random fighters too: each side whose player has one (Random: new…"
     ]
    ]
   },
@@ -8320,118 +8144,6 @@
     [
      "p",
      "No jailbreak or JIT is required. Do not search for a TLB-free ROM. Preview 9 accepts your ordinary .z64, .v64, .n64, or .rom dump and prepares the required private runtime copy automatically on the device."
-    ]
-   ]
-  },
-  "p-mstan-supermarioworldrecomp": {
-   "v": 2,
-   "repo": "mstan/SuperMarioWorldRecomp",
-   "actualizado": "2026-11-19T09:50:10.117Z",
-   "recortado": true,
-   "estado": {
-    "titulo": "Current status: believed fully playable",
-    "texto": "Hand-verified end-to-end through:"
-   },
-   "bloques": [
-    [
-     "h",
-     "SuperMarioWorldRecomp"
-    ],
-    [
-     "p",
-     "This recompilation is a byproduct of developing snesrecomp — the games are the proving ground, the framework is the goal. These are in-development previews, not finished ports — expect rough edges, and depth will keep landing over months, not days. My time for any one title is limited, so I ask for your patience. Contributions are welcome — testing, issues, and PRs to the game or framework all help and will accelerate this game's polish. More on the why at: Recomp + AI: 5 Months Later »"
-    ],
-    [
-     "p",
-     "Static recompilation of Super Mario World (SNES) into native C, using the snesrecomp framework. This repo is the per-game side: the runtime, the recompiled C output, the per-game .cfg, and the build glue."
-    ],
-    [
-     "h",
-     "What \"static recompilation\" means here"
-    ],
-    [
-     "p",
-     "The 65816 CPU code from the ROM is statically translated to C — every function the game runs on the SNES's main CPU is a real generated C function in src/gen/. The rest of the SNES is not recompiled — it's hardware. PPU rendering, the APU / SPC700 audio coprocessor, DMA and HDMA channels, hardware register I/O, and bank-mapping all run through a C reimplementation of the SNES hardware in snesrecomp/runner/src/snes/ — a LakeSnes-derived core (the same emulator family the snesrev reverse-engineered ports use), with individual algorithms credited to snes9x. This is the same model other…"
-    ],
-    [
-     "h",
-     "Current status: believed fully playable"
-    ],
-    [
-     "p",
-     "Hand-verified end-to-end through:"
-    ],
-    [
-     "li",
-     "Yoshi's Island (World 1) including Iggy's castle boss."
-    ],
-    [
-     "li",
-     "Donut Plains (World 2) end-to-end."
-    ],
-    [
-     "li",
-     "Vanilla Dome (World 3) in progress at time of writing."
-    ],
-    [
-     "p",
-     "No catastrophic visible regressions surfaced through these worlds. Two runtime tripwires (the M/X claim verifier and the async-cpu->m_flag/x_flag-write detector) are armed at boot and have not latched on the verified worlds. An off-rails event was captured in BufferScrollingTiles_Layer1_VerticalLevel_M1X1 during Donut Plains castle (bank-out-of-range pointer read; runtime mirrors the read to a safe location and gameplay continues) — see ISSUES.md for the bucketed capture and the offrails_get TCP query."
-    ],
-    [
-     "p",
-     "Worlds 4–7 and special content (Star Road, Special World) are not yet hand-verified but are expected to play similarly. If you hit a visible regression, please open an issue with a savestate and the offrails_get / mx_async_check_get JSON snapshots."
-    ],
-    [
-     "p",
-     "Active development; expect:"
-    ],
-    [
-     "li",
-     "Some branches don't build; only main is guaranteed to build."
-    ],
-    [
-     "li",
-     "Internal docs (ISSUES.md, ENHANCEMENTS.md) assume context."
-    ],
-    [
-     "li",
-     "APIs and recompiler output change without notice."
-    ],
-    [
-     "p",
-     "See RELEASE.md for the latest release notes."
-    ],
-    [
-     "h",
-     "Quick start (pre-built release)"
-    ],
-    [
-     "li",
-     "Download the Windows ZIP or Linux AppImage from Releases. Extract the ZIP, or make the AppImage executable."
-    ],
-    [
-     "li",
-     "Run SuperMarioWorldSNESRecomp.exe or the AppImage. On first launch a file picker asks for your legally-obtained Super Mario World (USA) ROM (.sfc / .smc). The path is remembered in rom.cfg next to the exe."
-    ],
-    [
-     "li",
-     "Edit keybinds.ini (auto-generated next to the exe on first run) to remap keys, then restart."
-    ],
-    [
-     "p",
-     "The ROM is never redistributed — supply your own dump."
-    ],
-    [
-     "p",
-     "To play as Captain Falcon, enable Captain Falcon on the launcher's Mods page, select your Super Smash Bros. (USA) v1.0 ROM, and press Play. The included helper prepares Falcon's assets in your user cache on first use. No Python installation or environment setup is required."
-    ],
-    [
-     "h",
-     "Send a reproducible bug report"
-    ],
-    [
-     "li",
-     "In the launcher's Mods page, enable SMW Playtest Diagnostics → Diagnostic recording. Keep the gameplay mods and settings needed for your reproduction, including native co-op where applicable. Disable run-ahead while recording."
     ]
    ]
   },
@@ -8750,6 +8462,114 @@
     ]
    ]
   },
+  "p-mr-finster-vf3-recomp": {
+   "v": 2,
+   "repo": "mr-finster/vf3-recomp",
+   "actualizado": "2026-11-19T09:50:10.117Z",
+   "recortado": true,
+   "estado": {
+    "titulo": "Status",
+    "texto": "This is an alpha. Please report anything that looks or plays differently from the arcade in Issues, with the log.txt from the game's data folder."
+   },
+   "bloques": [
+    [
+     "p",
+     "Virtua Fighter 3 Recomp"
+    ],
+    [
+     "p",
+     "Virtua Fighter 3 (SEGA, arcade, Model 3, 1996) as a native PC game: the game's own PowerPC program, recompiled to native code, with render scales up to 6x, widescreen and ultrawide, smooth motion up to 120 pictures a second and the 3D on the GPU."
+    ],
+    [
+     "p",
+     "Play · Download · Trailer · Status · Controls · Report a bug"
+    ],
+    [
+     "p",
+     "Trailer (click to watch on YouTube)"
+    ],
+    [
+     "p",
+     "[!IMPORTANT] No game files are included: no ROMs and nothing made from them. You need your own dump of the game as MAME's vf3 set (vf3.zip, Revision D). It is read on your computer, and the game's program is recompiled there each time it starts. An unofficial fan project, not made, approved or supported by SEGA, and not affiliated with it."
+    ],
+    [
+     "h",
+     "About"
+    ],
+    [
+     "p",
+     "Virtua Fighter 3 Recomp runs the game's own program, for the board's PowerPC 603e, recompiled to native code (ARM64 or x86-64) from your ROM each time it starts, and checked frame for frame against its own interpreter, which is itself frame-identical to the Supermodel reference on every scripted run (the attract mode, all twelve fighters, a versus match and the test menu: 173,000 frames). The rest of the Model 3 board is this port's own code: the board itself (memory map, IRQs, the 53C810 SCSI controller's DMA, the JTAG chain, EEPROM, inputs), the tile generator and the Real3D Pro-1000 (a…"
+    ],
+    [
+     "h",
+     "Status"
+    ],
+    [
+     "p",
+     "This is an alpha. Please report anything that looks or plays differently from the arcade in Issues, with the log.txt from the game's data folder."
+    ],
+    [
+     "p",
+     "Known issues: Shun's stage water is the game's own low-resolution 2D art up close."
+    ],
+    [
+     "p",
+     "Known differences from the reference's pictures: textures far away are softer (the Real3D's own mipmap level choice, as Supermodel's New3D documents it, where the reference build used OpenGL's)."
+    ],
+    [
+     "h",
+     "Play"
+    ],
+    [
+     "p",
+     "Mac and Windows"
+    ],
+    [
+     "li",
+     "Unzip it (Mac: move Virtua Fighter 3 Recomp to Applications; Windows: the VirtuaFighter3 folder anywhere, not inside Program Files)."
+    ],
+    [
+     "li",
+     "Open it (Windows: VirtuaFighter3.exe)."
+    ],
+    [
+     "li",
+     "Choose your vf3.zip when it asks. A copy is kept, so you only do this once."
+    ],
+    [
+     "p",
+     "Steam Deck"
+    ],
+    [
+     "li",
+     "Copy the download to the Deck (e.g. Downloads) and unpack it there: in Desktop Mode, right-click it in the file manager > Extract > Extract archive here. (Unpacking on Windows, or copying the folder through a USB stick, can lose the files' permissions, and then nothing launches.)"
+    ],
+    [
+     "li",
+     "Put your vf3.zip in the VirtuaFighter3/roms folder."
+    ],
+    [
+     "li",
+     "Desktop Mode: Steam > Games > Add a Non-Steam Game to My Library > Browse, set the file type filter to \"All files\", pick the vf3 file in the VirtuaFighter3 folder, Add Selected Programs. In its Properties, set Start In to the VirtuaFighter3 folder (e.g. /home/deck/Downloads/VirtuaFighter3/), and under Compatibility leave \"Force the use of a specific Steam Play compatibility tool\" off: it's a native Linux game, and Proton stops it launching."
+    ],
+    [
+     "li",
+     "Back in Game Mode, launch it from your Library with the default Gamepad layout."
+    ],
+    [
+     "p",
+     "The Windows download also runs on the Deck under Proton (add VirtuaFighter3.exe instead, with Proton forced on), but the native Linux build above is the one to use. The Deck package also keeps a copy of your vf3.zip in your user data folder, so an update unpacked into a new folder doesn't ask for it again."
+    ],
+    [
+     "p",
+     "On another x86-64 Linux PC: unpack it anywhere, put vf3.zip in its roms folder and run VirtuaFighter3.sh."
+    ],
+    [
+     "p",
+     "Portable mode: put a file named portable.txt next to the program (Windows: beside VirtuaFighter3.exe; Mac: beside the app, in the same folder), or in the folder above it, and the game keeps everything in that folder: settings, saves, screenshots, log.txt and the copy of your vf3.zip (in its roms folder), with nothing in your user data folder (%APPDATA%, ~/Library/Application Support). The Linux / Steam Deck build keeps everything in its folder already."
+    ]
+   ]
+  },
   "p-cheviman-tmnt-port": {
    "v": 2,
    "repo": "cheviman/tmnt-port",
@@ -8848,6 +8668,74 @@
     [
      "li",
      "Keyboard: the arrows move, Z or left Ctrl attacks, X or left Alt jumps, C does both at once (the special attack), Enter is START; Escape pauses (and goes back in the menus). F11 or Alt+Enter is the full screen, F3 the next kind of pixels. OPTIONS > CONTROLS changes each player's keys and buttons."
+    ]
+   ]
+  },
+  "p-mr-finster-vf2-recomp": {
+   "v": 2,
+   "repo": "mr-finster/vf2-recomp",
+   "actualizado": "2026-11-19T09:50:10.117Z",
+   "recortado": true,
+   "estado": {
+    "titulo": "Status",
+    "texto": ""
+   },
+   "bloques": [
+    [
+     "p",
+     "Virtua Fighter 2 Recomp"
+    ],
+    [
+     "p",
+     "Virtua Fighter 2 (SEGA, arcade, Model 2, 1994) as a native PC game: the game's own i960 program, recompiled to native code, with render scales up to 6x, widescreen and smooth motion at any refresh rate."
+    ],
+    [
+     "p",
+     "Play · Download · Trailer · Status · Controls · Report a bug"
+    ],
+    [
+     "p",
+     "The online trailer (click to watch on YouTube)"
+    ],
+    [
+     "p",
+     "[!IMPORTANT] No game files are included: no ROMs and nothing made from them. You need your own dump of the game as MAME's vf2 set (vf2.zip, Version 2.1). It is read on your computer, and the game's program is recompiled there each time it starts. An unofficial fan project, not made, approved or supported by SEGA, and not affiliated with it."
+    ],
+    [
+     "h",
+     "About"
+    ],
+    [
+     "p",
+     "Virtua Fighter 2 Recomp runs the game's own program, for the board's Intel i960 CPU, recompiled to native code (ARM64 or x86-64) from your ROM each time it starts, and checked instruction for instruction, cycle for cycle against MAME's i960 interpreter. Only the i960 program is recompiled: the rest of the Model 2A board (the TGP geometry processor, the geometrizer and polygon renderer, the System 24 tile layers, and the sound board's 68000 and SCSP) runs on code from MAME, inside an SDL 3 host. At 1x you get the arcade's frames and sound as MAME makes them (pixel for pixel on Apple silicon…"
+    ],
+    [
+     "h",
+     "Random fighters"
+    ],
+    [
+     "p",
+     "Menu > Cheats > Player 1 fighter (and Player 2 fighter):"
+    ],
+    [
+     "li",
+     "Random: a new fighter every game, made of three of the cast: its head, body and limbs from the three, and its moves dealt from them a move group at a time (its Punch moves one's, its Kick moves another's, its throws a third's, and so on), so it plays like a mix of them, at the game's own timings. Its stance is the first's and its voice one of theirs, and it gets a name made of theirs on the energy bar (JACPAIWOLF, LIJACPAI)."
+    ],
+    [
+     "li",
+     "Textures: every part is drawn in its own fighter's textures and their colours, as on that fighter: Jacky's vest, Kage's wraps, Pai's and Lau's patterns, belts, boots and bare feet beside its head's face and hair."
+    ],
+    [
+     "li",
+     "Colours: new every game (not part of a seed). A random fighter wears its head's colours, so its face, hair and skin are right and its skin is one tone all over; its clothes' main colour is turned round the colour wheel, or given a theme: cool, warm, two opposite colours, neon, pastel, black and white, black and gold. Its hair (and headband, hood) is given a hue of its own, as in VF1 Recomp, in the fight and on its select portrait; Shun's white hair and Dural's chrome stay as they are. Belts and shoes keep their colours (VF2 shares those between its fighters)."
+    ],
+    [
+     "li",
+     "Seed: type a fighter's name, as seen on an energy bar, to get that fighter again: the same build and the same moves on any machine. A name is the same fighter in every game that has it: VF1 Recomp's 337 names are here with their recipes (the same three, head, voice and moves by group), then VF2's own with Lion or Shun, 678 in all (docs/SEEDS.md; Random draws from the whole book). VF3 Recomp carries this book on in turn (docs/random_book.txt, vf2random --recipes)."
+    ],
+    [
+     "p",
+     "Anything but Normal is picked for you at the select, as in VF1 Recomp: playing alone, or with both players random (offline or online), the select is skipped (who you got is a surprise as the fight comes in); beside a player on Normal, it shows, the Normal player picks as ever and the random one is picked at once: its portrait is its head's, and no name is shown under it. A challenger's select doesn't pick again for a player already in, whose portrait is their random fighter's own head and hair in its colours. The attract shows random fighters too: each side whose player has one (Random: new…"
     ]
    ]
   },
@@ -9338,6 +9226,118 @@
     ]
    ]
   },
+  "p-mstan-supermarioworldrecomp": {
+   "v": 2,
+   "repo": "mstan/SuperMarioWorldRecomp",
+   "actualizado": "2026-11-19T09:50:10.117Z",
+   "recortado": true,
+   "estado": {
+    "titulo": "Current status: believed fully playable",
+    "texto": "Hand-verified end-to-end through:"
+   },
+   "bloques": [
+    [
+     "h",
+     "SuperMarioWorldRecomp"
+    ],
+    [
+     "p",
+     "This recompilation is a byproduct of developing snesrecomp — the games are the proving ground, the framework is the goal. These are in-development previews, not finished ports — expect rough edges, and depth will keep landing over months, not days. My time for any one title is limited, so I ask for your patience. Contributions are welcome — testing, issues, and PRs to the game or framework all help and will accelerate this game's polish. More on the why at: Recomp + AI: 5 Months Later »"
+    ],
+    [
+     "p",
+     "Static recompilation of Super Mario World (SNES) into native C, using the snesrecomp framework. This repo is the per-game side: the runtime, the recompiled C output, the per-game .cfg, and the build glue."
+    ],
+    [
+     "h",
+     "What \"static recompilation\" means here"
+    ],
+    [
+     "p",
+     "The 65816 CPU code from the ROM is statically translated to C — every function the game runs on the SNES's main CPU is a real generated C function in src/gen/. The rest of the SNES is not recompiled — it's hardware. PPU rendering, the APU / SPC700 audio coprocessor, DMA and HDMA channels, hardware register I/O, and bank-mapping all run through a C reimplementation of the SNES hardware in snesrecomp/runner/src/snes/ — a LakeSnes-derived core (the same emulator family the snesrev reverse-engineered ports use), with individual algorithms credited to snes9x. This is the same model other…"
+    ],
+    [
+     "h",
+     "Current status: believed fully playable"
+    ],
+    [
+     "p",
+     "Hand-verified end-to-end through:"
+    ],
+    [
+     "li",
+     "Yoshi's Island (World 1) including Iggy's castle boss."
+    ],
+    [
+     "li",
+     "Donut Plains (World 2) end-to-end."
+    ],
+    [
+     "li",
+     "Vanilla Dome (World 3) in progress at time of writing."
+    ],
+    [
+     "p",
+     "No catastrophic visible regressions surfaced through these worlds. Two runtime tripwires (the M/X claim verifier and the async-cpu->m_flag/x_flag-write detector) are armed at boot and have not latched on the verified worlds. An off-rails event was captured in BufferScrollingTiles_Layer1_VerticalLevel_M1X1 during Donut Plains castle (bank-out-of-range pointer read; runtime mirrors the read to a safe location and gameplay continues) — see ISSUES.md for the bucketed capture and the offrails_get TCP query."
+    ],
+    [
+     "p",
+     "Worlds 4–7 and special content (Star Road, Special World) are not yet hand-verified but are expected to play similarly. If you hit a visible regression, please open an issue with a savestate and the offrails_get / mx_async_check_get JSON snapshots."
+    ],
+    [
+     "p",
+     "Active development; expect:"
+    ],
+    [
+     "li",
+     "Some branches don't build; only main is guaranteed to build."
+    ],
+    [
+     "li",
+     "Internal docs (ISSUES.md, ENHANCEMENTS.md) assume context."
+    ],
+    [
+     "li",
+     "APIs and recompiler output change without notice."
+    ],
+    [
+     "p",
+     "See RELEASE.md for the latest release notes."
+    ],
+    [
+     "h",
+     "Quick start (pre-built release)"
+    ],
+    [
+     "li",
+     "Download the Windows ZIP or Linux AppImage from Releases. Extract the ZIP, or make the AppImage executable."
+    ],
+    [
+     "li",
+     "Run SuperMarioWorldSNESRecomp.exe or the AppImage. On first launch a file picker asks for your legally-obtained Super Mario World (USA) ROM (.sfc / .smc). The path is remembered in rom.cfg next to the exe."
+    ],
+    [
+     "li",
+     "Edit keybinds.ini (auto-generated next to the exe on first run) to remap keys, then restart."
+    ],
+    [
+     "p",
+     "The ROM is never redistributed — supply your own dump."
+    ],
+    [
+     "p",
+     "To play as Captain Falcon, enable Captain Falcon on the launcher's Mods page, select your Super Smash Bros. (USA) v1.0 ROM, and press Play. The included helper prepares Falcon's assets in your user cache on first use. No Python installation or environment setup is required."
+    ],
+    [
+     "h",
+     "Send a reproducible bug report"
+    ],
+    [
+     "li",
+     "In the launcher's Mods page, enable SMW Playtest Diagnostics → Diagnostic recording. Keep the gameplay mods and settings needed for your reproduction, including native co-op where applicable. Disable run-ahead while recording."
+    ]
+   ]
+  },
   "p-linkssy2-roadrash64recompiled": {
    "v": 2,
    "repo": "linkssy2/RoadRash64Recompiled",
@@ -9784,79 +9784,6 @@
     ]
    ]
   },
-  "p-underdecoded-gen2recomped": {
-   "v": 2,
-   "repo": "UNDERdecoded/Gen2Recomped",
-   "actualizado": "2026-11-19T09:50:10.117Z",
-   "recortado": true,
-   "estado": null,
-   "bloques": [
-    [
-     "h",
-     "gen2recomp"
-    ],
-    [
-     "p",
-     "Gen2Recomp Discord! by UNDERdecodedHD a fork of Gen1Recomp by bryanthaboi and BOIS CLUB GAMES"
-    ],
-    [
-     "p",
-     "A native LÖVE2D recreation of Poke Gold, Silver and Crystal, built on Gen1Recomp's Red/Blue/Yellow engine. The engine, script VM, and map behavior are hand-written Lua; game data and graphics are decoded from a ROM supplied by the player."
-    ],
-    [
-     "p",
-     "gen2recomp keeps everything the upstream project does for Generation I and adds the Generation II half: the Gen2 script VM and its command table, the Johto and Kanto world, day/night, breeding and the Day-Care, the Pokegear, shinies, held items, and the Gold/Silver title sequence."
-    ],
-    [
-     "p",
-     "It has since grown well past Generation II. The same launcher now imports and runs FireRed and Emerald (Gen 3), Platinum, HeartGold and SoulSilver (Gen 4), and Black and White (Gen 5), plus the Polished Crystal and Prism romhacks — all side by side, all from your own cartridge dumps. Around the games sit the Monster Walker (a next-gen Pokéwalker with minigames and a Watt Shop), a Map Editor, a Save Editor, machine translation into 25 languages, cloud saves, dual-screen support for the DS games, and touch controls. See What's New for the tour."
-    ],
-    [
-     "p",
-     "[!CAUTION] Neither this project nor Gen1Recomp is affiliated with the website gen1recomp[.]com. That site is not run by either project and was not authorized by anyone involved. Do not download anything from it, and treat anything it hosts or claims as untrustworthy. Even if it links back to a real repository, the people behind it can change its content at any time. This GitHub repository is the only official source for gen2recomp."
-    ],
-    [
-     "p",
-     "This project does not include a ROM, emulate the Game Boy, GBA or DS, transpile assembly, or download a disassembly. A canonical cartridge dump of one of the supported games is the only game content input."
-    ],
-    [
-     "p",
-     "The ROM is verified, used during import, and then released from memory. It is not copied into the cache. Later launches load the private generated cache and do not ask for the ROM again. Every version can be imported and played side by side."
-    ],
-    [
-     "h",
-     "Quick Start"
-    ],
-    [
-     "p",
-     "Open the desktop app. On first boot, choose your legally obtained .gb / .gbc / .gba / .nds file or drop it onto the window. Import takes a few seconds for Gen 1, a couple of minutes for Gen 2, and longer for the GBA and DS games, then the game starts automatically. Have a whole folder of dumps? Tools → Import ROMs takes several files at once and imports every one it recognises."
-    ],
-    [
-     "p",
-     "On a console or handheld there is no file picker to open: you copy the dump into a folder the launcher scans instead. See Downloads for the exact path per device."
-    ],
-    [
-     "h",
-     "Supported games"
-    ],
-    [
-     "p",
-     "Only specific canonical dumps are accepted. The importer verifies SHA-1 before creating any game data; a dump it does not accept is named (game, region, revision) so you know why — see docs/rom-revisions.md."
-    ],
-    [
-     "p",
-     "HeartGold, SoulSilver, Black and White dumps that have had their trailing FF padding trimmed are also accepted, as long as every game byte is intact — see docs/hgss-bw-import.md. The launcher shows each game's stage on its card; Alpha and Pre-alpha games are playable but expect gaps and bugs."
-    ],
-    [
-     "p",
-     "The packaged app contains neither a ROM nor pre-extracted game data. Music, sound effects, and cries are synthesized while the game runs from compact audio channel programs copied out of the verified ROM."
-    ],
-    [
-     "h",
-     "A note on Windows Defender warnings"
-    ]
-   ]
-  },
   "p-danielalves96-gow-pc-port": {
    "v": 2,
    "repo": "danielalves96/gow-pc-port",
@@ -9951,6 +9878,79 @@
     [
      "h",
      "Platform support"
+    ]
+   ]
+  },
+  "p-underdecoded-gen2recomped": {
+   "v": 2,
+   "repo": "UNDERdecoded/Gen2Recomped",
+   "actualizado": "2026-11-19T09:50:10.117Z",
+   "recortado": true,
+   "estado": null,
+   "bloques": [
+    [
+     "h",
+     "gen2recomp"
+    ],
+    [
+     "p",
+     "Gen2Recomp Discord! by UNDERdecodedHD a fork of Gen1Recomp by bryanthaboi and BOIS CLUB GAMES"
+    ],
+    [
+     "p",
+     "A native LÖVE2D recreation of Poke Gold, Silver and Crystal, built on Gen1Recomp's Red/Blue/Yellow engine. The engine, script VM, and map behavior are hand-written Lua; game data and graphics are decoded from a ROM supplied by the player."
+    ],
+    [
+     "p",
+     "gen2recomp keeps everything the upstream project does for Generation I and adds the Generation II half: the Gen2 script VM and its command table, the Johto and Kanto world, day/night, breeding and the Day-Care, the Pokegear, shinies, held items, and the Gold/Silver title sequence."
+    ],
+    [
+     "p",
+     "It has since grown well past Generation II. The same launcher now imports and runs FireRed and Emerald (Gen 3), Platinum, HeartGold and SoulSilver (Gen 4), and Black and White (Gen 5), plus the Polished Crystal and Prism romhacks — all side by side, all from your own cartridge dumps. Around the games sit the Monster Walker (a next-gen Pokéwalker with minigames and a Watt Shop), a Map Editor, a Save Editor, machine translation into 25 languages, cloud saves, dual-screen support for the DS games, and touch controls. See What's New for the tour."
+    ],
+    [
+     "p",
+     "[!CAUTION] Neither this project nor Gen1Recomp is affiliated with the website gen1recomp[.]com. That site is not run by either project and was not authorized by anyone involved. Do not download anything from it, and treat anything it hosts or claims as untrustworthy. Even if it links back to a real repository, the people behind it can change its content at any time. This GitHub repository is the only official source for gen2recomp."
+    ],
+    [
+     "p",
+     "This project does not include a ROM, emulate the Game Boy, GBA or DS, transpile assembly, or download a disassembly. A canonical cartridge dump of one of the supported games is the only game content input."
+    ],
+    [
+     "p",
+     "The ROM is verified, used during import, and then released from memory. It is not copied into the cache. Later launches load the private generated cache and do not ask for the ROM again. Every version can be imported and played side by side."
+    ],
+    [
+     "h",
+     "Quick Start"
+    ],
+    [
+     "p",
+     "Open the desktop app. On first boot, choose your legally obtained .gb / .gbc / .gba / .nds file or drop it onto the window. Import takes a few seconds for Gen 1, a couple of minutes for Gen 2, and longer for the GBA and DS games, then the game starts automatically. Have a whole folder of dumps? Tools → Import ROMs takes several files at once and imports every one it recognises."
+    ],
+    [
+     "p",
+     "On a console or handheld there is no file picker to open: you copy the dump into a folder the launcher scans instead. See Downloads for the exact path per device."
+    ],
+    [
+     "h",
+     "Supported games"
+    ],
+    [
+     "p",
+     "Only specific canonical dumps are accepted. The importer verifies SHA-1 before creating any game data; a dump it does not accept is named (game, region, revision) so you know why — see docs/rom-revisions.md."
+    ],
+    [
+     "p",
+     "HeartGold, SoulSilver, Black and White dumps that have had their trailing FF padding trimmed are also accepted, as long as every game byte is intact — see docs/hgss-bw-import.md. The launcher shows each game's stage on its card; Alpha and Pre-alpha games are playable but expect gaps and bugs."
+    ],
+    [
+     "p",
+     "The packaged app contains neither a ROM nor pre-extracted game data. Music, sound effects, and cries are synthesized while the game runs from compact audio channel programs copied out of the verified ROM."
+    ],
+    [
+     "h",
+     "A note on Windows Defender warnings"
     ]
    ]
   },
@@ -11734,67 +11734,6 @@
     ]
    ]
   },
-  "p-rob646464-luigis-mansion-recompiled": {
-   "v": 2,
-   "repo": "rob646464/luigis-mansion-recompiled",
-   "actualizado": "2026-11-19T09:50:10.117Z",
-   "recortado": false,
-   "estado": null,
-   "bloques": [
-    [
-     "h",
-     "Luigi's Mansion Recompiled"
-    ],
-    [
-     "p",
-     "Discord: news, help and bug reports for all my projects: https://discord.gg/cM4chZtgh7"
-    ],
-    [
-     "p",
-     "No game data is included. On first start the game asks for your own disc image (ISO, RVZ and or an extracted game folder) of the USA release (GLME01) and/or the European release (GLMP01). It is recommended to use both the USA and PAL versions of the game to experience every feature available in this port. Once the games are selected, it then builds the game for your PC with the bundled compiler, which takes about 20 to 60 seconds on a decent PC."
-    ],
-    [
-     "h",
-     "Features"
-    ],
-    [
-     "li",
-     "Any resolution, widescreen and ultrawide: Hor+, with HUD elements anchored to the screen edges and widescreen fixes for full-screen scenes."
-    ],
-    [
-     "li",
-     "High frame rates: game logic stays at the original 30 updates per second, and the frames in between are interpolated from source-tagged objects. Frame rate goes up to 320 fps, with \"Match display refresh rate\" and VRR/G-SYNC aware pacing. \"Original\" keeps the console's 30 fps."
-    ],
-    [
-     "li",
-     "Accurate GameCube rendering: Better than Dolphin. EFB copies including copy-to-RAM, depth textures, real-time shadows, indirect effects, 6-bit blending and copy filters. A shader precache prepares everything before the game starts, so there are no compile stutters."
-    ],
-    [
-     "li",
-     "Optional Enhanced lighting: per-pixel and colored lights, soft shadows, a realistic flashlight beam, bloom and ghosts cast a glowing light."
-    ],
-    [
-     "li",
-     "The European Hidden Mansion, including its boss changes. With both discs, E. Gadd's lab offers the USA and the European Hidden Mansion."
-    ],
-    [
-     "li",
-     "Restored unused content, all off by default: Toggles to re-enable various cut content, a model viewer, warps to unused rooms and more."
-    ],
-    [
-     "li",
-     "Options for EVERYTHING: an F1 options menu for everything, difficulty settings, fun tweaks and toggles, rendering options, etc"
-    ],
-    [
-     "h",
-     "Known issues"
-    ],
-    [
-     "li",
-     "The 2-player mode (Unused content) is unfinished. The plan is to finish it soon, but for now it's mostly in the state it was left in in the original code."
-    ]
-   ]
-  },
   "p-mstan-megamanx4recomp": {
    "v": 2,
    "repo": "mstan/MegaManX4Recomp",
@@ -12082,6 +12021,67 @@
     [
      "p",
      "Old ACGC logo has been made by @YourPalFox."
+    ]
+   ]
+  },
+  "p-rob646464-luigis-mansion-recompiled": {
+   "v": 2,
+   "repo": "rob646464/luigis-mansion-recompiled",
+   "actualizado": "2026-11-19T09:50:10.117Z",
+   "recortado": false,
+   "estado": null,
+   "bloques": [
+    [
+     "h",
+     "Luigi's Mansion Recompiled"
+    ],
+    [
+     "p",
+     "Discord: news, help and bug reports for all my projects: https://discord.gg/cM4chZtgh7"
+    ],
+    [
+     "p",
+     "No game data is included. On first start the game asks for your own disc image (ISO, RVZ and or an extracted game folder) of the USA release (GLME01) and/or the European release (GLMP01). It is recommended to use both the USA and PAL versions of the game to experience every feature available in this port. Once the games are selected, it then builds the game for your PC with the bundled compiler, which takes about 20 to 60 seconds on a decent PC."
+    ],
+    [
+     "h",
+     "Features"
+    ],
+    [
+     "li",
+     "Any resolution, widescreen and ultrawide: Hor+, with HUD elements anchored to the screen edges and widescreen fixes for full-screen scenes."
+    ],
+    [
+     "li",
+     "High frame rates: game logic stays at the original 30 updates per second, and the frames in between are interpolated from source-tagged objects. Frame rate goes up to 320 fps, with \"Match display refresh rate\" and VRR/G-SYNC aware pacing. \"Original\" keeps the console's 30 fps."
+    ],
+    [
+     "li",
+     "Accurate GameCube rendering: Better than Dolphin. EFB copies including copy-to-RAM, depth textures, real-time shadows, indirect effects, 6-bit blending and copy filters. A shader precache prepares everything before the game starts, so there are no compile stutters."
+    ],
+    [
+     "li",
+     "Optional Enhanced lighting: per-pixel and colored lights, soft shadows, a realistic flashlight beam, bloom and ghosts cast a glowing light."
+    ],
+    [
+     "li",
+     "The European Hidden Mansion, including its boss changes. With both discs, E. Gadd's lab offers the USA and the European Hidden Mansion."
+    ],
+    [
+     "li",
+     "Restored unused content, all off by default: Toggles to re-enable various cut content, a model viewer, warps to unused rooms and more."
+    ],
+    [
+     "li",
+     "Options for EVERYTHING: an F1 options menu for everything, difficulty settings, fun tweaks and toggles, rendering options, etc"
+    ],
+    [
+     "h",
+     "Known issues"
+    ],
+    [
+     "li",
+     "The 2-player mode (Unused content) is unfinished. The plan is to finish it soon, but for now it's mostly in the state it was left in in the original code."
     ]
    ]
   },
@@ -16403,91 +16403,6 @@
     ]
    ]
   },
-  "p-twilitrealm-dusklight": {
-   "v": 2,
-   "repo": "TwilitRealm/dusklight",
-   "actualizado": "2026-11-19T09:50:10.117Z",
-   "recortado": false,
-   "estado": null,
-   "bloques": [
-    [
-     "p",
-     "Official Website • Discord"
-    ],
-    [
-     "h",
-     "Overview"
-    ],
-    [
-     "p",
-     "Dusklight is a reverse-engineered reimplementation of Twilight Princess."
-    ],
-    [
-     "p",
-     "It aims to be as accurate as possible to the original while also providing new options, enhancements, and tools to customize your experience."
-    ],
-    [
-     "p",
-     "[!IMPORTANT] Dusklight's official website is https://twilitrealm.dev/, any other website is not affiliated and may be promoting AI-generated misinformation."
-    ],
-    [
-     "h",
-     "Setup"
-    ],
-    [
-     "p",
-     "[!IMPORTANT] Dusklight does not provide any copyrighted assets. You must provide your own copy of the original game."
-    ],
-    [
-     "p",
-     "[!IMPORTANT] At a minimum, Dusklight requires a GPU with support for D3D12, Vulkan 1.1+, or Metal. For older devices, best-effort support is provided for D3D11 and OpenGL ES (Android), but will not achieve full accuracy or performance. Your experience with specific hardware, operating systems, and drivers may vary."
-    ],
-    [
-     "h",
-     "1. Dump your game"
-    ],
-    [
-     "p",
-     "You must dump your own copy of the game. Please see this article for instructions. After dumping, you can use a program like Dolphin or nodtool to convert the .iso to .rvz to save space."
-    ],
-    [
-     "p",
-     "Dusklight currently supports all commercial discs except for Wii's Korean release."
-    ],
-    [
-     "p",
-     "[!NOTE] Dusklight is based on the Twilight Princess decompilation, which is currently only matching for GameCube. As a result, even when playing Dusklight with a Wii disc, you will be presented with the GameCube version's HUD and certain other specificities."
-    ],
-    [
-     "h",
-     "2. Install Dusklight"
-    ],
-    [
-     "p",
-     "Visit the official installation guide for full instructions."
-    ],
-    [
-     "h",
-     "Building"
-    ],
-    [
-     "p",
-     "If you'd like to build Dusklight from source, please read the build instructions."
-    ],
-    [
-     "p",
-     "Pull requests are welcomed! Note that we do not accept contributions that are primarily AI-generated and will close your PR if we suspect as much. Please also see the code conventions."
-    ],
-    [
-     "h",
-     "Credits"
-    ],
-    [
-     "p",
-     "Special thanks to the TP decompilation team, the GC/Wii decompilation community, the Aurora developers, the TP speedrunning community, and all contributors."
-    ]
-   ]
-  },
   "p-andrebrumdev-gow2-recomp": {
    "v": 2,
    "repo": "andrebrumdev/gow2-recomp",
@@ -16625,6 +16540,91 @@
     [
      "h",
      "Project Structure"
+    ]
+   ]
+  },
+  "p-twilitrealm-dusklight": {
+   "v": 2,
+   "repo": "TwilitRealm/dusklight",
+   "actualizado": "2026-11-19T09:50:10.117Z",
+   "recortado": false,
+   "estado": null,
+   "bloques": [
+    [
+     "p",
+     "Official Website • Discord"
+    ],
+    [
+     "h",
+     "Overview"
+    ],
+    [
+     "p",
+     "Dusklight is a reverse-engineered reimplementation of Twilight Princess."
+    ],
+    [
+     "p",
+     "It aims to be as accurate as possible to the original while also providing new options, enhancements, and tools to customize your experience."
+    ],
+    [
+     "p",
+     "[!IMPORTANT] Dusklight's official website is https://twilitrealm.dev/, any other website is not affiliated and may be promoting AI-generated misinformation."
+    ],
+    [
+     "h",
+     "Setup"
+    ],
+    [
+     "p",
+     "[!IMPORTANT] Dusklight does not provide any copyrighted assets. You must provide your own copy of the original game."
+    ],
+    [
+     "p",
+     "[!IMPORTANT] At a minimum, Dusklight requires a GPU with support for D3D12, Vulkan 1.1+, or Metal. For older devices, best-effort support is provided for D3D11 and OpenGL ES (Android), but will not achieve full accuracy or performance. Your experience with specific hardware, operating systems, and drivers may vary."
+    ],
+    [
+     "h",
+     "1. Dump your game"
+    ],
+    [
+     "p",
+     "You must dump your own copy of the game. Please see this article for instructions. After dumping, you can use a program like Dolphin or nodtool to convert the .iso to .rvz to save space."
+    ],
+    [
+     "p",
+     "Dusklight currently supports all commercial discs except for Wii's Korean release."
+    ],
+    [
+     "p",
+     "[!NOTE] Dusklight is based on the Twilight Princess decompilation, which is currently only matching for GameCube. As a result, even when playing Dusklight with a Wii disc, you will be presented with the GameCube version's HUD and certain other specificities."
+    ],
+    [
+     "h",
+     "2. Install Dusklight"
+    ],
+    [
+     "p",
+     "Visit the official installation guide for full instructions."
+    ],
+    [
+     "h",
+     "Building"
+    ],
+    [
+     "p",
+     "If you'd like to build Dusklight from source, please read the build instructions."
+    ],
+    [
+     "p",
+     "Pull requests are welcomed! Note that we do not accept contributions that are primarily AI-generated and will close your PR if we suspect as much. Please also see the code conventions."
+    ],
+    [
+     "h",
+     "Credits"
+    ],
+    [
+     "p",
+     "Special thanks to the TP decompilation team, the GC/Wii decompilation community, the Aurora developers, the TP speedrunning community, and all contributors."
     ]
    ]
   },
