@@ -1,6 +1,6 @@
-import { fetchGameEnhancedData, fetchGameEnhancedFichas, fetchGameEnhancedReadmes } from "../shared/catalog.js";
+import { fetchGameEnhancedData, fetchGameEnhancedFichas, fetchGameEnhancedReadmes, fetchGameEnhancedPlataformas } from "../shared/catalog.js";
 import { Ventana, VentanaCabecera } from "../shared/ui.jsx";
-import { CATEGORIAS, TIPO, ESTADOS_INFO, GLOSARIO_SUBTIPO, esCategoriaRegistro, esProyecto, tituloLimpio, motivoDe, cuando, detalleDe, filasFicha, madurezDecomp, edadDatos, itemsDe, XMB, OPACIDAD, disposicion, textoCompartir, resumen, portadaUrl, portadaDe } from "./logica.js";
+import { CATEGORIAS, TIPO, ESTADOS_INFO, GLOSARIO_SUBTIPO, esCategoriaRegistro, esProyecto, tituloLimpio, sugerenciasDe, plataformasDe, motivoDe, cuando, detalleDe, filasFicha, madurezDecomp, edadDatos, itemsDe, XMB, OPACIDAD, disposicion, textoCompartir, resumen, portadaUrl, portadaDe } from "./logica.js";
 import { useEstado, alternarGuardado, ocultar, deshacerOcultar } from "./estado.js";
 import { useRegistro, agregarJuego, editarJuego, quitarJuego, restaurarJuego, sembrar } from "./registro.js";
 import { ESTADOS_REGISTRO, idRegistro } from "./lib/claves.mjs";
@@ -120,13 +120,20 @@ const subtitulo = (j, ahora) => (j.tipo === "r" ? detalleDe(j, ahora) : `${TIPO[
 // disposición (continua mientras se arrastra) o, en la fila abierta, valores fijos.
 function FilaX({ j, t = 0, alto, op = 1, foco, expandida, guardado, fichas, ahora, onClick, estiloExtra }) {
   const lado = 38 + 24 * t;
+  const md = esProyecto(j) ? madurezDecomp(j, ahora) : null;      // estado de un decomp / port: visible sin abrir la ficha
+  const ins = Math.round(15 + 7 * t);
   const estilo = {
     flex: "none", display: "flex", alignItems: "center", gap: 12, width: "100%", boxSizing: "border-box", textAlign: "left", border: 0, background: "none",
     cursor: "pointer", fontFamily: FUENTE, color: "#fff", padding: "0 6px 0 21px", height: alto, opacity: op, ...estiloExtra,
   };
   return (
-    <button onClick={onClick} style={estilo} {...(foco ? { "aria-expanded": expandida ? "true" : "false" } : {})}>
-      <span style={{ flex: "none", width: 62, display: "flex", justifyContent: "center" }}><Miniatura imagen={portadaDe(j, fichas)} emoji={j.tipo === "r" ? ESTADOS_INFO[j.estado].emoji : TIPO[j.tipo].emoji} lado={lado} resaltada={t > 0.6} /></span>
+    <button onClick={onClick} style={estilo} {...(foco ? { "aria-expanded": expandida ? "true" : "false" } : {})} {...(md ? { title: md.etiqueta } : {})}>
+      <span style={{ flex: "none", width: 62, display: "flex", justifyContent: "center" }}>
+        <span style={{ position: "relative", display: "flex" }}>
+          <Miniatura imagen={portadaDe(j, fichas)} emoji={j.tipo === "r" ? ESTADOS_INFO[j.estado].emoji : TIPO[j.tipo].emoji} lado={lado} resaltada={t > 0.6} />
+          {md && <span data-estado={md.nivel} aria-hidden="true" style={{ position: "absolute", right: -5, bottom: -5, width: ins, height: ins, borderRadius: "50%", background: "#0b0b0c", border: "1px solid #3a3a40", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ins * 0.62, lineHeight: 1 }}>{md.emoji}</span>}
+        </span>
+      </span>
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 }}>
         <span style={{ fontSize: 14 + 3 * t, fontWeight: t > 0.5 ? 600 : 500, color: t > 0.5 ? "#fff" : "#d4d4d8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{j.titulo}{guardado ? " ★" : ""}</span>
         {t > 0.02 && <span style={{ fontSize: 12, color: DIM, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", opacity: t, maxHeight: 16 * t }}>{subtitulo(j, ahora)}</span>}
@@ -136,12 +143,13 @@ function FilaX({ j, t = 0, alto, op = 1, foco, expandida, guardado, fichas, ahor
   );
 }
 
-function Tarjeta({ j, ahora, guardado, fichas, enRegistro, onCerrar, onFicha, onDescartar, onQuitar, onQuiero }) {
+function Tarjeta({ j, ahora, guardado, fichas, enRegistro, otras, onCerrar, onFicha, onDescartar, onQuitar, onQuiero }) {
   return (
     <div data-id={j.id} style={{ flex: "none", margin: `${XMB.aire / 2}px 0`, background: "rgba(23,23,26,.92)", border: "1px dashed #3a3a40", borderRadius: 12, paddingBottom: 12 }}>
       <FilaX j={j} t={1} alto={XMB.foco} foco expandida guardado={guardado} fichas={fichas} ahora={ahora} onClick={onCerrar} />
       <div style={{ padding: "4px 14px 0 95px", display: "flex", flexDirection: "column", gap: 8, fontFamily: FUENTE, fontSize: 13, color: "#c4c4ca" }}>
         <span>{detalleDe(j, ahora)}</span>
+        {otras && otras.length > 0 && <span style={{ color: DIM }}>También en (sugerido): <span style={{ color: "#c4c4ca" }}>{plataformasDe(otras).join(" · ")}</span></span>}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button onClick={onFicha} style={botonPri}>Abrir ficha</button>
           {j.tipo === "r"
@@ -228,6 +236,30 @@ function EstadoDecomp({ j, ahora, readme }) {
   );
 }
 
+// Versiones "nativas" del mismo juego en otras plataformas, detectadas por el nombre de ramas y forks del repositorio.
+function OtrasPlataformas({ sugerencias, ahora }) {
+  return (
+    <>
+      <Seccion>Versiones en otras plataformas</Seccion>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {sugerencias.map(s => {
+          const dias = s.pushed ? Math.round((ahora - new Date(s.pushed).getTime()) / 86400000) : null;
+          return (
+            <a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", flexDirection: "column", gap: 3, padding: "8px 10px", borderRadius: 8, border: "1px dashed #3a3a40", color: TXT, textDecoration: "none", overflowWrap: "anywhere" }}>
+              <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {s.plataformas.map(p => <span key={p} style={{ fontSize: 11, letterSpacing: "0.06em", color: ACC, border: `1px solid ${ACC}`, borderRadius: 4, padding: "1px 6px" }}>{p}</span>)}
+              </span>
+              <span style={{ fontSize: 13, color: "#fff" }}>{s.tipo === "rama" ? `Rama «${s.nombre}»` : s.nombre}</span>
+              <span style={{ fontSize: 11, color: DIM }}>{s.tipo === "rama" ? "rama del mismo repositorio" : `fork · ⭐ ${s.estrellas}${dias === null ? "" : " · actualizado " + haceDiasTxt(dias)}`}</span>
+            </a>);
+        })}
+      </div>
+      <p style={{ margin: 0, fontSize: 11, color: DIM }}>Sugerencias detectadas por el nombre o la descripción de la rama o el fork; no están verificadas.</p>
+    </>
+  );
+}
+const haceDiasTxt = d => (d <= 0 ? "hoy" : d < 30 ? `hace ${d} d` : d < 365 ? `hace ${Math.round(d / 30)} m` : `hace ${Math.round(d / 365)} a`);
+
 const ETIQUETA_FICHA = { d: "Decomp", p: "Port", e: "Estudio", r: "Juego" };
 // ¿Ya está en tu registro? Un estudio por su título; un port por el título del juego sin el nombre del proyecto entre paréntesis.
 const registroDe = (j, registro) => (j.tipo === "e" ? registro.juegos[idRegistro(j.titulo)] : j.tipo === "p" ? registro.juegos[idRegistro(tituloLimpio(j.titulo))] : null) || null;
@@ -236,7 +268,7 @@ const tituloParaRegistro = j => (j.tipo === "p" ? tituloLimpio(j.titulo) : j.tit
 const MARCO_OSCURO = { background: "#0b0b0c", color: TXT, border: "2px dashed #555", boxShadow: "6px 6px 0 #000" };
 
 // Contenido de la ficha (va dentro del popup: la × de la cabecera la cierra).
-function Ficha({ j, ahora, igdb, imagen, guardado, enRegistro, readme, cargandoReadme, onGuardar, onDescartar, onQuiero, onEditar, onQuitar }) {
+function Ficha({ j, ahora, igdb, imagen, guardado, enRegistro, sugerencias, readme, cargandoReadme, onGuardar, onDescartar, onQuiero, onEditar, onQuitar }) {
   const [copiado, setCopiado] = useState(null);
   const tAviso = useRef(0);
   useEffect(() => () => clearTimeout(tAviso.current), []);
@@ -268,6 +300,7 @@ function Ficha({ j, ahora, igdb, imagen, guardado, enRegistro, readme, cargandoR
         </div>
       </div>
       {esProyecto(j) && <EstadoDecomp j={j} ahora={ahora} readme={readme} />}
+      {sugerencias && sugerencias.length > 0 && <OtrasPlataformas sugerencias={sugerencias} ahora={ahora} />}
       {j.tipo === "r" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <ChipsEstado valor={j.estado} onElegir={e => onEditar({ estado: e })} />
@@ -333,6 +366,7 @@ export default function GameEnhancedPage() {
   const [datos, setDatos] = useState(null);       // { juegos, generatedAt, fuentes, semilla }
   const [fichas, setFichas] = useState({});       // fichas de IGDB del registro: { [id]: { portada, resumen, ... } }
   const [readmes, setReadmes] = useState(null);   // README por decomp: null = sin pedir todavía
+  const [plataformas, setPlataformas] = useState({}); // versiones sugeridas en otras plataformas, por repo
   const [cargandoReadme, setCargandoReadme] = useState(false);
   const [error, setError] = useState(null);
   const [cat, setCat] = useState(0);              // categoría activa (la más cercana a la posición del eje)
@@ -493,6 +527,7 @@ export default function GameEnhancedPage() {
   }
   useEffect(() => { cargar(); }, []);
   useEffect(() => { fetchGameEnhancedFichas().then(setFichas).catch(() => {}); }, []);
+  useEffect(() => { fetchGameEnhancedPlataformas().then(setPlataformas).catch(() => {}); }, []);
 
   // Carga única de los terminados que ya estaban en el repo (después, el registro es solo de Angst).
   useEffect(() => { if (datos && registro.sembrado == null) sembrar(datos.semilla); }, [datos, registro.sembrado]);
@@ -651,7 +686,7 @@ export default function GameEnhancedPage() {
             </div>)}
           {lista.length > 0 && expandida && lista.slice(foco).map((j, i) => i === 0
             ? <Tarjeta key={j.id} j={j} ahora={ahora} guardado={guardadoDe(j)} fichas={fichas} enRegistro={registroDe(j, registro)}
-                onCerrar={clic(() => setAbierto(null))} onFicha={clic(() => setFichaId(j.id))} onDescartar={clic(() => descartar(j))} onQuitar={clic(() => quitar(j))} onQuiero={clic(() => quiero(j))} />
+                otras={sugerenciasDe(j, plataformas)} onCerrar={clic(() => setAbierto(null))} onFicha={clic(() => setFichaId(j.id))} onDescartar={clic(() => descartar(j))} onQuitar={clic(() => quitar(j))} onQuiero={clic(() => quiero(j))} />
             : <FilaX key={j.id} j={j} t={0} alto={XMB.fila} op={OPACIDAD[Math.min(i, OPACIDAD.length - 1)]} guardado={guardadoDe(j)} fichas={fichas} ahora={ahora} onClick={clic(() => tocarFila(j, foco + i))} />)}
           {filas}
         </div>
@@ -661,7 +696,7 @@ export default function GameEnhancedPage() {
           <VentanaCabecera titulo={ETIQUETA_FICHA[fichaJ.tipo]} onClose={cerrarFicha} grande />
           <div style={{ padding: 16, overflowY: "auto", flex: 1, minHeight: 0 }}>
             <Ficha j={fichaJ} ahora={ahora} igdb={igdb} imagen={portadaDe(fichaJ, fichas)} guardado={guardadoDe(fichaJ)}
-              enRegistro={registroDe(fichaJ, registro)}
+              enRegistro={registroDe(fichaJ, registro)} sugerencias={sugerenciasDe(fichaJ, plataformas)}
               readme={readmes ? readmes[fichaJ.id] : null} cargandoReadme={cargandoReadme}
               onGuardar={() => alternarGuardado(fichaJ.id)} onDescartar={() => descartar(fichaJ)} onQuiero={() => quiero(fichaJ)}
               onEditar={cambios => editarJuego(fichaJ.id, cambios)} onQuitar={() => quitar(fichaJ)} />

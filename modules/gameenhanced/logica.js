@@ -1,4 +1,4 @@
-import { idRegistro, repoDeUrl, tituloLimpio } from "./lib/claves.mjs";
+import { idRegistro, repoDeUrl, tituloLimpio, PLATAFORMAS_SUGERIDAS } from "./lib/claves.mjs";
 export { tituloLimpio };
 
 // ─── Lógica pura de Game enhanced (sin React ni red, probada en tests/gameenhanced.mjs) ─────────
@@ -117,6 +117,17 @@ export function madurezDecomp(j, ahora) {
   if (c === null) return { nivel: "sin-datos", emoji: "⚪", etiqueta: "Sin datos de avance", razon: "No hay versión publicada ni datos de actividad." };
   return { nivel: "construccion", emoji: "🟡", etiqueta: "En construcción", razon: `Sin versión descargable todavía; ${cambio}.` };
 }
+
+// Versiones sugeridas en otras plataformas (3DS, Vita, Wii U, Switch, Android…) de un proyecto: ramas y forks detectados
+// por el pipeline a partir de su nombre. `plataformas` es el archivo por repo; solo se aceptan enlaces de GitHub.
+export function sugerenciasDe(j, plataformas) {
+  const repo = esProyecto(j) ? repoDeUrl(j.url) : null;
+  const e = repo && plataformas && plataformas[repo];
+  if (!e || !Array.isArray(e.sugerencias)) return [];
+  return e.sugerencias.filter(s => s && typeof s.url === "string" && s.url.startsWith("https://github.com/") && typeof s.nombre === "string" && Array.isArray(s.plataformas) && s.plataformas.length);
+}
+// Las plataformas distintas de una lista de sugerencias, en el orden fijo de la lista de plataformas.
+export const plataformasDe = sugerencias => PLATAFORMAS_SUGERIDAS.filter(p => sugerencias.some(s => s.plataformas.includes(p)));
 
 // Enlaces a los releases de un decomp (solo repos de GitHub con una versión publicada): la página de la última
 // versión y la lista completa. null si no hay repo de GitHub o no hay versión.

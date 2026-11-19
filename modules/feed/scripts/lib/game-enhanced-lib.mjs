@@ -1,6 +1,6 @@
 // ─── Funciones puras del pipeline de Game enhanced (probadas en tests/gameenhanced.mjs) ─────────────
 // Sin red ni disco: reciben datos ya descargados. Las usa build-game-enhanced.mjs.
-import { ESTADOS_REGISTRO, repoDeUrl, tituloLimpio } from "../../../gameenhanced/lib/claves.mjs";
+import { ESTADOS_REGISTRO, repoDeUrl, tituloLimpio, PLATAFORMAS_SUGERIDAS } from "../../../gameenhanced/lib/claves.mjs";
 export { repoDeUrl, tituloLimpio };
 
 export const DIA = 86400000;
@@ -224,6 +224,57 @@ export function estadoDeReadme(md) {
     return { titulo: recortarTexto(titulo, 140), texto: cuerpo ? cuerpo[1] : "" };
   }
   return null;
+}
+
+// ── 4) Versiones en otras plataformas (sugeridas) ─────────────────────────────────────────────
+// Para cada proyecto se buscan, en las ramas del repo y en sus forks más estrellados, versiones "nativas" en otras
+// plataformas (3DS, Vita, Wii U, Switch, Android…). Se detectan SOLO por el nombre (y la descripción / topics de un fork):
+// son sugerencias, no están verificadas. Se descarta la plataforma original del propio juego (si no, un juego de
+// GameCube "aparecería" en GameCube), las ramas de trabajo (feat/, fix/…) y los forks con pocas estrellas.
+const TOKENS_PLAT = { "3ds": "3DS", n3ds: "3DS", vita: "PS Vita", psvita: "PS Vita", wiiu: "Wii U", switch: "Switch", nx: "Switch", psp: "PSP", wii: "Wii", gamecube: "GameCube", gcn: "GameCube", ps3: "PS3", ps4: "PS4", ps5: "PS5", xbox: "Xbox", xbox360: "Xbox 360", dreamcast: "Dreamcast", saturn: "Saturn", android: "Android" };
+const FRASES_PLAT = [[/\bnintendo switch\b/g, "Switch"], [/\b(?:ps|playstation) vita\b/g, "PS Vita"], [/\bwii u\b/g, "Wii U"], [/\bnew 3ds\b/g, "3DS"], [/\bplaystation portable\b/g, "PSP"], [/\bxbox 360\b/g, "Xbox 360"]];
+
+export function plataformasDeNombre(texto, { conNx = true } = {}) {
+  let t = String(texto || "").toLowerCase().replace(/[-_/.:()+]+/g, " ");
+  const out = new Set();
+  for (const [rx, p] of FRASES_PLAT) t = t.replace(rx, () => { out.add(p); return " "; });
+  for (const tok of t.split(/\s+/)) { if (!tok || (tok === "nx" && !conNx)) continue; if (TOKENS_PLAT[tok]) out.add(TOKENS_PLAT[tok]); }
+  return PLATAFORMAS_SUGERIDAS.filter(p => out.has(p));
+}
+
+const clavePlat = s => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+function esPlataformaOriginal(etiqueta, original) {
+  const k = clavePlat(etiqueta), o = clavePlat(original);
+  if (!o) return false;
+  return k === o || (k === "xbox" && o.includes("xbox") && !o.includes("360")) || (k === "xbox360" && o.includes("360"));
+}
+const RAMA_DE_TRABAJO = /^(?:feat|feature|fix|bugfix|hotfix|refactor|perf|chore|docs|test|ci|build|dependabot|renovate)(?:[/-]|$)/i;
+
+export function sugerenciasDePlataformas({ repo, ramas = [], forks = [], plataformaOriginal = "", minEstrellas = 3, maxPorPlataforma = 3, max = 10 }) {
+  const cand = [];
+  ramas = Array.isArray(ramas) ? ramas : [];
+  forks = Array.isArray(forks) ? forks : [];
+  for (const b of ramas) {
+    const nombre = b && typeof b.name === "string" ? b.name : "";
+    if (!nombre || RAMA_DE_TRABAJO.test(nombre)) continue;
+    const plataformas = plataformasDeNombre(nombre).filter(p => !esPlataformaOriginal(p, plataformaOriginal));
+    if (plataformas.length) cand.push({ tipo: "rama", nombre, url: `https://github.com/${repo}/tree/${nombre.split("/").map(encodeURIComponent).join("/")}`, plataformas, estrellas: 0, pushed: null });
+  }
+  for (const f of forks) {
+    if (!f || typeof f.full_name !== "string" || (f.stargazers_count ?? 0) < minEstrellas || typeof f.html_url !== "string" || !f.html_url.startsWith("https://github.com/")) continue;
+    const todas = new Set([...plataformasDeNombre(f.name || ""), ...plataformasDeNombre(`${f.description || ""} ${(f.topics || []).join(" ")}`, { conNx: false })]);
+    const plataformas = PLATAFORMAS_SUGERIDAS.filter(p => todas.has(p) && !esPlataformaOriginal(p, plataformaOriginal));
+    if (plataformas.length) cand.push({ tipo: "fork", nombre: f.full_name, url: f.html_url, plataformas, estrellas: f.stargazers_count ?? 0, pushed: typeof f.pushed_at === "string" ? f.pushed_at.slice(0, 10) : null });
+  }
+  cand.sort((a, b) => (a.tipo === "rama" ? 0 : 1) - (b.tipo === "rama" ? 0 : 1) || b.estrellas - a.estrellas || (a.nombre < b.nombre ? -1 : 1));
+  const cuenta = {}, salida = [];
+  for (const c of cand) {
+    if (salida.length >= max) break;
+    if (c.plataformas.every(p => (cuenta[p] || 0) >= maxPorPlataforma)) continue;
+    for (const p of c.plataformas) cuenta[p] = (cuenta[p] || 0) + 1;
+    salida.push(c);
+  }
+  return salida;
 }
 
 // Registro de Angst (campo gameEnhancedRegistro del estado en Angst-data) → lista de juegos válidos.

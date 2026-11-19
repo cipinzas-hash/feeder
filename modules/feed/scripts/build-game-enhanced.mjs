@@ -12,13 +12,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { DIA, proyectosDeDecomps, portsNativos, mapaDeEstudios, itemsDeEstudios, fichaDeIgdb, readmeABloques, estadoDeReadme, repoDeUrl, listaDeRegistro, terminadosDe } from "./lib/game-enhanced-lib.mjs";
+import { DIA, proyectosDeDecomps, portsNativos, mapaDeEstudios, itemsDeEstudios, fichaDeIgdb, readmeABloques, estadoDeReadme, sugerenciasDePlataformas, repoDeUrl, listaDeRegistro, terminadosDe } from "./lib/game-enhanced-lib.mjs";
 import { idRegistro } from "../../gameenhanced/lib/claves.mjs";
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const SALIDA = path.join(RAIZ, "modules/feed/data/game-enhanced.json");
 const SALIDA_FICHAS = path.join(RAIZ, "modules/feed/data/game-enhanced-fichas.json");
 const SALIDA_READMES = path.join(RAIZ, "modules/feed/data/game-enhanced-readmes.json");
+const SALIDA_PLATAFORMAS = path.join(RAIZ, "modules/feed/data/game-enhanced-plataformas.json");
 const SEMILLA = JSON.parse(fs.readFileSync(path.join(RAIZ, "modules/gameenhanced/data/terminados.json"), "utf8")).juegos;
 
 // Registro de Angst: con ANGST_STATE_PATH definido, un archivo ilegible ABORTA la corrida (no se pisan datos con la semilla
@@ -43,9 +44,9 @@ const dormir = ms => new Promise(r => setTimeout(r, ms));
 let previo = { decomps: [], estudios: [], fuentes: {} };
 try { previo = { ...previo, ...JSON.parse(fs.readFileSync(SALIDA, "utf8")) }; } catch (e) { /* primera corrida */ }
 const leerPrevio = (ruta, clave) => { try { return JSON.parse(fs.readFileSync(ruta, "utf8"))[clave] || {}; } catch (e) { return {}; } };
-const fichasPrevias = leerPrevio(SALIDA_FICHAS, "fichas"), readmesPrevios = leerPrevio(SALIDA_READMES, "readmes");
+const fichasPrevias = leerPrevio(SALIDA_FICHAS, "fichas"), readmesPrevios = leerPrevio(SALIDA_READMES, "readmes"), plataformasPrevias = leerPrevio(SALIDA_PLATAFORMAS, "plataformas");
 const out = { version: 1, generatedAt: new Date(AHORA).toISOString(), fuentes: { ...(previo.fuentes || {}) }, semilla: SEMILLA.map(t => ({ titulo: t.titulo, busqueda: t.busqueda })), decomps: previo.decomps || [], ports: previo.ports || [], estudios: previo.estudios || [] };
-const ok = { decomps: false, readmes: false, estudios: false };
+const ok = { decomps: false, readmes: false, plataformas: false, estudios: false };
 
 async function decomps() {
   const res = await fetch(DECOMP_URL);
@@ -90,6 +91,43 @@ async function readmes() {
   fs.writeFileSync(SALIDA_READMES, JSON.stringify({ version: 1, generatedAt: out.generatedAt, readmes: nuevos }, null, 1) + "\n");
   out.fuentes.readmes = { ok: true, actualizado: out.generatedAt, ...c, conReadme: Object.keys(nuevos).length, conEstado: Object.values(nuevos).filter(x => x.estado).length };
   ok.readmes = true;
+}
+
+// Versiones en otras plataformas (3DS, Vita, Wii U, Switch, Android…): ramas y forks de cada repo, por nombre. Se guarda por
+// repo (un repo puede estar como decomp y como port) y se reutiliza si tiene menos de 6 días y la misma plataforma original.
+async function plataformas() {
+  const token = process.env.GITHUB_TOKEN;
+  const repos = new Map();
+  for (const p of [...out.decomps, ...out.ports]) { const r = repoDeUrl(p.url); if (r && !repos.has(r)) repos.set(r, p.plataforma || ""); }
+  const nuevos = {};
+  const c = { repos: repos.size, pedidos: 0, reutilizados: 0, fallos: 0 };
+  let limite = false;
+  const gh = async ruta => {
+    const ctl = new AbortController();
+    const tm = setTimeout(() => ctl.abort(), 15000);
+    try {
+      await dormir(120);
+      const r = await fetch("https://api.github.com" + ruta, { signal: ctl.signal, headers: { Accept: "application/vnd.github+json", "User-Agent": "angst-feed-bot", ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
+      return { status: r.status, json: r.ok ? await r.json() : null };
+    } finally { clearTimeout(tm); }
+  };
+  for (const [repo, original] of repos) {
+    const prev = plataformasPrevias[repo];
+    if (prev && prev.v === 1 && prev.original === original && AHORA - new Date(prev.actualizado).getTime() < 6 * DIA) { nuevos[repo] = prev; c.reutilizados++; continue; }
+    if (limite) { if (prev) nuevos[repo] = prev; continue; }
+    c.pedidos++;
+    try {
+      const ramas = await gh(`/repos/${repo}/branches?per_page=100`);
+      const forks = await gh(`/repos/${repo}/forks?sort=stargazers&per_page=100`);
+      if ([ramas.status, forks.status].some(s => s === 403 || s === 429)) { limite = true; c.fallos++; if (prev) nuevos[repo] = prev; console.error(`plataformas ${repo}: límite de la API; se conserva lo anterior del resto`); continue; }
+      if (!ramas.json && !forks.json) { c.fallos++; if (prev) nuevos[repo] = prev; continue; }
+      nuevos[repo] = { v: 1, original, actualizado: new Date(AHORA).toISOString(), sugerencias: sugerenciasDePlataformas({ repo, ramas: ramas.json || [], forks: forks.json || [], plataformaOriginal: original }) };
+    } catch (e) { c.fallos++; if (prev) nuevos[repo] = prev; console.error(`plataformas ${repo}: ${e.message}`); }
+  }
+  if (!Object.keys(nuevos).length && c.fallos) throw new Error(`ninguna consulta de plataformas funcionó (${c.fallos} fallos)`);
+  fs.writeFileSync(SALIDA_PLATAFORMAS, JSON.stringify({ version: 1, generatedAt: out.generatedAt, plataformas: nuevos }, null, 1) + "\n");
+  out.fuentes.plataformas = { ok: true, actualizado: out.generatedAt, ...c, conSugerencias: Object.values(nuevos).filter(x => x.sugerencias.length).length, sugerencias: Object.values(nuevos).reduce((n, x) => n + x.sugerencias.length, 0) };
+  ok.plataformas = true;
 }
 
 async function estudios() {
@@ -157,8 +195,8 @@ async function estudios() {
   ok.estudios = true;
 }
 
-const CLAVE_FUENTE = { decomps: "decomps", readmes: "readmes", estudios: "igdb" };
-for (const [nombre, fn] of [["decomps", decomps], ["readmes", readmes], ["estudios", estudios]]) {
+const CLAVE_FUENTE = { decomps: "decomps", readmes: "readmes", plataformas: "plataformas", estudios: "igdb" };
+for (const [nombre, fn] of [["decomps", decomps], ["readmes", readmes], ["plataformas", plataformas], ["estudios", estudios]]) {
   try { await fn(); console.log(`${nombre} OK`); }
   catch (e) {
     console.error(`${nombre} falló: ${e.message}`);

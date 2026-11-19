@@ -30,3 +30,6 @@ export function tituloLimpio(titulo) {
   for (let i = 0; i < 3 && SUFIJO_PAREN.test(t); i++) t = t.replace(SUFIJO_PAREN, "");
   return t;
 }
+
+// Plataformas en las que se buscan versiones "nativas" de un decomp (ramas y forks), en el orden en que se muestran.
+export const PLATAFORMAS_SUGERIDAS = ["3DS", "PS Vita", "Wii U", "Switch", "PSP", "Wii", "GameCube", "PS3", "PS4", "PS5", "Xbox", "Xbox 360", "Dreamcast", "Saturn", "Android"];

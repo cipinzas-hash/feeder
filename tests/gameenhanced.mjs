@@ -360,6 +360,56 @@ assert.match(L.textoCompartir(PI[0], null, AHORA).texto, /🟢 Con versión desc
 assert.equal(L.esProyecto(PI[0]), true); assert.equal(L.esProyecto({ tipo: "e" }), false);
 assert.equal(L.portadaDe(PI[1], { "r-supermarioworld": { portada: "coM" } }), "coM", "un port de un juego tuyo muestra su portada"); assert.equal(L.portadaDe(PI[0], {}), null);
 
+// ── versiones en otras plataformas (sugeridas) ─────────────────────────────────
+const pn = P.plataformasDeNombre;
+assert.deepEqual(pn("ACGC-Vita-Port"), ["PS Vita"]); assert.deepEqual(pn("zelda-vita-3ds"), ["3DS", "PS Vita"], "varias plataformas, en el orden de la lista");
+assert.deepEqual(pn("zelda-alttp-3ds"), ["3DS"]); assert.deepEqual(pn("dusklight-nx"), ["Switch"]); assert.deepEqual(pn("Nintendo Switch port"), ["Switch"]);
+assert.deepEqual(pn("Wii-U port"), ["Wii U"], "Wii U con guion no se confunde con Wii"); assert.deepEqual(pn("wiiu"), ["Wii U"]);
+assert.deepEqual(pn("melee-Vita"), ["PS Vita"]); assert.deepEqual(pn("PS Vita build"), ["PS Vita"]);
+assert.deepEqual(pn("zelda3-android"), ["Android"], "Android incluido");
+assert.deepEqual(pn("xbox 360 port"), ["Xbox 360"]); assert.deepEqual(pn("tlou-remastered-ps4"), ["PS4"]);
+assert.deepEqual(pn("switchboard"), [], "una palabra que solo contiene «switch» no cuenta"); assert.deepEqual(pn("android-studio-fix").includes("Android"), true);
+assert.deepEqual(pn("an nx build", { conNx: false }), [], "nx en una descripción no cuenta"); assert.deepEqual(pn("dusklight-nx", { conNx: true }), ["Switch"]);
+assert.deepEqual(pn("sm64-ios-port"), [], "iOS no está entre las plataformas pedidas"); assert.deepEqual(pn(""), []); assert.deepEqual(pn(null), []);
+const frk = (o) => ({ name: "x", full_name: "u/x", html_url: "https://github.com/u/x", stargazers_count: 10, description: null, topics: [], pushed_at: "2026-10-01T00:00:00Z", ...o });
+const sg = (o) => P.sugerenciasDePlataformas({ repo: "o/r", plataformaOriginal: "N64", ...o });
+let r1 = sg({ forks: [frk({ name: "game-vita", full_name: "a/game-vita", html_url: "https://github.com/a/game-vita", stargazers_count: 228 })] });
+assert.deepEqual([r1[0].tipo, r1[0].nombre, r1[0].plataformas, r1[0].estrellas, r1[0].pushed, r1[0].url], ["fork", "a/game-vita", ["PS Vita"], 228, "2026-10-01", "https://github.com/a/game-vita"]);
+assert.equal(sg({ forks: [frk({ name: "game-vita", stargazers_count: 2 })] }).length, 0, "forks con menos de 3 estrellas: fuera");
+assert.equal(sg({ forks: [frk({ name: "game-vita", stargazers_count: 3 })] }).length, 1);
+assert.equal(sg({ forks: [frk({ name: "tlou-ps4" })], plataformaOriginal: "PS4" }).length, 0, "la plataforma original del juego no se sugiere");
+assert.equal(sg({ forks: [frk({ name: "burnout-xbox" })], plataformaOriginal: "Xbox" }).length, 0); assert.equal(sg({ forks: [frk({ name: "burnout-xbox" })], plataformaOriginal: "og xbox" }).length, 0);
+assert.deepEqual(sg({ forks: [frk({ name: "acgc-vita-port" })], plataformaOriginal: "GameCube" })[0].plataformas, ["PS Vita"], "se descarta solo la original");
+assert.equal(sg({ forks: [frk({ name: "mod-fix", description: "Port to 3DS homebrew" })] })[0].plataformas[0], "3DS", "también por la descripción");
+assert.equal(sg({ forks: [frk({ name: "algo", topics: ["wiiu", "homebrew"] })] })[0].plataformas[0], "Wii U", "y por los topics");
+assert.equal(sg({ forks: [frk({ name: "algo", html_url: "javascript:alert(1)", full_name: "u/algo", description: "vita" })] }).length, 0, "solo URLs de GitHub");
+const rr = sg({ ramas: [{ name: "vita" }, { name: "feat/gen4-end-of-turn-switch" }, { name: "fix-3ds-crash" }, { name: "port/3ds-v2.7" }, { name: "main" }] });
+assert.deepEqual(rr.map(x => x.nombre), ["port/3ds-v2.7", "vita"], "ramas de plataforma sí; ramas de trabajo (feat/, fix) y main no");
+assert.equal(rr[1].url, "https://github.com/o/r/tree/vita"); assert.equal(rr[0].url, "https://github.com/o/r/tree/port/3ds-v2.7");
+assert.equal(rr[0].tipo, "rama");
+const mix = sg({ ramas: [{ name: "switch-port" }], forks: [frk({ name: "a-switch", full_name: "a/a-switch", html_url: "https://github.com/a/a-switch", stargazers_count: 50 })] });
+assert.deepEqual(mix.map(x => x.tipo), ["rama", "fork"], "las ramas del propio repo van antes que los forks");
+const muchos = sg({ forks: Array.from({ length: 6 }, (_, i) => frk({ name: "g-vita-" + i, full_name: "a/g-vita-" + i, html_url: "https://github.com/a/g-vita-" + i, stargazers_count: 100 - i })) });
+assert.equal(muchos.length, 3, "máximo 3 por plataforma"); assert.deepEqual(muchos.map(x => x.estrellas), [100, 99, 98], "los más estrellados");
+const todas = sg({ forks: P ? ["3ds", "vita", "wiiu", "switch", "psp", "wii", "ps3", "ps4", "ps5", "xbox", "dreamcast", "saturn", "android"].flatMap((p, i) => [frk({ name: "g-" + p, full_name: "a/g-" + p, html_url: "https://github.com/a/g-" + p, stargazers_count: 50 - i })]) : [] });
+assert.equal(todas.length, 10, "tope total de 10 sugerencias");
+assert.deepEqual(sg({}), []); assert.deepEqual(sg({ ramas: null, forks: null }).length, 0);
+
+// ── sugerencias en el cliente ───────────────────────────────────────────────
+const PLAT = { "x/ec": { v: 1, sugerencias: [
+  { tipo: "fork", nombre: "a/ec-vita", url: "https://github.com/a/ec-vita", plataformas: ["PS Vita"], estrellas: 40, pushed: "2026-10-01" },
+  { tipo: "rama", nombre: "3ds", url: "https://github.com/x/ec/tree/3ds", plataformas: ["3DS"], estrellas: 0, pushed: null },
+  { tipo: "fork", nombre: "a/ec-android", url: "https://github.com/a/ec-android", plataformas: ["Android"], estrellas: 9, pushed: null },
+  { tipo: "fork", nombre: "mal", url: "javascript:alert(1)", plataformas: ["Switch"], estrellas: 99, pushed: null },
+  { tipo: "fork", nombre: "sin-plat", url: "https://github.com/a/b", plataformas: [], estrellas: 5, pushed: null },
+] } };
+assert.deepEqual(L.sugerenciasDe(wolf, PLAT).map(x => x.nombre), ["a/ec-vita", "3ds", "a/ec-android"], "solo enlaces de GitHub y con plataforma");
+assert.deepEqual(L.plataformasDe(L.sugerenciasDe(wolf, PLAT)), ["3DS", "PS Vita", "Android"], "plataformas distintas, en el orden fijo de la lista");
+assert.deepEqual(L.sugerenciasDe({ ...wolf, url: "https://github.com/z/z" }, PLAT), [], "repo sin sugerencias");
+assert.deepEqual(L.sugerenciasDe({ tipo: "e", titulo: "E", url: "https://github.com/x/ec" }, PLAT), [], "solo decomps y ports");
+assert.deepEqual(L.sugerenciasDe(wolf, null), []); assert.deepEqual(L.sugerenciasDe(wolf, { "x/ec": {} }), []); assert.deepEqual(L.sugerenciasDe({ ...wolf, url: null }, PLAT), []);
+assert.deepEqual(L.plataformasDe([]), []);
+
 // ── pipeline: README, fichas, registro ──────────────────────────────────────
 const md = "# Proyecto\n\n[![CI](https://x/badge.svg)](https://x) Una **decompilación** de [Zelda](https://z.example) <img src=\"a.png\">.\n\n<!-- oculto -->\n## Compilar\n\n- Instala `make`\n- Corre `make all`\n\n```sh\nmake all\n```\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n## Vacío\n## Licencia\n\nMIT";
 const rm = P.readmeABloques(md);
