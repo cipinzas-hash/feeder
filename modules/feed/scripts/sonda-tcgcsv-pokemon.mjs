@@ -178,6 +178,26 @@ const mults = hallazgos.map(h => h.multiplo).filter(x => x != null);
 const topSello = [...hallazgos].filter(h => h.multiplo != null).sort((a, b) => b.multiplo - a.multiplo).slice(0, 12);
 const porTipoFila = new Map(); for (const h of hallazgos) { const k = h.fila.id + "|" + h.tipo; porTipoFila.set(k, 1); }
 
+// ── 5c. Promos de liga / prerelease / campeonato del MISMO NOMBRE (otro número) ────────────────────────────
+// Las promos de liga modernas suelen ser cartas aparte (numeración de promo), no un reprint con el mismo número: se enlazan por nombre.
+const porNombre = new Map();
+for (const p of productos.values()) { const suf = sufijoParentesis(p.name); if (!suf) continue; const d = describirVariante({ juego: "pokemon", sufijo: suf, grupo: grupoNombre.get(p.groupId) }); if (d.tipo !== "sello") continue; const k = nombreBase(p); if (!porNombre.has(k)) porNombre.set(k, []); porNombre.get(k).push({ p, d }); }
+const hallazgosNombre = []; const tipoNombre = new Map(), filasNombre = new Map(), grupoNombreCnt = new Map();
+for (const f of emparejadas) {
+  const base = productos.get(f.productId); if (!base) continue;
+  const cand = (porNombre.get(nombreBase(base)) || []).filter(x => x.p.productId !== base.productId && numeroCrudo(x.p) !== numeroCrudo(base));
+  for (const { p, d } of cand) {
+    const ph = subAuto(precios.get(p.productId) || [])?.market ?? null;
+    tipoNombre.set(d.clave, (tipoNombre.get(d.clave) || 0) + 1);
+    filasNombre.set(d.clave, (filasNombre.get(d.clave) || new Set()).add(f.id));
+    grupoNombreCnt.set(grupoNombre.get(p.groupId), (grupoNombreCnt.get(grupoNombre.get(p.groupId)) || 0) + 1);
+    hallazgosNombre.push({ fila: f, p, tipo: d.clave, sufijo: sufijoParentesis(p.name), grupo: grupoNombre.get(p.groupId), precio: ph, multiplo: f.tcgcsv > 0 && ph != null ? Math.round(ph / f.tcgcsv * 10) / 10 : null });
+  }
+}
+const filasConAlguna = new Set(hallazgosNombre.map(h => h.fila.id)).size;
+const multsNombre = hallazgosNombre.map(h => h.multiplo).filter(x => x != null);
+const topNombre = [...hallazgosNombre].filter(h => h.multiplo != null && h.tipo === "liga").sort((a, b) => b.multiplo - a.multiplo).slice(0, 10);
+
 // ── 6. Archivo histórico ─────────────────────────────────────────────────────
 const archivo = { disponibles: [], faltan: [], error: null, nuevo: null, antiguo: null };
 const meses = []; for (let y = 2024, m = 2; y < 2026 || (y === 2026 && m <= 11); m++) { if (m > 12) { m = 1; y++; } meses.push(`${y}-${String(m).padStart(2, "0")}-${y === 2024 && m === 2 ? "08" : "01"}`); }
@@ -239,6 +259,11 @@ md.push(`- Tipos de sello encontrados (hermanos): ${[...tiposSello.entries()].so
 md.push(`- Grupos donde viven: ${[...gruposSello.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([k, v]) => `${k} (${v})`).join(" · ") || "—"}.`);
 md.push(`- Precio del sello ÷ precio de la carta base (acabado automático): ${fmtRatio(mults)}.`);
 if (topSello.length) { md.push("", "| Carta | Set | Sello | Grupo del sello | Base | Sello | × |", "|---|---|---|---|---:|---:|---:|", ...topSello.map(h => `| ${h.fila.name} ${h.fila.number} | ${h.fila.set} | ${h.tipo} (${h.sufijo}) | ${h.grupo} | ${h.fila.tcgcsv != null ? "$" + r2(h.fila.tcgcsv) : "—"} | ${h.precio != null ? "$" + r2(h.precio) : "—"} | ${h.multiplo} |`), ""); }
+md.push("### 5c. Promos del mismo nombre y otro número (así viven las de liga modernas)", "");
+md.push(`- Filas del inventario con **alguna promo de sello del mismo nombre**: **${filasConAlguna}** de ${emparejadas.length} (${pct(filasConAlguna, emparejadas.length)}). Por tipo (filas distintas): ${[...filasNombre.entries()].sort((a, b) => b[1].size - a[1].size).map(([k, v]) => `${k} (${v.size})`).join(" · ") || "ninguno"}.`);
+md.push(`- Productos de sello enlazados por nombre: ${[...tipoNombre.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} (${v})`).join(" · ") || "—"}. Grupos: ${[...grupoNombreCnt.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => `${k} (${v})`).join(" · ") || "—"}.`);
+md.push(`- Precio de esas promos ÷ precio de tu carta: ${fmtRatio(multsNombre)}.`);
+if (topNombre.length) md.push("", "Promos de **liga** más caras frente a tu carta:", "", "| Tu carta | Set | Promo de liga | Grupo | Tu carta $ | Promo $ | × |", "|---|---|---|---|---:|---:|---:|", ...topNombre.map(h => `| ${h.fila.name} ${h.fila.number} | ${h.fila.set} | ${h.p.name.slice(0, 46)} | ${h.grupo} | ${h.fila.tcgcsv != null ? "$" + r2(h.fila.tcgcsv) : "—"} | ${h.precio != null ? "$" + r2(h.precio) : "—"} | ${h.multiplo} |`), "");
 md.push("## 6. Archivo histórico de tcgcsv", "");
 if (archivo.error) md.push(`- ⚠ Archivo ${FECHA_ARCHIVO}: ${archivo.error}`);
 if (archivo.nuevo) md.push(`- Archivo ${FECHA_ARCHIVO}: ${(archivo.nuevo.bytes / 1048576).toFixed(1)} MB, ${archivo.nuevo.archivos} archivos de precios de la categoría ${CAT} (p. ej. \`${archivo.nuevo.ejemploRuta}\`), ${archivo.nuevo.productos} productos. Primeras rutas extraídas: ${archivo.nuevo.muestra.map(x => "\`" + x + "\`").join(", ")}.`);
