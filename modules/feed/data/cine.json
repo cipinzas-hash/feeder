@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-20T00:22:25.876Z",
+  "generatedAt": "2026-11-20T09:46:10.608Z",
   "categories": [
     {
       "cat": "Películas",
@@ -19,7 +19,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 7.4
+            "tmdb": 7.3
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -167,87 +167,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-movie-1567605",
-          "title": "Scrooge y los fantasmas de la Navidad",
-          "link": "https://www.themoviedb.org/movie/1567605",
-          "summary": "Reimaginación del clásico literario, una historia de fantasmas ambientada en el Londres de Dickens que sigue el viaje sobrenatural de un hombre para enfrentarse a su pasado, presente y futuro y luchar por una segunda oportunidad.",
-          "image": "https://image.tmdb.org/t/p/w500/gnG15MkiNeObCoPbHcLUX4zrNWh.jpg",
-          "pubDate": "2026-11-11",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-10T22:55:59.703Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.6
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "D-n-lqKVr78",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Johnny Depp",
-              "character": "Ebenezer Scrooge",
-              "order": 0
-            },
-            {
-              "name": "Rupert Grint",
-              "character": "Bob Cratchit",
-              "order": 1
-            },
-            {
-              "name": "Daisy Ridley",
-              "character": "Clara",
-              "order": 2
-            },
-            {
-              "name": "Ian McKellen",
-              "character": "Jacob Marley",
-              "order": 3
-            },
-            {
-              "name": "Andrea Riseborough",
-              "character": "Ghost of Christmas Past",
-              "order": 4
-            },
-            {
-              "name": "Sam Claflin",
-              "character": "Fred",
-              "order": 5
-            },
-            {
-              "name": "Tramell Tillman",
-              "character": "Ghost of Christmas Present",
-              "order": 6
-            },
-            {
-              "name": "Arthur Conti",
-              "character": "Young Ebenezer",
-              "order": 7
-            },
-            {
-              "name": "Ellie Bamber",
-              "character": "Belle",
-              "order": 8
-            },
-            {
-              "name": "Henry Lloyd-Hughes",
-              "character": "Topper",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
           "guid": "tmdb-movie-1381071",
           "title": "Godzilla Minus Zero",
           "link": "https://www.themoviedb.org/movie/1381071",
@@ -323,6 +242,87 @@
             {
               "name": "吉岡秀隆",
               "character": "Kenji Noda",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1567605",
+          "title": "Scrooge y los fantasmas de la Navidad",
+          "link": "https://www.themoviedb.org/movie/1567605",
+          "summary": "Reimaginación del clásico literario, una historia de fantasmas ambientada en el Londres de Dickens que sigue el viaje sobrenatural de un hombre para enfrentarse a su pasado, presente y futuro y luchar por una segunda oportunidad.",
+          "image": "https://image.tmdb.org/t/p/w500/gnG15MkiNeObCoPbHcLUX4zrNWh.jpg",
+          "pubDate": "2026-11-11",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-10T22:55:59.703Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.5
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "D-n-lqKVr78",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Johnny Depp",
+              "character": "Ebenezer Scrooge",
+              "order": 0
+            },
+            {
+              "name": "Rupert Grint",
+              "character": "Bob Cratchit",
+              "order": 1
+            },
+            {
+              "name": "Daisy Ridley",
+              "character": "Clara",
+              "order": 2
+            },
+            {
+              "name": "Ian McKellen",
+              "character": "Jacob Marley",
+              "order": 3
+            },
+            {
+              "name": "Andrea Riseborough",
+              "character": "Ghost of Christmas Past",
+              "order": 4
+            },
+            {
+              "name": "Sam Claflin",
+              "character": "Fred",
+              "order": 5
+            },
+            {
+              "name": "Tramell Tillman",
+              "character": "Ghost of Christmas Present",
+              "order": 6
+            },
+            {
+              "name": "Arthur Conti",
+              "character": "Young Ebenezer",
+              "order": 7
+            },
+            {
+              "name": "Ellie Bamber",
+              "character": "Belle",
+              "order": 8
+            },
+            {
+              "name": "Henry Lloyd-Hughes",
+              "character": "Topper",
               "order": 9
             }
           ],
@@ -495,7 +495,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1437511",
@@ -1042,21 +1042,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1551025",
-          "title": "Guardaespaldas por navidad",
-          "link": "https://www.themoviedb.org/movie/1551025",
-          "summary": "Una estricta guardaespaldas viaja a un rancho de Montana con el famoso actor al que protege. Pero al fingir ser pareja por Navidad surge un amor real.",
-          "image": "https://image.tmdb.org/t/p/w500/baYwDjfwRQud2Eibpay4XgvYSmv.jpg",
-          "pubDate": "2026-11-18",
+          "guid": "tmdb-movie-969681",
+          "title": "Spider-Man: Brand New Day",
+          "link": "https://www.themoviedb.org/movie/969681",
+          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad—un Spider-Man a tiempo completo—, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
+          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
+          "pubDate": "2026-07-29",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-11-20T00:22:24.404Z",
+          "firstSeenAt": "2026-10-30T08:12:18.586Z",
           "fullText": null,
           "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.4
+            "imdb": 8,
+            "rt": 90,
+            "metascore": 66,
+            "tmdb": 8.5
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1065,234 +1065,58 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "mFvtVPMa5ak",
+            "key": "P3uI5sLosKU",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Leighton Meester",
-              "character": "Hannah",
+              "name": "Tom Holland",
+              "character": "Peter Parker / Spider-Man",
               "order": 0
             },
             {
-              "name": "Jared Padalecki",
-              "character": "Jack",
+              "name": "Sadie Sink",
+              "character": "Jean Grey",
               "order": 1
             },
             {
-              "name": "Andie MacDowell",
-              "character": "Connie Stapleton",
+              "name": "Tramell Tillman",
+              "character": "William 'Bill' Metzger",
               "order": 2
             },
             {
-              "name": "Walker Hayes",
-              "character": "Sheriff Sanderson",
+              "name": "Zendaya",
+              "character": "MJ",
               "order": 3
             },
             {
-              "name": "Noah LaLonde",
-              "character": "Hank Stapleton",
+              "name": "Jacob Batalon",
+              "character": "Ned Leeds",
               "order": 4
             },
             {
-              "name": "Toby Sandeman",
-              "character": "Robbie",
+              "name": "Jon Bernthal",
+              "character": "Frank Castle / Punisher",
               "order": 5
             },
             {
-              "name": "Phil Brooks",
-              "character": "Doghouse",
+              "name": "Mark Ruffalo",
+              "character": "Bruce Banner / Hulk",
               "order": 6
             },
             {
-              "name": "Ava Max",
-              "character": "Kennedy Monroe",
+              "name": "Florence Pugh",
+              "character": "Yelena Belova / Black Widow",
               "order": 7
             },
             {
-              "name": "Jake Foy",
-              "character": "Brody",
+              "name": "Liza Colón-Zayas",
+              "character": "Detective Jean DeWolff",
               "order": 8
             },
             {
-              "name": "Siobhan Williams",
-              "character": "Ella Mae",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1400837",
-          "title": "La otra madre",
-          "link": "https://www.themoviedb.org/movie/1400837",
-          "summary": "Bela, una niña de 8 años que vive en un hogar con problemas matrimoniales, enfrenta a una entidad siniestra que sale de su armario. La presencia, a quien llama \"Otra mamá\", se vuelve cada vez más amenazante para ella y su familia.",
-          "image": "https://image.tmdb.org/t/p/w500/USCOKXrHBCeeK96qXmS0NyDHYL.jpg",
-          "pubDate": "2026-10-07",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-03T20:25:48.927Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.4
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": {
-            "top": {
-              "rating": 5,
-              "text": "(CASTELLANO)\r\n\r\nDurante sus primeros minutos, La otra madre parecía que podía ir por un camino bastante más perturbador del que finalmente recorre. Una mujer hablando a una niña de “entrar en su corazón” y diciendo que le gusta cuidar a niños especiales cuando están a punto de romperse tiene algo realmente desagradable. Jessica Chastain consigue que unas frases aparentemente cariñosas suenen casi depredadoras.\r\n\r\nAhí sí había mal rollo.\r\n\r\nEl problema es que la película va perdiendo parte de esa incomodidad conforme explica demasiado y transforma el misterio en una aventura sobrenatural bastante convencional.\r\n\r\nBela funciona bien como centro de la historia porque todo lo vemos desde la vulnerabilidad de una niña que percibe antes que los adultos que algo no encaja. La idea de que alguien ",
-              "author": "Marco-Hugo Landeta Vacas"
-            },
-            "bottom": null
-          },
-          "trailer": {
-            "key": "-mnTITqqiT0",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Jessica Chastain",
-              "character": "Mommy / Other Mommy",
-              "order": 0
-            },
-            {
-              "name": "Jay Duplass",
-              "character": "Daddo",
-              "order": 1
-            },
-            {
-              "name": "Arabella Olivia Clark",
-              "character": "Bela",
-              "order": 2
-            },
-            {
-              "name": "Karen Allen",
-              "character": "Grandma Ruth",
-              "order": 3
-            },
-            {
-              "name": "Arian Moayed",
-              "character": "Uncle Frank",
-              "order": 4
-            },
-            {
-              "name": "Dichen Lachman",
-              "character": "Lois Anthony",
-              "order": 5
-            },
-            {
-              "name": "Sean Kaufman",
-              "character": "Kelvin",
-              "order": 6
-            },
-            {
-              "name": "Adam Silver",
-              "character": "Brian",
-              "order": 7
-            },
-            {
-              "name": "Alec Secăreanu",
-              "character": "Ruiss",
-              "order": 8
-            },
-            {
-              "name": "Millie Wood",
-              "character": "Little Girl",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1131943",
-          "title": "Madden",
-          "link": "https://www.themoviedb.org/movie/1131943",
-          "summary": "Narra la increíble trayectoria de John Madden junto a su mejor amigo y figura verdaderamente singular, Al Davis: desde su colaboración con los Raiders —con quienes ganaron un Super Bowl— hasta convertirse en la voz más reconocible del fútbol americano y crear la serie de videojuegos Madden NFL, conocida a nivel mundial.",
-          "image": "https://image.tmdb.org/t/p/w500/bRa83oPFFPqaAF3wrpVWPqqfFel.jpg",
-          "pubDate": "2026-11-18",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-19T02:57:04.661Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.1
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": {
-            "top": {
-              "rating": 7,
-              "text": "(CASTELLANO)\n\nNo soy especialmente aficionado al fútbol americano, así que Madden partía conmigo con cierta desventaja. He jugado alguna vez a sus videojuegos, conozco la importancia de la franquicia y sé quién era John Madden, pero mi deporte y mi juego anual siempre han sido mucho más FIFA —ahora EA Sports FC— que la NFL.\n\nAun así, la película me ha resultado entretenida.\n\nY buena parte de la culpa la tiene Nicolas Cage.\n\nHe leído comentarios cuestionando su caracterización o tratando su interpretación como si fuera una exageración grotesca, pero ahí creo que existe un problema previo: hay que recordar cómo era realmente John Madden.\n\nEra un hombre enorme, expansivo, ruidoso, tremendamente expresivo y con una energía muy particular. Cage no está interpretando a una figura discreta y conv",
-              "author": "Marco-Hugo Landeta Vacas"
-            },
-            "bottom": null
-          },
-          "trailer": {
-            "key": "xzh7HzLXXpk",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Nicolas Cage",
-              "character": "John Madden",
-              "order": 0
-            },
-            {
-              "name": "Christian Bale",
-              "character": "Al Davis",
-              "order": 1
-            },
-            {
-              "name": "Kathryn Hahn",
-              "character": "Virginia Madden",
-              "order": 2
-            },
-            {
-              "name": "Sienna Miller",
-              "character": "Carol Davis",
-              "order": 3
-            },
-            {
-              "name": "John Mulaney",
-              "character": "Trip Hawkins",
-              "order": 4
-            },
-            {
-              "name": "Snoop Dogg",
-              "character": "Snoop Dogg",
-              "order": 5
-            },
-            {
-              "name": "Shane Gillis",
-              "character": "Vince McGary",
-              "order": 6
-            },
-            {
-              "name": "Marshawn Lynch",
-              "character": "Jerry Bell",
-              "order": 7
-            },
-            {
-              "name": "Julian Edelman",
-              "character": "Gary Kapeck",
-              "order": 8
-            },
-            {
-              "name": "Joel Murray",
-              "character": "Pat Summerall",
+              "name": "Marisa Tomei",
+              "character": "May Parker",
               "order": 9
             }
           ],
@@ -1380,21 +1204,109 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-969681",
-          "title": "Spider-Man: Brand New Day",
-          "link": "https://www.themoviedb.org/movie/969681",
-          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad—un Spider-Man a tiempo completo—, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
-          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
-          "pubDate": "2026-07-29",
+          "guid": "tmdb-movie-1400837",
+          "title": "La otra madre",
+          "link": "https://www.themoviedb.org/movie/1400837",
+          "summary": "Bela, una niña de ocho años que vive en un hogar con problemas matrimoniales, enfrenta a una entidad siniestra que sale de su armario. La presencia, a quien llama «otra mamá», se vuelve cada vez más amenazante para ella y su familia.",
+          "image": "https://image.tmdb.org/t/p/w500/USCOKXrHBCeeK96qXmS0NyDHYL.jpg",
+          "pubDate": "2026-10-07",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-10-30T08:12:18.586Z",
+          "firstSeenAt": "2026-11-03T20:25:48.927Z",
           "fullText": null,
           "rating": {
-            "imdb": 8,
-            "rt": 90,
-            "metascore": 66,
-            "tmdb": 8.5
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.4
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": {
+            "top": {
+              "rating": 5,
+              "text": "(CASTELLANO)\r\n\r\nDurante sus primeros minutos, La otra madre parecía que podía ir por un camino bastante más perturbador del que finalmente recorre. Una mujer hablando a una niña de “entrar en su corazón” y diciendo que le gusta cuidar a niños especiales cuando están a punto de romperse tiene algo realmente desagradable. Jessica Chastain consigue que unas frases aparentemente cariñosas suenen casi depredadoras.\r\n\r\nAhí sí había mal rollo.\r\n\r\nEl problema es que la película va perdiendo parte de esa incomodidad conforme explica demasiado y transforma el misterio en una aventura sobrenatural bastante convencional.\r\n\r\nBela funciona bien como centro de la historia porque todo lo vemos desde la vulnerabilidad de una niña que percibe antes que los adultos que algo no encaja. La idea de que alguien ",
+              "author": "Marco-Hugo Landeta Vacas"
+            },
+            "bottom": null
+          },
+          "trailer": {
+            "key": "-mnTITqqiT0",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Jessica Chastain",
+              "character": "Mommy / Other Mommy",
+              "order": 0
+            },
+            {
+              "name": "Jay Duplass",
+              "character": "Daddo",
+              "order": 1
+            },
+            {
+              "name": "Arabella Olivia Clark",
+              "character": "Bela",
+              "order": 2
+            },
+            {
+              "name": "Karen Allen",
+              "character": "Grandma Ruth",
+              "order": 3
+            },
+            {
+              "name": "Arian Moayed",
+              "character": "Uncle Frank",
+              "order": 4
+            },
+            {
+              "name": "Dichen Lachman",
+              "character": "Lois Anthony",
+              "order": 5
+            },
+            {
+              "name": "Sean Kaufman",
+              "character": "Kelvin",
+              "order": 6
+            },
+            {
+              "name": "Adam Silver",
+              "character": "Brian",
+              "order": 7
+            },
+            {
+              "name": "Alec Secăreanu",
+              "character": "Ruiss",
+              "order": 8
+            },
+            {
+              "name": "Millie Wood",
+              "character": "Little Girl",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1551025",
+          "title": "Guardaespaldas por navidad",
+          "link": "https://www.themoviedb.org/movie/1551025",
+          "summary": "Una estricta guardaespaldas viaja a un rancho de Montana con el famoso actor al que protege. Pero al fingir ser pareja por Navidad surge un amor real.",
+          "image": "https://image.tmdb.org/t/p/w500/baYwDjfwRQud2Eibpay4XgvYSmv.jpg",
+          "pubDate": "2026-11-18",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-20T00:22:24.404Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.5
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1403,58 +1315,146 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "P3uI5sLosKU",
+            "key": "mFvtVPMa5ak",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Tom Holland",
-              "character": "Peter Parker / Spider-Man",
+              "name": "Leighton Meester",
+              "character": "Hannah",
               "order": 0
             },
             {
-              "name": "Sadie Sink",
-              "character": "Jean Grey",
+              "name": "Jared Padalecki",
+              "character": "Jack",
               "order": 1
             },
             {
-              "name": "Tramell Tillman",
-              "character": "William 'Bill' Metzger",
+              "name": "Andie MacDowell",
+              "character": "Connie Stapleton",
               "order": 2
             },
             {
-              "name": "Zendaya",
-              "character": "MJ",
+              "name": "Walker Hayes",
+              "character": "Sheriff Sanderson",
               "order": 3
             },
             {
-              "name": "Jacob Batalon",
-              "character": "Ned Leeds",
+              "name": "Noah LaLonde",
+              "character": "Hank Stapleton",
               "order": 4
             },
             {
-              "name": "Jon Bernthal",
-              "character": "Frank Castle / Punisher",
+              "name": "Toby Sandeman",
+              "character": "Robbie",
               "order": 5
             },
             {
-              "name": "Mark Ruffalo",
-              "character": "Bruce Banner / Hulk",
+              "name": "Phil Brooks",
+              "character": "Doghouse",
               "order": 6
             },
             {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova / Black Widow",
+              "name": "Ava Max",
+              "character": "Kennedy Monroe",
               "order": 7
             },
             {
-              "name": "Liza Colón-Zayas",
-              "character": "Detective Jean DeWolff",
+              "name": "Jake Foy",
+              "character": "Brody",
               "order": 8
             },
             {
-              "name": "Marisa Tomei",
-              "character": "May Parker",
+              "name": "Siobhan Williams",
+              "character": "Ella Mae",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1131943",
+          "title": "Madden",
+          "link": "https://www.themoviedb.org/movie/1131943",
+          "summary": "Narra la increíble trayectoria de John Madden junto a su mejor amigo y figura verdaderamente singular, Al Davis: desde su colaboración con los Raiders —con quienes ganaron un Super Bowl— hasta convertirse en la voz más reconocible del fútbol americano y crear la serie de videojuegos Madden NFL, conocida a nivel mundial.",
+          "image": "https://image.tmdb.org/t/p/w500/bRa83oPFFPqaAF3wrpVWPqqfFel.jpg",
+          "pubDate": "2026-11-18",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-19T02:57:04.661Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": {
+            "top": {
+              "rating": 7,
+              "text": "(CASTELLANO)\n\nNo soy especialmente aficionado al fútbol americano, así que Madden partía conmigo con cierta desventaja. He jugado alguna vez a sus videojuegos, conozco la importancia de la franquicia y sé quién era John Madden, pero mi deporte y mi juego anual siempre han sido mucho más FIFA —ahora EA Sports FC— que la NFL.\n\nAun así, la película me ha resultado entretenida.\n\nY buena parte de la culpa la tiene Nicolas Cage.\n\nHe leído comentarios cuestionando su caracterización o tratando su interpretación como si fuera una exageración grotesca, pero ahí creo que existe un problema previo: hay que recordar cómo era realmente John Madden.\n\nEra un hombre enorme, expansivo, ruidoso, tremendamente expresivo y con una energía muy particular. Cage no está interpretando a una figura discreta y conv",
+              "author": "Marco-Hugo Landeta Vacas"
+            },
+            "bottom": null
+          },
+          "trailer": {
+            "key": "xzh7HzLXXpk",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Nicolas Cage",
+              "character": "John Madden",
+              "order": 0
+            },
+            {
+              "name": "Christian Bale",
+              "character": "Al Davis",
+              "order": 1
+            },
+            {
+              "name": "Kathryn Hahn",
+              "character": "Virginia Madden",
+              "order": 2
+            },
+            {
+              "name": "Sienna Miller",
+              "character": "Carol Davis",
+              "order": 3
+            },
+            {
+              "name": "John Mulaney",
+              "character": "Trip Hawkins",
+              "order": 4
+            },
+            {
+              "name": "Snoop Dogg",
+              "character": "Snoop Dogg",
+              "order": 5
+            },
+            {
+              "name": "Shane Gillis",
+              "character": "Vince McGary",
+              "order": 6
+            },
+            {
+              "name": "Marshawn Lynch",
+              "character": "Jerry Bell",
+              "order": 7
+            },
+            {
+              "name": "Julian Edelman",
+              "character": "Gary Kapeck",
+              "order": 8
+            },
+            {
+              "name": "Joel Murray",
+              "character": "Pat Summerall",
               "order": 9
             }
           ],
@@ -3704,87 +3704,6 @@
             {
               "name": "Phillip Andre Botello",
               "character": "A24 Executive",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1433583",
-          "title": "Oro sin ley",
-          "link": "https://www.themoviedb.org/movie/1433583",
-          "summary": "Oregón, 1933. Samuel Murphy (Ethan Hawke) es separado de su hija y enviado a un campo de trabajo. Un día, el alcaide Clancy (Russell Crowe) le ofrece la posibilidad de liberarlo si consigue pasar oro de contrabando a través de una peligrosa senda salvaje. ¿Hasta dónde será capaz de llegar Murphy por reencontrarse con su querida hija?",
-          "image": "https://image.tmdb.org/t/p/w500/8i5iZV50CoEtmDCFM7RSxCkpE8h.jpg",
-          "pubDate": "2026-09-16",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-21T07:11:32.862Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.7
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "7YpuMymmiJ8",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Ethan Hawke",
-              "character": "Samuel Murphy",
-              "order": 0
-            },
-            {
-              "name": "Russell Crowe",
-              "character": "Warden Clancy",
-              "order": 1
-            },
-            {
-              "name": "Julia Jones",
-              "character": "Anna",
-              "order": 2
-            },
-            {
-              "name": "Austin Amelio",
-              "character": "Rankin",
-              "order": 3
-            },
-            {
-              "name": "Avi Nash",
-              "character": "Singh",
-              "order": 4
-            },
-            {
-              "name": "Lucas Lynggaard Tønnesen",
-              "character": "Olson",
-              "order": 5
-            },
-            {
-              "name": "Sam Hazeldine",
-              "character": "Amis",
-              "order": 6
-            },
-            {
-              "name": "George Burgess",
-              "character": "Letender",
-              "order": 7
-            },
-            {
-              "name": "Jeff Hallman",
-              "character": "Big Prisoner",
-              "order": 8
-            },
-            {
-              "name": "Alec Newman",
-              "character": "Taggert",
               "order": 9
             }
           ],
@@ -7255,6 +7174,257 @@
       "cat": "Animación",
       "items": [
         {
+          "guid": "tmdb-tv-456",
+          "title": "Los Simpson",
+          "link": "https://www.themoviedb.org/tv/456",
+          "summary": "El día a día de una peculiar familia formada por Homer, Marge, Bart, Maggie y Lisa Simpson y otros divertidos personajes de la localidad norteamericana de Springfield. Homer, el padre, es un desastroso inspector de seguridad de una central nuclear. Marge, la madre, es un ama de casa acostumbrada a soportar a su peculiar familia. Bart, de diez años, intenta divertirse con travesuras de todo tipo. Lisa es la más inteligente de la familia, y Maggie, la más pequeña, es un bebé que todavía no habla, pero que juega un importante papel.",
+          "image": "https://image.tmdb.org/t/p/w500/9hmoEmntaYrrlb4HKSFisWUQnqy.jpg",
+          "pubDate": "1989-12-17",
+          "source": "TMDb",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-11-20T09:46:10.245Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.6,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-11-22",
+          "numberOfSeasons": 38,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 13,
+              "fechaEstreno": "1989-12-17"
+            },
+            {
+              "numero": 2,
+              "episodios": 22,
+              "fechaEstreno": "1990-10-11"
+            },
+            {
+              "numero": 3,
+              "episodios": 24,
+              "fechaEstreno": "1991-09-19"
+            },
+            {
+              "numero": 4,
+              "episodios": 22,
+              "fechaEstreno": "1992-09-24"
+            },
+            {
+              "numero": 5,
+              "episodios": 22,
+              "fechaEstreno": "1993-09-30"
+            },
+            {
+              "numero": 6,
+              "episodios": 25,
+              "fechaEstreno": "1994-09-04"
+            },
+            {
+              "numero": 7,
+              "episodios": 25,
+              "fechaEstreno": "1995-09-17"
+            },
+            {
+              "numero": 8,
+              "episodios": 25,
+              "fechaEstreno": "1996-10-27"
+            },
+            {
+              "numero": 9,
+              "episodios": 25,
+              "fechaEstreno": "1997-09-21"
+            },
+            {
+              "numero": 10,
+              "episodios": 23,
+              "fechaEstreno": "1998-08-23"
+            },
+            {
+              "numero": 11,
+              "episodios": 22,
+              "fechaEstreno": "1999-09-26"
+            },
+            {
+              "numero": 12,
+              "episodios": 21,
+              "fechaEstreno": "2000-11-01"
+            },
+            {
+              "numero": 13,
+              "episodios": 22,
+              "fechaEstreno": "2001-11-06"
+            },
+            {
+              "numero": 14,
+              "episodios": 22,
+              "fechaEstreno": "2002-11-03"
+            },
+            {
+              "numero": 15,
+              "episodios": 22,
+              "fechaEstreno": "2003-11-02"
+            },
+            {
+              "numero": 16,
+              "episodios": 21,
+              "fechaEstreno": "2004-11-07"
+            },
+            {
+              "numero": 17,
+              "episodios": 22,
+              "fechaEstreno": "2005-09-11"
+            },
+            {
+              "numero": 18,
+              "episodios": 22,
+              "fechaEstreno": "2006-09-10"
+            },
+            {
+              "numero": 19,
+              "episodios": 20,
+              "fechaEstreno": "2007-09-23"
+            },
+            {
+              "numero": 20,
+              "episodios": 21,
+              "fechaEstreno": "2008-09-28"
+            },
+            {
+              "numero": 21,
+              "episodios": 23,
+              "fechaEstreno": "2009-09-27"
+            },
+            {
+              "numero": 22,
+              "episodios": 22,
+              "fechaEstreno": "2010-09-26"
+            },
+            {
+              "numero": 23,
+              "episodios": 22,
+              "fechaEstreno": "2011-09-25"
+            },
+            {
+              "numero": 24,
+              "episodios": 22,
+              "fechaEstreno": "2012-09-30"
+            },
+            {
+              "numero": 25,
+              "episodios": 22,
+              "fechaEstreno": "2013-09-29"
+            },
+            {
+              "numero": 26,
+              "episodios": 22,
+              "fechaEstreno": "2014-09-28"
+            },
+            {
+              "numero": 27,
+              "episodios": 22,
+              "fechaEstreno": "2015-09-27"
+            },
+            {
+              "numero": 28,
+              "episodios": 22,
+              "fechaEstreno": "2016-09-25"
+            },
+            {
+              "numero": 29,
+              "episodios": 21,
+              "fechaEstreno": "2017-10-01"
+            },
+            {
+              "numero": 30,
+              "episodios": 23,
+              "fechaEstreno": "2018-09-30"
+            },
+            {
+              "numero": 31,
+              "episodios": 22,
+              "fechaEstreno": "2019-09-29"
+            },
+            {
+              "numero": 32,
+              "episodios": 22,
+              "fechaEstreno": "2020-09-27"
+            },
+            {
+              "numero": 33,
+              "episodios": 22,
+              "fechaEstreno": "2021-09-26"
+            },
+            {
+              "numero": 34,
+              "episodios": 22,
+              "fechaEstreno": "2022-09-25"
+            },
+            {
+              "numero": 35,
+              "episodios": 18,
+              "fechaEstreno": "2023-10-01"
+            },
+            {
+              "numero": 36,
+              "episodios": 18,
+              "fechaEstreno": "2024-09-29"
+            },
+            {
+              "numero": 37,
+              "episodios": 15,
+              "fechaEstreno": "2025-09-28"
+            },
+            {
+              "numero": 38,
+              "episodios": 15,
+              "fechaEstreno": "2026-09-27"
+            }
+          ],
+          "currentSeason": 38,
+          "reviews": null,
+          "trailer": {
+            "key": "_jgYEYERYFQ",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Dan Castellaneta",
+              "character": "Homer Simpson / Abe Simpson / Barney Gumble / Krusty the Clown / Groundskeeper Willie / Mayor Quimby (voice)",
+              "order": 0
+            },
+            {
+              "name": "Julie Kavner",
+              "character": "Marge Simpson / Patty Bouvier / Selma Bouvier / Jacqueline Bouvier (voice)",
+              "order": 1
+            },
+            {
+              "name": "Nancy Cartwright",
+              "character": "Bart Simpson / Maggie Simpson / Nelson Muntz / Ralph Wiggum (voice)",
+              "order": 2
+            },
+            {
+              "name": "Yeardley Smith",
+              "character": "Lisa Simpson / Maggie Simpson (voice)",
+              "order": 3
+            },
+            {
+              "name": "Hank Azaria",
+              "character": "Moe Szyslak / Chief Wiggum / Apu / Comic Book Guy / Carl Carlson / Superintendent Chalmers (voice)",
+              "order": 4
+            },
+            {
+              "name": "Harry Shearer",
+              "character": "Ned Flanders / Mr. Burns / Smithers / Principal Skinner / Lenny Leonard (voice)",
+              "order": 6
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-387",
           "title": "Bob Esponja",
           "link": "https://www.themoviedb.org/tv/387",
@@ -7419,198 +7589,6 @@
               "order": 8
             }
           ]
-        },
-        {
-          "guid": "tmdb-tv-2190",
-          "title": "South Park",
-          "link": "https://www.themoviedb.org/tv/2190",
-          "summary": "South Park es una serie de televisión estadounidense de animación, creada por Trey Parker y Matt Stone para el canal Comedy Central. Está dirigida al público adulto y se caracteriza por satirizar con humor negro la sociedad, actualidad y cultura estadounidense a través de las historias y situaciones surrealistas que les suceden a sus protagonistas, cuatro niños (Stan, Kyle, Cartman y Kenny) residentes en un pueblo ficticio de Colorado que se llama South Park.",
-          "image": "https://image.tmdb.org/t/p/w500/w9Kz3tZsEn95F8WHh6ydFXaQIFO.jpg",
-          "pubDate": "1997-08-13",
-          "source": "TMDb",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-10-21T07:11:33.285Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.7,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.3
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-28",
-          "numberOfSeasons": 29,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 13,
-              "fechaEstreno": "1997-08-13"
-            },
-            {
-              "numero": 2,
-              "episodios": 18,
-              "fechaEstreno": "1998-04-01"
-            },
-            {
-              "numero": 3,
-              "episodios": 17,
-              "fechaEstreno": "1999-04-07"
-            },
-            {
-              "numero": 4,
-              "episodios": 17,
-              "fechaEstreno": "2000-04-05"
-            },
-            {
-              "numero": 5,
-              "episodios": 14,
-              "fechaEstreno": "2001-06-20"
-            },
-            {
-              "numero": 6,
-              "episodios": 17,
-              "fechaEstreno": "2002-03-06"
-            },
-            {
-              "numero": 7,
-              "episodios": 15,
-              "fechaEstreno": "2003-03-19"
-            },
-            {
-              "numero": 8,
-              "episodios": 14,
-              "fechaEstreno": "2004-03-17"
-            },
-            {
-              "numero": 9,
-              "episodios": 14,
-              "fechaEstreno": "2005-03-09"
-            },
-            {
-              "numero": 10,
-              "episodios": 14,
-              "fechaEstreno": "2006-03-22"
-            },
-            {
-              "numero": 11,
-              "episodios": 14,
-              "fechaEstreno": "2007-03-07"
-            },
-            {
-              "numero": 12,
-              "episodios": 14,
-              "fechaEstreno": "2008-03-12"
-            },
-            {
-              "numero": 13,
-              "episodios": 14,
-              "fechaEstreno": "2009-03-11"
-            },
-            {
-              "numero": 14,
-              "episodios": 14,
-              "fechaEstreno": "2010-03-17"
-            },
-            {
-              "numero": 15,
-              "episodios": 14,
-              "fechaEstreno": "2011-04-27"
-            },
-            {
-              "numero": 16,
-              "episodios": 14,
-              "fechaEstreno": "2012-03-14"
-            },
-            {
-              "numero": 17,
-              "episodios": 10,
-              "fechaEstreno": "2013-09-25"
-            },
-            {
-              "numero": 18,
-              "episodios": 10,
-              "fechaEstreno": "2014-09-24"
-            },
-            {
-              "numero": 19,
-              "episodios": 10,
-              "fechaEstreno": "2015-09-16"
-            },
-            {
-              "numero": 20,
-              "episodios": 10,
-              "fechaEstreno": "2016-09-14"
-            },
-            {
-              "numero": 21,
-              "episodios": 10,
-              "fechaEstreno": "2017-09-13"
-            },
-            {
-              "numero": 22,
-              "episodios": 10,
-              "fechaEstreno": "2018-09-26"
-            },
-            {
-              "numero": 23,
-              "episodios": 10,
-              "fechaEstreno": "2019-09-25"
-            },
-            {
-              "numero": 24,
-              "episodios": 2,
-              "fechaEstreno": "2020-09-30"
-            },
-            {
-              "numero": 25,
-              "episodios": 6,
-              "fechaEstreno": "2022-02-02"
-            },
-            {
-              "numero": 26,
-              "episodios": 6,
-              "fechaEstreno": "2023-02-08"
-            },
-            {
-              "numero": 27,
-              "episodios": 5,
-              "fechaEstreno": "2025-07-23"
-            },
-            {
-              "numero": 28,
-              "episodios": 5,
-              "fechaEstreno": "2025-10-15"
-            },
-            {
-              "numero": 29,
-              "episodios": 6,
-              "fechaEstreno": "2026-09-16"
-            }
-          ],
-          "currentSeason": 29,
-          "reviews": null,
-          "trailer": {
-            "key": "oUIK01ek-Ko",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Matt Stone",
-              "character": "Kyle Broflovski / Kenny McCormick (voice)",
-              "order": 1
-            },
-            {
-              "name": "Mona Marshall",
-              "character": "Sheila Broflovski (voice)",
-              "order": 4
-            },
-            {
-              "name": "Jennifer Howell",
-              "character": "Bebe Stevens (voice)",
-              "order": 11
-            }
-          ],
-          "trending": false
         }
       ]
     }
