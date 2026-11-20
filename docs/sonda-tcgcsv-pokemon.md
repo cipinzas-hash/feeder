@@ -84,6 +84,24 @@ Regla probada: mismo nombre base + mismo número con total (p. ej. «025/165») 
 | Glaceon ex 26 | Prismatic Evolutions | evento (Prismatic Evolutions Stamp) | Miscellaneous Cards & Products | $1.7 | $6.42 | 3.8 |
 | Lombre 45 | Sandstorm | campeonato (Michael Gonzalez) | World Championship Decks | $4.32 | $14.39 | 3.3 |
 
+### 5c. Promos del mismo nombre y otro número (así viven las de liga modernas)
+
+- Filas del inventario con **alguna promo de sello del mismo nombre**: **348** de 887 (39 %). Por tipo (filas distintas): campeonato (270) · evento (101) · prerelease (56) · liga (10) · torneo (4) · staff (3).
+- Productos de sello enlazados por nombre: campeonato (1447) · evento (454) · prerelease (69) · liga (11) · torneo (4) · staff (3). Grupos: Pikachu World Collection Promos (612) · World Championship Decks (550) · League & Championship Cards (178) · Miscellaneous Cards & Products (175) · Battle Academy (160) · SV: Scarlet & Violet Promo Cards (82) · SWSH: Sword & Shield Promo Cards (52) · Battle Academy 2022 (48).
+- Precio de esas promos ÷ precio de tu carta: mediana 10.6 · p10 0.2 · p90 229.1 · n=1855.
+
+Promos de **liga** más caras frente a tu carta:
+
+| Tu carta | Set | Promo de liga | Grupo | Tu carta $ | Promo $ | × |
+|---|---|---|---|---:|---:|---:|
+| Torchic 22 | Darkness Ablaze | Torchic - 008 (e-League) | Nintendo Promos | $0.3 | $128.49 | 428.3 |
+| Treecko 20 | Lost Thunder | Treecko - 003 (e-League) | Nintendo Promos | $0.78 | $86.36 | 110.7 |
+| Beldum 47 | Ancient Origins | Beldum - 029/101 (Gym Challenge) | Miscellaneous Cards & Products | $0.35 | $36.08 | 103.1 |
+| Torchic 65 | Crystal Guardians | Torchic - 008 (e-League) | Nintendo Promos | $1.67 | $128.49 | 76.9 |
+| Chimecho 72 | Vivid Voltage | Chimecho - 024 (e-League) | Nintendo Promos | $0.29 | $14.66 | 50.6 |
+| Treecko 67 | Crystal Guardians | Treecko - 003 (e-League) | Nintendo Promos | $3.19 | $86.36 | 27.1 |
+| Beldum 47 | Ancient Origins | Beldum - 022 (e-League) | Nintendo Promos | $0.35 | $6.83 | 19.5 |
+
 ## 6. Archivo histórico de tcgcsv
 
 - Archivo 2026-11-01: 4.0 MB, 221 archivos de precios de la categoría 3 (p. ej. `x/2026-11-01/1/3/prices`), 31948 productos. Primeras rutas extraídas: `x/2026-11-01/1/1/prices`, `x/2026-11-01/1/10/prices`, `x/2026-11-01/1/100/prices`, `x/2026-11-01/1/101/prices`, `x/2026-11-01/1/102/prices`, `x/2026-11-01/1/103/prices`.
