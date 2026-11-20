@@ -1,9 +1,90 @@
 {
-  "generatedAt": "2026-11-19T15:22:55.098Z",
+  "generatedAt": "2026-11-20T00:22:25.876Z",
   "categories": [
     {
       "cat": "Películas",
       "items": [
+        {
+          "guid": "tmdb-movie-1300968",
+          "title": "Los Juegos del Hambre: Amanecer en la cosecha",
+          "link": "https://www.themoviedb.org/movie/1300968",
+          "summary": "Explora Panem 24 años antes de la saga de Katniss, comenzando en la mañana de la siega de los 50º Juegos del Hambre, donde participa un joven Haymitch Abernathy.",
+          "image": "https://image.tmdb.org/t/p/w500/nijGyrqQbDhSGss4uugQokvBAsG.jpg",
+          "pubDate": "2026-11-18",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-11T08:57:13.392Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.4
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "Dr060OLTodE",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Joseph Zada",
+              "character": "Haymitch Abernathy",
+              "order": 0
+            },
+            {
+              "name": "Mckenna Grace",
+              "character": "Maysilee Donner / Merrilee Donner",
+              "order": 1
+            },
+            {
+              "name": "Ralph Fiennes",
+              "character": "President Coriolanus Snow",
+              "order": 2
+            },
+            {
+              "name": "Jesse Plemons",
+              "character": "Plutarch Heavensbee",
+              "order": 3
+            },
+            {
+              "name": "Glenn Close",
+              "character": "Drusilla Sickle",
+              "order": 4
+            },
+            {
+              "name": "Whitney Peak",
+              "character": "Lenore Dove Baird",
+              "order": 5
+            },
+            {
+              "name": "Elle Fanning",
+              "character": "Effie Trinket",
+              "order": 6
+            },
+            {
+              "name": "Kieran Culkin",
+              "character": "Caesar Flickerman",
+              "order": 7
+            },
+            {
+              "name": "Maya Hawke",
+              "character": "Wiress",
+              "order": 8
+            },
+            {
+              "name": "Kelvin Harrison Jr.",
+              "character": "Beetee Latier",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
         {
           "guid": "tmdb-movie-1244523",
           "title": "Boiuna: La leyenda del Amazonas",
@@ -86,87 +167,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-movie-1300968",
-          "title": "Los Juegos del Hambre: Amanecer en la cosecha",
-          "link": "https://www.themoviedb.org/movie/1300968",
-          "summary": "v‌e‌r‌cineo.net – Películas y series HD, Gratis  Explora Panem 24 años antes de la saga de Katniss, comenzando en la mañana de la siega de los 50º Juegos del Hambre, donde participa un joven Haymitch Abernathy.",
-          "image": "https://image.tmdb.org/t/p/w500/nijGyrqQbDhSGss4uugQokvBAsG.jpg",
-          "pubDate": "2026-11-18",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-11T08:57:13.392Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.6
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "Dr060OLTodE",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Joseph Zada",
-              "character": "Haymitch Abernathy",
-              "order": 0
-            },
-            {
-              "name": "Mckenna Grace",
-              "character": "Maysilee Donner / Merrilee Donner",
-              "order": 1
-            },
-            {
-              "name": "Ralph Fiennes",
-              "character": "President Coriolanus Snow",
-              "order": 2
-            },
-            {
-              "name": "Jesse Plemons",
-              "character": "Plutarch Heavensbee",
-              "order": 3
-            },
-            {
-              "name": "Glenn Close",
-              "character": "Drusilla Sickle",
-              "order": 4
-            },
-            {
-              "name": "Whitney Peak",
-              "character": "Lenore Dove Baird",
-              "order": 5
-            },
-            {
-              "name": "Elle Fanning",
-              "character": "Effie Trinket",
-              "order": 6
-            },
-            {
-              "name": "Kieran Culkin",
-              "character": "Caesar Flickerman",
-              "order": 7
-            },
-            {
-              "name": "Maya Hawke",
-              "character": "Wiress",
-              "order": 8
-            },
-            {
-              "name": "Kelvin Harrison Jr.",
-              "character": "Beetee Latier",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
           "guid": "tmdb-movie-1567605",
           "title": "Scrooge y los fantasmas de la Navidad",
           "link": "https://www.themoviedb.org/movie/1567605",
@@ -181,7 +181,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 7.5
+            "tmdb": 7.6
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -495,83 +495,7 @@
               "order": 9
             }
           ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-891621",
-          "title": "Wild Horse Nine",
-          "link": "https://www.themoviedb.org/movie/891621",
-          "summary": "Poco antes del golpe de Estado chileno de 1973, los agentes de la CIA Chris y Lee son enviados desde Santiago a la Isla de Pascua por su jefa de la oficina, MJ. Entre las emblemáticas estatuas de la isla, y mientras los veteranos compañeros lidian con sus oscuros pasados ​​y conspiraciones actuales, el nuevo vínculo que Chris establece con un par de estudiantes rebeldes amenaza con desbaratar el viaje de todos a este remoto paraíso.",
-          "image": "https://image.tmdb.org/t/p/w500/bLDrHn76oiNYiELv1qw3Tfdkqc8.jpg",
-          "pubDate": "2026-10-30",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-03T20:25:49.594Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": 93,
-            "metascore": null,
-            "tmdb": 9
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "kqxuamKxRTo",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "John Malkovich",
-              "character": "Chris",
-              "order": 0
-            },
-            {
-              "name": "Sam Rockwell",
-              "character": "Lee",
-              "order": 1
-            },
-            {
-              "name": "Steve Buscemi",
-              "character": "MJ",
-              "order": 2
-            },
-            {
-              "name": "Tom Waits",
-              "character": "Jim",
-              "order": 3
-            },
-            {
-              "name": "Parker Posey",
-              "character": "Marge",
-              "order": 4
-            },
-            {
-              "name": "Mariana di Girolamo",
-              "character": "Monica",
-              "order": 5
-            },
-            {
-              "name": "Ailín Salas",
-              "character": "Alicia",
-              "order": 6
-            },
-            {
-              "name": "Paola Giannini",
-              "character": "Rosa",
-              "order": 7
-            },
-            {
-              "name": "Samuel Wayt",
-              "character": "Teenage Kid",
-              "order": 8
-            }
-          ],
-          "trending": false
+          "trending": true
         },
         {
           "guid": "tmdb-movie-1437511",
@@ -650,6 +574,163 @@
               "name": "Young Mazino",
               "character": "Marquis Collins",
               "order": 9
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-movie-1400940",
+          "title": "Clayface",
+          "link": "https://www.themoviedb.org/movie/1400940",
+          "summary": "El meteórico ascenso de Matt Hagen, desde chico de la calle en Gotham hasta promesa de Hollywood, se ve trágicamente truncado cuando las acciones de un jefe del crimen local lo dejan horriblemente desfigurado. Abandonado por su equipo y sin nada que perder, Matt busca un tratamiento celular vanguardista que, milagrosamente, le devuelve su aspecto anterior… pero que también afecta inesperadamente a su percepción de la realidad, sumiéndolo en una espiral destructiva de venganza que lo consume por completo.",
+          "image": "https://image.tmdb.org/t/p/w500/6ihSDJlBNcvoTWzSA0jonZyOXTs.jpg",
+          "pubDate": "2026-10-19",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-20T00:22:24.150Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.5,
+            "rt": null,
+            "metascore": 59,
+            "tmdb": 7.4
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "f7jlCqdtwdM",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Tom Rhys Harries",
+              "character": "Matt Hagen / Clayface",
+              "order": 0
+            },
+            {
+              "name": "Naomi Ackie",
+              "character": "Caitlyn Corr",
+              "order": 1
+            },
+            {
+              "name": "Eddie Marsan",
+              "character": "Frank Fitzpatrick",
+              "order": 2
+            },
+            {
+              "name": "Max Minghella",
+              "character": "John Borrelli",
+              "order": 3
+            },
+            {
+              "name": "David Dencik",
+              "character": "Markos Szabo",
+              "order": 4
+            },
+            {
+              "name": "Francesca Corney",
+              "character": "Rosie",
+              "order": 5
+            },
+            {
+              "name": "Ruby Sear",
+              "character": "Theresa",
+              "order": 6
+            },
+            {
+              "name": "Wil Coban",
+              "character": "Bones",
+              "order": 7
+            },
+            {
+              "name": "Joshua James",
+              "character": "Corey Bowery",
+              "order": 8
+            },
+            {
+              "name": "Jake Curran",
+              "character": "Patches",
+              "order": 9
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-movie-891621",
+          "title": "Wild Horse Nine",
+          "link": "https://www.themoviedb.org/movie/891621",
+          "summary": "Poco antes del golpe de Estado chileno de 1973, los agentes de la CIA Chris y Lee son enviados desde Santiago a la Isla de Pascua por su jefa de la oficina, MJ. Entre las emblemáticas estatuas de la isla, y mientras los veteranos compañeros lidian con sus oscuros pasados ​​y conspiraciones actuales, el nuevo vínculo que Chris establece con un par de estudiantes rebeldes amenaza con desbaratar el viaje de todos a este remoto paraíso.",
+          "image": "https://image.tmdb.org/t/p/w500/bLDrHn76oiNYiELv1qw3Tfdkqc8.jpg",
+          "pubDate": "2026-10-30",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-03T20:25:49.594Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": 93,
+            "metascore": null,
+            "tmdb": 9
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "kqxuamKxRTo",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "John Malkovich",
+              "character": "Chris",
+              "order": 0
+            },
+            {
+              "name": "Sam Rockwell",
+              "character": "Lee",
+              "order": 1
+            },
+            {
+              "name": "Steve Buscemi",
+              "character": "MJ",
+              "order": 2
+            },
+            {
+              "name": "Tom Waits",
+              "character": "Jim",
+              "order": 3
+            },
+            {
+              "name": "Parker Posey",
+              "character": "Marge",
+              "order": 4
+            },
+            {
+              "name": "Mariana di Girolamo",
+              "character": "Monica",
+              "order": 5
+            },
+            {
+              "name": "Ailín Salas",
+              "character": "Alicia",
+              "order": 6
+            },
+            {
+              "name": "Paola Giannini",
+              "character": "Rosa",
+              "order": 7
+            },
+            {
+              "name": "Samuel Wayt",
+              "character": "Teenage Kid",
+              "order": 8
             }
           ],
           "trending": false
@@ -961,21 +1042,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-969681",
-          "title": "Spider-Man: Brand New Day",
-          "link": "https://www.themoviedb.org/movie/969681",
-          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad—un Spider-Man a tiempo completo—, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
-          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
-          "pubDate": "2026-07-29",
+          "guid": "tmdb-movie-1551025",
+          "title": "Guardaespaldas por navidad",
+          "link": "https://www.themoviedb.org/movie/1551025",
+          "summary": "Una estricta guardaespaldas viaja a un rancho de Montana con el famoso actor al que protege. Pero al fingir ser pareja por Navidad surge un amor real.",
+          "image": "https://image.tmdb.org/t/p/w500/baYwDjfwRQud2Eibpay4XgvYSmv.jpg",
+          "pubDate": "2026-11-18",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-10-30T08:12:18.586Z",
+          "firstSeenAt": "2026-11-20T00:22:24.404Z",
           "fullText": null,
           "rating": {
-            "imdb": 8,
-            "rt": 90,
-            "metascore": 66,
-            "tmdb": 8.5
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.4
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -984,58 +1065,58 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "P3uI5sLosKU",
+            "key": "mFvtVPMa5ak",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Tom Holland",
-              "character": "Peter Parker / Spider-Man",
+              "name": "Leighton Meester",
+              "character": "Hannah",
               "order": 0
             },
             {
-              "name": "Sadie Sink",
-              "character": "Jean Grey",
+              "name": "Jared Padalecki",
+              "character": "Jack",
               "order": 1
             },
             {
-              "name": "Tramell Tillman",
-              "character": "William 'Bill' Metzger",
+              "name": "Andie MacDowell",
+              "character": "Connie Stapleton",
               "order": 2
             },
             {
-              "name": "Zendaya",
-              "character": "MJ",
+              "name": "Walker Hayes",
+              "character": "Sheriff Sanderson",
               "order": 3
             },
             {
-              "name": "Jacob Batalon",
-              "character": "Ned Leeds",
+              "name": "Noah LaLonde",
+              "character": "Hank Stapleton",
               "order": 4
             },
             {
-              "name": "Jon Bernthal",
-              "character": "Frank Castle / Punisher",
+              "name": "Toby Sandeman",
+              "character": "Robbie",
               "order": 5
             },
             {
-              "name": "Mark Ruffalo",
-              "character": "Bruce Banner / Hulk",
+              "name": "Phil Brooks",
+              "character": "Doghouse",
               "order": 6
             },
             {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova / Black Widow",
+              "name": "Ava Max",
+              "character": "Kennedy Monroe",
               "order": 7
             },
             {
-              "name": "Liza Colón-Zayas",
-              "character": "Detective Jean DeWolff",
+              "name": "Jake Foy",
+              "character": "Brody",
               "order": 8
             },
             {
-              "name": "Marisa Tomei",
-              "character": "May Parker",
+              "name": "Siobhan Williams",
+              "character": "Ella Mae",
               "order": 9
             }
           ],
@@ -1130,6 +1211,94 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1131943",
+          "title": "Madden",
+          "link": "https://www.themoviedb.org/movie/1131943",
+          "summary": "Narra la increíble trayectoria de John Madden junto a su mejor amigo y figura verdaderamente singular, Al Davis: desde su colaboración con los Raiders —con quienes ganaron un Super Bowl— hasta convertirse en la voz más reconocible del fútbol americano y crear la serie de videojuegos Madden NFL, conocida a nivel mundial.",
+          "image": "https://image.tmdb.org/t/p/w500/bRa83oPFFPqaAF3wrpVWPqqfFel.jpg",
+          "pubDate": "2026-11-18",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-19T02:57:04.661Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.1
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": {
+            "top": {
+              "rating": 7,
+              "text": "(CASTELLANO)\n\nNo soy especialmente aficionado al fútbol americano, así que Madden partía conmigo con cierta desventaja. He jugado alguna vez a sus videojuegos, conozco la importancia de la franquicia y sé quién era John Madden, pero mi deporte y mi juego anual siempre han sido mucho más FIFA —ahora EA Sports FC— que la NFL.\n\nAun así, la película me ha resultado entretenida.\n\nY buena parte de la culpa la tiene Nicolas Cage.\n\nHe leído comentarios cuestionando su caracterización o tratando su interpretación como si fuera una exageración grotesca, pero ahí creo que existe un problema previo: hay que recordar cómo era realmente John Madden.\n\nEra un hombre enorme, expansivo, ruidoso, tremendamente expresivo y con una energía muy particular. Cage no está interpretando a una figura discreta y conv",
+              "author": "Marco-Hugo Landeta Vacas"
+            },
+            "bottom": null
+          },
+          "trailer": {
+            "key": "xzh7HzLXXpk",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Nicolas Cage",
+              "character": "John Madden",
+              "order": 0
+            },
+            {
+              "name": "Christian Bale",
+              "character": "Al Davis",
+              "order": 1
+            },
+            {
+              "name": "Kathryn Hahn",
+              "character": "Virginia Madden",
+              "order": 2
+            },
+            {
+              "name": "Sienna Miller",
+              "character": "Carol Davis",
+              "order": 3
+            },
+            {
+              "name": "John Mulaney",
+              "character": "Trip Hawkins",
+              "order": 4
+            },
+            {
+              "name": "Snoop Dogg",
+              "character": "Snoop Dogg",
+              "order": 5
+            },
+            {
+              "name": "Shane Gillis",
+              "character": "Vince McGary",
+              "order": 6
+            },
+            {
+              "name": "Marshawn Lynch",
+              "character": "Jerry Bell",
+              "order": 7
+            },
+            {
+              "name": "Julian Edelman",
+              "character": "Gary Kapeck",
+              "order": 8
+            },
+            {
+              "name": "Joel Murray",
+              "character": "Pat Summerall",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1423191",
           "title": "Resident Evil",
           "link": "https://www.themoviedb.org/movie/1423191",
@@ -1211,21 +1380,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1263337",
-          "title": "En el corazón de la bestia",
-          "link": "https://www.themoviedb.org/movie/1263337",
-          "summary": "Tras sobrevivir a un brutal accidente aéreo, el oficial de las Fuerzas Especiales James Belmont y su perro de combate Odín intentarán regresar a la civilización desde un remoto lugar en medio de los parajes salvajes de Alaska.",
-          "image": "https://image.tmdb.org/t/p/w500/ya8iLCNyoVpBO7B7JrNJVj3g7tK.jpg",
-          "pubDate": "2026-09-19",
+          "guid": "tmdb-movie-969681",
+          "title": "Spider-Man: Brand New Day",
+          "link": "https://www.themoviedb.org/movie/969681",
+          "summary": "Han pasado cuatro años desde los acontecimientos de No Way Home, y Peter Parker ahora es un adulto que vive completamente solo, ha desaparecido voluntariamente de las vidas y recuerdos de quienes ama. Combatiendo el crimen en una Nueva York que ya no conoce su nombre, se ha dedicado por completo a proteger su ciudad—un Spider-Man a tiempo completo—, pero a medida que aumentan las exigencias sobre él, la presión desencadena una evolución física que amenaza su existencia, al mismo tiempo que un extraño nuevo patrón de crímenes da lugar a una de las amenazas más poderosas a las que se ha enfrentado.",
+          "image": "https://image.tmdb.org/t/p/w500/9g0sEFhmvmK4nGhXj8DHuv2noYI.jpg",
+          "pubDate": "2026-07-29",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-11-19T15:22:54.584Z",
+          "firstSeenAt": "2026-10-30T08:12:18.586Z",
           "fullText": null,
           "rating": {
-            "imdb": 7.1,
-            "rt": null,
+            "imdb": 8,
+            "rt": 90,
             "metascore": 66,
-            "tmdb": 7.7
+            "tmdb": 8.5
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1234,34 +1403,59 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "UkMuGKqAux4",
+            "key": "P3uI5sLosKU",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Brad Pitt",
-              "character": "James Belmont",
+              "name": "Tom Holland",
+              "character": "Peter Parker / Spider-Man",
               "order": 0
             },
             {
-              "name": "J.K. Simmons",
-              "character": "Watkins",
+              "name": "Sadie Sink",
+              "character": "Jean Grey",
               "order": 1
             },
             {
-              "name": "Anna Lambe",
-              "character": "Amber",
+              "name": "Tramell Tillman",
+              "character": "William 'Bill' Metzger",
               "order": 2
             },
             {
-              "name": "Justin Melnick",
-              "character": "Military Soldier",
+              "name": "Zendaya",
+              "character": "MJ",
               "order": 3
             },
             {
-              "name": "Shaun DeZern",
-              "character": "Military Soldier",
+              "name": "Jacob Batalon",
+              "character": "Ned Leeds",
               "order": 4
+            },
+            {
+              "name": "Jon Bernthal",
+              "character": "Frank Castle / Punisher",
+              "order": 5
+            },
+            {
+              "name": "Mark Ruffalo",
+              "character": "Bruce Banner / Hulk",
+              "order": 6
+            },
+            {
+              "name": "Florence Pugh",
+              "character": "Yelena Belova / Black Widow",
+              "order": 7
+            },
+            {
+              "name": "Liza Colón-Zayas",
+              "character": "Detective Jean DeWolff",
+              "order": 8
+            },
+            {
+              "name": "Marisa Tomei",
+              "character": "May Parker",
+              "order": 9
             }
           ],
           "trending": true
@@ -1348,21 +1542,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1131943",
-          "title": "Madden",
-          "link": "https://www.themoviedb.org/movie/1131943",
-          "summary": "Narra la increíble trayectoria de John Madden junto a su mejor amigo y figura verdaderamente singular, Al Davis: desde su colaboración con los Raiders —con quienes ganaron un Super Bowl— hasta convertirse en la voz más reconocible del fútbol americano y crear la serie de videojuegos Madden NFL, conocida a nivel mundial.",
-          "image": "https://image.tmdb.org/t/p/w500/bRa83oPFFPqaAF3wrpVWPqqfFel.jpg",
-          "pubDate": "2026-11-18",
+          "guid": "tmdb-movie-1263337",
+          "title": "En el corazón de la bestia",
+          "link": "https://www.themoviedb.org/movie/1263337",
+          "summary": "Tras sobrevivir a un brutal accidente aéreo, el oficial de las Fuerzas Especiales James Belmont y su perro de combate Odín intentarán regresar a la civilización desde un remoto lugar en medio de los parajes salvajes de Alaska.",
+          "image": "https://image.tmdb.org/t/p/w500/ya8iLCNyoVpBO7B7JrNJVj3g7tK.jpg",
+          "pubDate": "2026-09-19",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-11-19T02:57:04.661Z",
+          "firstSeenAt": "2026-11-19T15:22:54.584Z",
           "fullText": null,
           "rating": {
-            "imdb": null,
+            "imdb": 7.1,
             "rt": null,
-            "metascore": null,
-            "tmdb": 7.2
+            "metascore": 66,
+            "tmdb": 7.7
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1371,59 +1565,34 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "xzh7HzLXXpk",
+            "key": "UkMuGKqAux4",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Nicolas Cage",
-              "character": "John Madden",
+              "name": "Brad Pitt",
+              "character": "James Belmont",
               "order": 0
             },
             {
-              "name": "Christian Bale",
-              "character": "Al Davis",
+              "name": "J.K. Simmons",
+              "character": "Watkins",
               "order": 1
             },
             {
-              "name": "Kathryn Hahn",
-              "character": "Virginia Madden",
+              "name": "Anna Lambe",
+              "character": "Amber",
               "order": 2
             },
             {
-              "name": "Sienna Miller",
-              "character": "Carol Davis",
+              "name": "Justin Melnick",
+              "character": "Military Soldier",
               "order": 3
             },
             {
-              "name": "John Mulaney",
-              "character": "Trip Hawkins",
+              "name": "Shaun DeZern",
+              "character": "Military Soldier",
               "order": 4
-            },
-            {
-              "name": "Snoop Dogg",
-              "character": "Snoop Dogg",
-              "order": 5
-            },
-            {
-              "name": "Shane Gillis",
-              "character": "Vince McGary",
-              "order": 6
-            },
-            {
-              "name": "Marshawn Lynch",
-              "character": "Jerry Bell",
-              "order": 7
-            },
-            {
-              "name": "Julian Edelman",
-              "character": "Gary Kapeck",
-              "order": 8
-            },
-            {
-              "name": "Joel Murray",
-              "character": "Pat Summerall",
-              "order": 9
             }
           ],
           "trending": false
@@ -3701,87 +3870,6 @@
             }
           ],
           "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1284186",
-          "title": "Sacrifice",
-          "link": "https://www.themoviedb.org/movie/1284186",
-          "summary": "Durante una gala benéfica repleta de estrellas —entre ellas celebridades, multimillonarios y discursos vacíos—, una estrella de cine inmersa en una crisis existencial es tomada como rehén por una guerrera radical y sus fieles seguidores. A medida que la noche se precipita hacia el caos, se desarrollan simultáneamente un viaje interior y una aventura externa, donde la línea que separa la representación de la creencia, y la salvación del sacrificio, comienza a desdibujarse.",
-          "image": "https://image.tmdb.org/t/p/w500/fRjUuePNJFW2BcL5bXAe5xytGr9.jpg",
-          "pubDate": "2026-04-09",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-20T21:20:48.258Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 5.7,
-            "rt": 37,
-            "metascore": 48,
-            "tmdb": 5
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "u5qW1gMMSVI",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Chris Evans",
-              "character": "Mike Tyler",
-              "order": 0
-            },
-            {
-              "name": "Anya Taylor-Joy",
-              "character": "Joan",
-              "order": 1
-            },
-            {
-              "name": "Vincent Cassel",
-              "character": "Ben Bracken",
-              "order": 2
-            },
-            {
-              "name": "Salma Hayek Pinault",
-              "character": "Gloria Bracken",
-              "order": 3
-            },
-            {
-              "name": "John Malkovich",
-              "character": "Gunnar",
-              "order": 4
-            },
-            {
-              "name": "Charli xcx",
-              "character": "Mother Nature",
-              "order": 5
-            },
-            {
-              "name": "Sam Richardson",
-              "character": "Oliver",
-              "order": 6
-            },
-            {
-              "name": "Yung Lean",
-              "character": "Arthur",
-              "order": 8
-            },
-            {
-              "name": "Jade Croot",
-              "character": "Louise",
-              "order": 9
-            },
-            {
-              "name": "Miriam Silverman",
-              "character": "Anna",
-              "order": 10
-            }
-          ],
-          "trending": false
         }
       ]
     },
@@ -4607,6 +4695,113 @@
           ]
         },
         {
+          "guid": "tmdb-tv-231962",
+          "title": "Diepe Waters",
+          "link": "https://www.themoviedb.org/tv/231962",
+          "summary": "A South African, Afrikaans-language telenovela which takes place in and around a competitive swimming club, Die Swartmarlyne.",
+          "image": "https://image.tmdb.org/t/p/w500/uF5SpFjMmYTMF0sc5MbjnDsoBcG.jpg",
+          "pubDate": "2022-10-03",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-10-30T16:33:42.525Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.8,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.2
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-11-02",
+          "numberOfSeasons": 5,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 208,
+              "fechaEstreno": "2022-10-03"
+            },
+            {
+              "numero": 2,
+              "episodios": 208,
+              "fechaEstreno": "2023-10-02"
+            },
+            {
+              "numero": 3,
+              "episodios": 208,
+              "fechaEstreno": "2024-09-30"
+            },
+            {
+              "numero": 4,
+              "episodios": 208,
+              "fechaEstreno": "2025-09-29"
+            },
+            {
+              "numero": 5,
+              "episodios": 37,
+              "fechaEstreno": "2026-09-28"
+            }
+          ],
+          "currentSeason": 5,
+          "reviews": null,
+          "trailer": {
+            "key": "IdHR3_juiE8",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Justin Strydom",
+              "character": "Gys Swarts",
+              "order": 0
+            },
+            {
+              "name": "Sandi Schultz",
+              "character": "Zelda Joubert",
+              "order": 1
+            },
+            {
+              "name": "Nadia Valvekens",
+              "character": "Sanet Swarts",
+              "order": 2
+            },
+            {
+              "name": "Werner Coetser",
+              "character": "Jacques Swarts",
+              "order": 4
+            },
+            {
+              "name": "Danielle Swanepoel",
+              "character": "Karla van der Westhuizen",
+              "order": 6
+            },
+            {
+              "name": "Stiaan Bruwer",
+              "character": "Henry Paddu",
+              "order": 10
+            },
+            {
+              "name": "Johnny Potsanyane",
+              "character": "Tshepo Buti",
+              "order": 11
+            },
+            {
+              "name": "Stephanie Baartman",
+              "character": "Lettie Paddu",
+              "order": 13
+            },
+            {
+              "name": "Mandi du Plooy",
+              "character": "Theresa Swarts",
+              "order": 16
+            },
+            {
+              "name": "Marijke van der Westhuizen",
+              "character": "René du Preez",
+              "order": 17
+            }
+          ],
+          "trending": false
+        },
+        {
           "guid": "tmdb-tv-206559",
           "title": "Binnelanders",
           "link": "https://www.themoviedb.org/tv/206559",
@@ -4791,192 +4986,6 @@
               "order": 87
             }
           ]
-        },
-        {
-          "guid": "tmdb-tv-2224",
-          "title": "The Daily Show",
-          "link": "https://www.themoviedb.org/tv/2224",
-          "summary": "Presentado por el humorista Jon Stewart, es el formato de sátira política más popular de la televisión norteamericana. Ha estado en antena en Comedy Central desde 1996 y ha ganado 18 Primetime Emmys. Se autodefine como un programa de noticias falso y enfoca su particular punto de vista en la actualidad, las noticias, los personajes políticos y de los medios de comunicación fundamentalmente con el objetivo de hacer reír. Generalmente el show comienza con un monólogo de Jon Stewart relacionado con los principales titulares de la actualidad. Después de este monólogo da paso a sus numerosos corresponsales y finalmente suele acabar con una entrevista a un personaje conocido.",
-          "image": "https://image.tmdb.org/t/p/w500/ixcfyK7it6FjRM36Te4OdblAq4X.jpg",
-          "pubDate": "1996-07-22",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-11-02T20:00:15.610Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.3,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.4
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-11-02",
-          "numberOfSeasons": 31,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 7,
-              "fechaEstreno": "1996-07-22"
-            },
-            {
-              "numero": 2,
-              "episodios": 16,
-              "fechaEstreno": "1997-01-06"
-            },
-            {
-              "numero": 3,
-              "episodios": 33,
-              "fechaEstreno": "1998-03-09"
-            },
-            {
-              "numero": 4,
-              "episodios": 159,
-              "fechaEstreno": "1999-01-11"
-            },
-            {
-              "numero": 5,
-              "episodios": 166,
-              "fechaEstreno": "2000-01-04"
-            },
-            {
-              "numero": 6,
-              "episodios": 158,
-              "fechaEstreno": "2001-01-09"
-            },
-            {
-              "numero": 7,
-              "episodios": 160,
-              "fechaEstreno": "2002-01-08"
-            },
-            {
-              "numero": 8,
-              "episodios": 161,
-              "fechaEstreno": "2003-01-07"
-            },
-            {
-              "numero": 9,
-              "episodios": 161,
-              "fechaEstreno": "2004-01-06"
-            },
-            {
-              "numero": 10,
-              "episodios": 159,
-              "fechaEstreno": "2005-01-04"
-            },
-            {
-              "numero": 11,
-              "episodios": 161,
-              "fechaEstreno": "2006-01-04"
-            },
-            {
-              "numero": 12,
-              "episodios": 138,
-              "fechaEstreno": "2007-01-08"
-            },
-            {
-              "numero": 13,
-              "episodios": 160,
-              "fechaEstreno": "2008-01-07"
-            },
-            {
-              "numero": 14,
-              "episodios": 161,
-              "fechaEstreno": "2009-01-05"
-            },
-            {
-              "numero": 15,
-              "episodios": 161,
-              "fechaEstreno": "2010-01-04"
-            },
-            {
-              "numero": 16,
-              "episodios": 124,
-              "fechaEstreno": "2011-01-03"
-            },
-            {
-              "numero": 17,
-              "episodios": 157,
-              "fechaEstreno": "2011-10-03"
-            },
-            {
-              "numero": 18,
-              "episodios": 158,
-              "fechaEstreno": "2012-10-01"
-            },
-            {
-              "numero": 19,
-              "episodios": 159,
-              "fechaEstreno": "2013-09-30"
-            },
-            {
-              "numero": 20,
-              "episodios": 142,
-              "fechaEstreno": "2014-09-29"
-            },
-            {
-              "numero": 21,
-              "episodios": 161,
-              "fechaEstreno": "2015-09-28"
-            },
-            {
-              "numero": 22,
-              "episodios": 163,
-              "fechaEstreno": "2016-10-03"
-            },
-            {
-              "numero": 23,
-              "episodios": 157,
-              "fechaEstreno": "2017-10-02"
-            },
-            {
-              "numero": 24,
-              "episodios": 158,
-              "fechaEstreno": "2018-10-01"
-            },
-            {
-              "numero": 25,
-              "episodios": 160,
-              "fechaEstreno": "2019-09-30"
-            },
-            {
-              "numero": 26,
-              "episodios": 116,
-              "fechaEstreno": "2020-09-28"
-            },
-            {
-              "numero": 27,
-              "episodios": 140,
-              "fechaEstreno": "2021-09-27"
-            },
-            {
-              "numero": 28,
-              "episodios": 122,
-              "fechaEstreno": "2022-10-03"
-            },
-            {
-              "numero": 29,
-              "episodios": 138,
-              "fechaEstreno": "2024-02-12"
-            },
-            {
-              "numero": 30,
-              "episodios": 142,
-              "fechaEstreno": "2025-01-06"
-            },
-            {
-              "numero": 31,
-              "episodios": 134,
-              "fechaEstreno": "2026-01-05"
-            }
-          ],
-          "currentSeason": 31,
-          "reviews": null,
-          "trailer": {
-            "key": "VcEnG7qxnLY",
-            "site": "YouTube"
-          },
-          "cast": [],
-          "trending": false
         },
         {
           "guid": "tmdb-tv-11890",
@@ -5194,6 +5203,192 @@
           "cast": []
         },
         {
+          "guid": "tmdb-tv-2224",
+          "title": "The Daily Show",
+          "link": "https://www.themoviedb.org/tv/2224",
+          "summary": "Presentado por el humorista Jon Stewart, es el formato de sátira política más popular de la televisión norteamericana. Ha estado en antena en Comedy Central desde 1996 y ha ganado 18 Primetime Emmys. Se autodefine como un programa de noticias falso y enfoca su particular punto de vista en la actualidad, las noticias, los personajes políticos y de los medios de comunicación fundamentalmente con el objetivo de hacer reír. Generalmente el show comienza con un monólogo de Jon Stewart relacionado con los principales titulares de la actualidad. Después de este monólogo da paso a sus numerosos corresponsales y finalmente suele acabar con una entrevista a un personaje conocido.",
+          "image": "https://image.tmdb.org/t/p/w500/ixcfyK7it6FjRM36Te4OdblAq4X.jpg",
+          "pubDate": "1996-07-22",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-11-02T20:00:15.610Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.3,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.4
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-11-02",
+          "numberOfSeasons": 31,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 7,
+              "fechaEstreno": "1996-07-22"
+            },
+            {
+              "numero": 2,
+              "episodios": 16,
+              "fechaEstreno": "1997-01-06"
+            },
+            {
+              "numero": 3,
+              "episodios": 33,
+              "fechaEstreno": "1998-03-09"
+            },
+            {
+              "numero": 4,
+              "episodios": 159,
+              "fechaEstreno": "1999-01-11"
+            },
+            {
+              "numero": 5,
+              "episodios": 166,
+              "fechaEstreno": "2000-01-04"
+            },
+            {
+              "numero": 6,
+              "episodios": 158,
+              "fechaEstreno": "2001-01-09"
+            },
+            {
+              "numero": 7,
+              "episodios": 160,
+              "fechaEstreno": "2002-01-08"
+            },
+            {
+              "numero": 8,
+              "episodios": 161,
+              "fechaEstreno": "2003-01-07"
+            },
+            {
+              "numero": 9,
+              "episodios": 161,
+              "fechaEstreno": "2004-01-06"
+            },
+            {
+              "numero": 10,
+              "episodios": 159,
+              "fechaEstreno": "2005-01-04"
+            },
+            {
+              "numero": 11,
+              "episodios": 161,
+              "fechaEstreno": "2006-01-04"
+            },
+            {
+              "numero": 12,
+              "episodios": 138,
+              "fechaEstreno": "2007-01-08"
+            },
+            {
+              "numero": 13,
+              "episodios": 160,
+              "fechaEstreno": "2008-01-07"
+            },
+            {
+              "numero": 14,
+              "episodios": 161,
+              "fechaEstreno": "2009-01-05"
+            },
+            {
+              "numero": 15,
+              "episodios": 161,
+              "fechaEstreno": "2010-01-04"
+            },
+            {
+              "numero": 16,
+              "episodios": 124,
+              "fechaEstreno": "2011-01-03"
+            },
+            {
+              "numero": 17,
+              "episodios": 157,
+              "fechaEstreno": "2011-10-03"
+            },
+            {
+              "numero": 18,
+              "episodios": 158,
+              "fechaEstreno": "2012-10-01"
+            },
+            {
+              "numero": 19,
+              "episodios": 159,
+              "fechaEstreno": "2013-09-30"
+            },
+            {
+              "numero": 20,
+              "episodios": 142,
+              "fechaEstreno": "2014-09-29"
+            },
+            {
+              "numero": 21,
+              "episodios": 161,
+              "fechaEstreno": "2015-09-28"
+            },
+            {
+              "numero": 22,
+              "episodios": 163,
+              "fechaEstreno": "2016-10-03"
+            },
+            {
+              "numero": 23,
+              "episodios": 157,
+              "fechaEstreno": "2017-10-02"
+            },
+            {
+              "numero": 24,
+              "episodios": 158,
+              "fechaEstreno": "2018-10-01"
+            },
+            {
+              "numero": 25,
+              "episodios": 160,
+              "fechaEstreno": "2019-09-30"
+            },
+            {
+              "numero": 26,
+              "episodios": 116,
+              "fechaEstreno": "2020-09-28"
+            },
+            {
+              "numero": 27,
+              "episodios": 140,
+              "fechaEstreno": "2021-09-27"
+            },
+            {
+              "numero": 28,
+              "episodios": 122,
+              "fechaEstreno": "2022-10-03"
+            },
+            {
+              "numero": 29,
+              "episodios": 138,
+              "fechaEstreno": "2024-02-12"
+            },
+            {
+              "numero": 30,
+              "episodios": 142,
+              "fechaEstreno": "2025-01-06"
+            },
+            {
+              "numero": 31,
+              "episodios": 134,
+              "fechaEstreno": "2026-01-05"
+            }
+          ],
+          "currentSeason": 31,
+          "reviews": null,
+          "trailer": {
+            "key": "VcEnG7qxnLY",
+            "site": "YouTube"
+          },
+          "cast": [],
+          "trending": false
+        },
+        {
           "guid": "tmdb-tv-279246",
           "title": "La emperatriz divorciada",
           "link": "https://www.themoviedb.org/tv/279246",
@@ -5248,113 +5443,6 @@
               "order": 3
             }
           ]
-        },
-        {
-          "guid": "tmdb-tv-231962",
-          "title": "Diepe Waters",
-          "link": "https://www.themoviedb.org/tv/231962",
-          "summary": "A South African, Afrikaans-language telenovela which takes place in and around a competitive swimming club, Die Swartmarlyne.",
-          "image": "https://image.tmdb.org/t/p/w500/uF5SpFjMmYTMF0sc5MbjnDsoBcG.jpg",
-          "pubDate": "2022-10-03",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-10-30T16:33:42.525Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.8,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.2
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-11-02",
-          "numberOfSeasons": 5,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 208,
-              "fechaEstreno": "2022-10-03"
-            },
-            {
-              "numero": 2,
-              "episodios": 208,
-              "fechaEstreno": "2023-10-02"
-            },
-            {
-              "numero": 3,
-              "episodios": 208,
-              "fechaEstreno": "2024-09-30"
-            },
-            {
-              "numero": 4,
-              "episodios": 208,
-              "fechaEstreno": "2025-09-29"
-            },
-            {
-              "numero": 5,
-              "episodios": 37,
-              "fechaEstreno": "2026-09-28"
-            }
-          ],
-          "currentSeason": 5,
-          "reviews": null,
-          "trailer": {
-            "key": "IdHR3_juiE8",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Justin Strydom",
-              "character": "Gys Swarts",
-              "order": 0
-            },
-            {
-              "name": "Sandi Schultz",
-              "character": "Zelda Joubert",
-              "order": 1
-            },
-            {
-              "name": "Nadia Valvekens",
-              "character": "Sanet Swarts",
-              "order": 2
-            },
-            {
-              "name": "Werner Coetser",
-              "character": "Jacques Swarts",
-              "order": 4
-            },
-            {
-              "name": "Danielle Swanepoel",
-              "character": "Karla van der Westhuizen",
-              "order": 6
-            },
-            {
-              "name": "Stiaan Bruwer",
-              "character": "Henry Paddu",
-              "order": 10
-            },
-            {
-              "name": "Johnny Potsanyane",
-              "character": "Tshepo Buti",
-              "order": 11
-            },
-            {
-              "name": "Stephanie Baartman",
-              "character": "Lettie Paddu",
-              "order": 13
-            },
-            {
-              "name": "Mandi du Plooy",
-              "character": "Theresa Swarts",
-              "order": 16
-            },
-            {
-              "name": "Marijke van der Westhuizen",
-              "character": "René du Preez",
-              "order": 17
-            }
-          ],
-          "trending": false
         },
         {
           "guid": "tmdb-tv-153312",
@@ -5454,6 +5542,113 @@
               "name": "James Russo",
               "character": "Quiet Ray Renzetti",
               "order": 9
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-tv-61818",
+          "title": "Late Night with Seth Meyers",
+          "link": "https://www.themoviedb.org/tv/61818",
+          "summary": "Seth Meyers, who is \"Saturday Night Live's\" longest serving anchor on the show's wildly popular \"Weekend Update,\" takes over as host of NBC's \"Late Night\" — home to A-list celebrity guests, memorable comedy and the best in musical talent. As the Emmy Award-winning head writer for \"SNL,\" Meyers has established a reputation for sharp wit and perfectly timed comedy, and has gained fame for his spot-on jokes and satire. Meyers takes his departure from \"SNL\" to his new post at \"Late Night,\" as Jimmy Fallon moves to \"The Tonight Show\".",
+          "image": "https://image.tmdb.org/t/p/w500/qKFP9Se7LJtBaxrMS41iu63dtK3.jpg",
+          "pubDate": "2014-02-25",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-11-18T09:50:08.819Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.4,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 5.1
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-11-18",
+          "numberOfSeasons": 14,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 99,
+              "fechaEstreno": "2014-02-25"
+            },
+            {
+              "numero": 2,
+              "episodios": 161,
+              "fechaEstreno": "2014-09-23"
+            },
+            {
+              "numero": 3,
+              "episodios": 160,
+              "fechaEstreno": "2015-09-22"
+            },
+            {
+              "numero": 4,
+              "episodios": 162,
+              "fechaEstreno": "2016-09-20"
+            },
+            {
+              "numero": 5,
+              "episodios": 154,
+              "fechaEstreno": "2017-09-26"
+            },
+            {
+              "numero": 6,
+              "episodios": 150,
+              "fechaEstreno": "2018-09-25"
+            },
+            {
+              "numero": 7,
+              "episodios": 153,
+              "fechaEstreno": "2019-09-24"
+            },
+            {
+              "numero": 8,
+              "episodios": 155,
+              "fechaEstreno": "2020-09-22"
+            },
+            {
+              "numero": 9,
+              "episodios": 137,
+              "fechaEstreno": "2021-09-21"
+            },
+            {
+              "numero": 10,
+              "episodios": 91,
+              "fechaEstreno": "2022-09-20"
+            },
+            {
+              "numero": 11,
+              "episodios": 140,
+              "fechaEstreno": "2023-10-03"
+            },
+            {
+              "numero": 12,
+              "episodios": 141,
+              "fechaEstreno": "2024-09-24"
+            },
+            {
+              "numero": 13,
+              "episodios": 124,
+              "fechaEstreno": "2025-09-21"
+            },
+            {
+              "numero": 14,
+              "episodios": 33,
+              "fechaEstreno": "2026-09-21"
+            }
+          ],
+          "currentSeason": 14,
+          "reviews": null,
+          "trailer": {
+            "key": "rLwbzGyC6t4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Seth Meyers",
+              "character": "Self - Host",
+              "order": 0
             }
           ],
           "trending": false
@@ -5767,113 +5962,6 @@
               "name": "Steve Higgins",
               "character": "Self - Announcer",
               "order": 1
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-61818",
-          "title": "Late Night with Seth Meyers",
-          "link": "https://www.themoviedb.org/tv/61818",
-          "summary": "Seth Meyers, who is \"Saturday Night Live's\" longest serving anchor on the show's wildly popular \"Weekend Update,\" takes over as host of NBC's \"Late Night\" — home to A-list celebrity guests, memorable comedy and the best in musical talent. As the Emmy Award-winning head writer for \"SNL,\" Meyers has established a reputation for sharp wit and perfectly timed comedy, and has gained fame for his spot-on jokes and satire. Meyers takes his departure from \"SNL\" to his new post at \"Late Night,\" as Jimmy Fallon moves to \"The Tonight Show\".",
-          "image": "https://image.tmdb.org/t/p/w500/qKFP9Se7LJtBaxrMS41iu63dtK3.jpg",
-          "pubDate": "2014-02-25",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-11-18T09:50:08.819Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.4,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 5.1
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-11-18",
-          "numberOfSeasons": 14,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 99,
-              "fechaEstreno": "2014-02-25"
-            },
-            {
-              "numero": 2,
-              "episodios": 161,
-              "fechaEstreno": "2014-09-23"
-            },
-            {
-              "numero": 3,
-              "episodios": 160,
-              "fechaEstreno": "2015-09-22"
-            },
-            {
-              "numero": 4,
-              "episodios": 162,
-              "fechaEstreno": "2016-09-20"
-            },
-            {
-              "numero": 5,
-              "episodios": 154,
-              "fechaEstreno": "2017-09-26"
-            },
-            {
-              "numero": 6,
-              "episodios": 150,
-              "fechaEstreno": "2018-09-25"
-            },
-            {
-              "numero": 7,
-              "episodios": 153,
-              "fechaEstreno": "2019-09-24"
-            },
-            {
-              "numero": 8,
-              "episodios": 155,
-              "fechaEstreno": "2020-09-22"
-            },
-            {
-              "numero": 9,
-              "episodios": 137,
-              "fechaEstreno": "2021-09-21"
-            },
-            {
-              "numero": 10,
-              "episodios": 91,
-              "fechaEstreno": "2022-09-20"
-            },
-            {
-              "numero": 11,
-              "episodios": 140,
-              "fechaEstreno": "2023-10-03"
-            },
-            {
-              "numero": 12,
-              "episodios": 141,
-              "fechaEstreno": "2024-09-24"
-            },
-            {
-              "numero": 13,
-              "episodios": 124,
-              "fechaEstreno": "2025-09-21"
-            },
-            {
-              "numero": 14,
-              "episodios": 33,
-              "fechaEstreno": "2026-09-21"
-            }
-          ],
-          "currentSeason": 14,
-          "reviews": null,
-          "trailer": {
-            "key": "rLwbzGyC6t4",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Seth Meyers",
-              "character": "Self - Host",
-              "order": 0
             }
           ],
           "trending": false
@@ -7166,257 +7254,6 @@
     {
       "cat": "Animación",
       "items": [
-        {
-          "guid": "tmdb-tv-456",
-          "title": "Los Simpson",
-          "link": "https://www.themoviedb.org/tv/456",
-          "summary": "El día a día de una peculiar familia formada por Homer, Marge, Bart, Maggie y Lisa Simpson y otros divertidos personajes de la localidad norteamericana de Springfield. Homer, el padre, es un desastroso inspector de seguridad de una central nuclear. Marge, la madre, es un ama de casa acostumbrada a soportar a su peculiar familia. Bart, de diez años, intenta divertirse con travesuras de todo tipo. Lisa es la más inteligente de la familia, y Maggie, la más pequeña, es un bebé que todavía no habla, pero que juega un importante papel.",
-          "image": "https://image.tmdb.org/t/p/w500/9hmoEmntaYrrlb4HKSFisWUQnqy.jpg",
-          "pubDate": "1989-12-17",
-          "source": "TMDb",
-          "categoria": "Animación",
-          "firstSeenAt": "2026-10-20T21:20:48.333Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.6,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-25",
-          "numberOfSeasons": 38,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 13,
-              "fechaEstreno": "1989-12-17"
-            },
-            {
-              "numero": 2,
-              "episodios": 22,
-              "fechaEstreno": "1990-10-11"
-            },
-            {
-              "numero": 3,
-              "episodios": 24,
-              "fechaEstreno": "1991-09-19"
-            },
-            {
-              "numero": 4,
-              "episodios": 22,
-              "fechaEstreno": "1992-09-24"
-            },
-            {
-              "numero": 5,
-              "episodios": 22,
-              "fechaEstreno": "1993-09-30"
-            },
-            {
-              "numero": 6,
-              "episodios": 25,
-              "fechaEstreno": "1994-09-04"
-            },
-            {
-              "numero": 7,
-              "episodios": 25,
-              "fechaEstreno": "1995-09-17"
-            },
-            {
-              "numero": 8,
-              "episodios": 25,
-              "fechaEstreno": "1996-10-27"
-            },
-            {
-              "numero": 9,
-              "episodios": 25,
-              "fechaEstreno": "1997-09-21"
-            },
-            {
-              "numero": 10,
-              "episodios": 23,
-              "fechaEstreno": "1998-08-23"
-            },
-            {
-              "numero": 11,
-              "episodios": 22,
-              "fechaEstreno": "1999-09-26"
-            },
-            {
-              "numero": 12,
-              "episodios": 21,
-              "fechaEstreno": "2000-11-01"
-            },
-            {
-              "numero": 13,
-              "episodios": 22,
-              "fechaEstreno": "2001-11-06"
-            },
-            {
-              "numero": 14,
-              "episodios": 22,
-              "fechaEstreno": "2002-11-03"
-            },
-            {
-              "numero": 15,
-              "episodios": 22,
-              "fechaEstreno": "2003-11-02"
-            },
-            {
-              "numero": 16,
-              "episodios": 21,
-              "fechaEstreno": "2004-11-07"
-            },
-            {
-              "numero": 17,
-              "episodios": 22,
-              "fechaEstreno": "2005-09-11"
-            },
-            {
-              "numero": 18,
-              "episodios": 22,
-              "fechaEstreno": "2006-09-10"
-            },
-            {
-              "numero": 19,
-              "episodios": 20,
-              "fechaEstreno": "2007-09-23"
-            },
-            {
-              "numero": 20,
-              "episodios": 21,
-              "fechaEstreno": "2008-09-28"
-            },
-            {
-              "numero": 21,
-              "episodios": 23,
-              "fechaEstreno": "2009-09-27"
-            },
-            {
-              "numero": 22,
-              "episodios": 22,
-              "fechaEstreno": "2010-09-26"
-            },
-            {
-              "numero": 23,
-              "episodios": 22,
-              "fechaEstreno": "2011-09-25"
-            },
-            {
-              "numero": 24,
-              "episodios": 22,
-              "fechaEstreno": "2012-09-30"
-            },
-            {
-              "numero": 25,
-              "episodios": 22,
-              "fechaEstreno": "2013-09-29"
-            },
-            {
-              "numero": 26,
-              "episodios": 22,
-              "fechaEstreno": "2014-09-28"
-            },
-            {
-              "numero": 27,
-              "episodios": 22,
-              "fechaEstreno": "2015-09-27"
-            },
-            {
-              "numero": 28,
-              "episodios": 22,
-              "fechaEstreno": "2016-09-25"
-            },
-            {
-              "numero": 29,
-              "episodios": 21,
-              "fechaEstreno": "2017-10-01"
-            },
-            {
-              "numero": 30,
-              "episodios": 23,
-              "fechaEstreno": "2018-09-30"
-            },
-            {
-              "numero": 31,
-              "episodios": 22,
-              "fechaEstreno": "2019-09-29"
-            },
-            {
-              "numero": 32,
-              "episodios": 22,
-              "fechaEstreno": "2020-09-27"
-            },
-            {
-              "numero": 33,
-              "episodios": 22,
-              "fechaEstreno": "2021-09-26"
-            },
-            {
-              "numero": 34,
-              "episodios": 22,
-              "fechaEstreno": "2022-09-25"
-            },
-            {
-              "numero": 35,
-              "episodios": 18,
-              "fechaEstreno": "2023-10-01"
-            },
-            {
-              "numero": 36,
-              "episodios": 18,
-              "fechaEstreno": "2024-09-29"
-            },
-            {
-              "numero": 37,
-              "episodios": 15,
-              "fechaEstreno": "2025-09-28"
-            },
-            {
-              "numero": 38,
-              "episodios": 7,
-              "fechaEstreno": "2026-09-27"
-            }
-          ],
-          "currentSeason": 38,
-          "reviews": null,
-          "trailer": {
-            "key": "_jgYEYERYFQ",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Dan Castellaneta",
-              "character": "Homer Simpson / Abe Simpson / Barney Gumble / Krusty the Clown / Groundskeeper Willie / Mayor Quimby (voice)",
-              "order": 0
-            },
-            {
-              "name": "Julie Kavner",
-              "character": "Marge Simpson / Patty Bouvier / Selma Bouvier / Jacqueline Bouvier (voice)",
-              "order": 1
-            },
-            {
-              "name": "Nancy Cartwright",
-              "character": "Bart Simpson / Maggie Simpson / Nelson Muntz / Ralph Wiggum (voice)",
-              "order": 2
-            },
-            {
-              "name": "Yeardley Smith",
-              "character": "Lisa Simpson / Maggie Simpson (voice)",
-              "order": 3
-            },
-            {
-              "name": "Hank Azaria",
-              "character": "Moe Szyslak / Chief Wiggum / Apu / Comic Book Guy / Carl Carlson / Superintendent Chalmers (voice)",
-              "order": 4
-            },
-            {
-              "name": "Harry Shearer",
-              "character": "Ned Flanders / Mr. Burns / Smithers / Principal Skinner / Lenny Leonard (voice)",
-              "order": 6
-            }
-          ]
-        },
         {
           "guid": "tmdb-tv-387",
           "title": "Bob Esponja",
