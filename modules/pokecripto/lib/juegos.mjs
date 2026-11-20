@@ -12,6 +12,7 @@
 import { claveVersion, precioVersion, versionElegida, precioReferencia, etiquetaVersion, urlImagen, urlImagenGrande } from "../../tcgcrypto/logica.js";
 import { addSnapshot, compactarHistorial } from "./pricing.mjs";
 import { marcarCortes, extrasSnapshot } from "./historial.mjs";
+import { describirVariante, ordenarVariantes } from "./variantes-comunes.mjs";
 
 export const JUEGOS = [
   { id: "pokemon", nombre: "Pokémon", emoji: "🎴" },
@@ -21,7 +22,8 @@ export const JUEGOS = [
 export const OTROS_JUEGOS = JUEGOS.filter(j => j.id !== "pokemon").map(j => j.id);
 export const juegoDe = c => (c && typeof c.juego === "string" && c.juego) || "pokemon";
 export const esPokemon = c => juegoDe(c) === "pokemon";
-export const idFila = (juego, colecId, k) => `${juego}:${colecId}:${k}`;
+// Una fila por VARIANTE de la carta (cada variante es su propio ejemplar: costo, historial y gráfico propios). `vkey` = "pid|subtipo".
+export const idFila = (juego, colecId, k, vkey) => (vkey ? `${juego}:${colecId}:${k}:${vkey}` : `${juego}:${colecId}:${k}`);
 
 // ¿La tengo? (estado de Pokécripto: todo menos "hunting" y "vendida")
 export const filaTiene = f => !!f && f.estado !== "hunting" && f.estado !== "vendida";
@@ -38,12 +40,22 @@ export function marcaDeFila(f) {
   if (f.notas) m.nt = f.notas;
   return m;
 }
-// { [k]: marca } de las filas de un juego en una colección (por nombre de carpeta)
+// { [k]: marca } de las filas de un juego en una colección (por nombre de carpeta). Una carta puede tener VARIAS filas (una por
+// variante): la marca agregada dice "la tengo" si alguna lo está, suma cantidades y costos, y `e` es la variante que cuenta para el precio.
 export function marcasDeFilas(filas, juego, carpeta) {
   const out = {};
-  for (const f of filas || []) if (juegoDe(f) === juego && f.carpeta === carpeta && f.cardId) out[f.cardId] = marcaDeFila(f);
+  for (const f of filas || []) {
+    if (juegoDe(f) !== juego || f.carpeta !== carpeta || !f.cardId) continue;
+    const m = marcaDeFila(f), prev = out[f.cardId];
+    if (!prev) { out[f.cardId] = m; continue; }
+    const tiene = filaTiene(f);
+    out[f.cardId] = { ...prev, c: prev.c || m.c, e: (prev.c && prev.e) || (tiene && m.e) || prev.e || m.e, q: (prev.q || (prev.c ? 1 : 0)) + (tiene ? (f.cantidad || 1) : 0) || undefined, cu: (prev.cu || 0) + (m.cu || 0) || undefined, nt: prev.nt || m.nt };
+    if (!(out[f.cardId].q > 1)) delete out[f.cardId].q;
+  }
   return out;
 }
+// Filas (una por variante) de una carta en una colección
+export const filasDeCarta = (filas, juego, carpeta, k) => (filas || []).filter(f => juegoDe(f) === juego && f.carpeta === carpeta && f.cardId === k);
 const marcaVacia = m => !m.c && !m.e && !(m.q > 1) && !m.cu && !m.nt;
 
 const indices = new WeakMap();
@@ -78,19 +90,23 @@ function conSnapshot(historial, p, hoy) {
   return compactarHistorial(marcarCortes(addSnapshot(historial, p.market, p.low, p.high, hoy, "csv", extrasSnapshot({ tid: p.tid, variant: p.variant }))), hoy);
 }
 
-// Aplica un parche de marca ({c,e,q,cu,nt}; null/""/0 = borrar el campo) a la carta k de una colección y devuelve el
-// inventario nuevo. Si la marca queda vacía la fila desaparece. Mismas reglas que ponerMarca de tcgcrypto.
-export function aplicarMarca(inventario, { juego, datos, col, k, parche, hoy }) {
+// Aplica un parche ({c,q,cu,nt}; null/""/0 = borrar el campo) a UNA variante (`vkey` = "pid|subtipo") de la carta k en una colección y
+// devuelve el inventario nuevo. Si la fila queda sin nada marcado desaparece. Sin `vkey` usa la variante más barata con precio.
+export function aplicarMarca(inventario, { juego, datos, col, k, vkey, parche, hoy }) {
   const inv = Array.isArray(inventario) ? inventario : [];
   const carta = cartaDe(datos, k);
   if (!carta) return inv;
-  const id = idFila(juego, col.id, k);
+  if (!vkey) { const p0 = precioDeCarta(carta, null); vkey = p0 ? claveVersion(p0.version) : claveVersion(carta.v[0]); }
+  const v = carta.v.find(x => claveVersion(x) === vkey);
+  if (!v) return inv;
+  const id = idFila(juego, col.id, k, vkey);
   const prev = inv.find(f => f.id === id) || null;
-  const m = { ...(marcaDeFila(prev) || {}), ...parche };
+  const m = { ...(prev ? { ...marcaDeFila(prev), e: undefined } : {}), ...parche };
+  delete m.e;
   for (const campo of Object.keys(m)) if (m[campo] === undefined || m[campo] === null || m[campo] === "" || m[campo] === 0) delete m[campo];
   if (marcaVacia(m)) return prev ? inv.filter(f => f.id !== id) : inv;
-  const p = precioDeCarta(carta, m);
-  const v = (p && p.version) || versionElegida(carta, m) || carta.v[0];
+  const market = precioVersion(v);
+  const p = market != null ? { market, low: v[6] != null ? v[6] : null, high: v[7] != null ? v[7] : null, tid: String(v[0]), variant: v[1] || null } : null;
   const tiene = !!m.c;
   const estado = tiene ? (prev && filaTiene(prev) ? prev.estado : "en_mano") : "hunting";
   const fila = {
@@ -98,7 +114,7 @@ export function aplicarMarca(inventario, { juego, datos, col, k, parche, hoy }) 
     id, juego, cardId: k, coleccion: col.id, carpeta: col.nombre,
     name: carta.n, set: (datos.sets && datos.sets[v[2]]) || "", setCode: "", number: v[3] || "", rarity: v[4] || "",
     image: urlImagen(datos.imgTpl, v[0], 200), imageHd: urlImagenGrande(v[0]),
-    tcgcsvKey: m.e || null,
+    tcgcsvKey: vkey,
     tcgMarket: p ? p.market : (prev ? prev.tcgMarket : null), tcgLow: p ? p.low : (prev ? prev.tcgLow : null), tcgHigh: p ? p.high : (prev ? prev.tcgHigh : null),
     tcgUpdated: p ? hoy : (prev ? prev.tcgUpdated : null),
     priceHistory: conSnapshot(prev ? prev.priceHistory : [], p, hoy),
@@ -107,6 +123,29 @@ export function aplicarMarca(inventario, { juego, datos, col, k, parche, hoy }) 
     fechaCompra: tiene ? (prev && prev.fechaCompra) || hoy : null, fechaVenta: null, precioVendidoUSD: null,
   };
   return prev ? inv.map(f => (f.id === id ? fila : f)) : [...inv, fila];
+}
+
+// Variantes de una impresión: todas las versiones de la carta con el mismo set y número (distintas rarezas, ediciones, acabados),
+// descritas con el formato común. `key` = "pid|subtipo".
+export function variantesDeImpresion(datos, carta, setIdx, numero, juego = "yugioh") {
+  const vs = carta.v.filter(v => v[2] === setIdx && (v[3] || "") === (numero || ""));
+  return ordenarVariantes(vs.map(v => ({ ...describirVariante({ juego, sub: v[1], rareza: v[4], grupo: datos.sets[v[2]], market: precioVersion(v), low: v[6], high: v[7], pid: v[0] }), key: claveVersion(v), v })));
+}
+
+// Resumen de una colección sobre FILAS: cartas conseguidas (alguna variante), valor conseguido (cada variante que tienes × cantidad)
+// y valor total (la variante más barata de cada carta).
+export function resumenFilas(cartas, filasCol) {
+  const porCarta = new Map();
+  for (const f of filasCol) if (filaTiene(f)) { const a = porCarta.get(f.cardId) || []; a.push(f); porCarta.set(f.cardId, a); }
+  let conseguidas = 0, valorConseguido = 0, valorTotal = 0, sinPrecio = 0;
+  for (const c of cartas) {
+    const p = precioDeCarta(c, null);
+    if (p) valorTotal += p.market; else sinPrecio++;
+    const mias = porCarta.get(c.k);
+    if (mias) { conseguidas++; for (const f of mias) valorConseguido += (f.tcgMarket || 0) * Math.max(1, f.cantidad || 1); }
+  }
+  const total = cartas.length;
+  return { total, conseguidas, pct: total ? Math.floor(conseguidas / total * 100) : 0, valorTotal: Math.round(valorTotal * 100) / 100, valorConseguido: Math.round(valorConseguido * 100) / 100, sinPrecio };
 }
 
 // Refresca los precios de TODAS las filas de otros juegos desde sus catálogos ({ yugioh: datos, digimon: datos }).

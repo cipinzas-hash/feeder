@@ -18,6 +18,7 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { normNum, normName } from "../../pokecripto/lib/pricing.mjs";
 import { nombreSetCompatible } from "../../pokecripto/lib/variantes.mjs";
+import { describirVariante, multiploSobreBase } from "../../pokecripto/lib/variantes-comunes.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const RAIZ = path.join(AQUI, "..", "..", "..");
@@ -148,6 +149,35 @@ const tcgCercaDeSello = conHermanoSello.filter(f => f.tcgMarket > 0 && f.tcgcsv 
 const ratioActual = emparejadas.filter(f => f.tcgMarket > 0 && f.tcgcsv > 0).map(f => f.tcgcsv / f.tcgMarket);
 const ratioMejor = emparejadas.filter(f => f.tcgMarket > 0).map(f => { const v = (f.subtipos || []).filter(x => x.market != null); if (!v.length) return null; const c = v.sort((a, b) => Math.abs(a.market - f.tcgMarket) - Math.abs(b.market - f.tcgMarket))[0]; return c.market / f.tcgMarket; }).filter(x => x != null);
 
+// ── 5b. Variantes de sello ENTRE SETS (liga, prerelease, campeonato…) ───────────────────────────────────────
+// Los sellos suelen vivir en grupos de promos aparte, no en el set de la carta base: se busca el mismo nombre base + mismo número CON total
+// ("025/165") en toda la categoría y se miden los hermanos que traen paréntesis.
+const numeroCrudo = p => String(p.number || "").toUpperCase().replace(/\s+/g, "");
+const nombreBase = p => normName(quitaParentesis(p.name));
+const porNombreNumero = new Map();
+for (const p of productos.values()) { if (!p.number) continue; const k = nombreBase(p) + "|" + numeroCrudo(p); if (!porNombreNumero.has(k)) porNombreNumero.set(k, []); porNombreNumero.get(k).push(p); }
+const grupoNombre = new Map(grupos.map(g => [g.groupId, g.name]));
+const hallazgos = [];   // {fila, hermano, tipo, multiplo}
+const tiposSello = new Map(), gruposSello = new Map();
+let filasConSello = 0, filasConPatron = 0;
+for (const f of emparejadas) {
+  const base = productos.get(f.productId); if (!base) continue;
+  const key = nombreBase(base) + "|" + numeroCrudo(base);
+  const hermanos = (porNombreNumero.get(key) || []).filter(p => p.productId !== base.productId && sufijoParentesis(p.name));
+  let sello = false, patron = false;
+  const precioBase = f.tcgcsv;
+  for (const h of hermanos) {
+    const d = describirVariante({ juego: "pokemon", sufijo: sufijoParentesis(h.name), grupo: grupoNombre.get(h.groupId) });
+    const ph = subAuto(precios.get(h.productId) || [])?.market ?? null;
+    if (d.tipo === "sello") { sello = true; tiposSello.set(d.clave, (tiposSello.get(d.clave) || 0) + 1); gruposSello.set(grupoNombre.get(h.groupId), (gruposSello.get(grupoNombre.get(h.groupId)) || 0) + 1); hallazgos.push({ fila: f, hermano: h, tipo: d.clave, sufijo: sufijoParentesis(h.name), grupo: grupoNombre.get(h.groupId), precio: ph, multiplo: precioBase > 0 && ph != null ? Math.round(ph / precioBase * 10) / 10 : null }); }
+    else if (d.tipo === "patron") patron = true;
+  }
+  if (sello) filasConSello++; if (patron) filasConPatron++;
+}
+const mults = hallazgos.map(h => h.multiplo).filter(x => x != null);
+const topSello = [...hallazgos].filter(h => h.multiplo != null).sort((a, b) => b.multiplo - a.multiplo).slice(0, 12);
+const porTipoFila = new Map(); for (const h of hallazgos) { const k = h.fila.id + "|" + h.tipo; porTipoFila.set(k, 1); }
+
 // ── 6. Archivo histórico ─────────────────────────────────────────────────────
 const archivo = { disponibles: [], faltan: [], error: null, nuevo: null, antiguo: null };
 const meses = []; for (let y = 2024, m = 2; y < 2026 || (y === 2026 && m <= 11); m++) { if (m > 12) { m = 1; y++; } meses.push(`${y}-${String(m).padStart(2, "0")}-${y === 2024 && m === 2 ? "08" : "01"}`); }
@@ -202,7 +232,14 @@ const soloSello = filas.filter(f => f.estado === "solo_sello");
 md.push(`Las ${soloSello.length} filas «solo con sello»: sufijos ${contar(soloSello.flatMap(f => f.hermanosSello.map(h => h.sufijo))).slice(0, 8).map(([k, v]) => `${k} (${v})`).join(" · ") || "—"}; ejemplos: ${soloSello.slice(0, 6).map(f => `${f.name} ${f.number} (${f.set})`).join("; ") || "—"}.`, "");
 md.push("### Filas sin emparejar, por set del inventario", "", ...["sin_set", "sin_numero", "sin_nombre"].map(est => `- **${est}** (${filas.filter(f => f.estado === est).length}): ${contar(filas.filter(f => f.estado === est).map(f => f.set)).slice(0, 8).map(([k, v]) => `${k} (${v})`).join(" · ") || "—"}`), "");
 md.push("## 4. Precio tcgcsv vs tcgpricelookup actual (tcgMarket)", "", `- Con la regla automática de acabado: ${fmtRatio(ratioActual)}; dentro de ±10 %: ${dentro(ratioActual, 0.1)}; dentro de ±25 %: ${dentro(ratioActual, 0.25)}.`, `- Eligiendo para cada fila el acabado más cercano (cota optimista): ${fmtRatio(ratioMejor)}; dentro de ±10 %: ${dentro(ratioMejor, 0.1)}.`, "");
-md.push("## 5. Archivo histórico de tcgcsv", "");
+md.push("## 5. Variantes de sello entre sets (liga, prerelease, campeonato…)", "");
+md.push(`Regla probada: mismo nombre base + mismo número con total (p. ej. «025/165») en **cualquier grupo** de la categoría, con un paréntesis en el nombre del producto hermano.`, "");
+md.push(`- Filas del inventario con **al menos una variante de sello** en otro grupo (o en el mismo): **${filasConSello}** de ${emparejadas.length} (${pct(filasConSello, emparejadas.length)}). Con patrón (Poké Ball, Master Ball, logo de tipo…) además: ${filasConPatron}.`);
+md.push(`- Tipos de sello encontrados (hermanos): ${[...tiposSello.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} (${v})`).join(" · ") || "ninguno"}.`);
+md.push(`- Grupos donde viven: ${[...gruposSello.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([k, v]) => `${k} (${v})`).join(" · ") || "—"}.`);
+md.push(`- Precio del sello ÷ precio de la carta base (acabado automático): ${fmtRatio(mults)}.`);
+if (topSello.length) { md.push("", "| Carta | Set | Sello | Grupo del sello | Base | Sello | × |", "|---|---|---|---|---:|---:|---:|", ...topSello.map(h => `| ${h.fila.name} ${h.fila.number} | ${h.fila.set} | ${h.tipo} (${h.sufijo}) | ${h.grupo} | ${h.fila.tcgcsv != null ? "$" + r2(h.fila.tcgcsv) : "—"} | ${h.precio != null ? "$" + r2(h.precio) : "—"} | ${h.multiplo} |`), ""); }
+md.push("## 6. Archivo histórico de tcgcsv", "");
 if (archivo.error) md.push(`- ⚠ Archivo ${FECHA_ARCHIVO}: ${archivo.error}`);
 if (archivo.nuevo) md.push(`- Archivo ${FECHA_ARCHIVO}: ${(archivo.nuevo.bytes / 1048576).toFixed(1)} MB, ${archivo.nuevo.archivos} archivos de precios de la categoría ${CAT} (p. ej. \`${archivo.nuevo.ejemploRuta}\`), ${archivo.nuevo.productos} productos. Primeras rutas extraídas: ${archivo.nuevo.muestra.map(x => "\`" + x + "\`").join(", ")}.`);
 if (archivo.nuevo) md.push(`- **Empalme con tcgpricelookup el ${FECHA_ARCHIVO}** (precio del archivo ÷ snapshot diario de esa fecha, mismo acabado): ${fmtRatio(ratiosArchivo)}; dentro de ±10 %: ${dentro(ratiosArchivo, 0.1)}; dentro de ±25 %: ${dentro(ratiosArchivo, 0.25)}.`);
@@ -212,5 +249,5 @@ md.push(`- Un archivo por mes (día 1; el primero del archivo es el ${FECHA_ANTI
 if (avisos.length) md.push("## Avisos", "", ...avisos.map(a => "- " + a), "");
 fs.mkdirSync(path.dirname(SALIDA_MD), { recursive: true });
 fs.writeFileSync(SALIDA_MD, md.join("\n"));
-fs.writeFileSync(DETALLE, JSON.stringify({ generado: new Date().toISOString(), categoria: CAT, filas }, null, 1));
+fs.writeFileSync(DETALLE, JSON.stringify({ generado: new Date().toISOString(), categoria: CAT, filas, sellos: hallazgos.map(h => ({ id: h.fila.id, name: h.fila.name, number: h.fila.number, set: h.fila.set, productId: h.hermano.productId, tipo: h.tipo, sufijo: h.sufijo, grupo: h.grupo, precio: h.precio, multiplo: h.multiplo })) }, null, 1));
 console.log(md.join("\n"));

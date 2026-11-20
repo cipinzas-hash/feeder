@@ -50,3 +50,17 @@ memoizado con tarjetas estables.
 consumen cupo) y el resto de la batería. Flujo de pantalla verificado en jsdom sobre la versión offline: selector → Yu-Gi-Oh! → menú → Eldlich (por sets, borde rojo) →
 vistas ▦ ≡ → detalle a pantalla completa (1 / 14, ‹ ›) → «marcar conseguida» crea la fila (`en_mano`, `csv`) → ✎ editar costo → elegir edición →
 volver (1 conseguida, borde verde) → menú actualizado → Digimon con la misma estructura → Pokémon sin cambios (123 cartas).
+
+
+## Variantes homogéneas y tamaño de caras (20-nov-2026)
+- `lib/variantes-comunes.mjs`: una variante se describe igual en todos los juegos (tipo, etiqueta, ícono, orden): **acabado** (Normal, Holo, Reverse,
+  Foil), **patrón** (Poké Ball, Master Ball, logo de tipo, Dusk/Friend Ball, Cosmos, Cracked Ice), **sello** (liga, campeonato, prerelease, staff, torneo,
+  evento; casi siempre más caros que la base), **edición** (1ª Edición, Unlimited, Limited) y **rareza** (UR, SR, ScR… en Yu-Gi-Oh!).
+- **Un ejemplar por variante**: la fila lleva `tcgcsvKey` = `pid|subtipo` y su id incluye la variante; cada una tiene costo, cantidad, notas, historial y gráfico
+  propios. La completación de la colección cuenta CARTAS (alguna variante); el valor conseguido suma cada variante × cantidad.
+- **Tarjeta = impresión (set + número)** con insignias de todas sus variantes (rellenas las que tienes), contador `n/N`, 🏅 si trae sello y rango de precios.
+- **Detalle**: franja «Variantes» con casilla «la tengo», etiqueta, precio y ×base para los sellos; la variante seleccionada manda la imagen, el precio, el
+  historial y la edición.
+- **Tamaño de caras** S / M / L / XL / lista, recordado por juego en el dispositivo (`angst-caras-{juego}`), por defecto L.
+- Filtros: 🏅 (solo cartas con sello) y «Variantes» en el panel 🔎.
+- La sonda de tcgcsv mide además los sellos entre sets (liga, prerelease, campeonato) con tus cartas: ver `docs/sonda-tcgcsv-pokemon.md` sección 5.

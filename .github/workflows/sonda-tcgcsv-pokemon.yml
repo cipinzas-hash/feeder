@@ -8,7 +8,7 @@ name: Sonda tcgcsv Pokémon
 on:
   workflow_dispatch: {}
   push:
-    branches: [precios-limpios]
+    branches: [precios-limpios, variantes]
     paths:
       - modules/feed/scripts/sonda-tcgcsv-pokemon.mjs
       - .github/workflows/sonda-tcgcsv-pokemon.yml
