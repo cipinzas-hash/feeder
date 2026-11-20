@@ -1,86 +1,49 @@
 {
  "version": 1,
- "generatedAt": "2026-11-19T21:05:53.959Z",
+ "generatedAt": "2026-11-20T17:12:22.859Z",
  "plataformas": {
-  "fabiangreffrath/intenseflow": {
-   "v": 2,
-   "original": "DOS",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
   "Simon3Sarkis/super-odyssey-pc-recomp": {
    "v": 2,
    "original": "Switch",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
-  "Deez-coder/SMO-android-port": {
+  "EstebanPdN/zelda-alttp-3ds": {
    "v": 2,
-   "original": "Switch",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
-  "reshaped/sonic-adventure": {
-   "v": 2,
-   "original": "Dreamcast",
+   "original": "SNES",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": [
     {
      "tipo": "rama",
-     "nombre": "psp",
-     "url": "https://github.com/reshaped/sonic-adventure/tree/psp",
+     "nombre": "port/3ds-v2.7",
+     "url": "https://github.com/EstebanPdN/zelda-alttp-3ds/tree/port/3ds-v2.7",
      "plataformas": [
-      "PSP"
+      "3DS"
      ],
      "estrellas": 0,
      "pushed": null
-    }
-   ]
-  },
-  "tmcleroy/soulcalibur2-recomp": {
-   "v": 2,
-   "original": "og xbox",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": [
+    },
     {
-     "tipo": "rama",
-     "nombre": "android-port",
-     "url": "https://github.com/tmcleroy/soulcalibur2-recomp/tree/android-port",
+     "tipo": "fork",
+     "nombre": "frilxy/zelda-alttp-3ds-cn",
+     "url": "https://github.com/frilxy/zelda-alttp-3ds-cn",
      "plataformas": [
-      "Android"
+      "3DS"
      ],
-     "estrellas": 0,
-     "pushed": null
+     "estrellas": 9,
+     "pushed": "2026-11-13"
     }
    ]
   },
-  "jackpoison-prog/RingOut": {
+  "fabiangreffrath/intenseflow": {
    "v": 2,
-   "original": "GameCube",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
-  "rwwo8/OdysseyRecomp": {
-   "v": 2,
-   "original": "Switch",
+   "original": "DOS",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
   "metroidret/mf": {
    "v": 2,
    "original": "GBA",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
-  "Ragnaroek/iron-wolf": {
-   "v": 2,
-   "original": "DOS",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
-  "alexbeavs-ps1-ports/final-fantasy-ix-recomp": {
-   "v": 2,
-   "original": "PS1",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
@@ -117,6 +80,76 @@
     }
    ]
   },
+  "reshaped/sonic-adventure": {
+   "v": 2,
+   "original": "Dreamcast",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": [
+    {
+     "tipo": "rama",
+     "nombre": "psp",
+     "url": "https://github.com/reshaped/sonic-adventure/tree/psp",
+     "plataformas": [
+      "PSP"
+     ],
+     "estrellas": 0,
+     "pushed": null
+    }
+   ]
+  },
+  "rwwo8/OdysseyRecomp": {
+   "v": 2,
+   "original": "Switch",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "Deez-coder/SMO-android-port": {
+   "v": 2,
+   "original": "Switch",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "tmcleroy/soulcalibur2-recomp": {
+   "v": 2,
+   "original": "og xbox",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": [
+    {
+     "tipo": "rama",
+     "nombre": "android-port",
+     "url": "https://github.com/tmcleroy/soulcalibur2-recomp/tree/android-port",
+     "plataformas": [
+      "Android"
+     ],
+     "estrellas": 0,
+     "pushed": null
+    }
+   ]
+  },
+  "jackpoison-prog/RingOut": {
+   "v": 2,
+   "original": "GameCube",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "Ragnaroek/iron-wolf": {
+   "v": 2,
+   "original": "DOS",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "alexbeavs-ps1-ports/final-fantasy-ix-recomp": {
+   "v": 2,
+   "original": "PS1",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "mstan/SuperMarioWorldRecomp": {
+   "v": 2,
+   "original": "SNES",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
   "mstan/SuperMarioLand2Recomp": {
    "v": 2,
    "original": "Game Boy",
@@ -134,42 +167,36 @@
     }
    ]
   },
-  "mstan/SuperMarioWorldRecomp": {
-   "v": 2,
-   "original": "SNES",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
   "maurizi/ff9-3ds": {
    "v": 2,
    "original": "PS1",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
-  "EstebanPdN/zelda-alttp-3ds": {
+  "CTR-tools/ctr-native": {
    "v": 2,
-   "original": "SNES",
+   "original": "PS1",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": [
     {
-     "tipo": "rama",
-     "nombre": "port/3ds-v2.7",
-     "url": "https://github.com/EstebanPdN/zelda-alttp-3ds/tree/port/3ds-v2.7",
+     "tipo": "fork",
+     "nombre": "Rinnegatamante/Crash-Team-Racing-High-Octane",
+     "url": "https://github.com/Rinnegatamante/Crash-Team-Racing-High-Octane",
      "plataformas": [
-      "3DS"
+      "PS Vita"
      ],
-     "estrellas": 0,
-     "pushed": null
+     "estrellas": 228,
+     "pushed": "2026-10-31"
     },
     {
      "tipo": "fork",
-     "nombre": "frilxy/zelda-alttp-3ds-cn",
-     "url": "https://github.com/frilxy/zelda-alttp-3ds-cn",
+     "nombre": "Simon358/ctr-native-android",
+     "url": "https://github.com/Simon358/ctr-native-android",
      "plataformas": [
-      "3DS"
+      "Android"
      ],
-     "estrellas": 9,
-     "pushed": "2026-11-13"
+     "estrellas": 64,
+     "pushed": "2026-07-26"
     }
    ]
   },
@@ -189,6 +216,12 @@
    "v": 2,
    "original": "NES",
    "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "Albeoris/Memoria": {
+   "v": 2,
+   "original": "PC",
+   "actualizado": "2026-11-20T17:12:22.859Z",
    "sugerencias": []
   },
   "mstan/ZeldaAlttPSNESRecomp": {
@@ -255,33 +288,6 @@
    "original": "PS1",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
-  },
-  "CTR-tools/ctr-native": {
-   "v": 2,
-   "original": "PS1",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": [
-    {
-     "tipo": "fork",
-     "nombre": "Rinnegatamante/Crash-Team-Racing-High-Octane",
-     "url": "https://github.com/Rinnegatamante/Crash-Team-Racing-High-Octane",
-     "plataformas": [
-      "PS Vita"
-     ],
-     "estrellas": 228,
-     "pushed": "2026-10-31"
-    },
-    {
-     "tipo": "fork",
-     "nombre": "Simon358/ctr-native-android",
-     "url": "https://github.com/Simon358/ctr-native-android",
-     "plataformas": [
-      "Android"
-     ],
-     "estrellas": 64,
-     "pushed": "2026-07-26"
-    }
-   ]
   },
   "adonis-singh/re4": {
    "v": 2,
@@ -366,15 +372,15 @@
     }
    ]
   },
-  "Player124413/Sonic-Generations-recomp-android-and-pc-edition": {
-   "v": 2,
-   "original": "Xbox 360",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
   "spannerisms/jpdasm": {
    "v": 2,
    "original": "SNES",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "Player124413/Sonic-Generations-recomp-android-and-pc-edition": {
+   "v": 2,
+   "original": "Xbox 360",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
@@ -524,8 +530,8 @@
   },
   "daniele-rapagnani/alephone-android": {
    "v": 2,
-   "original": "Mac",
-   "actualizado": "2026-11-19T21:05:53.959Z",
+   "original": "PC",
+   "actualizado": "2026-11-20T17:12:22.859Z",
    "sugerencias": []
   },
   "Yoshifanatic1/SMW-SMAS-SMASW-Disassembly": {
@@ -576,11 +582,91 @@
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
+  "matt-pulsipher/GT3-revisited": {
+   "v": 2,
+   "original": "PS2",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": [
+    {
+     "tipo": "rama",
+     "nombre": "android-logitech-wheel-ffb",
+     "url": "https://github.com/matt-pulsipher/GT3-revisited/tree/android-logitech-wheel-ffb",
+     "plataformas": [
+      "Android"
+     ],
+     "estrellas": 0,
+     "pushed": null
+    },
+    {
+     "tipo": "fork",
+     "nombre": "tomplayer07/GT3-revisited-switch",
+     "url": "https://github.com/tomplayer07/GT3-revisited-switch",
+     "plataformas": [
+      "Switch"
+     ],
+     "estrellas": 33,
+     "pushed": "2026-11-11"
+    }
+   ]
+  },
+  "mstan/ApeEscapeRecomp": {
+   "v": 2,
+   "original": "PS1",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "ZQuestClassic/ZQuestClassic": {
+   "v": 2,
+   "original": "NES",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
   "nathanialf/ico-pc": {
    "v": 2,
    "original": "PS2",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
+  },
+  "wurlyfox/c1": {
+   "v": 2,
+   "original": "PS1",
+   "actualizado": "2026-11-20T17:12:22.859Z",
+   "sugerencias": []
+  },
+  "FridiNaTor1/SafeHouse": {
+   "v": 2,
+   "original": "PS2",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "Hero88go/melee-unlocked": {
+   "v": 2,
+   "original": "GameCube",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "gminustwo/red_two": {
+   "v": 2,
+   "original": "GameCube",
+   "actualizado": "2026-11-20T17:12:22.859Z",
+   "sugerencias": []
+  },
+  "mstan/SuperMetroidRecomp": {
+   "v": 2,
+   "original": "SNES",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": [
+    {
+     "tipo": "rama",
+     "nombre": "archive/sm-android-pr1",
+     "url": "https://github.com/mstan/SuperMetroidRecomp/tree/archive/sm-android-pr1",
+     "plataformas": [
+      "Android"
+     ],
+     "estrellas": 0,
+     "pushed": null
+    }
+   ]
   },
   "NauTaro/DBZ-BT4-Tag-Team-Decomp": {
    "v": 2,
@@ -598,6 +684,24 @@
      "pushed": "2026-11-19"
     }
    ]
+  },
+  "cheviman/tmnt-port": {
+   "v": 2,
+   "original": "Arcade",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "marcoscodas/bravely-emerald": {
+   "v": 2,
+   "original": "GBA",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "cheviman/simpsons-port": {
+   "v": 2,
+   "original": "Arcade",
+   "actualizado": "2026-11-20T17:12:22.859Z",
+   "sugerencias": []
   },
   "sciaschi/CBFD-Recompiled": {
    "v": 2,
@@ -626,18 +730,6 @@
     }
    ]
   },
-  "FridiNaTor1/SafeHouse": {
-   "v": 2,
-   "original": "PS2",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
-  "Hero88go/melee-unlocked": {
-   "v": 2,
-   "original": "GameCube",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
   "Madxbio97/SF-pc-port": {
    "v": 2,
    "original": "PS1",
@@ -650,12 +742,6 @@
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
-  "chasem-dev/orre-launcher": {
-   "v": 2,
-   "original": "GameCube",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
   "JoeyAW/TPVR": {
    "v": 2,
    "original": "GameCube",
@@ -665,6 +751,18 @@
   "Snaity-CORE/pe2-pc-port": {
    "v": 2,
    "original": "PS1",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "chasem-dev/orre-launcher": {
+   "v": 2,
+   "original": "GameCube",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "RetroPortingToolKit/F-ZeroForever": {
+   "v": 2,
+   "original": "SNES",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
@@ -723,15 +821,15 @@
     }
    ]
   },
-  "RetroPortingToolKit/F-ZeroForever": {
+  "mr-finster/vf3-recomp": {
    "v": 2,
-   "original": "SNES",
+   "original": "Arcade",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
-  "marcoscodas/bravely-emerald": {
+  "mr-finster/vf2-recomp": {
    "v": 2,
-   "original": "GBA",
+   "original": "Arcade",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
@@ -824,24 +922,6 @@
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
-  "mr-finster/vf3-recomp": {
-   "v": 2,
-   "original": "Arcade",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
-  "cheviman/tmnt-port": {
-   "v": 2,
-   "original": "Arcade",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
-  "mr-finster/vf2-recomp": {
-   "v": 2,
-   "original": "Arcade",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
   "BlackLabelHQ/SymphonyRecomp": {
    "v": 2,
    "original": "PS1",
@@ -866,55 +946,11 @@
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
-  "matt-pulsipher/GT3-revisited": {
-   "v": 2,
-   "original": "PS2",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": [
-    {
-     "tipo": "rama",
-     "nombre": "android-logitech-wheel-ffb",
-     "url": "https://github.com/matt-pulsipher/GT3-revisited/tree/android-logitech-wheel-ffb",
-     "plataformas": [
-      "Android"
-     ],
-     "estrellas": 0,
-     "pushed": null
-    },
-    {
-     "tipo": "fork",
-     "nombre": "tomplayer07/GT3-revisited-switch",
-     "url": "https://github.com/tomplayer07/GT3-revisited-switch",
-     "plataformas": [
-      "Switch"
-     ],
-     "estrellas": 33,
-     "pushed": "2026-11-11"
-    }
-   ]
-  },
   "Vnnc1/gow-native-pc": {
    "v": 2,
    "original": "PS2",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
-  },
-  "mstan/SuperMetroidRecomp": {
-   "v": 2,
-   "original": "SNES",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": [
-    {
-     "tipo": "rama",
-     "nombre": "archive/sm-android-pr1",
-     "url": "https://github.com/mstan/SuperMetroidRecomp/tree/archive/sm-android-pr1",
-     "plataformas": [
-      "Android"
-     ],
-     "estrellas": 0,
-     "pushed": null
-    }
-   ]
   },
   "TawhidI-602/The-House-of-the-Dead-ReWrithe": {
    "v": 2,
@@ -922,15 +958,15 @@
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
-  "danielalves96/gow-pc-port": {
-   "v": 2,
-   "original": "PS2",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
   "UNDERdecoded/Gen2Recomped": {
    "v": 2,
    "original": "Game Boy Color",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "danielalves96/gow-pc-port": {
+   "v": 2,
+   "original": "PS2",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
@@ -1057,12 +1093,6 @@
     }
    ]
   },
-  "mstan/ApeEscapeRecomp": {
-   "v": 2,
-   "original": "PS1",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
   "Ninjacornix/reo": {
    "v": 2,
    "original": "PS2",
@@ -1072,6 +1102,12 @@
   "Rosalie241/RMG": {
    "v": 2,
    "original": "N64",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "rob646464/luigis-mansion-recompiled": {
+   "v": 2,
+   "original": "GameCube",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
@@ -1107,12 +1143,6 @@
      "pushed": "2026-10-23"
     }
    ]
-  },
-  "rob646464/luigis-mansion-recompiled": {
-   "v": 2,
-   "original": "GameCube",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
   },
   "Jorge262007/FFTARecomp": {
    "v": 2,
@@ -1454,12 +1484,6 @@
     }
    ]
   },
-  "andrebrumdev/gow2-recomp": {
-   "v": 2,
-   "original": "PS2",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
   "TwilitRealm/dusklight": {
    "v": 2,
    "original": "GameCube",
@@ -1486,6 +1510,12 @@
      "pushed": "2026-10-15"
     }
    ]
+  },
+  "andrebrumdev/gow2-recomp": {
+   "v": 2,
+   "original": "PS2",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
   },
   "Rainchus/Donkey-Kong-64-Recompiled": {
    "v": 2,
@@ -1526,12 +1556,6 @@
      "pushed": null
     }
    ]
-  },
-  "ZQuestClassic/ZQuestClassic": {
-   "v": 2,
-   "original": "NES",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
   },
   "HarvestMoon64Recomp/HarvestMoon64Recomp": {
    "v": 2,
