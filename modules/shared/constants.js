@@ -15,6 +15,7 @@ export const GAME_ENHANCED_JSON_URL = "https://raw.githubusercontent.com/cipinza
 // Módulo Panoramas (nov-2026, issue #17): eventos culturales de Santiago, lo escribe build-panoramas.mjs.
 // Módulo tcgcrypto (nov-2026, issue #42): un archivo por juego (tcgcrypto-yugioh.json, tcgcrypto-digimon.json), lo escribe build-tcgcrypto.mjs.
 export const tcgcryptoJsonUrl = tcg => `https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/tcgcrypto-${tcg}.json`;
+export const pokemonVariantesUrl = archivo => `https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/pokemon-variantes/${archivo}.json`;
 export const PANORAMAS_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/panoramas.json";
 
 // Destacados (vitrina audiovisual) — 3 categorías separadas, cada una su

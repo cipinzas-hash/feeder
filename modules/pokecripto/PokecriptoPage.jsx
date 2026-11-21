@@ -3,6 +3,7 @@
 // diverjan en matching/normalización (issue #9).
 import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPrice, fetchTCGCandidatos, addSnapshot, refreshPrecio as refreshPrecioCompartido, fuenteCompatible } from "./lib/pricing.mjs";
 import { marcarCortes, ultimoSegmento, esMercadoDelgado, serieSuave, extrasSnapshot } from "./lib/historial.mjs";
+import { PanelVariantesPokemon, InsigniasPokemon } from "./VariantesPokemon.jsx";
 import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarCandidatos, matchAutomatico, mergeOverrides, claveCandidato, urlsFoto, mismoSet } from "./lib/review.mjs";
 import { marcarEdicionLocal } from "../shared/localedit.js";
 import { esDoubleRare, esAceSpec, carpetaDeCat, carpetaDeInv, invEnCarpeta, invDeCarta, rarezaConocida, sobraPorRareza, entradasFaltantes,
@@ -1471,6 +1472,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         <div style={{background:"rgba(0,0,0,0.7)",padding:isSmall?"2px 3px":"3px 4px",textAlign:"center"}}>
           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:isSmall?8:9,color:"#aac756"}}>{d.number}</div>
           {!isSmall&&d.tcgMarket&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:8,color:"#5c9cff"}}>{fmtUSD(d.tcgMarket)}</div>}
+          {!isSmall&&<InsigniasPokemon set={d.setName||d.set} number={d.number} name={d.name}/>}
         </div>
       </div>
     );
@@ -1947,6 +1949,8 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                 </div>
               </div>
             </div>
+            {/* variantes (holo, reverse, Poké Ball, logo de tipo, sellos): mismo formato que Yu-Gi-Oh!/Digimon */}
+            <PanelVariantesPokemon set={detalle.setName||detalle.set} number={detalle.number} name={detalle.name}/>
             {/* métricas y variación por periodo: una sola rejilla de 4 columnas (ATH · ATL · σ · 7D / 30D · 90D · 180D · 360D) */}
             {hist.length>=2&&(()=>{
               const deltas=computeTimeframeDeltas(hist);

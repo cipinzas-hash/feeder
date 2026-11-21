@@ -46,7 +46,7 @@ const parentesis = s => ((String(s || "").match(/\(([^)]*)\)/g) || []).map(x => 
 const sinParentesis = s => String(s || "").replace(/\s*\([^)]*\)/g, " ").replace(/\s+/g, " ").trim();
 const r2 = n => (n == null ? null : Math.round(n * 100) / 100);
 const precio = r => (r.marketPrice ?? r.midPrice ?? r.lowPrice ?? null);
-const numCrudo = p => String(p.number || "").toUpperCase().replace(/\s+/g, "");
+const numCrudo = p => String(p.numero || "").toUpperCase().replace(/\s+/g, "");   // número con total, p. ej. "025/165"
 
 const cats = (await getJson(`${TCGCSV}/categories`)).results || [];
 const cat = cats.find(c => /^pok[eé]mon$/i.test(String(c.name || "").trim())) || cats.find(c => /pok[eé]mon/i.test(String(c.name || "")) && !/japan/i.test(c.name));
@@ -84,7 +84,7 @@ for (const [k1, hermanos] of porGrupoNumNombre) {
   const lista = [];
   for (const p of hermanos) lista.push(...variantesDe(p, 0));
   // sellos de OTROS grupos con el mismo nombre y número con total
-  if (base.numero.includes("/")) {
+  if (numCrudo(base).includes("/")) {
     for (const s of porNombreNumero.get(`${base.base}|${numCrudo(base)}`) || []) {
       if (s.grupo === base.grupo || !s.sufijo) continue;
       const d = describirVariante({ juego: "pokemon", sufijo: s.sufijo, grupo: nombreGrupo.get(s.grupo) });
