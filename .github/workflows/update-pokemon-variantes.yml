@@ -1,0 +1,53 @@
+name: Actualizar variantes de Pokémon
+
+# Catálogo de variantes de Pokémon por set (acabados, patrones, sellos) desde tcgcsv.com (sin key, sin secrets).
+# Corre una vez por semana (los precios del panel de variantes tienen hasta 7 días; el precio vigente de cada carta sigue
+# viniendo del bot diario) y a mano (Run workflow). En la rama `variantes` también corre al subir cambios al script.
+# Escribe SOLO modules/feed/data/pokemon-variantes/ y docs/pokemon-variantes-reporte.md.
+
+on:
+  schedule:
+    - cron: "40 21 * * 0"
+  workflow_dispatch: {}
+  push:
+    branches: [variantes]
+    paths:
+      - modules/feed/scripts/build-pokemon-variantes.mjs
+      - .github/workflows/update-pokemon-variantes.yml
+
+concurrency:
+  group: pokemon-variantes-update
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  variantes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Construir el catálogo de variantes
+        run: |
+          set -o pipefail
+          timeout -s TERM -k 15 20m node modules/feed/scripts/build-pokemon-variantes.mjs 2>&1 | tee /tmp/variantes.log
+
+      - name: Commitear los datos (a la misma rama que corrió)
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add modules/feed/data/pokemon-variantes docs/pokemon-variantes-reporte.md
+          git diff --staged --quiet && { echo "sin cambios"; exit 0; }
+          git commit -m "Actualizar variantes de Pokémon $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git push && break
+            echo "push falló, reintentando ($i/3)..."
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            sleep 5
+          done
