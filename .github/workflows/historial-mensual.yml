@@ -1,0 +1,92 @@
+name: Historial mensual de precios (tcgcsv)
+
+# Antepone a cada fila del inventario un punto de precio por mes desde feb-2024 (archivo diario de tcgcsv.com, día 1 de cada mes).
+# MODO PRUEBA por omisión: no escribe Angst-data; deja el informe en docs/historial-mensual-reporte.md (commit a la misma rama) y el
+# inventario propuesto como artefacto (7 días). Para APLICAR: Run workflow con apply = true (escribe pokecripto-inventario.json en
+# Angst-data y marca cada fila con `histMensual`). Comparte el grupo de concurrencia del bot de precios para no pisarse.
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "true = escribir el inventario en Angst-data (por omisión solo prueba)"
+        required: false
+        default: "false"
+  push:
+    branches: [variantes]
+    paths:
+      - modules/feed/scripts/build-historial-mensual.mjs
+      - .github/workflows/historial-mensual.yml
+
+concurrency:
+  group: pokecripto-update
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  mensual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout feeder
+        uses: actions/checkout@v4
+        with:
+          path: feeder
+
+      - name: Checkout Angst-data
+        uses: actions/checkout@v4
+        with:
+          repository: cipinzas-hash/Angst-data
+          token: ${{ secrets.WORKER_GITHUB_PAT }}
+          path: angst-data
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar 7z
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
+
+      - name: Construir el historial mensual
+        working-directory: feeder
+        env:
+          POKECRIPTO_INVENTARIO_PATH: ${{ github.workspace }}/angst-data/pokecripto-inventario.json
+          HISTORIAL_PROPUESTA_PATH: ${{ runner.temp }}/inventario-propuesto.json
+          APPLY: ${{ github.event.inputs.apply == 'true' && '1' || '0' }}
+        run: |
+          set -o pipefail
+          timeout -s TERM -k 15 35m node modules/feed/scripts/build-historial-mensual.mjs 2>&1 | tee ${{ runner.temp }}/historial.log
+
+      - name: Subir el inventario propuesto y el log (artefacto, 7 días)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: historial-mensual-propuesta
+          path: |
+            ${{ runner.temp }}/inventario-propuesto.json
+            ${{ runner.temp }}/historial.log
+          retention-days: 7
+
+      - name: Commitear el informe a la rama de feeder
+        if: always()
+        working-directory: feeder
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/historial-mensual-reporte.md
+          git diff --staged --quiet && { echo "sin cambios en el informe"; exit 0; }
+          git commit -m "Historial mensual: informe $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do git push && break; git pull --rebase origin "${GITHUB_REF_NAME}"; sleep 5; done
+
+      - name: Commitear el inventario a Angst-data (solo con apply = true)
+        if: github.event.inputs.apply == 'true'
+        working-directory: angst-data
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add pokecripto-inventario.json
+          git diff --staged --quiet && { echo "inventario sin cambios"; exit 0; }
+          git commit -m "Historial mensual de precios (tcgcsv) en el inventario $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do git push && break; git pull --rebase origin main; sleep 5; done
