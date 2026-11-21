@@ -1,8 +1,49 @@
 {
  "version": 1,
- "generatedAt": "2026-11-20T17:12:22.859Z",
+ "generatedAt": "2026-11-21T16:21:44.378Z",
  "plataformas": {
   "Simon3Sarkis/super-odyssey-pc-recomp": {
+   "v": 2,
+   "original": "Switch",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "kanapitsas/source-recomp": {
+   "v": 2,
+   "original": "PC",
+   "actualizado": "2026-11-21T16:21:44.378Z",
+   "sugerencias": []
+  },
+  "metroidret/mzm": {
+   "v": 2,
+   "original": "GBA",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "mstan/SuperMarioWorldRecomp": {
+   "v": 2,
+   "original": "SNES",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "reshaped/sonic-adventure": {
+   "v": 2,
+   "original": "Dreamcast",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": [
+    {
+     "tipo": "rama",
+     "nombre": "psp",
+     "url": "https://github.com/reshaped/sonic-adventure/tree/psp",
+     "plataformas": [
+      "PSP"
+     ],
+     "estrellas": 0,
+     "pushed": null
+    }
+   ]
+  },
+  "rwwo8/OdysseyRecomp": {
    "v": 2,
    "original": "Switch",
    "actualizado": "2026-11-19T21:05:53.959Z",
@@ -47,12 +88,6 @@
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
-  "metroidret/mzm": {
-   "v": 2,
-   "original": "GBA",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
   "ravencaio/tlou-remastered-pc": {
    "v": 2,
    "original": "PS4",
@@ -80,35 +115,6 @@
     }
    ]
   },
-  "reshaped/sonic-adventure": {
-   "v": 2,
-   "original": "Dreamcast",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": [
-    {
-     "tipo": "rama",
-     "nombre": "psp",
-     "url": "https://github.com/reshaped/sonic-adventure/tree/psp",
-     "plataformas": [
-      "PSP"
-     ],
-     "estrellas": 0,
-     "pushed": null
-    }
-   ]
-  },
-  "rwwo8/OdysseyRecomp": {
-   "v": 2,
-   "original": "Switch",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
-  "Deez-coder/SMO-android-port": {
-   "v": 2,
-   "original": "Switch",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
   "tmcleroy/soulcalibur2-recomp": {
    "v": 2,
    "original": "og xbox",
@@ -126,6 +132,12 @@
     }
    ]
   },
+  "Deez-coder/SMO-android-port": {
+   "v": 2,
+   "original": "Switch",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
   "jackpoison-prog/RingOut": {
    "v": 2,
    "original": "GameCube",
@@ -141,12 +153,6 @@
   "alexbeavs-ps1-ports/final-fantasy-ix-recomp": {
    "v": 2,
    "original": "PS1",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
-  "mstan/SuperMarioWorldRecomp": {
-   "v": 2,
-   "original": "SNES",
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
@@ -582,6 +588,64 @@
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
+  "Hero88go/melee-unlocked": {
+   "v": 2,
+   "original": "GameCube",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "mstan/SuperMetroidRecomp": {
+   "v": 2,
+   "original": "SNES",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": [
+    {
+     "tipo": "rama",
+     "nombre": "archive/sm-android-pr1",
+     "url": "https://github.com/mstan/SuperMetroidRecomp/tree/archive/sm-android-pr1",
+     "plataformas": [
+      "Android"
+     ],
+     "estrellas": 0,
+     "pushed": null
+    }
+   ]
+  },
+  "God-Hand-Rearmed/God-Hand-Rearmed": {
+   "v": 2,
+   "original": "PS2",
+   "actualizado": "2026-11-21T16:21:44.378Z",
+   "sugerencias": []
+  },
+  "NauTaro/DBZ-BT4-Tag-Team-Decomp": {
+   "v": 2,
+   "original": "PS2",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": [
+    {
+     "tipo": "fork",
+     "nombre": "manumastro/DBZ-BT4-Tag-Team-Decomp-Vita",
+     "url": "https://github.com/manumastro/DBZ-BT4-Tag-Team-Decomp-Vita",
+     "plataformas": [
+      "PS Vita"
+     ],
+     "estrellas": 10,
+     "pushed": "2026-11-19"
+    }
+   ]
+  },
+  "RetroPortingToolKit/F-ZeroForever": {
+   "v": 2,
+   "original": "SNES",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "nathanialf/ico-pc": {
+   "v": 2,
+   "original": "PS2",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
   "matt-pulsipher/GT3-revisited": {
    "v": 2,
    "original": "PS2",
@@ -609,6 +673,39 @@
     }
    ]
   },
+  "tmcleroy/cps2recomp": {
+   "v": 2,
+   "original": "Arcade",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": [
+    {
+     "tipo": "rama",
+     "nombre": "android",
+     "url": "https://github.com/tmcleroy/cps2recomp/tree/android",
+     "plataformas": [
+      "Android"
+     ],
+     "estrellas": 0,
+     "pushed": null
+    },
+    {
+     "tipo": "rama",
+     "nombre": "android-update-notice",
+     "url": "https://github.com/tmcleroy/cps2recomp/tree/android-update-notice",
+     "plataformas": [
+      "Android"
+     ],
+     "estrellas": 0,
+     "pushed": null
+    }
+   ]
+  },
+  "cheviman/simpsons-port": {
+   "v": 2,
+   "original": "Arcade",
+   "actualizado": "2026-11-20T17:12:22.859Z",
+   "sugerencias": []
+  },
   "mstan/ApeEscapeRecomp": {
    "v": 2,
    "original": "PS1",
@@ -621,28 +718,10 @@
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
-  "nathanialf/ico-pc": {
-   "v": 2,
-   "original": "PS2",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
   "wurlyfox/c1": {
    "v": 2,
    "original": "PS1",
    "actualizado": "2026-11-20T17:12:22.859Z",
-   "sugerencias": []
-  },
-  "FridiNaTor1/SafeHouse": {
-   "v": 2,
-   "original": "PS2",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
-  "Hero88go/melee-unlocked": {
-   "v": 2,
-   "original": "GameCube",
-   "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
   "gminustwo/red_two": {
@@ -651,39 +730,11 @@
    "actualizado": "2026-11-20T17:12:22.859Z",
    "sugerencias": []
   },
-  "mstan/SuperMetroidRecomp": {
-   "v": 2,
-   "original": "SNES",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": [
-    {
-     "tipo": "rama",
-     "nombre": "archive/sm-android-pr1",
-     "url": "https://github.com/mstan/SuperMetroidRecomp/tree/archive/sm-android-pr1",
-     "plataformas": [
-      "Android"
-     ],
-     "estrellas": 0,
-     "pushed": null
-    }
-   ]
-  },
-  "NauTaro/DBZ-BT4-Tag-Team-Decomp": {
+  "FridiNaTor1/SafeHouse": {
    "v": 2,
    "original": "PS2",
    "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": [
-    {
-     "tipo": "fork",
-     "nombre": "manumastro/DBZ-BT4-Tag-Team-Decomp-Vita",
-     "url": "https://github.com/manumastro/DBZ-BT4-Tag-Team-Decomp-Vita",
-     "plataformas": [
-      "PS Vita"
-     ],
-     "estrellas": 10,
-     "pushed": "2026-11-19"
-    }
-   ]
+   "sugerencias": []
   },
   "cheviman/tmnt-port": {
    "v": 2,
@@ -695,12 +746,6 @@
    "v": 2,
    "original": "GBA",
    "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
-  "cheviman/simpsons-port": {
-   "v": 2,
-   "original": "Arcade",
-   "actualizado": "2026-11-20T17:12:22.859Z",
    "sugerencias": []
   },
   "sciaschi/CBFD-Recompiled": {
@@ -760,12 +805,6 @@
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
-  "RetroPortingToolKit/F-ZeroForever": {
-   "v": 2,
-   "original": "SNES",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
   "bryanthaboi/gen1recomp": {
    "v": 2,
    "original": "Game Boy",
@@ -794,32 +833,11 @@
     }
    ]
   },
-  "tmcleroy/cps2recomp": {
+  "JackandBeans/Snap64Recomp": {
    "v": 2,
-   "original": "Arcade",
+   "original": "N64",
    "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": [
-    {
-     "tipo": "rama",
-     "nombre": "android",
-     "url": "https://github.com/tmcleroy/cps2recomp/tree/android",
-     "plataformas": [
-      "Android"
-     ],
-     "estrellas": 0,
-     "pushed": null
-    },
-    {
-     "tipo": "rama",
-     "nombre": "android-update-notice",
-     "url": "https://github.com/tmcleroy/cps2recomp/tree/android-update-notice",
-     "plataformas": [
-      "Android"
-     ],
-     "estrellas": 0,
-     "pushed": null
-    }
-   ]
+   "sugerencias": []
   },
   "mr-finster/vf3-recomp": {
    "v": 2,
@@ -893,12 +911,6 @@
     }
    ]
   },
-  "JackandBeans/Snap64Recomp": {
-   "v": 2,
-   "original": "N64",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
   "cheviman/outrunners-port": {
    "v": 2,
    "original": "Arcade",
@@ -920,6 +932,12 @@
    "v": 2,
    "original": "Game Boy Color",
    "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
+  },
+  "abedegno/underworld-exhumed": {
+   "v": 2,
+   "original": "DOS",
+   "actualizado": "2026-11-21T16:21:44.378Z",
    "sugerencias": []
   },
   "BlackLabelHQ/SymphonyRecomp": {
@@ -1557,6 +1575,12 @@
     }
    ]
   },
+  "novapowers0/BloodyRoar2Recomp": {
+   "v": 2,
+   "original": "PS1",
+   "actualizado": "2026-11-21T16:21:44.378Z",
+   "sugerencias": []
+  },
   "HarvestMoon64Recomp/HarvestMoon64Recomp": {
    "v": 2,
    "original": "N64",
@@ -1632,12 +1656,6 @@
    "actualizado": "2026-11-19T21:05:53.959Z",
    "sugerencias": []
   },
-  "elliotttate/wave-race-64-recomp": {
-   "v": 2,
-   "original": "N64",
-   "actualizado": "2026-11-19T21:05:53.959Z",
-   "sugerencias": []
-  },
   "HarbourMasters/Ghostship": {
    "v": 2,
    "original": "N64",
@@ -1664,6 +1682,12 @@
      "pushed": "2026-08-03"
     }
    ]
+  },
+  "elliotttate/wave-race-64-recomp": {
+   "v": 2,
+   "original": "N64",
+   "actualizado": "2026-11-19T21:05:53.959Z",
+   "sugerencias": []
   },
   "JHDev2006/Super-Mario-Bros.-Remastered-Public": {
    "v": 2,
