@@ -4,7 +4,7 @@ export { tituloLimpio };
 // ─── Lógica pura de Game enhanced (sin React ni red, probada en tests/gameenhanced.mjs) ─────────
 // Tipos que hoy tienen fuente real: d (decomps, ports y recompilaciones) y e (juegos nuevos de los
 // estudios). Versiones web y sucesores espirituales quedaron fuera hasta tener fuente (sonda 11-nov-2026).
-// r = juego del registro propio (terminado / quiero jugar / pendiente), issue #43.
+// r = juego del registro propio (terminado / jugando / inconcluso / quiero jugar), issue #43.
 export const TIPO = {
   d: { etiqueta: "DECOMP", emoji: "🧩", motivo: "Porque terminaste " },
   e: { etiqueta: "ESTUDIO", emoji: "🏢", motivo: "Del estudio detrás de " },
@@ -17,8 +17,9 @@ export const esProyecto = j => j.tipo === "d" || j.tipo === "p";
 
 export const ESTADOS_INFO = {
   terminado: { emoji: "🏁", etiqueta: "Terminado" },
+  jugando: { emoji: "🎮", etiqueta: "Jugando" },
+  inconcluso: { emoji: "⏸️", etiqueta: "Inconcluso" },
   quiero: { emoji: "🎯", etiqueta: "Quiero jugar" },
-  pendiente: { emoji: "⏳", etiqueta: "Pendiente" },
 };
 export const esCategoriaRegistro = clave => Object.prototype.hasOwnProperty.call(ESTADOS_INFO, clave);
 
@@ -29,8 +30,9 @@ export const CATEGORIAS = [
   ["e", "🏢", "Estudios"],
   ["p", "🕹️", "Ports"],
   ["terminado", "🏁", "Terminados"],
+  ["jugando", "🎮", "Jugando"],
+  ["inconcluso", "⏸️", "Inconclusos"],
   ["quiero", "🎯", "Quiero jugar"],
-  ["pendiente", "⏳", "Pendientes"],
 ];
 
 export const SUBTIPOS = {
@@ -44,9 +46,17 @@ const ASSETS = { byo: "Sí, con tu propia copia", instant: "No, se juega al inst
 const VENTANA = { decompDias: 90, pasadoEstudio: 120, futuroEstudio: 240, portDias: 30 };
 export const enNovedades = j => (j.tipo === "r" || j.tipo === "p" ? false : j.tipo === "d" ? !j.inactivo && j.dias <= VENTANA.decompDias : j.dias >= -VENTANA.futuroEstudio && j.dias <= VENTANA.pasadoEstudio);
 
-export const motivoDe = j => (j.tipo === "r" ? ESTADOS_INFO[j.estado].etiqueta
-  : j.tipo === "p" ? (j.tuyos && j.tuyos.length ? `Ya terminaste ${j.tuJuego}` : `Clásico de ${j.plataforma}`)
-  : TIPO[j.tipo].motivo + j.tuJuego);
+// Por qué se ve un ítem sugerido, según la relación (estado en tu registro) con el juego que lo motiva.
+const MOTIVO_D = { terminado: "Porque terminaste ", jugando: "Porque estás jugando ", inconcluso: "Porque lo dejaste a medias: ", quiero: "Porque quieres jugar " };
+const MOTIVO_P = { terminado: "Ya terminaste ", jugando: "Estás jugando ", inconcluso: "Lo dejaste a medias: ", quiero: "Quieres jugar " };
+const MOTIVO_E = { terminado: "Del estudio detrás de ", jugando: "Del estudio detrás de ", inconcluso: "Del estudio detrás de " };
+export const motivoDe = j => {
+  if (j.tipo === "r") return ESTADOS_INFO[j.estado].etiqueta;
+  const rel = j.relacion || "terminado";
+  if (j.tipo === "p") return j.tuyos && j.tuyos.length ? (MOTIVO_P[rel] || MOTIVO_P.terminado) + j.tuJuego : `Clásico de ${j.plataforma}`;
+  if (j.tipo === "d") return (MOTIVO_D[rel] || MOTIVO_D.terminado) + j.tuJuego;
+  return (MOTIVO_E[rel] || TIPO.e.motivo) + j.tuJuego;
+};
 
 export function haceDias(n) {
   if (n <= 0) return "hoy";
@@ -166,6 +176,8 @@ export function filasFicha(j, ahora, igdb = null) {
   const ei = ESTADOS_INFO[j.estado];
   add("Estado", `${ei.emoji} ${ei.etiqueta}`); add("Plataforma", j.plataforma);
   add("Terminado el", j.estado === "terminado" && j.fecha ? fechaLegible(j) : null);
+  add("Empezado el", (j.estado === "jugando" || j.estado === "inconcluso") && j.empezado ? fechaLegible({ fecha: j.empezado }) : null);
+  if (!igdb && (j.portada || j.lanzamiento)) igdb = { lanzamiento: j.lanzamiento || null };   // alta con IGDB: el lanzamiento ya viene en la entrada
   if (igdb) {
     add("Géneros", (igdb.generos || []).join(" · ")); add("Lanzamiento", igdb.lanzamiento ? fechaLegible({ fecha: igdb.lanzamiento }) : null);
     add("Plataformas (IGDB)", (igdb.plataformas || []).join(" · ")); add("Fuente", enlace(igdb.url, "IGDB"));
@@ -198,7 +210,7 @@ export function textoCompartir(j, igdb = null, ahora = Date.now()) {
 // Juegos del registro de un estado, como ítems de lista: los terminados por fecha de término (o, sin fecha, por cuándo
 // se tocaron), los demás por última actualización; los más recientes primero.
 export function itemsRegistro(registro, estado, ahora = Date.now()) {
-  const marca = j => (j.fecha ? new Date(j.fecha).getTime() : j.actualizado || 0);
+  const marca = j => { const f = j.fecha || j.empezado; return f ? new Date(f).getTime() : j.actualizado || 0; };
   return Object.values((registro && registro.juegos) || {})
     .filter(j => j.estado === estado)
     .map(j => ({ ...j, tipo: "r", dias: marca(j) ? Math.round((ahora - marca(j)) / 86400000) : 9999 }))
@@ -206,7 +218,7 @@ export function itemsRegistro(registro, estado, ahora = Date.now()) {
 }
 
 // Ítems de una categoría, sin los ocultos, los más cercanos a hoy primero (pasados y futuros por igual).
-// Las categorías del registro (terminado / quiero / pendiente) salen del registro propio, no de los datos del pipeline.
+// Las categorías del registro (terminado / jugando / inconcluso / quiero) salen del registro propio, no de los datos del pipeline.
 export function itemsDe(juegos, clave, ocultos = {}, registro = null, ahora = Date.now()) {
   if (esCategoriaRegistro(clave)) return itemsRegistro(registro, clave, ahora);
   return juegos
@@ -245,8 +257,9 @@ export function resumen(juegos, ocultos = {}, guardados = {}, registro = null) {
     deEstudios: v.filter(j => j.tipo === "e" && enNovedades(j)).length,
     guardados: v.filter(j => guardados[j.id]).length,
     terminados: reg.filter(j => j.estado === "terminado").length,
+    jugando: reg.filter(j => j.estado === "jugando").length,
+    inconclusos: reg.filter(j => j.estado === "inconcluso").length,
     quiero: reg.filter(j => j.estado === "quiero").length,
-    pendientes: reg.filter(j => j.estado === "pendiente").length,
   };
 }
 
@@ -255,12 +268,22 @@ export const portadaUrl = (imageId, tam = "t_cover_big") => (typeof imageId === 
 
 // image_id de la portada de un ítem: la suya (estudios), la ficha del registro (juegos del registro) o la del juego
 // tuyo que motiva el decomp (así los decomps también muestran portada).
-export function portadaDe(j, fichas = {}) {
+// `portadas` = portadas de IGDB buscadas por el pipeline para cada decomp / port (por id de ítem): cubren los que no casan con un juego tuyo.
+export function portadaDe(j, fichas = {}, portadas = {}) {
   if (j.tipo === "e") return j.portada || null;
-  if (j.tipo === "r") return (fichas[j.id] && fichas[j.id].portada) || null;
-  if (!j.tuJuego) return null;
-  const id = idRegistro(j.tuJuego);
-  return (id && fichas[id] && fichas[id].portada) || null;
+  if (j.tipo === "r") return (fichas[j.id] && fichas[j.id].portada) || j.portada || null;
+  const id = j.tuJuego ? idRegistro(j.tuJuego) : null;
+  const deFicha = id && fichas[id] && fichas[id].portada;
+  return deFicha || (portadas[j.id] && portadas[j.id].imagen) || null;
+}
+
+// Imágenes candidatas de un ítem, en orden: portada de IGDB (tamaño según `tam`) y, de un proyecto, la imagen social de su repo. Sin
+// ninguna → [] y la miniatura muestra el emoji. Solo URLs https de IGDB o de las imágenes de repos de GitHub.
+export function imagenesDe(j, fichas = {}, portadas = {}, tam = "t_cover_big") {
+  const lista = [], igdb = portadaUrl(portadaDe(j, fichas, portadas), tam);
+  if (igdb) lista.push(igdb);
+  if (esProyecto(j) && typeof j.imagenRepo === "string" && /^https:\/\/repository-images\.githubusercontent\.com\//.test(j.imagenRepo)) lista.push(j.imagenRepo);
+  return lista;
 }
 
 // Antigüedad de los datos para el sello de la franja.

@@ -17,7 +17,7 @@
     "test:fadiman": "node tests/fadiman-diario.mjs && node tests/fadiman-protocolo.mjs",
     "test:melee": "node tests/melee-orden.mjs",
     "test:musica": "node tests/musica.mjs && node tests/musica-megusta.mjs",
-    "test:gameenhanced": "node tests/gameenhanced.mjs",
+    "test:gameenhanced": "node tests/gameenhanced.mjs && node tests/gameenhanced-worker.mjs && node tests/gameenhanced-sync.mjs",
     "test:panoramas": "node tests/panoramas-detalle.mjs && node tests/panoramas-seleccion.mjs",
     "test:tcgcrypto": "node tests/tcgcrypto-logica.mjs"
   },

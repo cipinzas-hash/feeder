@@ -134,7 +134,7 @@ ver su `LEEME.md`). Corridas reales del pipeline: todas con éxito. Último resu
 **Sin confirmar** (solo Cristopher puede): sensación del arrastre (umbral 8 px, inercia de 240 ms en la lista y 110 ms en el eje), que colapsado no
 desborde en celular y tablet (la válvula avisa por consola), y que la página desplegada en `github.io` se vea bien (no se pudo abrir desde el sandbox).
 
-## 7. Plan aprobado en principio (falta el "Go" explícito)
+## 7. Plan A/B/C: HECHO el 21-nov-2026 con el Go de Cristopher (ver docs/modulo-game-enhanced.md, sección «21-nov-2026»)
 
 Cristopher respondió «me parece bien» al plan de abajo. El orden propuesto: **A → B → C**, porque cada paso sostiene al siguiente. Antes de
 implementar, **pedir su Go** y abrir un issue nuevo.

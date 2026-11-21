@@ -1,7 +1,12 @@
 // ─── Claves de títulos del registro de Game enhanced (puro: lo usan el módulo y el pipeline) ────
 // Un juego del registro se identifica por su título normalizado: "r-" + clave. El pipeline guarda las
 // fichas de IGDB bajo ese mismo id, así que cliente y bot tienen que calcularlo igual.
-export const ESTADOS_REGISTRO = ["terminado", "quiero", "pendiente"];
+// Estados de un juego del registro (B, nov-2026): lo que ya jugó (terminado), lo que juega ahora (jugando), lo que dejó a medias
+// (inconcluso) y lo que quiere jugar. El antiguo "pendiente" («empezado o en pausa») se lee como "inconcluso".
+export const ESTADOS_REGISTRO = ["terminado", "jugando", "inconcluso", "quiero"];
+// Estados que cuentan como "lo que has jugado": alimentan decomps y juegos nuevos de sus estudios. `quiero` solo alimenta decomps y ports.
+export const ESTADOS_JUGADOS = ["terminado", "jugando", "inconcluso"];
+export const normalizarEstado = e => (e === "pendiente" ? "inconcluso" : e);
 
 export function claveTitulo(titulo) {
   const t = String(titulo || "").trim();

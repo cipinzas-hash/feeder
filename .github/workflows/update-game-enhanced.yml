@@ -2,9 +2,10 @@ name: Actualizar Game enhanced
 
 # Pipeline de datos reales del módulo 🎮 Game enhanced (nov-2026): decomps/ports (awesome-decomp-games)
 # y juegos nuevos de los estudios (IGDB). Corre una vez al día y también a mano (Run workflow).
-# Escribe SOLO modules/feed/data/game-enhanced.json, game-enhanced-fichas.json y game-enhanced-readmes.json.
+# Escribe SOLO modules/feed/data/game-enhanced*.json (datos, fichas, readmes, plataformas y portadas).
 # Usa los secrets IGDB_CLIENT_ID e IGDB_CLIENT_SECRET, y WORKER_GITHUB_PAT para LEER el registro de juegos que Angst
-# sube a Angst-data (rama state-sync, issue #43).
+# guarda en Angst-data: primero game-enhanced-registro.json (rama main, se escribe en cada cambio) y, si aún no existe, el
+# campo gameEnhancedRegistro del estado completo (rama state-sync, 📤) (issue #43).
 
 on:
   schedule:
@@ -36,6 +37,14 @@ jobs:
           token: ${{ secrets.WORKER_GITHUB_PAT }}
           path: .angst-data
 
+      - name: Checkout Angst-data (rama main, archivo propio del registro de juegos)
+        uses: actions/checkout@v4
+        with:
+          repository: cipinzas-hash/Angst-data
+          ref: main
+          token: ${{ secrets.WORKER_GITHUB_PAT }}
+          path: .angst-data-main
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -45,6 +54,7 @@ jobs:
           IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
           IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
           GITHUB_TOKEN: ${{ github.token }}
+          ANGST_REGISTRO_PATH: .angst-data-main/game-enhanced-registro.json
           ANGST_STATE_PATH: .angst-data/angst-full-state.json
         run: |
           set -o pipefail
@@ -54,7 +64,7 @@ jobs:
         run: |
           git config user.name "angst-feed-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add modules/feed/data/game-enhanced.json modules/feed/data/game-enhanced-fichas.json modules/feed/data/game-enhanced-readmes.json modules/feed/data/game-enhanced-plataformas.json
+          git add modules/feed/data/game-enhanced.json modules/feed/data/game-enhanced-fichas.json modules/feed/data/game-enhanced-readmes.json modules/feed/data/game-enhanced-plataformas.json modules/feed/data/game-enhanced-portadas.json
           git diff --staged --quiet || git commit -m "Actualizar Game enhanced $(date -u +%Y-%m-%dT%H:%MZ)"
           for i in 1 2 3; do
             git push && break

@@ -37,7 +37,7 @@ const txt = () => document.body.textContent;
 const ok = (c, m) => { if (!c) { console.error("FALLA:", m); process.exitCode = 1; } else console.log("ok:", m); };
 
 const btns = () => [...document.querySelectorAll("button")];
-ok(btns().filter(b => /categoría seleccionada|^(Novedades|Decomps|Estudios|Ports|Terminados|Quiero jugar|Pendientes)$/.test(b.getAttribute("aria-label") || "")).length === 7, "7 categorías en el eje (con Ports)");
+ok(btns().filter(b => /categoría seleccionada|^(Novedades|Decomps|Estudios|Ports|Terminados|Jugando|Inconclusos|Quiero jugar)$/.test(b.getAttribute("aria-label") || "")).length === 8, "8 categorías en el eje (con Ports, Jugando e Inconclusos)");
 ok(/DATOS/.test(txt()) && /🏁 71/.test(txt()), "franja: datos y 71 terminados sembrados desde la semilla");
 // ir a Terminados (índice 3)
 const irA = async nombre => { await act(async () => { btns().find(b => b.getAttribute("aria-label") === nombre).click(); }); await tick(25); };

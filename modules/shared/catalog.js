@@ -1,4 +1,4 @@
-import { CINE_JSON_URL, FEED_JSON_URL, FORMATO_BY_CATEGORIA, GAME_ENHANCED_JSON_URL, GAME_ENHANCED_FICHAS_URL, GAME_ENHANCED_READMES_URL, GAME_ENHANCED_PLATAFORMAS_URL, MELEE_JSON_URL, MUSIC_CATEGORIA, MUSICA_JSON_URL, VIDEOTECA_JSON_URL, VITRINA_CATEGORIAS, fetchJsonSafe, tcgcryptoJsonUrl } from "./constants.js";
+import { CINE_JSON_URL, FEED_JSON_URL, FORMATO_BY_CATEGORIA, GAME_ENHANCED_JSON_URL, GAME_ENHANCED_FICHAS_URL, GAME_ENHANCED_READMES_URL, GAME_ENHANCED_PLATAFORMAS_URL, GAME_ENHANCED_PORTADAS_URL, MELEE_JSON_URL, MUSIC_CATEGORIA, MUSICA_JSON_URL, VIDEOTECA_JSON_URL, VITRINA_CATEGORIAS, fetchJsonSafe, tcgcryptoJsonUrl } from "./constants.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -95,6 +95,11 @@ export async function fetchGameEnhancedFichas() {
 export async function fetchGameEnhancedPlataformas() {
   const d = await fetchJsonSafe(GAME_ENHANCED_PLATAFORMAS_URL);
   return d && d.plataformas && typeof d.plataformas === "object" ? d.plataformas : {};
+}
+// Portadas de IGDB de cada decomp / port (por id de ítem): { "d-123": { imagen: "co1abc" | null } }. Complemento: sin él, emoji.
+export async function fetchGameEnhancedPortadas() {
+  const d = await fetchJsonSafe(GAME_ENHANCED_PORTADAS_URL);
+  return d && d.portadas && typeof d.portadas === "object" ? d.portadas : {};
 }
 export async function fetchGameEnhancedReadmes() {
   const d = await fetchJsonSafe(GAME_ENHANCED_READMES_URL);

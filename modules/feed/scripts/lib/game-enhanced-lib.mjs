@@ -1,6 +1,6 @@
 // ─── Funciones puras del pipeline de Game enhanced (probadas en tests/gameenhanced.mjs) ─────────────
 // Sin red ni disco: reciben datos ya descargados. Las usa build-game-enhanced.mjs.
-import { ESTADOS_REGISTRO, repoDeUrl, tituloLimpio, PLATAFORMAS_SUGERIDAS } from "../../../gameenhanced/lib/claves.mjs";
+import { ESTADOS_REGISTRO, ESTADOS_JUGADOS, normalizarEstado, idRegistro, repoDeUrl, tituloLimpio, PLATAFORMAS_SUGERIDAS } from "../../../gameenhanced/lib/claves.mjs";
 export { repoDeUrl, tituloLimpio };
 
 export const DIA = 86400000;
@@ -25,6 +25,20 @@ export function casaConTerminado(tituloProyecto, busqueda) {
   return k === clave || (k.startsWith(clave) && EDICIONES.has(k.slice(clave.length)));
 }
 
+// Imagen social del repo (og_image de la fuente): solo las que sirve GitHub, por https. Segundo recurso tras la portada de IGDB.
+export const imagenRepoOk = u => (typeof u === "string" && /^https:\/\/repository-images\.githubusercontent\.com\/[A-Za-z0-9/_.-]+$/.test(u) ? u : null);
+
+// Relación del ítem con tu registro (B, nov-2026): si casa con varios juegos tuyos manda el más "vivo" (jugando > inconcluso > quiero >
+// terminado). Cada entrada de `lista` es { titulo, busqueda, estado? }; sin estado cuenta como terminado (así lo usaban los tests y la semilla).
+const PRIORIDAD_RELACION = ["jugando", "inconcluso", "quiero", "terminado"];
+export function relacionDe(entradas) {
+  for (const r of PRIORIDAD_RELACION) {
+    const e = entradas.find(x => (x.estado || "terminado") === r);
+    if (e) return { relacion: r, tuJuego: e.titulo };
+  }
+  return { relacion: "terminado", tuJuego: entradas[0] ? entradas[0].titulo : undefined };
+}
+
 export function proyectosDeDecomps(juegosFuente, terminados, ahora) {
   const porId = new Map();
   for (const t of terminados) {
@@ -34,15 +48,15 @@ export function proyectosDeDecomps(juegosFuente, terminados, ahora) {
         id: "d-" + j.id, tipo: "d", titulo: j.title, subtipo: j.type, plataforma: j.platform || null,
         estrellas: j.stars ?? null, ultimoCommit: j.last_commit || null, release: j.release || null, fechaRelease: j.release_date || null,
         url: j.url || null, jugableUrl: j.play_url || null, pideAssets: j.needs_assets || null,
-        ia: !!j.ai_flag, inactivo: !!(j.inactive || j.archived), tuyos: [],
+        ia: !!j.ai_flag, inactivo: !!(j.inactive || j.archived), tuyos: [], _entradas: [], ...(imagenRepoOk(j.og_image) ? { imagenRepo: imagenRepoOk(j.og_image) } : {}),
       };
-      if (!it.tuyos.includes(t.titulo)) it.tuyos.push(t.titulo);
+      if (!it.tuyos.includes(t.titulo)) { it.tuyos.push(t.titulo); it._entradas.push(t); }
       porId.set(j.id, it);
     }
   }
-  return [...porId.values()].map(it => {
+  return [...porId.values()].map(({ _entradas, ...it }) => {
     const d = [diasDesde(it.ultimoCommit, ahora), diasDesde(it.fechaRelease, ahora)].filter(x => x !== null);
-    return { ...it, tuJuego: it.tuyos[0], dias: d.length ? Math.max(0, Math.min(...d)) : 9999 };
+    return { ...it, ...relacionDe(_entradas), dias: d.length ? Math.max(0, Math.min(...d)) : 9999 };
   }).sort((a, b) => a.dias - b.dias || (a.id < b.id ? -1 : 1));
 }
 
@@ -62,12 +76,13 @@ export function portsNativos(juegosFuente, terminados, ahora, { dias = PORTS.dia
     if ((j.stars ?? 0) < minEstrellas) continue;
     const d = diasDesde(j.release_date, ahora);
     if (d === null || d > dias) continue;
-    const tuyos = terminados.filter(t => casaConTerminado(j.title, t.busqueda)).map(t => t.titulo);
+    const casan = terminados.filter(t => casaConTerminado(j.title, t.busqueda));
+    const tuyos = casan.map(t => t.titulo);
     salida.push({
       id: "p-" + j.id, tipo: "p", titulo: j.title, subtipo: j.type, plataforma: j.platform, estrellas: j.stars ?? null,
       ultimoCommit: j.last_commit || null, release: j.release, fechaRelease: j.release_date || null,
       url: j.url || null, jugableUrl: j.play_url || null, pideAssets: j.needs_assets || null,
-      ia: !!j.ai_flag, inactivo: false, tuyos, ...(tuyos.length ? { tuJuego: tuyos[0] } : {}), dias: Math.max(0, d),
+      ia: !!j.ai_flag, inactivo: false, tuyos, ...(tuyos.length ? relacionDe(casan) : {}), ...(imagenRepoOk(j.og_image) ? { imagenRepo: imagenRepoOk(j.og_image) } : {}), dias: Math.max(0, d),
     });
   }
   return salida.sort((a, b) => a.dias - b.dias || (b.estrellas ?? 0) - (a.estrellas ?? 0) || (a.id < b.id ? -1 : 1));
@@ -96,8 +111,9 @@ export function mapaDeEstudios(resultados) {
   const mapa = new Map();
   for (const r of resultados) {
     for (const dv of r.desarrolladoras || []) {
-      const e = mapa.get(dv.id) || { id: dv.id, nombre: dv.nombre, tuyos: [] };
+      const e = mapa.get(dv.id) || { id: dv.id, nombre: dv.nombre, tuyos: [], estados: {} };
       if (!e.tuyos.includes(r.titulo)) e.tuyos.push(r.titulo);
+      e.estados[r.titulo] = r.estado || "terminado";
       mapa.set(dv.id, e);
     }
   }
@@ -115,17 +131,17 @@ export function itemsDeEstudios(porEstudio, ahora) {
         fecha: new Date(g.first_release_date * 1000).toISOString().slice(0, 10),
         fechaAprox: fechaAproximada(g.first_release_date),
         plataformas: (g.platforms || []).map(p => p.abbreviation).filter(Boolean).slice(0, 6),
-        url: g.url || null, estudios: [], tuyos: [],
+        url: g.url || null, estudios: [], tuyos: [], _estados: {},
         portada: imagenIgdb(g.cover), resumen: recortarTexto(g.summary, 500) || null,
         generos: (g.genres || []).map(x => x.name).filter(Boolean).slice(0, 4),
       };
       if (!it.estudios.includes(estudio.nombre)) it.estudios.push(estudio.nombre);
-      for (const t of estudio.tuyos) if (!it.tuyos.includes(t)) it.tuyos.push(t);
+      for (const t of estudio.tuyos) if (!it.tuyos.includes(t)) { it.tuyos.push(t); it._estados[t] = (estudio.estados && estudio.estados[t]) || "terminado"; }
       porId.set(g.id, it);
     }
   }
-  return [...porId.values()].map(it => ({
-    ...it, estudio: it.estudios.join(" / "), tuJuego: it.tuyos[0],
+  return [...porId.values()].map(({ _estados, ...it }) => ({
+    ...it, estudio: it.estudios.join(" / "), ...relacionDe(it.tuyos.map(t => ({ titulo: t, estado: _estados[t] }))),
     dias: Math.round((ahora - new Date(it.fecha + "T00:00:00Z").getTime()) / DIA),
   })).sort((a, b) => Math.abs(a.dias) - Math.abs(b.dias) || (a.id < b.id ? -1 : 1));
 }
@@ -282,9 +298,46 @@ export function sugerenciasDePlataformas({ repo, ramas = [], forks = [], platafo
 export function listaDeRegistro(estado) {
   const r = estado && estado.gameEnhancedRegistro;
   if (!r || typeof r !== "object" || !r.juegos || typeof r.juegos !== "object" || Array.isArray(r.juegos)) return null;
-  return Object.values(r.juegos).filter(e => e && typeof e.titulo === "string" && e.titulo.trim() && ESTADOS_REGISTRO.includes(e.estado));
+  return Object.values(r.juegos)
+    .map(e => (e && typeof e === "object" ? { ...e, estado: normalizarEstado(e.estado) } : e))   // "pendiente" (antiguo) → "inconcluso"
+    .filter(e => e && typeof e.titulo === "string" && e.titulo.trim() && ESTADOS_REGISTRO.includes(e.estado));
 }
 
 export function terminadosDe(lista) {
   return lista.filter(e => e.estado === "terminado").map(e => ({ titulo: e.titulo, busqueda: e.busqueda || e.titulo }));
 }
+
+// Juegos del registro que alimentan el cruce con decomps y ports (B, nov-2026): lo que has jugado (terminado / jugando / inconcluso)
+// y lo que quieres jugar (quiero: «decomps y ports que permiten jugarlo»). Cada uno lleva su `estado`, que define la `relacion` del ítem.
+export function relacionadosDe(lista) {
+  return lista.filter(e => ESTADOS_REGISTRO.includes(e.estado)).map(e => ({ titulo: e.titulo, busqueda: e.busqueda || e.titulo, estado: e.estado }));
+}
+
+// Lo que has jugado (terminado, jugando o inconcluso): de sus desarrolladoras salen los juegos nuevos de Estudios. `quiero` no entra.
+export function jugadosDe(lista) {
+  return lista.filter(e => ESTADOS_JUGADOS.includes(e.estado)).map(e => ({ titulo: e.titulo, busqueda: e.busqueda || e.titulo, estado: e.estado }));
+}
+
+// Coincidencia de un título en los resultados de IGDB: nombre idéntico (mejor si no es una versión), luego idéntico, luego que empiece igual.
+export function elegirCoincidencia(resultados, busqueda) {
+  const k = norm(busqueda);
+  if (!k || !Array.isArray(resultados)) return null;
+  return resultados.find(x => norm(x.name) === k && !x.version_parent) || resultados.find(x => norm(x.name) === k)
+    || resultados.find(x => norm(x.name).startsWith(k) && !x.version_parent) || null;
+}
+
+// Portadas de los proyectos (decomps y ports) a partir de lo ya sabido: la ficha del juego tuyo que lo motiva (sin consultar) y,
+// si no hay, la consulta pendiente. `consultar(item)` devuelve true si hay que buscarlo en IGDB (no está en caché ni resuelto por la ficha).
+export function planPortadas(items, fichas, previas, ahora, { diasEncontrada = 30, diasSinResultado = 7 } = {}) {
+  const resueltos = {}, pendientes = [];
+  for (const it of items) {
+    const ficha = it.tuJuego ? fichas[idDeTitulo(it.tuJuego)] : null;
+    if (ficha && ficha.portada) { resueltos[it.id] = { v: 1, imagen: ficha.portada, fuente: "ficha", nombre: it.tuJuego }; continue; }
+    const busqueda = tituloLimpio(it.titulo), prev = previas[it.id];
+    const vigente = prev && prev.v === 1 && prev.busqueda === busqueda && prev.buscado
+      && (ahora - new Date(prev.buscado).getTime()) < (prev.imagen ? diasEncontrada : diasSinResultado) * DIA;
+    if (vigente) resueltos[it.id] = prev; else pendientes.push({ id: it.id, busqueda });
+  }
+  return { resueltos, pendientes };
+}
+const idDeTitulo = t => idRegistro(t);

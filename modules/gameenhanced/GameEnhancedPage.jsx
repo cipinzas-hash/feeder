@@ -1,15 +1,16 @@
-import { fetchGameEnhancedData, fetchGameEnhancedFichas, fetchGameEnhancedReadmes, fetchGameEnhancedPlataformas } from "../shared/catalog.js";
+import { fetchGameEnhancedData, fetchGameEnhancedFichas, fetchGameEnhancedReadmes, fetchGameEnhancedPlataformas, fetchGameEnhancedPortadas } from "../shared/catalog.js";
 import { Ventana, VentanaCabecera } from "../shared/ui.jsx";
-import { CATEGORIAS, TIPO, ESTADOS_INFO, GLOSARIO_SUBTIPO, esCategoriaRegistro, esProyecto, tituloLimpio, sugerenciasDe, plataformasDe, motivoDe, cuando, detalleDe, filasFicha, madurezDecomp, edadDatos, itemsDe, XMB, OPACIDAD, disposicion, textoCompartir, resumen, portadaUrl, portadaDe } from "./logica.js";
+import { CATEGORIAS, TIPO, ESTADOS_INFO, GLOSARIO_SUBTIPO, esCategoriaRegistro, esProyecto, tituloLimpio, sugerenciasDe, plataformasDe, motivoDe, cuando, detalleDe, filasFicha, madurezDecomp, edadDatos, itemsDe, XMB, OPACIDAD, disposicion, textoCompartir, resumen, portadaUrl, portadaDe, imagenesDe } from "./logica.js";
 import { useEstado, alternarGuardado, ocultar, deshacerOcultar } from "./estado.js";
 import { useRegistro, agregarJuego, editarJuego, quitarJuego, restaurarJuego, sembrar } from "./registro.js";
+import { iniciarSync, useSync, pedirAuth, getAuth, sincronizar, buscarJuegos } from "./sync.js";
 import { ESTADOS_REGISTRO, idRegistro } from "./lib/claves.mjs";
 
 const { useState, useEffect, useRef } = React;
 
 // ─── Módulo Game enhanced (nov-2026) ────────────────────────────────────────
 // Novedades de juegos que importan (decomps, ports nativos de clásicos y juegos nuevos de los estudios detrás de lo que
-// terminaste) + tu registro propio de juegos: 🏁 terminados, 🎯 quiero jugar, ⏳ pendientes.
+// terminaste) + tu registro propio de juegos: 🏁 terminados, 🎮 jugando, ⏸️ inconclusos, 🎯 quiero jugar.
 //
 // Navegación al estilo XMB de PSP/PS3 (issue #43): una fila de íconos en horizontal cuyo activo queda fijo
 // (más grande, con su nombre) mientras los demás se deslizan; los ítems cuelgan en columna bajo ese ícono,
@@ -80,14 +81,57 @@ function Ondas() {
   );
 }
 
-// Portada de IGDB (o el emoji del tipo si no hay o no carga). `lado` en px.
-function Miniatura({ imagen, emoji, lado, resaltada }) {
+// Imágenes de las burbujas (C, nov-2026): la navegación depende de verlas, así que la carga no se deja al azar.
+//  · memoria de módulo de las URL ya cargadas: al cambiar de categoría no parpadean;
+//  · precarga de las filas cercanas al foco (ver el efecto de GameEnhancedPage);
+//  · sin `loading="lazy"` (dentro de filas trasladadas y recortadas nunca terminaba de disparar);
+//  · dos reintentos con espera si falla, después la siguiente imagen candidata (la del repo) y, al final, el emoji;
+//  · reintenta al volver la conexión (`online`) y al volver a ser visible la pestaña.
+const IMAGENES_OK = new Set();
+const PRECARGANDO = new Set();
+const ESPERAS_REINTENTO = [700, 2000];
+function precargar(urls) {
+  for (const u of urls) {
+    if (!u || IMAGENES_OK.has(u) || PRECARGANDO.has(u) || typeof Image === "undefined") continue;
+    PRECARGANDO.add(u);
+    const im = new Image();
+    im.decoding = "async"; im.referrerPolicy = "no-referrer";
+    im.onload = () => { IMAGENES_OK.add(u); PRECARGANDO.delete(u); };
+    im.onerror = () => PRECARGANDO.delete(u);
+    im.src = u;
+  }
+}
+const conIntento = (u, n) => (n > 0 ? `${u}${u.includes("?") ? "&" : "?"}r=${n}` : u);   // el reintento no reutiliza una respuesta fallida en caché
+
+// Miniatura: la portada (o el emoji del tipo si no hay o no carga). `fuentes` = URL candidatas en orden; `lado` en px.
+function Miniatura({ fuentes, emoji, lado, alto = lado, resaltada }) {
+  const clave = fuentes.join("|");
+  const [idx, setIdx] = useState(0);
+  const [intento, setIntento] = useState(0);
+  const [cargada, setCargada] = useState(() => fuentes.length > 0 && IMAGENES_OK.has(fuentes[0]));
   const [falla, setFalla] = useState(false);
-  useEffect(() => { setFalla(false); }, [imagen]);
-  const url = !falla ? portadaUrl(imagen, lado > 48 ? "t_cover_big" : "t_cover_small") : null;
+  const espera = useRef(0);
+  useEffect(() => { setIdx(0); setIntento(0); setFalla(false); setCargada(fuentes.length > 0 && IMAGENES_OK.has(fuentes[0])); return () => clearTimeout(espera.current); }, [clave]);
+  useEffect(() => {
+    if (!falla || !fuentes.length) return undefined;
+    const otra = () => { if (typeof document === "undefined" || document.visibilityState !== "hidden") { setIdx(0); setIntento(0); setFalla(false); } };
+    window.addEventListener("online", otra);
+    document.addEventListener("visibilitychange", otra);
+    return () => { window.removeEventListener("online", otra); document.removeEventListener("visibilitychange", otra); };
+  }, [falla, clave]);
+  function alFallar() {
+    if (intento < ESPERAS_REINTENTO.length) { espera.current = setTimeout(() => setIntento(n => n + 1), ESPERAS_REINTENTO[intento]); return; }
+    if (idx + 1 < fuentes.length) { setIdx(idx + 1); setIntento(0); setCargada(IMAGENES_OK.has(fuentes[idx + 1])); return; }
+    setFalla(true);
+  }
+  const url = !falla && fuentes[idx] ? conIntento(fuentes[idx], intento) : null;
+  const mostrarEmoji = !fuentes.length || falla;
   return (
-    <span aria-hidden="true" style={{ flex: "none", width: lado, height: lado, boxSizing: "border-box", borderRadius: 10, overflow: "hidden", background: "#1b1b1f", border: resaltada ? "1.5px solid #fff" : "1px solid #2c2c31", boxShadow: resaltada ? "0 0 18px rgba(255,255,255,.22)" : "none", display: "flex", alignItems: "center", justifyContent: "center", fontSize: lado * 0.46 }}>
-      {url ? <img src={url} alt="" loading="lazy" onError={() => setFalla(true)} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /> : emoji}
+    <span aria-hidden="true" style={{ flex: "none", width: lado, height: alto, boxSizing: "border-box", borderRadius: 10, overflow: "hidden", background: "#1b1b1f", border: resaltada ? "1.5px solid #fff" : "1px solid #2c2c31", boxShadow: resaltada ? "0 0 18px rgba(255,255,255,.22)" : "none", display: "flex", alignItems: "center", justifyContent: "center", fontSize: lado * 0.46 }}>
+      {mostrarEmoji ? emoji : url && (
+        <img key={`${idx}-${intento}`} src={url} alt="" decoding="async" referrerPolicy="no-referrer"
+          onLoad={() => { IMAGENES_OK.add(fuentes[idx]); setCargada(true); }} onError={alFallar}
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: cargada ? 1 : 0, transition: cargada && IMAGENES_OK.has(fuentes[idx]) ? "opacity .2s ease" : "none" }} />)}
     </span>
   );
 }
@@ -118,7 +162,7 @@ const subtitulo = (j, ahora) => (j.tipo === "r" ? detalleDe(j, ahora) : `${TIPO[
 
 // Fila del XMB. `t` (0–1) es cuánto está "enfocada": a más t, más grande, con subtítulo; `alto` y `op` los da la
 // disposición (continua mientras se arrastra) o, en la fila abierta, valores fijos.
-function FilaX({ j, t = 0, alto, op = 1, foco, expandida, guardado, fichas, ahora, onClick, estiloExtra }) {
+function FilaX({ j, t = 0, alto, op = 1, foco, expandida, guardado, fichas, portadas, ahora, onClick, estiloExtra }) {
   const lado = 38 + 24 * t;
   const md = esProyecto(j) ? madurezDecomp(j, ahora) : null;      // estado de un decomp / port: visible sin abrir la ficha
   const ins = Math.round(15 + 7 * t);
@@ -130,7 +174,7 @@ function FilaX({ j, t = 0, alto, op = 1, foco, expandida, guardado, fichas, ahor
     <button onClick={onClick} style={estilo} {...(foco ? { "aria-expanded": expandida ? "true" : "false" } : {})} {...(md ? { title: md.etiqueta } : {})}>
       <span style={{ flex: "none", width: 62, display: "flex", justifyContent: "center" }}>
         <span style={{ position: "relative", display: "flex" }}>
-          <Miniatura imagen={portadaDe(j, fichas)} emoji={j.tipo === "r" ? ESTADOS_INFO[j.estado].emoji : TIPO[j.tipo].emoji} lado={lado} resaltada={t > 0.6} />
+          <Miniatura fuentes={imagenesDe(j, fichas, portadas)} emoji={j.tipo === "r" ? ESTADOS_INFO[j.estado].emoji : TIPO[j.tipo].emoji} lado={lado} resaltada={t > 0.6} />
           {md && <span data-estado={md.nivel} aria-hidden="true" style={{ position: "absolute", right: -5, bottom: -5, width: ins, height: ins, borderRadius: "50%", background: "#0b0b0c", border: "1px solid #3a3a40", display: "flex", alignItems: "center", justifyContent: "center", fontSize: ins * 0.62, lineHeight: 1 }}>{md.emoji}</span>}
         </span>
       </span>
@@ -143,10 +187,10 @@ function FilaX({ j, t = 0, alto, op = 1, foco, expandida, guardado, fichas, ahor
   );
 }
 
-function Tarjeta({ j, ahora, guardado, fichas, enRegistro, otras, onCerrar, onFicha, onDescartar, onQuitar, onQuiero }) {
+function Tarjeta({ j, ahora, guardado, fichas, portadas, enRegistro, otras, onCerrar, onFicha, onDescartar, onQuitar, onQuiero }) {
   return (
     <div data-id={j.id} style={{ flex: "none", margin: `${XMB.aire / 2}px 0`, background: "rgba(23,23,26,.92)", border: "1px dashed #3a3a40", borderRadius: 12, paddingBottom: 12 }}>
-      <FilaX j={j} t={1} alto={XMB.foco} foco expandida guardado={guardado} fichas={fichas} ahora={ahora} onClick={onCerrar} />
+      <FilaX j={j} t={1} alto={XMB.foco} foco expandida guardado={guardado} fichas={fichas} portadas={portadas} ahora={ahora} onClick={onCerrar} />
       <div style={{ padding: "4px 14px 0 95px", display: "flex", flexDirection: "column", gap: 8, fontFamily: FUENTE, fontSize: 13, color: "#c4c4ca" }}>
         <span>{detalleDe(j, ahora)}</span>
         {otras && otras.length > 0 && <span style={{ color: DIM }}>También en (sugerido): <span style={{ color: "#c4c4ca" }}>{plataformasDe(otras).join(" · ")}</span></span>}
@@ -268,7 +312,7 @@ const tituloParaRegistro = j => (j.tipo === "p" ? tituloLimpio(j.titulo) : j.tit
 const MARCO_OSCURO = { background: "#0b0b0c", color: TXT, border: "2px dashed #555", boxShadow: "6px 6px 0 #000" };
 
 // Contenido de la ficha (va dentro del popup: la × de la cabecera la cierra).
-function Ficha({ j, ahora, igdb, imagen, guardado, enRegistro, sugerencias, readme, cargandoReadme, onGuardar, onDescartar, onQuiero, onEditar, onQuitar }) {
+function Ficha({ j, ahora, igdb, imagenes, guardado, enRegistro, sugerencias, readme, cargandoReadme, onGuardar, onDescartar, onQuiero, onEditar, onQuitar }) {
   const [copiado, setCopiado] = useState(null);
   const tAviso = useRef(0);
   useEffect(() => () => clearTimeout(tAviso.current), []);
@@ -276,7 +320,6 @@ function Ficha({ j, ahora, igdb, imagen, guardado, enRegistro, sugerencias, read
   const filas = filasFicha(j, ahora, igdb);
   const resumenTexto = j.tipo === "e" ? j.resumen : j.tipo === "r" ? igdb && igdb.resumen : null;
   const sub = j.tipo === "r" ? null : detalleDe(j, ahora);
-  const url = imagen ? portadaUrl(imagen, "t_cover_big") : null;
   // Menú nativo de compartir del celular; donde no exista, copia el texto al portapapeles (igual que Panoramas).
   const compartir = async () => {
     const { titulo, texto, url: enlace } = textoCompartir(j, igdb, ahora);
@@ -292,7 +335,7 @@ function Ficha({ j, ahora, igdb, imagen, guardado, enRegistro, sugerencias, read
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12, fontFamily: FUENTE, color: TXT }}>
       <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-        {url && <img src={url} alt="" style={{ flex: "none", width: 96, height: 128, objectFit: "cover", borderRadius: 8, border: "1px solid #2c2c31", background: "#1b1b1f" }} onError={e => { e.currentTarget.style.display = "none"; }} />}
+        {imagenes.length > 0 && <Miniatura fuentes={imagenes} emoji="" lado={96} alto={128} />}
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 8 }}>
           <span style={{ alignSelf: "flex-start", fontSize: 11, letterSpacing: "0.12em", color: ACC, border: `1px solid ${ACC}`, borderRadius: 4, padding: "2px 6px" }}>{t.etiqueta}</span>
           <h2 style={{ fontFamily: CAVEAT, fontWeight: 600, fontSize: 34, lineHeight: 1, color: "#fff", margin: 0, overflowWrap: "anywhere" }}>{j.titulo}</h2>
@@ -305,6 +348,7 @@ function Ficha({ j, ahora, igdb, imagen, guardado, enRegistro, sugerencias, read
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <ChipsEstado valor={j.estado} onElegir={e => onEditar({ estado: e })} />
           {j.estado === "terminado" && <Campo etiqueta="Terminado el" tipo="date" valor={j.fecha} onGuardar={v => onEditar({ fecha: v })} />}
+          {(j.estado === "jugando" || j.estado === "inconcluso") && <Campo etiqueta="Empezado el" tipo="date" valor={j.empezado} onGuardar={v => onEditar({ empezado: v })} />}
           <Campo etiqueta="Plataforma" valor={j.plataforma} onGuardar={v => onEditar({ plataforma: v })} />
           <Campo etiqueta="Nota" multilinea valor={j.nota} onGuardar={v => onEditar({ nota: v })} />
         </div>
@@ -334,6 +378,30 @@ function Ficha({ j, ahora, igdb, imagen, guardado, enRegistro, sugerencias, read
 // Alta de un juego al registro (ventana emergente compartida: solo para formularios).
 function FormAgregar({ estadoInicial, existentes, onCancelar, onAgregar }) {
   const [titulo, setTitulo] = useState("");
+  // Autocompletado con IGDB (vía el Worker): al elegir un resultado el alta guarda el id, la portada y el lanzamiento, y la portada se
+  // ve al instante. Sin AUTH_SECRET o sin red, alta manual por título como siempre.
+  const [elegido, setElegido] = useState(null);      // resultado de IGDB elegido (se descarta si cambias el título a mano)
+  const [sugeridos, setSugeridos] = useState(null);  // null = sin buscar · [] = sin resultados · [...] = resultados
+  const [buscando, setBuscando] = useState(false);
+  const [falloBusqueda, setFalloBusqueda] = useState(false);
+  const [conAuth, setConAuth] = useState(() => !!getAuth());
+  const turno = useRef(0);
+  useEffect(() => {
+    const q = titulo.trim();
+    if (!conAuth || q.length < 2 || (elegido && elegido.nombre === q)) { setSugeridos(null); setBuscando(false); setFalloBusqueda(false); return undefined; }
+    const mio = ++turno.current;
+    setBuscando(true);
+    const t = setTimeout(() => {
+      buscarJuegos(q).then(r => { if (mio === turno.current) { setSugeridos(r || []); setFalloBusqueda(false); setBuscando(false); } })
+        .catch(() => { if (mio === turno.current) { setSugeridos(null); setFalloBusqueda(true); setBuscando(false); } });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [titulo, conAuth]);
+  function elegir(r) {
+    setElegido(r); setTitulo(r.nombre); setSugeridos(null);
+    if (!plataforma && r.plataformas && r.plataformas.length === 1) setPlataforma(r.plataformas[0]);
+  }
+  function conectar() { if (pedirAuth()) setConAuth(true); }
   const [estado, setEstado] = useState(estadoInicial);
   const [plataforma, setPlataforma] = useState("");
   const [fecha, setFecha] = useState("");
@@ -345,15 +413,31 @@ function FormAgregar({ estadoInicial, existentes, onCancelar, onAgregar }) {
     <Ventana onClose={onCancelar} ancho={420}>
       <VentanaCabecera titulo="Agregar juego" onClose={onCancelar} />
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12, overflowY: "auto" }}>
-        <label style={etiq}>Título<input type="text" value={titulo} maxLength={120} onChange={e => setTitulo(e.target.value)} style={campo} /></label>
+        <label style={etiq}>Título<input type="text" value={titulo} maxLength={120} onChange={e => { setTitulo(e.target.value); if (elegido && elegido.nombre !== e.target.value.trim()) setElegido(null); }} style={campo} /></label>
+        {elegido && <p style={{ margin: 0, fontSize: 12, color: "#555" }}>✓ De IGDB{elegido.anio ? ` · ${elegido.anio}` : ""}{elegido.plataformas && elegido.plataformas.length ? ` · ${elegido.plataformas.join(" · ")}` : ""}</p>}
+        {buscando && <p style={{ margin: 0, fontSize: 12, color: "#777" }}>Buscando en IGDB…</p>}
+        {sugeridos && sugeridos.length > 0 && (
+          <div role="listbox" aria-label="Resultados de IGDB" style={{ display: "flex", flexDirection: "column", border: "1px dashed #888", borderRadius: 8, overflow: "hidden" }}>
+            {sugeridos.map(r => (
+              <button key={r.igdbId} role="option" onClick={() => elegir(r)} style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 52, padding: "6px 10px", border: 0, borderBottom: "1px dashed #ccc", background: "#fff", color: "#111", fontFamily: FUENTE, fontSize: 14, textAlign: "left", cursor: "pointer" }}>
+                <Miniatura fuentes={[portadaUrl(r.portada, "t_cover_small")].filter(Boolean)} emoji="🎮" lado={36} alto={48} />
+                <span style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.nombre}</span>
+                  <span style={{ fontSize: 11, color: "#666", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{[r.anio, (r.plataformas || []).join(" · ")].filter(Boolean).join(" · ")}</span>
+                </span>
+              </button>))}
+          </div>)}
+        {sugeridos && sugeridos.length === 0 && <p style={{ margin: 0, fontSize: 12, color: "#777" }}>IGDB no encontró «{titulo.trim()}»: se agrega con el título que escribiste.</p>}
+        {falloBusqueda && <p style={{ margin: 0, fontSize: 12, color: "#777" }}>No pude consultar IGDB ahora: puedes agregarlo igual por título.</p>}
+        {!conAuth && <p style={{ margin: 0, fontSize: 12, color: "#777" }}>Para buscar en IGDB y sincronizar el registro falta conectar el Worker. <button onClick={conectar} style={{ ...reset, textDecoration: "underline", color: "#111", minHeight: 44 }}>Conectar</button></p>}
         <ChipsEstado valor={estado} onElegir={setEstado} claro />
         <label style={etiq}>Plataforma (opcional)<input type="text" value={plataforma} maxLength={60} onChange={e => setPlataforma(e.target.value)} style={campo} /></label>
-        {estado === "terminado" && <label style={etiq}>Terminado el (opcional)<input type="date" value={fecha} onChange={e => setFecha(e.target.value)} style={campo} /></label>}
+        {(estado === "terminado" || estado === "jugando" || estado === "inconcluso") && <label style={etiq}>{estado === "terminado" ? "Terminado el (opcional)" : "Empezado el (opcional)"}<input type="date" value={fecha} onChange={e => setFecha(e.target.value)} style={campo} /></label>}
         {previo && <p style={{ margin: 0, fontSize: 12, color: "#555" }}>Ya está en tu registro como «{ESTADOS_INFO[previo.estado].etiqueta}»: se actualizará su estado.</p>}
-        <p style={{ margin: 0, fontSize: 12, color: "#777" }}>La portada y el resumen se agregan solos en la próxima actualización diaria, después de subir a Angst-data con 📤.</p>
+        <p style={{ margin: 0, fontSize: 12, color: "#777" }}>{elegido ? "La portada se ve al instante; el resumen y los géneros llegan con la próxima actualización diaria." : "La portada y el resumen llegan con la próxima actualización diaria."}</p>
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
           <button onClick={onCancelar} style={{ minHeight: 44, padding: "0 16px", borderRadius: 8, background: "#fff", color: "#111", border: "1px dashed #888", fontFamily: FUENTE, fontSize: 13, cursor: "pointer" }}>Cancelar</button>
-          <button onClick={() => titulo.trim() && onAgregar({ titulo: titulo.trim(), estado, plataforma: plataforma.trim() || undefined, fecha: estado === "terminado" && fecha ? fecha : undefined })} disabled={!titulo.trim()} style={{ minHeight: 44, padding: "0 16px", borderRadius: 8, background: "#111", color: "#fff", border: 0, fontFamily: FUENTE, fontSize: 13, fontWeight: 500, cursor: titulo.trim() ? "pointer" : "default", opacity: titulo.trim() ? 1 : 0.4 }}>Agregar</button>
+          <button onClick={() => titulo.trim() && onAgregar({ titulo: titulo.trim(), estado, plataforma: plataforma.trim() || undefined, fecha: estado === "terminado" && fecha ? fecha : undefined, ...(elegido ? { igdbId: elegido.igdbId, portada: elegido.portada || undefined, lanzamiento: elegido.lanzamiento || undefined } : {}), empezado: (estado === "jugando" || estado === "inconcluso") && fecha ? fecha : undefined })} disabled={!titulo.trim()} style={{ minHeight: 44, padding: "0 16px", borderRadius: 8, background: "#111", color: "#fff", border: 0, fontFamily: FUENTE, fontSize: 13, fontWeight: 500, cursor: titulo.trim() ? "pointer" : "default", opacity: titulo.trim() ? 1 : 0.4 }}>Agregar</button>
         </div>
       </div>
     </Ventana>
@@ -363,7 +447,9 @@ function FormAgregar({ estadoInicial, existentes, onCancelar, onAgregar }) {
 export default function GameEnhancedPage() {
   const estado = useEstado();
   const registro = useRegistro();
+  const sync = useSync();
   const [datos, setDatos] = useState(null);       // { juegos, generatedAt, fuentes, semilla }
+  const [portadas, setPortadas] = useState({});   // portada de IGDB de cada decomp / port: { [idItem]: { imagen } }
   const [fichas, setFichas] = useState({});       // fichas de IGDB del registro: { [id]: { portada, resumen, ... } }
   const [readmes, setReadmes] = useState(null);   // README por decomp: null = sin pedir todavía
   const [plataformas, setPlataformas] = useState({}); // versiones sugeridas en otras plataformas, por repo
@@ -527,10 +613,24 @@ export default function GameEnhancedPage() {
   }
   useEffect(() => { cargar(); }, []);
   useEffect(() => { fetchGameEnhancedFichas().then(setFichas).catch(() => {}); }, []);
+  useEffect(() => { fetchGameEnhancedPortadas().then(setPortadas).catch(() => {}); }, []);
+
+  // Precarga de las portadas de las filas cercanas al foco (±8), para que estén listas al arrastrar. Depende de la categoría y de qué
+  // fila está enfocada, no de cada fotograma del arrastre (`foco` ya es un entero).
+  useEffect(() => {
+    const urls = [];
+    for (let i = Math.max(0, foco - 8); i <= Math.min(lista.length - 1, foco + 8); i++) urls.push(...imagenesDe(lista[i], fichas, portadas).slice(0, 1));
+    precargar(urls);
+  }, [clave, foco, lista.length, fichas, portadas]);
   useEffect(() => { fetchGameEnhancedPlataformas().then(setPlataformas).catch(() => {}); }, []);
 
-  // Carga única de los terminados que ya estaban en el repo (después, el registro es solo de Angst).
-  useEffect(() => { if (datos && registro.sembrado == null) sembrar(datos.semilla); }, [datos, registro.sembrado]);
+  // Sincronización del registro con Angst-data: lee y fusiona al abrir; los cambios se escriben solos (sync.js).
+  useEffect(() => { iniciarSync(); }, []);
+
+  // Carga única de los terminados que ya estaban en el repo (después, el registro es solo de Angst). Con el Worker conectado se
+  // espera a la primera lectura de Angst-data: otro dispositivo pudo sembrarlo ya, y sembrar antes pisaría sus cambios.
+  const listoParaSembrar = !getAuth() || ["sincronizado", "error", "pendiente", "escribiendo"].includes(sync.fase);
+  useEffect(() => { if (datos && listoParaSembrar && registro.sembrado == null) sembrar(datos.semilla); }, [datos, registro.sembrado, listoParaSembrar]);
 
   // README de los decomps: se pide la primera vez que se abre la ficha de uno.
   useEffect(() => {
@@ -650,7 +750,7 @@ export default function GameEnhancedPage() {
       const L = disposicion(i, fv);
       if (L.y > alto || L.y + L.h < 0) continue;
       const j = lista[i];
-      filas.push(<FilaX key={j.id} j={j} t={L.t} alto={L.h} op={L.op} foco={i === foco} guardado={guardadoDe(j)} fichas={fichas} ahora={ahora}
+      filas.push(<FilaX key={j.id} j={j} t={L.t} alto={L.h} op={L.op} foco={i === foco} guardado={guardadoDe(j)} fichas={fichas} portadas={portadas} ahora={ahora}
         estiloExtra={{ position: "absolute", left: 0, top: 0, transform: `translateY(${L.y}px)` }} onClick={clic(() => tocarFila(j, i))} />);
     }
   }
@@ -666,7 +766,15 @@ export default function GameEnhancedPage() {
           {aviso
             ? <><span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{aviso.texto}</span>
                 <button onClick={deshacer} style={{ ...reset, flex: "none", minHeight: 44, margin: "-8px 0", padding: "0 8px", color: ACC, textDecoration: "underline" }}>Deshacer</button></>
-            : <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.semana} esta semana · 🏁 {r.terminados} · 🎯 {r.quiero} · ⏳ {r.pendientes} · ★ {r.guardados}</span>}
+            : <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.semana} esta semana · 🏁 {r.terminados} · 🎮 {r.jugando} · ⏸️ {r.inconclusos} · 🎯 {r.quiero} · ★ {r.guardados}</span>}
+          {sync.fase !== "sincronizado" && (
+            <button onClick={() => { if (sync.fase === "sin-auth" && !getAuth()) { if (pedirAuth()) sincronizar(); } else if (sync.fase === "error") sincronizar(); }}
+              title={sync.error || (sync.fase === "sin-auth" ? "El registro solo está en este dispositivo: toca para conectar el Worker" : "")}
+              style={{ ...reset, flex: "none", minHeight: 44, margin: "-8px 0", display: "flex", alignItems: "center", cursor: sync.fase === "sin-auth" || sync.fase === "error" ? "pointer" : "default" }}>
+              <span style={{ ...sello, color: sync.fase === "error" ? WARN : "#b5b5bb", ...(sync.fase === "error" ? { borderColor: WARN } : {}) }}>
+                {sync.fase === "sin-auth" ? "SIN SINCRONIZAR" : sync.fase === "error" ? "SYNC ✗" : "SINCRONIZANDO…"}
+              </span>
+            </button>)}
           {datos && <span style={{ ...sello, ...(edad.vieja ? { color: WARN, borderColor: WARN } : {}) }}>DATOS {edad.texto.toUpperCase()}</span>}
         </div>
         <Eje c={m.c} onElegir={i => clic(() => { setAbierto(null); ir(i, undefined); })()} mostrarMas={enRegistroCat} onMas={() => setForm(clave)} />
@@ -685,9 +793,9 @@ export default function GameEnhancedPage() {
               {enRegistroCat && <button onClick={() => setForm(clave)} style={botonSec}>＋ Agregar juego</button>}
             </div>)}
           {lista.length > 0 && expandida && lista.slice(foco).map((j, i) => i === 0
-            ? <Tarjeta key={j.id} j={j} ahora={ahora} guardado={guardadoDe(j)} fichas={fichas} enRegistro={registroDe(j, registro)}
+            ? <Tarjeta key={j.id} j={j} ahora={ahora} guardado={guardadoDe(j)} fichas={fichas} portadas={portadas} enRegistro={registroDe(j, registro)}
                 otras={sugerenciasDe(j, plataformas)} onCerrar={clic(() => setAbierto(null))} onFicha={clic(() => setFichaId(j.id))} onDescartar={clic(() => descartar(j))} onQuitar={clic(() => quitar(j))} onQuiero={clic(() => quiero(j))} />
-            : <FilaX key={j.id} j={j} t={0} alto={XMB.fila} op={OPACIDAD[Math.min(i, OPACIDAD.length - 1)]} guardado={guardadoDe(j)} fichas={fichas} ahora={ahora} onClick={clic(() => tocarFila(j, foco + i))} />)}
+            : <FilaX key={j.id} j={j} t={0} alto={XMB.fila} op={OPACIDAD[Math.min(i, OPACIDAD.length - 1)]} guardado={guardadoDe(j)} fichas={fichas} portadas={portadas} ahora={ahora} onClick={clic(() => tocarFila(j, foco + i))} />)}
           {filas}
         </div>
       </div>
@@ -695,7 +803,7 @@ export default function GameEnhancedPage() {
         <Ventana onClose={cerrarFicha} ancho={460} estiloMarco={MARCO_OSCURO}>
           <VentanaCabecera titulo={ETIQUETA_FICHA[fichaJ.tipo]} onClose={cerrarFicha} grande />
           <div style={{ padding: 16, overflowY: "auto", flex: 1, minHeight: 0 }}>
-            <Ficha j={fichaJ} ahora={ahora} igdb={igdb} imagen={portadaDe(fichaJ, fichas)} guardado={guardadoDe(fichaJ)}
+            <Ficha j={fichaJ} ahora={ahora} igdb={igdb} imagenes={imagenesDe(fichaJ, fichas, portadas)} guardado={guardadoDe(fichaJ)}
               enRegistro={registroDe(fichaJ, registro)} sugerencias={sugerenciasDe(fichaJ, plataformas)}
               readme={readmes ? readmes[fichaJ.id] : null} cargandoReadme={cargandoReadme}
               onGuardar={() => alternarGuardado(fichaJ.id)} onDescartar={() => descartar(fichaJ)} onQuiero={() => quiero(fichaJ)}

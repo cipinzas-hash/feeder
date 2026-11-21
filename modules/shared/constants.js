@@ -14,6 +14,7 @@ export const MUSICA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/
 export const GAME_ENHANCED_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced.json";
 export const GAME_ENHANCED_FICHAS_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced-fichas.json";
 export const GAME_ENHANCED_PLATAFORMAS_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced-plataformas.json";
+export const GAME_ENHANCED_PORTADAS_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced-portadas.json";
 export const GAME_ENHANCED_READMES_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced-readmes.json";
 // Módulo Panoramas (nov-2026, issue #17): eventos culturales de Santiago, lo escribe build-panoramas.mjs.
 // Módulo tcgcrypto (nov-2026, issue #42): un archivo por juego (tcgcrypto-yugioh.json, tcgcrypto-digimon.json), lo escribe build-tcgcrypto.mjs.
