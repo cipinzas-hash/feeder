@@ -4,7 +4,7 @@ Generado por `modules/feed/scripts/build-historial-mensual.mjs`. **Modo PRUEBA (
 
 - Filas del inventario con producto y subtipo identificados: **940** (Pokémon 940 de 1003; otros juegos 0). Sin match: Pokémon 63 · otros sin clave 0.
 - Archivos mensuales leídos: 34 de 34 (108.0 MB bajados en total).
-- Filas que reciben historial: **851** (91 %) · puntos mensuales nuevos: 20806 · mediana por fila: 31 meses · máximo 34. **Espacio que suma al inventario: 1521 KB (1830 caracteres por fila).** Ya marcadas de antes: 0.
+- Filas que reciben historial: **851** (91 %) · puntos mensuales nuevos: 20806 · mediana por fila: 31 meses · máximo 34. **Espacio que suma al inventario: 119 KB (144 caracteres por fila).** Ya marcadas de antes: 0.
 - **Validación contra tus snapshots** (mes en que existen los dos): n=2074 · precio del archivo ÷ tu snapshot del mes: mediana 1 · dentro de ±10 %: 55 % · ±25 %: 77 %.
 
 | Mes | Puntos | MB |
