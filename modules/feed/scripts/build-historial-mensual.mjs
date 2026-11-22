@@ -143,14 +143,14 @@ const resultado = inventario.map(c => {
   if (!pts.length) return c;
   const h = Array.isArray(c.priceHistory) ? c.priceHistory : [];
   const primero = h.filter(x => x && x.date && x.market > 0).map(x => x.date).sort()[0] || "9999-12-31";
-  const hasta = primero.slice(0, 7);
+  const hasta = primero.slice(0, 7), tope = hoy.slice(0, 7);          // sin snapshot propio `primero` es 9999: nunca pasar del mes actual
   const util = pts.filter(([f]) => f.slice(0, 7) < hasta);
   // validación: meses en que ambos existen (el snapshot propio de ese mes vs el archivo)
   for (const [f, m] of pts) { const mesF = f.slice(0, 7); const propios = h.filter(x => x && x.market > 0 && x.date.slice(0, 7) === mesF).map(x => x.market); if (propios.length) comparaciones.push(m / mediana(propios)); }
   if (!util.length) return { ...c, histMensual: hoy.slice(0, 7) };
   const porMes = new Map(util.map(([f, m]) => [f.slice(0, 7), r2(m)]));
   const ini = util[0][0].slice(0, 7), meses = [];
-  for (let [y, mo] = ini.split("-").map(Number); `${y}-${String(mo).padStart(2, "0")}` < hasta; mo++) { if (mo > 12) { mo = 1; y++; } const k = `${y}-${String(mo).padStart(2, "0")}`; if (k >= hasta) break; meses.push(porMes.has(k) ? porMes.get(k) : null); }
+  for (let [y, mo] = ini.split("-").map(Number); `${y}-${String(mo).padStart(2, "0")}` < hasta && `${y}-${String(mo).padStart(2, "0")}` <= tope; mo++) { if (mo > 12) { mo = 1; y++; } const k = `${y}-${String(mo).padStart(2, "0")}`; if (k >= hasta || k > tope) break; meses.push(porMes.has(k) ? porMes.get(k) : null); }
   filasConSerie++; puntosNuevos += util.length; largos.push(util.length);
   const histMes = { m: ini, p: meses };
   chars += JSON.stringify(histMes).length;

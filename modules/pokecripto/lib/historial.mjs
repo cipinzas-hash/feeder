@@ -119,7 +119,7 @@ export function expandirHistMes(hm) {
   if (!hm || typeof hm.m !== "string" || !Array.isArray(hm.p)) return [];
   let [y, mo] = hm.m.split("-").map(Number);
   const out = [];
-  for (const m of hm.p) {
+  for (const m of hm.p.slice(0, 240)) {                      // 20 años: tope defensivo ante datos corruptos
     if (m != null && m > 0) out.push({ date: `${y}-${String(mo).padStart(2, "0")}-01`, market: m, low: null, high: null, src: "csv-mes", agg: true, n: 1 });
     mo++; if (mo > 12) { mo = 1; y++; }
   }

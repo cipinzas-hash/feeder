@@ -110,4 +110,7 @@ t("mergePreciosBot: el historial mensual compacto del bot llega a la fila del cl
   assert.deepEqual(r[0].histMes, { m: "2024-02", p: [1, 2] }); assert.equal(r[0].priceHistory.length, 2);
   assert.equal(mergePreciosBot(local, [{ id: "a", tcgMarket: 1.1, tcgUpdated: "2026-11-11", priceHistory: [] }])[0].histMes, undefined);
 });
+t("histMes: un arreglo desmesurado se recorta (no genera miles de puntos)", () => {
+  assert.equal(expandirHistMes({ m: "2024-02", p: Array(5000).fill(1) }).length, 240);
+});
 console.log(`\n${n} pruebas en verde`);
