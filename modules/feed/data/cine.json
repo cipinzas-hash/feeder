@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-22T17:39:06.520Z",
+  "generatedAt": "2026-11-22T23:20:28.142Z",
   "categories": [
     {
       "cat": "Películas",
@@ -329,87 +329,6 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1153576",
-          "title": "Street Fighter",
-          "link": "https://www.themoviedb.org/movie/1153576",
-          "summary": "En 1993, los distanciados luchadores callejeros Ryu y Ken Masters se ven arrastrados de nuevo al combate cuando la misteriosa Chun-Li los recluta para el próximo Torneo World Warrior: un enfrentamiento brutal de puños, destino y furia. Sin embargo, tras esta gran batalla se esconde una conspiración mortal que los obliga a enfrentarse tanto entre sí como a los demonios de su pasado. Y si no lo logran... ¡será el fin de la partida!",
-          "image": "https://image.tmdb.org/t/p/w500/2kdEEUkbkJe08kTDMCUbBrZ71Aw.jpg",
-          "pubDate": "2026-10-13",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-13T17:32:43.424Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.2,
-            "rt": null,
-            "metascore": 46,
-            "tmdb": 6.3
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "U6sbm1OaJb8",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Andrew Koji",
-              "character": "Ryu",
-              "order": 0
-            },
-            {
-              "name": "Noah Centineo",
-              "character": "Ken Masters",
-              "order": 1
-            },
-            {
-              "name": "Callina Liang",
-              "character": "Chun-Li",
-              "order": 2
-            },
-            {
-              "name": "David Dastmalchian",
-              "character": "M. Bison",
-              "order": 3
-            },
-            {
-              "name": "Andrew Schulz",
-              "character": "Dan Hibiki",
-              "order": 4
-            },
-            {
-              "name": "Roman Reigns",
-              "character": "Akuma",
-              "order": 5
-            },
-            {
-              "name": "Cody Rhodes",
-              "character": "Guile",
-              "order": 6
-            },
-            {
-              "name": "Jason Momoa",
-              "character": "Blanka",
-              "order": 7
-            },
-            {
-              "name": "Eric André",
-              "character": "Don Sauvage",
-              "order": 8
-            },
-            {
-              "name": "50 Cent",
-              "character": "Balrog",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
           "guid": "tmdb-movie-791523",
           "title": "Wildwood: El Bosque Salvaje",
           "link": "https://www.themoviedb.org/movie/791523",
@@ -495,6 +414,87 @@
               "order": 9
             }
           ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1153576",
+          "title": "Street Fighter",
+          "link": "https://www.themoviedb.org/movie/1153576",
+          "summary": "En 1993, los distanciados luchadores callejeros Ryu y Ken Masters se ven arrastrados de nuevo al combate cuando la misteriosa Chun-Li los recluta para el próximo Torneo World Warrior: un enfrentamiento brutal de puños, destino y furia. Sin embargo, tras esta gran batalla se esconde una conspiración mortal que los obliga a enfrentarse tanto entre sí como a los demonios de su pasado. Y si no lo logran... ¡será el fin de la partida!",
+          "image": "https://image.tmdb.org/t/p/w500/2kdEEUkbkJe08kTDMCUbBrZ71Aw.jpg",
+          "pubDate": "2026-10-13",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-13T17:32:43.424Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.2,
+            "rt": null,
+            "metascore": 46,
+            "tmdb": 6.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "U6sbm1OaJb8",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Andrew Koji",
+              "character": "Ryu",
+              "order": 0
+            },
+            {
+              "name": "Noah Centineo",
+              "character": "Ken Masters",
+              "order": 1
+            },
+            {
+              "name": "Callina Liang",
+              "character": "Chun-Li",
+              "order": 2
+            },
+            {
+              "name": "David Dastmalchian",
+              "character": "M. Bison",
+              "order": 3
+            },
+            {
+              "name": "Andrew Schulz",
+              "character": "Dan Hibiki",
+              "order": 4
+            },
+            {
+              "name": "Roman Reigns",
+              "character": "Akuma",
+              "order": 5
+            },
+            {
+              "name": "Cody Rhodes",
+              "character": "Guile",
+              "order": 6
+            },
+            {
+              "name": "Jason Momoa",
+              "character": "Blanka",
+              "order": 7
+            },
+            {
+              "name": "Eric André",
+              "character": "Don Sauvage",
+              "order": 8
+            },
+            {
+              "name": "50 Cent",
+              "character": "Balrog",
+              "order": 9
+            }
+          ],
           "trending": false
         },
         {
@@ -576,7 +576,7 @@
               "order": 9
             }
           ],
-          "trending": true
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1437511",
@@ -660,6 +660,87 @@
           "trending": false
         },
         {
+          "guid": "tmdb-movie-1286656",
+          "title": "Yo soy Rocky",
+          "link": "https://www.themoviedb.org/movie/1286656",
+          "summary": "La electrizante historia real de un actor desconocido con la convicción inquebrantable de que no solo estaba destinado a escribir *Rocky*, sino a ser Rocky Balboa. Tras recibir negativas constantes, Sylvester Stallone lo apuesta todo a sí mismo y se mantiene firme en su empeño de interpretar el papel protagonista, contra todo pronóstico.",
+          "image": "https://image.tmdb.org/t/p/w500/6ItqVHcsb2swkE7ajS6EVCH2mpd.jpg",
+          "pubDate": "2026-11-06",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-22T23:20:25.212Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.4
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "jq5oCjhQtIc",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Anthony Ippolito",
+              "character": "Sylvester Stallone",
+              "order": 0
+            },
+            {
+              "name": "AnnaSophia Robb",
+              "character": "Sasha Czack",
+              "order": 1
+            },
+            {
+              "name": "P.J. Byrne",
+              "character": "Irwin Winkler",
+              "order": 2
+            },
+            {
+              "name": "Toby Kebbell",
+              "character": "Robert Chartoff",
+              "order": 3
+            },
+            {
+              "name": "Jay Duplass",
+              "character": "John Avildsen",
+              "order": 4
+            },
+            {
+              "name": "Tracy Letts",
+              "character": "Sandy Maddox",
+              "order": 5
+            },
+            {
+              "name": "Matt Dillon",
+              "character": "Frank Stallone Sr.",
+              "order": 6
+            },
+            {
+              "name": "Stephan James",
+              "character": "Carl Weathers",
+              "order": 7
+            },
+            {
+              "name": "Kiki Seto",
+              "character": "Talia Shire",
+              "order": 8
+            },
+            {
+              "name": "Robert Morgan",
+              "character": "Burgess Meredith",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-891621",
           "title": "Wild Horse Nine",
           "link": "https://www.themoviedb.org/movie/891621",
@@ -731,87 +812,6 @@
               "name": "Samuel Wayt",
               "character": "Teenage Kid",
               "order": 8
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1117898",
-          "title": "El gato con sombrero",
-          "link": "https://www.themoviedb.org/movie/1117898",
-          "summary": "Un astuto gato lleva el caos con sus travesuras a la vida de un par de hermanos que lidian con su mudanza a una nueva ciudad.",
-          "image": "https://image.tmdb.org/t/p/w500/8TW5oOMZbxaMFVgletpW0bxd2Aa.jpg",
-          "pubDate": "2026-10-31",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-02T20:00:14.894Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.7,
-            "rt": null,
-            "metascore": 47,
-            "tmdb": 7.2
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "tkZpcypT8Z4",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Bill Hader",
-              "character": "The Cat in the Hat (voice)",
-              "order": 0
-            },
-            {
-              "name": "Xochitl Gomez",
-              "character": "Gabby (voice)",
-              "order": 1
-            },
-            {
-              "name": "Tiago Martinez",
-              "character": "Sebastian (voice)",
-              "order": 2
-            },
-            {
-              "name": "Matt Berry",
-              "character": "Waffles (voice)",
-              "order": 3
-            },
-            {
-              "name": "Quinta Brunson",
-              "character": "Sherrie from HR (voice)",
-              "order": 4
-            },
-            {
-              "name": "Bowen Yang",
-              "character": "Gary (voice)",
-              "order": 5
-            },
-            {
-              "name": "America Ferrera",
-              "character": "Mom (Carmen) (voice)",
-              "order": 6
-            },
-            {
-              "name": "Paula Pell",
-              "character": "Patty (voice)",
-              "order": 7
-            },
-            {
-              "name": "Tituss Burgess",
-              "character": "The Psychic Narwhal (voice)",
-              "order": 8
-            },
-            {
-              "name": "Giancarlo Esposito",
-              "character": "Mr. Hoogeboom (voice)",
-              "order": 9
             }
           ],
           "trending": false
@@ -905,6 +905,143 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1003596",
+          "title": "Vengadores: Doomsday",
+          "link": "https://www.themoviedb.org/movie/1003596",
+          "summary": "Los héroes más queridos de tres universos distintos son abocados a una colisión catastrófica donde tendrán que hacer frente a la mayor amenaza a su existencia hasta la fecha.",
+          "image": "https://image.tmdb.org/t/p/w500/7bQczUMnjz8iwxNP9YrmLkfI8od.jpg",
+          "pubDate": "2026-12-16",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-22T23:20:25.709Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Post Production",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "X1aFkAkFASk",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Robert Downey Jr.",
+              "character": "Victor von Doom  / Doctor Doom",
+              "order": 0
+            },
+            {
+              "name": "Chris Evans",
+              "character": "Steve Rogers",
+              "order": 1
+            },
+            {
+              "name": "Chris Hemsworth",
+              "character": "Thor",
+              "order": 2
+            },
+            {
+              "name": "Pedro Pascal",
+              "character": "Reed Richards / Mister Fantastic",
+              "order": 3
+            },
+            {
+              "name": "Paul Rudd",
+              "character": "Scott Lang / Ant-Man",
+              "order": 4
+            },
+            {
+              "name": "Anthony Mackie",
+              "character": "Sam Wilson / Captain America",
+              "order": 5
+            },
+            {
+              "name": "Florence Pugh",
+              "character": "Yelena Belova",
+              "order": 6
+            },
+            {
+              "name": "Vanessa Kirby",
+              "character": "Sue Storm / Invisible Woman",
+              "order": 7
+            },
+            {
+              "name": "Ebon Moss-Bachrach",
+              "character": "Ben Grimm / The Thing",
+              "order": 8
+            },
+            {
+              "name": "Wyatt Russell",
+              "character": "John Walker",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1185344",
+          "title": "The Beast",
+          "link": "https://www.themoviedb.org/movie/1185344",
+          "summary": "Cuando una milicia de hostiles no identificados coordina un golpe contra Estados Unidos, el presidente descubre el alcance de las capacidades ofensivas altamente clasificadas de La Bestia para salvar su vida y la de Estados Unidos.",
+          "image": "https://image.tmdb.org/t/p/w500/ocg5JfJP19fodcv5uQUApkmZMdI.jpg",
+          "pubDate": "2026-10-08",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-14T16:24:46.687Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": 52,
+            "metascore": null,
+            "tmdb": 5.6
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "5ckqV_uf8E0",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Samuel L. Jackson",
+              "character": "President of the United States",
+              "order": 0
+            },
+            {
+              "name": "Joel Kinnaman",
+              "character": "Agent Taft",
+              "order": 1
+            },
+            {
+              "name": "Guy Burnet",
+              "character": "",
+              "order": 2
+            },
+            {
+              "name": "Eoin Macken",
+              "character": "",
+              "order": 3
+            },
+            {
+              "name": "Colin Morgan",
+              "character": "",
+              "order": 4
+            }
+          ],
+          "trending": true
+        },
+        {
           "guid": "tmdb-movie-1595124",
           "title": "Hermanastras",
           "link": "https://www.themoviedb.org/movie/1595124",
@@ -919,7 +1056,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.6
+            "tmdb": 6.8
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1000,7 +1137,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.9
+            "tmdb": 7
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1155,21 +1292,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1185344",
-          "title": "The Beast",
-          "link": "https://www.themoviedb.org/movie/1185344",
-          "summary": "Cuando una milicia de hostiles no identificados coordina un golpe contra Estados Unidos, el presidente descubre el alcance de las capacidades ofensivas altamente clasificadas de La Bestia para salvar su vida y la de Estados Unidos.",
-          "image": "https://image.tmdb.org/t/p/w500/ocg5JfJP19fodcv5uQUApkmZMdI.jpg",
-          "pubDate": "2026-10-08",
+          "guid": "tmdb-movie-1423191",
+          "title": "Resident Evil",
+          "link": "https://www.themoviedb.org/movie/1423191",
+          "summary": "Película basada en la saga de videojuegos de Capcom del mismo nombre. En una reinvención totalmente nueva, el mensajero médico Bryan se ve inmerso en una carrera de acción sin descanso por la supervivencia, mientras el caos se desata a su alrededor.",
+          "image": "https://image.tmdb.org/t/p/w500/vrLEVObLGbUinE4sC4Lqao2dK0E.jpg",
+          "pubDate": "2026-09-16",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-11-14T16:24:46.687Z",
+          "firstSeenAt": "2026-11-02T20:00:13.476Z",
           "fullText": null,
           "rating": {
             "imdb": null,
-            "rt": 52,
+            "rt": 96,
             "metascore": null,
-            "tmdb": 5.6
+            "tmdb": 7.3
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1178,34 +1315,59 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "5ckqV_uf8E0",
+            "key": "mNd1gb19A-c",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Samuel L. Jackson",
-              "character": "President of the United States",
+              "name": "Austin Abrams",
+              "character": "Bryan",
               "order": 0
             },
             {
-              "name": "Joel Kinnaman",
-              "character": "Agent Taft",
+              "name": "Paul Walter Hauser",
+              "character": "Paul",
               "order": 1
             },
             {
-              "name": "Guy Burnet",
-              "character": "",
+              "name": "Kali Reis",
+              "character": "Maxine",
               "order": 2
             },
             {
-              "name": "Eoin Macken",
-              "character": "",
+              "name": "Zach Cherry",
+              "character": "Carl",
               "order": 3
             },
             {
-              "name": "Colin Morgan",
-              "character": "",
+              "name": "Johnno Wilson",
+              "character": "Officer Wilson",
               "order": 4
+            },
+            {
+              "name": "Shaun W. Loeser",
+              "character": "Puker",
+              "order": 5
+            },
+            {
+              "name": "Zach Cregger",
+              "character": "Intercom (voice)",
+              "order": 6
+            },
+            {
+              "name": "Emily Piggford",
+              "character": "Dr. Maria Stokes",
+              "order": 7
+            },
+            {
+              "name": "Will Merrick",
+              "character": "Dave",
+              "order": 8
+            },
+            {
+              "name": "Zoé Bellas",
+              "character": "Birdie",
+              "order": 9
             }
           ],
           "trending": true
@@ -1286,87 +1448,6 @@
             {
               "name": "Marisa Tomei",
               "character": "May Parker",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1568060",
-          "title": "Perfectos mentirosos",
-          "link": "https://www.themoviedb.org/movie/1568060",
-          "summary": "Bienvenidos a Tagus, donde el poder, el privilegio y los secretos mortales se esconden tras fachadas perfectas. Jude Derry llega a esta exclusiva universidad con una misión oculta: infiltrarse en el círculo de los hermanos Cash para descubrir la verdad sobre la muerte de su hermano. Los tres herederos del imperio familiar, Aegan, el carismático y calculador primogénito, Adrik, el enigmático y misterioso hermano mediano, y Alex, el rebelde e impredecible hermano pequeño, dominan Tagus con un magnetismo al que nadie puede resistirse. Lo que comienza como una venganza personal se transforma en un peligroso triángulo de seducción, atracción prohibida y mentiras cuando Jude queda envuelta en la compleja dinámica familiar de los Cash. Con cada pista que descubre, se acerca más a una verdad que podría no solo destruir a la poderosa familia… sino también desvelar secretos que quizás ella misma no está preparada para enfrentar.",
-          "image": "https://image.tmdb.org/t/p/w500/1amYmUeoBi23kGcR2pWQclEzXk2.jpg",
-          "pubDate": "2026-11-20",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-20T18:22:52.618Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.2
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "50v6k3LUcxU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Irene Balmes",
-              "character": "Jude Derry",
-              "order": 0
-            },
-            {
-              "name": "Глеб Абросимов",
-              "character": "Aegan Cash",
-              "order": 1
-            },
-            {
-              "name": "Pau Simon",
-              "character": "Adrik Cash",
-              "order": 2
-            },
-            {
-              "name": "Pablo Scapigliati",
-              "character": "Aleixandre Cash",
-              "order": 3
-            },
-            {
-              "name": "Asier Etxeandia",
-              "character": "Adrian Cash",
-              "order": 4
-            },
-            {
-              "name": "Irene Ferreiro",
-              "character": "Artie",
-              "order": 5
-            },
-            {
-              "name": "Silvia Kal",
-              "character": "Michelle",
-              "order": 6
-            },
-            {
-              "name": "Jorge Motos",
-              "character": "Henry",
-              "order": 7
-            },
-            {
-              "name": "Daniela Riveri",
-              "character": "Bárbara",
-              "order": 8
-            },
-            {
-              "name": "Juan Torres",
-              "character": "Dash",
               "order": 9
             }
           ],
@@ -1535,6 +1616,168 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1117898",
+          "title": "El gato con sombrero",
+          "link": "https://www.themoviedb.org/movie/1117898",
+          "summary": "Un astuto gato lleva el caos con sus travesuras a la vida de un par de hermanos que lidian con su mudanza a una nueva ciudad.",
+          "image": "https://image.tmdb.org/t/p/w500/8TW5oOMZbxaMFVgletpW0bxd2Aa.jpg",
+          "pubDate": "2026-10-31",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-02T20:00:14.894Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.7,
+            "rt": null,
+            "metascore": 47,
+            "tmdb": 7.2
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "tkZpcypT8Z4",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Bill Hader",
+              "character": "The Cat in the Hat (voice)",
+              "order": 0
+            },
+            {
+              "name": "Xochitl Gomez",
+              "character": "Gabby (voice)",
+              "order": 1
+            },
+            {
+              "name": "Tiago Martinez",
+              "character": "Sebastian (voice)",
+              "order": 2
+            },
+            {
+              "name": "Matt Berry",
+              "character": "Waffles (voice)",
+              "order": 3
+            },
+            {
+              "name": "Quinta Brunson",
+              "character": "Sherrie from HR (voice)",
+              "order": 4
+            },
+            {
+              "name": "Bowen Yang",
+              "character": "Gary (voice)",
+              "order": 5
+            },
+            {
+              "name": "America Ferrera",
+              "character": "Mom (Carmen) (voice)",
+              "order": 6
+            },
+            {
+              "name": "Paula Pell",
+              "character": "Patty (voice)",
+              "order": 7
+            },
+            {
+              "name": "Tituss Burgess",
+              "character": "The Psychic Narwhal (voice)",
+              "order": 8
+            },
+            {
+              "name": "Giancarlo Esposito",
+              "character": "Mr. Hoogeboom (voice)",
+              "order": 9
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-movie-1568060",
+          "title": "Perfectos mentirosos",
+          "link": "https://www.themoviedb.org/movie/1568060",
+          "summary": "Bienvenidos a Tagus, donde el poder, el privilegio y los secretos mortales se esconden tras fachadas perfectas. Jude Derry llega a esta exclusiva universidad con una misión oculta: infiltrarse en el círculo de los hermanos Cash para descubrir la verdad sobre la muerte de su hermano. Los tres herederos del imperio familiar, Aegan, el carismático y calculador primogénito, Adrik, el enigmático y misterioso hermano mediano, y Alex, el rebelde e impredecible hermano pequeño, dominan Tagus con un magnetismo al que nadie puede resistirse. Lo que comienza como una venganza personal se transforma en un peligroso triángulo de seducción, atracción prohibida y mentiras cuando Jude queda envuelta en la compleja dinámica familiar de los Cash. Con cada pista que descubre, se acerca más a una verdad que podría no solo destruir a la poderosa familia… sino también desvelar secretos que quizás ella misma no está preparada para enfrentar.",
+          "image": "https://image.tmdb.org/t/p/w500/1amYmUeoBi23kGcR2pWQclEzXk2.jpg",
+          "pubDate": "2026-11-20",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-20T18:22:52.618Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.2
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "50v6k3LUcxU",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Irene Balmes",
+              "character": "Jude Derry",
+              "order": 0
+            },
+            {
+              "name": "Глеб Абросимов",
+              "character": "Aegan Cash",
+              "order": 1
+            },
+            {
+              "name": "Pau Simon",
+              "character": "Adrik Cash",
+              "order": 2
+            },
+            {
+              "name": "Pablo Scapigliati",
+              "character": "Aleixandre Cash",
+              "order": 3
+            },
+            {
+              "name": "Asier Etxeandia",
+              "character": "Adrian Cash",
+              "order": 4
+            },
+            {
+              "name": "Irene Ferreiro",
+              "character": "Artie",
+              "order": 5
+            },
+            {
+              "name": "Silvia Kal",
+              "character": "Michelle",
+              "order": 6
+            },
+            {
+              "name": "Jorge Motos",
+              "character": "Henry",
+              "order": 7
+            },
+            {
+              "name": "Daniela Riveri",
+              "character": "Bárbara",
+              "order": 8
+            },
+            {
+              "name": "Juan Torres",
+              "character": "Dash",
+              "order": 9
+            }
+          ],
+          "trending": false
+        },
+        {
           "guid": "tmdb-movie-1599184",
           "title": "斗破苍穹剧场版 双帝之战",
           "link": "https://www.themoviedb.org/movie/1599184",
@@ -1657,87 +1900,6 @@
               "name": "Nick Choksi",
               "character": "Friend",
               "order": 10
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1423191",
-          "title": "Resident Evil",
-          "link": "https://www.themoviedb.org/movie/1423191",
-          "summary": "Película basada en la saga de videojuegos de Capcom del mismo nombre. En una reinvención totalmente nueva, el mensajero médico Bryan se ve inmerso en una carrera de acción sin descanso por la supervivencia, mientras el caos se desata a su alrededor.",
-          "image": "https://image.tmdb.org/t/p/w500/vrLEVObLGbUinE4sC4Lqao2dK0E.jpg",
-          "pubDate": "2026-09-16",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-02T20:00:13.476Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": 96,
-            "metascore": null,
-            "tmdb": 7.3
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "mNd1gb19A-c",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Austin Abrams",
-              "character": "Bryan",
-              "order": 0
-            },
-            {
-              "name": "Paul Walter Hauser",
-              "character": "Paul",
-              "order": 1
-            },
-            {
-              "name": "Kali Reis",
-              "character": "Maxine",
-              "order": 2
-            },
-            {
-              "name": "Zach Cherry",
-              "character": "Carl",
-              "order": 3
-            },
-            {
-              "name": "Johnno Wilson",
-              "character": "Officer Wilson",
-              "order": 4
-            },
-            {
-              "name": "Shaun W. Loeser",
-              "character": "Puker",
-              "order": 5
-            },
-            {
-              "name": "Zach Cregger",
-              "character": "Intercom (voice)",
-              "order": 6
-            },
-            {
-              "name": "Emily Piggford",
-              "character": "Dr. Maria Stokes",
-              "order": 7
-            },
-            {
-              "name": "Will Merrick",
-              "character": "Dave",
-              "order": 8
-            },
-            {
-              "name": "Zoé Bellas",
-              "character": "Birdie",
-              "order": 9
             }
           ],
           "trending": false
