@@ -112,3 +112,24 @@ export function extrasSnapshot({ tid, variant, base } = {}) {
   if (base) e.base = base;
   return e;
 }
+
+// Historial mensual compacto (build-historial-mensual.mjs): fila.histMes = {m: "YYYY-MM", p: [precio, …]} con un precio por mes consecutivo
+// desde `m` (null = mes sin dato). Se expande a puntos mensuales (agg) con src "csv-mes" al dibujar; no se guarda expandido.
+export function expandirHistMes(hm) {
+  if (!hm || typeof hm.m !== "string" || !Array.isArray(hm.p)) return [];
+  let [y, mo] = hm.m.split("-").map(Number);
+  const out = [];
+  for (const m of hm.p) {
+    if (m != null && m > 0) out.push({ date: `${y}-${String(mo).padStart(2, "0")}-01`, market: m, low: null, high: null, src: "csv-mes", agg: true, n: 1 });
+    mo++; if (mo > 12) { mo = 1; y++; }
+  }
+  return out;
+}
+// priceHistory de la fila con los meses anteriores delante y las costuras marcadas. Si la fila no tiene histMes devuelve su priceHistory tal cual.
+export function historialConMensual(fila) {
+  const h = (fila && Array.isArray(fila.priceHistory)) ? fila.priceHistory : [];
+  const pre = expandirHistMes(fila && fila.histMes);
+  if (!pre.length) return h;
+  const primero = h.filter(x => x && x.date && x.market > 0).map(x => x.date).sort()[0] || "9999-12-31";
+  return marcarCortes([...pre.filter(x => x.date.slice(0, 7) < primero.slice(0, 7)), ...h]);
+}

@@ -35,6 +35,7 @@ export function mergePreciosBot(local, remote) {
       tcgUpdated: c.tcgUpdated ?? null,
       priceHistory: Array.isArray(c.priceHistory) ? c.priceHistory : [],
       ...(c.tcgId ? { tcgId: c.tcgId } : {}),
+      ...(c.histMes ? { histMes: c.histMes } : {}),   // historial mensual compacto (build-historial-mensual.mjs)
     });
   }
   return (Array.isArray(local) ? local : []).map(c => {
@@ -45,7 +46,7 @@ export function mergePreciosBot(local, remote) {
     const precio = localMasNuevo
       ? { tcgMarket: c.tcgMarket, tcgLow: c.tcgLow ?? null, tcgHigh: c.tcgHigh ?? null, tcgUpdated: c.tcgUpdated }
       : { tcgMarket: r.tcgMarket, tcgLow: r.tcgLow, tcgHigh: r.tcgHigh, tcgUpdated: r.tcgUpdated };
-    return { ...c, ...precio, priceHistory: historial, ...(r.tcgId ? { tcgId: r.tcgId } : {}) };
+    return { ...c, ...precio, priceHistory: historial, ...(r.tcgId ? { tcgId: r.tcgId } : {}), ...(r.histMes ? { histMes: r.histMes } : {}) };
   });
 }
 

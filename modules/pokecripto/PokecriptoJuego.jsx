@@ -9,8 +9,10 @@ import { fetchTcgCryptoData } from "../shared/catalog.js";
 import {
   MarcoPoke, PriceChartFill, fmtUSD, BarraSet, ChipHerramienta, fmtDateShort, computeHistMetrics, computeTimeframeDeltas, BotonCerrar,
 } from "./PokecriptoPage.jsx";
-import { JUEGOS, juegoDe, idFila, filaTiene, marcasDeFilas, aplicarMarca, actualizarPreciosFilas, cartaDe, variantesDeImpresion, resumenFilas } from "./lib/juegos.mjs";
+import { JUEGOS, juegoDe, idFila, filaTiene, marcasDeFilas, aplicarMarca, actualizarPreciosFilas, cartaDe, variantesDeImpresion, resumenFilas, pendientesDeCambio } from "./lib/juegos.mjs";
+import { encolarPokecriptoPending } from "./alta.js";
 import { multiploSobreBase } from "./lib/variantes-comunes.mjs";
+import { historialConMensual } from "./lib/historial.mjs";
 import {
   cartasDeColeccion, filtrarCartas, urlImagen, urlImagenGrande, rankSets, valoresFiltro, cuentaFiltros, precioReferencia,
 } from "../tcgcrypto/logica.js";
@@ -98,7 +100,7 @@ function Detalle({ datos, col, carta, tile, filasCarta, lista, onIr, onCerrar, o
   const v = tile.vs.find(x => x.key === selKey) || tile.vs[0];
   const fila = propias.get(v.key) || null, cons = !!fila && filaTiene(fila);
   const nTengo = tile.vs.filter(x => tiene(x.key)).length;
-  const hist = (fila && fila.priceHistory) || [];
+  const hist = fila ? historialConMensual(fila) : [];
   const idx = lista.findIndex(x => x.k === carta.k && x.setIdx === tile.setIdx && x.num === tile.num), nav = lista.length > 1;
   const { ath, athDate, atl, atlDate, vol, volLabel } = computeHistMetrics(hist, rango);
   const mult = multiploSobreBase(v, tile.vs);
@@ -235,7 +237,12 @@ const VistaColeccion = React.memo(function VistaColeccion({ juego, datos, col, f
   const [invertidos, setInvertidos] = useState(() => new Set());   // sets que el usuario abrió/cerró respecto del valor por defecto
   const [filtroSet, setFiltroSet] = useState("");
   const abrirRef = React.useRef(() => {});
-  const marcar = (c, k, vkey, parche) => saveInventario(prev => aplicarMarca(prev || [], { juego, datos, col: c, k, vkey, parche, hoy: hoyISO() }));
+  const marcar = (c, k, vkey, parche) => {
+    // El bot se entera del cambio (fila nueva, modificada o quitada) para precearla y acumular su historial; sin conexión no pasa nada.
+    const cambios = pendientesDeCambio(filas, aplicarMarca(filas, { juego, datos, col: c, k, vkey, parche, hoy: hoyISO() }));
+    if (cambios.length) encolarPokecriptoPending(cambios);
+    saveInventario(prev => aplicarMarca(prev || [], { juego, datos, col: c, k, vkey, parche, hoy: hoyISO() }));
+  };
 
   const todas = useMemo(() => cartasDeColeccion(datos, col.id), [datos, col.id]);
   const filasCol = useMemo(() => filas.filter(x => x.carpeta === col.nombre), [filas, col.nombre]);

@@ -1,7 +1,7 @@
 // Pruebas de lib/juegos.mjs y lib/variantes-comunes.mjs (multi-juego + variantes). Correr: node tests/pokecripto-juegos.mjs
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { juegoDe, esPokemon, idFila, filaTiene, marcaDeFila, marcasDeFilas, filasDeCarta, aplicarMarca, actualizarPreciosFilas, precioDeCarta, cartaDe, JUEGOS, variantesDeImpresion, resumenFilas } from "../modules/pokecripto/lib/juegos.mjs";
+import { pendientesDeCambio, juegoDe, esPokemon, idFila, filaTiene, marcaDeFila, marcasDeFilas, filasDeCarta, aplicarMarca, actualizarPreciosFilas, precioDeCarta, cartaDe, JUEGOS, variantesDeImpresion, resumenFilas } from "../modules/pokecripto/lib/juegos.mjs";
 import { describirVariante, ordenarVariantes, abreviarRareza, multiploSobreBase, resumenVariantes } from "../modules/pokecripto/lib/variantes-comunes.mjs";
 import { resumenColeccion, filtrarCartas, claveVersion, precioVersion } from "../modules/tcgcrypto/logica.js";
 
@@ -153,5 +153,15 @@ t("ordenar y comparar: sellos primero, luego por precio; múltiplo sobre la base
   assert.deepEqual(o.map(x => x.clave), ["liga", "reverse", "normal"]);
   assert.equal(multiploSobreBase(liga, o), 15); assert.equal(multiploSobreBase(rev, o), 2); assert.equal(multiploSobreBase(liga, []), null);
   const r = resumenVariantes(o); assert.equal(r.n, 3); assert.equal(r.min, 2); assert.equal(r.max, 30); assert.equal(r.sellos, 1);
+});
+t("pendientesDeCambio: fila nueva y modificada se encolan; la quitada va como baja; sin cambio no encola nada", () => {
+  const k0 = vk(carta, 0), k1 = vk(carta, 1);
+  const a = marcar([], { c: 1 }, k0);
+  assert.deepEqual(pendientesDeCambio([], a).map(f => f.id), [a[0].id]);                       // alta
+  assert.equal(pendientesDeCambio(a, a).length, 0);                                              // sin cambio
+  const b = marcar(a, { c: 1, cu: 4 }, k0); assert.equal(pendientesDeCambio(a, b).length, 1);     // modificada
+  const c2 = marcar(a, { c: 1 }, k1); assert.deepEqual(pendientesDeCambio(a, c2).map(f => f.tcgcsvKey), [k1]); // solo la nueva variante
+  const quitada = marcar(a, { c: 0, q: 0, cu: 0, nt: "" }, k0);
+  assert.deepEqual(pendientesDeCambio(a, quitada), [{ id: a[0].id, _baja: true }]);              // baja
 });
 console.log(`\n${n} pruebas en verde`);

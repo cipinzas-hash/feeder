@@ -4487,6 +4487,27 @@ ${linea}`, url: ev.url };
     if (base) e.base = base;
     return e;
   }
+  function expandirHistMes(hm) {
+    if (!hm || typeof hm.m !== "string" || !Array.isArray(hm.p)) return [];
+    let [y, mo] = hm.m.split("-").map(Number);
+    const out = [];
+    for (const m of hm.p) {
+      if (m != null && m > 0) out.push({ date: `${y}-${String(mo).padStart(2, "0")}-01`, market: m, low: null, high: null, src: "csv-mes", agg: true, n: 1 });
+      mo++;
+      if (mo > 12) {
+        mo = 1;
+        y++;
+      }
+    }
+    return out;
+  }
+  function historialConMensual(fila) {
+    const h = fila && Array.isArray(fila.priceHistory) ? fila.priceHistory : [];
+    const pre = expandirHistMes(fila && fila.histMes);
+    if (!pre.length) return h;
+    const primero = h.filter((x) => x && x.date && x.market > 0).map((x) => x.date).sort()[0] || "9999-12-31";
+    return marcarCortes([...pre.filter((x) => x.date.slice(0, 7) < primero.slice(0, 7)), ...h]);
+  }
 
   // modules/shared/constants.js
   var { useState: useState7, useEffect: useEffect5, useRef: useRef5 } = React;
@@ -4781,7 +4802,9 @@ ${linea}`, url: ev.url };
         tcgHigh: c.tcgHigh ?? null,
         tcgUpdated: c.tcgUpdated ?? null,
         priceHistory: Array.isArray(c.priceHistory) ? c.priceHistory : [],
-        ...c.tcgId ? { tcgId: c.tcgId } : {}
+        ...c.tcgId ? { tcgId: c.tcgId } : {},
+        ...c.histMes ? { histMes: c.histMes } : {}
+        // historial mensual compacto (build-historial-mensual.mjs)
       });
     }
     return (Array.isArray(local) ? local : []).map((c) => {
@@ -4790,7 +4813,7 @@ ${linea}`, url: ev.url };
       const historial = unirHistorial(c.priceHistory, r.priceHistory);
       const localMasNuevo = c.tcgMarket != null && c.tcgUpdated && String(c.tcgUpdated).slice(0, 10) > String(r.tcgUpdated || "").slice(0, 10);
       const precio = localMasNuevo ? { tcgMarket: c.tcgMarket, tcgLow: c.tcgLow ?? null, tcgHigh: c.tcgHigh ?? null, tcgUpdated: c.tcgUpdated } : { tcgMarket: r.tcgMarket, tcgLow: r.tcgLow, tcgHigh: r.tcgHigh, tcgUpdated: r.tcgUpdated };
-      return { ...c, ...precio, priceHistory: historial, ...r.tcgId ? { tcgId: r.tcgId } : {} };
+      return { ...c, ...precio, priceHistory: historial, ...r.tcgId ? { tcgId: r.tcgId } : {}, ...r.histMes ? { histMes: r.histMes } : {} };
     });
   }
   function numOrden(n) {
@@ -6888,7 +6911,7 @@ ${item.link}`);
       const { detalle, ctx, catalogEntry } = r;
       const esWatch = ctx === "watch", esCarpeta = ctx === "carpeta";
       const carta = ctx === "coleccion" ? null : r.row;
-      const hist = detalle.priceHistory || [];
+      const hist = historialConMensual(detalle);
       const cons = ctx === "coleccion" ? catalogEntry ? getEstadoDark(detalle) === "conseguida" : true : detalle.estado !== "hunting";
       const { ath, athDate, atl, atlDate, vol, volLabel } = computeHistMetrics(hist, darkDetailRange);
       const idx = darkDetailList.indexOf(darkDetailId), nav = darkDetailList.length > 1;
@@ -7649,7 +7672,7 @@ ${item.link}`);
       l
     )))), filtradas.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: "40px 0", textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontFamily: "'Caveat',cursive", fontSize: 18, color: "#ccc" } }, inv.length === 0 ? "colecci\xF3n vac\xEDa" : searchMode === "mostrar" && chipCarpetas.size + chipEstado.size === 0 ? "eleg\xED un filtro arriba para buscar" : "sin cartas en esta vista")), poolView === "lista" && /* @__PURE__ */ React.createElement("div", null, filtradas.map((carta) => {
       const est = ESTADOS[carta.estado] || ESTADOS.sin_publicar;
-      const hist = carta.priceHistory || [];
+      const hist = historialConMensual(carta);
       const metrics = computeHistMetrics(hist, "todo");
       const colorVenta = carta.tcgMarket && carta.precioVentaUSD ? carta.precioVentaUSD > carta.tcgMarket ? "#2e7d52" : "#e53935" : null;
       const varTotal = hist.length >= 2 && hist[0].market > 0 ? (hist[hist.length - 1].market - hist[0].market) / hist[0].market * 100 : null;
@@ -8091,6 +8114,16 @@ ${item.link}`);
     });
     return { filas: cambiadas ? filas : inv, cambiadas };
   }
+  function pendientesDeCambio(antes, despues) {
+    const a = new Map((antes || []).map((f4) => [f4.id, f4])), d = new Map((despues || []).map((f4) => [f4.id, f4]));
+    const out = [];
+    for (const [id, fila] of d) {
+      const p = a.get(id);
+      if (!p || p !== fila && JSON.stringify(p) !== JSON.stringify(fila)) out.push(fila);
+    }
+    for (const id of a.keys()) if (!d.has(id)) out.push({ id, _baja: true });
+    return out;
+  }
 
   // modules/pokecripto/PokecriptoJuego.jsx
   var { useState: useState11, useEffect: useEffect9, useMemo: useMemo2 } = React;
@@ -8171,7 +8204,7 @@ ${item.link}`);
     const v = tile.vs.find((x) => x.key === selKey) || tile.vs[0];
     const fila = propias.get(v.key) || null, cons = !!fila && filaTiene(fila);
     const nTengo = tile.vs.filter((x) => tiene(x.key)).length;
-    const hist = fila && fila.priceHistory || [];
+    const hist = fila ? historialConMensual(fila) : [];
     const idx = lista.findIndex((x) => x.k === carta.k && x.setIdx === tile.setIdx && x.num === tile.num), nav = lista.length > 1;
     const { ath, athDate, atl, atlDate, vol, volLabel } = computeHistMetrics(hist, rango);
     const mult = multiploSobreBase(v, tile.vs);
@@ -8232,7 +8265,11 @@ ${item.link}`);
     const [filtroSet, setFiltroSet] = useState11("");
     const abrirRef = React.useRef(() => {
     });
-    const marcar = (c, k, vkey, parche) => saveInventario((prev) => aplicarMarca(prev || [], { juego, datos, col: c, k, vkey, parche, hoy: hoyISO2() }));
+    const marcar = (c, k, vkey, parche) => {
+      const cambios = pendientesDeCambio(filas, aplicarMarca(filas, { juego, datos, col: c, k, vkey, parche, hoy: hoyISO2() }));
+      if (cambios.length) encolarPokecriptoPending(cambios);
+      saveInventario((prev) => aplicarMarca(prev || [], { juego, datos, col: c, k, vkey, parche, hoy: hoyISO2() }));
+    };
     const todas = useMemo2(() => cartasDeColeccion(datos, col2.id), [datos, col2.id]);
     const filasCol = useMemo2(() => filas.filter((x) => x.carpeta === col2.nombre), [filas, col2.nombre]);
     const marcas = useMemo2(() => marcasDeFilas(filas, juego, col2.nombre), [filas, juego, col2.nombre]);

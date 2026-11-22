@@ -2,7 +2,7 @@
 // (build-pokecripto.mjs) -- se importa acá para que cliente y bot nunca
 // diverjan en matching/normalización (issue #9).
 import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPrice, fetchTCGCandidatos, addSnapshot, refreshPrecio as refreshPrecioCompartido, fuenteCompatible } from "./lib/pricing.mjs";
-import { marcarCortes, ultimoSegmento, esMercadoDelgado, serieSuave, extrasSnapshot } from "./lib/historial.mjs";
+import { marcarCortes, ultimoSegmento, esMercadoDelgado, serieSuave, extrasSnapshot, historialConMensual } from "./lib/historial.mjs";
 import { PanelVariantesPokemon, InsigniasPokemon } from "./VariantesPokemon.jsx";
 import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarCandidatos, matchAutomatico, mergeOverrides, claveCandidato, urlsFoto, mismoSet } from "./lib/review.mjs";
 import { marcarEdicionLocal } from "../shared/localedit.js";
@@ -1874,7 +1874,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const {detalle,ctx,catalogEntry}=r;
     const esWatch=ctx==="watch", esCarpeta=ctx==="carpeta";
     const carta=ctx==="coleccion"?null:r.row;               // fila de inventario editable (carpeta / Price Watch)
-    const hist=detalle.priceHistory||[];
+    const hist=historialConMensual(detalle); // + meses anteriores (histMes, de tcgcsv) si la fila los tiene
     const cons=ctx==="coleccion"?(catalogEntry?getEstadoDark(detalle)==="conseguida":true):detalle.estado!=="hunting";
     const {ath,athDate,atl,atlDate,vol,volLabel}=computeHistMetrics(hist,darkDetailRange);
     const idx=darkDetailList.indexOf(darkDetailId), nav=darkDetailList.length>1;
@@ -2883,7 +2883,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       {poolView==="lista"&&<div>
         {filtradas.map(carta=>{
           const est=ESTADOS[carta.estado]||ESTADOS.sin_publicar;
-          const hist=carta.priceHistory||[];
+          const hist=historialConMensual(carta);
           const metrics=computeHistMetrics(hist,"todo");
           const colorVenta=carta.tcgMarket&&carta.precioVentaUSD?(carta.precioVentaUSD>carta.tcgMarket?"#2e7d52":"#e53935"):null;
           // Variación total desde el primer snapshot hasta el más reciente —

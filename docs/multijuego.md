@@ -64,3 +64,18 @@ volver (1 conseguida, borde verde) → menú actualizado → Digimon con la mism
 - **Tamaño de caras** S / M / L / XL / lista, recordado por juego en el dispositivo (`angst-caras-{juego}`), por defecto L.
 - Filtros: 🏅 (solo cartas con sello) y «Variantes» en el panel 🔎.
 - La sonda de tcgcsv mide además los sellos entre sets (liga, prerelease, campeonato) con tus cartas: ver `docs/sonda-tcgcsv-pokemon.md` sección 5.
+
+## Pokémon: variantes y historial mensual (20-nov-2026)
+- **Variantes de Pokémon** (`build-pokemon-variantes.mjs` + `update-pokemon-variantes.yml`, semanal): catálogo por set desde tcgcsv, un archivo por set
+  (≤135 KB, ~2 MB en total) en `modules/feed/data/pokemon-variantes/`. Une los acabados del producto (Normal/Holo/Reverse), los hermanos del mismo set
+  con patrón (Poké Ball, Master Ball, logo de tipo…) y los sellos de OTROS grupos con el mismo nombre y el mismo número CON total (campeonato, evento,
+  prerelease, liga). **No enlaza por nombre solo**: la sonda midió 348 de 887 filas con «promos del mismo nombre» (ruido: son cartas aparte, p. ej. las promos de
+  liga modernas con numeración de promo). Con tus cartas: 583 de 978 filas tienen ≥2 variantes, 34 con sello (evento/campeonato sobre todo) y 20 con patrón.
+- Pantalla: panel «variantes» en el detalle de Pokémon e insignias en las tarjetas de las colecciones (`VariantesPokemon.jsx`), mismo formato que los otros
+  juegos. **Solo muestra**: marcar cuál variante tienes en Pokémon cambia el modelo de filas del módulo y queda como paso aparte.
+- **Historial mensual** (`build-historial-mensual.mjs` + `historial-mensual.yml`): precio de la variante de cada fila el día 1 de cada mes desde feb-2024
+  (archivos de tcgcsv, 2-4 MB c/u, ~105 MB en total por corrida). Se guarda COMPACTO en la fila (`histMes`: {m, p:[…]}, ~180 caracteres por fila) y la pantalla
+  lo expande al dibujar (`historialConMensual`, con costuras marcadas). **Modo prueba por omisión**; escribe Angst-data solo con `apply = true`.
+  Prueba real (20-nov): 940 de 1003 filas de Pokémon identificadas, 851 reciben historial (mediana 30 meses); precio del archivo ÷ tu snapshot del mismo mes:
+  mediana 1,00 (55 % dentro de ±10 %, 77 % dentro de ±25 %: tu mes es un promedio, el archivo es un día).
+- Marcar una variante de Yu-Gi-Oh!/Digimon **encola la fila al bot** (alta, cambio o baja) para que acumule historial.

@@ -1,7 +1,8 @@
 // Pruebas de lib/historial.mjs (lote 1, 16-nov-2026). Correr: node tests/pokecripto-historial.mjs
 import assert from "node:assert/strict";
-import { marcarCortes, contarCortes, ultimoSegmento, hayCorteEntre, esMercadoDelgado, serieSuave, conservarNM, extrasSnapshot, esCostura } from "../modules/pokecripto/lib/historial.mjs";
+import { marcarCortes, contarCortes, ultimoSegmento, hayCorteEntre, esMercadoDelgado, serieSuave, conservarNM, extrasSnapshot, esCostura, expandirHistMes, historialConMensual } from "../modules/pokecripto/lib/historial.mjs";
 import { addSnapshot, compactarHistorial } from "../modules/pokecripto/lib/pricing.mjs";
+import { mergePreciosBot } from "../modules/pokecripto/lib/review.mjs";
 
 let n = 0;
 const t = (nombre, fn) => { fn(); n++; console.log("✓", nombre); };
@@ -85,5 +86,28 @@ t("extras de snapshot: addSnapshot guarda tid/var/base solo cuando existen, y el
   const h2 = addSnapshot(h, 2.5, 1, 3, "2026-11-16", "tpl", extrasSnapshot({ tid: "x", variant: "Normal", base: "nm" }));
   assert.equal(h2.length, 1); assert.equal(h2[0].var, "Normal"); assert.equal(h2[0].market, 2.5);
   assert.deepEqual(addSnapshot([], 1, null, null, "2026-11-16", "tpl"), [{ date: "2026-11-16", market: 1, low: null, high: null, src: "tpl" }]);
+});
+t("histMes: se expande a un punto por mes (con huecos y cambio de año) y no se guarda expandido", () => {
+  const e = expandirHistMes({ m: "2025-11", p: [1, null, 3, 4] });
+  assert.deepEqual(e.map(x => x.date), ["2025-11-01", "2026-01-01", "2026-02-01"]);
+  assert.deepEqual(e.map(x => x.market), [1, 3, 4]); assert.ok(e.every(x => x.agg && x.src === "csv-mes"));
+  assert.deepEqual(expandirHistMes(null), []); assert.deepEqual(expandirHistMes({ m: "x" }), []);
+});
+t("historialConMensual: antepone los meses previos al primer snapshot propio, sin pisar meses propios, y marca la costura si el salto es grande", () => {
+  const fila = { histMes: { m: "2026-08", p: [1, 1.05, 1.1, 9] }, priceHistory: [{ date: "2026-11-10", market: 1.2, src: "tpl" }, { date: "2026-11-11", market: 1.25, src: "tpl" }] };
+  const h = historialConMensual(fila);
+  assert.equal(h.length, 5); assert.deepEqual(h.slice(0, 3).map(x => x.date), ["2026-08-01", "2026-09-01", "2026-10-01"]);
+  assert.ok(!h.some(x => x.src === "csv-mes" && x.date.startsWith("2026-11")));          // el mes del primer snapshot propio no se repite
+  const salto = historialConMensual({ histMes: { m: "2026-09", p: [5, 5] }, priceHistory: [{ date: "2026-11-10", market: 1.2, src: "tpl" }] });
+  assert.equal(salto.at(-1).corte, true);                                                   // 5 → 1,2 con fuente distinta: costura marcada
+  const sin = { priceHistory: [{ date: "2026-11-10", market: 1 }] };
+  assert.equal(historialConMensual(sin), sin.priceHistory);                                   // sin histMes: la misma lista
+});
+t("mergePreciosBot: el historial mensual compacto del bot llega a la fila del cliente (y no se pierde al unir snapshots)", () => {
+  const local = [{ id: "a", tcgMarket: 1, tcgUpdated: "2026-11-10", priceHistory: [{ date: "2026-11-10", market: 1 }] }];
+  const remote = [{ id: "a", tcgMarket: 1.1, tcgUpdated: "2026-11-11", priceHistory: [{ date: "2026-11-11", market: 1.1 }], histMes: { m: "2024-02", p: [1, 2] } }];
+  const r = mergePreciosBot(local, remote);
+  assert.deepEqual(r[0].histMes, { m: "2024-02", p: [1, 2] }); assert.equal(r[0].priceHistory.length, 2);
+  assert.equal(mergePreciosBot(local, [{ id: "a", tcgMarket: 1.1, tcgUpdated: "2026-11-11", priceHistory: [] }])[0].histMes, undefined);
 });
 console.log(`\n${n} pruebas en verde`);

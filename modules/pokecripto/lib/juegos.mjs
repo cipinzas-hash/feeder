@@ -169,4 +169,14 @@ export function actualizarPreciosFilas(inventario, catalogos, hoy) {
   return { filas: cambiadas ? filas : inv, cambiadas };
 }
 
+// Entradas que hay que encolar al bot tras un cambio de inventario: las filas nuevas o modificadas (cualquier campo) y la baja de las que
+// desaparecieron ({id, _baja:true}). Sin esto el bot no se entera de las filas de otros juegos (nacen en el navegador) y no acumula su historial.
+export function pendientesDeCambio(antes, despues) {
+  const a = new Map((antes || []).map(f => [f.id, f])), d = new Map((despues || []).map(f => [f.id, f]));
+  const out = [];
+  for (const [id, fila] of d) { const p = a.get(id); if (!p || p !== fila && JSON.stringify(p) !== JSON.stringify(fila)) out.push(fila); }
+  for (const id of a.keys()) if (!d.has(id)) out.push({ id, _baja: true });
+  return out;
+}
+
 export { claveVersion, etiquetaVersion };

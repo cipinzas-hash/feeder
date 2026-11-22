@@ -1,7 +1,9 @@
 // Historial MENSUAL de precios desde el archivo diario de tcgcsv.com (desde el 8-feb-2024). Variantes 20-nov-2026.
 //
 // Para cada fila del inventario (Pokémon, Yu-Gi-Oh!, Digimon) toma el precio de SU variante (productId + subtipo) el día 1 de cada mes
-// y lo antepone a su priceHistory como punto mensual (src "csv-mes", agg:true), solo para meses ANTERIORES al primer snapshot propio.
+// y lo guarda en el campo compacto `histMes` = {m: "YYYY-MM" del primer mes, p: [precio por mes consecutivo, null si falta]} (~180
+// caracteres por carta: el inventario ya ocupa ~1,8 MB del almacenamiento del navegador, 20.000 objetos más lo desbordarían). La pantalla lo
+// expande al dibujar (lib/historial.mjs: historialConMensual). Solo meses ANTERIORES al primer snapshot propio.
 // Los archivos pesan 2-4 MB cada uno y son inmutables: se bajan una sola vez por corrida y se descartan (la documentación de tcgcsv
 // pide no repetir descargas de archivos).
 //
@@ -103,9 +105,13 @@ const resumenMeses = [];
 async function procesar(fecha) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mes-" + fecha + "-"));
   try {
-    const r = await fetch(`${ARCHIVO}/prices-${fecha}.ppmd.7z`, { headers: UA, signal: AbortSignal.timeout(120000) });
-    if (!r.ok) { avisos.push(`archivo ${fecha}: HTTP ${r.status}`); return; }
-    const f7 = path.join(dir, "a.7z"); fs.writeFileSync(f7, Buffer.from(await r.arrayBuffer()));
+    let buf = null, ult = "";
+    for (let intento = 1; intento <= 4 && !buf; intento++) {            // un mes fallido deja un hueco: se reintenta con espera creciente
+      try { const r = await fetch(`${ARCHIVO}/prices-${fecha}.ppmd.7z`, { headers: UA, signal: AbortSignal.timeout(120000) }); if (!r.ok) throw new Error("HTTP " + r.status); buf = Buffer.from(await r.arrayBuffer()); }
+      catch (e) { ult = String(e.message).slice(0, 80); await dormir(2000 * intento); }
+    }
+    if (!buf) { avisos.push(`archivo ${fecha}: ${ult} (4 intentos)`); return; }
+    const f7 = path.join(dir, "a.7z"); fs.writeFileSync(f7, buf);
     const x = spawnSync("7z", ["x", "-y", `-o${dir}/x`, f7], { encoding: "utf-8" });
     if (x.status !== 0) { avisos.push(`7z ${fecha}: ${String(x.stderr || x.stdout).slice(0, 100)}`); return; }
     let n = 0;
@@ -128,7 +134,7 @@ await Promise.all(Array.from({ length: 3 }, async () => { while (ix < fechasUsar
 resumenMeses.sort((a, b) => a.fecha.localeCompare(b.fecha));
 
 // ── 3. Antes de cada fila: meses anteriores a su primer snapshot ───────────────────────────────────────────────
-let filasConSerie = 0, puntosNuevos = 0, yaTenian = 0;
+let filasConSerie = 0, puntosNuevos = 0, yaTenian = 0, chars = 0;
 const largos = [], comparaciones = [];
 const resultado = inventario.map(c => {
   const o = objetivos.get(c.id); if (!o) return c;
@@ -137,12 +143,18 @@ const resultado = inventario.map(c => {
   if (!pts.length) return c;
   const h = Array.isArray(c.priceHistory) ? c.priceHistory : [];
   const primero = h.filter(x => x && x.date && x.market > 0).map(x => x.date).sort()[0] || "9999-12-31";
-  const nuevos = pts.filter(([f]) => f.slice(0, 7) < primero.slice(0, 7)).map(([f, m]) => ({ date: f, market: r2(m), low: null, high: null, src: "csv-mes", agg: true, n: 1, tid: String(o.pid), var: o.sub || undefined }));
+  const hasta = primero.slice(0, 7);
+  const util = pts.filter(([f]) => f.slice(0, 7) < hasta);
   // validación: meses en que ambos existen (el snapshot propio de ese mes vs el archivo)
   for (const [f, m] of pts) { const mesF = f.slice(0, 7); const propios = h.filter(x => x && x.market > 0 && x.date.slice(0, 7) === mesF).map(x => x.market); if (propios.length) comparaciones.push(m / mediana(propios)); }
-  if (!nuevos.length) return { ...c, histMensual: hoy.slice(0, 7) };
-  filasConSerie++; puntosNuevos += nuevos.length; largos.push(nuevos.length);
-  return { ...c, priceHistory: [...nuevos, ...h], histMensual: hoy.slice(0, 7) };
+  if (!util.length) return { ...c, histMensual: hoy.slice(0, 7) };
+  const porMes = new Map(util.map(([f, m]) => [f.slice(0, 7), r2(m)]));
+  const ini = util[0][0].slice(0, 7), meses = [];
+  for (let [y, mo] = ini.split("-").map(Number); `${y}-${String(mo).padStart(2, "0")}` < hasta; mo++) { if (mo > 12) { mo = 1; y++; } const k = `${y}-${String(mo).padStart(2, "0")}`; if (k >= hasta) break; meses.push(porMes.has(k) ? porMes.get(k) : null); }
+  filasConSerie++; puntosNuevos += util.length; largos.push(util.length);
+  const histMes = { m: ini, p: meses };
+  chars += JSON.stringify(histMes).length;
+  return { ...c, histMes, histMensual: hoy.slice(0, 7) };
 });
 
 // ── 4. Informe y salida ─────────────────────────────────────────────────────────────────────────────────────────
@@ -153,7 +165,7 @@ const md = [
   `Generado por \`modules/feed/scripts/build-historial-mensual.mjs\`. **Modo ${APPLY ? "APLICAR (escribió el inventario)" : "PRUEBA (no escribió nada)"}.**`, "",
   `- Filas del inventario con producto y subtipo identificados: **${objetivos.size}** (Pokémon ${detalle.pokemonOk} de ${pokes.length}; otros juegos ${detalle.otrosOk}). Sin match: Pokémon ${detalle.pokemonSinMatch} · otros sin clave ${detalle.otrosSinClave}.`,
   `- Archivos mensuales leídos: ${resumenMeses.length} de ${fechasUsar.length} (${resumenMeses.map(m => m.mb).reduce((a, b) => a + b, 0).toFixed(1)} MB bajados en total).`,
-  `- Filas que reciben historial: **${filasConSerie}** (${pct(filasConSerie, objetivos.size)}) · puntos mensuales nuevos: ${puntosNuevos} · mediana por fila: ${mediana(largos) ?? "—"} meses · máximo ${largos.length ? Math.max(...largos) : "—"}. Ya marcadas de antes: ${yaTenian}.`,
+  `- Filas que reciben historial: **${filasConSerie}** (${pct(filasConSerie, objetivos.size)}) · puntos mensuales nuevos: ${puntosNuevos} · mediana por fila: ${mediana(largos) ?? "—"} meses · máximo ${largos.length ? Math.max(...largos) : "—"}. **Espacio que suma al inventario: ${(chars / 1024).toFixed(0)} KB (${filasConSerie ? Math.round(chars / filasConSerie) : 0} caracteres por fila).** Ya marcadas de antes: ${yaTenian}.`,
   `- **Validación contra tus snapshots** (mes en que existen los dos): n=${comparaciones.length} · precio del archivo ÷ tu snapshot del mes: mediana ${comparaciones.length ? r2(mediana(comparaciones)) : "—"} · dentro de ±10 %: ${dentro(comparaciones, 0.1)} · ±25 %: ${dentro(comparaciones, 0.25)}.`,
   "", "| Mes | Puntos | MB |", "|---|---:|---:|", ...resumenMeses.map(m => `| ${m.fecha} | ${m.puntos} | ${m.mb} |`),
   avisos.length ? "\n## Avisos\n" + avisos.slice(0, 20).map(a => "- " + a).join("\n") : "",
