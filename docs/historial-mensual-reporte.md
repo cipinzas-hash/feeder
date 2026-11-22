@@ -1,10 +1,10 @@
-# Historial mensual desde el archivo de tcgcsv (2026-11-21)
+# Historial mensual desde el archivo de tcgcsv (2026-11-22)
 
 Generado por `modules/feed/scripts/build-historial-mensual.mjs`. **Modo PRUEBA (no escribió nada).**
 
 - Filas del inventario con producto y subtipo identificados: **940** (Pokémon 940 de 1003; otros juegos 0). Sin match: Pokémon 63 · otros sin clave 0.
-- Archivos mensuales leídos: 33 de 34 (105.2 MB bajados en total).
-- Filas que reciben historial: **851** (91 %) · puntos mensuales nuevos: 20223 · mediana por fila: 30 meses · máximo 33. Ya marcadas de antes: 0.
+- Archivos mensuales leídos: 34 de 34 (108.0 MB bajados en total).
+- Filas que reciben historial: **851** (91 %) · puntos mensuales nuevos: 20806 · mediana por fila: 31 meses · máximo 34. **Espacio que suma al inventario: 1521 KB (1830 caracteres por fila).** Ya marcadas de antes: 0.
 - **Validación contra tus snapshots** (mes en que existen los dos): n=2074 · precio del archivo ÷ tu snapshot del mes: mediana 1 · dentro de ±10 %: 55 % · ±25 %: 77 %.
 
 | Mes | Puntos | MB |
@@ -16,6 +16,7 @@ Generado por `modules/feed/scripts/build-historial-mensual.mjs`. **Modo PRUEBA (
 | 2024-06-01 | 989 | 2.7 |
 | 2024-07-01 | 989 | 2.7 |
 | 2024-08-01 | 1004 | 2.8 |
+| 2024-09-01 | 1013 | 2.8 |
 | 2024-10-01 | 1011 | 2.8 |
 | 2024-11-01 | 1032 | 2.9 |
 | 2024-12-01 | 1032 | 2.9 |
@@ -42,6 +43,3 @@ Generado por `modules/feed/scripts/build-historial-mensual.mjs`. **Modo PRUEBA (
 | 2026-09-01 | 1305 | 3.9 |
 | 2026-10-01 | 1350 | 3.9 |
 | 2026-11-01 | 1389 | 4 |
-
-## Avisos
-- mes 2024-09-01: fetch failed
