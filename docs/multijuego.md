@@ -74,8 +74,15 @@ volver (1 conseguida, borde verde) → menú actualizado → Digimon con la mism
 - Pantalla: panel «variantes» en el detalle de Pokémon e insignias en las tarjetas de las colecciones (`VariantesPokemon.jsx`), mismo formato que los otros
   juegos. **Solo muestra**: marcar cuál variante tienes en Pokémon cambia el modelo de filas del módulo y queda como paso aparte.
 - **Historial mensual** (`build-historial-mensual.mjs` + `historial-mensual.yml`): precio de la variante de cada fila el día 1 de cada mes desde feb-2024
-  (archivos de tcgcsv, 2-4 MB c/u, ~105 MB en total por corrida). Se guarda COMPACTO en la fila (`histMes`: {m, p:[…]}, ~180 caracteres por fila) y la pantalla
+  (archivos de tcgcsv, 2-4 MB c/u, ~105 MB en total por corrida). Se guarda COMPACTO en la fila (`histMes`: {m, p:[…]}; medido en Actions: 119 KB en total, 144 caracteres por fila) y la pantalla
   lo expande al dibujar (`historialConMensual`, con costuras marcadas). **Modo prueba por omisión**; escribe Angst-data solo con `apply = true`.
-  Prueba real (20-nov): 940 de 1003 filas de Pokémon identificadas, 851 reciben historial (mediana 30 meses); precio del archivo ÷ tu snapshot del mismo mes:
+  Prueba real (21-nov, 34 de 34 archivos): 940 de 1003 filas de Pokémon identificadas, 851 reciben historial (mediana 31 meses); precio del archivo ÷ tu snapshot del mismo mes:
   mediana 1,00 (55 % dentro de ±10 %, 77 % dentro de ±25 %: tu mes es un promedio, el archivo es un día).
 - Marcar una variante de Yu-Gi-Oh!/Digimon **encola la fila al bot** (alta, cambio o baja) para que acumule historial.
+
+## Orden de fusión y pasos manuales
+1. Fusionar `precios-limpios` (marca costuras, base NM, mediana 7 d; el bot lo aplica en su próxima corrida; respaldo: tag `backup-pre-lote1-2026-11-16` en Angst-data).
+2. Fusionar `multijuego`, luego `variantes` (selector de juego, variantes, catálogo de Pokémon, historial mensual). Tras fusionar, los workflows semanales/manuales quedan en main.
+3. Historial mensual: Run workflow «Historial mensual de precios (tcgcsv)» con `apply = true` (antes, el informe de prueba ya está en `docs/historial-mensual-reporte.md`).
+4. Pendiente (no hecho): marcar la variante que tienes en Pokémon (hoy solo se muestran), selector de tamaño de caras en las tarjetas de Pokémon, y mostrar
+   las «promos relacionadas» por nombre (liga modernas) como lista aparte.
