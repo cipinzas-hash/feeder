@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-22T09:27:27.871Z",
+  "generatedAt": "2026-11-22T17:39:06.520Z",
   "categories": [
     {
       "cat": "Películas",
@@ -73,13 +73,13 @@
               "order": 7
             },
             {
-              "name": "Maya Hawke",
-              "character": "Wiress",
+              "name": "Kelvin Harrison Jr.",
+              "character": "Beetee",
               "order": 8
             },
             {
-              "name": "Kelvin Harrison Jr.",
-              "character": "Beetee",
+              "name": "Maya Hawke",
+              "character": "Wiress",
               "order": 9
             }
           ],
@@ -329,6 +329,87 @@
           "trending": true
         },
         {
+          "guid": "tmdb-movie-1153576",
+          "title": "Street Fighter",
+          "link": "https://www.themoviedb.org/movie/1153576",
+          "summary": "En 1993, los distanciados luchadores callejeros Ryu y Ken Masters se ven arrastrados de nuevo al combate cuando la misteriosa Chun-Li los recluta para el próximo Torneo World Warrior: un enfrentamiento brutal de puños, destino y furia. Sin embargo, tras esta gran batalla se esconde una conspiración mortal que los obliga a enfrentarse tanto entre sí como a los demonios de su pasado. Y si no lo logran... ¡será el fin de la partida!",
+          "image": "https://image.tmdb.org/t/p/w500/2kdEEUkbkJe08kTDMCUbBrZ71Aw.jpg",
+          "pubDate": "2026-10-13",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-13T17:32:43.424Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.2,
+            "rt": null,
+            "metascore": 46,
+            "tmdb": 6.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "U6sbm1OaJb8",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Andrew Koji",
+              "character": "Ryu",
+              "order": 0
+            },
+            {
+              "name": "Noah Centineo",
+              "character": "Ken Masters",
+              "order": 1
+            },
+            {
+              "name": "Callina Liang",
+              "character": "Chun-Li",
+              "order": 2
+            },
+            {
+              "name": "David Dastmalchian",
+              "character": "M. Bison",
+              "order": 3
+            },
+            {
+              "name": "Andrew Schulz",
+              "character": "Dan Hibiki",
+              "order": 4
+            },
+            {
+              "name": "Roman Reigns",
+              "character": "Akuma",
+              "order": 5
+            },
+            {
+              "name": "Cody Rhodes",
+              "character": "Guile",
+              "order": 6
+            },
+            {
+              "name": "Jason Momoa",
+              "character": "Blanka",
+              "order": 7
+            },
+            {
+              "name": "Eric André",
+              "character": "Don Sauvage",
+              "order": 8
+            },
+            {
+              "name": "50 Cent",
+              "character": "Balrog",
+              "order": 9
+            }
+          ],
+          "trending": false
+        },
+        {
           "guid": "tmdb-movie-791523",
           "title": "Wildwood: El Bosque Salvaje",
           "link": "https://www.themoviedb.org/movie/791523",
@@ -417,87 +498,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-movie-1153576",
-          "title": "Street Fighter",
-          "link": "https://www.themoviedb.org/movie/1153576",
-          "summary": "En 1993, los distanciados luchadores callejeros Ryu y Ken Masters se ven arrastrados de nuevo al combate cuando la misteriosa Chun-Li los recluta para el próximo Torneo World Warrior: un enfrentamiento brutal de puños, destino y furia. Sin embargo, tras esta gran batalla se esconde una conspiración mortal que los obliga a enfrentarse tanto entre sí como a los demonios de su pasado. Y si no lo logran... ¡será el fin de la partida!",
-          "image": "https://image.tmdb.org/t/p/w500/2kdEEUkbkJe08kTDMCUbBrZ71Aw.jpg",
-          "pubDate": "2026-10-13",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-13T17:32:43.424Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.2,
-            "rt": null,
-            "metascore": 46,
-            "tmdb": 6.3
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "U6sbm1OaJb8",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Andrew Koji",
-              "character": "Ryu",
-              "order": 0
-            },
-            {
-              "name": "Noah Centineo",
-              "character": "Ken Masters",
-              "order": 1
-            },
-            {
-              "name": "Callina Liang",
-              "character": "Chun-Li",
-              "order": 2
-            },
-            {
-              "name": "David Dastmalchian",
-              "character": "M. Bison",
-              "order": 3
-            },
-            {
-              "name": "Andrew Schulz",
-              "character": "Dan Hibiki",
-              "order": 4
-            },
-            {
-              "name": "Roman Reigns",
-              "character": "Akuma",
-              "order": 5
-            },
-            {
-              "name": "Cody Rhodes",
-              "character": "Guile",
-              "order": 6
-            },
-            {
-              "name": "Jason Momoa",
-              "character": "Blanka",
-              "order": 7
-            },
-            {
-              "name": "Eric André",
-              "character": "Don Sauvage",
-              "order": 8
-            },
-            {
-              "name": "50 Cent",
-              "character": "Balrog",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
           "guid": "tmdb-movie-1400940",
           "title": "Clayface",
           "link": "https://www.themoviedb.org/movie/1400940",
@@ -576,7 +576,7 @@
               "order": 9
             }
           ],
-          "trending": false
+          "trending": true
         },
         {
           "guid": "tmdb-movie-1437511",
@@ -905,102 +905,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1003596",
-          "title": "Vengadores: Doomsday",
-          "link": "https://www.themoviedb.org/movie/1003596",
-          "summary": "Los héroes más queridos de tres universos distintos son abocados a una colisión catastrófica donde tendrán que hacer frente a la mayor amenaza a su existencia hasta la fecha.",
-          "image": "https://image.tmdb.org/t/p/w500/7bQczUMnjz8iwxNP9YrmLkfI8od.jpg",
-          "pubDate": "2026-12-16",
+          "guid": "tmdb-movie-1595124",
+          "title": "Hermanastras",
+          "link": "https://www.themoviedb.org/movie/1595124",
+          "summary": "En esta encantadora e inusual comedia de acción, la hermanastra «malvada» de Cenicienta roba la varita del Hada Madrina y destruye la historia que conoce todo el mundo.",
+          "image": "https://image.tmdb.org/t/p/w500/5f69fuZBiPoa8H1AJ3UHH4AztOb.jpg",
+          "pubDate": "2026-11-20",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-10-23T14:42:44.135Z",
+          "firstSeenAt": "2026-11-20T18:22:52.319Z",
           "fullText": null,
           "rating": {
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": null
-          },
-          "status": "Post Production",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "X1aFkAkFASk",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Robert Downey Jr.",
-              "character": "Victor von Doom  / Doctor Doom",
-              "order": 0
-            },
-            {
-              "name": "Chris Evans",
-              "character": "Steve Rogers",
-              "order": 1
-            },
-            {
-              "name": "Chris Hemsworth",
-              "character": "Thor",
-              "order": 2
-            },
-            {
-              "name": "Pedro Pascal",
-              "character": "Reed Richards / Mister Fantastic",
-              "order": 3
-            },
-            {
-              "name": "Paul Rudd",
-              "character": "Scott Lang / Ant-Man",
-              "order": 4
-            },
-            {
-              "name": "Anthony Mackie",
-              "character": "Sam Wilson / Captain America",
-              "order": 5
-            },
-            {
-              "name": "Florence Pugh",
-              "character": "Yelena Belova",
-              "order": 6
-            },
-            {
-              "name": "Vanessa Kirby",
-              "character": "Sue Storm / Invisible Woman",
-              "order": 7
-            },
-            {
-              "name": "Ebon Moss-Bachrach",
-              "character": "Ben Grimm / The Thing",
-              "order": 8
-            },
-            {
-              "name": "Wyatt Russell",
-              "character": "John Walker",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1185344",
-          "title": "The Beast",
-          "link": "https://www.themoviedb.org/movie/1185344",
-          "summary": "Cuando una milicia de hostiles no identificados coordina un golpe contra Estados Unidos, el presidente descubre el alcance de las capacidades ofensivas altamente clasificadas de La Bestia para salvar su vida y la de Estados Unidos.",
-          "image": "https://image.tmdb.org/t/p/w500/ocg5JfJP19fodcv5uQUApkmZMdI.jpg",
-          "pubDate": "2026-10-08",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-14T16:24:46.687Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": 52,
-            "metascore": null,
-            "tmdb": 5.6
+            "tmdb": 6.6
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1009,34 +928,59 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "5ckqV_uf8E0",
+            "key": "tNV4i3BqUGY",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Samuel L. Jackson",
-              "character": "President of the United States",
+              "name": "Ali Wong",
+              "character": "Lilith (voice)",
               "order": 0
             },
             {
-              "name": "Joel Kinnaman",
-              "character": "Agent Taft",
+              "name": "Amanda Seyfried",
+              "character": "Cinderella (voice)",
               "order": 1
             },
             {
-              "name": "Guy Burnet",
-              "character": "",
+              "name": "Stephanie Hsu",
+              "character": "Margot (voice)",
               "order": 2
             },
             {
-              "name": "Eoin Macken",
-              "character": "",
+              "name": "Nikki Glaser",
+              "character": "Priscilla (voice)",
               "order": 3
             },
             {
-              "name": "Colin Morgan",
-              "character": "",
+              "name": "Daniel Radcliffe",
+              "character": "The Prince (voice)",
               "order": 4
+            },
+            {
+              "name": "Young Mazino",
+              "character": "Gef (voice)",
+              "order": 5
+            },
+            {
+              "name": "Peter Dinklage",
+              "character": "Roderick (voice)",
+              "order": 6
+            },
+            {
+              "name": "Bette Midler",
+              "character": "Fairy Godmother (voice)",
+              "order": 7
+            },
+            {
+              "name": "Luis Martinez",
+              "character": "Cracktor (voice)",
+              "order": 8
+            },
+            {
+              "name": "Gwendoline Yeo",
+              "character": "Li Mei (voice)",
+              "order": 9
             }
           ],
           "trending": true
@@ -1137,7 +1081,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 7
+            "tmdb": 6.9
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1211,21 +1155,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1599184",
-          "title": "斗破苍穹剧场版 双帝之战",
-          "link": "https://www.themoviedb.org/movie/1599184",
-          "summary": "Xiao Zhan is a Chinese actor and singer. He began his career in the entertainment industry when he participated in the idol survival show X-Fire (2015) and joined the Chinese boy group X Nine. He achieved breakthrough success with the xianxia drama The Untamed (2019), followed by dramas Joy of Life (2019), The Wolf (2020), Douluo Continent (2021), Ace Troops (2021), The Oath of Love (2022), The Youth Memories (2023), The Longest Promise (2023), Sunshine by My Side (2023), The Legend of Zang Hai (2025), Small Town Remedy (2026) as well as films Jade Dynasty (2019), Legends of the Condor Heroes: The Gallants (2025) and Gezhi Town (2025).",
-          "image": "https://image.tmdb.org/t/p/w500/kQA44KCjcI284f3uxCRAdiS9blt.jpg",
-          "pubDate": "2026-11-22",
+          "guid": "tmdb-movie-1185344",
+          "title": "The Beast",
+          "link": "https://www.themoviedb.org/movie/1185344",
+          "summary": "Cuando una milicia de hostiles no identificados coordina un golpe contra Estados Unidos, el presidente descubre el alcance de las capacidades ofensivas altamente clasificadas de La Bestia para salvar su vida y la de Estados Unidos.",
+          "image": "https://image.tmdb.org/t/p/w500/ocg5JfJP19fodcv5uQUApkmZMdI.jpg",
+          "pubDate": "2026-10-08",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-11-22T09:27:24.800Z",
+          "firstSeenAt": "2026-11-14T16:24:46.687Z",
           "fullText": null,
           "rating": {
             "imdb": null,
-            "rt": null,
+            "rt": 52,
             "metascore": null,
-            "tmdb": null
+            "tmdb": 5.6
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1234,105 +1178,34 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "CYYKQIEPpyI",
+            "key": "5ckqV_uf8E0",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "不一",
-              "character": "Voice",
+              "name": "Samuel L. Jackson",
+              "character": "President of the United States",
               "order": 0
             },
             {
-              "name": "刘雨轩",
-              "character": "Voice",
+              "name": "Joel Kinnaman",
+              "character": "Agent Taft",
               "order": 1
             },
             {
-              "name": "陈奕雯",
-              "character": "Voice",
-              "order": 2
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1595124",
-          "title": "Hermanastras",
-          "link": "https://www.themoviedb.org/movie/1595124",
-          "summary": "En esta encantadora e inusual comedia de acción, la hermanastra «malvada» de Cenicienta roba la varita del Hada Madrina y destruye la historia que conoce todo el mundo.",
-          "image": "https://image.tmdb.org/t/p/w500/5f69fuZBiPoa8H1AJ3UHH4AztOb.jpg",
-          "pubDate": "2026-11-20",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-20T18:22:52.319Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.6
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "tNV4i3BqUGY",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Ali Wong",
-              "character": "Lilith (voice)",
-              "order": 0
-            },
-            {
-              "name": "Amanda Seyfried",
-              "character": "Cinderella (voice)",
-              "order": 1
-            },
-            {
-              "name": "Stephanie Hsu",
-              "character": "Margot (voice)",
+              "name": "Guy Burnet",
+              "character": "",
               "order": 2
             },
             {
-              "name": "Nikki Glaser",
-              "character": "Priscilla (voice)",
+              "name": "Eoin Macken",
+              "character": "",
               "order": 3
             },
             {
-              "name": "Daniel Radcliffe",
-              "character": "The Prince (voice)",
+              "name": "Colin Morgan",
+              "character": "",
               "order": 4
-            },
-            {
-              "name": "Young Mazino",
-              "character": "Gef (voice)",
-              "order": 5
-            },
-            {
-              "name": "Peter Dinklage",
-              "character": "Roderick (voice)",
-              "order": 6
-            },
-            {
-              "name": "Bette Midler",
-              "character": "Fairy Godmother (voice)",
-              "order": 7
-            },
-            {
-              "name": "Luis Martinez",
-              "character": "Cracktor (voice)",
-              "order": 8
-            },
-            {
-              "name": "Gwendoline Yeo",
-              "character": "Li Mei (voice)",
-              "order": 9
             }
           ],
           "trending": true
@@ -1419,21 +1292,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1765072",
-          "title": "Puedes verlo todo",
-          "link": "https://www.themoviedb.org/movie/1765072",
-          "summary": "Treinta y cuatro días antes de ingresar en prisión, la famosa fundadora de Theranos, Elizabeth Holmes, invita a un equipo de rodaje escéptico a documentar cada uno de sus movimientos. Lo que comienza como un retrato íntimo se convierte en un alucinante viaje de tres años.",
-          "image": "https://image.tmdb.org/t/p/w500/g2PKUCpDChvYvT7IaUOYfjO0mbG.jpg",
-          "pubDate": "2026-10-16",
+          "guid": "tmdb-movie-1568060",
+          "title": "Perfectos mentirosos",
+          "link": "https://www.themoviedb.org/movie/1568060",
+          "summary": "Bienvenidos a Tagus, donde el poder, el privilegio y los secretos mortales se esconden tras fachadas perfectas. Jude Derry llega a esta exclusiva universidad con una misión oculta: infiltrarse en el círculo de los hermanos Cash para descubrir la verdad sobre la muerte de su hermano. Los tres herederos del imperio familiar, Aegan, el carismático y calculador primogénito, Adrik, el enigmático y misterioso hermano mediano, y Alex, el rebelde e impredecible hermano pequeño, dominan Tagus con un magnetismo al que nadie puede resistirse. Lo que comienza como una venganza personal se transforma en un peligroso triángulo de seducción, atracción prohibida y mentiras cuando Jude queda envuelta en la compleja dinámica familiar de los Cash. Con cada pista que descubre, se acerca más a una verdad que podría no solo destruir a la poderosa familia… sino también desvelar secretos que quizás ella misma no está preparada para enfrentar.",
+          "image": "https://image.tmdb.org/t/p/w500/1amYmUeoBi23kGcR2pWQclEzXk2.jpg",
+          "pubDate": "2026-11-20",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-11-21T22:51:52.675Z",
+          "firstSeenAt": "2026-11-20T18:22:52.618Z",
           "fullText": null,
           "rating": {
-            "imdb": 7.9,
+            "imdb": null,
             "rt": null,
-            "metascore": 98,
-            "tmdb": 8.8
+            "metascore": null,
+            "tmdb": 7.2
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1442,59 +1315,140 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "IEx8D1Wb__U",
+            "key": "50v6k3LUcxU",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Elizabeth Holmes",
-              "character": "Self",
+              "name": "Irene Balmes",
+              "character": "Jude Derry",
               "order": 0
             },
             {
-              "name": "Nathan Fielder",
-              "character": "Self",
+              "name": "Глеб Абросимов",
+              "character": "Aegan Cash",
               "order": 1
             },
             {
-              "name": "Billy Evans",
-              "character": "Self",
+              "name": "Pau Simon",
+              "character": "Adrik Cash",
               "order": 2
             },
             {
-              "name": "Amanda Seyfried",
-              "character": "Self / Elizabeth Holmes",
+              "name": "Pablo Scapigliati",
+              "character": "Aleixandre Cash",
               "order": 3
             },
             {
-              "name": "Christopher Abbott",
-              "character": "Billy Evans",
+              "name": "Asier Etxeandia",
+              "character": "Adrian Cash",
               "order": 4
             },
             {
-              "name": "Christian Rasmus Holmes IV",
-              "character": "Self",
+              "name": "Irene Ferreiro",
+              "character": "Artie",
+              "order": 5
+            },
+            {
+              "name": "Silvia Kal",
+              "character": "Michelle",
               "order": 6
             },
             {
-              "name": "Noel Anne Holmes",
-              "character": "Self",
+              "name": "Jorge Motos",
+              "character": "Henry",
               "order": 7
             },
             {
-              "name": "Gary Wilmes",
-              "character": "A24 Executive",
+              "name": "Daniela Riveri",
+              "character": "Bárbara",
               "order": 8
             },
             {
-              "name": "Phillip Andre Botello",
-              "character": "A24 Executive",
+              "name": "Juan Torres",
+              "character": "Dash",
               "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1538497",
+          "title": "Hechizo: Bienvenidos a Hexe",
+          "link": "https://www.themoviedb.org/movie/1538497",
+          "summary": "Billie, una adolescente impulsiva y poco convencional, desata accidentalmente unos poderes mágicos secretos y sale disparada de los suburbios hacia un reino mágico llamado Hexe, donde la reciben Ms. Quill y Elias Quire. A medida que se desarrolla el viaje de Billie, descubre misterios familiares que podrían cambiar para siempre el mundo mágico de las brujas.",
+          "image": "https://image.tmdb.org/t/p/w500/zPaypaMulDEVhuTCN1hPN1Hg4DI.jpg",
+          "pubDate": "2026-11-25",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-20T18:22:53.223Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 5
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "IuosV-TRxDU",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Hailee Steinfeld",
+              "character": "Billie Doe (voice)",
+              "order": 0
             },
             {
-              "name": "Nick Choksi",
-              "character": "Friend",
-              "order": 10
+              "name": "Rashida Jones",
+              "character": "Alice Doe (voice)",
+              "order": 1
+            },
+            {
+              "name": "Jodie Foster",
+              "character": "Queen Celeste (voice)",
+              "order": 2
+            },
+            {
+              "name": "Walton Goggins",
+              "character": "Beef Roger Crummchuk (voice)",
+              "order": 3
+            },
+            {
+              "name": "Tracey Ullman",
+              "character": "Ms. Quill (voice)",
+              "order": 4
+            },
+            {
+              "name": "Stephen Fry",
+              "character": "Elias Quire (voice)",
+              "order": 5
+            },
+            {
+              "name": "Henry Winkler",
+              "character": "Nigel (voice)",
+              "order": 6
+            },
+            {
+              "name": "Dan Stevens",
+              "character": "Hieronymous (voice)",
+              "order": 7
+            },
+            {
+              "name": "Brett Gelman",
+              "character": "Principal Huggins (voice)",
+              "order": 8
+            },
+            {
+              "name": "Samson Kayo",
+              "character": "(voice)",
+              "order": 9
             }
           ],
           "trending": true
@@ -1579,6 +1533,133 @@
             }
           ],
           "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1599184",
+          "title": "斗破苍穹剧场版 双帝之战",
+          "link": "https://www.themoviedb.org/movie/1599184",
+          "summary": "Xiao Zhan is a Chinese actor and singer. He began his career in the entertainment industry when he participated in the idol survival show X-Fire (2015) and joined the Chinese boy group X Nine. He achieved breakthrough success with the xianxia drama The Untamed (2019), followed by dramas Joy of Life (2019), The Wolf (2020), Douluo Continent (2021), Ace Troops (2021), The Oath of Love (2022), The Youth Memories (2023), The Longest Promise (2023), Sunshine by My Side (2023), The Legend of Zang Hai (2025), Small Town Remedy (2026) as well as films Jade Dynasty (2019), Legends of the Condor Heroes: The Gallants (2025) and Gezhi Town (2025).",
+          "image": "https://image.tmdb.org/t/p/w500/kQA44KCjcI284f3uxCRAdiS9blt.jpg",
+          "pubDate": "2026-11-22",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-22T09:27:24.800Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "CYYKQIEPpyI",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "不一",
+              "character": "Voice",
+              "order": 0
+            },
+            {
+              "name": "刘雨轩",
+              "character": "Voice",
+              "order": 1
+            },
+            {
+              "name": "陈奕雯",
+              "character": "Voice",
+              "order": 2
+            }
+          ],
+          "trending": false
+        },
+        {
+          "guid": "tmdb-movie-1765072",
+          "title": "Puedes verlo todo",
+          "link": "https://www.themoviedb.org/movie/1765072",
+          "summary": "Treinta y cuatro días antes de ingresar en prisión, la famosa fundadora de Theranos, Elizabeth Holmes, invita a un equipo de rodaje escéptico a documentar cada uno de sus movimientos. Lo que comienza como un retrato íntimo se convierte en un alucinante viaje de tres años.",
+          "image": "https://image.tmdb.org/t/p/w500/g2PKUCpDChvYvT7IaUOYfjO0mbG.jpg",
+          "pubDate": "2026-10-16",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-21T22:51:52.675Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.9,
+            "rt": null,
+            "metascore": 98,
+            "tmdb": 8.8
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "IEx8D1Wb__U",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Elizabeth Holmes",
+              "character": "Self",
+              "order": 0
+            },
+            {
+              "name": "Nathan Fielder",
+              "character": "Self",
+              "order": 1
+            },
+            {
+              "name": "Billy Evans",
+              "character": "Self",
+              "order": 2
+            },
+            {
+              "name": "Amanda Seyfried",
+              "character": "Self / Elizabeth Holmes",
+              "order": 3
+            },
+            {
+              "name": "Christopher Abbott",
+              "character": "Billy Evans",
+              "order": 4
+            },
+            {
+              "name": "Christian Rasmus Holmes IV",
+              "character": "Self",
+              "order": 6
+            },
+            {
+              "name": "Noel Anne Holmes",
+              "character": "Self",
+              "order": 7
+            },
+            {
+              "name": "Gary Wilmes",
+              "character": "A24 Executive",
+              "order": 8
+            },
+            {
+              "name": "Phillip Andre Botello",
+              "character": "A24 Executive",
+              "order": 9
+            },
+            {
+              "name": "Nick Choksi",
+              "character": "Friend",
+              "order": 10
+            }
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-movie-1423191",
@@ -1744,163 +1825,6 @@
             {
               "name": "Millie Wood",
               "character": "Little Girl",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1568060",
-          "title": "Perfectos mentirosos",
-          "link": "https://www.themoviedb.org/movie/1568060",
-          "summary": "Bienvenidos a Tagus, donde el poder, el privilegio y los secretos mortales se esconden tras fachadas perfectas. Jude Derry llega a esta exclusiva universidad con una misión oculta: infiltrarse en el círculo de los hermanos Cash para descubrir la verdad sobre la muerte de su hermano. Los tres herederos del imperio familiar, Aegan, el carismático y calculador primogénito, Adrik, el enigmático y misterioso hermano mediano, y Alex, el rebelde e impredecible hermano pequeño, dominan Tagus con un magnetismo al que nadie puede resistirse. Lo que comienza como una venganza personal se transforma en un peligroso triángulo de seducción, atracción prohibida y mentiras cuando Jude queda envuelta en la compleja dinámica familiar de los Cash. Con cada pista que descubre, se acerca más a una verdad que podría no solo destruir a la poderosa familia… sino también desvelar secretos que quizás ella misma no está preparada para enfrentar.",
-          "image": "https://image.tmdb.org/t/p/w500/1amYmUeoBi23kGcR2pWQclEzXk2.jpg",
-          "pubDate": "2026-11-20",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-20T18:22:52.618Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Post Production",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "50v6k3LUcxU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Irene Balmes",
-              "character": "Jude Derry",
-              "order": 0
-            },
-            {
-              "name": "Gleb Abrosimov",
-              "character": "Aegan Cash",
-              "order": 1
-            },
-            {
-              "name": "Pau Simon",
-              "character": "Adrik Cash",
-              "order": 2
-            },
-            {
-              "name": "Pablo Scapigliati",
-              "character": "Aleixandre Cash",
-              "order": 3
-            },
-            {
-              "name": "Asier Etxeandia",
-              "character": "Adrian Cash",
-              "order": 4
-            },
-            {
-              "name": "Silvia Kal",
-              "character": "Michelle Cash",
-              "order": 5
-            },
-            {
-              "name": "Irene Ferreiro",
-              "character": "",
-              "order": 6
-            },
-            {
-              "name": "Manuela Calle",
-              "character": "",
-              "order": 7
-            },
-            {
-              "name": "Verónica Moral",
-              "character": "Prof. Lauris",
-              "order": 8
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1538497",
-          "title": "Hechizo: Bienvenidos a Hexe",
-          "link": "https://www.themoviedb.org/movie/1538497",
-          "summary": "Billie, una adolescente impulsiva y poco convencional, desata accidentalmente unos poderes mágicos secretos y sale disparada de los suburbios hacia un reino mágico llamado Hexe, donde la reciben Ms. Quill y Elias Quire. A medida que se desarrolla el viaje de Billie, descubre misterios familiares que podrían cambiar para siempre el mundo mágico de las brujas.",
-          "image": "https://image.tmdb.org/t/p/w500/zPaypaMulDEVhuTCN1hPN1Hg4DI.jpg",
-          "pubDate": "2026-11-25",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-20T18:22:53.223Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "IuosV-TRxDU",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Hailee Steinfeld",
-              "character": "Billie Doe (voice)",
-              "order": 0
-            },
-            {
-              "name": "Rashida Jones",
-              "character": "Alice Doe (voice)",
-              "order": 1
-            },
-            {
-              "name": "Jodie Foster",
-              "character": "Queen Celeste (voice)",
-              "order": 2
-            },
-            {
-              "name": "Walton Goggins",
-              "character": "Beef Roger Crummchuk (voice)",
-              "order": 3
-            },
-            {
-              "name": "Tracey Ullman",
-              "character": "Ms. Quill (voice)",
-              "order": 4
-            },
-            {
-              "name": "Stephen Fry",
-              "character": "Elias Quire (voice)",
-              "order": 5
-            },
-            {
-              "name": "Henry Winkler",
-              "character": "Nigel (voice)",
-              "order": 6
-            },
-            {
-              "name": "Dan Stevens",
-              "character": "Hieronymous (voice)",
-              "order": 7
-            },
-            {
-              "name": "Brett Gelman",
-              "character": "Principal Huggins (voice)",
-              "order": 8
-            },
-            {
-              "name": "Samson Kayo",
-              "character": "(voice)",
               "order": 9
             }
           ],
@@ -4004,6 +3928,107 @@
           ]
         },
         {
+          "guid": "tmdb-tv-46923",
+          "title": "Shetland",
+          "link": "https://www.themoviedb.org/tv/46923",
+          "summary": "Miniserie dramática de corte policial en la que un detective regresa a su pueblo natal tras varios años de ausencia. Las islas Shetland son el hogar natal del detective Jimmy Perez (Douglas Henshall, 'The Kidnap Diaries', 'The Silence'), pero lo dejó atrás para iniciar su carrera como investigador. Ahora, años después, ha regresado a casa dispuesto a defender a sus compatriotas y vecinos de cualquier mal que amenace la tranquila vida de las islas. Por ello, cuando un joven arqueólogo encuentra algunos huesos humanos que evidencian muertas violentas y una mujer es asesinada de un disparo, Jimmy y su equipo deciden encontrar a los responsables a como dé lugar. De esta forma se ve atrapado entre dos importantes familias marcadas por el odio, la envidia y la traición, y cuyo enfrentamiento a dividido a los tranquilos habitantes de las Shetland",
+          "image": "https://image.tmdb.org/t/p/w500/rKnxmir8m5I3RdSTdZr3jaQaCZi.jpg",
+          "pubDate": "2013-03-10",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-11-20T18:22:53.531Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.3,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.5
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-11-26",
+          "numberOfSeasons": 11,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 2,
+              "fechaEstreno": "2013-03-10"
+            },
+            {
+              "numero": 2,
+              "episodios": 6,
+              "fechaEstreno": "2014-03-11"
+            },
+            {
+              "numero": 3,
+              "episodios": 6,
+              "fechaEstreno": "2016-01-15"
+            },
+            {
+              "numero": 4,
+              "episodios": 6,
+              "fechaEstreno": "2018-02-13"
+            },
+            {
+              "numero": 5,
+              "episodios": 6,
+              "fechaEstreno": "2019-02-12"
+            },
+            {
+              "numero": 6,
+              "episodios": 6,
+              "fechaEstreno": "2021-10-20"
+            },
+            {
+              "numero": 7,
+              "episodios": 6,
+              "fechaEstreno": "2022-08-10"
+            },
+            {
+              "numero": 8,
+              "episodios": 6,
+              "fechaEstreno": "2023-11-01"
+            },
+            {
+              "numero": 9,
+              "episodios": 6,
+              "fechaEstreno": "2024-11-06"
+            },
+            {
+              "numero": 10,
+              "episodios": 6,
+              "fechaEstreno": "2025-11-05"
+            },
+            {
+              "numero": 11,
+              "episodios": 4,
+              "fechaEstreno": "2026-11-12"
+            }
+          ],
+          "currentSeason": 11,
+          "reviews": null,
+          "trailer": {
+            "key": "6bvOxd4183E",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Ashley Jensen",
+              "character": "DI Ruth Calder",
+              "order": 1
+            },
+            {
+              "name": "Alison O'Donnell",
+              "character": "DI Alison 'Tosh' McIntosh",
+              "order": 2
+            },
+            {
+              "name": "Steven Robertson",
+              "character": "DC Sandy Wilson",
+              "order": 3
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-37678",
           "title": "The Voice",
           "link": "https://www.themoviedb.org/tv/37678",
@@ -4206,107 +4231,6 @@
               "name": "Riley Green",
               "character": "Self - Coach",
               "order": 29
-            }
-          ]
-        },
-        {
-          "guid": "tmdb-tv-46923",
-          "title": "Shetland",
-          "link": "https://www.themoviedb.org/tv/46923",
-          "summary": "Miniserie dramática de corte policial en la que un detective regresa a su pueblo natal tras varios años de ausencia. Las islas Shetland son el hogar natal del detective Jimmy Perez (Douglas Henshall, 'The Kidnap Diaries', 'The Silence'), pero lo dejó atrás para iniciar su carrera como investigador. Ahora, años después, ha regresado a casa dispuesto a defender a sus compatriotas y vecinos de cualquier mal que amenace la tranquila vida de las islas. Por ello, cuando un joven arqueólogo encuentra algunos huesos humanos que evidencian muertas violentas y una mujer es asesinada de un disparo, Jimmy y su equipo deciden encontrar a los responsables a como dé lugar. De esta forma se ve atrapado entre dos importantes familias marcadas por el odio, la envidia y la traición, y cuyo enfrentamiento a dividido a los tranquilos habitantes de las Shetland",
-          "image": "https://image.tmdb.org/t/p/w500/rKnxmir8m5I3RdSTdZr3jaQaCZi.jpg",
-          "pubDate": "2013-03-10",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-11-20T18:22:53.531Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.3,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.5
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-11-26",
-          "numberOfSeasons": 11,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 2,
-              "fechaEstreno": "2013-03-10"
-            },
-            {
-              "numero": 2,
-              "episodios": 6,
-              "fechaEstreno": "2014-03-11"
-            },
-            {
-              "numero": 3,
-              "episodios": 6,
-              "fechaEstreno": "2016-01-15"
-            },
-            {
-              "numero": 4,
-              "episodios": 6,
-              "fechaEstreno": "2018-02-13"
-            },
-            {
-              "numero": 5,
-              "episodios": 6,
-              "fechaEstreno": "2019-02-12"
-            },
-            {
-              "numero": 6,
-              "episodios": 6,
-              "fechaEstreno": "2021-10-20"
-            },
-            {
-              "numero": 7,
-              "episodios": 6,
-              "fechaEstreno": "2022-08-10"
-            },
-            {
-              "numero": 8,
-              "episodios": 6,
-              "fechaEstreno": "2023-11-01"
-            },
-            {
-              "numero": 9,
-              "episodios": 6,
-              "fechaEstreno": "2024-11-06"
-            },
-            {
-              "numero": 10,
-              "episodios": 6,
-              "fechaEstreno": "2025-11-05"
-            },
-            {
-              "numero": 11,
-              "episodios": 4,
-              "fechaEstreno": "2026-11-12"
-            }
-          ],
-          "currentSeason": 11,
-          "reviews": null,
-          "trailer": {
-            "key": "6bvOxd4183E",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Ashley Jensen",
-              "character": "DI Ruth Calder",
-              "order": 1
-            },
-            {
-              "name": "Alison O'Donnell",
-              "character": "DI Alison 'Tosh' McIntosh",
-              "order": 2
-            },
-            {
-              "name": "Steven Robertson",
-              "character": "DC Sandy Wilson",
-              "order": 3
             }
           ]
         },
@@ -4764,108 +4688,103 @@
           "cast": []
         },
         {
-          "guid": "tmdb-tv-231962",
-          "title": "Diepe Waters",
-          "link": "https://www.themoviedb.org/tv/231962",
-          "summary": "A South African, Afrikaans-language telenovela which takes place in and around a competitive swimming club, Die Swartmarlyne.",
-          "image": "https://image.tmdb.org/t/p/w500/uF5SpFjMmYTMF0sc5MbjnDsoBcG.jpg",
-          "pubDate": "2022-10-03",
+          "guid": "tmdb-tv-153312",
+          "title": "Tulsa King",
+          "link": "https://www.themoviedb.org/tv/153312",
+          "summary": "Justo después de ser liberado de prisión después de 25 años, el capo de la mafia de Nueva York, Dwight \"El General\" Manfredi, es exiliado sin contemplaciones por su jefe para instalarse en Tulsa, Oklahoma. Al darse cuenta de que su familia de la mafia puede no tener sus mejores intereses en mente, Dwight construye lentamente una \"tripulación\" a partir de un grupo de personajes inverosímiles, para ayudarlo a establecer un nuevo imperio criminal en un lugar que para él bien podría ser otro planeta.",
+          "image": "https://image.tmdb.org/t/p/w500/6ryay9RQfT5jrY9i1dveUUGryAO.jpg",
+          "pubDate": "2022-11-13",
           "source": "TMDb",
           "categoria": "Series",
-          "firstSeenAt": "2026-10-30T16:33:42.525Z",
+          "firstSeenAt": "2026-10-25T20:29:42.243Z",
           "fullText": null,
           "rating": {
-            "imdb": 8.8,
+            "imdb": 7.9,
             "rt": null,
             "metascore": null,
-            "tmdb": 8.2
+            "tmdb": 8.3
           },
           "status": "Returning Series",
-          "nextEpisodeDate": "2026-11-02",
-          "numberOfSeasons": 5,
+          "nextEpisodeDate": "2026-10-30",
+          "numberOfSeasons": 4,
           "seasons": [
             {
               "numero": 1,
-              "episodios": 208,
-              "fechaEstreno": "2022-10-03"
+              "episodios": 9,
+              "fechaEstreno": "2022-11-13"
             },
             {
               "numero": 2,
-              "episodios": 208,
-              "fechaEstreno": "2023-10-02"
+              "episodios": 10,
+              "fechaEstreno": "2024-09-15"
             },
             {
               "numero": 3,
-              "episodios": 208,
-              "fechaEstreno": "2024-09-30"
+              "episodios": 10,
+              "fechaEstreno": "2025-09-21"
             },
             {
               "numero": 4,
-              "episodios": 208,
-              "fechaEstreno": "2025-09-29"
-            },
-            {
-              "numero": 5,
-              "episodios": 37,
-              "fechaEstreno": "2026-09-28"
+              "episodios": 10,
+              "fechaEstreno": "2026-10-16"
             }
           ],
-          "currentSeason": 5,
+          "currentSeason": 4,
           "reviews": null,
           "trailer": {
-            "key": "IdHR3_juiE8",
+            "key": "aaQSScwZPbA",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Justin Strydom",
-              "character": "Gys Swarts",
+              "name": "Sylvester Stallone",
+              "character": "Dwight 'The General' Manfredi",
               "order": 0
             },
             {
-              "name": "Sandi Schultz",
-              "character": "Zelda Joubert",
+              "name": "Martin Starr",
+              "character": "Lawrence 'Bodhi' Geigerman",
               "order": 1
             },
             {
-              "name": "Nadia Valvekens",
-              "character": "Sanet Swarts",
+              "name": "Jay Will",
+              "character": "Tyson Mitchell",
               "order": 2
             },
             {
-              "name": "Werner Coetser",
-              "character": "Jacques Swarts",
+              "name": "Vincent Piazza",
+              "character": "Vince Antonacci",
+              "order": 3
+            },
+            {
+              "name": "Annabella Sciorra",
+              "character": "Joanne",
               "order": 4
             },
             {
-              "name": "Danielle Swanepoel",
-              "character": "Karla van der Westhuizen",
+              "name": "Chris Caldovino",
+              "character": "Goodie Carangi",
+              "order": 5
+            },
+            {
+              "name": "McKenna Quigley Harrington",
+              "character": "Grace",
               "order": 6
             },
             {
-              "name": "Stiaan Bruwer",
-              "character": "Henry Paddu",
-              "order": 10
+              "name": "Frank Grillo",
+              "character": "Bill Bevilaqua",
+              "order": 7
             },
             {
-              "name": "Johnny Potsanyane",
-              "character": "Tshepo Buti",
-              "order": 11
+              "name": "Michael Walden",
+              "character": "Bigfoot",
+              "order": 8
             },
             {
-              "name": "Stephanie Baartman",
-              "character": "Lettie Paddu",
-              "order": 13
-            },
-            {
-              "name": "Mandi du Plooy",
-              "character": "Theresa Swarts",
-              "order": 16
-            },
-            {
-              "name": "Marijke van der Westhuizen",
-              "character": "René du Preez",
-              "order": 17
+              "name": "James Russo",
+              "character": "Quiet Ray Renzetti",
+              "order": 9
             }
           ],
           "trending": false
@@ -4978,103 +4897,108 @@
           "trending": false
         },
         {
-          "guid": "tmdb-tv-153312",
-          "title": "Tulsa King",
-          "link": "https://www.themoviedb.org/tv/153312",
-          "summary": "Justo después de ser liberado de prisión después de 25 años, el capo de la mafia de Nueva York, Dwight \"El General\" Manfredi, es exiliado sin contemplaciones por su jefe para instalarse en Tulsa, Oklahoma. Al darse cuenta de que su familia de la mafia puede no tener sus mejores intereses en mente, Dwight construye lentamente una \"tripulación\" a partir de un grupo de personajes inverosímiles, para ayudarlo a establecer un nuevo imperio criminal en un lugar que para él bien podría ser otro planeta.",
-          "image": "https://image.tmdb.org/t/p/w500/6ryay9RQfT5jrY9i1dveUUGryAO.jpg",
-          "pubDate": "2022-11-13",
+          "guid": "tmdb-tv-231962",
+          "title": "Diepe Waters",
+          "link": "https://www.themoviedb.org/tv/231962",
+          "summary": "A South African, Afrikaans-language telenovela which takes place in and around a competitive swimming club, Die Swartmarlyne.",
+          "image": "https://image.tmdb.org/t/p/w500/uF5SpFjMmYTMF0sc5MbjnDsoBcG.jpg",
+          "pubDate": "2022-10-03",
           "source": "TMDb",
           "categoria": "Series",
-          "firstSeenAt": "2026-10-25T20:29:42.243Z",
+          "firstSeenAt": "2026-10-30T16:33:42.525Z",
           "fullText": null,
           "rating": {
-            "imdb": 7.9,
+            "imdb": 8.8,
             "rt": null,
             "metascore": null,
-            "tmdb": 8.3
+            "tmdb": 8.2
           },
           "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-30",
-          "numberOfSeasons": 4,
+          "nextEpisodeDate": "2026-11-02",
+          "numberOfSeasons": 5,
           "seasons": [
             {
               "numero": 1,
-              "episodios": 9,
-              "fechaEstreno": "2022-11-13"
+              "episodios": 208,
+              "fechaEstreno": "2022-10-03"
             },
             {
               "numero": 2,
-              "episodios": 10,
-              "fechaEstreno": "2024-09-15"
+              "episodios": 208,
+              "fechaEstreno": "2023-10-02"
             },
             {
               "numero": 3,
-              "episodios": 10,
-              "fechaEstreno": "2025-09-21"
+              "episodios": 208,
+              "fechaEstreno": "2024-09-30"
             },
             {
               "numero": 4,
-              "episodios": 10,
-              "fechaEstreno": "2026-10-16"
+              "episodios": 208,
+              "fechaEstreno": "2025-09-29"
+            },
+            {
+              "numero": 5,
+              "episodios": 37,
+              "fechaEstreno": "2026-09-28"
             }
           ],
-          "currentSeason": 4,
+          "currentSeason": 5,
           "reviews": null,
           "trailer": {
-            "key": "aaQSScwZPbA",
+            "key": "IdHR3_juiE8",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Sylvester Stallone",
-              "character": "Dwight 'The General' Manfredi",
+              "name": "Justin Strydom",
+              "character": "Gys Swarts",
               "order": 0
             },
             {
-              "name": "Martin Starr",
-              "character": "Lawrence 'Bodhi' Geigerman",
+              "name": "Sandi Schultz",
+              "character": "Zelda Joubert",
               "order": 1
             },
             {
-              "name": "Jay Will",
-              "character": "Tyson Mitchell",
+              "name": "Nadia Valvekens",
+              "character": "Sanet Swarts",
               "order": 2
             },
             {
-              "name": "Vincent Piazza",
-              "character": "Vince Antonacci",
-              "order": 3
-            },
-            {
-              "name": "Annabella Sciorra",
-              "character": "Joanne",
+              "name": "Werner Coetser",
+              "character": "Jacques Swarts",
               "order": 4
             },
             {
-              "name": "Chris Caldovino",
-              "character": "Goodie Carangi",
-              "order": 5
-            },
-            {
-              "name": "McKenna Quigley Harrington",
-              "character": "Grace",
+              "name": "Danielle Swanepoel",
+              "character": "Karla van der Westhuizen",
               "order": 6
             },
             {
-              "name": "Frank Grillo",
-              "character": "Bill Bevilaqua",
-              "order": 7
+              "name": "Stiaan Bruwer",
+              "character": "Henry Paddu",
+              "order": 10
             },
             {
-              "name": "Michael Walden",
-              "character": "Bigfoot",
-              "order": 8
+              "name": "Johnny Potsanyane",
+              "character": "Tshepo Buti",
+              "order": 11
             },
             {
-              "name": "James Russo",
-              "character": "Quiet Ray Renzetti",
-              "order": 9
+              "name": "Stephanie Baartman",
+              "character": "Lettie Paddu",
+              "order": 13
+            },
+            {
+              "name": "Mandi du Plooy",
+              "character": "Theresa Swarts",
+              "order": 16
+            },
+            {
+              "name": "Marijke van der Westhuizen",
+              "character": "René du Preez",
+              "order": 17
             }
           ],
           "trending": false
@@ -6460,118 +6384,6 @@
             "site": "YouTube"
           },
           "cast": [],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-tv-59941",
-          "title": "The Tonight Show Starring Jimmy Fallon",
-          "link": "https://www.themoviedb.org/tv/59941",
-          "summary": "Después del segundo retiro de Jay Leno del programa, Jimmy Fallon intervino como su reemplazo permanente. Después de 42 años en Los Ángeles, el programa regresó a Nueva York.",
-          "image": "https://image.tmdb.org/t/p/w500/1N4o5PmmqhlVDrcdJ2RlCFWbLGX.jpg",
-          "pubDate": "2014-02-17",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-10-23T14:42:44.328Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 5.8
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-10-26",
-          "numberOfSeasons": 14,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 191,
-              "fechaEstreno": "2014-02-17"
-            },
-            {
-              "numero": 2,
-              "episodios": 263,
-              "fechaEstreno": "2015-01-05"
-            },
-            {
-              "numero": 3,
-              "episodios": 144,
-              "fechaEstreno": "2016-01-04"
-            },
-            {
-              "numero": 4,
-              "episodios": 208,
-              "fechaEstreno": "2016-09-19"
-            },
-            {
-              "numero": 5,
-              "episodios": 190,
-              "fechaEstreno": "2017-09-25"
-            },
-            {
-              "numero": 6,
-              "episodios": 194,
-              "fechaEstreno": "2018-09-24"
-            },
-            {
-              "numero": 7,
-              "episodios": 201,
-              "fechaEstreno": "2019-09-23"
-            },
-            {
-              "numero": 8,
-              "episodios": 197,
-              "fechaEstreno": "2020-09-21"
-            },
-            {
-              "numero": 9,
-              "episodios": 194,
-              "fechaEstreno": "2021-09-19"
-            },
-            {
-              "numero": 10,
-              "episodios": 132,
-              "fechaEstreno": "2022-09-19"
-            },
-            {
-              "numero": 11,
-              "episodios": 182,
-              "fechaEstreno": "2023-10-01"
-            },
-            {
-              "numero": 12,
-              "episodios": 163,
-              "fechaEstreno": "2024-09-22"
-            },
-            {
-              "numero": 13,
-              "episodios": 155,
-              "fechaEstreno": "2025-09-22"
-            },
-            {
-              "numero": 14,
-              "episodios": 20,
-              "fechaEstreno": "2026-09-21"
-            }
-          ],
-          "currentSeason": 14,
-          "reviews": null,
-          "trailer": {
-            "key": "q-0YafsWK_M",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Jimmy Fallon",
-              "character": "Self - Host",
-              "order": 0
-            },
-            {
-              "name": "Steve Higgins",
-              "character": "Self - Announcer",
-              "order": 1
-            }
-          ],
           "trending": false
         },
         {
