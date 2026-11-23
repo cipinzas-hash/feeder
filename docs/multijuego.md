@@ -1,3 +1,27 @@
+# Pokécripto unificado (22-nov-2026)
+
+**Una sola pantalla para todos los juegos.** La de siempre (`PokecriptoPage`): carpetas, estados, Price Watch, precio objetivo, ventas, historial,
+ficha y gráficos. El selector de juego (`PokecriptoRaiz`) solo cambia qué filas se ven y de dónde vienen el catálogo y los precios. Reemplaza el
+diseño anterior de esta rama (una segunda pantalla reducida, `PokecriptoJuego`, al lado de la de Pokémon).
+
+- **Filas**: todas en `pokeInventario`; `juego` ausente = Pokémon. Las 980 filas de Pokémon no se migran ni cambian.
+- **Carpetas**: Pokémon como siempre; los otros juegos usan MLP, Staples & Meta y Price Watch propios (guardados en `pokeCarpetas` con prefijo `yugioh::`).
+- **Otros juegos aportan**: el explorador de colecciones (`PokecriptoJuego`, ahora embebido: «🗂️ Colecciones») y el buscador de catálogo
+  (`BuscarCatalogo`: «+ agregar» → carta, variante, carpeta, «la tengo» / «solo la sigo»). Precios diarios desde tcgcsv (sin API).
+- **Lo propio de Pokémon queda apagado en los otros juegos**: API key, bot de tcgpricelookup, catálogo Dark, colecciones por ilustrador, «revisar precio».
+- **Variantes en Pokémon**: cada variante (holo, reverse, Poké Ball, logo de tipo, sellos) puede ser su propio ejemplar, con costo, historial y gráfico.
+  En el detalle: «＋ la tengo» (promueve la fila «hunting» o crea un ejemplar extra) y «es mi carta» (la fila que ya tenías ES esa variante).
+  Lógica en `lib/variantes-filas.mjs`; el bot repreciea esas filas cada día desde `tcgcsv.com/tcgplayer/3/<grupo>/prices` y no las pasa por la API de la carta base.
+- **Pestaña tcgcrypto retirada** (id 15 sin pestaña; el código de `modules/tcgcrypto` sigue porque `logica.js` lo usan los juegos).
+
+## Límites conocidos
+- El buscador de otros juegos solo ve las cartas del catálogo que arma `build-tcgcrypto.mjs` (las de sus colecciones). Para staples hay que sumarlas al catálogo.
+- Las ediciones de una fila existente (costo, notas…) no viajan al bot: el cliente es dueño de esos campos, como ya pasaba en Pokémon.
+- El precio inicial de una variante recién marcada es el del catálogo semanal; el bot lo actualiza en su próxima corrida (necesita conectar el bot en el dispositivo).
+
+---
+(Documento anterior de la rama, para referencia)
+
 # Multi-juego en Pokécripto (rama `multijuego`, 17-nov-2026)
 
 Construida SOBRE `precios-limpios` (lote 1): al fusionar, primero `precios-limpios` y después `multijuego`.

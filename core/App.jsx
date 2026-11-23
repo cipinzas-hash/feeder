@@ -2053,8 +2053,8 @@ function AngstApp() {
 
         {(()=>{
           const TABS=[{label:"📅 Semana",emoji:"📅"},{label:"💵 Presupuesto",emoji:"💵"},{label:"📒 Emprendimientos",emoji:"📒"},{label:"🧠 mindfulness",emoji:"🧠"},{label:"🩺 salud",emoji:"🩺"},{label:"🍄 fadiman",emoji:"🍄"},{label:"🥗 nutrición",emoji:"🥗"},{label:"🏋️ ejercicio",emoji:"🏋️"},{label:"🃏 pokécripto",emoji:"🃏"},{label:"📰 feed",emoji:"📰"},{label:"🎬 vitrina",emoji:"🎬"},{label:"🌱 rutinas",emoji:"🌱"},{label:"🎧 música",emoji:"🎧"},{label:"🎮 game enhanced",emoji:"🎮"},{label:"🗓️ panoramas",emoji:"🗓️"},{label:"🎴 tcgcrypto",emoji:"🎴"}];
-          // Orden visual: Rutinas va justo después de Semana, tcgcrypto (id 15) justo después de Pokécripto, Música (id 12) justo después de Feed y Game enhanced (id 13) al final. Los ids de página (índice en TABS) no se renumeran.
-          const ORDER=[0,11,1,2,3,4,5,6,7,8,15,9,12,14,10,13];
+          // Orden visual: Rutinas va justo después de Semana, Música (id 12) justo después de Feed y Game enhanced (id 13) al final. Los ids de página (índice en TABS) no se renumeran.
+          const ORDER=[0,11,1,2,3,4,5,6,7,8,9,12,14,10,13];   // tcgcrypto (id 15) ya no tiene pestaña: sus juegos viven dentro de Pokécripto (unificación 22-nov-2026)
           return (
             <div className="tabs" ref={tabsRef} data-edge={tabsEdge} style={{userSelect:"none"}}>
               {ORDER.map(ti=>{
@@ -2442,7 +2442,7 @@ function AngstApp() {
           saveCalMarks={(nm)=>{setCalMarks(nm);calMarksRef.current=nm;saveToStorage({calMarks:nm});}}
           initial={saludReg} onClose={()=>setSaludReg(null)} onGuardado={avisarRegistro}/>}
         {registroTipo&&<RegistroRapido tipo={registroTipo} onNota={agregarNotaRapida} onTarea={agregarTareaRapida} compras={{hoy:fmtFull(new Date()), items:((dayData[fmtFull(new Date())]||{}).compras)||[], api:comprasApi, onPatch:(id,f)=>updateComprasItem(fmtFull(new Date()),id,f), onAdd:item=>agregarCompraEn(fmtFull(new Date()),item), onDelete:id=>quitarCompraEn(fmtFull(new Date()),id)}} onGuardado={avisarRegistro} onClose={()=>setRegistroTipo(null)}/>}
-        {cartaOpen&&<AgregarCartaModal inventario={pokeInventario} carpetas={pokeCarpetas} priceCache={pokePriceCache}
+        {cartaOpen&&<AgregarCartaModal inventario={pokeInventario} carpetas={pokeCarpetas.filter(c=>!String(c).includes("::"))} priceCache={pokePriceCache}
           saveInventario={guardarInventario} permanecer onClose={()=>setCartaOpen(false)} onGuardado={avisarRegistro}/>}
         {page===2&&<NutriaPage data={nutria} saveData={updateNutria} budgets={budgets} onSaveBudget={updateBudgetForMonth}/>}
         {page===3&&<EspritPage dayData={dayData} calMarks={calMarks} updateDay={updateDay} kidsHealth={kidsHealth}/>}

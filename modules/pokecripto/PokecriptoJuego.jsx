@@ -376,7 +376,7 @@ const VistaColeccion = React.memo(function VistaColeccion({ juego, datos, col, f
   );
 }, sameFilas);
 
-export default function PokecriptoJuego({ juego, inventario, saveInventario }) {
+export default function PokecriptoJuego({ juego, inventario, saveInventario, onSalir }) {
   const info = JUEGOS.find(j => j.id === juego);
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState(null);
@@ -411,6 +411,7 @@ export default function PokecriptoJuego({ juego, inventario, saveInventario }) {
   return (
     <MarcoPoke>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+        {onSalir && <button data-t="salir" onClick={onSalir} style={{ background: "transparent", border: "none", fontSize: 20, color: "#bbb", cursor: "pointer", padding: 0 }}>←</button>}
         <div style={{ flex: 1, ...cv, fontSize: 22, fontWeight: 700, color: "#fff" }}>🗂️ Colecciones</div>
         {total > 0 && <div style={{ textAlign: "right" }}><div style={{ ...cv, fontSize: 20, fontWeight: 700, color: "#aac756" }}>{tengo}/{total}</div><div style={{ ...f, fontSize: 9, color: "#444" }}>{pct}% completado</div></div>}
       </div>

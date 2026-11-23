@@ -21,7 +21,8 @@
     "test:panoramas": "node tests/panoramas-detalle.mjs && node tests/panoramas-seleccion.mjs",
     "test:tcgcrypto": "node tests/tcgcrypto-logica.mjs",
     "test:pokecripto-historial": "node tests/pokecripto-historial.mjs",
-    "test:pokecripto-juegos": "node tests/pokecripto-juegos.mjs"
+    "test:pokecripto-juegos": "node tests/pokecripto-juegos.mjs",
+    "test:pokecripto-variantes-filas": "node tests/pokecripto-variantes-filas.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"

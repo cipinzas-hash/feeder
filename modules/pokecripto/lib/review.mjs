@@ -54,7 +54,9 @@ export function mergePreciosBot(local, remote) {
 // El inventario canónico del bot solo se enteraba de cartas NUEVAS; si Cristopher movía una carta existente a
 // Price Watch, el bot no lo sabía y no podía darle prioridad. Ahora el cliente encola `{id, _patch:{carpeta,...}}`
 // y el bot aplica solo estos campos a la carta que ya existe.
-export const CAMPOS_PARCHEABLES = ["carpeta", "precioObjetivo"];
+// Variante (unificación 22-nov-2026): marcar qué variante es un ejemplar existente de Pokémon también se parchea, para que el
+// bot lo repreciee desde tcgcsv (tcgcsvKey = "pid|subtipo") en vez de con la API de la carta base.
+export const CAMPOS_PARCHEABLES = ["carpeta", "precioObjetivo", "tcgcsvKey", "tcgcsvGrupo", "tcgcsvPid", "tcgcsvSub", "varianteEtiqueta"];
 export function fusionarPending(inventario, pending) {
   const inv = Array.isArray(inventario) ? [...inventario] : [];
   const porId = new Map(inv.map((c, i) => [c.id, i]));
@@ -100,7 +102,7 @@ function numOrden(n) {
 export function colaSinPrecio(inv, excluirIds) {
   const excl = excluirIds instanceof Set ? excluirIds : new Set(excluirIds || []);
   return (Array.isArray(inv) ? inv : [])
-    .filter(c => c && c.estado !== "vendida" && !c.tcgMarket && !excl.has(c.id))
+    .filter(c => c && c.estado !== "vendida" && !c.tcgMarket && !c.tcgcsvKey && !excl.has(c.id))   // las variantes (tcgcsv) no se resuelven con la API de la carta base
     .sort((a, b) =>
       String(a.set || "").localeCompare(String(b.set || "")) ||
       numOrden(a.number) - numOrden(b.number) ||

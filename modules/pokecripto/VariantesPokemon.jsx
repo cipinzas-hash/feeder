@@ -1,11 +1,13 @@
 // Variantes de Pokémon dentro de Pokécripto (variantes, 20-nov-2026): panel del detalle e insignias de las tarjetas, con el MISMO
 // formato que Yu-Gi-Oh! y Digimon (lib/variantes-comunes.mjs). Datos: catálogo por set de tcgcsv (build-pokemon-variantes.mjs), un archivo
 // por set que se carga solo al abrir o mostrar una carta de ese set (≤135 KB) y se guarda en memoria.
-// SOLO MUESTRA: qué variantes existen (holo, reverse, Poké Ball, logo de tipo, sellos de campeonato / evento / prerelease / liga) y cuánto
-// cuesta cada una. Marcar cuál tienes por variante en Pokémon es un paso aparte (cambia el modelo de filas del módulo).
+// Muestra qué variantes existen (holo, reverse, Poké Ball, logo de tipo, sellos de campeonato / evento / prerelease / liga) y cuánto
+// cuesta cada una, y deja MARCAR cuál tienes: cada variante es su propio ejemplar (ver lib/variantes-filas.mjs).
 import { pokemonVariantesUrl, fetchJsonSafe } from "../shared/constants.js";
 import { grupoDeSet, variantesDeShard } from "./lib/variantes-pokemon.mjs";
 import { multiploSobreBase } from "./lib/variantes-comunes.mjs";
+import { filaDeVariante, baseSinVariante } from "./lib/variantes-filas.mjs";
+import { filaTiene } from "./lib/juegos.mjs";
 
 const { useState, useEffect } = React;
 const fmtUSD = n => "$" + parseFloat(n || 0).toFixed(2);   // (copia local: PokecriptoPage importa este módulo)
@@ -56,12 +58,18 @@ export function InsigniasPokemon({ set, number, name, max = 3 }) {
     </div>);
 }
 
-// Panel del detalle: todas las variantes de esa carta con precio, y el múltiplo sobre la base para los sellos.
-export function PanelVariantesPokemon({ set, number, name, precioActual }) {
+// Panel del detalle: todas las variantes de esa carta con precio, el múltiplo sobre la base para los sellos y, si se pasa `onMarcar`, qué
+// variante tienes. `filas` = las filas de esa carta en esa carpeta (la base y sus variantes); `onMarcar(v, accion)` con accion
+// "agregar" | "asignar" | "quitar".
+export function PanelVariantesPokemon({ set, number, name, filas, onMarcar }) {
   const vs = useVariantesPokemon(set, number, name);
   if (vs === undefined) return <div data-t="variantes-poke" style={{ ...f, fontSize: 10, color: "#555", padding: "4px 0" }}>buscando variantes…</div>;
   if (!vs.length) return null;
   const precios = vs.map(v => v.market).filter(p => p != null);
+  const hs = filas || [];
+  const base = baseSinVariante(hs);
+  const baseTenida = !!base && filaTiene(base);
+  const btn = (act, bg, col) => ({ ...f, fontSize: 10, fontWeight: 700, padding: "4px 8px", borderRadius: 8, border: act ? "none" : "1px dashed #444", background: bg, color: col, cursor: "pointer", whiteSpace: "nowrap" });
   return (
     <div data-t="variantes-poke" style={{ flex: "none", marginTop: 4 }}>
       <div style={{ ...f, fontSize: 8, color: "rgba(255,255,255,0.35)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>
@@ -70,17 +78,29 @@ export function PanelVariantesPokemon({ set, number, name, precioActual }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         {vs.map(v => {
           const m = multiploSobreBase(v, vs);
+          const fila = filaDeVariante(hs, v.key), tengo = !!fila && filaTiene(fila);
           return (
-            <div key={v.key + (v.grupoSello || "")} data-t="variante-poke" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", borderRadius: 9, background: "#151515", border: `1px solid ${v.esSello ? v.color : "#1f1f1f"}` }}>
+            <div key={v.key + (v.grupoSello || "")} data-t="variante-poke" data-tengo={tengo ? "1" : "0"} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", borderRadius: 9, background: tengo ? "#12301f" : "#151515", border: `1px solid ${tengo ? "#2e7d52" : v.esSello ? v.color : "#1f1f1f"}` }}>
               <span style={{ ...f, fontSize: 12, color: v.color, fontWeight: 700, width: 16, textAlign: "center" }}>{v.icono}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ ...f, fontSize: 11, color: "#ddd", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.etiqueta}{v.esSello && m != null && m >= 1.5 ? <span style={{ color: "#e6c229" }}> · ×{m} la base</span> : ""}</div>
+                <div style={{ ...f, fontSize: 11, color: "#ddd", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.etiqueta}{v.esSello && m != null && m >= 1.5 ? <span style={{ color: "#e6c229" }}> · ×{m} la base</span> : null}</div>
                 {v.grupoSello && <div style={{ ...f, fontSize: 9, color: "#666", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.grupoSello}</div>}
               </div>
               <span style={{ ...cv, fontSize: 15, fontWeight: 700, color: v.market != null ? "#5c9cff" : "#555" }}>{v.market != null ? fmtUSD(v.market) : "—"}</span>
+              {onMarcar && (
+                <div style={{ display: "flex", gap: 4, flex: "none" }}>
+                  {tengo
+                    ? <button data-t="var-quitar" onClick={() => onMarcar(v, "quitar")} title="quitar esta variante" style={btn(true, "#2e7d52", "#fff")}>✓ la tengo</button>
+                    : <>
+                        {baseTenida && <button data-t="var-asignar" onClick={() => onMarcar(v, "asignar")} title="mi carta actual es esta variante" style={btn(false, "transparent", "#999")}>es mi carta</button>}
+                        <button data-t="var-agregar" onClick={() => onMarcar(v, "agregar")} style={btn(false, "transparent", "#ccc")}>＋ la tengo</button>
+                      </>}
+                </div>)}
             </div>);
         })}
       </div>
-      <div style={{ ...f, fontSize: 8, color: "#444", marginTop: 4 }}>precios del catálogo semanal de tcgcsv · el precio de arriba lo actualiza el bot cada día</div>
+      <div style={{ ...f, fontSize: 8, color: "#444", marginTop: 4 }}>
+        {onMarcar ? "cada variante que marcas es su propio ejemplar, con costo, historial y gráfico propios · " : ""}precio inicial del catálogo semanal de tcgcsv; el bot lo actualiza cada día
+      </div>
     </div>);
 }

@@ -85,14 +85,14 @@ export function precioDeCarta(carta, marca) {
 export const precioDeFila = (datos, fila) => precioDeCarta(cartaDe(datos, fila.cardId), marcaDeFila(fila));
 
 // Snapshot del día con tcgId/variante (misma forma que el bot de Pokémon) y corte si cambió la versión.
-function conSnapshot(historial, p, hoy) {
+export function conSnapshot(historial, p, hoy) {
   if (!p) return historial || [];
   return compactarHistorial(marcarCortes(addSnapshot(historial, p.market, p.low, p.high, hoy, "csv", extrasSnapshot({ tid: p.tid, variant: p.variant }))), hoy);
 }
 
 // Aplica un parche ({c,q,cu,nt}; null/""/0 = borrar el campo) a UNA variante (`vkey` = "pid|subtipo") de la carta k en una colección y
 // devuelve el inventario nuevo. Si la fila queda sin nada marcado desaparece. Sin `vkey` usa la variante más barata con precio.
-export function aplicarMarca(inventario, { juego, datos, col, k, vkey, parche, hoy }) {
+export function aplicarMarca(inventario, { juego, datos, col, k, vkey, parche, hoy, forzar }) {
   const inv = Array.isArray(inventario) ? inventario : [];
   const carta = cartaDe(datos, k);
   if (!carta) return inv;
@@ -104,7 +104,7 @@ export function aplicarMarca(inventario, { juego, datos, col, k, vkey, parche, h
   const m = { ...(prev ? { ...marcaDeFila(prev), e: undefined } : {}), ...parche };
   delete m.e;
   for (const campo of Object.keys(m)) if (m[campo] === undefined || m[campo] === null || m[campo] === "" || m[campo] === 0) delete m[campo];
-  if (marcaVacia(m)) return prev ? inv.filter(f => f.id !== id) : inv;
+  if (marcaVacia(m) && !forzar) return prev ? inv.filter(f => f.id !== id) : inv;   // `forzar`: alta sin marcas (carta que solo sigo, p. ej. Price Watch)
   const market = precioVersion(v);
   const p = market != null ? { market, low: v[6] != null ? v[6] : null, high: v[7] != null ? v[7] : null, tid: String(v[0]), variant: v[1] || null } : null;
   const tiene = !!m.c;
@@ -115,6 +115,7 @@ export function aplicarMarca(inventario, { juego, datos, col, k, vkey, parche, h
     name: carta.n, set: (datos.sets && datos.sets[v[2]]) || "", setCode: "", number: v[3] || "", rarity: v[4] || "",
     image: urlImagen(datos.imgTpl, v[0], 200), imageHd: urlImagenGrande(v[0]),
     tcgcsvKey: vkey,
+    varianteEtiqueta: describirVariante({ juego, sub: v[1], rareza: v[4], grupo: (datos.sets && datos.sets[v[2]]) || "" }).etiqueta,
     tcgMarket: p ? p.market : (prev ? prev.tcgMarket : null), tcgLow: p ? p.low : (prev ? prev.tcgLow : null), tcgHigh: p ? p.high : (prev ? prev.tcgHigh : null),
     tcgUpdated: p ? hoy : (prev ? prev.tcgUpdated : null),
     priceHistory: conSnapshot(prev ? prev.priceHistory : [], p, hoy),

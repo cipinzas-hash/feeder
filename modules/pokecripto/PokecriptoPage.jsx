@@ -4,6 +4,8 @@
 import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPrice, fetchTCGCandidatos, addSnapshot, refreshPrecio as refreshPrecioCompartido, fuenteCompatible } from "./lib/pricing.mjs";
 import { marcarCortes, ultimoSegmento, esMercadoDelgado, serieSuave, extrasSnapshot, historialConMensual } from "./lib/historial.mjs";
 import { PanelVariantesPokemon, InsigniasPokemon } from "./VariantesPokemon.jsx";
+import { aplicarVariantePoke, parcheVariante, hermanasDe, esFilaVariante } from "./lib/variantes-filas.mjs";
+import { pendientesDeCambio } from "./lib/juegos.mjs";
 import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarCandidatos, matchAutomatico, mergeOverrides, claveCandidato, urlsFoto, mismoSet } from "./lib/review.mjs";
 import { marcarEdicionLocal } from "../shared/localedit.js";
 import { esDoubleRare, esAceSpec, carpetaDeCat, carpetaDeInv, invEnCarpeta, invDeCarta, rarezaConocida, sobraPorRareza, entradasFaltantes,
@@ -492,7 +494,12 @@ export function PriceChartFill(props){
 }
 
 // ─── PokecriptoPage ─────────────────────────────────────────────────────────────
-function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCatalogo,saveDarkCatalogo,priceCache,savePriceCache,apiKey,saveApiKey}){
+// Pantalla ÚNICA de Pokécripto para todos los juegos (unificación 22-nov-2026). `juego` por omisión es Pokémon (comportamiento de siempre).
+// Los otros juegos usan las mismas carpetas, fichas, estados, Price Watch, historial y ventas; lo propio de Pokémon (sus APIs, el catálogo
+// Dark y las colecciones por ilustrador, revisar precio) queda apagado, y el explorador de colecciones y el buscador de cada juego
+// llegan por `explorador` y `buscador` (los arma PokecriptoRaiz).
+function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCatalogo,saveDarkCatalogo,priceCache,savePriceCache,apiKey,saveApiKey,juego="pokemon",explorador=null,buscador=null}){
+  const esPoke=juego==="pokemon";
   const inv     = inventario||[];
   // Price Watch siempre existe como carpeta (12-oct-2026): el estado guardado de antes no la traía y, como los valores por
   // defecto solo se usan cuando NO hay nada guardado, nunca aparecía como destino al agregar o editar una carta.
@@ -693,6 +700,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // preservando priceHistory/estado/notas, y dejamos darkCat reducido a
   // solo identidad (cardId/name/número/set) — el resto vive en inv.
   React.useEffect(()=>{
+    if(!esPoke) return;
     const invIds=new Set(inv.map(c=>c.cardId));
     const manuales=darkCat.filter(d=>d.manual&&!invIds.has(d.cardId));
     const legacyDark=darkCat.filter(d=>!d.manual&&!invIds.has(d.cardId)&&
@@ -730,7 +738,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   React.useEffect(()=>{
     if(!fichaId) return;
     const carta=inv.find(c=>c.id===fichaId);
-    if(carta) refreshPrecio(carta);
+    if(carta&&esPoke&&!carta.tcgcsvKey) refreshPrecio(carta);
   },[fichaId]);
 
   // ── Auto-poblar catálogo dark con sets nuevos ──
@@ -773,6 +781,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // acá, pero SOLO si siguen intactas (estado hunting, nunca tocadas) --
   // si Cristopher ya marcó alguna conseguida o la editó, se conserva.
   React.useEffect(()=>{
+    if(!esPoke) return;
     if(!allSets.length) return;
     const idsSetsValidos=new Set(darkSetsScope.map(s=>s.id));
     const paraSacar=inv.filter(c=>c.carpeta==="Dark Collection"&&c.estado==="hunting"&&c.costoUSD===0&&!c.notas&&c.setCode&&!idsSetsValidos.has(c.setCode));
@@ -783,6 +792,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     saveDarkCatalogo(prev=>(prev||[]).filter(d=>!((!d.carpeta||d.carpeta==="Dark Collection")&&cardIdsSacar.has(d.cardId))));
   },[allSets]);
   React.useEffect(()=>{
+    if(!esPoke) return;
     if(!darkSetsScope.length) return;
     // Filtrado por carpeta (22-sep-2026): darkCat pasó a ser compartido con
     // las 8 colecciones de ilustrador. Sin este filtro, un set que ya tenga
@@ -830,6 +840,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // conocemos y suma las que pokemontcg.io haya indexado con lag, sin tocar
   // el progreso (conseguida/hunting/precio) de las que ya están.
   React.useEffect(()=>{
+    if(!esPoke) return;
     if(!darkSetsScope.length) return;
     const lastSync=cache._lastResyncDate;
     if(lastSync && (Date.now()-new Date(lastSync).getTime())<RESYNC_INTERVAL_MS) return;
@@ -884,6 +895,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // al montar el módulo, en vez de esperar una vista dedicada que estas
   // carpetas no tienen.
   React.useEffect(()=>{
+    if(!esPoke) return;
     if(!allSets.length&&!allSetsLoading) loadAllSets();
   },[]);
 
@@ -893,6 +905,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // la vez -- se corre matchIlustrador() contra cada carta traída, una vez
   // por definición, en vez de pedir el set 8 veces.
   React.useEffect(()=>{
+    if(!esPoke) return;
     if(!allSets.length) return;
     const enCat=new Set(darkCat.filter(d=>d.carpeta).map(d=>d.setId+"::"+d.carpeta));
     const pendientes=allSets.filter(s=>COLECCIONES_ILUSTRADOR.some(def=>!enCat.has(s.id+"::"+def.carpeta)));
@@ -937,6 +950,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // Mismo criterio que el resync de Dark (1x/día, cache key propia para no
   // pisar `_lastResyncDate` de Dark), sobre el catálogo completo de sets.
   React.useEffect(()=>{
+    if(!esPoke) return;
     if(!allSets.length) return;
     const lastSync=cache._lastResyncIlustradorDate;
     if(lastSync && (Date.now()-new Date(lastSync).getTime())<RESYNC_INTERVAL_MS) return;
@@ -1000,6 +1014,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // (Cristopher, 26-oct-2026: "las cartas sueltas se eliminan, sin miedo"; antes se conservaban las con estado distinto o notas).
   // Cada baja se encola como {id,_baja:true} para que el bot la quite también del canónico.
   React.useEffect(()=>{
+    if(!esPoke) return;
     if(!carpetas||!inventario||!darkCatalogo) return;
     const quitar=inventario.filter(c=>CARPETAS_RETIRADAS.includes(c.carpeta));
     const hayCat=darkCatalogo.some(d=>CARPETAS_RETIRADAS.includes(d.carpeta));
@@ -1019,6 +1034,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // retiradas, pero solo para cartas en "hunting" y solo las de esa carpeta. Cada baja se encola para que el bot la
   // quite también del canónico.
   React.useEffect(()=>{
+    if(!esPoke) return;
     if(!inventario||!darkCatalogo) return;
     const dEnCat=darkCatalogo.filter(d=>BAJAS_POR_REGLA.some(b=>b.carpeta===d.carpeta&&b.quitar(d,rarezaConocida(d,inventario))));
     if(!dEnCat.length) return;
@@ -1041,6 +1057,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const rarezaIntentada=React.useRef(new Set());
   const rarezaEnCurso=React.useRef(false);
   React.useEffect(()=>{
+    if(!esPoke) return;
     if(!inventario||!darkCatalogo||rarezaEnCurso.current) return;
     const sets=[...new Set(darkCatalogo.filter(d=>(d.carpeta==="Mega"||d.carpeta==="Tera")&&d.setId&&!rarezaConocida(d,inventario)&&!rarezaIntentada.current.has(d.setId)).map(d=>d.setId))];
     if(!sets.length) return;
@@ -1069,6 +1086,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   // colección: las que faltaban se crean en hunting (heredan de la hermana rareza, ilustrador, imágenes y último precio).
   // No se crean las que la regla va a dar de baja, ni las de Mega/Tera con rareza todavía desconocida (esperan al efecto de arriba).
   React.useEffect(()=>{
+    if(!esPoke) return;
     if(!inventario||!darkCatalogo) return;
     const elegibles=darkCatalogo.filter(d=>{
       const car=carpetaDeCat(d), rar=rarezaConocida(d,inventario);
@@ -1189,6 +1207,16 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     setAddingCard(null);
     setNewForm({costoUSD:"",precioVentaUSD:"",condicion:"NM",notas:"",fechaCompra:hoy,carpeta:cats[0],cantidad:1,destino:"inventario",precioObjetivo:""});
     setView("coleccion");
+  }
+  // Variantes de Pokémon como ejemplares (unificación 22-nov-2026): ver lib/variantes-filas.mjs
+  function marcarVariante(fila,v,accion){
+    const next=aplicarVariantePoke(inv,{fila,v,accion,hoy});
+    if(next===inv) return;
+    saveInventario(next);
+    const nuevas=pendientesDeCambio(inv,next).filter(c=>c._baja||!inv.some(x=>x.id===c.id));
+    const cambios=[...nuevas,...parcheVariante(inv,next)];
+    if(cambios.length) encolarPokecriptoPending(cambios);
+    if(!next.some(x=>x.id===fila.id)) setDarkDetailId(null);   // quité el ejemplar que tenía abierto
   }
   function updCarta(id,fields){ saveInventario(inv.map(c=>c.id===id?{...c,...fields}:c)); }
   function deleteCarta(id){ saveInventario(inv.filter(c=>c.id!==id)); setView("coleccion"); }
@@ -1578,6 +1606,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     return {porColeccion,total:sumarAvances(Object.values(porColeccion))};
   },[darkCat,inv]);
   React.useEffect(()=>{
+    if(!esPoke) return;
     const auth=getPokecriptoAuth();
     if(!auth) return;
     fetch(`${POKECRIPTO_WORKER_URL}?path=pokecripto-colecciones-historial.json`,{headers:{"X-Angst-Auth":auth}})
@@ -1892,6 +1921,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const btnAcc=(bg,color,extra)=>({flex:1,minWidth:0,background:bg,border:bg==="transparent"?"1px dashed #444":"none",borderRadius:10,padding:"10px 6px",...f,fontSize:12,color:color||"#fff",cursor:"pointer",whiteSpace:"nowrap",...extra});
     // datos propios en una sola línea bajo el precio
     const datosLinea=[];
+    if(detalle.varianteEtiqueta) datosLinea.push(detalle.varianteEtiqueta);
     if(esCarpeta){ if(detalle.condicion) datosLinea.push(detalle.condicion); if((detalle.cantidad||1)>1) datosLinea.push(`×${detalle.cantidad}`); if(dias!=null) datosLinea.push(`${dias}d`); }
     else if(esWatch){ if(detalle.condicion) datosLinea.push(detalle.condicion); }
     else if(cons&&catalogEntry){ if(detalle.condicion) datosLinea.push(detalle.condicion); if((detalle.cantidad||1)>1) datosLinea.push(`×${detalle.cantidad}`); }
@@ -1945,12 +1975,13 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                 {datosLinea.length>0&&<div style={{...f,fontSize:10,color:"#888"}}>{datosLinea.join(" · ")}</div>}
                 {detalle.notas&&<div style={{fontFamily:"'Caveat',cursive",fontSize:13,color:"rgba(255,255,255,0.5)",fontStyle:"italic",display:"-webkit-box",WebkitLineClamp:1,WebkitBoxOrient:"vertical",overflow:"hidden"}}>"{detalle.notas}"</div>}
                 <div style={{marginTop:"auto"}}>
-                  {detalle.id&&<button onClick={()=>abrirRevisionCarta(detalle.id)} style={{...f,fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.2)",background:"transparent",color:"rgba(255,255,255,0.6)",borderRadius:99,padding:"2px 8px",cursor:"pointer"}}>🔍 revisar precio</button>}
+                  {detalle.id&&esPoke&&!detalle.tcgcsvKey&&<button onClick={()=>abrirRevisionCarta(detalle.id)} style={{...f,fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.2)",background:"transparent",color:"rgba(255,255,255,0.6)",borderRadius:99,padding:"2px 8px",cursor:"pointer"}}>🔍 revisar precio</button>}
                 </div>
               </div>
             </div>
             {/* variantes (holo, reverse, Poké Ball, logo de tipo, sellos): mismo formato que Yu-Gi-Oh!/Digimon */}
-            <PanelVariantesPokemon set={detalle.setName||detalle.set} number={detalle.number} name={detalle.name}/>
+            <PanelVariantesPokemon set={detalle.setName||detalle.set} number={detalle.number} name={detalle.name}
+              filas={esPoke&&r.row?hermanasDe(inv,r.row):[]} onMarcar={esPoke&&r.row?((v,acc)=>{ if(acc!=="quitar"||window.confirm("¿Quitar esta variante? Si es un ejemplar aparte se borra con su historial.")) marcarVariante(r.row,v,acc); }):null}/>
             {/* métricas y variación por periodo: una sola rejilla de 4 columnas (ATH · ATL · σ · 7D / 30D · 90D · 180D · 360D) */}
             {hist.length>=2&&(()=>{
               const deltas=computeTimeframeDeltas(hist);
@@ -2163,6 +2194,8 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   }
 
   // ── VISTA BUSCAR ─────────────────────────────────────────────────────────────
+  if(!esPoke&&view==="buscar"&&buscador) return buscador({volver:()=>setView("coleccion"),carpetas:cats});
+  if(!esPoke&&view==="colecciones_menu"&&explorador) return explorador({volver:()=>setView("coleccion")});
   if(view==="buscar"){
     return(
       <MarcoPoke scrollRef={mainRef}>
@@ -2700,7 +2733,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
 
   return(
     <MarcoPoke scrollRef={mainRef}>
-      {!apiKey&&(
+      {esPoke&&!apiKey&&(
         <div style={{background:"#1a1a1a",border:"1px solid #333",borderRadius:12,padding:"12px 14px",marginBottom:12}}>
           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:12,color:"#bbb",marginBottom:8}}>
             Sin API key de tcgpricelookup.com — los precios en vivo no van a actualizar (lo guardado sigue disponible). Se pide una sola vez, queda en este dispositivo.
@@ -2715,7 +2748,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           </div>
         </div>
       )}
-      {colaSinPrecio(inv).length>0&&(
+      {esPoke&&colaSinPrecio(inv).length>0&&(
         <button onClick={abrirRevisionCola}
           style={{width:"100%",background:"#111",border:"1px solid #aac756",borderRadius:12,padding:"12px 14px",marginBottom:12,fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:"#aac756",cursor:"pointer",textAlign:"left"}}>
           🧭 revisar cartas sin precio ({colaSinPrecio(inv).length})
@@ -2782,7 +2815,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               <div style={{fontSize:20,marginBottom:4}}>{cat==="Colecciones"?"🗂️":CARPETAS_ICONS[cat]}</div>
               <div style={{fontFamily:"'Caveat',cursive",fontSize:13,color:"#fff",lineHeight:1.2}}>{cat}</div>
               <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"rgba(255,255,255,0.35)",marginTop:3}}>
-                {cat==="Colecciones"?"9 en curso":`${n} cartas${cat==="Price Watch"&&alertasWatch.length?` · 🎯 ${alertasWatch.length}`:""}`}
+                {cat==="Colecciones"?(esPoke?"9 en curso":"explorar"):`${n} cartas${cat==="Price Watch"&&alertasWatch.length?` · 🎯 ${alertasWatch.length}`:""}`}
               </div>
             </button>
           );
