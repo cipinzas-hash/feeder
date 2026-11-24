@@ -1,0 +1,50 @@
+name: Sonda conciertos
+
+# Issue #44 (nov-2026): sonda de viabilidad para ampliar la fuente de Conciertos.
+# Solo se dispara a mano. Escribe docs/sonda-conciertos.json; no toca feeds.json
+# ni nada que lea la app. Se puede borrar cuando termine la evaluación.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: sonda-conciertos
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Correr la sonda
+        working-directory: modules/feed
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: |
+          set -o pipefail
+          timeout -s TERM -k 15 17m node scripts/sonda-conciertos.mjs 2>&1 | tee /tmp/sonda-conciertos.log
+
+      - name: Commitear el reporte
+        if: always()
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -f docs/sonda-conciertos.json 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "Sonda conciertos $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git push && break
+            echo "push falló, reintentando ($i/3)..."
+            git fetch origin main
+            git reset --soft origin/main
+            git diff --staged --quiet || git commit -m "Sonda conciertos $(date -u +%Y-%m-%dT%H:%MZ)"
+            sleep 5
+          done
