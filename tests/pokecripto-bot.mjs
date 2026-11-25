@@ -1,4 +1,5 @@
 // Prueba de integración del bot con una API falsa (tests/helpers/mock-api.mjs). Correr: node tests/pokecripto-bot.mjs
+import { expandirHistMes } from "../modules/pokecripto/lib/historial.mjs";
 import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -101,7 +102,7 @@ t("override: se empareja por la designación manual aunque el nombre difiera", (
 });
 t("lotes: la carta que ya tenía tcgId se actualiza por lote (20 por consulta) y suma snapshot a su historial", () => {
   assert.ok(log().some(l => /^BATCH \d+$/.test(l))); assert.equal(por.old.tcgUpdated, new Date().toISOString().slice(0, 10));
-  assert.equal(por.old.priceHistory.length, 2); assert.equal(por.old.priceHistory[0].market, 1);
+  assert.equal(por.old.priceHistory.length, 1); assert.equal(expandirHistMes(por.old.histMes)[0].market, 1); // el punto de hace meses queda plegado en histMes (régimen de 3 datos por mes)
 });
 t("una sola fuente: el bot nunca consulta pokemontcg.io; lo que tcgpricelookup no tiene queda sin tocar y pasa al final de la cola", () => {
   assert.ok(!log().some(l => l.startsWith("PTCG")));
@@ -118,13 +119,15 @@ t("baja: la carta con _baja desaparece del canónico y queda registrada como fus
 t("variantes: la carta toma la impresión Normal aunque la Reverse venga primero", () => { assert.equal(por.var1.tcgId, "t-alp-7n"); });
 t("misma carta en dos colecciones (mismo cardId) comparte tcgId", () => { assert.equal(por.a1b.tcgId, por.a1.tcgId); assert.equal(por.a1b.tcgId, "t-alp-1"); });
 t("guarda: un tcgId que ya tiene otra carta (otro cardId) no se asigna a una distinta", () => { assert.equal(por.gu1.tcgId, "t-guard"); assert.ok(!por.gu2.tcgId); });
-t("compactación: lo viejo queda en un punto por mes (promedio, low mínimo, high máximo) y el último punto se conserva", () => {
-  const h = por.hist.priceHistory, agg = h.filter(x => x.agg);
-  assert.ok(agg.length >= 1 && h.length < 4);
-  const total = agg.reduce((a, x) => a + x.n, 0); assert.equal(total, 3);
-  const meses = new Set([dia(-90).slice(0, 7), dia(-80).slice(0, 7), dia(-60).slice(0, 7)]);
-  if (meses.size === 1) { const x = agg[0]; assert.equal(x.market, 2); assert.equal(x.low, 0.4); assert.equal(x.high, 4); }
+t("régimen de 3 datos (23-nov-2026): los meses cerrados salen de priceHistory y quedan en histMes como [media, mínimo, máximo] del market; el último punto se conserva", () => {
+  const h = por.hist.priceHistory;
+  assert.ok(!h.some(x => x.agg) && h.length === 1);
   assert.equal(h.at(-1).date, new Date().toISOString().slice(0, 10)); assert.equal(h.at(-1).market, 8);
+  const esperado = new Map();
+  for (const [d, m] of [[dia(-90), 1], [dia(-80), 3], [dia(-60), 2]]) { const k = d.slice(0, 7); esperado.set(k, [...(esperado.get(k) || []), m]); }
+  const pts = new Map(expandirHistMes(por.hist.histMes).map(x => [x.date.slice(0, 7), x]));
+  assert.equal(pts.size, esperado.size);
+  for (const [k, ms] of esperado) { const x = pts.get(k); assert.equal(x.market, Math.round(ms.reduce((a, b) => a + b, 0) / ms.length * 100) / 100); assert.equal(x.low, Math.min(...ms)); assert.equal(x.high, Math.max(...ms)); }
 });
 // 2ª corrida: ahora todo lo emparejado va por lote y el descubrimiento no repite los sets ya resueltos
 writeFileSync(P("pending.json"), "[]"); writeFileSync(P("log.txt"), "");
@@ -138,6 +141,6 @@ t("2ª corrida: sin búsquedas por set repetidas de sets resueltos; todo lo empa
   const unicos = new Set(Object.values(res2).filter(x => x.estado !== "vendida" && x.tcgId).map(x => x.tcgId)).size;
   const enLotes = l.filter(x => x.startsWith("BATCH")).reduce((a, x) => a + parseInt(x.split(" ")[1], 10), 0);
   assert.equal(enLotes, unicos, "los lotes piden cada tcgId una sola vez, aunque la carta esté en varias colecciones");
-  assert.equal(res2.hist.priceHistory.filter(x => x.agg).reduce((a, x) => a + x.n, 0), 3); // idempotente: no se vuelve a compactar
+  assert.equal(JSON.stringify(res2.hist.histMes), JSON.stringify(por.hist.histMes)); assert.ok(!res2.hist.priceHistory.some(x => x.agg)); // idempotente: no se vuelve a plegar
 });
 console.log(`\n${n} pruebas en verde`);

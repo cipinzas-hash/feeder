@@ -6,6 +6,8 @@
 // Datos: el MISMO inventario de Pokécripto (pokeInventario): una fila por VARIANTE marcada (ver lib/juegos.mjs). El catálogo es virtual
 // (los JSON de tcgcrypto, de tcgcsv). Una tarjeta es una impresión (set + número) y reúne todas las variantes de esa impresión.
 import { fetchTcgCryptoData } from "../shared/catalog.js";
+import { TAMANOS_VISTA, ratioDe, alturaFicha, abiertoPorDefecto as plegadoPorDefecto } from "./lib/vistas.mjs";
+import EfectoCarta from "./EfectoCarta.jsx";
 import {
   MarcoPoke, PriceChartFill, fmtUSD, BarraSet, ChipHerramienta, fmtDateShort, computeHistMetrics, computeTimeframeDeltas, BotonCerrar,
 } from "./PokecriptoPage.jsx";
@@ -24,14 +26,14 @@ const lbl = { ...f, fontSize: 8, color: "rgba(255,255,255,0.35)", letterSpacing:
 const numCmp = (a, b) => String(a).localeCompare(String(b), undefined, { numeric: true });
 
 // Tamaño de las caras (preferencia de este dispositivo, por juego). Las cartas de Yu-Gi-Oh!/Digimon llevan texto: por defecto L.
-export const TAMANOS = [["S", "S", 64, 3], ["M", "M", 96, 5], ["L", "L", 150, 6], ["XL", "XL", 250, 8]];
+export const TAMANOS = TAMANOS_VISTA;   // mismos botones y tamaños que en Pokémon (lib/vistas.mjs)
 const prefClave = j => `angst-caras-${j}`;
 const leerTamano = j => { try { const v = window.localStorage.getItem(prefClave(j)); if (v === "lista" || TAMANOS.some(t => t[0] === v)) return v; } catch (e) { /* sin almacenamiento */ } return "L"; };
 const guardarTamano = (j, v) => { try { window.localStorage.setItem(prefClave(j), v); } catch (e) { /* sin almacenamiento */ } };
 
 // Ilustración con cadena de respaldos (200w → 400w → 1000x1000 del CDN de TCGplayer), sin enviar referer y con el alto reservado
 // (así una carga lenta o fallida no colapsa la tarjeta). Si todas fallan queda un marcador con el nombre. La que falta se ve gris.
-const ASPECTO = 0.69; // ancho/alto de una carta
+const aspectoDe = datos => ratioDe((datos && datos.tcg) || "yugioh");   // ancho/alto real de la carta del juego
 function ImagenCarta({ datos, pid, alt, cons, grande, style }) {
   const urls = useMemo(() => {
     const l = grande ? [urlImagen(datos.imgTpl, pid, 400), urlImagenGrande(pid), urlImagen(datos.imgTpl, pid, 200)] : [urlImagen(datos.imgTpl, pid, 200), urlImagen(datos.imgTpl, pid, 400), urlImagenGrande(pid)];
@@ -40,8 +42,8 @@ function ImagenCarta({ datos, pid, alt, cons, grande, style }) {
   const [i, setI] = useState(0);
   useEffect(() => { setI(0); }, [urls]);
   const filtro = cons ? "none" : "grayscale(1) brightness(0.6)";
-  if (i >= urls.length) return <div style={{ aspectRatio: String(ASPECTO), background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", padding: 4, boxSizing: "border-box", textAlign: "center", ...f, fontSize: 8, color: "#555", overflow: "hidden", filter: filtro, ...style }}>{alt}</div>;
-  return <img src={urls[i]} alt={alt} referrerPolicy="no-referrer" onError={() => setI(k => k + 1)} style={{ display: "block", width: "100%", aspectRatio: String(ASPECTO), objectFit: "cover", background: "#0d0d0d", filter: filtro, ...style }} />;
+  if (i >= urls.length) return <div style={{ aspectRatio: String(aspectoDe(datos)), background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", padding: 4, boxSizing: "border-box", textAlign: "center", ...f, fontSize: 8, color: "#555", overflow: "hidden", filter: filtro, ...style }}>{alt}</div>;
+  return <img src={urls[i]} alt={alt} referrerPolicy="no-referrer" onError={() => setI(k => k + 1)} style={{ display: "block", width: "100%", aspectRatio: String(aspectoDe(datos)), objectFit: "cover", background: "#0d0d0d", filter: filtro, ...style }} />;
 }
 
 // Insignia de variante: llena si la tienes, con borde si existe y no la tienes.
@@ -88,10 +90,11 @@ function TarjetaImpresion({ it, datos, own, view, abrirRef }) {
 }
 const TarjetaMem = React.memo(TarjetaImpresion, (x, y) => x.it === y.it && x.view === y.view && x.datos === y.datos && x.own === y.own);
 
-function Detalle({ datos, col, carta, tile, filasCarta, lista, onIr, onCerrar, onMarca }) {
+function Detalle({ datos, col, carta, tile, filasCarta, lista, onIr, onCerrar, onMarca, zoomInicial, onZoomEstado }) {
   const [rango, setRango] = useState("todo");
   const [sel, setSel] = useState(null);
   const [zoom, setZoom] = useState(null);
+  const altFicha = alturaFicha(datos.tcg || "yugioh");
   const [editar, setEditar] = useState(false);
   const [ed, setEd] = useState({});
   const propias = new Map(filasCarta.map(x => [x.tcgcsvKey, x]));
@@ -100,11 +103,13 @@ function Detalle({ datos, col, carta, tile, filasCarta, lista, onIr, onCerrar, o
   const v = tile.vs.find(x => x.key === selKey) || tile.vs[0];
   const fila = propias.get(v.key) || null, cons = !!fila && filaTiene(fila);
   const nTengo = tile.vs.filter(x => tiene(x.key)).length;
+  useEffect(() => { if (zoomInicial) setZoom(v.pid); }, []);                        // eslint-disable-line
+  useEffect(() => { if (onZoomEstado) onZoomEstado(zoom != null); }, [zoom]);
   const hist = fila ? historialConMensual(fila) : [];
   const idx = lista.findIndex(x => x.k === carta.k && x.setIdx === tile.setIdx && x.num === tile.num), nav = lista.length > 1;
   const { ath, athDate, atl, atlDate, vol, volLabel } = computeHistMetrics(hist, rango);
   const mult = multiploSobreBase(v, tile.vs);
-  const flecha = (d, t) => <button onClick={e => { e.stopPropagation(); onIr(d); }} title={d < 0 ? "anterior" : "siguiente"} style={{ flex: "none", width: 30, height: 176, background: "rgba(255,255,255,0.09)", border: "none", borderRadius: 12, color: "#fff", fontSize: 26, cursor: "pointer" }}>{t}</button>;
+  const flecha = (d, t) => <button onClick={e => { e.stopPropagation(); onIr(d); }} title={d < 0 ? "anterior" : "siguiente"} style={{ flex: "none", width: 30, height: altFicha, background: "rgba(255,255,255,0.09)", border: "none", borderRadius: 12, color: "#fff", fontSize: 26, cursor: "pointer" }}>{t}</button>;
   const btnAcc = (bg, color, extra) => ({ flex: 1, minWidth: 0, background: bg, border: bg === "transparent" ? "1px dashed #444" : "none", borderRadius: 10, padding: "10px 6px", ...f, fontSize: 12, color: color || "#fff", cursor: "pointer", ...extra });
   const deltas = hist.length >= 2 ? computeTimeframeDeltas(hist) : [];
   const celdas = hist.length >= 2 ? [
@@ -126,7 +131,7 @@ function Detalle({ datos, col, carta, tile, filasCarta, lista, onIr, onCerrar, o
           <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
             <div style={{ display: "flex", gap: 4, flex: "none" }}>
               {nav && flecha(-1, "‹")}
-              <div onClick={() => setZoom(v.pid)} style={{ width: 126, height: 176, borderRadius: 8, overflow: "hidden", cursor: "pointer", background: "#000", flex: "none" }}>
+              <div onClick={() => setZoom(v.pid)} style={{ width: 126, height: altFicha, borderRadius: 8, overflow: "hidden", cursor: "pointer", background: "#000", flex: "none" }}>
                 <ImagenCarta datos={datos} pid={v.pid} alt={carta.n} cons={cons} grande style={{ width: "100%", height: "100%", aspectRatio: "auto", objectFit: "contain" }} />
               </div>
               {nav && flecha(1, "›")}
@@ -145,6 +150,7 @@ function Detalle({ datos, col, carta, tile, filasCarta, lista, onIr, onCerrar, o
               {cons && fila.notas && <div style={{ ...cv, fontSize: 13, color: "rgba(255,255,255,0.5)", fontStyle: "italic", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{fila.notas}</div>}
             </div>
           </div>
+          {datos.tcg && <EfectoCarta juego={datos.tcg} nombre={carta.n} />}
           <div style={{ flex: "none" }}>
             <div style={{ ...lbl, marginBottom: 4 }}>variantes · {tile.vs.length}{tile.min != null && tile.max !== tile.min ? ` · ${fmtUSD(tile.min)} a ${fmtUSD(tile.max)}` : ""}</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -200,7 +206,13 @@ function Detalle({ datos, col, carta, tile, filasCarta, lista, onIr, onCerrar, o
         </div>
       </div>
     </div>
-    {zoom != null && <div onClick={() => setZoom(null)} style={{ position: "fixed", inset: 0, zIndex: 800, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ width: "min(92vw,420px)" }}><ImagenCarta datos={datos} pid={zoom} alt={carta.n} cons grande style={{ borderRadius: 10, objectFit: "contain" }} /></div></div>}
+    {zoom != null && <div onClick={() => setZoom(null)} style={{ position: "fixed", inset: 0, zIndex: 800, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "12px 0", boxSizing: "border-box" }}>
+      <button onClick={e => { e.stopPropagation(); setZoom(null); }} title="cerrar" style={{ position: "fixed", top: 12, right: 14, background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 99, width: 36, height: 36, color: "#fff", fontSize: 18, cursor: "pointer", zIndex: 2 }}>×</button>
+      {nav && idx >= 0 && <div style={{ position: "fixed", top: 20, left: 0, right: 0, textAlign: "center", ...f, fontSize: 10, color: "rgba(255,255,255,0.4)", pointerEvents: "none" }}>{idx + 1} / {lista.length}</div>}
+      <div style={{ width: "min(80vw,380px)", maxHeight: datos.tcg ? "62vh" : "90vh" }}><ImagenCarta datos={datos} pid={zoom} alt={carta.n} cons grande style={{ borderRadius: 10, objectFit: "contain" }} /></div>
+      {datos.tcg && <div onClick={e => e.stopPropagation()} style={{ width: "min(88vw,420px)", maxHeight: "30vh", overflowY: "auto" }}><EfectoCarta juego={datos.tcg} nombre={carta.n} grande /></div>}
+      {nav && [["left", -1, "‹"], ["right", 1, "›"]].map(([lado, d, t]) => <button key={lado} data-t={"zoom-" + lado} onClick={e => { e.stopPropagation(); onIr(d); }} title={d < 0 ? "anterior" : "siguiente"} style={{ position: "fixed", [lado]: 6, top: "42%", transform: "translateY(-50%)", background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 16, width: 64, height: 110, color: "#fff", fontSize: 30, cursor: "pointer", zIndex: 2 }}>{t}</button>)}
+    </div>}
     {editar && <div onClick={() => setEditar(false)} style={{ position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
       <div onClick={e => e.stopPropagation()} style={{ position: "relative", width: "min(96vw,420px)", background: "#111", borderRadius: "16px 16px 0 0", padding: "22px 20px 28px", boxSizing: "border-box" }}>
         <BotonCerrar onClick={() => setEditar(false)} />
@@ -226,6 +238,7 @@ const sameFilas = (a, b) => a.datos === b.datos && a.col === b.col && a.filas ==
 const VistaColeccion = React.memo(function VistaColeccion({ juego, datos, col, filas, saveInventario, onVolver }) {
   const rank = useMemo(() => rankSets(datos), [datos]);
   const [detalle, setDetalle] = useState(null);                // {k, setIdx, num, lista}
+  const [zoomAbierto, setZoomAbierto] = useState(false);       // el zoom grande sigue abierto al pasar de una carta a otra con ‹ ›
   const [view, setViewRaw] = useState(() => leerTamano(juego));
   const setView = v => { guardarTamano(juego, v); setViewRaw(v); };
   const [soloSinPrecio, setSoloSinPrecio] = useState(false);
@@ -290,11 +303,11 @@ const VistaColeccion = React.memo(function VistaColeccion({ juego, datos, col, f
   let gruposVis = grupos.map(g => ({ ...g, vis: g.items.filter(it => kVis.has(it.c.k) && pasaVar(it)) })).filter(g => g.vis.length > 0);
   if (filtroSet !== "") gruposVis = gruposVis.filter(g => String(g.setIdx) === filtroSet);
   const totalItems = gruposVis.reduce((n, g) => n + g.vis.length, 0);
-  const abiertoPorDefecto = totalItems <= 400;          // pocas impresiones: todo abierto; muchas: sets cerrados y se abren al tocar
+  const abiertoPorDefecto = plegadoPorDefecto(totalItems);          // pocas impresiones: todo abierto; muchas: sets cerrados y se abren al tocar
   const abierto = g => abiertoPorDefecto !== invertidos.has(g.setIdx);
   const alternar = idx => setInvertidos(prev => { const n = new Set(prev); if (n.has(idx)) n.delete(idx); else n.add(idx); return n; });
-  const lista = gruposVis.filter(abierto).flatMap(g => g.vis.map(it => ({ k: it.c.k, setIdx: it.setIdx, num: it.num })));
-  abrirRef.current = it => setDetalle({ k: it.c.k, setIdx: it.setIdx, num: it.num, lista });
+  // ‹ › recorren solo las cartas del set que se está viendo (igual que en Pokémon)
+  abrirRef.current = it => { const g = gruposVis.find(x => x.setIdx === it.setIdx); setDetalle({ k: it.c.k, setIdx: it.setIdx, num: it.num, lista: (g ? g.vis : []).map(i => ({ k: i.c.k, setIdx: i.setIdx, num: i.num })) }); };
   const tam = TAMANOS.find(t => t[0] === view);
   const gridCols = tam ? `repeat(auto-fill,minmax(${tam[2]}px,1fr))` : null, gap = tam ? tam[3] : 0;
   const detCarta = detalle ? cartaDe(datos, detalle.k) : null;
@@ -304,7 +317,7 @@ const VistaColeccion = React.memo(function VistaColeccion({ juego, datos, col, f
   const nSellos = useMemo(() => grupos.reduce((n, g) => n + g.items.filter(it => it.vs.some(v => v.esSello)).length, 0), [grupos]);
   return (
     <MarcoPoke>
-      {detCarta && detTile && <Detalle key={`${detalle.k}|${detalle.setIdx}|${detalle.num}`} datos={datos} col={col} carta={detCarta} tile={detTile} filasCarta={propiasPorCarta.get(detCarta.k) || []} lista={detalle.lista} onIr={irA} onCerrar={() => setDetalle(null)} onMarca={(vkey, p) => marcar(col, detCarta.k, vkey, p)} />}
+      {detCarta && detTile && <Detalle key={`${detalle.k}|${detalle.setIdx}|${detalle.num}`} datos={datos} col={col} carta={detCarta} tile={detTile} filasCarta={propiasPorCarta.get(detCarta.k) || []} lista={detalle.lista} onIr={irA} onCerrar={() => setDetalle(null)} onMarca={(vkey, p) => marcar(col, detCarta.k, vkey, p)} zoomInicial={zoomAbierto} onZoomEstado={setZoomAbierto} />}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
         <button onClick={onVolver} style={{ background: "transparent", border: "none", fontSize: 20, color: "#444", cursor: "pointer", padding: 0 }}>←</button>
         <div style={{ flex: 1 }}><div style={{ ...cv, fontSize: 22, fontWeight: 700, color: "#fff" }}>{col.emoji} {col.nombre}</div></div>

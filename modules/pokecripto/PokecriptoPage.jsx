@@ -5,6 +5,10 @@ import { POKE_BASE, fetchPoke, getPrimaryPrice, normNum, normName, fetchTCGPrice
 import { marcarCortes, ultimoSegmento, esMercadoDelgado, serieSuave, extrasSnapshot, historialConMensual } from "./lib/historial.mjs";
 import { PanelVariantesPokemon, InsigniasPokemon } from "./VariantesPokemon.jsx";
 import { aplicarVariantePoke, parcheVariante, hermanasDe, esFilaVariante } from "./lib/variantes-filas.mjs";
+import EfectoCarta from "./EfectoCarta.jsx";
+import { VISTAS, normVista, gridDe, ratioDe, alturaFicha, abiertoPorDefecto } from "./lib/vistas.mjs";
+import { avisoHistorial } from "./lib/historial-pool.mjs";
+import { adjuntarHistorial } from "./historialAlAgregar.js";
 import { pendientesDeCambio } from "./lib/juegos.mjs";
 import { mergePreciosBot, colaSinPrecio, planBusquedas, rankCandidatos, mezclarCandidatos, matchAutomatico, mergeOverrides, claveCandidato, urlsFoto, mismoSet } from "./lib/review.mjs";
 import { marcarEdicionLocal } from "../shared/localedit.js";
@@ -94,7 +98,7 @@ async function cargarUsdClp(){
 }
 const CONDICIONES = ["NM","LP","MP","HP","DMG"];
 export const CARPETAS_DEFAULT = ["MLP","Staples & Meta","Dark Collection","Price Watch"];
-const CARPETAS_ICONS = {"MLP":"🐴","Staples & Meta":"⚡","Dark Collection":"⚫","Price Watch":"🎯","ACE SPEC":"🃏"};
+const CARPETAS_ICONS = {"MLP":"🐴","Para cambio":"🔁","Staples & Meta":"⚡","Dark Collection":"⚫","Price Watch":"🎯","ACE SPEC":"🃏"};
 const ESTADOS = {
   hunting:      { label:"hunting",      color:"#7c4dff", bg:"#ede7f6" },
   sin_publicar: { label:"sin publicar", color:"#888",    bg:"#f0f0f0" },
@@ -500,6 +504,7 @@ export function PriceChartFill(props){
 // llegan por `explorador` y `buscador` (los arma PokecriptoRaiz).
 function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCatalogo,saveDarkCatalogo,priceCache,savePriceCache,apiKey,saveApiKey,juego="pokemon",explorador=null,buscador=null}){
   const esPoke=juego==="pokemon";
+  const FIJA1=esPoke?"MLP":"Para cambio";   // la primera carpeta fija: MLP en Pokémon, «Para cambio» en Yu-Gi-Oh! y Digimon
   const inv     = inventario||[];
   // Price Watch siempre existe como carpeta (12-oct-2026): el estado guardado de antes no la traía y, como los valores por
   // defecto solo se usan cuando NO hay nada guardado, nunca aparecía como destino al agregar o editar una carta.
@@ -536,13 +541,14 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [searchErr,      setSearchErr]      = React.useState(null);
   const [addingCard,     setAddingCard]     = React.useState(null);
   const [zoomImage,      setZoomImage]      = React.useState(null);
-  const [newForm,        setNewForm]        = React.useState({costoUSD:"",precioVentaUSD:"",condicion:"NM",notas:"",fechaCompra:hoy,carpeta:cats[0]||"MLP",cantidad:1,destino:"inventario"});
+  const [newForm,        setNewForm]        = React.useState({costoUSD:"",precioVentaUSD:"",condicion:"NM",notas:"",fechaCompra:hoy,carpeta:cats[0]||FIJA1,cantidad:1,destino:"inventario"});
   const [vendModal,      setVendModal]      = React.useState(false);
   const [vendPrecio,     setVendPrecio]     = React.useState("");
   const [vendFecha,      setVendFecha]      = React.useState(hoy);
   const [editMode,       setEditMode]       = React.useState(false);
   const [editFields,     setEditFields]     = React.useState({});
   const [darkView,       setDarkView]       = React.useState("grid_small");
+  const [setsInvertidos,  setSetsInvertidos]  = React.useState(()=>new Set());   // sets cuyo plegado se invirtió respecto del valor por defecto
   const [soloSinPrecio,  setSoloSinPrecio]  = React.useState(false); // filtro rápido por carpeta -- cartas con tcgMarket null
   const [autocolCarpeta, setAutocolCarpeta] = React.useState(null);
 
@@ -647,7 +653,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   React.useEffect(()=>{
     const sinCarpeta=inv.filter(c=>!c.carpeta);
     if(!sinCarpeta.length) return;
-    const def=cats[0]||"MLP";
+    const def=cats[0]||FIJA1;
     saveInventario(prev=>(prev||[]).map(c=>c.carpeta?c:{...c,carpeta:def}));
   },[inv,cats]);
 
@@ -1204,6 +1210,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const nueva=armarCartaNueva(card,newForm,cats,hoy);
     saveInventario([nueva,...inv]);
     encolarPokecriptoPending([nueva]);
+    adjuntarHistorial([nueva],saveInventario,"pokemon",hoy);   // historial completo (3 datos por mes) al registrar; si aún no existe, queda histPend
     setAddingCard(null);
     setNewForm({costoUSD:"",precioVentaUSD:"",condicion:"NM",notas:"",fechaCompra:hoy,carpeta:cats[0],cantidad:1,destino:"inventario",precioObjetivo:""});
     setView("coleccion");
@@ -1216,6 +1223,8 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const nuevas=pendientesDeCambio(inv,next).filter(c=>c._baja||!inv.some(x=>x.id===c.id));
     const cambios=[...nuevas,...parcheVariante(inv,next)];
     if(cambios.length) encolarPokecriptoPending(cambios);
+    const creadas=next.filter(x=>esFilaVariante(x)&&!inv.some(y=>y.id===x.id));
+    if(creadas.length) adjuntarHistorial(creadas,saveInventario,"pokemon",hoy);
     if(!next.some(x=>x.id===fila.id)) setDarkDetailId(null);   // quité el ejemplar que tenía abierto
   }
   function updCarta(id,fields){ saveInventario(inv.map(c=>c.id===id?{...c,...fields}:c)); }
@@ -1471,7 +1480,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const cons=getEstadoDark(d)==="conseguida";
     const abrir=guardLongPressClick(()=>{setDarkDetailId(d.cardId);setDarkDetailList(list||[]);});
     const press=bindLongPress(d.imageHd||d.image,d.cardId,list);
-    if(darkView==="lista") return(
+    if(normVista(darkView)==="lista") return(
       <div onClick={abrir} {...press} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",borderBottom:"1px solid #f0f0f0",cursor:"pointer"}}>
         {d.image&&<DarkArt src={d.image} alt={d.name} cons={cons} wrapStyle={{width:36,borderRadius:4,flexShrink:0}}/>}
         <div style={{flex:1,minWidth:0}}>
@@ -1484,7 +1493,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
         </div>
       </div>
     );
-    const isSmall=darkView==="grid_small";
+    const isSmall=normVista(darkView)==="S";
     return(
       <div onClick={abrir} {...press}
         style={{position:"relative",cursor:"pointer",borderRadius:isSmall?6:8,overflow:"hidden",
@@ -1492,7 +1501,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           boxShadow:cons?"0 2px 8px rgba(46,125,82,0.3)":"0 2px 8px rgba(229,57,53,0.3)"}}>
         {d.image
           ?<DarkArt src={d.image} alt={d.name} cons={cons} wrapStyle={{width:"100%"}}/>
-          :<div style={{aspectRatio:"2/3",background:"#1a1a1a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>⚫</div>
+          :<div style={{aspectRatio:String(ratioDe(juego)),background:"#1a1a1a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>⚫</div>
         }
         {cons&&<div style={{position:"absolute",top:2,right:2,background:"#2e7d52",borderRadius:"50%",width:isSmall?12:16,height:isSmall?12:16,display:"flex",alignItems:"center",justifyContent:"center"}}>
           <span style={{color:"#fff",fontSize:isSmall?7:9,fontWeight:700}}>✓</span>
@@ -1928,7 +1937,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const pagado=detalle.precioUSD||detalle.costoUSD;
     const flechaLado=(delta,txt)=>(
       <button onClick={e=>{e.stopPropagation();irADetalle(delta);}} title={delta<0?"anterior":"siguiente"}
-        style={{flex:"none",width:30,height:176,background:"rgba(255,255,255,0.09)",border:"none",borderRadius:12,color:"#fff",fontSize:26,cursor:"pointer"}}>{txt}</button>
+        style={{flex:"none",width:30,height:alturaFicha(juego),background:"rgba(255,255,255,0.09)",border:"none",borderRadius:12,color:"#fff",fontSize:26,cursor:"pointer"}}>{txt}</button>
     );
     const metricas=[
       {label:"ATH",val:ath,date:athDate,color:"#4caf80"},
@@ -1951,7 +1960,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               <div style={{display:"flex",gap:4,flex:"none"}}>
                 {nav&&flechaLado(-1,"‹")}
                 {detalle.image&&<img src={detalle.imageHd||detalle.image} alt={detalle.name}
-                  style={{width:126,height:176,objectFit:"contain",borderRadius:8,cursor:"pointer",filter:cons?"none":"grayscale(1) brightness(0.65)",background:"#000",display:"block"}}
+                  style={{width:126,height:alturaFicha(juego),objectFit:"contain",borderRadius:8,cursor:"pointer",filter:cons?"none":"grayscale(1) brightness(0.65)",background:"#000",display:"block"}}
                   {...bindLongPress(detalle.imageHd||detalle.image)}
                   onClick={()=>{setZoomImage(detalle.imageHd||detalle.image);setZoomExtra(null);}}/>}
                 {nav&&flechaLado(1,"›")}
@@ -1973,6 +1982,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                   {esCarpeta&&detalle.precioVentaUSD>0&&<span style={{color:detalle.tcgMarket?(detalle.precioVentaUSD>detalle.tcgMarket?"#4caf80":"#e57373"):"#aaa"}}>venta {fmtUSD(detalle.precioVentaUSD)}</span>}
                 </div>
                 {datosLinea.length>0&&<div style={{...f,fontSize:10,color:"#888"}}>{datosLinea.join(" · ")}</div>}
+                {avisoHistorial(detalle,hoy)&&<div data-t="aviso-historial" style={{...f,fontSize:10,color:"#c9a227"}}>{avisoHistorial(detalle,hoy)}</div>}
                 {detalle.notas&&<div style={{fontFamily:"'Caveat',cursive",fontSize:13,color:"rgba(255,255,255,0.5)",fontStyle:"italic",display:"-webkit-box",WebkitLineClamp:1,WebkitBoxOrient:"vertical",overflow:"hidden"}}>"{detalle.notas}"</div>}
                 <div style={{marginTop:"auto"}}>
                   {detalle.id&&esPoke&&!detalle.tcgcsvKey&&<button onClick={()=>abrirRevisionCarta(detalle.id)} style={{...f,fontSize:9,fontWeight:700,border:"1px solid rgba(255,255,255,0.2)",background:"transparent",color:"rgba(255,255,255,0.6)",borderRadius:99,padding:"2px 8px",cursor:"pointer"}}>🔍 revisar precio</button>}
@@ -1980,8 +1990,9 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               </div>
             </div>
             {/* variantes (holo, reverse, Poké Ball, logo de tipo, sellos): mismo formato que Yu-Gi-Oh!/Digimon */}
-            <PanelVariantesPokemon set={detalle.setName||detalle.set} number={detalle.number} name={detalle.name}
-              filas={esPoke&&r.row?hermanasDe(inv,r.row):[]} onMarcar={esPoke&&r.row?((v,acc)=>{ if(acc!=="quitar"||window.confirm("¿Quitar esta variante? Si es un ejemplar aparte se borra con su historial.")) marcarVariante(r.row,v,acc); }):null}/>
+            {!esPoke&&<EfectoCarta juego={juego} nombre={detalle.name}/>}
+            {esPoke&&<PanelVariantesPokemon set={detalle.setName||detalle.set} number={detalle.number} name={detalle.name}
+              filas={esPoke&&r.row?hermanasDe(inv,r.row):[]} onMarcar={esPoke&&r.row?((v,acc)=>{ if(acc!=="quitar"||window.confirm("¿Quitar esta variante? Si es un ejemplar aparte se borra con su historial.")) marcarVariante(r.row,v,acc); }):null}/>}
             {/* métricas y variación por periodo: una sola rejilla de 4 columnas (ATH · ATL · σ · 7D / 30D · 90D · 180D · 360D) */}
             {hist.length>=2&&(()=>{
               const deltas=computeTimeframeDeltas(hist);
@@ -2188,13 +2199,13 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const antes=comp.reduce((a,e)=>a+e.prevMarket,0), ahora=comp.reduce((a,e)=>a+e.newMarket,0);
     const resumen={n:entradas.length,comparadas:comp.length,antes,ahora,delta:ahora-antes,pct:antes>0?(ahora-antes)/antes*100:null};
     const presentes=new Set(todas.map(c=>carpetaDeInv(c)).filter(Boolean));
-    const fijas=["MLP","Staples & Meta","Price Watch"];
+    const fijas=[FIJA1,"Staples & Meta","Price Watch"];
     const grupos=[...fijas.filter(g=>presentes.has(g)),...[...presentes].filter(g=>!fijas.includes(g)&&!NOMBRES_COLECCIONES.includes(g)).sort(),...NOMBRES_COLECCIONES.filter(g=>presentes.has(g))];
     return {fechas,fecha,entradas,resumen,grupos,hayHistoria:todas.length>0};
   }
 
   // ── VISTA BUSCAR ─────────────────────────────────────────────────────────────
-  if(!esPoke&&view==="buscar"&&buscador) return buscador({volver:()=>setView("coleccion"),carpetas:cats});
+  if(!esPoke&&view==="buscar"&&buscador) return buscador({volver:()=>setView("coleccion"),carpetas:cats,crearCarpeta:nombre=>saveCarpetas([...(cats.includes(nombre)?cats:[...cats,nombre])])});
   if(!esPoke&&view==="colecciones_menu"&&explorador) return explorador({volver:()=>setView("coleccion")});
   if(view==="buscar"){
     return(
@@ -2240,7 +2251,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                       title="seguir su precio en Price Watch" style={{background:"transparent",border:"1px dashed #bbb",borderRadius:8,padding:"7px 9px",cursor:"pointer",fontSize:13}}>🎯</button>}
                   {yaInv
                     ?<span style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:"#aaa",padding:"6px"}}>ya en tu pool</span>
-                    :<button onClick={()=>{setAddingCard(card);setNewForm(f=>({...f,precioVentaUSD:tcgPrice?tcgPrice.toFixed(2):"",destino:"inventario",carpeta:isDarkCard(card)?"Dark Collection":(cats.find(c=>c!=="Price Watch")||"MLP")}));}}
+                    :<button onClick={()=>{setAddingCard(card);setNewForm(f=>({...f,precioVentaUSD:tcgPrice?tcgPrice.toFixed(2):"",destino:"inventario",carpeta:isDarkCard(card)?"Dark Collection":(cats.find(c=>c!=="Price Watch")||FIJA1)}));}}
                       style={{background:"#111",border:"none",borderRadius:8,padding:"7px 12px",cursor:"pointer",fontFamily:"'Caveat',cursive",fontSize:14,color:"#fff"}}>+ agregar</button>}
                 </div>
               </div>
@@ -2341,7 +2352,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const cartasCarpeta=inv.filter(c=>c.carpeta===carpetaView);
     const fichaListCarpeta=cartasCarpeta.map(c=>c.id); // para las flechas de la ficha
     const cvView=darkView; const setCvView=setDarkView;
-    const gridCols=cvView==="grid_small"?"repeat(auto-fill,minmax(72px,1fr))":cvView==="grid_med"?"repeat(auto-fill,minmax(100px,1fr))":null;
+    const vistaC=normVista(cvView), {cols:gridCols,gap:gapC}=gridDe(cvView);
     return(
       <MarcoPoke scrollRef={mainRef}>
         {renderZoom()}
@@ -2351,11 +2362,11 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           <button onClick={()=>setCarpetaView(null)} style={{background:"transparent",border:"none",fontSize:20,color:"#444",cursor:"pointer",padding:0}}>←</button>
           <div style={{fontFamily:"'Caveat',cursive",fontSize:22,fontWeight:700,color:"#fff"}}>{CARPETAS_ICONS[carpetaView]||"📁"} {carpetaView}</div>
           <div style={{marginLeft:"auto",display:"flex",gap:4}}>
-            {[["grid_small","⠿"],["grid_med","▦"],["lista","≡"]].map(([v,l])=>(
-              <button key={v} onClick={()=>setCvView(v)}
-                style={{flex:1,padding:"6px 8px",background:cvView===v?"#fff":"transparent",color:cvView===v?"#111":"#555",
-                  border:"1px solid",borderColor:cvView===v?"#fff":"#333",borderRadius:8,cursor:"pointer",fontSize:13}}>
-                {l}
+            {VISTAS.map(v=>(
+              <button key={v} data-view={v} onClick={()=>setCvView(v)}
+                style={{flex:1,padding:"6px 8px",background:normVista(cvView)===v?"#fff":"transparent",color:normVista(cvView)===v?"#111":"#555",
+                  border:"1px solid",borderColor:normVista(cvView)===v?"#fff":"#333",borderRadius:8,cursor:"pointer",fontSize:13}}>
+                {v==="lista"?"≡":v}
               </button>
             ))}
           </div>
@@ -2367,7 +2378,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             return <span key={k} style={{fontFamily:"'DM Sans',sans-serif",fontSize:10,color:ESTADOS[k].color,background:ESTADOS[k].bg,borderRadius:20,padding:"3px 10px"}}>{l} {n}</span>;
           })}
         </div>
-        {cvView==="lista"
+        {vistaC==="lista"
           ?<div>{cartasCarpeta.map(c=>{
             const up=c.tcgMarket&&c.precioVentaUSD;
             const color=up?(c.precioVentaUSD>c.tcgMarket?"#2e7d52":"#e53935"):"#fff";
@@ -2395,18 +2406,18 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
               </div>
             );
           })}</div>
-          :<div style={{display:"grid",gridTemplateColumns:gridCols,gap:cvView==="grid_small"?3:5}}>
+          :<div style={{display:"grid",gridTemplateColumns:gridCols,gap:gapC}}>
             {cartasCarpeta.map(c=>{
               const up=c.tcgMarket&&c.precioVentaUSD;
               const color=up?(c.precioVentaUSD>c.tcgMarket?"#2e7d52":"#e53935"):"rgba(255,255,255,0.7)";
-              const isSmall=cvView==="grid_small";
+              const isSmall=vistaC==="S";
               return(
                 <div key={c.id} onClick={guardLongPressClick(()=>{abrirDetalleInv(c.id,fichaListCarpeta);})}
                   style={{cursor:"pointer",borderRadius:isSmall?6:8,overflow:"hidden",border:"2px solid transparent",position:"relative"}}
                   {...bindLongPress(c.imageHd||c.image,"inv:"+c.id,fichaListCarpeta.map(i=>"inv:"+i))}>
                   {c.image
                     ?<img src={c.image} alt={c.name} style={{width:"100%",display:"block"}}/>
-                    :<div style={{aspectRatio:"2/3",background:"#1a1a1a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🃏</div>
+                    :<div style={{aspectRatio:String(ratioDe(juego)),background:"#1a1a1a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>🃏</div>
                   }
                   {(c.cantidad||1)>1&&<div style={{position:"absolute",top:2,left:2,background:"rgba(0,0,0,0.75)",borderRadius:4,padding:"1px 5px",fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#fff"}}>×{c.cantidad}</div>}
                   <div style={{background:"rgba(0,0,0,0.75)",padding:isSmall?"2px 3px":"4px 5px"}}>
@@ -2594,8 +2605,10 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       porSet[k].cards.push(d);
     });
     const setGroups=Object.values(porSet).sort((a,b)=>b.releaseDate.localeCompare(a.releaseDate));
-    const cardIdsGrid=setGroups.flatMap(g=>g.cards.map(c=>c.cardId)); // orden de lo VISIBLE (respeta soloSinPrecio), para ‹› desde la grilla
-    const gridCols=darkView==="grid_small"?"repeat(auto-fill,minmax(58px,1fr))":darkView==="grid_med"?"repeat(auto-fill,minmax(88px,1fr))":null;
+    const totalVisibles=setGroups.reduce((n,g)=>n+g.cards.length,0), plegadoPorDefecto=abiertoPorDefecto(totalVisibles);   // pocas cartas: todo abierto; muchas: sets cerrados y se abren al tocar
+    const setAbierto=id=>plegadoPorDefecto!==setsInvertidos.has(id);
+    const alternarSet=id=>setSetsInvertidos(prev=>{const n=new Set(prev); if(n.has(id)) n.delete(id); else n.add(id); return n;});
+    const vistaD=normVista(darkView), {cols:gridCols,gap:gapD}=gridDe(darkView);
     const catLoading=allSetsLoading;
     const serieCol=serieColeccion(histColecciones,cat);
     const vmCol=variacionMensual(histColecciones,cat,mesDe(hoy));
@@ -2669,11 +2682,11 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           </div>
         </div>}
         <div style={{display:"flex",gap:6,marginBottom:10,alignItems:"center",flexWrap:"wrap"}}>
-          {[["grid_small","⠿"],["grid_med","▦"],["lista","≡"]].map(([v,l])=>(
-            <button key={v} onClick={()=>setDarkView(v)}
-              style={{padding:"6px 10px",background:darkView===v?"#fff":"transparent",color:darkView===v?"#111":"#555",
-                border:"1px solid",borderColor:darkView===v?"#fff":"#333",borderRadius:8,cursor:"pointer",fontSize:13}}>
-              {l}
+          {VISTAS.map(v=>(
+            <button key={v} data-view={v} onClick={()=>setDarkView(v)}
+              style={{padding:"6px 10px",background:normVista(darkView)===v?"#fff":"transparent",color:normVista(darkView)===v?"#111":"#555",
+                border:"1px solid",borderColor:normVista(darkView)===v?"#fff":"#333",borderRadius:8,cursor:"pointer",fontSize:13}}>
+              {v==="lista"?"≡":v}
             </button>
           ))}
           {esDark&&<button onClick={()=>{if(window.confirm("¿Repoblar catálogo Dark? Se conserva tu progreso (conseguidas, precios, notas)."))repoblarDark();}}
@@ -2701,22 +2714,22 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
           const numerosUnicos=new Set(cards.map(c=>c.number)).size;
           const hayVariantes=cards.length>numerosUnicos;
           return(
-            <div key={setId} style={{marginBottom:20}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,gap:6}}>
-                <div style={{fontFamily:"'Caveat',cursive",fontSize:17,fontWeight:700,color:"#fff",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{setName}</div>
+            <div key={setId} data-t="set" style={{marginBottom:setAbierto(setId)?20:10}}>
+              <div data-t="set-cab" onClick={()=>alternarSet(setId)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,gap:6,cursor:"pointer"}}>
+                <div style={{fontFamily:"'Caveat',cursive",fontSize:17,fontWeight:700,color:"#fff",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}><span style={{fontFamily:"'DM Sans',sans-serif",color:"#555",fontSize:11}}>{setAbierto(setId)?"▾":"▸"} </span>{setName}</div>
                 {hayVariantes&&<span title={`${cards.length} cartas · ${numerosUnicos} números únicos — hay variantes holo/estándar como entradas separadas`}
                   style={{fontFamily:"'DM Sans',sans-serif",fontSize:8,color:"#5c9cff",background:"rgba(92,156,255,0.12)",borderRadius:6,padding:"1px 5px",flexShrink:0}}>2 var.</span>}
                 <div style={{textAlign:"right",flexShrink:0}}>
                   {rs.total>0&&rs.conseguidas===rs.total&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:700,color:"#d4af37"}}>¡completada!</div>}
-                  {rs.valorTotal>0&&<div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#666",marginTop:1}}>{fmtUSD(rs.valorConseguido)} / {fmtUSD(rs.valorTotal)}</div>}
+                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:9,color:"#666",marginTop:1}}>{rs.conseguidas}/{rs.total}{rs.valorTotal>0?` · ${fmtUSD(rs.valorConseguido)} / ${fmtUSD(rs.valorTotal)}`:""}</div>
                 </div>
               </div>
               <BarraSet conseguidas={rs.conseguidas} total={rs.total}/>
-              {darkView==="lista"
-                ?<div>{cards.map(d=><DarkCard key={d.cardId} d={d} list={cardIdsGrid}/>)}</div>
-                :<div style={{display:"grid",gridTemplateColumns:gridCols,gap:darkView==="grid_small"?3:5}}>
-                  {cards.map(d=><DarkCard key={d.cardId} d={d} list={cardIdsGrid}/>)}
-                </div>
+              {setAbierto(setId)&&(vistaD==="lista"
+                ?<div>{cards.map(d=><DarkCard key={d.cardId} d={d} list={cards.map(c=>c.cardId)}/>)}</div>
+                :<div style={{display:"grid",gridTemplateColumns:gridCols,gap:gapD}}>
+                  {cards.map(d=><DarkCard key={d.cardId} d={d} list={cards.map(c=>c.cardId)}/>)}
+                </div>)
               }
             </div>
           );
@@ -2807,7 +2820,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
       )}
       {/* Iconos de carpetas hardcodeadas */}
       <div style={{display:"flex",gap:8,marginBottom:14}}>
-        {["MLP","Staples & Meta","Colecciones","Price Watch"].map(cat=>{
+        {[FIJA1,"Staples & Meta","Colecciones","Price Watch"].map(cat=>{
           const n=cat==="Colecciones"?0:inv.filter(c=>c.carpeta===cat).length;
           return(
             <button key={cat} onClick={()=>cat==="Colecciones"?setView("colecciones_menu"):setCarpetaView(cat)}

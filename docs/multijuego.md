@@ -14,6 +14,29 @@ diseño anterior de esta rama (una segunda pantalla reducida, `PokecriptoJuego`,
   Lógica en `lib/variantes-filas.mjs`; el bot repreciea esas filas cada día desde `tcgcsv.com/tcgplayer/3/<grupo>/prices` y no las pasa por la API de la carta base.
 - **Pestaña tcgcrypto retirada** (id 15 sin pestaña; el código de `modules/tcgcrypto` sigue porque `logica.js` lo usan los juegos).
 
+
+## Segunda entrega (23-nov-2026)
+
+- **Estructura de colecciones única**: sets plegables (pocos → abiertos; más de 400 cartas → cerrados y se abren al tocar), mismos botones de vista `S · M · L · XL · ≡`
+  (`lib/vistas.mjs`), mismo formato de nombre de set y de carta, proporción de carta por juego (Pokémon/Digimon 63×88, Yu-Gi-Oh! 59×86).
+  Los ‹ › del zoom grande tienen el tamaño de los de Pokémon (64×110) y recorren solo las cartas del set que estás viendo; el zoom sigue abierto al pasar de carta.
+- **«Para cambio»** reemplaza a MLP en Yu-Gi-Oh! y Digimon (las filas y carpetas existentes se migran solas).
+- **Dark sale de Yu-Gi-Oh!** (se conservan Zombie y Eldlich). Las filas ya marcadas se conservan.
+- **Pool completo** (`build-tcgcrypto.mjs`, domingos o `POOL=1`): `tcgcrypto-pool/<juego>-index.json` (nombres), `<juego>-<letra>.json` (versiones, precios, **texto del efecto**)
+  y `yugioh-codigos.json` (pasaporte → carta). El buscador «+ agregar» busca ahí; si aún no existe cae al catálogo de colecciones.
+- **Importar mazo** (Yu-Gi-Oh!): `.ydk` o lista de texto → «rareza para todo» + ajuste carta por carta → carpeta «Edison · Zombie» con las copias (`copiasMazo`).
+- **Historial de 3 datos por mes** (media, mínimo, máximo del market) desde feb-2024: `build-historial-pool.mjs` (workflow `historial-pool.yml`, mensual día 2) escribe
+  `tcgcrypto-hist/<cat>/<grupo>.json`; `lib/historial-pool.mjs` lo une a cada fila (`histMes`) al registrarla o, si aún no está, la marca `histPend` y la ficha avisa
+  «⏳ historial llega en ~N días»; el bot completa solo. **Pokémon pasa al mismo régimen**: el bot pliega los meses cerrados de `priceHistory` a `histMes`
+  (`plegarMeses`), el inventario se escribe sin sangrías (-42 %) y las cartas nuevas de Pokémon también nacen con su historial.
+- **Texto del efecto** en la ficha y en el zoom de Yu-Gi-Oh! (`EfectoCarta.jsx`).
+
+### Pendientes conocidos de esta entrega
+- Los datos nuevos (pool, historial, `u` en pokemon-variantes) los generan los workflows: hasta que corran, el buscador usa el catálogo de colecciones y las filas quedan `histPend`.
+- El plegado de sets en las colecciones de **Pokémon** compila y comparte código con el explorador, pero no se probó en pantalla (requiere el catálogo Dark/ilustradores de la API).
+- Las cartas con una sola variante de Pokémon necesitan el campo `u` que agrega `build-pokemon-variantes.mjs` (corre los domingos).
+- Si el historial del pool pesa demasiado, `MIN_USD` (0,50) filtra el bulk; el informe de peso queda en `tcgcrypto-hist/estado.json`.
+
 ## Límites conocidos
 - El buscador de otros juegos solo ve las cartas del catálogo que arma `build-tcgcrypto.mjs` (las de sus colecciones). Para staples hay que sumarlas al catálogo.
 - Las ediciones de una fila existente (costo, notas…) no viajan al bot: el cliente es dueño de esos campos, como ya pasaba en Pokémon.

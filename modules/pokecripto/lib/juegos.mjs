@@ -92,7 +92,7 @@ export function conSnapshot(historial, p, hoy) {
 
 // Aplica un parche ({c,q,cu,nt}; null/""/0 = borrar el campo) a UNA variante (`vkey` = "pid|subtipo") de la carta k en una colección y
 // devuelve el inventario nuevo. Si la fila queda sin nada marcado desaparece. Sin `vkey` usa la variante más barata con precio.
-export function aplicarMarca(inventario, { juego, datos, col, k, vkey, parche, hoy, forzar }) {
+export function aplicarMarca(inventario, { juego, datos, col, k, vkey, parche, hoy, forzar, extra }) {
   const inv = Array.isArray(inventario) ? inventario : [];
   const carta = cartaDe(datos, k);
   if (!carta) return inv;
@@ -114,7 +114,7 @@ export function aplicarMarca(inventario, { juego, datos, col, k, vkey, parche, h
     id, juego, cardId: k, coleccion: col.id, carpeta: col.nombre,
     name: carta.n, set: (datos.sets && datos.sets[v[2]]) || "", setCode: "", number: v[3] || "", rarity: v[4] || "",
     image: urlImagen(datos.imgTpl, v[0], 200), imageHd: urlImagenGrande(v[0]),
-    tcgcsvKey: vkey,
+    tcgcsvKey: vkey, tcgcsvPid: v[0], tcgcsvSub: v[1] || "", tcgcsvGrupo: (datos.setIds && datos.setIds[v[2]]) || (prev && prev.tcgcsvGrupo) || null,   // grupo de tcgcsv: ubica su historial (lib/historial-pool.mjs)
     varianteEtiqueta: describirVariante({ juego, sub: v[1], rareza: v[4], grupo: (datos.sets && datos.sets[v[2]]) || "" }).etiqueta,
     tcgMarket: p ? p.market : (prev ? prev.tcgMarket : null), tcgLow: p ? p.low : (prev ? prev.tcgLow : null), tcgHigh: p ? p.high : (prev ? prev.tcgHigh : null),
     tcgUpdated: p ? hoy : (prev ? prev.tcgUpdated : null),
@@ -122,6 +122,7 @@ export function aplicarMarca(inventario, { juego, datos, col, k, vkey, parche, h
     costoUSD: m.cu || 0, precioVentaUSD: prev ? prev.precioVentaUSD || 0 : 0, condicion: (prev && prev.condicion) || "NM",
     estado, cantidad: m.q || 1, notas: m.nt || "",
     fechaCompra: tiene ? (prev && prev.fechaCompra) || hoy : null, fechaVenta: null, precioVendidoUSD: null,
+    ...(extra || {}),
   };
   return prev ? inv.map(f => (f.id === id ? fila : f)) : [...inv, fila];
 }

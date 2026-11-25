@@ -28,9 +28,10 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { fetchTCGBatch, addSnapshot, compactarHistorial } from "../../pokecripto/lib/pricing.mjs";
-import { marcarCortes, contarCortes, conservarNM, extrasSnapshot } from "../../pokecripto/lib/historial.mjs";
+import { marcarCortes, contarCortes, conservarNM, extrasSnapshot, plegarMeses } from "../../pokecripto/lib/historial.mjs";
 import { juegoDe, OTROS_JUEGOS, actualizarPreciosFilas } from "../../pokecripto/lib/juegos.mjs";
 import { esFilaVariante, gruposDeVariantes, actualizarPreciosPokeVariantes } from "../../pokecripto/lib/variantes-filas.mjs";
+import { completarHistorial } from "../../pokecripto/lib/historial-pool.mjs";
 import { aplicarOverrides, normalizarOverridesRemotos, fusionarPending, prioridadCarta } from "../../pokecripto/lib/review.mjs";
 import { fetchTCGPagina, fetchTCGSets, fetchTCGSetPagina, slugParaSet, paginasDeSet, claveCarta, PAUSA_RAFAGA_MS, asignarTcgIds, agruparPorSet, debeSaltarse, actualizarEstadoSet, presupuestoDescubrimiento, sumarDias, cupoRestante } from "../../pokecripto/lib/discovery.mjs";
 
@@ -107,6 +108,11 @@ async function main() {
     if (Array.isArray(h) && h.length > 1) { const n = compactarHistorial(h, hoy); if (n.length !== h.length) { compactados += h.length - n.length; c.priceHistory = n; } }
   }
   if (compactados) console.log(`✓ Historial compactado: ${compactados} snapshot(s) menos`);
+  // Historial completo al registrar (23-nov-2026): las filas sin histMes (o con un mes nuevo disponible) reciben su historial de 3 datos por mes
+  // desde modules/feed/data/tcgcrypto-hist/; las que aún no se pueden resolver quedan con histPend (la app avisa «llega en ~N días»). Idempotente.
+  const cargarLocal = async r => { try { return JSON.parse(readFileSync(new URL(`../data/${r}`, import.meta.url), "utf-8")); } catch (e) { return null; } };
+  const comp = await completarHistorial(base, cargarLocal, hoy, juegoDe);
+  if (comp !== base) { let cn = 0; comp.forEach((c, i) => { if (c !== base[i]) { base[i] = c; cn++; } }); console.log(`✓ Historial del pool: ${cn} fila(s) completada(s) o marcada(s) en espera`); }
   // Lote 1 (16-nov-2026): marca como corte las costuras entre fuentes / bases / tcgId (saltos que no son del mercado).
   // Idempotente: solo agrega marcas; el gráfico y las variaciones no cruzan un corte.
   let cortesNuevos = 0;
@@ -161,8 +167,10 @@ async function main() {
   const aplicado = () => base.map(c => (parches.has(c.id) || actualizadas.has(c.id)) ? { ...c, ...(parches.get(c.id) || {}), ...(actualizadas.get(c.id) || {}) } : c);
   const resumen = {};
   function guardar(motivo) {
-    const inv = aplicado();
-    writeFileSync(INVENTARIO_PATH, JSON.stringify(inv, null, 2));
+    // Régimen de 3 datos por mes (23-nov-2026): al guardar (después de sumar los precios de hoy) los meses cerrados salen de priceHistory y
+    // quedan en fila.histMes como [media, mínimo, máximo] del market. Idempotente. Ver plegarMeses en historial.mjs.
+    const inv = aplicado().map(c => plegarMeses(c, hoy));
+    writeFileSync(INVENTARIO_PATH, JSON.stringify(inv));   // sin sangrías: -42 % de peso (3,66 → 2,13 MB medidos el 23-nov-2026)
     if (ESTADO_PATH) {
       const act = inv.filter(c => c.estado !== "vendida");
       const ayer = new Date(Date.now() - 86400000).toISOString().slice(0, 10);

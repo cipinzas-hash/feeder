@@ -141,14 +141,14 @@ t("slugParaSet: quita el código de serie, no adivina si hay dos sets con el mis
   assert.equal(slugParaSet("XY", reales).slug, "pokemon--xy-base-set"); assert.equal(slugParaSet("Sun & Moon", reales), null); // alias cuyo slug no está en la lista: no se inventa
   assert.equal(paginasDeSet({ count: 284 }), 3); assert.equal(paginasDeSet({ count: 100 }), 1); assert.equal(paginasDeSet({}), 1);
 });
-t("compactarHistorial: mes viejo = 1 punto (promedio, low mín, high máx, n), idempotente, el último punto queda crudo", () => {
+t("compactarHistorial: mes viejo = 1 punto (promedio, mínimo y máximo del market, n), idempotente, el último punto queda crudo", () => {
   const h = [
     { date: "2026-07-03", market: 1, low: 0.5, high: 2, src: "tpl" }, { date: "2026-07-20", market: 3, low: 0.4, high: 4, src: "tpl" },
     { date: "2026-08-10", market: 5, low: 4, high: 6, src: "tpl" }, { date: "2026-10-20", market: 7, low: 6, high: 9, src: "tpl" }, { date: "2026-10-25", market: 8, low: 7, high: 9, src: "tpl" },
   ];
   const c = compactarHistorial(h, "2026-10-26");
   assert.equal(c.length, 4);
-  assert.deepEqual(c[0], { date: "2026-07-20", market: 2, low: 0.4, high: 4, n: 2, agg: true, src: "tpl" });
+  assert.deepEqual(c[0], { date: "2026-07-20", market: 2, low: 1, high: 3, n: 2, agg: true, src: "tpl" });
   assert.equal(c[1].agg, true); assert.equal(c[1].n, 1);
   assert.deepEqual(c.slice(2).map(x => x.date), ["2026-10-20", "2026-10-25"]);
   assert.deepEqual(compactarHistorial(c, "2026-10-26"), c);
@@ -157,7 +157,7 @@ t("compactarHistorial: mes viejo = 1 punto (promedio, low mín, high máx, n), i
   assert.equal(viejo.length, 2); assert.equal(viejo.at(-1).market, 3);
   // el mes sigue abierto en la frontera: lo que entra a la ventana se suma al mensual con su peso
   const a = compactarHistorial([{ date: "2026-10-20", market: 2, low: 1, high: 3 }, { date: "2026-10-27", market: 4, low: 2, high: 6 }, { date: "2026-11-30", market: 9, low: 9, high: 9 }], "2026-11-30");
-  assert.equal(a.length, 2); assert.deepEqual(a[0], { date: "2026-10-27", market: 3, low: 1, high: 6, n: 2, agg: true });
+  assert.equal(a.length, 2); assert.deepEqual(a[0], { date: "2026-10-27", market: 3, low: 2, high: 4, n: 2, agg: true });
   const b = compactarHistorial([...a, { date: "2026-12-05", market: 1, low: 1, high: 1 }, { date: "2026-12-30", market: 2, low: 2, high: 2 }], "2026-12-31");
   assert.equal(b.filter(x => x.agg).length, 2); assert.equal(b.find(x => x.date === "2026-11-30")?.n, 1); // nov (1 punto) y oct (n=2) quedan separados
 });

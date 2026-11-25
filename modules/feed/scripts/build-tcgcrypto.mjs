@@ -15,9 +15,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
-const DATA = path.join(AQUI, "..", "data");
-const TCGCSV = "https://tcgcsv.com/tcgplayer";
-const YGOPRO = "https://db.ygoprodeck.com/api/v7/cardinfo.php";
+const DATA = process.env.DATA_DIR || path.join(AQUI, "..", "data");
+const TCGCSV = process.env.TCGCSV_BASE || "https://tcgcsv.com/tcgplayer";                       // (las variables de entorno solo las usan las pruebas)
+const YGOPRO = process.env.YGOPRO_URL || "https://db.ygoprodeck.com/api/v7/cardinfo.php";
+// Catálogo COMPLETO («pool»): índice de nombres + un archivo por letra con versiones, precios y texto del efecto. Pesa varios MB y cambia con cada
+// precio, así que se emite solo los domingos (o con POOL=1); el resto de los días se reescriben únicamente las colecciones.
+const EMITIR_POOL = process.env.POOL === "1" || new Date().getUTCDay() === 0;
 const UA = { "User-Agent": "angst-feed-bot (github.com/cipinzas-hash/feeder)" };
 
 const CONCURRENCIA = 6;
@@ -108,6 +111,7 @@ async function mapaYgopro() {
   for (const c of d.data || []) {
     const ficha = { nombre: c.name, atributo: c.attribute || "", tipo: c.race || "", arquetipo: c.archetype || "", texto: c.desc || "", cardType: c.type || "", nivel: c.level ?? null, atk: c.atk ?? null, def: c.def ?? null };
     ficha.impresiones = (c.card_sets || []).length;
+    ficha.codigos = [...new Set([c.id, ...(c.card_images || []).map(i => i.id)].filter(x => x != null))];   // pasaportes: el .ydk de un mazo trae estos números
     lista.push(ficha);
     porNombre.set(norm(c.name), ficha);
     for (const s of c.card_sets || []) if (s.set_code) porCodigo.set(String(s.set_code).toUpperCase(), ficha);
@@ -127,13 +131,11 @@ const FILTROS_YGO = [{ id: "t", nombre: "Tipo de carta" }, { id: "ct", nombre: "
 const FILTROS_DIGIMON = [{ id: "t", nombre: "Tipo de carta" }, { id: "col", nombre: "Color" }, { id: "lv", nombre: "Nivel" }, { id: "f", nombre: "Forma" }];
 
 const COLECCIONES_YGO = [
-  { id: "dark", nombre: "Dark", emoji: "🌑", criterio: "Monstruos de atributo DARK" },
   { id: "zombie", nombre: "Zombie", emoji: "🧟", criterio: "Monstruos de tipo Zombie y cartas que mencionan Zombie en su texto (soporte)" },
   { id: "eldlich", nombre: "Eldlich", emoji: "💀", criterio: "Arquetipo Eldlich y su soporte (Golden Land), por arquetipo, nombre o texto" },
 ];
 function coleccionesYgo(f) {
   const out = [];
-  if (f.atributo === "DARK") out.push("dark");
   if (f.tipo === "Zombie" || /\bzombie\b/i.test(f.texto)) out.push("zombie");
   if (f.arquetipo === "Eldlich" || /eldlich|golden land/i.test(f.nombre) || /eldlich/i.test(f.texto)) out.push("eldlich");
   return out;
@@ -144,7 +146,7 @@ async function construirYugioh() {
   const d = diag.juegos.yugioh;
   let ygo = null;
   try { ygo = await mapaYgopro(); d.ygoproCartas = ygo.total; } catch (e) { diag.avisos.push("YGOPRODeck no respondió; se clasifica solo con datos de tcgcsv: " + e.message); }
-  const nombresSets = [], setFechas = [], setIds = [], cartas = new Map();
+  const nombresSets = [], setFechas = [], setIds = [], cartas = new Map(), pool = new Map();
   let sinClasificar = 0, porCodigo = 0, porNombre = 0, porExt = 0;
   const muestraSin = [], vistos = new Set();
   for (const s of sets) {
@@ -166,14 +168,14 @@ async function construirYugioh() {
       if (/token|non-game/i.test(f.cardType || "")) continue;   // fichas y cartas fuera de juego: no son coleccionables
       vistos.add(norm(f.nombre || p.name));
       const colecs = coleccionesYgo(f);
-      if (!colecs.length) continue;
       const k = norm(f.nombre || p.name);
-      let c = cartas.get(k);
-      if (!c) { c = { k, n: f.nombre || quitaParentesis(p.name), c: colecs, m: metaYgo(f), v: [] }; cartas.set(k, c); }
+      let pc = pool.get(k);
+      if (!pc) { pc = { k, n: f.nombre || quitaParentesis(p.name), m: metaYgo(f), x: f.texto || "", i: f.codigos || [], v: [] }; pool.set(k, pc); }
       const filas = precios.get(p.productId) || [null];
       for (const r of filas) {
-        c.v.push([p.productId, r ? r.subTypeName || "" : "", setIdx, numero, rareza, r2(precioDe(r)), r2(r && r.lowPrice), r2(r && r.highPrice)]);
+        pc.v.push([p.productId, r ? r.subTypeName || "" : "", setIdx, numero, rareza, r2(precioDe(r)), r2(r && r.lowPrice), r2(r && r.highPrice)]);
       }
+      if (colecs.length && !cartas.has(k)) cartas.set(k, { k, n: pc.n, c: colecs, m: pc.m, v: pc.v });   // comparte las versiones con el pool
     }
   }
   Object.assign(d, { cartas: cartas.size, versiones: [...cartas.values()].reduce((a, c) => a + c.v.length, 0), clasificadasPorCodigo: porCodigo, clasificadasPorNombre: porNombre, clasificadasPorTcgcsv: porExt, sinClasificar, muestraSinClasificar: muestraSin });
@@ -191,10 +193,10 @@ async function construirYugioh() {
     };
     mide("zombieTipo", f => f.tipo === "Zombie" && /monster/i.test(f.cardType));
     mide("zombieTexto", f => /\bzombie\b/i.test(f.texto));
-    mide("dark", f => f.atributo === "DARK");
   }
   d.muestraMeta = [...cartas.values()].slice(0, 3).map(c => c.m);
-  return { tcg: "yugioh", nombre: "Yu-Gi-Oh!", emoji: "🃏", agrupar: "nombre", imgTpl: plantillaImagen(sets), colecciones: COLECCIONES_YGO, filtros: FILTROS_YGO, sets: nombresSets, setFechas, setIds, cartas: [...cartas.values()].sort((a, b) => a.n.localeCompare(b.n)) };
+  d.poolCartas = pool.size;
+  return { pool: [...pool.values()], tcg: "yugioh", nombre: "Yu-Gi-Oh!", emoji: "🃏", agrupar: "nombre", imgTpl: plantillaImagen(sets), colecciones: COLECCIONES_YGO, filtros: FILTROS_YGO, sets: nombresSets, setFechas, setIds, cartas: [...cartas.values()].sort((a, b) => a.n.localeCompare(b.n)) };
 }
 
 // ── Digimon: el catálogo sale de tcgcsv (cada arte es un producto distinto) ─────────────────────────────────────────
@@ -204,21 +206,22 @@ const COLECCIONES_DIGIMON = [
 async function construirDigimon() {
   const sets = await leerCategoria(63, "digimon");
   const d = diag.juegos.digimon;
-  const nombresSets = [], setFechas = [], setIds = [], cartas = new Map();
+  const nombresSets = [], setFechas = [], setIds = [], cartas = new Map(), pool = [];
   for (const s of sets) {
     const setIdx = nombresSets.push(s.grp.name) - 1;
     setFechas.push(String(s.grp.publishedOn || "").slice(0, 10)); setIds.push(s.grp.groupId);
     const precios = new Map();
     for (const r of s.precios) { if (!precios.has(r.productId)) precios.set(r.productId, []); precios.get(r.productId).push(r); }
     for (const p of s.productos) {
-      if (!esCartaSuelta(p) || !/\bnumemon\b/i.test(p.name || "")) continue;
+      if (!esCartaSuelta(p)) continue;
       const numero = ext(p, "Number"), rareza = ext(p, "Rarity");
       const k = String(p.productId);
       const m = { t: ext(p, "CardType"), col: ext(p, "Color"), lv: ext(p, "LevelLv"), dp: ext(p, "DigimonPowerDP"), f: ext(p, "DigimonForm"), a: ext(p, "DigimonAttribute"), r: ext(p, "DigimonType") };
       for (const kk of Object.keys(m)) if (!m[kk]) delete m[kk];
-      const c = { k, n: p.name, c: ["numemon"], m, v: [] };
-      for (const r of precios.get(p.productId) || [null]) c.v.push([p.productId, r ? r.subTypeName || "" : "", setIdx, numero, rareza, r2(precioDe(r)), r2(r && r.lowPrice), r2(r && r.highPrice)]);
-      cartas.set(k, c);
+      const v = [];
+      for (const r of precios.get(p.productId) || [null]) v.push([p.productId, r ? r.subTypeName || "" : "", setIdx, numero, rareza, r2(precioDe(r)), r2(r && r.lowPrice), r2(r && r.highPrice)]);
+      pool.push({ k, n: p.name, m, x: ext(p, "Description", "Card Text", "Text", "Effect"), i: [], v });
+      if (/\bnumemon\b/i.test(p.name || "")) cartas.set(k, { k, n: p.name, c: ["numemon"], m, v });
     }
   }
   d.cartas = cartas.size;
@@ -226,7 +229,8 @@ async function construirDigimon() {
   d.muestraMeta = [...cartas.values()].slice(0, 3).map(c => c.m);
   d.versiones = [...cartas.values()].reduce((a, c) => a + c.v.length, 0);
   d.muestraNombres = [...cartas.values()].slice(0, 12).map(c => c.n);
-  return { tcg: "digimon", nombre: "Digimon", emoji: "🐉", agrupar: "producto", imgTpl: plantillaImagen(sets), colecciones: COLECCIONES_DIGIMON, filtros: FILTROS_DIGIMON, sets: nombresSets, setFechas, setIds, cartas: [...cartas.values()].sort((a, b) => a.n.localeCompare(b.n)) };
+  d.poolCartas = pool.length;
+  return { pool, tcg: "digimon", nombre: "Digimon", emoji: "🐉", agrupar: "producto", imgTpl: plantillaImagen(sets), colecciones: COLECCIONES_DIGIMON, filtros: FILTROS_DIGIMON, sets: nombresSets, setFechas, setIds, cartas: [...cartas.values()].sort((a, b) => a.n.localeCompare(b.n)) };
 }
 
 // ── Escritura ───────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -236,12 +240,31 @@ function escribir(nombreArchivo, obj) {
   return fs.statSync(path.join(DATA, nombreArchivo)).size;
 }
 
+// Pool: <clave>-index.json (nombres + sets + plantilla de imagen), <clave>-<letra>.json (versiones, precios y texto de las cartas que empiezan con
+// esa letra) y, en Yu-Gi-Oh!, <clave>-codigos.json (pasaporte → carta, para importar mazos .ydk). La app baja el índice al buscar y el archivo
+// de la letra al elegir la carta: nunca se carga todo junto.
+const letraDe = n => { const c = norm(n).charAt(0); return /[a-z]/.test(c) ? c : "0"; };
+function emitirPool(clave, out) {
+  const dir = path.join(DATA, "tcgcrypto-pool");
+  fs.mkdirSync(dir, { recursive: true });
+  const w = (nombre, obj) => { fs.writeFileSync(path.join(dir, nombre), JSON.stringify(obj)); return fs.statSync(path.join(dir, nombre)).size; };
+  const porLetra = new Map();
+  for (const c of out.pool) { const l = letraDe(c.n); if (!porLetra.has(l)) porLetra.set(l, []); porLetra.get(l).push(c); }
+  let bytes = 0;
+  const idx = { generatedAt: new Date().toISOString(), tcg: clave, imgTpl: out.imgTpl, sets: out.sets, setFechas: out.setFechas, setIds: out.setIds, n: out.pool.map(c => [c.k, c.n, letraDe(c.n)]).sort((a, b) => a[1].localeCompare(b[1])) };
+  bytes += w(`${clave}-index.json`, idx);
+  for (const [l, cs] of porLetra) bytes += w(`${clave}-${l}.json`, { cartas: cs });
+  if (clave === "yugioh") { const cod = {}; for (const c of out.pool) for (const id of c.i) cod[id] = c.k; bytes += w("yugioh-codigos.json", cod); diag.juegos[clave].codigos = Object.keys(cod).length; }
+  Object.assign(diag.juegos[clave], { poolBytes: bytes, poolArchivos: porLetra.size + 1, poolMayorArchivoKB: Math.round(Math.max(...[...porLetra.values()].map(cs => JSON.stringify({ cartas: cs }).length)) / 1024) });
+}
+
 async function juego(clave, construir) {
   try {
-    const out = await construir();
+    const { pool, ...out } = await construir();
     if (!out.cartas.length) { diag.avisos.push(`${clave}: 0 cartas; se conserva el archivo anterior`); return; }
     const bytes = escribir(`tcgcrypto-${clave}.json`, { generatedAt: new Date().toISOString(), ...out });
     diag.juegos[clave].bytesArchivo = bytes;
+    if (EMITIR_POOL && pool && pool.length) emitirPool(clave, { ...out, pool }); else diag.juegos[clave].poolOmitido = EMITIR_POOL ? "sin cartas" : "solo domingos o POOL=1";
   } catch (e) {
     diag.avisos.push(`${clave} falló: ${e.message}`);
     diag.juegos[clave] = { ...(diag.juegos[clave] || {}), error: String(e.message).slice(0, 300) };

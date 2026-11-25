@@ -22,7 +22,12 @@
     "test:tcgcrypto": "node tests/tcgcrypto-logica.mjs",
     "test:pokecripto-historial": "node tests/pokecripto-historial.mjs",
     "test:pokecripto-juegos": "node tests/pokecripto-juegos.mjs",
-    "test:pokecripto-variantes-filas": "node tests/pokecripto-variantes-filas.mjs"
+    "test:pokecripto-variantes-filas": "node tests/pokecripto-variantes-filas.mjs",
+    "test:historial-3datos": "node tests/pokecripto-historial-3datos.mjs",
+    "test:historial-pool": "node tests/pokecripto-historial-pool.mjs",
+    "test:mazos": "node tests/pokecripto-mazos.mjs",
+    "test:tcgcrypto-pool": "node tests/tcgcrypto-pool.mjs",
+    "test:tcgcrypto-historial-pool": "node tests/tcgcrypto-historial-pool.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"

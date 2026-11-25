@@ -249,7 +249,7 @@ export function addSnapshot(history, market, low, high, dateISO, src, campos) {
   return [...h, { date: today, market, low: low || null, high: high || null, ...extra }];
 }
 // Compactación del historial (issue #27, pedido de Cristopher 25-oct-2026): lo de los últimos `diasDiarios` días queda
-// diario; cada mes anterior se reduce a UN punto = promedio del mes (market, ponderado por n), low mínimo, high máximo.
+// diario; cada mes anterior se reduce a UN punto = promedio del mes (market, ponderado por n), mínimo y máximo del market (low/high).
 // `agg:true` marca el punto mensual y `n` cuántos snapshots resume; la fecha es la del último snapshot resumido.
 // Idempotente: volver a correrla sobre un historial ya compactado no cambia nada, y si el mes sigue abierto en la
 // frontera de los 30 días, los puntos diarios que entran a la ventana se suman al mensual con el peso correcto.
@@ -278,7 +278,8 @@ export function compactarHistorial(history, hoyISO, diasDiarios = 30) {
       const w = p.agg && p.n > 0 ? p.n : 1;
       const mk = num(p.market);
       if (mk != null) { suma += mk * w; nPrecio += w; }
-      const lo = num(p.low), hi = num(p.high);
+      // régimen de 3 datos por mes (23-nov-2026): el mínimo y el máximo del mes son los del MARKET diario, no los de las publicaciones sueltas
+      const lo = p.agg ? (num(p.low) != null ? num(p.low) : mk) : mk, hi = p.agg ? (num(p.high) != null ? num(p.high) : mk) : mk;
       if (lo != null && (low == null || lo < low)) low = lo;
       if (hi != null && (high == null || hi > high)) high = hi;
       n += w; srcs.add(p.src || "");

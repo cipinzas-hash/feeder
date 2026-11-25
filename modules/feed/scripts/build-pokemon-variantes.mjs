@@ -76,6 +76,7 @@ for (const p of productos) {
 }
 
 const salida = new Map();               // grupo -> {clave: variantes[]}
+const unicas = new Map();               // grupo -> {clave: [pid, subtipo, rareza]} de las cartas con UNA sola variante
 const conteo = { cartas: 0, conVarias: 0, acabados: 0, patrones: 0, sellos: new Map() };
 const variantesDe = (p, grupoSello) => (precios.get(p.pid) || []).map(r => [p.pid, r.sub, p.sufijo, r2(r.market), r2(r.low), r2(r.high), grupoSello || 0, p.rareza]);
 for (const [k1, hermanos] of porGrupoNumNombre) {
@@ -93,7 +94,11 @@ for (const [k1, hermanos] of porGrupoNumNombre) {
     }
   }
   const conPrecio = lista.filter(v => v[3] != null || v[4] != null);
-  if (new Set(lista.map(v => `${v[0]}|${v[1]}`)).size < 2 || conPrecio.length < 1) continue;   // una sola variante: no hace falta
+  if (new Set(lista.map(v => `${v[0]}|${v[1]}`)).size < 2 || conPrecio.length < 1) {
+    // una sola variante: no se lista en `cartas`, pero se anota en `u` ([pid, subtipo, rareza]) para poder ubicar su historial de precios (lib/historial-pool.mjs)
+    if (conPrecio.length >= 1) { if (!unicas.has(base.grupo)) unicas.set(base.grupo, {}); unicas.get(base.grupo)[`${base.num}|${base.base}`] = [conPrecio[0][0], conPrecio[0][1], conPrecio[0][7]]; }
+    continue;
+  }
   conteo.conVarias++;
   for (const v of lista) { const d = describirVariante({ juego: "pokemon", sub: v[1], sufijo: v[2], grupo: v[6] ? nombreGrupo.get(v[6]) : "" }); if (d.tipo === "patron") conteo.patrones++; else if (d.tipo === "acabado") conteo.acabados++; }
   if (!salida.has(base.grupo)) salida.set(base.grupo, {});
@@ -105,8 +110,8 @@ fs.mkdirSync(SALIDA, { recursive: true });
 let bytes = 0;
 const indice = [];
 for (const g of grupos) {
-  const cartas = salida.get(g.groupId); if (!cartas) continue;
-  const texto = JSON.stringify({ g: g.groupId, cartas });
+  const cartas = salida.get(g.groupId) || {}, u = unicas.get(g.groupId); if (!Object.keys(cartas).length && !u) continue;
+  const texto = JSON.stringify({ g: g.groupId, cartas, ...(u ? { u } : {}) });
   fs.writeFileSync(path.join(SALIDA, `${g.groupId}.json`), texto); bytes += texto.length;
   indice.push({ id: g.groupId, nombre: g.name, abrev: g.abbreviation || "", n: Object.keys(cartas).length });
 }

@@ -1,4 +1,4 @@
-import { CINE_JSON_URL, FEED_JSON_URL, FORMATO_BY_CATEGORIA, GAME_ENHANCED_JSON_URL, MELEE_JSON_URL, MUSIC_CATEGORIA, MUSICA_JSON_URL, VIDEOTECA_JSON_URL, VITRINA_CATEGORIAS, fetchJsonSafe, tcgcryptoJsonUrl } from "./constants.js";
+import { CINE_JSON_URL, FEED_JSON_URL, FORMATO_BY_CATEGORIA, GAME_ENHANCED_JSON_URL, MELEE_JSON_URL, MUSIC_CATEGORIA, MUSICA_JSON_URL, VIDEOTECA_JSON_URL, VITRINA_CATEGORIAS, fetchJsonSafe, tcgcryptoJsonUrl, DATA_BASES } from "./constants.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -86,8 +86,30 @@ export async function fetchGameEnhancedData() {
 }
 
 // tcgcrypto: catálogo + precios por set y versión de UN juego (tcgcrypto-<juego>.json). Archivo propio por juego.
+// Archivos de datos del repo (pool, historial, catálogos): main primero y, si no está ahí, la rama de pruebas. Con `nuevo` consulta ambos y se
+// queda con el más reciente (los que traen generatedAt). Cacheado por ruta: un archivo de letra o de grupo se baja una sola vez por sesión.
+const _cacheData = new Map();
+export function fetchDataJson(ruta, { nuevo = false } = {}) {
+  const k = ruta + (nuevo ? "#n" : "");
+  if (!_cacheData.has(k)) {
+    _cacheData.set(k, (async () => {
+      if (nuevo) {
+        const rs = (await Promise.all(DATA_BASES.map(b => fetchJsonSafe(b + ruta)))).filter(Boolean);
+        return rs.sort((a, b) => String(b.generatedAt || "").localeCompare(String(a.generatedAt || "")))[0] || null;
+      }
+      for (const b of DATA_BASES) { const d = await fetchJsonSafe(b + ruta); if (d) return d; }
+      return null;
+    })().then(d => { if (!d) _cacheData.delete(k); return d; }));
+  }
+  return _cacheData.get(k);
+}
+// Pool completo de un juego: índice de nombres (se baja al primer tipeo), archivo por letra (al elegir la carta) y pasaportes (.ydk).
+export const fetchPoolIndice = juego => fetchDataJson(`tcgcrypto-pool/${juego}-index.json`, { nuevo: true });
+export const fetchPoolLetra = (juego, letra) => fetchDataJson(`tcgcrypto-pool/${juego}-${letra}.json`);
+export const fetchPoolCodigos = () => fetchDataJson("tcgcrypto-pool/yugioh-codigos.json", { nuevo: true });
+
 export async function fetchTcgCryptoData(tcg) {
-  const d = await fetchJsonSafe(tcgcryptoJsonUrl(tcg));
+  const d = await fetchDataJson(`tcgcrypto-${tcg}.json`, { nuevo: true }) || await fetchJsonSafe(tcgcryptoJsonUrl(tcg));
   if (!d || !Array.isArray(d.cartas) || !Array.isArray(d.colecciones) || !Array.isArray(d.sets)) throw new Error(`no se pudo leer tcgcrypto-${tcg}.json`);
   return d;
 }

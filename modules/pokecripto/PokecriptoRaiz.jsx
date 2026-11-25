@@ -10,9 +10,9 @@ import PokecriptoJuego from "./PokecriptoJuego.jsx";
 import BuscarCatalogo from "./BuscarCatalogo.jsx";
 import { JUEGOS, juegoDe } from "./lib/juegos.mjs";
 
-const { useState, useMemo } = React;
+const { useState, useMemo, useEffect } = React;
 const SEP = "::";
-const CARPETAS_OTROS = CARPETAS_DEFAULT.filter(c => c !== "Dark Collection");
+const CARPETAS_OTROS = ["Para cambio", "Staples & Meta", "Price Watch"];   // MLP solo existe en Pokémon
 const esDeJuego = (c, j) => (j === "pokemon" ? !String(c).includes(SEP) : String(c).startsWith(j + SEP));
 
 export default function PokecriptoRaiz(props) {
@@ -40,6 +40,13 @@ export default function PokecriptoRaiz(props) {
     props.saveCarpetas(esPoke ? [...lista, ...otras] : [...otras, ...lista.map(c => juego + SEP + c)]);
   };
 
+  // MLP → «Para cambio» en Yu-Gi-Oh! y Digimon (23-nov-2026): una sola vez, para las filas y las carpetas que ya existieran con el nombre viejo
+  useEffect(() => {
+    if (esPoke) return;
+    if (filas.some(c => c.carpeta === "MLP")) save(prev => (prev || []).map(c => (juegoDe(c) === juego && c.carpeta === "MLP" ? { ...c, carpeta: "Para cambio" } : c)));
+    if ((props.carpetas || []).includes(juego + SEP + "MLP")) props.saveCarpetas((props.carpetas || []).map(c => (c === juego + SEP + "MLP" ? juego + SEP + "Para cambio" : c)));
+  }, [juego]);
+
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", background: "#0a0a0a" }}>
       <div style={{ flex: "none", display: "flex", gap: 6, justifyContent: "center", padding: "6px 12px 4px" }} role="tablist" aria-label="juego">
@@ -53,7 +60,7 @@ export default function PokecriptoRaiz(props) {
         carpetas={carpetas} saveCarpetas={saveCarpetas}
         darkCatalogo={esPoke ? props.darkCatalogo : []} saveDarkCatalogo={esPoke ? props.saveDarkCatalogo : () => {}}
         explorador={esPoke ? null : p => <PokecriptoJuego juego={juego} inventario={filas} saveInventario={save} onSalir={p.volver} />}
-        buscador={esPoke ? null : p => <BuscarCatalogo juego={juego} filas={filas} saveInventario={save} carpetas={p.carpetas} onVolver={p.volver} />} />
+        buscador={esPoke ? null : p => <BuscarCatalogo juego={juego} filas={filas} saveInventario={save} carpetas={p.carpetas} crearCarpeta={p.crearCarpeta} onVolver={p.volver} />} />
     </div>
   );
 }

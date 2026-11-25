@@ -1,0 +1,57 @@
+name: Historial de precios del pool (tcgcsv)
+
+# Historial MENSUAL de 3 datos (media, mínimo, máximo del precio de mercado) de TODO el pool de Pokémon, Yu-Gi-Oh! y Digimon desde feb-2024
+# (archivo diario de tcgcsv.com). Escribe SOLO modules/feed/data/tcgcrypto-hist/. Corrida completa (a mano, una sola vez: varios GB de descargas, por
+# eso el timeout largo) y corrida mensual (cron, día 2, solo anexa el mes recién cerrado). El informe de peso queda en tcgcrypto-hist/estado.json.
+# Corre sobre la rama desde la que se lanza (en el cron, main). No usa secrets.
+
+on:
+  schedule:
+    - cron: "15 6 2 * *"
+  workflow_dispatch:
+    inputs:
+      min_usd:
+        description: "Solo se guardan los productos que alguna vez valieron al menos esto (USD); 0 = todo"
+        required: false
+        default: "0.5"
+
+concurrency:
+  group: historial-pool
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  historial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar 7z
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
+
+      - name: Construir el historial
+        run: |
+          set -o pipefail
+          MIN_USD=${{ github.event.inputs.min_usd || '0.5' }} NODE_OPTIONS=--max-old-space-size=6144 node modules/feed/scripts/build-historial-pool.mjs 2>&1 | tee /tmp/historial-pool.log
+
+      - name: Commitear los datos
+        run: |
+          git config user.name "angst-feed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add modules/feed/data/tcgcrypto-hist
+          git diff --staged --quiet || git commit -m "Historial del pool (3 datos por mes) $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git push && break
+            echo "push falló, reintentando ($i/3)..."
+            git fetch origin ${{ github.ref_name }}
+            git reset --soft origin/${{ github.ref_name }}
+            git diff --staged --quiet || git commit -m "Historial del pool (3 datos por mes) $(date -u +%Y-%m-%dT%H:%MZ)"
+            sleep 5
+          done

@@ -113,17 +113,81 @@ export function extrasSnapshot({ tid, variant, base } = {}) {
   return e;
 }
 
-// Historial mensual compacto (build-historial-mensual.mjs): fila.histMes = {m: "YYYY-MM", p: [precio, …]} con un precio por mes consecutivo
-// desde `m` (null = mes sin dato). Se expande a puntos mensuales (agg) con src "csv-mes" al dibujar; no se guarda expandido.
+// Historial MENSUAL compacto de una fila. Régimen de 3 datos por mes (unificación de Pokécripto, 23-nov-2026): de cada mes se guarda la MEDIA, el MÍNIMO
+// y el MÁXIMO del precio de mercado y nada más; solo los últimos días quedan como snapshots diarios.
+//   fila.histMes = {m: "YYYY-MM" del primer mes, t: [[media, mínimo, máximo] | null, …]}   (un elemento por mes consecutivo; null = mes sin dato)
+// El formato anterior {m, p:[precio, …]} (un precio por mes) se sigue leyendo. Se expande a puntos mensuales (agg) con src "csv-mes" al
+// dibujar (market = media, low = mínimo, high = máximo); no se guarda expandido: así 34 meses pesan ~0,6 KB por carta en vez de ~3 KB.
+const r2 = x => Math.round(x * 100) / 100;
+const mesDe = d => String(d).slice(0, 7);
+const sumaMes = (m, k) => { let [y, mo] = m.split("-").map(Number); mo += k; y += Math.floor((mo - 1) / 12); mo = ((mo - 1) % 12 + 12) % 12 + 1; return `${y}-${String(mo).padStart(2, "0")}`; };
+const difMeses = (a, b) => { const [ya, ma] = a.split("-").map(Number), [yb, mb] = b.split("-").map(Number); return (yb - ya) * 12 + (mb - ma); };
+const tri = t => (Array.isArray(t) && t.length >= 3 && t[0] != null && t[0] > 0 ? t : null);
+
 export function expandirHistMes(hm) {
-  if (!hm || typeof hm.m !== "string" || !Array.isArray(hm.p)) return [];
-  let [y, mo] = hm.m.split("-").map(Number);
+  if (!hm || typeof hm.m !== "string") return [];
   const out = [];
-  for (const m of hm.p.slice(0, 240)) {                      // 20 años: tope defensivo ante datos corruptos
-    if (m != null && m > 0) out.push({ date: `${y}-${String(mo).padStart(2, "0")}-01`, market: m, low: null, high: null, src: "csv-mes", agg: true, n: 1 });
+  const lista = Array.isArray(hm.t) ? hm.t : Array.isArray(hm.p) ? hm.p : [];
+  let [y, mo] = hm.m.split("-").map(Number);
+  for (const e of lista.slice(0, 240)) {                      // 20 años: tope defensivo ante datos corruptos
+    const f = Array.isArray(hm.t) ? tri(e) : (e != null && e > 0 ? [e, null, null] : null);
+    if (f) out.push({ date: `${y}-${String(mo).padStart(2, "0")}-01`, market: f[0], low: f[1], high: f[2], src: "csv-mes", agg: true, n: 1 });
     mo++; if (mo > 12) { mo = 1; y++; }
   }
   return out;
+}
+// Media, mínimo y máximo de los precios de mercado de UN mes (puntos diarios o ya agregados). null si no hay precio.
+export function triMensual(puntos) {
+  let n = 0, suma = 0, mn = null, mx = null;
+  for (const p of puntos || []) {
+    const w = p.agg && p.n > 0 ? p.n : 1, mk = num(p.market);
+    if (mk == null || mk <= 0) continue;
+    suma += mk * w; n += w;
+    const lo = p.agg ? (num(p.low) != null ? p.low : mk) : mk, hi = p.agg ? (num(p.high) != null ? p.high : mk) : mk;
+    if (mn == null || lo < mn) mn = lo; if (mx == null || hi > mx) mx = hi;
+  }
+  return n ? [r2(suma / n), r2(mn), r2(mx)] : null;
+}
+// Mezcla `nuevo` (un histMes) dentro de `base`: para cada mes gana `base` salvo que le falte (o `pisar` sea true).
+export function mezclarHistMes(base, nuevo, pisar = false) {
+  const a = base && typeof base.m === "string" ? { m: base.m, t: expandirATri(base) } : null, b = nuevo && typeof nuevo.m === "string" ? { m: nuevo.m, t: expandirATri(nuevo) } : null;
+  if (!a) return b; if (!b) return a;
+  const ini = difMeses(a.m, b.m) < 0 ? b.m : a.m;
+  const fin = [sumaMes(a.m, a.t.length - 1), sumaMes(b.m, b.t.length - 1)].sort().pop();
+  const largo = difMeses(ini, fin) + 1, t = [];
+  for (let i = 0; i < largo; i++) {
+    const m = sumaMes(ini, i), ia = difMeses(a.m, m), ib = difMeses(b.m, m);
+    const ea = ia >= 0 ? tri(a.t[ia]) : null, eb = ib >= 0 ? tri(b.t[ib]) : null;
+    t.push(pisar ? (eb || ea) : (ea || eb));
+  }
+  while (t.length && !t[t.length - 1]) t.pop();
+  return t.length ? { m: ini, t } : null;
+}
+function expandirATri(hm) { return Array.isArray(hm.t) ? hm.t : (Array.isArray(hm.p) ? hm.p.map(x => (x != null && x > 0 ? [x, x, x] : null)) : []); }
+
+// PLIEGUE (lo corre el bot cada día, idempotente): los snapshots diarios de meses CERRADOS, y los puntos mensuales agg heredados del compactador
+// anterior, salen de priceHistory y pasan a fila.histMes como [media, mínimo, máximo]. Se quedan como snapshots el mes en curso y los últimos
+// `diasDiarios` días (el corte cae siempre en un inicio de mes, así cada mes se pliega completo). Los meses que ya tiene histMes (archivo de
+// tcgcsv) se respetan; solo se rellenan los que faltan. Devuelve LA MISMA fila si no hay nada que plegar.
+export function plegarMeses(fila, hoyISO, diasDiarios = 30) {
+  const h = Array.isArray(fila && fila.priceHistory) ? fila.priceHistory : [];
+  if (h.length < 2) return fila;
+  const d = new Date(hoyISO + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - diasDiarios);
+  const corte = mesDe(d.toISOString().slice(0, 10)) + "-01";           // inicio del mes que contiene (hoy − diasDiarios)
+  const ult = [...h].filter(p => p && p.date).sort(porFecha).pop();
+  const viejos = h.filter(p => p && p.date && p.date < corte && p !== ult);
+  if (!viejos.length) return fila;
+  const porMes = new Map();
+  for (const p of viejos) { const m = mesDe(p.date); if (!porMes.has(m)) porMes.set(m, []); porMes.get(m).push(p); }
+  const meses = [...porMes.keys()].sort();
+  const t = Array.from({ length: difMeses(meses[0], meses[meses.length - 1]) + 1 }, () => null);
+  for (const m of meses) t[difMeses(meses[0], m)] = triMensual(porMes.get(m));
+  const propio = t.some(Boolean) ? { m: meses[0], t } : null;
+  const histMes = mezclarHistMes(fila.histMes, propio);
+  const quedan = h.filter(p => !viejos.includes(p));
+  const nuevo = { ...fila, priceHistory: quedan };
+  if (histMes) nuevo.histMes = histMes;
+  return nuevo;
 }
 // priceHistory de la fila con los meses anteriores delante y las costuras marcadas. Si la fila no tiene histMes devuelve su priceHistory tal cual.
 export function historialConMensual(fila) {

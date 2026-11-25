@@ -74,3 +74,10 @@ export async function fetchJsonSafe(url) {
 
 // Estado propio de Feed (cola/vistos/buzón/último refresh).
 export const STORAGE_KEY = "angst-feed-proto-v1";
+
+// Datos del feed que viven en el repo: se leen de main y, mientras exista la rama de pruebas, también de ella (lo que main aún no tiene).
+// Al fusionar la rama a main se puede borrar de acá; si queda, `fetchDataJson` elige lo más nuevo cuando el archivo trae fecha.
+export const DATA_BASES = [
+  "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/",
+  "https://raw.githubusercontent.com/cipinzas-hash/feeder/pokecripto-unificado/modules/feed/data/",
+];

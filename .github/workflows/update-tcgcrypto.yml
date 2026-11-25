@@ -3,12 +3,18 @@ name: Actualizar tcgcrypto
 # Datos de tcgcrypto (issue #42): catálogo + precios por set y versión de Yu-Gi-Oh! y Digimon.
 # Fuentes: tcgcsv.com (espejo de TCGplayer, sin key) y YGOPRODeck (solo clasificación). Corre una vez al día
 # (tcgcsv se actualiza ~20:00 UTC) y a mano (Run workflow). No usa secrets.
-# Escribe SOLO modules/feed/data/tcgcrypto-*.json.
+# Escribe SOLO modules/feed/data/tcgcrypto-*.json y tcgcrypto-pool/ (catálogo completo con texto de efecto y pasaportes; los domingos o con POOL=1).
+# Corre sobre la rama desde la que se lanza (en el cron, main): así se puede probar desde una rama sin pisar su código.
 
 on:
   schedule:
     - cron: "30 21 * * *"
   workflow_dispatch:
+    inputs:
+      pool:
+        description: "1 = emitir también el catálogo completo (pool) aunque no sea domingo"
+        required: false
+        default: "0"
 
 concurrency:
   group: tcgcrypto-update
@@ -24,8 +30,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Sincronizar con la punta real de main
-        run: git fetch origin main && git reset --hard origin/main
+      - name: Sincronizar con la punta real de la rama
+        run: git fetch origin ${{ github.ref_name }} && git reset --hard origin/${{ github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -34,19 +40,19 @@ jobs:
       - name: Construir datos de tcgcrypto
         run: |
           set -o pipefail
-          timeout -s TERM -k 15 20m node modules/feed/scripts/build-tcgcrypto.mjs 2>&1 | tee /tmp/tcgcrypto.log
+          POOL=${{ github.event.inputs.pool == '1' && '1' || '' }} timeout -s TERM -k 15 20m node modules/feed/scripts/build-tcgcrypto.mjs 2>&1 | tee /tmp/tcgcrypto.log
 
       - name: Commitear los datos
         run: |
           git config user.name "angst-feed-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add modules/feed/data/tcgcrypto-*.json
+          git add modules/feed/data/tcgcrypto-*.json modules/feed/data/tcgcrypto-pool
           git diff --staged --quiet || git commit -m "Actualizar tcgcrypto $(date -u +%Y-%m-%dT%H:%MZ)"
           for i in 1 2 3; do
             git push && break
             echo "push falló, reintentando ($i/3)..."
-            git fetch origin main
-            git reset --soft origin/main
+            git fetch origin ${{ github.ref_name }}
+            git reset --soft origin/${{ github.ref_name }}
             git diff --staged --quiet || git commit -m "Actualizar tcgcrypto $(date -u +%Y-%m-%dT%H:%MZ)"
             sleep 5
           done
