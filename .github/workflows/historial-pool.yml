@@ -6,6 +6,10 @@ name: Historial de precios del pool (tcgcsv)
 # Corre sobre la rama desde la que se lanza (en el cron, main). No usa secrets.
 
 on:
+  # Un workflow nuevo no se puede lanzar a mano desde una rama hasta que existe en main: mientras vive la rama de pruebas, se lanza tocando este archivo.
+  push:
+    branches: [pokecripto-unificado]
+    paths: [".github/lanzar-historial-pool"]
   schedule:
     - cron: "15 6 2 * *"
   workflow_dispatch:
