@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-26T10:32:39.762Z",
+  "generatedAt": "2026-11-26T22:50:37.659Z",
   "categories": [
     {
       "cat": "Películas",
@@ -100,7 +100,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6
+            "tmdb": 5.9
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -248,87 +248,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-movie-1381071",
-          "title": "Godzilla Minus Zero",
-          "link": "https://www.themoviedb.org/movie/1381071",
-          "summary": "La guerra dejó a Japón en la ruina, y Godzilla lo sumió en una situación aún peor. Han pasado dos años desde entonces, y el país ha librado una lucha ardua por recuperarse y finalmente retomar su vida cotidiana. Justo cuando la humanidad lograba aferrarse a una paz duramente conquistada, una nueva amenaza irrumpe, aplastando la esperanza en un instante.",
-          "image": "https://image.tmdb.org/t/p/w500/taoPyKQTXh0FSwO5rin8Djrt20C.jpg",
-          "pubDate": "2026-11-03",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-31T01:30:07.374Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": 97,
-            "metascore": null,
-            "tmdb": null
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "We3rt2uQpoY",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Ryunosuke Kamiki",
-              "character": "Koichi Shikishima",
-              "order": 0
-            },
-            {
-              "name": "浜辺美波",
-              "character": "Noriko Oishi",
-              "order": 1
-            },
-            {
-              "name": "山田裕貴",
-              "character": "Shiro Mizushima",
-              "order": 2
-            },
-            {
-              "name": "Kuranosuke Sasaki",
-              "character": "Seiji Akitsu",
-              "order": 3
-            },
-            {
-              "name": "Jun Kunimura",
-              "character": "",
-              "order": 4
-            },
-            {
-              "name": "Mio Tanaka",
-              "character": "Captain Tatsuo Hotta",
-              "order": 5
-            },
-            {
-              "name": "Sakura Ando",
-              "character": "Sumiko Ota",
-              "order": 6
-            },
-            {
-              "name": "Masami Nagasawa",
-              "character": "Aoyama",
-              "order": 7
-            },
-            {
-              "name": "田中泯",
-              "character": "Kanji Murakami",
-              "order": 8
-            },
-            {
-              "name": "吉岡秀隆",
-              "character": "Kenji Noda",
-              "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
           "guid": "tmdb-movie-1281331",
           "title": "El Precio de la Red",
           "link": "https://www.themoviedb.org/movie/1281331",
@@ -404,6 +323,87 @@
             {
               "name": "Joseph Brooks",
               "character": "Brendan",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1381071",
+          "title": "Godzilla Minus Zero",
+          "link": "https://www.themoviedb.org/movie/1381071",
+          "summary": "La guerra dejó a Japón en la ruina, y Godzilla lo sumió en una situación aún peor. Han pasado dos años desde entonces, y el país ha librado una lucha ardua por recuperarse y finalmente retomar su vida cotidiana. Justo cuando la humanidad lograba aferrarse a una paz duramente conquistada, una nueva amenaza irrumpe, aplastando la esperanza en un instante.",
+          "image": "https://image.tmdb.org/t/p/w500/taoPyKQTXh0FSwO5rin8Djrt20C.jpg",
+          "pubDate": "2026-11-03",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-10-31T01:30:07.374Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": 97,
+            "metascore": null,
+            "tmdb": null
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "We3rt2uQpoY",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Ryunosuke Kamiki",
+              "character": "Koichi Shikishima",
+              "order": 0
+            },
+            {
+              "name": "浜辺美波",
+              "character": "Noriko Oishi",
+              "order": 1
+            },
+            {
+              "name": "山田裕貴",
+              "character": "Shiro Mizushima",
+              "order": 2
+            },
+            {
+              "name": "Kuranosuke Sasaki",
+              "character": "Seiji Akitsu",
+              "order": 3
+            },
+            {
+              "name": "Jun Kunimura",
+              "character": "",
+              "order": 4
+            },
+            {
+              "name": "Mio Tanaka",
+              "character": "Captain Tatsuo Hotta",
+              "order": 5
+            },
+            {
+              "name": "Sakura Ando",
+              "character": "Sumiko Ota",
+              "order": 6
+            },
+            {
+              "name": "Masami Nagasawa",
+              "character": "Aoyama",
+              "order": 7
+            },
+            {
+              "name": "田中泯",
+              "character": "Kanji Murakami",
+              "order": 8
+            },
+            {
+              "name": "吉岡秀隆",
+              "character": "Kenji Noda",
               "order": 9
             }
           ],
@@ -505,7 +505,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 6.3
+            "tmdb": 5.9
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -566,6 +566,87 @@
             {
               "name": "Samson Kayo",
               "character": "Constable Beans (voice)",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1400336",
+          "title": "Ahora los suegros son ellos",
+          "link": "https://www.themoviedb.org/movie/1400336",
+          "summary": "Henry, hijo de Greg y Pam Focker, se enfrenta al caos familiar cuando decide casarse con una mujer de carácter fuerte que parece ser totalmente incompatible con él.",
+          "image": "https://image.tmdb.org/t/p/w500/iU2XxFhMxC5Z2gOPASkRmtuDjJQ.jpg",
+          "pubDate": "2026-11-21",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-25T10:56:49.392Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "9CKu3WoMYCg",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Ben Stiller",
+              "character": "Greg Focker",
+              "order": 0
+            },
+            {
+              "name": "Robert De Niro",
+              "character": "Jack Byrnes",
+              "order": 1
+            },
+            {
+              "name": "Ariana Grande",
+              "character": "Olivia Jones",
+              "order": 2
+            },
+            {
+              "name": "Skyler Gisondo",
+              "character": "Henry Focker",
+              "order": 3
+            },
+            {
+              "name": "Owen Wilson",
+              "character": "Kevin Rawley",
+              "order": 4
+            },
+            {
+              "name": "Blythe Danner",
+              "character": "Dina Byrnes",
+              "order": 5
+            },
+            {
+              "name": "Teri Polo",
+              "character": "Pam Byrnes-Focker",
+              "order": 6
+            },
+            {
+              "name": "Beanie Feldstein",
+              "character": "Samantha Focker",
+              "order": 7
+            },
+            {
+              "name": "Eduardo Franco",
+              "character": "Eduardo Villalobos",
+              "order": 8
+            },
+            {
+              "name": "Liza Koshy",
+              "character": "",
               "order": 9
             }
           ],
@@ -674,7 +755,7 @@
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 8.4
+            "tmdb": 8.3
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -739,87 +820,6 @@
             }
           ],
           "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1400336",
-          "title": "Ahora los suegros son ellos",
-          "link": "https://www.themoviedb.org/movie/1400336",
-          "summary": "Henry, hijo de Greg y Pam Focker, se enfrenta al caos familiar cuando decide casarse con una mujer de carácter fuerte que parece ser totalmente incompatible con él.",
-          "image": "https://image.tmdb.org/t/p/w500/iU2XxFhMxC5Z2gOPASkRmtuDjJQ.jpg",
-          "pubDate": "2026-11-21",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-25T10:56:49.392Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "9CKu3WoMYCg",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Ben Stiller",
-              "character": "Greg Focker",
-              "order": 0
-            },
-            {
-              "name": "Robert De Niro",
-              "character": "Jack Byrnes",
-              "order": 1
-            },
-            {
-              "name": "Ariana Grande",
-              "character": "Olivia Jones",
-              "order": 2
-            },
-            {
-              "name": "Skyler Gisondo",
-              "character": "Henry Focker",
-              "order": 3
-            },
-            {
-              "name": "Owen Wilson",
-              "character": "Kevin Rawley",
-              "order": 4
-            },
-            {
-              "name": "Blythe Danner",
-              "character": "Dina Byrnes",
-              "order": 5
-            },
-            {
-              "name": "Teri Polo",
-              "character": "Pam Byrnes-Focker",
-              "order": 6
-            },
-            {
-              "name": "Beanie Feldstein",
-              "character": "Samantha Focker",
-              "order": 7
-            },
-            {
-              "name": "Eduardo Franco",
-              "character": "Eduardo Villalobos",
-              "order": 8
-            },
-            {
-              "name": "Liza Koshy",
-              "character": "",
-              "order": 9
-            }
-          ],
-          "trending": true
         },
         {
           "guid": "tmdb-movie-1003596",
@@ -991,87 +991,6 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1458300",
-          "title": "Mosquito Bowl: Un partido en plena guerra",
-          "link": "https://www.themoviedb.org/movie/1458300",
-          "summary": "Tras el ataque a Pearl Harbor, cuatro estrellas del fútbol americano renuncian a la fama para alistarse en el cuerpo de Marines. Durante la preparación de la brutal invasión de Okinawa, juegan un mítico partido en el que participan algunos de los mejores jugadores de la historia. Un partido que, para muchos, será el último de sus vidas.",
-          "image": "https://image.tmdb.org/t/p/w500/yWhMnr8pkhgZ1rGlj4z2dxLbS99.jpg",
-          "pubDate": "2026-10-29",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-25T10:56:50.424Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.2
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "F6YDzPfjH4I",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Nicholas Galitzine",
-              "character": "John McLaughry",
-              "order": 0
-            },
-            {
-              "name": "Bill Skarsgård",
-              "character": "Bob Bauman",
-              "order": 1
-            },
-            {
-              "name": "Ray Nicholson",
-              "character": "Tony Butkovich",
-              "order": 2
-            },
-            {
-              "name": "Tom Francis",
-              "character": "Dave Schreiner",
-              "order": 3
-            },
-            {
-              "name": "Brent Comer",
-              "character": "George Murphy",
-              "order": 4
-            },
-            {
-              "name": "Dominic Bogart",
-              "character": "Wilkes",
-              "order": 5
-            },
-            {
-              "name": "Jack Ingram",
-              "character": "Wilson",
-              "order": 6
-            },
-            {
-              "name": "Ella Newton",
-              "character": "Jane",
-              "order": 7
-            },
-            {
-              "name": "Lola Bond",
-              "character": "Odette",
-              "order": 9
-            },
-            {
-              "name": "Stacy Clausen",
-              "character": "Avery",
-              "order": 10
-            }
-          ],
-          "trending": true
-        },
-        {
           "guid": "tmdb-movie-969681",
           "title": "Spider-Man: Brand New Day",
           "link": "https://www.themoviedb.org/movie/969681",
@@ -1153,21 +1072,21 @@
           "trending": true
         },
         {
-          "guid": "tmdb-movie-1595124",
-          "title": "Hermanastras",
-          "link": "https://www.themoviedb.org/movie/1595124",
-          "summary": "En esta encantadora e inusual comedia de acción, la hermanastra «malvada» de Cenicienta roba la varita del Hada Madrina y destruye la historia que conoce todo el mundo.",
-          "image": "https://image.tmdb.org/t/p/w500/5f69fuZBiPoa8H1AJ3UHH4AztOb.jpg",
-          "pubDate": "2026-11-20",
+          "guid": "tmdb-movie-1458300",
+          "title": "Mosquito Bowl: Un partido en plena guerra",
+          "link": "https://www.themoviedb.org/movie/1458300",
+          "summary": "Tras el ataque a Pearl Harbor, cuatro estrellas del fútbol americano renuncian a la fama para alistarse en el cuerpo de Marines. Durante la preparación de la brutal invasión de Okinawa, juegan un mítico partido en el que participan algunos de los mejores jugadores de la historia. Un partido que, para muchos, será el último de sus vidas.",
+          "image": "https://image.tmdb.org/t/p/w500/yWhMnr8pkhgZ1rGlj4z2dxLbS99.jpg",
+          "pubDate": "2026-10-29",
           "source": "TMDb",
           "categoria": "Películas",
-          "firstSeenAt": "2026-11-20T18:22:52.319Z",
+          "firstSeenAt": "2026-11-25T10:56:50.424Z",
           "fullText": null,
           "rating": {
             "imdb": null,
             "rt": null,
             "metascore": null,
-            "tmdb": 7.2
+            "tmdb": 7.4
           },
           "status": "Released",
           "nextEpisodeDate": null,
@@ -1176,140 +1095,59 @@
           "currentSeason": null,
           "reviews": null,
           "trailer": {
-            "key": "tNV4i3BqUGY",
+            "key": "F6YDzPfjH4I",
             "site": "YouTube"
           },
           "cast": [
             {
-              "name": "Ali Wong",
-              "character": "Lilith (voice)",
+              "name": "Nicholas Galitzine",
+              "character": "John McLaughry",
               "order": 0
             },
             {
-              "name": "Amanda Seyfried",
-              "character": "Cinderella (voice)",
+              "name": "Bill Skarsgård",
+              "character": "Bob Bauman",
               "order": 1
             },
             {
-              "name": "Stephanie Hsu",
-              "character": "Margot (voice)",
+              "name": "Ray Nicholson",
+              "character": "Tony Butkovich",
               "order": 2
             },
             {
-              "name": "Nikki Glaser",
-              "character": "Priscilla (voice)",
+              "name": "Tom Francis",
+              "character": "Dave Schreiner",
               "order": 3
             },
             {
-              "name": "Daniel Radcliffe",
-              "character": "The Prince (voice)",
+              "name": "Brent Comer",
+              "character": "George Murphy",
               "order": 4
             },
             {
-              "name": "Young Mazino",
-              "character": "Gef (voice)",
+              "name": "Dominic Bogart",
+              "character": "Wilkes",
               "order": 5
             },
             {
-              "name": "Peter Dinklage",
-              "character": "Roderick (voice)",
+              "name": "Jack Ingram",
+              "character": "Wilson",
               "order": 6
             },
             {
-              "name": "Bette Midler",
-              "character": "Fairy Godmother (voice)",
+              "name": "Ella Newton",
+              "character": "Jane",
               "order": 7
             },
             {
-              "name": "Luis Martinez",
-              "character": "Cracktor (voice)",
-              "order": 8
-            },
-            {
-              "name": "Gwendoline Yeo",
-              "character": "Li Mei (voice)",
+              "name": "Lola Bond",
+              "character": "Odette",
               "order": 9
-            }
-          ],
-          "trending": true
-        },
-        {
-          "guid": "tmdb-movie-1280115",
-          "title": "El camino del pequeño guerrero",
-          "link": "https://www.themoviedb.org/movie/1280115",
-          "summary": "Jake es un SEAL de la Marina herido que se convierte en el mentor de su tímido sobrino Marc. Utilizando los principios de su formación militar, Jake enseña a Marc a ser un pequeño guerrero cuando empieza el instituto.",
-          "image": "https://image.tmdb.org/t/p/w500/uh9hCepFpB2xvLUeYSZKrjcjnvk.jpg",
-          "pubDate": "2026-11-24",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-25T10:56:50.343Z",
-          "fullText": null,
-          "rating": {
-            "imdb": null,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.6
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "R1ECMLrwDYQ",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Chris Pratt",
-              "character": "Jake",
-              "order": 0
             },
             {
-              "name": "Jude Hill",
-              "character": "Marc",
-              "order": 1
-            },
-            {
-              "name": "Linda Cardellini",
-              "character": "Sarah",
-              "order": 2
-            },
-            {
-              "name": "Jocko Willink",
-              "character": "Coach Adam",
-              "order": 3
-            },
-            {
-              "name": "Ava Torres",
-              "character": "Nora",
-              "order": 4
-            },
-            {
-              "name": "Levi McConaughey",
-              "character": "Kenny",
-              "order": 5
-            },
-            {
-              "name": "Darien Sills-Evans",
-              "character": "Commander Barnes",
-              "order": 6
-            },
-            {
-              "name": "Carl McDowell",
-              "character": "Principal Lanzetta",
-              "order": 7
-            },
-            {
-              "name": "Parker Young",
-              "character": "Kyle",
-              "order": 8
-            },
-            {
-              "name": "Arlan Ruf",
-              "character": "Logan",
-              "order": 9
+              "name": "Stacy Clausen",
+              "character": "Avery",
+              "order": 10
             }
           ],
           "trending": true
@@ -1391,6 +1229,249 @@
               "name": "Nick Choksi",
               "character": "Friend",
               "order": 10
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1153576",
+          "title": "Street Fighter",
+          "link": "https://www.themoviedb.org/movie/1153576",
+          "summary": "En 1993, los distanciados luchadores callejeros Ryu y Ken Masters se ven arrastrados de nuevo al combate cuando la misteriosa Chun-Li los recluta para el próximo Torneo World Warrior: un enfrentamiento brutal de puños, destino y furia. Sin embargo, tras esta gran batalla se esconde una conspiración mortal que los obliga a enfrentarse tanto entre sí como a los demonios de su pasado. Y si no lo logran... ¡será el fin de la partida!",
+          "image": "https://image.tmdb.org/t/p/w500/2kdEEUkbkJe08kTDMCUbBrZ71Aw.jpg",
+          "pubDate": "2026-10-13",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-13T17:32:43.424Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 6.2,
+            "rt": null,
+            "metascore": 46,
+            "tmdb": 6.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "U6sbm1OaJb8",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Andrew Koji",
+              "character": "Ryu",
+              "order": 0
+            },
+            {
+              "name": "Noah Centineo",
+              "character": "Ken Masters",
+              "order": 1
+            },
+            {
+              "name": "Callina Liang",
+              "character": "Chun-Li",
+              "order": 2
+            },
+            {
+              "name": "David Dastmalchian",
+              "character": "M. Bison",
+              "order": 3
+            },
+            {
+              "name": "Andrew Schulz",
+              "character": "Dan Hibiki",
+              "order": 4
+            },
+            {
+              "name": "Roman Reigns",
+              "character": "Akuma",
+              "order": 5
+            },
+            {
+              "name": "Cody Rhodes",
+              "character": "Guile",
+              "order": 6
+            },
+            {
+              "name": "Jason Momoa",
+              "character": "Blanka",
+              "order": 7
+            },
+            {
+              "name": "Eric André",
+              "character": "Don Sauvage",
+              "order": 8
+            },
+            {
+              "name": "50 Cent",
+              "character": "Balrog",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1595124",
+          "title": "Hermanastras",
+          "link": "https://www.themoviedb.org/movie/1595124",
+          "summary": "En esta encantadora e inusual comedia de acción, la hermanastra «malvada» de Cenicienta roba la varita del Hada Madrina y destruye la historia que conoce todo el mundo.",
+          "image": "https://image.tmdb.org/t/p/w500/5f69fuZBiPoa8H1AJ3UHH4AztOb.jpg",
+          "pubDate": "2026-11-20",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-20T18:22:52.319Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.1
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "tNV4i3BqUGY",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Ali Wong",
+              "character": "Lilith (voice)",
+              "order": 0
+            },
+            {
+              "name": "Amanda Seyfried",
+              "character": "Cinderella (voice)",
+              "order": 1
+            },
+            {
+              "name": "Stephanie Hsu",
+              "character": "Margot (voice)",
+              "order": 2
+            },
+            {
+              "name": "Nikki Glaser",
+              "character": "Priscilla (voice)",
+              "order": 3
+            },
+            {
+              "name": "Daniel Radcliffe",
+              "character": "The Prince (voice)",
+              "order": 4
+            },
+            {
+              "name": "Young Mazino",
+              "character": "Gef (voice)",
+              "order": 5
+            },
+            {
+              "name": "Peter Dinklage",
+              "character": "Roderick (voice)",
+              "order": 6
+            },
+            {
+              "name": "Bette Midler",
+              "character": "Fairy Godmother (voice)",
+              "order": 7
+            },
+            {
+              "name": "Luis Martinez",
+              "character": "Cracktor (voice)",
+              "order": 8
+            },
+            {
+              "name": "Gwendoline Yeo",
+              "character": "Li Mei (voice)",
+              "order": 9
+            }
+          ],
+          "trending": true
+        },
+        {
+          "guid": "tmdb-movie-1280115",
+          "title": "El camino del pequeño guerrero",
+          "link": "https://www.themoviedb.org/movie/1280115",
+          "summary": "Jake es un SEAL de la Marina herido que se convierte en el mentor de su tímido sobrino Marc. Utilizando los principios de su formación militar, Jake enseña a Marc a ser un pequeño guerrero cuando empieza el instituto.",
+          "image": "https://image.tmdb.org/t/p/w500/uh9hCepFpB2xvLUeYSZKrjcjnvk.jpg",
+          "pubDate": "2026-11-24",
+          "source": "TMDb",
+          "categoria": "Películas",
+          "firstSeenAt": "2026-11-25T10:56:50.343Z",
+          "fullText": null,
+          "rating": {
+            "imdb": null,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.3
+          },
+          "status": "Released",
+          "nextEpisodeDate": null,
+          "numberOfSeasons": null,
+          "seasons": null,
+          "currentSeason": null,
+          "reviews": null,
+          "trailer": {
+            "key": "R1ECMLrwDYQ",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Chris Pratt",
+              "character": "Jake",
+              "order": 0
+            },
+            {
+              "name": "Jude Hill",
+              "character": "Marc",
+              "order": 1
+            },
+            {
+              "name": "Linda Cardellini",
+              "character": "Sarah",
+              "order": 2
+            },
+            {
+              "name": "Jocko Willink",
+              "character": "Coach Adam",
+              "order": 3
+            },
+            {
+              "name": "Ava Torres",
+              "character": "Nora",
+              "order": 4
+            },
+            {
+              "name": "Levi McConaughey",
+              "character": "Kenny",
+              "order": 5
+            },
+            {
+              "name": "Darien Sills-Evans",
+              "character": "Commander Barnes",
+              "order": 6
+            },
+            {
+              "name": "Carl McDowell",
+              "character": "Principal Lanzetta",
+              "order": 7
+            },
+            {
+              "name": "Parker Young",
+              "character": "Kyle",
+              "order": 8
+            },
+            {
+              "name": "Arlan Ruf",
+              "character": "Logan",
+              "order": 9
             }
           ],
           "trending": true
@@ -1633,87 +1714,6 @@
             {
               "name": "Young Mazino",
               "character": "Marquis Collins",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
-          "guid": "tmdb-movie-1153576",
-          "title": "Street Fighter",
-          "link": "https://www.themoviedb.org/movie/1153576",
-          "summary": "En 1993, los distanciados luchadores callejeros Ryu y Ken Masters se ven arrastrados de nuevo al combate cuando la misteriosa Chun-Li los recluta para el próximo Torneo World Warrior: un enfrentamiento brutal de puños, destino y furia. Sin embargo, tras esta gran batalla se esconde una conspiración mortal que los obliga a enfrentarse tanto entre sí como a los demonios de su pasado. Y si no lo logran... ¡será el fin de la partida!",
-          "image": "https://image.tmdb.org/t/p/w500/2kdEEUkbkJe08kTDMCUbBrZ71Aw.jpg",
-          "pubDate": "2026-10-13",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-11-13T17:32:43.424Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 6.2,
-            "rt": null,
-            "metascore": 46,
-            "tmdb": 6.3
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "U6sbm1OaJb8",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Andrew Koji",
-              "character": "Ryu",
-              "order": 0
-            },
-            {
-              "name": "Noah Centineo",
-              "character": "Ken Masters",
-              "order": 1
-            },
-            {
-              "name": "Callina Liang",
-              "character": "Chun-Li",
-              "order": 2
-            },
-            {
-              "name": "David Dastmalchian",
-              "character": "M. Bison",
-              "order": 3
-            },
-            {
-              "name": "Andrew Schulz",
-              "character": "Dan Hibiki",
-              "order": 4
-            },
-            {
-              "name": "Roman Reigns",
-              "character": "Akuma",
-              "order": 5
-            },
-            {
-              "name": "Cody Rhodes",
-              "character": "Guile",
-              "order": 6
-            },
-            {
-              "name": "Jason Momoa",
-              "character": "Blanka",
-              "order": 7
-            },
-            {
-              "name": "Eric André",
-              "character": "Don Sauvage",
-              "order": 8
-            },
-            {
-              "name": "50 Cent",
-              "character": "Balrog",
               "order": 9
             }
           ],
@@ -4004,87 +4004,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-movie-1465063",
-          "title": "La isla olvidada",
-          "link": "https://www.themoviedb.org/movie/1465063",
-          "summary": "Dos amigas se quedan varadas en el místico mundo de Nakali, donde su único escape podría costarles su vida compartida de recuerdos.",
-          "image": "https://image.tmdb.org/t/p/w500/vpTdXFoZGzwnCWzkVYU7JH8teAZ.jpg",
-          "pubDate": "2026-09-10",
-          "source": "TMDb",
-          "categoria": "Películas",
-          "firstSeenAt": "2026-10-27T15:46:00.903Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.7,
-            "rt": 95,
-            "metascore": 73,
-            "tmdb": 7.6
-          },
-          "status": "Released",
-          "nextEpisodeDate": null,
-          "numberOfSeasons": null,
-          "seasons": null,
-          "currentSeason": null,
-          "reviews": null,
-          "trailer": {
-            "key": "PhgY8cOJiQA",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "H.E.R.",
-              "character": "Jo (voice)",
-              "order": 0
-            },
-            {
-              "name": "Liza Soberano",
-              "character": "Raissa (voice)",
-              "order": 1
-            },
-            {
-              "name": "Dave Franco",
-              "character": "Raww (voice)",
-              "order": 2
-            },
-            {
-              "name": "Jenny Slate",
-              "character": "Batiba (voice)",
-              "order": 3
-            },
-            {
-              "name": "Manny Jacinto",
-              "character": "Bungi (voice)",
-              "order": 4
-            },
-            {
-              "name": "Lea Salonga",
-              "character": "Manang (voice)",
-              "order": 5
-            },
-            {
-              "name": "Dolly de Leon",
-              "character": "Lola Fatima (voice)",
-              "order": 6
-            },
-            {
-              "name": "Jo Koy",
-              "character": "Datu (voice)",
-              "order": 7
-            },
-            {
-              "name": "Ronny Chieng",
-              "character": "King Truffle Wuffle (voice)",
-              "order": 8
-            },
-            {
-              "name": "Kevin McCann",
-              "character": "Prince Mermahn (voice)",
-              "order": 9
-            }
-          ],
-          "trending": false
-        },
-        {
           "guid": "tmdb-movie-1727734",
           "title": "Ali G: Kién es yo?",
           "link": "https://www.themoviedb.org/movie/1727734",
@@ -4430,6 +4349,107 @@
               "name": "Steven Robertson",
               "character": "DC Sandy Wilson",
               "order": 3
+            }
+          ]
+        },
+        {
+          "guid": "tmdb-tv-81723",
+          "title": "La edad dorada",
+          "link": "https://www.themoviedb.org/tv/81723",
+          "summary": "La Edad Dorada comienza en 1882 con la mudanza de la joven Marian Brook de la zona rural de Pensilvania a la ciudad de Nueva York después de la muerte de su padre para vivir con sus tías adineradas Agnes van Rhijn y Ada Brook. Acompañada por Peggy Scott, una aspirante a escritora que busca un nuevo comienzo, Marian se ve envuelta de forma inesperada en una guerra social entre una de sus tías, hija de la vieja riqueza, y sus vecinos tremendamente ricos, un magnate ferroviario despiadado y su ambiciosa esposa, George y Bertha Russell. Expuesta a un mundo al borde de la Edad moderna, ¿Marian seguirá las reglas ya establecidas por la sociedad o forjará su propio camino?",
+          "image": "https://image.tmdb.org/t/p/w500/o6F0N46WsVc43h6LVJtnvQiky0s.jpg",
+          "pubDate": "2022-01-24",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-11-24T23:24:25.532Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.1,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 7.7
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-11-29",
+          "numberOfSeasons": 4,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 9,
+              "fechaEstreno": "2022-01-24"
+            },
+            {
+              "numero": 2,
+              "episodios": 8,
+              "fechaEstreno": "2023-10-28"
+            },
+            {
+              "numero": 3,
+              "episodios": 8,
+              "fechaEstreno": "2025-06-22"
+            },
+            {
+              "numero": 4,
+              "episodios": 8,
+              "fechaEstreno": "2026-11-01"
+            }
+          ],
+          "currentSeason": 4,
+          "reviews": null,
+          "trailer": {
+            "key": "wKj1cMz3yfI",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Carrie Coon",
+              "character": "Bertha Russell",
+              "order": 0
+            },
+            {
+              "name": "Morgan Spector",
+              "character": "George Russell",
+              "order": 1
+            },
+            {
+              "name": "Louisa Jacobson",
+              "character": "Marian Brook",
+              "order": 2
+            },
+            {
+              "name": "Denée Benton",
+              "character": "Peggy Scott",
+              "order": 3
+            },
+            {
+              "name": "Taissa Farmiga",
+              "character": "Gladys Russell",
+              "order": 4
+            },
+            {
+              "name": "Harry Richardson",
+              "character": "Larry Russell",
+              "order": 5
+            },
+            {
+              "name": "Blake Ritson",
+              "character": "Oscar van Rhijn",
+              "order": 6
+            },
+            {
+              "name": "Simon Jones",
+              "character": "Alfred Bannister",
+              "order": 7
+            },
+            {
+              "name": "Jack Gilpin",
+              "character": "Church",
+              "order": 8
+            },
+            {
+              "name": "Cynthia Nixon",
+              "character": "Ada Brook",
+              "order": 25
             }
           ]
         },
@@ -4847,107 +4867,6 @@
           ]
         },
         {
-          "guid": "tmdb-tv-81723",
-          "title": "La edad dorada",
-          "link": "https://www.themoviedb.org/tv/81723",
-          "summary": "La Edad Dorada comienza en 1882 con la mudanza de la joven Marian Brook de la zona rural de Pensilvania a la ciudad de Nueva York después de la muerte de su padre para vivir con sus tías adineradas Agnes van Rhijn y Ada Brook. Acompañada por Peggy Scott, una aspirante a escritora que busca un nuevo comienzo, Marian se ve envuelta de forma inesperada en una guerra social entre una de sus tías, hija de la vieja riqueza, y sus vecinos tremendamente ricos, un magnate ferroviario despiadado y su ambiciosa esposa, George y Bertha Russell. Expuesta a un mundo al borde de la Edad moderna, ¿Marian seguirá las reglas ya establecidas por la sociedad o forjará su propio camino?",
-          "image": "https://image.tmdb.org/t/p/w500/o6F0N46WsVc43h6LVJtnvQiky0s.jpg",
-          "pubDate": "2022-01-24",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-11-24T23:24:25.532Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 8.1,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 7.7
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-11-29",
-          "numberOfSeasons": 4,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 9,
-              "fechaEstreno": "2022-01-24"
-            },
-            {
-              "numero": 2,
-              "episodios": 8,
-              "fechaEstreno": "2023-10-28"
-            },
-            {
-              "numero": 3,
-              "episodios": 8,
-              "fechaEstreno": "2025-06-22"
-            },
-            {
-              "numero": 4,
-              "episodios": 8,
-              "fechaEstreno": "2026-11-01"
-            }
-          ],
-          "currentSeason": 4,
-          "reviews": null,
-          "trailer": {
-            "key": "wKj1cMz3yfI",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Carrie Coon",
-              "character": "Bertha Russell",
-              "order": 0
-            },
-            {
-              "name": "Morgan Spector",
-              "character": "George Russell",
-              "order": 1
-            },
-            {
-              "name": "Louisa Jacobson",
-              "character": "Marian Brook",
-              "order": 2
-            },
-            {
-              "name": "Denée Benton",
-              "character": "Peggy Scott",
-              "order": 3
-            },
-            {
-              "name": "Taissa Farmiga",
-              "character": "Gladys Russell",
-              "order": 4
-            },
-            {
-              "name": "Harry Richardson",
-              "character": "Larry Russell",
-              "order": 5
-            },
-            {
-              "name": "Blake Ritson",
-              "character": "Oscar van Rhijn",
-              "order": 6
-            },
-            {
-              "name": "Simon Jones",
-              "character": "Alfred Bannister",
-              "order": 7
-            },
-            {
-              "name": "Jack Gilpin",
-              "character": "Church",
-              "order": 8
-            },
-            {
-              "name": "Cynthia Nixon",
-              "character": "Ada Brook",
-              "order": 25
-            }
-          ]
-        },
-        {
           "guid": "tmdb-tv-22980",
           "title": "Watch What Happens Live with Andy Cohen",
           "link": "https://www.themoviedb.org/tv/22980",
@@ -5313,92 +5232,6 @@
             "site": "YouTube"
           },
           "cast": []
-        },
-        {
-          "guid": "tmdb-tv-33238",
-          "title": "Running Man",
-          "link": "https://www.themoviedb.org/tv/33238",
-          "summary": "Running Man es un espectáculo de variedades de Corea del Sur transmitido desde el 11 de julio de 2010 hasta ahora a través de SBS. El programa forma parte de la formación de \"Good Sunday\". El programa fue creado por Jo Hyo-jin, Kim Joo-hyung y Im Hyung-taek.",
-          "image": "https://image.tmdb.org/t/p/w500/15SMnscZqd7HZ0bzruatOcKUlOV.jpg",
-          "pubDate": "2010-07-11",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-10-27T21:53:47.469Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 9.1,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.2
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-11-01",
-          "numberOfSeasons": 1,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 828,
-              "fechaEstreno": "2010-07-11"
-            }
-          ],
-          "currentSeason": 1,
-          "reviews": null,
-          "trailer": {
-            "key": "v90RObJapJI",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "유재석",
-              "character": "Self",
-              "order": 0
-            },
-            {
-              "name": "지석진",
-              "character": "Self",
-              "order": 1
-            },
-            {
-              "name": "김종국",
-              "character": "Self",
-              "order": 2
-            },
-            {
-              "name": "하하",
-              "character": "Self",
-              "order": 3
-            },
-            {
-              "name": "Song Ji-hyo",
-              "character": "Self",
-              "order": 4
-            },
-            {
-              "name": "양세찬",
-              "character": "Self",
-              "order": 5
-            },
-            {
-              "name": "지예은",
-              "character": "Self",
-              "order": 6
-            },
-            {
-              "name": "전소민",
-              "character": "Self – Former Member",
-              "order": 7
-            },
-            {
-              "name": "이광수",
-              "character": "Self – Former Member",
-              "order": 8
-            },
-            {
-              "name": "강개리",
-              "character": "Self – Former Member",
-              "order": 10
-            }
-          ]
         },
         {
           "guid": "tmdb-tv-2224",
@@ -5779,107 +5612,6 @@
           "trending": false
         },
         {
-          "guid": "tmdb-tv-153312",
-          "title": "Tulsa King",
-          "link": "https://www.themoviedb.org/tv/153312",
-          "summary": "Justo después de ser liberado de prisión después de 25 años, el capo de la mafia de Nueva York, Dwight \"El General\" Manfredi, es exiliado sin contemplaciones por su jefe para instalarse en Tulsa, Oklahoma. Al darse cuenta de que su familia de la mafia puede no tener sus mejores intereses en mente, Dwight construye lentamente una \"tripulación\" a partir de un grupo de personajes inverosímiles, para ayudarlo a establecer un nuevo imperio criminal en un lugar que para él bien podría ser otro planeta.",
-          "image": "https://image.tmdb.org/t/p/w500/6ryay9RQfT5jrY9i1dveUUGryAO.jpg",
-          "pubDate": "2022-11-13",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-11-25T10:56:51.498Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.9,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 8.3
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-11-27",
-          "numberOfSeasons": 4,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 9,
-              "fechaEstreno": "2022-11-13"
-            },
-            {
-              "numero": 2,
-              "episodios": 10,
-              "fechaEstreno": "2024-09-15"
-            },
-            {
-              "numero": 3,
-              "episodios": 10,
-              "fechaEstreno": "2025-09-21"
-            },
-            {
-              "numero": 4,
-              "episodios": 10,
-              "fechaEstreno": "2026-10-16"
-            }
-          ],
-          "currentSeason": 4,
-          "reviews": null,
-          "trailer": {
-            "key": "aaQSScwZPbA",
-            "site": "YouTube"
-          },
-          "cast": [
-            {
-              "name": "Sylvester Stallone",
-              "character": "Dwight 'The General' Manfredi",
-              "order": 0
-            },
-            {
-              "name": "Martin Starr",
-              "character": "Lawrence 'Bodhi' Geigerman",
-              "order": 1
-            },
-            {
-              "name": "Jay Will",
-              "character": "Tyson Mitchell",
-              "order": 2
-            },
-            {
-              "name": "Vincent Piazza",
-              "character": "Vince Antonacci",
-              "order": 3
-            },
-            {
-              "name": "Annabella Sciorra",
-              "character": "Joanne",
-              "order": 5
-            },
-            {
-              "name": "Chris Caldovino",
-              "character": "Goodie Carangi",
-              "order": 6
-            },
-            {
-              "name": "McKenna Quigley Harrington",
-              "character": "Grace",
-              "order": 7
-            },
-            {
-              "name": "Frank Grillo",
-              "character": "Bill Bevilaqua",
-              "order": 9
-            },
-            {
-              "name": "Michael Walden",
-              "character": "Bigfoot",
-              "order": 10
-            },
-            {
-              "name": "James Russo",
-              "character": "Quiet Ray Renzetti",
-              "order": 13
-            }
-          ]
-        },
-        {
           "guid": "tmdb-tv-4614",
           "title": "Navy: Investigación criminal",
           "link": "https://www.themoviedb.org/tv/4614",
@@ -6065,206 +5797,6 @@
             }
           ],
           "trending": false
-        },
-        {
-          "guid": "tmdb-tv-4656",
-          "title": "Raw",
-          "link": "https://www.themoviedb.org/tv/4656",
-          "summary": "A regularly scheduled, live, year-round program featuring some of the biggest WWE Superstars.",
-          "image": "https://image.tmdb.org/t/p/w500/fstEe6RsyNyPUnMwNcL20iNl0nE.jpg",
-          "pubDate": "1993-01-11",
-          "source": "TMDb",
-          "categoria": "Series",
-          "firstSeenAt": "2026-11-22T09:27:27.243Z",
-          "fullText": null,
-          "rating": {
-            "imdb": 7.7,
-            "rt": null,
-            "metascore": null,
-            "tmdb": 6.7
-          },
-          "status": "Returning Series",
-          "nextEpisodeDate": "2026-11-23",
-          "numberOfSeasons": 34,
-          "seasons": [
-            {
-              "numero": 1,
-              "episodios": 45,
-              "fechaEstreno": "1993-01-11"
-            },
-            {
-              "numero": 2,
-              "episodios": 47,
-              "fechaEstreno": "1994-01-03"
-            },
-            {
-              "numero": 3,
-              "episodios": 48,
-              "fechaEstreno": "1995-01-02"
-            },
-            {
-              "numero": 4,
-              "episodios": 51,
-              "fechaEstreno": "1996-01-01"
-            },
-            {
-              "numero": 5,
-              "episodios": 52,
-              "fechaEstreno": "1997-01-06"
-            },
-            {
-              "numero": 6,
-              "episodios": 52,
-              "fechaEstreno": "1998-01-05"
-            },
-            {
-              "numero": 7,
-              "episodios": 52,
-              "fechaEstreno": "1999-01-04"
-            },
-            {
-              "numero": 8,
-              "episodios": 52,
-              "fechaEstreno": "2000-01-03"
-            },
-            {
-              "numero": 9,
-              "episodios": 53,
-              "fechaEstreno": "2001-01-01"
-            },
-            {
-              "numero": 10,
-              "episodios": 52,
-              "fechaEstreno": "2002-01-07"
-            },
-            {
-              "numero": 11,
-              "episodios": 52,
-              "fechaEstreno": "2003-01-06"
-            },
-            {
-              "numero": 12,
-              "episodios": 52,
-              "fechaEstreno": "2004-01-05"
-            },
-            {
-              "numero": 13,
-              "episodios": 52,
-              "fechaEstreno": "2005-01-03"
-            },
-            {
-              "numero": 14,
-              "episodios": 52,
-              "fechaEstreno": "2006-01-02"
-            },
-            {
-              "numero": 15,
-              "episodios": 53,
-              "fechaEstreno": "2007-01-01"
-            },
-            {
-              "numero": 16,
-              "episodios": 52,
-              "fechaEstreno": "2008-01-07"
-            },
-            {
-              "numero": 17,
-              "episodios": 52,
-              "fechaEstreno": "2009-01-05"
-            },
-            {
-              "numero": 18,
-              "episodios": 52,
-              "fechaEstreno": "2010-01-04"
-            },
-            {
-              "numero": 19,
-              "episodios": 52,
-              "fechaEstreno": "2011-01-03"
-            },
-            {
-              "numero": 20,
-              "episodios": 53,
-              "fechaEstreno": "2012-01-02"
-            },
-            {
-              "numero": 21,
-              "episodios": 52,
-              "fechaEstreno": "2013-01-07"
-            },
-            {
-              "numero": 22,
-              "episodios": 52,
-              "fechaEstreno": "2014-01-05"
-            },
-            {
-              "numero": 23,
-              "episodios": 52,
-              "fechaEstreno": "2015-01-04"
-            },
-            {
-              "numero": 24,
-              "episodios": 52,
-              "fechaEstreno": "2016-01-03"
-            },
-            {
-              "numero": 25,
-              "episodios": 52,
-              "fechaEstreno": "2017-01-01"
-            },
-            {
-              "numero": 26,
-              "episodios": 53,
-              "fechaEstreno": "2017-12-31"
-            },
-            {
-              "numero": 27,
-              "episodios": 52,
-              "fechaEstreno": "2019-01-06"
-            },
-            {
-              "numero": 28,
-              "episodios": 52,
-              "fechaEstreno": "2020-01-05"
-            },
-            {
-              "numero": 29,
-              "episodios": 52,
-              "fechaEstreno": "2021-01-03"
-            },
-            {
-              "numero": 30,
-              "episodios": 52,
-              "fechaEstreno": "2022-01-02"
-            },
-            {
-              "numero": 31,
-              "episodios": 52,
-              "fechaEstreno": "2023-01-01"
-            },
-            {
-              "numero": 32,
-              "episodios": 53,
-              "fechaEstreno": "2023-12-29"
-            },
-            {
-              "numero": 33,
-              "episodios": 52,
-              "fechaEstreno": "2024-12-31"
-            },
-            {
-              "numero": 34,
-              "episodios": 52,
-              "fechaEstreno": "2026-01-05"
-            }
-          ],
-          "currentSeason": 34,
-          "reviews": null,
-          "trailer": {
-            "key": "FVO6mUQMon8",
-            "site": "YouTube"
-          },
-          "cast": []
         },
         {
           "guid": "tmdb-tv-291",
@@ -6639,6 +6171,307 @@
           "trending": false
         },
         {
+          "guid": "tmdb-tv-4656",
+          "title": "Raw",
+          "link": "https://www.themoviedb.org/tv/4656",
+          "summary": "A regularly scheduled, live, year-round program featuring some of the biggest WWE Superstars.",
+          "image": "https://image.tmdb.org/t/p/w500/fstEe6RsyNyPUnMwNcL20iNl0nE.jpg",
+          "pubDate": "1993-01-11",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-11-22T09:27:27.243Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.7,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 6.7
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-11-23",
+          "numberOfSeasons": 34,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 45,
+              "fechaEstreno": "1993-01-11"
+            },
+            {
+              "numero": 2,
+              "episodios": 47,
+              "fechaEstreno": "1994-01-03"
+            },
+            {
+              "numero": 3,
+              "episodios": 48,
+              "fechaEstreno": "1995-01-02"
+            },
+            {
+              "numero": 4,
+              "episodios": 51,
+              "fechaEstreno": "1996-01-01"
+            },
+            {
+              "numero": 5,
+              "episodios": 52,
+              "fechaEstreno": "1997-01-06"
+            },
+            {
+              "numero": 6,
+              "episodios": 52,
+              "fechaEstreno": "1998-01-05"
+            },
+            {
+              "numero": 7,
+              "episodios": 52,
+              "fechaEstreno": "1999-01-04"
+            },
+            {
+              "numero": 8,
+              "episodios": 52,
+              "fechaEstreno": "2000-01-03"
+            },
+            {
+              "numero": 9,
+              "episodios": 53,
+              "fechaEstreno": "2001-01-01"
+            },
+            {
+              "numero": 10,
+              "episodios": 52,
+              "fechaEstreno": "2002-01-07"
+            },
+            {
+              "numero": 11,
+              "episodios": 52,
+              "fechaEstreno": "2003-01-06"
+            },
+            {
+              "numero": 12,
+              "episodios": 52,
+              "fechaEstreno": "2004-01-05"
+            },
+            {
+              "numero": 13,
+              "episodios": 52,
+              "fechaEstreno": "2005-01-03"
+            },
+            {
+              "numero": 14,
+              "episodios": 52,
+              "fechaEstreno": "2006-01-02"
+            },
+            {
+              "numero": 15,
+              "episodios": 53,
+              "fechaEstreno": "2007-01-01"
+            },
+            {
+              "numero": 16,
+              "episodios": 52,
+              "fechaEstreno": "2008-01-07"
+            },
+            {
+              "numero": 17,
+              "episodios": 52,
+              "fechaEstreno": "2009-01-05"
+            },
+            {
+              "numero": 18,
+              "episodios": 52,
+              "fechaEstreno": "2010-01-04"
+            },
+            {
+              "numero": 19,
+              "episodios": 52,
+              "fechaEstreno": "2011-01-03"
+            },
+            {
+              "numero": 20,
+              "episodios": 53,
+              "fechaEstreno": "2012-01-02"
+            },
+            {
+              "numero": 21,
+              "episodios": 52,
+              "fechaEstreno": "2013-01-07"
+            },
+            {
+              "numero": 22,
+              "episodios": 52,
+              "fechaEstreno": "2014-01-05"
+            },
+            {
+              "numero": 23,
+              "episodios": 52,
+              "fechaEstreno": "2015-01-04"
+            },
+            {
+              "numero": 24,
+              "episodios": 52,
+              "fechaEstreno": "2016-01-03"
+            },
+            {
+              "numero": 25,
+              "episodios": 52,
+              "fechaEstreno": "2017-01-01"
+            },
+            {
+              "numero": 26,
+              "episodios": 53,
+              "fechaEstreno": "2017-12-31"
+            },
+            {
+              "numero": 27,
+              "episodios": 52,
+              "fechaEstreno": "2019-01-06"
+            },
+            {
+              "numero": 28,
+              "episodios": 52,
+              "fechaEstreno": "2020-01-05"
+            },
+            {
+              "numero": 29,
+              "episodios": 52,
+              "fechaEstreno": "2021-01-03"
+            },
+            {
+              "numero": 30,
+              "episodios": 52,
+              "fechaEstreno": "2022-01-02"
+            },
+            {
+              "numero": 31,
+              "episodios": 52,
+              "fechaEstreno": "2023-01-01"
+            },
+            {
+              "numero": 32,
+              "episodios": 53,
+              "fechaEstreno": "2023-12-29"
+            },
+            {
+              "numero": 33,
+              "episodios": 52,
+              "fechaEstreno": "2024-12-31"
+            },
+            {
+              "numero": 34,
+              "episodios": 52,
+              "fechaEstreno": "2026-01-05"
+            }
+          ],
+          "currentSeason": 34,
+          "reviews": null,
+          "trailer": {
+            "key": "FVO6mUQMon8",
+            "site": "YouTube"
+          },
+          "cast": []
+        },
+        {
+          "guid": "tmdb-tv-153312",
+          "title": "Tulsa King",
+          "link": "https://www.themoviedb.org/tv/153312",
+          "summary": "Justo después de ser liberado de prisión después de 25 años, el capo de la mafia de Nueva York, Dwight \"El General\" Manfredi, es exiliado sin contemplaciones por su jefe para instalarse en Tulsa, Oklahoma. Al darse cuenta de que su familia de la mafia puede no tener sus mejores intereses en mente, Dwight construye lentamente una \"tripulación\" a partir de un grupo de personajes inverosímiles, para ayudarlo a establecer un nuevo imperio criminal en un lugar que para él bien podría ser otro planeta.",
+          "image": "https://image.tmdb.org/t/p/w500/6ryay9RQfT5jrY9i1dveUUGryAO.jpg",
+          "pubDate": "2022-11-13",
+          "source": "TMDb",
+          "categoria": "Series",
+          "firstSeenAt": "2026-11-25T10:56:51.498Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 7.9,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.3
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-11-27",
+          "numberOfSeasons": 4,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 9,
+              "fechaEstreno": "2022-11-13"
+            },
+            {
+              "numero": 2,
+              "episodios": 10,
+              "fechaEstreno": "2024-09-15"
+            },
+            {
+              "numero": 3,
+              "episodios": 10,
+              "fechaEstreno": "2025-09-21"
+            },
+            {
+              "numero": 4,
+              "episodios": 10,
+              "fechaEstreno": "2026-10-16"
+            }
+          ],
+          "currentSeason": 4,
+          "reviews": null,
+          "trailer": {
+            "key": "aaQSScwZPbA",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "Sylvester Stallone",
+              "character": "Dwight 'The General' Manfredi",
+              "order": 0
+            },
+            {
+              "name": "Martin Starr",
+              "character": "Lawrence 'Bodhi' Geigerman",
+              "order": 1
+            },
+            {
+              "name": "Jay Will",
+              "character": "Tyson Mitchell",
+              "order": 2
+            },
+            {
+              "name": "Vincent Piazza",
+              "character": "Vince Antonacci",
+              "order": 3
+            },
+            {
+              "name": "Annabella Sciorra",
+              "character": "Joanne",
+              "order": 5
+            },
+            {
+              "name": "Chris Caldovino",
+              "character": "Goodie Carangi",
+              "order": 6
+            },
+            {
+              "name": "McKenna Quigley Harrington",
+              "character": "Grace",
+              "order": 7
+            },
+            {
+              "name": "Frank Grillo",
+              "character": "Bill Bevilaqua",
+              "order": 9
+            },
+            {
+              "name": "Michael Walden",
+              "character": "Bigfoot",
+              "order": 10
+            },
+            {
+              "name": "James Russo",
+              "character": "Quiet Ray Renzetti",
+              "order": 13
+            }
+          ]
+        },
+        {
           "guid": "tmdb-tv-206559",
           "title": "Binnelanders",
           "link": "https://www.themoviedb.org/tv/206559",
@@ -6822,7 +6655,8 @@
               "character": "Petro van Zyl",
               "order": 87
             }
-          ]
+          ],
+          "trending": false
         },
         {
           "guid": "tmdb-tv-84773",
@@ -8138,6 +7972,92 @@
               "name": "Harry Shearer",
               "character": "Ned Flanders / Mr. Burns / Smithers / Principal Skinner / Lenny Leonard (voice)",
               "order": 6
+            }
+          ]
+        },
+        {
+          "guid": "tmdb-tv-65733",
+          "title": "Doraemon, el gato cósmico",
+          "link": "https://www.themoviedb.org/tv/65733",
+          "summary": "Doraemon es un gato robot cósmico que viene del futuro, es amigo de Novita, un niño muy despistado y algo torpe, al cual ayudara con sus grandiosos inventos futuristas los cuales saca de su bolsillo mágico, de este modo tratara de evitar los problemas que él ha provocado en el futuro.",
+          "image": "https://image.tmdb.org/t/p/w500/9YqdMXlPTQGLIG67vqZdsPdPC4T.jpg",
+          "pubDate": "2005-04-22",
+          "source": "TMDb",
+          "categoria": "Animación",
+          "firstSeenAt": "2026-11-26T22:50:37.265Z",
+          "fullText": null,
+          "rating": {
+            "imdb": 8.4,
+            "rt": null,
+            "metascore": null,
+            "tmdb": 8.1
+          },
+          "status": "Returning Series",
+          "nextEpisodeDate": "2026-11-28",
+          "numberOfSeasons": 1,
+          "seasons": [
+            {
+              "numero": 1,
+              "episodios": 1549,
+              "fechaEstreno": "2005-04-22"
+            }
+          ],
+          "currentSeason": 1,
+          "reviews": null,
+          "trailer": {
+            "key": "DgmGALXIsgA",
+            "site": "YouTube"
+          },
+          "cast": [
+            {
+              "name": "大原めぐみ",
+              "character": "Nobita Nobi (voice)",
+              "order": 0
+            },
+            {
+              "name": "Wasabi Mizuta",
+              "character": "Doraemon (voice)",
+              "order": 1
+            },
+            {
+              "name": "かかずゆみ",
+              "character": "Shizuka Minamoto (voice)",
+              "order": 2
+            },
+            {
+              "name": "Tomokazu Seki",
+              "character": "Suneo Honekawa (voice)",
+              "order": 3
+            },
+            {
+              "name": "Subaru Kimura",
+              "character": "Takeshi Gouda (voice)",
+              "order": 4
+            },
+            {
+              "name": "千秋",
+              "character": "Dorami (voice)",
+              "order": 5
+            },
+            {
+              "name": "Kotono Mitsuishi",
+              "character": "Tamako Nobi (voice)",
+              "order": 6
+            },
+            {
+              "name": "Yasunori Matsumoto",
+              "character": "Nobisuke Nobi (voice)",
+              "order": 7
+            },
+            {
+              "name": "萩野志保子",
+              "character": "Hidetoshi Dekisugi (voice)",
+              "order": 8
+            },
+            {
+              "name": "Wataru Takagi",
+              "character": "Sensei (voice)",
+              "order": 9
             }
           ]
         },
