@@ -1,7 +1,25 @@
 {
  "version": 1,
- "generatedAt": "2026-11-25T18:48:38.617Z",
+ "generatedAt": "2026-11-26T18:36:45.813Z",
  "portadas": {
+  "d-simon3sarkis-super-odyssey-pc-recomp": {
+   "v": 1,
+   "imagen": "co1mxf",
+   "fuente": "ficha",
+   "nombre": "Super Mario Odyssey"
+  },
+  "d-tmcleroy-soulcalibur2-recomp": {
+   "v": 1,
+   "imagen": "co61yo",
+   "fuente": "ficha",
+   "nombre": "SoulCalibur II"
+  },
+  "d-yeoldpress-alttp-dx": {
+   "v": 1,
+   "imagen": "co5x34",
+   "fuente": "ficha",
+   "nombre": "The Legend of Zelda: A Link to the Past"
+  },
   "d-ctr-tools-ctr-native": {
    "v": 1,
    "imagen": "co7r52",
@@ -13,24 +31,6 @@
    "imagen": "co61yo",
    "fuente": "ficha",
    "nombre": "SoulCalibur II"
-  },
-  "d-spannerisms-jpdasm": {
-   "v": 1,
-   "imagen": "co5x34",
-   "fuente": "ficha",
-   "nombre": "The Legend of Zelda: A Link to the Past"
-  },
-  "d-estebanpdn-zelda-alttp-3ds": {
-   "v": 1,
-   "imagen": "co5x34",
-   "fuente": "ficha",
-   "nombre": "The Legend of Zelda: A Link to the Past"
-  },
-  "d-kanapitsas-source-recomp": {
-   "v": 1,
-   "imagen": "co1rs4",
-   "fuente": "ficha",
-   "nombre": "Portal 2"
   },
   "d-maurizi-ff9-3ds": {
    "v": 1,
@@ -52,15 +52,27 @@
   },
   "d-riviergrullon-kirby-epic-yarn-recomp": {
    "v": 1,
-   "imagen": "co1w9w",
+   "imagen": "cod9rh",
    "fuente": "ficha",
    "nombre": "Kirby’s Epic Yarn"
   },
-  "d-simon3sarkis-super-odyssey-pc-recomp": {
+  "d-spannerisms-jpdasm": {
    "v": 1,
-   "imagen": "co1mxf",
+   "imagen": "co5x34",
    "fuente": "ficha",
-   "nombre": "Super Mario Odyssey"
+   "nombre": "The Legend of Zelda: A Link to the Past"
+  },
+  "d-estebanpdn-zelda-alttp-3ds": {
+   "v": 1,
+   "imagen": "co5x34",
+   "fuente": "ficha",
+   "nombre": "The Legend of Zelda: A Link to the Past"
+  },
+  "d-kanapitsas-source-recomp": {
+   "v": 1,
+   "imagen": "co1rs4",
+   "fuente": "ficha",
+   "nombre": "Portal 2"
   },
   "d-metroidret-mzm": {
    "v": 1,
@@ -73,12 +85,6 @@
    "imagen": "co1r7f",
    "fuente": "ficha",
    "nombre": "The Last of Us"
-  },
-  "d-tmcleroy-soulcalibur2-recomp": {
-   "v": 1,
-   "imagen": "co61yo",
-   "fuente": "ficha",
-   "nombre": "SoulCalibur II"
   },
   "d-patataofcourse-rhgold": {
    "v": 1,
@@ -182,12 +188,6 @@
    "fuente": "ficha",
    "nombre": "Dino Crisis"
   },
-  "d-yeoldpress-alttp-dx": {
-   "v": 1,
-   "imagen": "co5x34",
-   "fuente": "ficha",
-   "nombre": "The Legend of Zelda: A Link to the Past"
-  },
   "d-rinnegatamante-crash-team-racing-high-octane": {
    "v": 1,
    "imagen": "co7r52",
@@ -220,7 +220,7 @@
   },
   "d-swiftshine-key": {
    "v": 1,
-   "imagen": "co1w9w",
+   "imagen": "cod9rh",
    "fuente": "ficha",
    "nombre": "Kirby’s Epic Yarn"
   },
@@ -434,12 +434,12 @@
    "fuente": "ficha",
    "nombre": "Halo: Combat Evolved"
   },
-  "p-tmcleroy-cps2recomp": {
+  "p-mstan-megamanxsnesrecomp": {
    "v": 1,
-   "imagen": "co6boi",
-   "busqueda": "Street Fighter Alpha 2",
+   "imagen": "co3z0b",
+   "busqueda": "Mega Man X",
    "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "Street Fighter Alpha 2"
+   "nombre": "Mega Man X"
   },
   "p-hero88go-melee-unlocked": {
    "v": 1,
@@ -448,59 +448,12 @@
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "Super Smash Bros. Melee"
   },
-  "p-chasem-dev-orre-launcher": {
+  "p-mstan-supermetroidrecomp": {
    "v": 1,
-   "imagen": "co2tpe",
-   "busqueda": "Pokémon Colosseum",
+   "imagen": "co5osy",
+   "busqueda": "Super Metroid",
    "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "Pokémon Colosseum"
-  },
-  "p-jackpoison-prog-ringout": {
-   "v": 1,
-   "imagen": "co61yo",
-   "fuente": "ficha",
-   "nombre": "SoulCalibur II"
-  },
-  "p-retroportingtoolkit-f-zeroforever": {
-   "v": 1,
-   "imagen": "co6ufz",
-   "busqueda": "F-Zero",
-   "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "F-Zero"
-  },
-  "p-underdecoded-gen2recomped": {
-   "v": 1,
-   "imagen": null,
-   "busqueda": "Pokemon Gold / Silver / Crystal",
-   "buscado": "2026-11-21T22:03:31.566Z"
-  },
-  "p-god-hand-rearmed-god-hand-rearmed": {
-   "v": 1,
-   "imagen": "co2kru",
-   "busqueda": "God Hand",
-   "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "God Hand"
-  },
-  "p-fridinator1-safehouse": {
-   "v": 1,
-   "imagen": "co8c2u",
-   "busqueda": "Sly Cooper and the Thievius Raccoonus",
-   "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "Sly Cooper and the Thievius Raccoonus"
-  },
-  "p-cheviman-tmnt-port": {
-   "v": 1,
-   "imagen": "co4iax",
-   "busqueda": "Teenage Mutant Ninja Turtles",
-   "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "Teenage Mutant Ninja Turtles"
-  },
-  "p-enrique363-voldorium": {
-   "v": 1,
-   "imagen": "co3xt2",
-   "busqueda": "SoulCalibur",
-   "buscado": "2026-11-23T20:29:57.632Z",
-   "nombre": "SoulCalibur VI: Hwang"
+   "nombre": "Super Metroid"
   },
   "p-nathanialf-ico-pc": {
    "v": 1,
@@ -515,6 +468,13 @@
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "Gran Turismo 3: A-Spec"
   },
+  "p-thatguymcd-dkr-r": {
+   "v": 1,
+   "imagen": "co1wgj",
+   "busqueda": "Diddy Kong Racing",
+   "buscado": "2026-11-21T22:03:31.566Z",
+   "nombre": "Diddy Kong Racing"
+  },
   "p-gminustwo-red-two": {
    "v": 1,
    "imagen": "co9v76",
@@ -522,12 +482,113 @@
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "Star Wars: Rogue Squadron II - Rogue Leader"
   },
-  "p-mstan-megamanxsnesrecomp": {
+  "p-tmcleroy-cps2recomp": {
    "v": 1,
-   "imagen": "co3z0b",
-   "busqueda": "Mega Man X",
+   "imagen": "co6boi",
+   "busqueda": "Street Fighter Alpha 2",
    "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "Mega Man X"
+   "nombre": "Street Fighter Alpha 2"
+  },
+  "p-fridinator1-safehouse": {
+   "v": 1,
+   "imagen": "co8c2u",
+   "busqueda": "Sly Cooper and the Thievius Raccoonus",
+   "buscado": "2026-11-21T22:03:31.566Z",
+   "nombre": "Sly Cooper and the Thievius Raccoonus"
+  },
+  "p-chasem-dev-orre-launcher": {
+   "v": 1,
+   "imagen": "co2tpe",
+   "busqueda": "Pokémon Colosseum",
+   "buscado": "2026-11-21T22:03:31.566Z",
+   "nombre": "Pokémon Colosseum"
+  },
+  "p-jackpoison-prog-ringout": {
+   "v": 1,
+   "imagen": "co61yo",
+   "fuente": "ficha",
+   "nombre": "SoulCalibur II"
+  },
+  "p-mstan-supermarioworldrecomp": {
+   "v": 1,
+   "imagen": "co779k",
+   "fuente": "ficha",
+   "nombre": "Super Mario World"
+  },
+  "p-cheviman-outrunners-port": {
+   "v": 1,
+   "imagen": "co5ozj",
+   "busqueda": "OutRunners",
+   "buscado": "2026-11-21T22:03:31.566Z",
+   "nombre": "OutRunners"
+  },
+  "p-sinan-karakaya-dq8-recompiled": {
+   "v": 1,
+   "imagen": null,
+   "busqueda": "DQ8 Recompiled",
+   "buscado": "2026-11-21T22:03:31.566Z"
+  },
+  "p-retroportingtoolkit-f-zeroforever": {
+   "v": 1,
+   "imagen": "co6ufz",
+   "busqueda": "F-Zero",
+   "buscado": "2026-11-21T22:03:31.566Z",
+   "nombre": "F-Zero"
+  },
+  "p-snaity-core-pe2-pc-port": {
+   "v": 1,
+   "imagen": "co7txl",
+   "busqueda": "Parasite Eve II",
+   "buscado": "2026-11-21T22:03:31.566Z",
+   "nombre": "Parasite Eve II"
+  },
+  "p-imyourhuckleberryponcho-pokemon-xd-pc-port": {
+   "v": 1,
+   "imagen": "co1zk4",
+   "busqueda": "Pokemon XD: Gale of Darkness",
+   "buscado": "2026-11-25T18:48:38.617Z",
+   "nombre": "Pokémon XD: Gale of Darkness"
+  },
+  "p-zloikiller-nfshp2-port-win": {
+   "v": 1,
+   "imagen": "co2098",
+   "busqueda": "Need for Speed: Hot Pursuit 2",
+   "buscado": "2026-11-25T18:48:38.617Z",
+   "nombre": "Need for Speed: Hot Pursuit 2"
+  },
+  "p-underdecoded-gen2recomped": {
+   "v": 1,
+   "imagen": null,
+   "busqueda": "Pokemon Gold / Silver / Crystal",
+   "buscado": "2026-11-21T22:03:31.566Z"
+  },
+  "p-god-hand-rearmed-god-hand-rearmed": {
+   "v": 1,
+   "imagen": "co2kru",
+   "busqueda": "God Hand",
+   "buscado": "2026-11-21T22:03:31.566Z",
+   "nombre": "God Hand"
+  },
+  "p-cheviman-tmnt-port": {
+   "v": 1,
+   "imagen": "co4iax",
+   "busqueda": "Teenage Mutant Ninja Turtles",
+   "buscado": "2026-11-21T22:03:31.566Z",
+   "nombre": "Teenage Mutant Ninja Turtles"
+  },
+  "p-u0rhs-burnout3-native": {
+   "v": 1,
+   "imagen": "co1y53",
+   "busqueda": "Burnout 3: Takedown",
+   "buscado": "2026-11-25T18:48:38.617Z",
+   "nombre": "Burnout 3: Takedown"
+  },
+  "p-enrique363-voldorium": {
+   "v": 1,
+   "imagen": "co3xt2",
+   "busqueda": "SoulCalibur",
+   "buscado": "2026-11-23T20:29:57.632Z",
+   "nombre": "SoulCalibur VI: Hwang"
   },
   "p-dubrovskiy-yevhen-stakelogic-gt-2-pc": {
    "v": 1,
@@ -535,13 +596,6 @@
    "busqueda": "Gran Turismo 2",
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "Gran Turismo 2"
-  },
-  "p-mstan-supermetroidrecomp": {
-   "v": 1,
-   "imagen": "co5osy",
-   "busqueda": "Super Metroid",
-   "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "Super Metroid"
   },
   "p-cheviman-simpsons-port": {
    "v": 1,
@@ -570,12 +624,6 @@
    "busqueda": "Ape Escape",
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "Ape Escape"
-  },
-  "p-mstan-supermarioworldrecomp": {
-   "v": 1,
-   "imagen": "co779k",
-   "fuente": "ficha",
-   "nombre": "Super Mario World"
   },
   "p-zquestclassic-zquestclassic": {
    "v": 1,
@@ -626,13 +674,6 @@
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "The Legend of Zelda: Twilight Princess"
   },
-  "p-snaity-core-pe2-pc-port": {
-   "v": 1,
-   "imagen": "co7txl",
-   "busqueda": "Parasite Eve II",
-   "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "Parasite Eve II"
-  },
   "p-bryanthaboi-gen1recomp": {
    "v": 1,
    "imagen": null,
@@ -672,13 +713,6 @@
    "busqueda": "GoldenEye 007",
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "GoldenEye 007"
-  },
-  "p-cheviman-outrunners-port": {
-   "v": 1,
-   "imagen": "co5ozj",
-   "busqueda": "OutRunners",
-   "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "OutRunners"
   },
   "p-jackandbeans-snap64recomp": {
    "v": 1,
@@ -780,13 +814,6 @@
    "busqueda": "Super Mario Strikers",
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "Super Mario Strikers"
-  },
-  "p-thatguymcd-dkr-r": {
-   "v": 1,
-   "imagen": "co1wgj",
-   "busqueda": "Diddy Kong Racing",
-   "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "Diddy Kong Racing"
   },
   "p-mabec-games-f-zero-glinux": {
    "v": 1,
@@ -931,12 +958,6 @@
    "busqueda": "Castlevania: Legacy of Darkness",
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "Castlevania: Legacy of Darkness"
-  },
-  "p-sinan-karakaya-dq8-recompiled": {
-   "v": 1,
-   "imagen": null,
-   "busqueda": "DQ8 Recompiled",
-   "buscado": "2026-11-21T22:03:31.566Z"
   },
   "p-troyedwardsjr-z2rs": {
    "v": 1,
@@ -1175,33 +1196,19 @@
    "busqueda": "Einhänder",
    "buscado": "2026-11-21T22:03:31.566Z"
   },
-  "p-izzy2lost-perfect-dark": {
+  "p-mbracali-prj-gd-engine": {
    "v": 1,
-   "imagen": "co77xv",
-   "busqueda": "Perfect Dark",
-   "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "Perfect Dark"
+   "imagen": "co8qmr",
+   "busqueda": "Guitar Hero",
+   "buscado": "2026-11-26T18:36:45.813Z",
+   "nombre": "Guitar Hero Dual Pack: Guitar Hero II & Guitar Hero Aerosmith"
   },
-  "p-imyourhuckleberryponcho-pokemon-xd-pc-port": {
+  "p-lfarroco-ogre-battle-64-recomp": {
    "v": 1,
-   "imagen": "co1zk4",
-   "busqueda": "Pokemon XD: Gale of Darkness",
-   "buscado": "2026-11-25T18:48:38.617Z",
-   "nombre": "Pokémon XD: Gale of Darkness"
-  },
-  "p-u0rhs-burnout3-native": {
-   "v": 1,
-   "imagen": "co1y53",
-   "busqueda": "Burnout 3: Takedown",
-   "buscado": "2026-11-25T18:48:38.617Z",
-   "nombre": "Burnout 3: Takedown"
-  },
-  "p-zloikiller-nfshp2-port-win": {
-   "v": 1,
-   "imagen": "co2098",
-   "busqueda": "Need for Speed: Hot Pursuit 2",
-   "buscado": "2026-11-25T18:48:38.617Z",
-   "nombre": "Need for Speed: Hot Pursuit 2"
+   "imagen": "co54xx",
+   "busqueda": "Ogre Battle 64: Person of Lordly Caliber",
+   "buscado": "2026-11-26T18:36:45.813Z",
+   "nombre": "Ogre Battle 64: Person of Lordly Caliber"
   }
  }
 }
