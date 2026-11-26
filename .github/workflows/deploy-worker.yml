@@ -27,6 +27,8 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           WORKER_GITHUB_PAT: ${{ secrets.WORKER_GITHUB_PAT }}
           WORKER_AUTH_SECRET: ${{ secrets.WORKER_AUTH_SECRET }}
+          IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
+          IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
         run: python3 .github/scripts/deploy_worker.py
 
       - name: Probar el Worker desplegado

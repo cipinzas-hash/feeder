@@ -39,6 +39,12 @@
 // de que un bug de cliente fuerce un push destructivo sobre la rama
 // compartida por accidente.
 //
+// IGDB (21-nov-2026, Game enhanced): GET /igdb/search?q=<texto> y GET /igdb/game?id=<n>, con el mismo header de auth. El navegador no
+// puede llamar a IGDB (pide un secreto de Twitch y no admite origen cruzado), así que el Worker lo hace con IGDB_CLIENT_ID /
+// IGDB_CLIENT_SECRET (secrets del Worker, subidos por deploy_worker.py desde los secrets del repo). Pide el token de Twitch
+// (client_credentials), lo guarda hasta que vence, respeta el límite de 4 pedidos por segundo con una cola y guarda las búsquedas
+// unas horas en la caché de Cloudflare. Responde [{ igdbId, nombre, anio, lanzamiento, portada, plataformas, generos, resumen }].
+//
 // AUTH_SECRET es "seguridad liviana", no criptográfica -- cualquiera que
 // lea el JS de Angst en el navegador podría en teoría verlo si algún día
 // se hornea como constante ahí (por ahora no se hornea, se pide en runtime
@@ -68,6 +74,96 @@ function withCors(response) {
   const headers = new Headers(response.headers);
   for (const [k, v] of Object.entries(CORS_HEADERS)) headers.set(k, v);
   return new Response(response.body, { status: response.status, headers });
+}
+
+// ─── IGDB ───────────────────────────────────────────────────────────────────
+const IGDB_CAMPOS = "name,version_parent,first_release_date,summary,cover.image_id,platforms.abbreviation,genres.name";
+const IGDB_CACHE_SEGUNDOS = 6 * 3600;
+const IGDB_ESPERA_MS = 270;   // IGDB admite 4 pedidos por segundo
+let igdbToken = null;          // { valor, vence } -- vive mientras viva el isolate del Worker
+let igdbCola = Promise.resolve();
+const dormir = ms => new Promise(r => setTimeout(r, ms));
+
+function jsonResp(obj, status = 200, extra) {
+  return withCors(new Response(JSON.stringify(obj), { status, headers: { "Content-Type": "application/json", ...(extra || {}) } }));
+}
+
+async function tokenIgdb(env, forzar) {
+  if (!forzar && igdbToken && Date.now() < igdbToken.vence - 60000) return igdbToken.valor;
+  const r = await fetch(`https://id.twitch.tv/oauth2/token?client_id=${encodeURIComponent(env.IGDB_CLIENT_ID)}&client_secret=${encodeURIComponent(env.IGDB_CLIENT_SECRET)}&grant_type=client_credentials`, { method: "POST" });
+  if (!r.ok) throw new Error(`token de Twitch HTTP ${r.status}`);
+  const d = await r.json();
+  igdbToken = { valor: d.access_token, vence: Date.now() + (Number(d.expires_in) || 3600) * 1000 };
+  return igdbToken.valor;
+}
+
+// Un pedido a IGDB a la vez y separados por IGDB_ESPERA_MS (cola dentro del isolate); reintenta una vez con token nuevo ante 401
+// y una vez ante 429.
+function igdbPedir(env, endpoint, cuerpo) {
+  const turno = igdbCola.then(async () => {
+    for (let intento = 0; intento < 3; intento++) {
+      await dormir(IGDB_ESPERA_MS);
+      const token = await tokenIgdb(env, intento === 1);
+      const r = await fetch(`https://api.igdb.com/v4/${endpoint}`, { method: "POST", headers: { "Client-ID": env.IGDB_CLIENT_ID, Authorization: `Bearer ${token}`, Accept: "application/json" }, body: cuerpo });
+      if (r.status === 401 && intento === 0) continue;
+      if (r.status === 429) { await dormir(1200); continue; }
+      if (!r.ok) throw new Error(`IGDB ${endpoint} HTTP ${r.status}`);
+      return r.json();
+    }
+    throw new Error(`IGDB ${endpoint}: sin respuesta tras reintentos`);
+  });
+  igdbCola = turno.catch(() => {});
+  return turno;
+}
+
+function igdbAResultado(g) {
+  const ts = g && g.first_release_date;
+  const lanzamiento = ts ? new Date(ts * 1000).toISOString().slice(0, 10) : null;
+  const portada = g && g.cover && typeof g.cover.image_id === "string" && /^[a-z0-9]+$/i.test(g.cover.image_id) ? g.cover.image_id : null;
+  return {
+    igdbId: g.id, nombre: g.name || "", anio: lanzamiento ? Number(lanzamiento.slice(0, 4)) : null, lanzamiento, portada,
+    plataformas: (g.platforms || []).map(p => p.abbreviation).filter(Boolean).slice(0, 6),
+    generos: (g.genres || []).map(x => x.name).filter(Boolean).slice(0, 4),
+    resumen: typeof g.summary === "string" ? g.summary.replace(/\s+/g, " ").trim().slice(0, 700) : null,
+    _version: !!g.version_parent,
+  };
+}
+
+async function igdbEnCache(clave, producir) {
+  let cache = null;
+  try { cache = typeof caches !== "undefined" ? caches.default : null; } catch (e) { cache = null; }
+  const req = new Request(`https://angst-igdb-cache.invalid/${clave}`);
+  if (cache) { try { const hit = await cache.match(req); if (hit) return await hit.json(); } catch (e) { /* sin caché: se consulta */ } }
+  const valor = await producir();
+  if (cache) { try { await cache.put(req, new Response(JSON.stringify(valor), { headers: { "Content-Type": "application/json", "Cache-Control": `max-age=${IGDB_CACHE_SEGUNDOS}` } })); } catch (e) { /* ignorar */ } }
+  return valor;
+}
+
+async function manejarIgdb(url, env) {
+  if (!env.IGDB_CLIENT_ID || !env.IGDB_CLIENT_SECRET) return jsonResp({ error: "IGDB no está configurado en el Worker" }, 501);
+  try {
+    if (url.pathname === "/igdb/search") {
+      const q = (url.searchParams.get("q") || "").replace(/["\\]/g, " ").replace(/\s+/g, " ").trim().slice(0, 100);
+      if (q.length < 2) return jsonResp([]);
+      const lista = await igdbEnCache("search/" + encodeURIComponent(q.toLowerCase()), async () => {
+        const r = await igdbPedir(env, "games", `search "${q}"; fields ${IGDB_CAMPOS}; limit 10;`);
+        // Los juegos base primero (los "version_parent" son ediciones o remasters del mismo juego).
+        return r.map(igdbAResultado).sort((a, b) => Number(a._version) - Number(b._version)).map(({ _version, ...x }) => x).slice(0, 8);
+      });
+      return jsonResp(lista);
+    }
+    const id = Number(url.searchParams.get("id"));
+    if (!Number.isInteger(id) || id <= 0) return jsonResp({ error: "id inválido" }, 400);
+    const juego = await igdbEnCache("game/" + id, async () => {
+      const r = await igdbPedir(env, "games", `where id = ${id}; fields ${IGDB_CAMPOS}; limit 1;`);
+      if (!r.length) return null;
+      const { _version, ...x } = igdbAResultado(r[0]);
+      return x;
+    });
+    return jsonResp(juego ? juego : { found: false });
+  } catch (e) {
+    return jsonResp({ error: "no se pudo consultar IGDB", detail: String(e && e.message || e).slice(0, 200) }, 502);
+  }
 }
 
 async function gh(path, ghHeaders, opts) {
@@ -135,6 +231,11 @@ export default {
     const auth = request.headers.get("X-Angst-Auth");
     if (!auth || auth !== env.AUTH_SECRET) {
       return withCors(new Response("Unauthorized", { status: 401 }));
+    }
+
+    {
+      const u = new URL(request.url);
+      if (request.method === "GET" && (u.pathname === "/igdb/search" || u.pathname === "/igdb/game")) return manejarIgdb(u, env);
     }
 
     const ghHeaders = {

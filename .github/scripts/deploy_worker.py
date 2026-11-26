@@ -93,6 +93,13 @@ if __name__ == "__main__":
     multipart_upload_worker()
     set_secret("GITHUB_PAT", os.environ["WORKER_GITHUB_PAT"])
     set_secret("AUTH_SECRET", os.environ["WORKER_AUTH_SECRET"])
+    # IGDB (Game enhanced): los mismos secrets del repo que usa el pipeline. Opcionales: sin ellos el Worker responde 501 en /igdb/*
+    # y el resto de sus funciones sigue igual.
+    for nombre in ("IGDB_CLIENT_ID", "IGDB_CLIENT_SECRET"):
+        if os.environ.get(nombre):
+            set_secret(nombre, os.environ[nombre])
+        else:
+            print(f"Secret {nombre}: no está en el entorno, se omite (el Worker responderá 501 en /igdb/*)")
     prefix = get_subdomain_prefix()  # asegura el subdominio de CUENTA primero
     enable_subdomain()  # recién ahora tiene sentido habilitar el worker en él
     if prefix:

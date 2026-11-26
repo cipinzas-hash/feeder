@@ -15,11 +15,12 @@ export function Ventana({ onClose, ancho = 440, z = 1001, arriba = false, estilo
     </div>
   );
 }
-export function VentanaCabecera({ titulo, sub, onClose }) {
+// grande: la × con zona táctil de 44 px (sin agrandar la cabecera) para ventanas que se cierran seguido.
+export function VentanaCabecera({ titulo, sub, onClose, grande = false }) {
   return (
     <div style={{ background: "#111", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flex: "none" }}>
       <div style={{ fontFamily: "'Caveat',cursive", fontSize: 22, color: "#fff", fontWeight: 700 }}>{titulo}{sub != null ? <> <span style={{ fontSize: 14, color: "#888" }}>{sub}</span></> : null}</div>
-      <button onClick={onClose} aria-label="cerrar" style={{ background: "transparent", border: "none", color: "#aaa", fontSize: 22, cursor: "pointer", lineHeight: 1 }}>×</button>
+      <button onClick={onClose} aria-label="cerrar" style={{ background: "transparent", border: "none", color: "#aaa", fontSize: 22, cursor: "pointer", lineHeight: 1, ...(grande ? { minWidth: 44, minHeight: 44, margin: "-10px -12px -10px 0", fontSize: 28 } : null) }}>×</button>
     </div>
   );
 }

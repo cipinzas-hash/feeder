@@ -12,6 +12,10 @@ export const VIDEOTECA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-ha
 // Módulo de música (oct-2026): lanzamientos + fichas de artista, lo escribe build-musica.mjs.
 export const MUSICA_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/musica.json";
 export const GAME_ENHANCED_JSON_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced.json";
+export const GAME_ENHANCED_FICHAS_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced-fichas.json";
+export const GAME_ENHANCED_PLATAFORMAS_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced-plataformas.json";
+export const GAME_ENHANCED_PORTADAS_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced-portadas.json";
+export const GAME_ENHANCED_READMES_URL = "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/game-enhanced-readmes.json";
 // Módulo Panoramas (nov-2026, issue #17): eventos culturales de Santiago, lo escribe build-panoramas.mjs.
 // Módulo tcgcrypto (nov-2026, issue #42): un archivo por juego (tcgcrypto-yugioh.json, tcgcrypto-digimon.json), lo escribe build-tcgcrypto.mjs.
 export const tcgcryptoJsonUrl = tcg => `https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/tcgcrypto-${tcg}.json`;
@@ -75,9 +79,7 @@ export async function fetchJsonSafe(url) {
 // Estado propio de Feed (cola/vistos/buzón/último refresh).
 export const STORAGE_KEY = "angst-feed-proto-v1";
 
-// Datos del feed que viven en el repo: se leen de main y, mientras exista la rama de pruebas, también de ella (lo que main aún no tiene).
-// Al fusionar la rama a main se puede borrar de acá; si queda, `fetchDataJson` elige lo más nuevo cuando el archivo trae fecha.
+// Datos del feed que viven en el repo (pool, historial, catálogos de tcgcrypto). `fetchDataJson` (catalog.js) prueba las bases en orden.
 export const DATA_BASES = [
   "https://raw.githubusercontent.com/cipinzas-hash/feeder/main/modules/feed/data/",
-  "https://raw.githubusercontent.com/cipinzas-hash/feeder/pokecripto-unificado/modules/feed/data/",
 ];
