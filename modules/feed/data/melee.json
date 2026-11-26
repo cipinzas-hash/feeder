@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-26T05:58:04.472Z",
+  "generatedAt": "2026-11-26T17:58:44.340Z",
   "categories": [
     {
       "cat": "Melee",
@@ -1433,9 +1433,9 @@
           "guid": "melee-archivo-tournament/port-priority-dx/event/melee-singles",
           "title": "Resultado final: Port Priority: DX",
           "link": "https://www.start.gg/tournament/port-priority-dx/event/melee-singles",
-          "summary": "Cody Schwab se alzó con la victoria en Port Priority: DX tras imponerse a Zain en la gran final, mientras que Hungrybox completó el podio en la tercera posición seguido por Ossify en el cuarto puesto, con Joshman y Wizzrobe compartiendo el quinto lugar, y Soonsay junto a Trif cerrando en la séptima posición. El torneo estuvo marcado por múltiples sorpresas, destacando la actuación de chape, quien logró avanzar tras derrotar a RapMonster, Ginger y Ultra, así como los triunfos de Medz sobre Salt y SDJ. Asimismo, rainy sorprendió eliminando a Aklo, Dova hizo lo propio frente a 404Cray y Mr. Motion se impuso ante Ultra en las rondas iniciales.",
+          "summary": "Cody Schwab se consagró campeón del torneo tras imponerse en la gran final ante Zain, quien obtuvo el segundo puesto, mientras que Hungrybox completó el podio en la tercera posición y Ossify finalizó cuarto. Joshman y Wizzrobe compartieron el quinto lugar, seguidos por Soonsay y Trif en la séptima posición. La competencia estuvo marcada por una serie de resultados inesperados, destacando la actuación de chape, quien derrotó a RapMonster en winners, y posteriormente eliminó a Ginger y a Ultra en el cuadro de perdedores. Otros upsets relevantes incluyeron las victorias de Medz sobre Salt y SDJ, el triunfo de rainy frente a Aklo, la victoria de Dova ante 404Cray y el triunfo de Mr. Motion sobre Ultra.",
           "image": null,
-          "pubDate": "2026-11-26T05:58:04.124Z",
+          "pubDate": "2026-11-26T17:58:43.623Z",
           "source": "Port Priority: DX",
           "categoria": "Melee",
           "fullText": null,
@@ -1900,20 +1900,24 @@
   ],
   "meleeDebug": [
     {
-      "meleemajorsCount": 4,
+      "meleemajorsCount": 6,
       "meleemajorsSlugs": [
         "tournament/port-priority-dx/event/melee-singles",
         "tournament/taking-back-tampa-the-movie/event/melee-singles",
         null,
-        "tournament/genesis-x4/event/melee-singles"
+        "tournament/genesis-x4/event/melee-singles",
+        "tournament/somnio-noctem-2/event/melee-singles-somnio-noctem-2",
+        "tournament/zenkoku-taikai-5-ultimate-chapter/event/zenkoku-taikai-5-melee"
       ]
     },
     {
-      "combinedCount": 3,
+      "combinedCount": 5,
       "combinedSlugs": [
         "tournament/port-priority-dx/event/melee-singles",
         "tournament/taking-back-tampa-the-movie/event/melee-singles",
-        "tournament/genesis-x4/event/melee-singles"
+        "tournament/genesis-x4/event/melee-singles",
+        "tournament/somnio-noctem-2/event/melee-singles-somnio-noctem-2",
+        "tournament/zenkoku-taikai-5-ultimate-chapter/event/zenkoku-taikai-5-melee"
       ],
       "previousTrackedCount": 1,
       "previousProcessedCount": 3
@@ -1961,6 +1965,20 @@
       "tournamentName": "Genesis X4",
       "state": "CREATED",
       "eventId": 1655410,
+      "yaProcesado": false
+    },
+    {
+      "slug": "tournament/somnio-noctem-2/event/melee-singles-somnio-noctem-2",
+      "tournamentName": "Somnio Noctem 2",
+      "state": "CREATED",
+      "eventId": 1690115,
+      "yaProcesado": false
+    },
+    {
+      "slug": "tournament/zenkoku-taikai-5-ultimate-chapter/event/zenkoku-taikai-5-melee",
+      "tournamentName": "Zenkoku Taikai 5: Ultimate Chapter",
+      "state": "CREATED",
+      "eventId": 1711751,
       "yaProcesado": false
     }
   ],
