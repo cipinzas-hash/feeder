@@ -41,11 +41,19 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full
 
       - name: Construir el historial
+        id: construir
         run: |
-          set -o pipefail
-          MIN_USD=${{ github.event.inputs.min_usd || '0.5' }} NODE_OPTIONS=--max-old-space-size=6144 node modules/feed/scripts/build-historial-pool.mjs 2>&1 | tee /tmp/historial-pool.log
+          # Lanzado por push: el tope y el filtro se leen de .github/lanzar-historial-pool (líneas "hasta=2025-03", "min_usd=0.5")
+          HASTA=$(grep -oP '^hasta=\K[0-9-]+' .github/lanzar-historial-pool 2>/dev/null || true)
+          MIN=$(grep -oP '^min_usd=\K[0-9.]+' .github/lanzar-historial-pool 2>/dev/null || true)
+          set +e
+          HASTA_MES="$HASTA" MIN_USD="${{ github.event.inputs.min_usd || '' }}" ; export HASTA_MES
+          MIN_USD="${{ github.event.inputs.min_usd || '' }}"; [ -z "$MIN_USD" ] && MIN_USD="${MIN:-0.5}"; export MIN_USD
+          PRESUPUESTO_MIN=300 NODE_OPTIONS=--max-old-space-size=6144 node modules/feed/scripts/build-historial-pool.mjs 2>&1 | tee /tmp/historial-pool.log
+          echo "codigo=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
 
       - name: Commitear los datos
+        if: always()
         run: |
           git config user.name "angst-feed-bot"
           git config user.email "actions@users.noreply.github.com"
@@ -59,3 +67,8 @@ jobs:
             git diff --staged --quiet || git commit -m "Historial del pool (3 datos por mes) $(date -u +%Y-%m-%dT%H:%MZ)"
             sleep 5
           done
+
+      - name: Fallar si la corrida no completó ningún mes
+        if: steps.construir.outputs.codigo != '0'
+        run: |
+          echo "::warning::el historial terminó con código ${{ steps.construir.outputs.codigo }} (ver tcgcrypto-hist/estado.json: avisos)"

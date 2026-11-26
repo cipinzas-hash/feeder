@@ -14,7 +14,7 @@ dia("2026-08-05", 3, 77, [px(1, "Holofoil", 10), px(2, "Normal", 0.2)]); dia("20
 dia("2026-09-10", 3, 77, [px(1, "Holofoil", 30), px(3, "Normal", 5)]); dia("2026-09-11", 3, 77, [px(3, "Normal", 7)]);
 dia("2026-08-07", 2, 55, [px(9, "1st Edition", 100)]);                       // Yu-Gi-Oh! (categoría 2)
 dia("2026-11-03", 3, 77, [px(1, "Holofoil", 40)]);
-const correr = hoy => spawnSync("node", ["modules/feed/scripts/build-historial-pool.mjs"], { env: { ...process.env, DATA_DIR: salida, ARCHIVO_LOCAL: arch, DESDE: "2026-08-01", HOY: hoy, MIN_USD: "0.5" }, encoding: "utf-8" });
+const correr = hoy => spawnSync("node", ["modules/feed/scripts/build-historial-pool.mjs"], { env: { ...process.env, DATA_DIR: salida, ARCHIVO_LOCAL: arch, DESDE: "2026-08-01", HOY: hoy, MIN_USD: "0.5", COBERTURA_MIN: "0", PAUSA_MS: "0" }, encoding: "utf-8" });
 const r1 = correr("2026-11-02");                                              // cerrados: agosto, septiembre, octubre
 assert.equal(r1.status, 0, r1.stderr);
 const leer = f => JSON.parse(readFileSync(join(salida, "tcgcrypto-hist", f), "utf-8"));
@@ -39,5 +39,19 @@ t("corrida mensual: solo procesa los meses cerrados que faltan y los anexa con e
   assert.deepEqual(leer("3/77.json").t["1|Holofoil"], [0, 15, 10, 20, 30, 30, 30, null, null, null, 40, 40, 40]);
   const e = leer("estado.json"); assert.equal(e.ultimoMes, "2026-11"); assert.equal(e.informe.dias, 30);          // solo noviembre
   assert.equal(correr("2026-12-02").stdout.includes("Nada que hacer"), true);                                      // sin meses nuevos no hace nada
+});
+t("límite de velocidad / días faltantes: un mes con poca cobertura NO se guarda y la corrida se detiene ahí (exit 1 si no hubo ningún mes completo)", () => {
+  const salida2 = mkdtempSync(join(tmpdir(), "hist2-"));
+  const r = spawnSync("node", ["modules/feed/scripts/build-historial-pool.mjs"], { env: { ...process.env, DATA_DIR: salida2, ARCHIVO_LOCAL: arch, DESDE: "2026-08-01", HOY: "2026-11-02", MIN_USD: "0.5", COBERTURA_MIN: "0.8", PAUSA_MS: "0" }, encoding: "utf-8" });
+  assert.equal(r.status, 1); assert.ok(!existsSync(join(salida2, "tcgcrypto-hist", "3", "77.json")), "no escribió datos de un mes con 2 de 31 días");
+  assert.ok(JSON.parse(readFileSync(join(salida2, "tcgcrypto-hist", "estado.json"), "utf-8")).avisos.some(a => /solo \d+ de 31 días/.test(a)));
+});
+t("tramos: HASTA_MES limita la corrida y la siguiente continúa desde ahí", () => {
+  const salida3 = mkdtempSync(join(tmpdir(), "hist3-")); const env = { ...process.env, DATA_DIR: salida3, ARCHIVO_LOCAL: arch, DESDE: "2026-08-01", HOY: "2026-11-02", MIN_USD: "0.5", COBERTURA_MIN: "0", PAUSA_MS: "0" };
+  assert.equal(spawnSync("node", ["modules/feed/scripts/build-historial-pool.mjs"], { env: { ...env, HASTA_MES: "2026-08" }, encoding: "utf-8" }).status, 0);
+  const l = f => JSON.parse(readFileSync(join(salida3, "tcgcrypto-hist", f), "utf-8"));
+  assert.equal(l("estado.json").ultimoMes, "2026-08"); assert.deepEqual(l("3/77.json").t["1|Holofoil"], [0, 15, 10, 20]);
+  assert.equal(spawnSync("node", ["modules/feed/scripts/build-historial-pool.mjs"], { env, encoding: "utf-8" }).status, 0);
+  assert.equal(l("estado.json").ultimoMes, "2026-10"); assert.deepEqual(l("3/77.json").t["1|Holofoil"], [0, 15, 10, 20, 30, 30, 30]);
 });
 console.log(`${n} pruebas en verde`);
