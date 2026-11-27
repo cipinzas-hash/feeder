@@ -158,6 +158,7 @@ export const EXPORT_EXEMPT_KEYS = {
   "angst-pokecripto-tcgcalls-v1": "contador diario de consultas a la API de precios: por día y por dispositivo",
   "angst-pokecripto-migrated-v1": "flag de migración por dispositivo",
   "angst-nutri-decks-v1": "legado: ya migrado a nutriDecks (CORE_EXPORT_FIELDS)",
+  "angst-poke-hist-ocultos-": "carpetas/colecciones que el historial de snapshots oculta (una clave por juego): preferencia de pantalla, por dispositivo",
 };
 
 const TIPOS_OK = {
