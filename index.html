@@ -6558,6 +6558,8 @@ ${item.link}`);
     const lineaPts = delgado ? serieSuave(history).filter((h) => fechasF.has(h.date)) : filtered;
     const path = lineaPts.map((h, i) => `${i === 0 || h.corte ? "M" : "L"}${px(h.date).toFixed(1)},${py(h.market).toFixed(1)}`).join(" ");
     const cortes = filtered.filter((h, i) => i > 0 && h.corte);
+    const sobreLinea = new Map(lineaPts.map((h) => [h.date, h.market]));
+    const yDe = (h) => py(delgado && sobreLinea.has(h.date) ? sobreLinea.get(h.date) : h.market);
     const last = filtered[filtered.length - 1];
     const first = filtered[0];
     const up = last.market >= first.market;
@@ -6604,7 +6606,7 @@ ${item.link}`);
       ),
       !compact && cortes.map((h, i) => /* @__PURE__ */ React.createElement("line", { key: "c" + i, x1: px(h.date), y1: padT, x2: px(h.date), y2: H2 - padB, stroke: dark ? "#555" : "#ccc", strokeWidth: "1", strokeDasharray: "2,3" }, /* @__PURE__ */ React.createElement("title", null, "Cambio de fuente: la l\xEDnea no se une a lo anterior"))),
       /* @__PURE__ */ React.createElement("path", { d: path, fill: "none", stroke: color2, strokeWidth: compact ? 1.5 : 2, strokeLinejoin: "round", strokeLinecap: "round" }),
-      delgado && !compact && /* @__PURE__ */ React.createElement("text", { x: padL + 2, y: padT + 7, fontSize: "8", fontFamily: "DM Sans,sans-serif", fill: dark ? "#777" : "#bbb" }, "mediana 7 d \xB7 mercado delgado"),
+      delgado && !compact && /* @__PURE__ */ React.createElement("text", { x: padL + 2, y: padT + 7, fontSize: "8", fontFamily: "DM Sans,sans-serif", fill: dark ? "#777" : "#bbb" }, "mediana 7 d \xB7 mercado delgado \xB7 toca un punto para ver el precio real"),
       filtered.map((h, i) => {
         const isSel = selectedPoint && selectedPoint.date === h.date && selectedPoint.market === h.market;
         return /* @__PURE__ */ React.createElement(
@@ -6612,13 +6614,14 @@ ${item.link}`);
           {
             key: i,
             cx: px(h.date),
-            cy: py(h.market),
+            cy: yDe(h),
             r: isSel ? 5 : compact ? 1.5 : 2.5,
             fill: isSel ? "#fff" : color2,
             stroke: isSel ? color2 : "none",
             strokeWidth: isSel ? 2 : 0,
-            opacity: delgado && !isSel ? 0.35 : 1
-          }
+            opacity: 1
+          },
+          /* @__PURE__ */ React.createElement("title", null, `${h.date} \xB7 ${fmtUSD2(h.market)}`)
         );
       }),
       !compact && (() => {
@@ -6641,7 +6644,7 @@ ${item.link}`);
         "text",
         {
           x: px(last.date),
-          y: py(last.market) - 5,
+          y: yDe(last) - 5,
           textAnchor: "end",
           fontSize: compact ? 8 : 9,
           fontFamily: "DM Sans,sans-serif",
@@ -6747,6 +6750,23 @@ ${item.link}`);
     const [histDir, setHistDir] = React.useState("todas");
     const [histTen, setHistTen] = React.useState("todas");
     const [histOrden, setHistOrden] = React.useState("cambio");
+    const HIST_OCULTOS_KEY = "angst-poke-hist-ocultos-" + juego;
+    const [histOcultos, setHistOcultosS] = React.useState(() => {
+      try {
+        const v = JSON.parse(localStorage.getItem("angst-poke-hist-ocultos-" + juego) || "[]");
+        return Array.isArray(v) ? v : [];
+      } catch (e) {
+        return [];
+      }
+    });
+    const setHistOcultos = (lista) => {
+      setHistOcultosS(lista);
+      try {
+        localStorage.setItem(HIST_OCULTOS_KEY, JSON.stringify(lista));
+      } catch (e) {
+      }
+    };
+    const [histOcultarAbierto, setHistOcultarAbierto] = React.useState(false);
     const [apiKeyInput, setApiKeyInput] = React.useState("");
     const [revAbierta, setRevAbierta] = React.useState(false);
     const [revSaltadas, setRevSaltadas] = React.useState([]);
@@ -8053,7 +8073,7 @@ ${item.link}`);
     const HIST_ORDENES = [["cambio", "mayor cambio"], ["suben", "mayor subida"], ["bajan", "mayor baja"], ["valor", "valor"], ["nombre", "nombre"]];
     function calcularHistorial() {
       const tieneHist = (c) => (c.priceHistory || []).some((h) => h.market != null);
-      const enGrupo = (c) => !histGrupo || carpetaDeInv(c) === histGrupo;
+      const enGrupo = (c) => histGrupo ? carpetaDeInv(c) === histGrupo : !histOcultos.includes(carpetaDeInv(c));
       const enTenencia = (c) => histTen === "todas" || (histTen === "tengo" ? c.estado !== "hunting" : c.estado === "hunting");
       const todas = inv.filter(tieneHist);
       const base = todas.filter((c) => enGrupo(c) && enTenencia(c));
@@ -8106,7 +8126,7 @@ ${item.link}`);
       const presentes = new Set(todas.map((c) => carpetaDeInv(c)).filter(Boolean));
       const fijas = [FIJA1, "Staples & Meta", "Price Watch"];
       const grupos = [...fijas.filter((g) => presentes.has(g)), ...[...presentes].filter((g) => !fijas.includes(g) && !NOMBRES_COLECCIONES.includes(g)).sort(), ...NOMBRES_COLECCIONES.filter((g) => presentes.has(g))];
-      return { fechas, fecha: fecha2, entradas, resumen: resumen3, grupos, hayHistoria: todas.length > 0 };
+      return { fechas, fecha: fecha2, entradas, resumen: resumen3, grupos, hayHistoria: todas.length > 0, ocultas: grupos.filter((g) => histOcultos.includes(g)).length };
     }
     if (!esPoke && view === "buscar" && buscador) return buscador({ volver: () => setView("coleccion"), carpetas: cats, crearCarpeta: (nombre) => saveCarpetas([...cats.includes(nombre) ? cats : [...cats, nombre]]) });
     if (!esPoke && view === "colecciones_menu" && explorador) return explorador({ volver: () => setView("coleccion") });
@@ -8317,7 +8337,21 @@ ${item.link}`);
       const signo2 = (n) => n > 0 ? "+" : n < 0 ? "\u2212" : "";
       const fmtPctH = (n) => n == null ? "nuevo" : `${signo2(n)}${Math.abs(n).toFixed(1)}%`;
       const colorH = (n) => n == null ? "#888" : n > 0 ? "#4caf80" : n < 0 ? "#e57373" : "#888";
-      return /* @__PURE__ */ React.createElement(MarcoPoke, { scrollRef: mainRef }, renderZoom(), renderDetalleCarta(), renderRevisionModal(), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setView("coleccion"), style: { background: "transparent", border: "none", fontSize: 20, color: "#444", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff" } }, "\u{1F4CA} historial de snapshots")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 6 } }, /* @__PURE__ */ React.createElement("select", { value: histGrupo, onChange: (e) => setHistGrupo(e.target.value), style: { ...estiloSelector, flex: 1.5 } }, /* @__PURE__ */ React.createElement("option", { value: "" }, "todas las cartas"), h.grupos.some((g) => !NOMBRES_COLECCIONES.includes(g)) && /* @__PURE__ */ React.createElement("optgroup", { label: "carpetas" }, h.grupos.filter((g) => !NOMBRES_COLECCIONES.includes(g)).map((g) => /* @__PURE__ */ React.createElement("option", { key: g, value: g }, g))), h.grupos.some((g) => NOMBRES_COLECCIONES.includes(g)) && /* @__PURE__ */ React.createElement("optgroup", { label: "colecciones" }, h.grupos.filter((g) => NOMBRES_COLECCIONES.includes(g)).map((g) => /* @__PURE__ */ React.createElement("option", { key: g, value: g }, g)))), /* @__PURE__ */ React.createElement("select", { value: histPeriodo, onChange: (e) => setHistPeriodo(e.target.value), style: estiloSelector }, [["ultimo", "\xFAltimo snapshot"], ["7", "7 d\xEDas"], ["30", "30 d\xEDas"], ["90", "90 d\xEDas"]].map(([k, l]) => /* @__PURE__ */ React.createElement("option", { key: k, value: k }, l))), /* @__PURE__ */ React.createElement("select", { value: histOrden, onChange: (e) => setHistOrden(e.target.value), style: estiloSelector }, HIST_ORDENES.map(([k, l]) => /* @__PURE__ */ React.createElement("option", { key: k, value: k }, "\u21C5 ", l)))), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 6 } }, /* @__PURE__ */ React.createElement(Segmentado, { items: [["todas", "todas"], ["suben", "\u25B2 suben"], ["bajan", "\u25BC bajan"], ["nuevas", "nuevas"]], valor: histDir, onChange: setHistDir })), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement(Segmentado, { items: [["todas", "todas"], ["tengo", "tengo"], ["faltan", "me faltan"]], valor: histTen, onChange: setHistTen })), !h.hayHistoria ? /* @__PURE__ */ React.createElement("div", { style: { ...f7, textAlign: "center", fontSize: 12, color: "#555", padding: "30px 0" } }, "todav\xEDa no hay snapshots de precios") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { background: "#151515", borderRadius: 10, padding: "8px 12px", marginBottom: 8, display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { style: { ...f7, fontSize: 10, color: "#777" } }, h.resumen.n, " carta", h.resumen.n === 1 ? "" : "s"), h.resumen.comparadas > 0 ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: "#fff" } }, fmtUSD2(h.resumen.antes), " ", /* @__PURE__ */ React.createElement("span", { style: { color: "#555" } }, "\u2192"), " ", fmtUSD2(h.resumen.ahora)), /* @__PURE__ */ React.createElement("span", { style: { marginLeft: "auto", ...f7, fontSize: 12, fontWeight: 700, color: colorH(h.resumen.delta) } }, signo2(h.resumen.delta), fmtUSD2(Math.abs(h.resumen.delta)), h.resumen.pct != null ? ` (${fmtPctH(h.resumen.pct)})` : "")) : /* @__PURE__ */ React.createElement("span", { style: { ...f7, fontSize: 11, color: "#555" } }, "sin cartas con punto de comparaci\xF3n")), histPeriodo === "ultimo" && h.fecha && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setHistorialFecha(h.fechas[idxF + 1]), disabled: idxF >= h.fechas.length - 1, style: { background: "transparent", border: "none", fontSize: 15, color: "#888", cursor: idxF >= h.fechas.length - 1 ? "default" : "pointer", opacity: idxF >= h.fechas.length - 1 ? 0.3 : 1, padding: "0 6px" } }, "\u25C0"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, textAlign: "center", ...f7, fontSize: 12, color: "#ccc" } }, h.fecha), /* @__PURE__ */ React.createElement("button", { onClick: () => setHistorialFecha(h.fechas[idxF - 1]), disabled: idxF <= 0, style: { background: "transparent", border: "none", fontSize: 15, color: "#888", cursor: idxF <= 0 ? "default" : "pointer", opacity: idxF <= 0 ? 0.3 : 1, padding: "0 6px" } }, "\u25B6")), h.entradas.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { ...f7, textAlign: "center", fontSize: 12, color: "#555", padding: "24px 0" } }, "ninguna carta cumple estos filtros"), h.entradas.map((e, i) => {
+      return /* @__PURE__ */ React.createElement(MarcoPoke, { scrollRef: mainRef }, renderZoom(), renderDetalleCarta(), renderRevisionModal(), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setView("coleccion"), style: { background: "transparent", border: "none", fontSize: 20, color: "#444", cursor: "pointer", padding: 0 } }, "\u2190"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, fontFamily: "'Caveat',cursive", fontSize: 22, fontWeight: 700, color: "#fff" } }, "\u{1F4CA} historial de snapshots")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 6 } }, /* @__PURE__ */ React.createElement("select", { value: histGrupo, onChange: (e) => setHistGrupo(e.target.value), style: { ...estiloSelector, flex: 1.5 } }, /* @__PURE__ */ React.createElement("option", { value: "" }, "todas las cartas"), h.grupos.some((g) => !NOMBRES_COLECCIONES.includes(g)) && /* @__PURE__ */ React.createElement("optgroup", { label: "carpetas" }, h.grupos.filter((g) => !NOMBRES_COLECCIONES.includes(g)).map((g) => /* @__PURE__ */ React.createElement("option", { key: g, value: g }, g))), h.grupos.some((g) => NOMBRES_COLECCIONES.includes(g)) && /* @__PURE__ */ React.createElement("optgroup", { label: "colecciones" }, h.grupos.filter((g) => NOMBRES_COLECCIONES.includes(g)).map((g) => /* @__PURE__ */ React.createElement("option", { key: g, value: g }, g)))), /* @__PURE__ */ React.createElement("select", { value: histPeriodo, onChange: (e) => setHistPeriodo(e.target.value), style: estiloSelector }, [["ultimo", "\xFAltimo snapshot"], ["7", "7 d\xEDas"], ["30", "30 d\xEDas"], ["90", "90 d\xEDas"]].map(([k, l]) => /* @__PURE__ */ React.createElement("option", { key: k, value: k }, l))), /* @__PURE__ */ React.createElement("select", { value: histOrden, onChange: (e) => setHistOrden(e.target.value), style: estiloSelector }, HIST_ORDENES.map(([k, l]) => /* @__PURE__ */ React.createElement("option", { key: k, value: k }, "\u21C5 ", l)))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 6, alignItems: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement(Segmentado, { items: [["todas", "todas"], ["suben", "\u25B2 suben"], ["bajan", "\u25BC bajan"], ["nuevas", "nuevas"]], valor: histDir, onChange: setHistDir })), /* @__PURE__ */ React.createElement("button", { "data-t": "hist-ocultar", onClick: () => setHistOcultarAbierto((a) => !a), style: { ...estiloSelector, flex: "none", cursor: "pointer", color: h.ocultas ? "#c9a227" : "#aaa", borderColor: histOcultarAbierto ? "#fff" : void 0 } }, "\u{1F648} ", h.ocultas ? `${h.ocultas} oculta${h.ocultas === 1 ? "" : "s"}` : "ocultar")), histOcultarAbierto && /* @__PURE__ */ React.createElement("div", { "data-t": "hist-ocultar-panel", style: { background: "#111", border: "1px solid #222", borderRadius: 10, padding: "8px 10px", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { ...f7, fontSize: 10, color: "#777", marginBottom: 6 } }, "Toca para ocultar o mostrar en el historial. Se recuerda en este dispositivo."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } }, h.grupos.map((g) => {
+        const oc = histOcultos.includes(g);
+        return /* @__PURE__ */ React.createElement(
+          "button",
+          {
+            key: g,
+            "data-grupo": g,
+            "data-oculto": oc ? "1" : "0",
+            onClick: () => setHistOcultos(oc ? histOcultos.filter((x) => x !== g) : [...histOcultos, g]),
+            style: { ...f7, fontSize: 11, padding: "5px 10px", borderRadius: 14, border: "1px solid " + (oc ? "#5a4a1a" : "#333"), background: oc ? "#2a2410" : "transparent", color: oc ? "#c9a227" : "#bbb", cursor: "pointer", textDecoration: oc ? "line-through" : "none" }
+          },
+          NOMBRES_COLECCIONES.includes(g) ? "\u25C6 " : "",
+          g
+        );
+      })), h.ocultas > 0 && /* @__PURE__ */ React.createElement("button", { onClick: () => setHistOcultos([]), style: { ...f7, fontSize: 10, color: "#888", background: "transparent", border: "none", marginTop: 8, cursor: "pointer", padding: 0 } }, "mostrar todas")), /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 10 } }, /* @__PURE__ */ React.createElement(Segmentado, { items: [["todas", "todas"], ["tengo", "tengo"], ["faltan", "me faltan"]], valor: histTen, onChange: setHistTen })), !h.hayHistoria ? /* @__PURE__ */ React.createElement("div", { style: { ...f7, textAlign: "center", fontSize: 12, color: "#555", padding: "30px 0" } }, "todav\xEDa no hay snapshots de precios") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { background: "#151515", borderRadius: 10, padding: "8px 12px", marginBottom: 8, display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { style: { ...f7, fontSize: 10, color: "#777" } }, h.resumen.n, " carta", h.resumen.n === 1 ? "" : "s"), h.resumen.comparadas > 0 ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 16, fontWeight: 700, color: "#fff" } }, fmtUSD2(h.resumen.antes), " ", /* @__PURE__ */ React.createElement("span", { style: { color: "#555" } }, "\u2192"), " ", fmtUSD2(h.resumen.ahora)), /* @__PURE__ */ React.createElement("span", { style: { marginLeft: "auto", ...f7, fontSize: 12, fontWeight: 700, color: colorH(h.resumen.delta) } }, signo2(h.resumen.delta), fmtUSD2(Math.abs(h.resumen.delta)), h.resumen.pct != null ? ` (${fmtPctH(h.resumen.pct)})` : "")) : /* @__PURE__ */ React.createElement("span", { style: { ...f7, fontSize: 11, color: "#555" } }, "sin cartas con punto de comparaci\xF3n")), histPeriodo === "ultimo" && h.fecha && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => setHistorialFecha(h.fechas[idxF + 1]), disabled: idxF >= h.fechas.length - 1, style: { background: "transparent", border: "none", fontSize: 15, color: "#888", cursor: idxF >= h.fechas.length - 1 ? "default" : "pointer", opacity: idxF >= h.fechas.length - 1 ? 0.3 : 1, padding: "0 6px" } }, "\u25C0"), /* @__PURE__ */ React.createElement("span", { style: { flex: 1, textAlign: "center", ...f7, fontSize: 12, color: "#ccc" } }, h.fecha), /* @__PURE__ */ React.createElement("button", { onClick: () => setHistorialFecha(h.fechas[idxF - 1]), disabled: idxF <= 0, style: { background: "transparent", border: "none", fontSize: 15, color: "#888", cursor: idxF <= 0 ? "default" : "pointer", opacity: idxF <= 0 ? 0.3 : 1, padding: "0 6px" } }, "\u25B6")), h.entradas.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { ...f7, textAlign: "center", fontSize: 12, color: "#555", padding: "24px 0" } }, "ninguna carta cumple estos filtros"), h.entradas.map((e, i) => {
         const c = e.carta, ref = "inv:" + c.id;
         const dUSD = e.prevMarket != null ? e.newMarket - e.prevMarket : null;
         const extra = e.prevMarket != null ? `${fmtUSD2(e.prevMarket)} \u2192 ${fmtUSD2(e.newMarket)}${dUSD != null ? ` \xB7 ${signo2(dUSD)}${fmtUSD2(Math.abs(dUSD))}` : ""} \xB7 ${fmtPctH(e.delta)}` : `primer snapshot \xB7 ${fmtUSD2(e.newMarket)}`;
