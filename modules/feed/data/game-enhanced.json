@@ -1,18 +1,18 @@
 {
  "version": 1,
- "generatedAt": "2026-11-26T18:36:45.813Z",
+ "generatedAt": "2026-11-27T18:25:50.559Z",
  "fuentes": {
   "decomps": {
    "ok": true,
-   "actualizado": "2026-11-26T18:36:45.813Z",
-   "generadoPorLaFuente": "2026-11-26T13:01:04Z",
-   "proyectosEnLaFuente": 3199,
+   "actualizado": "2026-11-27T18:25:50.559Z",
+   "generadoPorLaFuente": "2026-11-27T12:46:32Z",
+   "proyectosEnLaFuente": 3202,
    "proyectos": 72,
-   "ports": 114
+   "ports": 113
   },
   "igdb": {
    "ok": true,
-   "actualizado": "2026-11-26T18:36:45.813Z",
+   "actualizado": "2026-11-27T18:25:50.559Z",
    "fichas": 77,
    "jugadosConDesarrolladora": 75,
    "estudios": 58,
@@ -23,34 +23,34 @@
   },
   "readmes": {
    "ok": true,
-   "actualizado": "2026-11-26T18:36:45.813Z",
-   "pedidos": 9,
+   "actualizado": "2026-11-27T18:25:50.559Z",
+   "pedidos": 8,
    "reutilizados": 176,
    "sinReadme": 4,
    "fallos": 0,
-   "conReadme": 181,
+   "conReadme": 180,
    "conEstado": 50
   },
   "plataformas": {
    "ok": true,
-   "actualizado": "2026-11-26T18:36:45.813Z",
-   "repos": 179,
-   "pedidos": 162,
-   "reutilizados": 17,
+   "actualizado": "2026-11-27T18:25:50.559Z",
+   "repos": 178,
+   "pedidos": 4,
+   "reutilizados": 174,
    "fallos": 0,
    "conSugerencias": 47,
    "sugerencias": 74
   },
   "portadas": {
    "ok": true,
-   "actualizado": "2026-11-26T18:36:45.813Z",
-   "proyectos": 186,
-   "conPortadaIgdb": 170,
+   "actualizado": "2026-11-27T18:25:50.559Z",
+   "proyectos": 185,
+   "conPortadaIgdb": 169,
    "soloImagenDelRepo": 3,
    "sinImagen": 13,
-   "consultados": 2,
+   "consultados": 0,
    "fallos": 0,
-   "llamadas": 2
+   "llamadas": 0
   }
  },
  "semilla": [
@@ -341,15 +341,37 @@
  ],
  "decomps": [
   {
+   "id": "d-mstan-supermarioworldrecomp",
+   "tipo": "d",
+   "titulo": "Super Mario World (SuperMarioWorldRecomp)",
+   "subtipo": "static-recomp",
+   "plataforma": "SNES",
+   "estrellas": 197,
+   "ultimoCommit": "2026-11-27T10:11:45Z",
+   "release": "v0.15.13",
+   "fechaRelease": "2026-11-26T04:07:38Z",
+   "url": "https://github.com/mstan/SuperMarioWorldRecomp",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [
+    "Super Mario World"
+   ],
+   "relacion": "terminado",
+   "tuJuego": "Super Mario World",
+   "dias": 0
+  },
+  {
    "id": "d-simon3sarkis-super-odyssey-pc-recomp",
    "tipo": "d",
    "titulo": "Super Mario Odyssey (Super Odyssey PC Recomp)",
    "subtipo": "static-recomp",
    "plataforma": "Switch",
-   "estrellas": 650,
-   "ultimoCommit": "2026-11-26T07:31:20Z",
-   "release": "v1.0.2",
-   "fechaRelease": "2026-11-25T01:10:04Z",
+   "estrellas": 674,
+   "ultimoCommit": "2026-11-27T09:03:37Z",
+   "release": "v1.0.3",
+   "fechaRelease": "2026-11-27T09:27:10Z",
    "url": "https://github.com/Simon3Sarkis/super-odyssey-pc-recomp",
    "jugableUrl": null,
    "pideAssets": null,
@@ -369,9 +391,9 @@
    "subtipo": "static-recomp",
    "plataforma": "og xbox",
    "estrellas": 184,
-   "ultimoCommit": "2026-11-26T08:56:41Z",
-   "release": "v0.7.0-beta.1",
-   "fechaRelease": "2026-11-26T02:14:09Z",
+   "ultimoCommit": "2026-11-27T08:59:44Z",
+   "release": "v0.7.1-beta.1",
+   "fechaRelease": "2026-11-26T17:03:25Z",
    "url": "https://github.com/tmcleroy/soulcalibur2-recomp",
    "jugableUrl": null,
    "pideAssets": null,
@@ -383,6 +405,116 @@
    "relacion": "terminado",
    "tuJuego": "SoulCalibur II",
    "dias": 0
+  },
+  {
+   "id": "d-deez-coder-smo-android-port",
+   "tipo": "d",
+   "titulo": "Super Mario Odyssey (SMO Android Port)",
+   "subtipo": "source-port",
+   "plataforma": "Switch",
+   "estrellas": 101,
+   "ultimoCommit": "2026-11-26T14:40:19Z",
+   "release": "b0.6",
+   "fechaRelease": "2026-11-26T14:46:07Z",
+   "url": "https://github.com/Deez-coder/SMO-android-port",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": false,
+   "inactivo": false,
+   "tuyos": [
+    "Super Mario Odyssey"
+   ],
+   "relacion": "terminado",
+   "tuJuego": "Super Mario Odyssey",
+   "dias": 1
+  },
+  {
+   "id": "d-kanapitsas-source-recomp",
+   "tipo": "d",
+   "titulo": "Portal 2 (Portal 2 Recomp (Mac))",
+   "subtipo": "static-recomp",
+   "plataforma": "PC",
+   "estrellas": 144,
+   "ultimoCommit": "2026-11-26T16:08:07Z",
+   "release": "v0.4.0",
+   "fechaRelease": "2026-11-18T21:47:35Z",
+   "url": "https://github.com/kanapitsas/source-recomp",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [
+    "Portal 2"
+   ],
+   "relacion": "terminado",
+   "tuJuego": "Portal 2",
+   "dias": 1
+  },
+  {
+   "id": "d-maurizi-ff9-3ds",
+   "tipo": "d",
+   "titulo": "Final Fantasy IX (ff9-3ds)",
+   "subtipo": "decompilation",
+   "plataforma": "PS1",
+   "estrellas": 35,
+   "ultimoCommit": "2026-11-26T19:29:58Z",
+   "release": "v0.3.2",
+   "fechaRelease": "2026-11-26T19:35:25Z",
+   "url": "https://github.com/maurizi/ff9-3ds",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": false,
+   "inactivo": false,
+   "tuyos": [
+    "Final Fantasy IX"
+   ],
+   "relacion": "terminado",
+   "tuJuego": "Final Fantasy IX",
+   "dias": 1
+  },
+  {
+   "id": "d-ravencaio-tlou-remastered-pc",
+   "tipo": "d",
+   "titulo": "The Last of Us Remastered (tlou-remastered-pc)",
+   "subtipo": "engine-remake",
+   "plataforma": "PS4",
+   "estrellas": 403,
+   "ultimoCommit": "2026-11-26T18:46:31Z",
+   "release": "v0.6.0",
+   "fechaRelease": "2026-11-26T18:40:13Z",
+   "url": "https://github.com/ravencaio/tlou-remastered-pc",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [
+    "The Last of Us"
+   ],
+   "relacion": "terminado",
+   "tuJuego": "The Last of Us",
+   "dias": 1
+  },
+  {
+   "id": "d-riviergrullon-kirby-epic-yarn-recomp",
+   "tipo": "d",
+   "titulo": "Kirby's Epic Yarn (kirby-epic-yarn-recomp)",
+   "subtipo": "static-recomp",
+   "plataforma": "Wii",
+   "estrellas": 50,
+   "ultimoCommit": "2026-11-26T13:24:59Z",
+   "release": "v0.2.7",
+   "fechaRelease": "2026-11-26T04:31:00Z",
+   "url": "https://github.com/RivierGrullon/kirby-epic-yarn-recomp",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": false,
+   "inactivo": false,
+   "tuyos": [
+    "Kirby’s Epic Yarn"
+   ],
+   "relacion": "terminado",
+   "tuJuego": "Kirby’s Epic Yarn",
+   "dias": 1
   },
   {
    "id": "d-yeoldpress-alttp-dx",
@@ -404,7 +536,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 0
+   "dias": 1
   },
   {
    "id": "d-ctr-tools-ctr-native",
@@ -412,7 +544,7 @@
    "titulo": "Crash Team Racing (CTR Native)",
    "subtipo": "decompilation",
    "plataforma": "PS1",
-   "estrellas": 447,
+   "estrellas": 448,
    "ultimoCommit": "2026-11-25T12:32:48Z",
    "release": null,
    "fechaRelease": null,
@@ -426,7 +558,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Crash Team Racing",
-   "dias": 1
+   "dias": 2
   },
   {
    "id": "d-jackpoison-prog-ringout",
@@ -448,51 +580,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "SoulCalibur II",
-   "dias": 1
-  },
-  {
-   "id": "d-maurizi-ff9-3ds",
-   "tipo": "d",
-   "titulo": "Final Fantasy IX (ff9-3ds)",
-   "subtipo": "decompilation",
-   "plataforma": "PS1",
-   "estrellas": 35,
-   "ultimoCommit": "2026-11-25T22:39:08Z",
-   "release": "v0.3.1",
-   "fechaRelease": "2026-11-25T22:48:42Z",
-   "url": "https://github.com/maurizi/ff9-3ds",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": false,
-   "inactivo": false,
-   "tuyos": [
-    "Final Fantasy IX"
-   ],
-   "relacion": "terminado",
-   "tuJuego": "Final Fantasy IX",
-   "dias": 1
-  },
-  {
-   "id": "d-mstan-supermarioworldrecomp",
-   "tipo": "d",
-   "titulo": "Super Mario World (SuperMarioWorldRecomp)",
-   "subtipo": "static-recomp",
-   "plataforma": "SNES",
-   "estrellas": 195,
-   "ultimoCommit": "2026-11-26T03:54:23Z",
-   "release": "v0.15.13",
-   "fechaRelease": "2026-11-26T04:07:38Z",
-   "url": "https://github.com/mstan/SuperMarioWorldRecomp",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [
-    "Super Mario World"
-   ],
-   "relacion": "terminado",
-   "tuJuego": "Super Mario World",
-   "dias": 1
+   "dias": 2
   },
   {
    "id": "d-mstan-zeldaalttpsnesrecomp",
@@ -500,43 +588,21 @@
    "titulo": "The Legend of Zelda: A Link to the Past (ZeldaAlttPSNESRecomp)",
    "subtipo": "static-recomp",
    "plataforma": "SNES",
-   "estrellas": 82,
+   "estrellas": 87,
    "ultimoCommit": "2026-11-26T02:01:16Z",
    "release": "v0.6.7",
    "fechaRelease": "2026-11-26T02:07:10Z",
    "url": "https://github.com/mstan/ZeldaAlttPSNESRecomp",
    "jugableUrl": null,
    "pideAssets": null,
-   "ia": true,
+   "ia": false,
    "inactivo": false,
    "tuyos": [
     "The Legend of Zelda: A Link to the Past"
    ],
    "relacion": "terminado",
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 1
-  },
-  {
-   "id": "d-riviergrullon-kirby-epic-yarn-recomp",
-   "tipo": "d",
-   "titulo": "Kirby's Epic Yarn (kirby-epic-yarn-recomp)",
-   "subtipo": "static-recomp",
-   "plataforma": "Wii",
-   "estrellas": 49,
-   "ultimoCommit": "2026-11-24T19:13:22Z",
-   "release": "v0.2.7",
-   "fechaRelease": "2026-11-26T04:31:00Z",
-   "url": "https://github.com/RivierGrullon/kirby-epic-yarn-recomp",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": false,
-   "inactivo": false,
-   "tuyos": [
-    "Kirby’s Epic Yarn"
-   ],
-   "relacion": "terminado",
-   "tuJuego": "Kirby’s Epic Yarn",
-   "dias": 1
+   "dias": 2
   },
   {
    "id": "d-spannerisms-jpdasm",
@@ -558,7 +624,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 1
+   "dias": 2
   },
   {
    "id": "d-estebanpdn-zelda-alttp-3ds",
@@ -566,7 +632,7 @@
    "titulo": "The Legend of Zelda: A Link to the Past (3DS port)",
    "subtipo": "source-port",
    "plataforma": "SNES",
-   "estrellas": 815,
+   "estrellas": 818,
    "ultimoCommit": "2026-11-25T05:01:09Z",
    "release": "v4.1",
    "fechaRelease": "2026-11-11T05:20:13Z",
@@ -580,29 +646,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 2
-  },
-  {
-   "id": "d-kanapitsas-source-recomp",
-   "tipo": "d",
-   "titulo": "Portal 2 (Portal 2 Recomp (Mac))",
-   "subtipo": "static-recomp",
-   "plataforma": "PC",
-   "estrellas": 142,
-   "ultimoCommit": "2026-11-24T21:08:32Z",
-   "release": "v0.4.0",
-   "fechaRelease": "2026-11-18T21:47:35Z",
-   "url": "https://github.com/kanapitsas/source-recomp",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [
-    "Portal 2"
-   ],
-   "relacion": "terminado",
-   "tuJuego": "Portal 2",
-   "dias": 2
+   "dias": 3
   },
   {
    "id": "d-metroidret-mzm",
@@ -624,29 +668,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Metroid: Zero Mission",
-   "dias": 3
-  },
-  {
-   "id": "d-ravencaio-tlou-remastered-pc",
-   "tipo": "d",
-   "titulo": "The Last of Us Remastered (tlou-remastered-pc)",
-   "subtipo": "engine-remake",
-   "plataforma": "PS4",
-   "estrellas": 399,
-   "ultimoCommit": "2026-11-23T15:53:32Z",
-   "release": "v0.4.0",
-   "fechaRelease": "2026-11-20T03:47:06Z",
-   "url": "https://github.com/ravencaio/tlou-remastered-pc",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [
-    "The Last of Us"
-   ],
-   "relacion": "terminado",
-   "tuJuego": "The Last of Us",
-   "dias": 3
+   "dias": 4
   },
   {
    "id": "d-patataofcourse-rhgold",
@@ -668,7 +690,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Rhythm Heaven (DS)",
-   "dias": 4
+   "dias": 5
   },
   {
    "id": "d-rwwo8-odysseyrecomp",
@@ -676,7 +698,7 @@
    "titulo": "Super Mario Odyssey (OdysseyRecomp)",
    "subtipo": "static-recomp",
    "plataforma": "Switch",
-   "estrellas": 116,
+   "estrellas": 119,
    "ultimoCommit": "2026-11-22T14:51:54Z",
    "release": "0.2.9",
    "fechaRelease": "2026-11-22T14:53:32Z",
@@ -684,28 +706,6 @@
    "jugableUrl": null,
    "pideAssets": null,
    "ia": true,
-   "inactivo": false,
-   "tuyos": [
-    "Super Mario Odyssey"
-   ],
-   "relacion": "terminado",
-   "tuJuego": "Super Mario Odyssey",
-   "dias": 4
-  },
-  {
-   "id": "d-deez-coder-smo-android-port",
-   "tipo": "d",
-   "titulo": "Super Mario Odyssey (SMO Android Port)",
-   "subtipo": "source-port",
-   "plataforma": "Switch",
-   "estrellas": 99,
-   "ultimoCommit": "2026-11-21T13:32:51Z",
-   "release": "B0.5",
-   "fechaRelease": "2026-11-21T13:43:02Z",
-   "url": "https://github.com/Deez-coder/SMO-android-port",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": false,
    "inactivo": false,
    "tuyos": [
     "Super Mario Odyssey"
@@ -734,7 +734,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Wolfenstein 3D",
-   "dias": 5
+   "dias": 6
   },
   {
    "id": "d-metroidret-mf",
@@ -756,7 +756,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Metroid Fusion",
-   "dias": 5
+   "dias": 6
   },
   {
    "id": "d-mstan-supermarioland2recomp",
@@ -778,7 +778,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Super Mario Land 2: 6 Golden Coins",
-   "dias": 5
+   "dias": 6
   },
   {
    "id": "d-reshaped-sonic-adventure",
@@ -786,7 +786,7 @@
    "titulo": "Sonic Adventure",
    "subtipo": "decompilation",
    "plataforma": "Dreamcast",
-   "estrellas": 106,
+   "estrellas": 111,
    "ultimoCommit": "2026-11-21T00:17:56Z",
    "release": null,
    "fechaRelease": null,
@@ -800,7 +800,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Sonic Adventure",
-   "dias": 6
+   "dias": 7
   },
   {
    "id": "d-punpckhdq-halo",
@@ -822,7 +822,7 @@
    ],
    "relacion": "jugando",
    "tuJuego": "Halo: Combat Evolved",
-   "dias": 9
+   "dias": 10
   },
   {
    "id": "d-ragnaroek-iron-wolf",
@@ -844,7 +844,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Wolfenstein 3D",
-   "dias": 10
+   "dias": 11
   },
   {
    "id": "d-alexbeavs-ps1-ports-dino-crisis-recomp",
@@ -866,7 +866,7 @@
    ],
    "relacion": "quiero",
    "tuJuego": "Dino Crisis",
-   "dias": 11
+   "dias": 12
   },
   {
    "id": "d-alexbeavs-ps1-ports-final-fantasy-ix-recomp",
@@ -888,7 +888,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Final Fantasy IX",
-   "dias": 11
+   "dias": 12
   },
   {
    "id": "d-ecwolfengine-ecwolf",
@@ -896,7 +896,7 @@
    "titulo": "Wolfenstein 3D (ECWolf)",
    "subtipo": "decompilation",
    "plataforma": "PC",
-   "estrellas": 68,
+   "estrellas": 69,
    "ultimoCommit": "2026-11-08T17:33:08Z",
    "release": "1.4.2",
    "fechaRelease": "2026-11-10T22:50:13Z",
@@ -910,7 +910,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Wolfenstein 3D",
-   "dias": 16
+   "dias": 17
   },
   {
    "id": "d-lamb2k-re4dc",
@@ -918,7 +918,7 @@
    "titulo": "Resident Evil 4 (Dreamcast port, re4dc)",
    "subtipo": "source-port",
    "plataforma": "Dreamcast",
-   "estrellas": 51,
+   "estrellas": 52,
    "ultimoCommit": "2026-11-11T03:35:15Z",
    "release": null,
    "fechaRelease": null,
@@ -932,7 +932,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Resident Evil 4",
-   "dias": 16
+   "dias": 17
   },
   {
    "id": "d-palaceswitcher-smw-nes-disassembly",
@@ -954,7 +954,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Super Mario World",
-   "dias": 16
+   "dias": 17
   },
   {
    "id": "d-albeoris-memoria",
@@ -976,7 +976,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Final Fantasy IX",
-   "dias": 17
+   "dias": 18
   },
   {
    "id": "d-maurizi-ff9-decomp",
@@ -998,7 +998,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Final Fantasy IX",
-   "dias": 19
+   "dias": 20
   },
   {
    "id": "d-rotmill-dino-crisis-modern-edition",
@@ -1006,7 +1006,7 @@
    "titulo": "Dino Crisis (Dino Crisis - Modern Edition)",
    "subtipo": "engine-remake",
    "plataforma": "PS1",
-   "estrellas": 181,
+   "estrellas": 183,
    "ultimoCommit": "2026-11-01T18:09:15Z",
    "release": "v1.07",
    "fechaRelease": "2026-11-01T18:10:04Z",
@@ -1020,7 +1020,7 @@
    ],
    "relacion": "quiero",
    "tuJuego": "Dino Crisis",
-   "dias": 25
+   "dias": 26
   },
   {
    "id": "d-rinnegatamante-crash-team-racing-high-octane",
@@ -1042,7 +1042,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Crash Team Racing",
-   "dias": 26
+   "dias": 27
   },
   {
    "id": "d-countallegrex-sa1-psp",
@@ -1064,7 +1064,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Sonic Adventure",
-   "dias": 29
+   "dias": 30
   },
   {
    "id": "d-coz-0-smo-recomp",
@@ -1086,7 +1086,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Super Mario Odyssey",
-   "dias": 29
+   "dias": 30
   },
   {
    "id": "d-rrika-cdcenginedxhr",
@@ -1108,7 +1108,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Deus Ex: Human Revolution",
-   "dias": 29
+   "dias": 30
   },
   {
    "id": "d-sonicfreak1337-sarecomp",
@@ -1116,7 +1116,7 @@
    "titulo": "Sonic Adventure",
    "subtipo": "static-recomp",
    "plataforma": "Dreamcast",
-   "estrellas": 131,
+   "estrellas": 132,
    "ultimoCommit": "2026-10-18T20:10:32Z",
    "release": "v0.52.1",
    "fechaRelease": "2026-10-18T20:12:45Z",
@@ -1130,7 +1130,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Sonic Adventure",
-   "dias": 39
+   "dias": 40
   },
   {
    "id": "d-swiftshine-key",
@@ -1152,7 +1152,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Kirby’s Epic Yarn",
-   "dias": 43
+   "dias": 44
   },
   {
    "id": "d-technicallycomputers-metal-slug-x-recomp",
@@ -1174,7 +1174,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Metal Slug X",
-   "dias": 47
+   "dias": 48
   },
   {
    "id": "d-adonis-singh-re4",
@@ -1182,7 +1182,7 @@
    "titulo": "Resident Evil 4",
    "subtipo": "decompilation",
    "plataforma": "GameCube",
-   "estrellas": 407,
+   "estrellas": 408,
    "ultimoCommit": "2026-10-02T12:31:01Z",
    "release": null,
    "fechaRelease": null,
@@ -1196,7 +1196,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Resident Evil 4",
-   "dias": 55
+   "dias": 56
   },
   {
    "id": "d-snesrev-zelda3",
@@ -1211,14 +1211,14 @@
    "url": "https://github.com/snesrev/zelda3",
    "jugableUrl": null,
    "pideAssets": null,
-   "ia": true,
+   "ia": false,
    "inactivo": false,
    "tuyos": [
     "The Legend of Zelda: A Link to the Past"
    ],
    "relacion": "terminado",
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 55
+   "dias": 56
   },
   {
    "id": "d-monsterdruide1-odysseydecomp",
@@ -1226,7 +1226,7 @@
    "titulo": "Super Mario Odyssey",
    "subtipo": "decompilation",
    "plataforma": "Switch",
-   "estrellas": 523,
+   "estrellas": 524,
    "ultimoCommit": "2026-09-29T21:17:14Z",
    "release": null,
    "fechaRelease": null,
@@ -1240,7 +1240,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Super Mario Odyssey",
-   "dias": 58
+   "dias": 59
   },
   {
    "id": "d-fishb0nes98-tekken3recompiled",
@@ -1262,7 +1262,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Tekken 3",
-   "dias": 64
+   "dias": 65
   },
   {
    "id": "d-elliotttate-dkc1recomp",
@@ -1284,7 +1284,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Donkey Kong Country",
-   "dias": 68
+   "dias": 69
   },
   {
    "id": "d-player124413-sonic-generations-recomp-android-and-pc-edition",
@@ -1306,7 +1306,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Sonic Generations",
-   "dias": 73
+   "dias": 74
   },
   {
    "id": "d-sp00nznet-tokyojungle",
@@ -1328,7 +1328,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Tokyo Jungle",
-   "dias": 81
+   "dias": 82
   },
   {
    "id": "d-omegakatana92-kirby-dream-land-recomp",
@@ -1350,7 +1350,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Kirby’s Dream Land",
-   "dias": 88
+   "dias": 89
   },
   {
    "id": "d-isofrieze-smwdisx",
@@ -1372,7 +1372,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Super Mario World",
-   "dias": 99
+   "dias": 100
   },
   {
    "id": "d-nyperyuhgard-ctr-pc-port",
@@ -1394,7 +1394,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Crash Team Racing",
-   "dias": 115
+   "dias": 116
   },
   {
    "id": "d-ctr-tools-ctr-modsdk",
@@ -1402,7 +1402,7 @@
    "titulo": "Crash Team Racing",
    "subtipo": "decompilation",
    "plataforma": "PS1",
-   "estrellas": 460,
+   "estrellas": 461,
    "ultimoCommit": "2026-07-05T11:20:07Z",
    "release": "r11",
    "fechaRelease": "2023-03-26T16:14:18Z",
@@ -1416,7 +1416,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Crash Team Racing",
-   "dias": 144
+   "dias": 145
   },
   {
    "id": "d-entroper-ff1disassembly",
@@ -1438,7 +1438,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Final Fantasy (Remaster)",
-   "dias": 174
+   "dias": 175
   },
   {
    "id": "d-luigi587-generationsdecomp",
@@ -1460,7 +1460,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Sonic Generations",
-   "dias": 375
+   "dias": 376
   },
   {
    "id": "d-soulcalibur-ii-research-group-scii-re",
@@ -1482,7 +1482,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "SoulCalibur II",
-   "dias": 383
+   "dias": 384
   },
   {
    "id": "d-jhdev2006-super-mario-world-remastered-public",
@@ -1504,7 +1504,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Super Mario World",
-   "dias": 561
+   "dias": 562
   },
   {
    "id": "d-doldecomp-sadx",
@@ -1527,7 +1527,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Sonic Adventure DX Director’s Cut",
-   "dias": 848
+   "dias": 849
   },
   {
    "id": "d-waterdish-zelda3-android",
@@ -1549,7 +1549,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 907
+   "dias": 908
   },
   {
    "id": "d-jmxamongusmodder-cuphead-decomp",
@@ -1571,7 +1571,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Cuphead",
-   "dias": 1068
+   "dias": 1069
   },
   {
    "id": "d-snesrev-smw",
@@ -1593,7 +1593,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Super Mario World",
-   "dias": 1198
+   "dias": 1199
   },
   {
    "id": "d-stephini-smas-launcher",
@@ -1616,7 +1616,7 @@
    "imagenRepo": "https://repository-images.githubusercontent.com/655313372/53905f59-8ae1-4f11-86fc-cb647a67b622",
    "relacion": "terminado",
    "tuJuego": "Super Mario World",
-   "dias": 1225
+   "dias": 1226
   },
   {
    "id": "d-halo-re-halo",
@@ -1624,7 +1624,7 @@
    "titulo": "Halo: Combat Evolved",
    "subtipo": "decompilation",
    "plataforma": "Xbox",
-   "estrellas": 461,
+   "estrellas": 462,
    "ultimoCommit": "2023-07-07T09:16:33Z",
    "release": null,
    "fechaRelease": null,
@@ -1638,7 +1638,7 @@
    ],
    "relacion": "jugando",
    "tuJuego": "Halo: Combat Evolved",
-   "dias": 1238
+   "dias": 1239
   },
   {
    "id": "d-everything8215-ff2",
@@ -1660,7 +1660,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Final Fantasy II (Remaster)",
-   "dias": 1452
+   "dias": 1453
   },
   {
    "id": "d-yoshifanatic1-donkey-kong-country-1-disassembly",
@@ -1682,7 +1682,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Donkey Kong Country",
-   "dias": 1831
+   "dias": 1832
   },
   {
    "id": "d-daniele-rapagnani-alephone-android",
@@ -1704,7 +1704,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Marathon",
-   "dias": 2015
+   "dias": 2016
   },
   {
    "id": "d-yoshifanatic1-super-mario-rpg-disassembly",
@@ -1726,7 +1726,7 @@
    ],
    "relacion": "jugando",
    "tuJuego": "Super Mario RPG",
-   "dias": 2032
+   "dias": 2033
   },
   {
    "id": "d-yoshifanatic1-smw-smas-smasw-disassembly",
@@ -1748,7 +1748,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Super Mario World",
-   "dias": 2093
+   "dias": 2094
   },
   {
    "id": "d-jiggeryponkery-ff1-mmc5",
@@ -1770,7 +1770,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Final Fantasy (Remaster)",
-   "dias": 2125
+   "dias": 2126
   },
   {
    "id": "d-galaxyhaxz-smw-src",
@@ -1792,7 +1792,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Super Mario World",
-   "dias": 2189
+   "dias": 2190
   },
   {
    "id": "d-huderlem-kirbydreamland",
@@ -1814,7 +1814,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Kirby’s Dream Land",
-   "dias": 2354
+   "dias": 2355
   },
   {
    "id": "d-benwenger-finalfantasydisassembly",
@@ -1836,7 +1836,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Final Fantasy (Remaster)",
-   "dias": 2609
+   "dias": 2610
   },
   {
    "id": "d-walkingeyerobot-alttp-disassembly",
@@ -1858,7 +1858,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 2923
+   "dias": 2924
   },
   {
    "id": "d-gnaghi-smwdisc",
@@ -1880,7 +1880,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Super Mario World",
-   "dias": 4328
+   "dias": 4329
   },
   {
    "id": "d-sonicretro-sad-disasm",
@@ -1902,7 +1902,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Sonic Adventure",
-   "dias": 4743
+   "dias": 4744
   },
   {
    "id": "d-halo-combat-evolved",
@@ -1929,33 +1929,15 @@
  ],
  "ports": [
   {
-   "id": "p-mstan-megamanxsnesrecomp",
-   "tipo": "p",
-   "titulo": "Mega Man X (Mega Man X SNES Recomp)",
-   "subtipo": "static-recomp",
-   "plataforma": "SNES",
-   "estrellas": 243,
-   "ultimoCommit": "2026-11-26T10:06:50Z",
-   "release": "v2.4.12",
-   "fechaRelease": "2026-11-26T10:19:05Z",
-   "url": "https://github.com/mstan/MegaManXSNESRecomp",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [],
-   "dias": 0
-  },
-  {
    "id": "p-hero88go-melee-unlocked",
    "tipo": "p",
    "titulo": "Super Smash Bros. Melee (Melee Unlocked)",
    "subtipo": "static-recomp",
    "plataforma": "GameCube",
-   "estrellas": 213,
-   "ultimoCommit": "2026-11-26T06:30:36Z",
-   "release": "v1.0.30",
-   "fechaRelease": "2026-11-26T06:41:47Z",
+   "estrellas": 214,
+   "ultimoCommit": "2026-11-27T08:28:19Z",
+   "release": "v1.0.33",
+   "fechaRelease": "2026-11-27T09:05:49Z",
    "url": "https://github.com/Hero88go/melee-unlocked",
    "jugableUrl": null,
    "pideAssets": null,
@@ -1965,16 +1947,16 @@
    "dias": 0
   },
   {
-   "id": "p-mstan-supermetroidrecomp",
+   "id": "p-cheviman-outrunners-port",
    "tipo": "p",
-   "titulo": "Super Metroid (SuperMetroidSNESRecomp)",
-   "subtipo": "static-recomp",
-   "plataforma": "SNES",
-   "estrellas": 167,
-   "ultimoCommit": "2026-11-26T11:38:58Z",
-   "release": "v0.4.14",
-   "fechaRelease": "2026-11-26T11:40:33Z",
-   "url": "https://github.com/mstan/SuperMetroidRecomp",
+   "titulo": "OutRunners (OutRunners - Native Port)",
+   "subtipo": "source-port",
+   "plataforma": "Arcade",
+   "estrellas": 150,
+   "ultimoCommit": "2026-11-27T11:28:18Z",
+   "release": "v1.4.2",
+   "fechaRelease": "2026-11-27T11:53:13Z",
+   "url": "https://github.com/cheviman/outrunners-port",
    "jugableUrl": null,
    "pideAssets": null,
    "ia": true,
@@ -1983,88 +1965,34 @@
    "dias": 0
   },
   {
-   "id": "p-nathanialf-ico-pc",
+   "id": "p-nautaro-dbz-bt4-tag-team-decomp",
    "tipo": "p",
-   "titulo": "Ico-PC",
-   "subtipo": "static-recomp",
-   "plataforma": "PS2",
-   "estrellas": 585,
-   "ultimoCommit": "2026-11-25T17:39:04Z",
-   "release": "v0.11.16",
-   "fechaRelease": "2026-11-25T19:28:39Z",
-   "url": "https://github.com/nathanialf/ico-pc",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [],
-   "dias": 1
-  },
-  {
-   "id": "p-matt-pulsipher-gt3-revisited",
-   "tipo": "p",
-   "titulo": "Gran Turismo 3 A-Spec (GT3 Revisited)",
+   "titulo": "Dragon Ball Z: Budokai Tenkaichi 4",
    "subtipo": "engine-remake",
    "plataforma": "PS2",
-   "estrellas": 378,
-   "ultimoCommit": "2026-11-26T06:56:10Z",
-   "release": "v0.9.0",
-   "fechaRelease": "2026-11-25T21:20:47Z",
-   "url": "https://github.com/matt-pulsipher/GT3-revisited",
+   "estrellas": 138,
+   "ultimoCommit": "2026-11-27T11:32:43Z",
+   "release": "v0.1.39.6-R3.2",
+   "fechaRelease": "2026-11-27T11:41:11Z",
+   "url": "https://github.com/NauTaro/DBZ-BT4-Tag-Team-Decomp",
    "jugableUrl": null,
    "pideAssets": null,
-   "ia": true,
+   "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 1
+   "dias": 0
   },
   {
-   "id": "p-thatguymcd-dkr-r",
+   "id": "p-mstan-megamanxsnesrecomp",
    "tipo": "p",
-   "titulo": "Diddy Kong Racing",
+   "titulo": "Mega Man X (Mega Man X SNES Recomp)",
    "subtipo": "static-recomp",
-   "plataforma": "N64",
-   "estrellas": 271,
-   "ultimoCommit": "2026-11-26T05:57:21Z",
-   "release": "Version1.0.16",
-   "fechaRelease": "2026-11-26T00:12:58Z",
-   "url": "https://github.com/ThatGuyMcd/DKR-R",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [],
-   "dias": 1
-  },
-  {
-   "id": "p-gminustwo-red-two",
-   "tipo": "p",
-   "titulo": "Star Wars: Rogue Squadron II – Rogue Leader (Red Two)",
-   "subtipo": "source-port",
-   "plataforma": "GameCube",
-   "estrellas": 257,
-   "ultimoCommit": "2026-11-26T03:43:40Z",
-   "release": "v1.4",
-   "fechaRelease": "2026-11-26T04:01:04Z",
-   "url": "https://github.com/gminustwo/red_two",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [],
-   "dias": 1
-  },
-  {
-   "id": "p-tmcleroy-cps2recomp",
-   "tipo": "p",
-   "titulo": "Street Fighter Alpha 2 (CPS-2 Recomp)",
-   "subtipo": "static-recomp",
-   "plataforma": "Arcade",
-   "estrellas": 219,
-   "ultimoCommit": "2026-11-26T06:16:20Z",
-   "release": "v1.6.0-beta.6",
-   "fechaRelease": "2026-11-25T11:37:23Z",
-   "url": "https://github.com/tmcleroy/cps2recomp",
+   "plataforma": "SNES",
+   "estrellas": 244,
+   "ultimoCommit": "2026-11-26T10:06:50Z",
+   "release": "v2.4.12",
+   "fechaRelease": "2026-11-26T10:19:05Z",
+   "url": "https://github.com/mstan/MegaManXSNESRecomp",
    "jugableUrl": null,
    "pideAssets": null,
    "ia": true,
@@ -2078,10 +2006,10 @@
    "titulo": "Sly Cooper and the Thievius Raccoonus (SafeHouse)",
    "subtipo": "source-port",
    "plataforma": "PS2",
-   "estrellas": 212,
-   "ultimoCommit": "2026-11-25T16:31:18Z",
-   "release": "v0.3.155",
-   "fechaRelease": "2026-11-25T17:34:43Z",
+   "estrellas": 215,
+   "ultimoCommit": "2026-11-26T17:42:28Z",
+   "release": "v0.3.157",
+   "fechaRelease": "2026-11-26T18:12:43Z",
    "url": "https://github.com/FridiNaTor1/SafeHouse",
    "jugableUrl": null,
    "pideAssets": null,
@@ -2091,13 +2019,157 @@
    "dias": 1
   },
   {
+   "id": "p-mstan-supermetroidrecomp",
+   "tipo": "p",
+   "titulo": "Super Metroid (SuperMetroidSNESRecomp)",
+   "subtipo": "static-recomp",
+   "plataforma": "SNES",
+   "estrellas": 169,
+   "ultimoCommit": "2026-11-26T11:38:58Z",
+   "release": "v0.4.14",
+   "fechaRelease": "2026-11-26T11:40:33Z",
+   "url": "https://github.com/mstan/SuperMetroidRecomp",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [],
+   "dias": 1
+  },
+  {
+   "id": "p-zloikiller-nfshp2-port-win",
+   "tipo": "p",
+   "titulo": "Need for Speed: Hot Pursuit 2 (nfshp2-port-win)",
+   "subtipo": "source-port",
+   "plataforma": "PS2",
+   "estrellas": 114,
+   "ultimoCommit": "2026-11-27T01:55:53Z",
+   "release": "0.16",
+   "fechaRelease": "2026-11-26T15:14:02Z",
+   "url": "https://github.com/ZloiKILLER/nfshp2-port-win",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": false,
+   "inactivo": false,
+   "tuyos": [],
+   "dias": 1
+  },
+  {
+   "id": "p-imyourhuckleberryponcho-pokemon-xd-pc-port",
+   "tipo": "p",
+   "titulo": "Pokemon XD: Gale of Darkness (Pokemon XD PC Port)",
+   "subtipo": "source-port",
+   "plataforma": "GameCube",
+   "estrellas": 112,
+   "ultimoCommit": "2026-11-27T02:38:00Z",
+   "release": "v0.7.7",
+   "fechaRelease": "2026-11-27T03:36:19Z",
+   "url": "https://github.com/imyourhuckleberryponcho/Pokemon-XD-PC-Port",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": false,
+   "inactivo": false,
+   "tuyos": [],
+   "dias": 1
+  },
+  {
+   "id": "p-nathanialf-ico-pc",
+   "tipo": "p",
+   "titulo": "Ico-PC",
+   "subtipo": "static-recomp",
+   "plataforma": "PS2",
+   "estrellas": 587,
+   "ultimoCommit": "2026-11-25T17:39:04Z",
+   "release": "v0.11.16",
+   "fechaRelease": "2026-11-25T19:28:39Z",
+   "url": "https://github.com/nathanialf/ico-pc",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [],
+   "dias": 2
+  },
+  {
+   "id": "p-matt-pulsipher-gt3-revisited",
+   "tipo": "p",
+   "titulo": "Gran Turismo 3 A-Spec (GT3 Revisited)",
+   "subtipo": "engine-remake",
+   "plataforma": "PS2",
+   "estrellas": 383,
+   "ultimoCommit": "2026-11-27T06:50:49Z",
+   "release": "v0.9.0",
+   "fechaRelease": "2026-11-25T21:20:47Z",
+   "url": "https://github.com/matt-pulsipher/GT3-revisited",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [],
+   "dias": 2
+  },
+  {
+   "id": "p-thatguymcd-dkr-r",
+   "tipo": "p",
+   "titulo": "Diddy Kong Racing",
+   "subtipo": "static-recomp",
+   "plataforma": "N64",
+   "estrellas": 273,
+   "ultimoCommit": "2026-11-26T20:31:25Z",
+   "release": "Version1.0.16",
+   "fechaRelease": "2026-11-26T00:12:58Z",
+   "url": "https://github.com/ThatGuyMcd/DKR-R",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [],
+   "dias": 2
+  },
+  {
+   "id": "p-gminustwo-red-two",
+   "tipo": "p",
+   "titulo": "Star Wars: Rogue Squadron II – Rogue Leader (Red Two)",
+   "subtipo": "source-port",
+   "plataforma": "GameCube",
+   "estrellas": 263,
+   "ultimoCommit": "2026-11-26T03:43:40Z",
+   "release": "v1.4",
+   "fechaRelease": "2026-11-26T04:01:04Z",
+   "url": "https://github.com/gminustwo/red_two",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [],
+   "dias": 2
+  },
+  {
+   "id": "p-tmcleroy-cps2recomp",
+   "tipo": "p",
+   "titulo": "Street Fighter Alpha 2 (CPS-2 Recomp)",
+   "subtipo": "static-recomp",
+   "plataforma": "Arcade",
+   "estrellas": 221,
+   "ultimoCommit": "2026-11-27T05:13:26Z",
+   "release": "v1.6.0-beta.6",
+   "fechaRelease": "2026-11-25T11:37:23Z",
+   "url": "https://github.com/tmcleroy/cps2recomp",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [],
+   "dias": 2
+  },
+  {
    "id": "p-chasem-dev-orre-launcher",
    "tipo": "p",
    "titulo": "Pokémon Colosseum (Colosseum Launcher)",
    "subtipo": "engine-remake",
    "plataforma": "GameCube",
-   "estrellas": 205,
-   "ultimoCommit": "2026-11-25T17:13:45Z",
+   "estrellas": 207,
+   "ultimoCommit": "2026-11-27T12:18:44Z",
    "release": "v0.6.1",
    "fechaRelease": "2026-11-25T12:44:37Z",
    "url": "https://github.com/chasem-dev/orre-launcher",
@@ -2106,7 +2178,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 1
+   "dias": 2
   },
   {
    "id": "p-jackpoison-prog-ringout",
@@ -2128,7 +2200,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "SoulCalibur II",
-   "dias": 1
+   "dias": 2
   },
   {
    "id": "p-mstan-supermarioworldrecomp",
@@ -2136,8 +2208,8 @@
    "titulo": "Super Mario World (SuperMarioWorldRecomp)",
    "subtipo": "static-recomp",
    "plataforma": "SNES",
-   "estrellas": 195,
-   "ultimoCommit": "2026-11-26T03:54:23Z",
+   "estrellas": 197,
+   "ultimoCommit": "2026-11-27T10:11:45Z",
    "release": "v0.15.13",
    "fechaRelease": "2026-11-26T04:07:38Z",
    "url": "https://github.com/mstan/SuperMarioWorldRecomp",
@@ -2150,25 +2222,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Super Mario World",
-   "dias": 1
-  },
-  {
-   "id": "p-cheviman-outrunners-port",
-   "tipo": "p",
-   "titulo": "OutRunners (OutRunners - Native Port)",
-   "subtipo": "source-port",
-   "plataforma": "Arcade",
-   "estrellas": 149,
-   "ultimoCommit": "2026-11-26T00:29:12Z",
-   "release": "v1.4.0",
-   "fechaRelease": "2026-11-26T00:27:02Z",
-   "url": "https://github.com/cheviman/outrunners-port",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [],
-   "dias": 1
+   "dias": 2
   },
   {
    "id": "p-sinan-karakaya-dq8-recompiled",
@@ -2176,7 +2230,7 @@
    "titulo": "DQ8 Recompiled",
    "subtipo": "static-recomp",
    "plataforma": "PS2",
-   "estrellas": 138,
+   "estrellas": 139,
    "ultimoCommit": "2026-11-25T14:38:48Z",
    "release": "469d3cf",
    "fechaRelease": "2026-11-25T14:52:57Z",
@@ -2186,7 +2240,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 1
+   "dias": 2
   },
   {
    "id": "p-retroportingtoolkit-f-zeroforever",
@@ -2204,7 +2258,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 1
+   "dias": 2
   },
   {
    "id": "p-snaity-core-pe2-pc-port",
@@ -2212,7 +2266,7 @@
    "titulo": "Parasite Eve II (PE2PC)",
    "subtipo": "source-port",
    "plataforma": "PS1",
-   "estrellas": 111,
+   "estrellas": 112,
    "ultimoCommit": "2026-11-26T01:16:19Z",
    "release": "v0.9.0",
    "fechaRelease": "2026-11-26T01:21:36Z",
@@ -2222,43 +2276,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 1
-  },
-  {
-   "id": "p-imyourhuckleberryponcho-pokemon-xd-pc-port",
-   "tipo": "p",
-   "titulo": "Pokemon XD: Gale of Darkness (Pokemon XD PC Port)",
-   "subtipo": "source-port",
-   "plataforma": "GameCube",
-   "estrellas": 109,
-   "ultimoCommit": "2026-11-26T02:22:04Z",
-   "release": "v0.7.5",
-   "fechaRelease": "2026-11-26T03:09:30Z",
-   "url": "https://github.com/imyourhuckleberryponcho/Pokemon-XD-PC-Port",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": false,
-   "inactivo": false,
-   "tuyos": [],
-   "dias": 1
-  },
-  {
-   "id": "p-zloikiller-nfshp2-port-win",
-   "tipo": "p",
-   "titulo": "Need for Speed: Hot Pursuit 2 (nfshp2-port-win)",
-   "subtipo": "source-port",
-   "plataforma": "PS2",
-   "estrellas": 109,
-   "ultimoCommit": "2026-11-26T05:10:56Z",
-   "release": "0.15",
-   "fechaRelease": "2026-11-26T05:15:42Z",
-   "url": "https://github.com/ZloiKILLER/nfshp2-port-win",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": false,
-   "inactivo": false,
-   "tuyos": [],
-   "dias": 1
+   "dias": 2
   },
   {
    "id": "p-underdecoded-gen2recomped",
@@ -2266,7 +2284,7 @@
    "titulo": "Pokemon Gold / Silver / Crystal (Gen2Recomped)",
    "subtipo": "static-recomp",
    "plataforma": "Game Boy Color",
-   "estrellas": 477,
+   "estrellas": 478,
    "ultimoCommit": "2026-11-24T23:58:49Z",
    "release": "v0.8.61",
    "fechaRelease": "2026-11-25T00:05:28Z",
@@ -2276,7 +2294,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 2
+   "dias": 3
   },
   {
    "id": "p-god-hand-rearmed-god-hand-rearmed",
@@ -2284,8 +2302,8 @@
    "titulo": "God Hand (God Hand: Rearmed)",
    "subtipo": "static-recomp",
    "plataforma": "PS2",
-   "estrellas": 248,
-   "ultimoCommit": "2026-11-26T12:28:51Z",
+   "estrellas": 253,
+   "ultimoCommit": "2026-11-27T09:14:34Z",
    "release": "v0.6.9.6",
    "fechaRelease": "2026-11-24T19:58:54Z",
    "url": "https://github.com/God-Hand-Rearmed/God-Hand-Rearmed",
@@ -2294,7 +2312,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 2
+   "dias": 3
   },
   {
    "id": "p-cheviman-tmnt-port",
@@ -2312,7 +2330,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 2
+   "dias": 3
   },
   {
    "id": "p-u0rhs-burnout3-native",
@@ -2320,7 +2338,7 @@
    "titulo": "Burnout 3: Takedown (Burnout 3 Native)",
    "subtipo": "engine-remake",
    "plataforma": "PS2",
-   "estrellas": 109,
+   "estrellas": 118,
    "ultimoCommit": "2026-11-24T07:15:51Z",
    "release": "v1.4.0",
    "fechaRelease": "2026-11-24T07:26:06Z",
@@ -2330,7 +2348,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 2
+   "dias": 3
   },
   {
    "id": "p-enrique363-voldorium",
@@ -2338,7 +2356,7 @@
    "titulo": "SoulCalibur (voldorium)",
    "subtipo": "static-recomp",
    "plataforma": "Dreamcast",
-   "estrellas": 103,
+   "estrellas": 105,
    "ultimoCommit": "2026-11-24T22:42:43Z",
    "release": "v1.2.3",
    "fechaRelease": "2026-11-24T22:44:49Z",
@@ -2348,7 +2366,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 2
+   "dias": 3
   },
   {
    "id": "p-dubrovskiy-yevhen-stakelogic-gt-2-pc",
@@ -2356,8 +2374,8 @@
    "titulo": "Gran Turismo 2 (Gran Turismo 2 PC, VR & Browser)",
    "subtipo": "browser-port",
    "plataforma": "PS1",
-   "estrellas": 216,
-   "ultimoCommit": "2026-11-25T22:15:35Z",
+   "estrellas": 218,
+   "ultimoCommit": "2026-11-26T17:00:56Z",
    "release": "v1.0.0",
    "fechaRelease": "2026-11-24T00:25:17Z",
    "url": "https://github.com/dubrovskiy-yevhen-stakelogic/gt-2-pc",
@@ -2366,7 +2384,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 3
+   "dias": 4
   },
   {
    "id": "p-cheviman-simpsons-port",
@@ -2374,7 +2392,7 @@
    "titulo": "The Simpsons Arcade (The Simpsons — port)",
    "subtipo": "source-port",
    "plataforma": "Arcade",
-   "estrellas": 145,
+   "estrellas": 147,
    "ultimoCommit": "2026-11-23T16:27:54Z",
    "release": "v1.0.4",
    "fechaRelease": "2026-11-23T17:23:42Z",
@@ -2384,7 +2402,25 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 3
+   "dias": 4
+  },
+  {
+   "id": "p-mstan-megamanx4recomp",
+   "tipo": "p",
+   "titulo": "Mega Man X4 (MegaManX4Recomp)",
+   "subtipo": "static-recomp",
+   "plataforma": "PS1",
+   "estrellas": 147,
+   "ultimoCommit": "2026-11-27T06:05:29Z",
+   "release": "v1.0.33",
+   "fechaRelease": "2026-11-23T11:47:23Z",
+   "url": "https://github.com/mstan/MegaManX4Recomp",
+   "jugableUrl": null,
+   "pideAssets": null,
+   "ia": true,
+   "inactivo": false,
+   "tuyos": [],
+   "dias": 4
   },
   {
    "id": "p-roman215-weltall",
@@ -2392,7 +2428,7 @@
    "titulo": "Xenogears (Weltall)",
    "subtipo": "engine-remake",
    "plataforma": "PS1",
-   "estrellas": 223,
+   "estrellas": 225,
    "ultimoCommit": "2026-11-23T00:28:28Z",
    "release": "v1.0.4",
    "fechaRelease": "2026-11-23T01:01:06Z",
@@ -2402,25 +2438,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 4
-  },
-  {
-   "id": "p-nautaro-dbz-bt4-tag-team-decomp",
-   "tipo": "p",
-   "titulo": "Dragon Ball Z: Budokai Tenkaichi 4",
-   "subtipo": "engine-remake",
-   "plataforma": "PS2",
-   "estrellas": 137,
-   "ultimoCommit": "2026-11-22T23:41:44Z",
-   "release": "v0.1.39.6-R3",
-   "fechaRelease": "2026-11-22T23:56:28Z",
-   "url": "https://github.com/NauTaro/DBZ-BT4-Tag-Team-Decomp",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": false,
-   "inactivo": false,
-   "tuyos": [],
-   "dias": 4
+   "dias": 5
   },
   {
    "id": "p-mstan-apeescaperecomp",
@@ -2438,7 +2456,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 5
+   "dias": 6
   },
   {
    "id": "p-mbracali-prj-gd-engine",
@@ -2456,26 +2474,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 5
-  },
-  {
-   "id": "p-zquestclassic-zquestclassic",
-   "tipo": "p",
-   "titulo": "The Legend of Zelda (ZQuest Classic)",
-   "subtipo": "engine-remake",
-   "plataforma": "NES",
-   "estrellas": 573,
-   "ultimoCommit": "2026-11-24T08:26:48Z",
-   "release": "2.55.18",
-   "fechaRelease": "2026-11-20T01:35:57Z",
-   "url": "https://github.com/ZQuestClassic/ZQuestClassic",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [],
-   "imagenRepo": "https://repository-images.githubusercontent.com/30955718/f9963ffe-e28a-4cf4-a2bd-1eb6270db004",
-   "dias": 7
+   "dias": 6
   },
   {
    "id": "p-marcoscodas-bravely-emerald",
@@ -2483,7 +2482,7 @@
    "titulo": "Pokemon Emerald (Bravely Emerald HD-2D)",
    "subtipo": "engine-remake",
    "plataforma": "GBA",
-   "estrellas": 129,
+   "estrellas": 130,
    "ultimoCommit": "2026-11-20T00:31:12Z",
    "release": "v0.2.0",
    "fechaRelease": "2026-11-20T00:51:37Z",
@@ -2493,7 +2492,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 7
+   "dias": 8
   },
   {
    "id": "p-wootbeer-snprecomp",
@@ -2501,7 +2500,7 @@
    "titulo": "Sin and Punishment (SnPRecompiled)",
    "subtipo": "static-recomp",
    "plataforma": "N64",
-   "estrellas": 103,
+   "estrellas": 106,
    "ultimoCommit": "2026-11-19T22:07:47Z",
    "release": "0.2.12",
    "fechaRelease": "2026-11-19T22:16:36Z",
@@ -2511,7 +2510,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 7
+   "dias": 8
   },
   {
    "id": "p-sciaschi-cbfd-recompiled",
@@ -2530,7 +2529,7 @@
    "inactivo": false,
    "tuyos": [],
    "imagenRepo": "https://repository-images.githubusercontent.com/1388317348/504b8c7e-a257-4497-bbef-38710f3f818a",
-   "dias": 8
+   "dias": 9
   },
   {
    "id": "p-madxbio97-sf-pc-port",
@@ -2548,7 +2547,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 8
+   "dias": 9
   },
   {
    "id": "p-obaidr1-hercules-recompiled",
@@ -2566,7 +2565,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 8
+   "dias": 9
   },
   {
    "id": "p-joeyaw-tpvr",
@@ -2584,7 +2583,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 8
+   "dias": 9
   },
   {
    "id": "p-bryanthaboi-gen1recomp",
@@ -2592,7 +2591,7 @@
    "titulo": "Pokemon RBY / GSC / FRLF / RSE (G1R Deluxe)",
    "subtipo": "static-recomp",
    "plataforma": "Game Boy",
-   "estrellas": 4215,
+   "estrellas": 4216,
    "ultimoCommit": "2026-11-17T03:55:30Z",
    "release": "v0.4.8",
    "fechaRelease": "2026-11-17T01:16:00Z",
@@ -2602,7 +2601,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 10
+   "dias": 11
   },
   {
    "id": "p-mr-finster-vf3-recomp",
@@ -2620,7 +2619,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 10
+   "dias": 11
   },
   {
    "id": "p-mr-finster-vf2-recomp",
@@ -2638,7 +2637,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 10
+   "dias": 11
   },
   {
    "id": "p-chrissotraidis-bluewake",
@@ -2646,7 +2645,7 @@
    "titulo": "The Legend of Zelda: The Wind Waker (BlueWake)",
    "subtipo": "static-recomp",
    "plataforma": "GameCube",
-   "estrellas": 676,
+   "estrellas": 684,
    "ultimoCommit": "2026-11-24T00:27:23Z",
    "release": "v0.12.0",
    "fechaRelease": "2026-11-15T23:20:16Z",
@@ -2656,7 +2655,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 11
+   "dias": 12
   },
   {
    "id": "p-chrissotraidis-sunpad",
@@ -2674,7 +2673,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 11
+   "dias": 12
   },
   {
    "id": "p-chrissotraidis-goldenpad",
@@ -2683,7 +2682,7 @@
    "subtipo": "source-port",
    "plataforma": "N64",
    "estrellas": 194,
-   "ultimoCommit": "2026-11-15T23:54:45Z",
+   "ultimoCommit": "2026-11-27T00:03:53Z",
    "release": "v0.3.2",
    "fechaRelease": "2026-11-15T23:49:36Z",
    "url": "https://github.com/chrissotraidis/goldenpad",
@@ -2692,7 +2691,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 11
+   "dias": 12
   },
   {
    "id": "p-jackandbeans-snap64recomp",
@@ -2710,8 +2709,8 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "imagenRepo": "https://repository-images.githubusercontent.com/1358365242/2c5561f8-88d1-4804-b040-8e556231b84d",
-   "dias": 11
+   "imagenRepo": "https://repository-images.githubusercontent.com/1358365242/3c26ac06-2644-40d1-b517-24aacda2b0d4",
+   "dias": 12
   },
   {
    "id": "p-thibautbus-top",
@@ -2730,7 +2729,7 @@
    "inactivo": false,
    "tuyos": [],
    "imagenRepo": "https://repository-images.githubusercontent.com/1391290392/43371226-e7f6-4530-9662-35b27022397f",
-   "dias": 11
+   "dias": 12
   },
   {
    "id": "p-abedegno-underworld-exhumed",
@@ -2738,7 +2737,7 @@
    "titulo": "Underworld Exhumed",
    "subtipo": "static-recomp",
    "plataforma": "DOS",
-   "estrellas": 108,
+   "estrellas": 109,
    "ultimoCommit": "2026-11-17T22:40:05Z",
    "release": "uw1-v1.0.3",
    "fechaRelease": "2026-11-15T13:56:50Z",
@@ -2749,7 +2748,7 @@
    "inactivo": false,
    "tuyos": [],
    "imagenRepo": "https://repository-images.githubusercontent.com/1398811852/e3e6b22c-7ca0-41c2-aa12-bf4a932b686c",
-   "dias": 11
+   "dias": 12
   },
   {
    "id": "p-blacklabelhq-symphonyrecomp",
@@ -2757,7 +2756,7 @@
    "titulo": "Castlevania: Symphony of the Night (SymphonyRecomp)",
    "subtipo": "static-recomp",
    "plataforma": "PS1",
-   "estrellas": 1178,
+   "estrellas": 1181,
    "ultimoCommit": "2026-11-24T15:08:39Z",
    "release": "v1.2.0p",
    "fechaRelease": "2026-11-14T20:02:34Z",
@@ -2767,7 +2766,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 12
+   "dias": 13
   },
   {
    "id": "p-gothamor-gta-vcs-recomp",
@@ -2775,8 +2774,8 @@
    "titulo": "Grand Theft Auto: Vice City Stories (GTA: Vice City Stories — Native PC port (PS2 static recompilation))",
    "subtipo": "static-recomp",
    "plataforma": "PS2",
-   "estrellas": 767,
-   "ultimoCommit": "2026-11-14T13:10:03Z",
+   "estrellas": 770,
+   "ultimoCommit": "2026-11-27T01:04:26Z",
    "release": "v0.3.0",
    "fechaRelease": "2026-11-14T13:15:02Z",
    "url": "https://github.com/gothamor/gta-vcs-recomp",
@@ -2785,7 +2784,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 12
+   "dias": 13
   },
   {
    "id": "p-blacklabelhq-medievilrecomp",
@@ -2803,7 +2802,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 12
+   "dias": 13
   },
   {
    "id": "p-linkssy2-roadrash64recompiled",
@@ -2821,7 +2820,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 12
+   "dias": 13
   },
   {
    "id": "p-vnnc1-gow-native-pc",
@@ -2829,7 +2828,7 @@
    "titulo": "God of War (GOW Native PC)",
    "subtipo": "static-recomp",
    "plataforma": "PS2",
-   "estrellas": 284,
+   "estrellas": 286,
    "ultimoCommit": "2026-11-14T02:26:20Z",
    "release": "v0.6.1",
    "fechaRelease": "2026-11-14T04:01:30Z",
@@ -2839,7 +2838,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 13
+   "dias": 14
   },
   {
    "id": "p-tawhidi-602-the-house-of-the-dead-rewrithe",
@@ -2847,7 +2846,7 @@
    "titulo": "The House of the Dead (The House of the Dead: ReWrithe)",
    "subtipo": "engine-remake",
    "plataforma": "Arcade",
-   "estrellas": 169,
+   "estrellas": 170,
    "ultimoCommit": "2026-11-14T02:20:35Z",
    "release": "v1.4.1",
    "fechaRelease": "2026-11-14T02:30:21Z",
@@ -2857,7 +2856,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 13
+   "dias": 14
   },
   {
    "id": "p-danielalves96-gow-pc-port",
@@ -2865,7 +2864,7 @@
    "titulo": "God of War (GoW PC port)",
    "subtipo": "source-port",
    "plataforma": "PS2",
-   "estrellas": 222,
+   "estrellas": 223,
    "ultimoCommit": "2026-11-13T02:13:34Z",
    "release": "launcher-v0.4.0",
    "fechaRelease": "2026-11-13T02:32:21Z",
@@ -2875,7 +2874,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 14
+   "dias": 15
   },
   {
    "id": "p-ssunnking-open-nectar-pikmin-native-pc-mobile-port",
@@ -2883,7 +2882,7 @@
    "titulo": "Pikmin & Pikmin 2 (Open Nectar)",
    "subtipo": "source-port",
    "plataforma": "GameCube",
-   "estrellas": 330,
+   "estrellas": 332,
    "ultimoCommit": "2026-11-26T09:30:41Z",
    "release": "1.3",
    "fechaRelease": "2026-11-11T22:15:57Z",
@@ -2893,7 +2892,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 15
+   "dias": 16
   },
   {
    "id": "p-asobicodes-rac-rs",
@@ -2901,7 +2900,7 @@
    "titulo": "Ratchet & Clank (RAC-RS)",
    "subtipo": "source-port",
    "plataforma": "PS2",
-   "estrellas": 300,
+   "estrellas": 302,
    "ultimoCommit": "2026-11-11T13:40:00Z",
    "release": "v0.5.1",
    "fechaRelease": "2026-11-11T13:41:31Z",
@@ -2911,7 +2910,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 15
+   "dias": 16
   },
   {
    "id": "p-brazilianhobbyist-project-re-visited-re3",
@@ -2929,7 +2928,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 15
+   "dias": 16
   },
   {
    "id": "p-estebanpdn-zelda-alttp-3ds",
@@ -2937,7 +2936,7 @@
    "titulo": "The Legend of Zelda: A Link to the Past (3DS port)",
    "subtipo": "source-port",
    "plataforma": "SNES",
-   "estrellas": 815,
+   "estrellas": 818,
    "ultimoCommit": "2026-11-25T05:01:09Z",
    "release": "v4.1",
    "fechaRelease": "2026-11-11T05:20:13Z",
@@ -2951,7 +2950,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "The Legend of Zelda: A Link to the Past",
-   "dias": 16
+   "dias": 17
   },
   {
    "id": "p-new-coke-strikers",
@@ -2959,7 +2958,7 @@
    "titulo": "Super Mario Strikers (PC Port)",
    "subtipo": "source-port",
    "plataforma": "GameCube",
-   "estrellas": 438,
+   "estrellas": 439,
    "ultimoCommit": "2026-11-09T14:40:13Z",
    "release": "v2.0.0",
    "fechaRelease": "2026-11-09T14:12:54Z",
@@ -2969,7 +2968,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 17
+   "dias": 18
   },
   {
    "id": "p-mabec-games-f-zero-glinux",
@@ -2977,7 +2976,7 @@
    "titulo": "F-Zero GX (F-ZERO GLINUX)",
    "subtipo": "source-port",
    "plataforma": "GameCube",
-   "estrellas": 142,
+   "estrellas": 143,
    "ultimoCommit": "2026-11-07T13:53:37Z",
    "release": "v0.9.4",
    "fechaRelease": "2026-11-07T14:16:42Z",
@@ -2987,7 +2986,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 19
+   "dias": 20
   },
   {
    "id": "p-darhkfox-supermarioallstars",
@@ -2995,7 +2994,7 @@
    "titulo": "Super Mario All-Stars (Super Mario All-Stars — PC Port)",
    "subtipo": "source-port",
    "plataforma": "SNES",
-   "estrellas": 399,
+   "estrellas": 401,
    "ultimoCommit": "2026-11-06T14:58:01Z",
    "release": "v1.1.1",
    "fechaRelease": "2026-11-06T14:59:41Z",
@@ -3005,7 +3004,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 20
+   "dias": 21
   },
   {
    "id": "p-ninjacornix-reo",
@@ -3013,7 +3012,7 @@
    "titulo": "Resident Evil Outbreak (RE: Outbreak Recomp)",
    "subtipo": "static-recomp",
    "plataforma": "PS2",
-   "estrellas": 154,
+   "estrellas": 156,
    "ultimoCommit": "2026-11-04T19:08:26Z",
    "release": "v1.0.20",
    "fechaRelease": "2026-11-04T19:13:21Z",
@@ -3023,7 +3022,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 22
+   "dias": 23
   },
   {
    "id": "p-rosalie241-rmg",
@@ -3031,7 +3030,7 @@
    "titulo": "Mupen64Plus (Rosalie's Mupen GUI)",
    "subtipo": "engine-remake",
    "plataforma": "N64",
-   "estrellas": 1167,
+   "estrellas": 1168,
    "ultimoCommit": "2026-11-04T03:17:41Z",
    "release": "v0.9.1",
    "fechaRelease": "2026-11-04T03:52:38Z",
@@ -3041,7 +3040,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 23
+   "dias": 24
   },
   {
    "id": "p-rob646464-luigis-mansion-recompiled",
@@ -3049,7 +3048,7 @@
    "titulo": "Luigi's Mansion (Luigi's Mansion Recompiled)",
    "subtipo": "static-recomp",
    "plataforma": "GameCube",
-   "estrellas": 369,
+   "estrellas": 371,
    "ultimoCommit": "2026-11-12T08:46:03Z",
    "release": "v1.1.6",
    "fechaRelease": "2026-11-03T06:58:33Z",
@@ -3059,25 +3058,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 23
-  },
-  {
-   "id": "p-mstan-megamanx4recomp",
-   "tipo": "p",
-   "titulo": "Mega Man X4 (MegaManX4Recomp)",
-   "subtipo": "static-recomp",
-   "plataforma": "PS1",
-   "estrellas": 144,
-   "ultimoCommit": "2026-11-23T11:46:07Z",
-   "release": "v1.0.29",
-   "fechaRelease": "2026-11-03T21:44:07Z",
-   "url": "https://github.com/mstan/MegaManX4Recomp",
-   "jugableUrl": null,
-   "pideAssets": null,
-   "ia": true,
-   "inactivo": false,
-   "tuyos": [],
-   "dias": 23
+   "dias": 24
   },
   {
    "id": "p-lfarroco-ogre-battle-64-recomp",
@@ -3095,7 +3076,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 23
+   "dias": 24
   },
   {
    "id": "p-flyngmt-nookery",
@@ -3103,7 +3084,7 @@
    "titulo": "Animal Crossing (ACGC-PC-Port)",
    "subtipo": "source-port",
    "plataforma": "GameCube",
-   "estrellas": 1606,
+   "estrellas": 1609,
    "ultimoCommit": "2026-11-08T19:47:00Z",
    "release": "v1.0.0",
    "fechaRelease": "2026-11-02T19:31:17Z",
@@ -3113,7 +3094,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 24
+   "dias": 25
   },
   {
    "id": "p-jorge262007-fftarecomp",
@@ -3131,7 +3112,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 25
+   "dias": 26
   },
   {
    "id": "p-rotmill-dino-crisis-modern-edition",
@@ -3139,7 +3120,7 @@
    "titulo": "Dino Crisis (Dino Crisis - Modern Edition)",
    "subtipo": "engine-remake",
    "plataforma": "PS1",
-   "estrellas": 181,
+   "estrellas": 183,
    "ultimoCommit": "2026-11-01T18:09:15Z",
    "release": "v1.07",
    "fechaRelease": "2026-11-01T18:10:04Z",
@@ -3153,7 +3134,7 @@
    ],
    "relacion": "quiero",
    "tuJuego": "Dino Crisis",
-   "dias": 25
+   "dias": 26
   },
   {
    "id": "p-jeschete-vs-nativeport",
@@ -3162,7 +3143,7 @@
    "subtipo": "source-port",
    "plataforma": "PS1",
    "estrellas": 101,
-   "ultimoCommit": "2026-11-26T12:38:59Z",
+   "ultimoCommit": "2026-11-27T11:49:16Z",
    "release": "0.0.11",
    "fechaRelease": "2026-11-01T03:13:02Z",
    "url": "https://github.com/JEschete/VS-NativePort",
@@ -3171,7 +3152,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 26
+   "dias": 27
   },
   {
    "id": "p-zallaxdev-emerald-3ds",
@@ -3179,7 +3160,7 @@
    "titulo": "Pokémon Emerald (pokeemerald-3Ds-dualscreen)",
    "subtipo": "source-port",
    "plataforma": "GBA",
-   "estrellas": 815,
+   "estrellas": 820,
    "ultimoCommit": "2026-10-30T17:44:41Z",
    "release": "v0.5.0",
    "fechaRelease": "2026-10-30T20:06:41Z",
@@ -3190,7 +3171,7 @@
    "inactivo": false,
    "tuyos": [],
    "imagenRepo": "https://repository-images.githubusercontent.com/1389305211/2c46140e-5522-46dd-b937-60c9c0d178f8",
-   "dias": 27
+   "dias": 28
   },
   {
    "id": "p-linkzenic-shipwright-ports",
@@ -3208,7 +3189,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 28
+   "dias": 29
   },
   {
    "id": "p-brawmario-libsm64-godot",
@@ -3226,7 +3207,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 29
+   "dias": 30
   },
   {
    "id": "p-dahsidiabdallah-conkerbfdreloaded",
@@ -3244,7 +3225,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 29
+   "dias": 30
   },
   {
    "id": "p-josiahg2502-glitch-mother3recomp",
@@ -3252,7 +3233,7 @@
    "titulo": "MOTHER 3 (MOTHER 3 Recomp)",
    "subtipo": "static-recomp",
    "plataforma": "GBA",
-   "estrellas": 133,
+   "estrellas": 134,
    "ultimoCommit": "2026-10-28T18:32:10Z",
    "release": "v1.0.8",
    "fechaRelease": "2026-10-28T18:39:39Z",
@@ -3262,7 +3243,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 29
+   "dias": 30
   },
   {
    "id": "p-centollos-switchwaker",
@@ -3270,7 +3251,7 @@
    "titulo": "The Legend of Zelda: The Wind Waker (SwitchWaker)",
    "subtipo": "source-port",
    "plataforma": "GameCube",
-   "estrellas": 114,
+   "estrellas": 117,
    "ultimoCommit": "2026-11-02T23:45:47Z",
    "release": "v1.0.2",
    "fechaRelease": "2026-10-27T15:28:06Z",
@@ -3280,7 +3261,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 30
+   "dias": 31
   },
   {
    "id": "p-moesuito-gt4-staticrecomp",
@@ -3288,7 +3269,7 @@
    "titulo": "Gran Turismo 4 (GT4Recomp)",
    "subtipo": "static-recomp",
    "plataforma": "PS2",
-   "estrellas": 658,
+   "estrellas": 670,
    "ultimoCommit": "2026-11-11T13:00:01Z",
    "release": "v1.2.5",
    "fechaRelease": "2026-10-26T18:32:42Z",
@@ -3298,7 +3279,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 31
+   "dias": 32
   },
   {
    "id": "p-griches-eternaldarknessrecomp",
@@ -3306,7 +3287,7 @@
    "titulo": "Eternal Darkness: Sanity's Requiem (Eternal Darkness Recomp)",
    "subtipo": "static-recomp",
    "plataforma": "GameCube",
-   "estrellas": 221,
+   "estrellas": 222,
    "ultimoCommit": "2026-11-06T21:34:13Z",
    "release": "v0.9.6",
    "fechaRelease": "2026-10-24T20:35:29Z",
@@ -3316,7 +3297,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 33
+   "dias": 34
   },
   {
    "id": "p-sal063-ace-combat-5-static-recompilation",
@@ -3324,7 +3305,7 @@
    "titulo": "Ace Combat 5: The Unsung War (Ace Combat 5 Recompilation)",
    "subtipo": "static-recomp",
    "plataforma": "PS2",
-   "estrellas": 159,
+   "estrellas": 162,
    "ultimoCommit": "2026-10-24T18:29:03Z",
    "release": "V3.0",
    "fechaRelease": "2026-10-24T18:30:45Z",
@@ -3334,7 +3315,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 33
+   "dias": 34
   },
   {
    "id": "p-kitrinx-ultima7-decomp",
@@ -3343,7 +3324,7 @@
    "subtipo": "static-recomp",
    "plataforma": "DOS",
    "estrellas": 105,
-   "ultimoCommit": "2026-10-24T18:49:01Z",
+   "ultimoCommit": "2026-11-27T03:46:06Z",
    "release": "v0.5.1",
    "fechaRelease": "2026-10-24T18:54:01Z",
    "url": "https://github.com/Kitrinx/Ultima7_Decomp",
@@ -3352,7 +3333,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 33
+   "dias": 34
   },
   {
    "id": "p-fliperama86-cvlod-recomp",
@@ -3370,7 +3351,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 34
+   "dias": 35
   },
   {
    "id": "p-troyedwardsjr-z2rs",
@@ -3378,17 +3359,17 @@
    "titulo": "Zelda II: The Adventure of Link (z2rs)",
    "subtipo": "engine-remake",
    "plataforma": "NES",
-   "estrellas": 221,
+   "estrellas": 222,
    "ultimoCommit": "2026-10-22T04:30:20Z",
    "release": "v0.6.0",
    "fechaRelease": "2026-10-22T04:42:39Z",
    "url": "https://github.com/troyedwardsjr/z2rs",
    "jugableUrl": "https://z2rs.com/",
    "pideAssets": "byo",
-   "ia": true,
+   "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 36
+   "dias": 37
   },
   {
    "id": "p-999sian-melee-pc",
@@ -3396,7 +3377,7 @@
    "titulo": "MeleePC",
    "subtipo": "static-recomp",
    "plataforma": "GameCube",
-   "estrellas": 614,
+   "estrellas": 615,
    "ultimoCommit": "2026-10-20T23:52:16Z",
    "release": "v0.4.2",
    "fechaRelease": "2026-10-21T00:08:51Z",
@@ -3406,7 +3387,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 37
+   "dias": 38
   },
   {
    "id": "p-dabdavis-perfect-dark-dabs-mod",
@@ -3414,7 +3395,7 @@
    "titulo": "Perfect Dark (Dab's Mod)",
    "subtipo": "static-recomp",
    "plataforma": "N64",
-   "estrellas": 237,
+   "estrellas": 238,
    "ultimoCommit": "2026-10-21T00:54:35Z",
    "release": "v3.15.1",
    "fechaRelease": "2026-10-21T01:00:10Z",
@@ -3424,7 +3405,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 37
+   "dias": 38
   },
   {
    "id": "p-sp00nznet-burnout3",
@@ -3442,7 +3423,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 37
+   "dias": 38
   },
   {
    "id": "p-therunaway5-phase-distorter",
@@ -3460,7 +3441,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 38
+   "dias": 39
   },
   {
    "id": "p-sonicfreak1337-sarecomp",
@@ -3468,7 +3449,7 @@
    "titulo": "Sonic Adventure",
    "subtipo": "static-recomp",
    "plataforma": "Dreamcast",
-   "estrellas": 131,
+   "estrellas": 132,
    "ultimoCommit": "2026-10-18T20:10:32Z",
    "release": "v0.52.1",
    "fechaRelease": "2026-10-18T20:12:45Z",
@@ -3482,7 +3463,7 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Sonic Adventure",
-   "dias": 39
+   "dias": 40
   },
   {
    "id": "p-cdlewis-snowboardkids2-recomp",
@@ -3501,7 +3482,7 @@
    "inactivo": false,
    "tuyos": [],
    "imagenRepo": "https://repository-images.githubusercontent.com/1136986611/eb1e6a1d-e87b-49e3-bf62-43a09bc556cf",
-   "dias": 40
+   "dias": 41
   },
   {
    "id": "p-discostarslayer-pcsx2-reliquary",
@@ -3519,7 +3500,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 41
+   "dias": 42
   },
   {
    "id": "p-danisandoval-fukami",
@@ -3527,7 +3508,7 @@
    "titulo": "Ridge Racer V (Fukami)",
    "subtipo": "static-recomp",
    "plataforma": "PS2",
-   "estrellas": 113,
+   "estrellas": 114,
    "ultimoCommit": "2026-10-14T07:40:37Z",
    "release": "v1.1.0",
    "fechaRelease": "2026-10-14T11:05:05Z",
@@ -3537,25 +3518,25 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 43
+   "dias": 44
   },
   {
    "id": "p-krystalgamer-yu-gi-oh-forbidden-memories-recompiled",
    "tipo": "p",
-   "titulo": "Yu-Gi-Oh! Forbidden Memories (Yu-Gi-Oh! Forbidden Memories Recompiled)",
+   "titulo": "Yu-Gi-Oh! Forbidden Memories (Yu-Gi-Oh-Forbidden-Memories-Recompiled)",
    "subtipo": "static-recomp",
    "plataforma": "PS1",
-   "estrellas": 337,
-   "ultimoCommit": "2026-11-25T21:59:43Z",
+   "estrellas": 336,
+   "ultimoCommit": "2026-11-27T04:15:03Z",
    "release": "v0.3.0",
    "fechaRelease": "2026-10-11T15:30:19Z",
    "url": "https://github.com/krystalgamer/Yu-Gi-Oh-Forbidden-Memories-Recompiled",
    "jugableUrl": null,
    "pideAssets": null,
-   "ia": true,
+   "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 46
+   "dias": 47
   },
   {
    "id": "p-dsda-org-dsda-doom",
@@ -3564,7 +3545,7 @@
    "subtipo": "source-port",
    "plataforma": "DOS",
    "estrellas": 531,
-   "ultimoCommit": "2026-11-23T16:23:21Z",
+   "ultimoCommit": "2026-11-26T15:45:52Z",
    "release": "v0.30.1",
    "fechaRelease": "2026-10-09T19:16:04Z",
    "url": "https://github.com/dsda-org/dsda-doom",
@@ -3573,7 +3554,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 48
+   "dias": 49
   },
   {
    "id": "p-zumbo06-crash2recomp",
@@ -3591,7 +3572,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 49
+   "dias": 50
   },
   {
    "id": "p-jkdansereau-goldeneye-pc-port",
@@ -3599,7 +3580,7 @@
    "titulo": "GoldenEye PC Port",
    "subtipo": "source-port",
    "plataforma": "N64",
-   "estrellas": 345,
+   "estrellas": 346,
    "ultimoCommit": "2026-10-07T16:07:09Z",
    "release": "v0.5.0",
    "fechaRelease": "2026-10-07T15:42:22Z",
@@ -3610,7 +3591,7 @@
    "inactivo": false,
    "tuyos": [],
    "imagenRepo": "https://repository-images.githubusercontent.com/1351803914/37377fc6-f3a2-4871-a502-f0b9787d67c0",
-   "dias": 50
+   "dias": 51
   },
   {
    "id": "p-twilitrealm-dusklight",
@@ -3618,7 +3599,7 @@
    "titulo": "The Legend of Zelda: Twilight Princess (Dusklight)",
    "subtipo": "source-port",
    "plataforma": "GameCube",
-   "estrellas": 6551,
+   "estrellas": 6562,
    "ultimoCommit": "2026-10-20T11:30:29Z",
    "release": "v2.0.3",
    "fechaRelease": "2026-09-30T07:06:44Z",
@@ -3629,7 +3610,7 @@
    "inactivo": false,
    "tuyos": [],
    "imagenRepo": "https://repository-images.githubusercontent.com/1106809206/8ca7b8b8-a77b-4a02-a76a-ddb959872328",
-   "dias": 57
+   "dias": 58
   },
   {
    "id": "p-andrebrumdev-gow2-recomp",
@@ -3637,7 +3618,7 @@
    "titulo": "God of War II HD (gow2-recomp)",
    "subtipo": "static-recomp",
    "plataforma": "PS2",
-   "estrellas": 113,
+   "estrellas": 114,
    "ultimoCommit": "2026-10-19T21:21:58Z",
    "release": "kit-macos-20260930",
    "fechaRelease": "2026-09-30T19:28:53Z",
@@ -3647,7 +3628,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 57
+   "dias": 58
   },
   {
    "id": "p-rainchus-donkey-kong-64-recompiled",
@@ -3655,7 +3636,7 @@
    "titulo": "Donkey Kong 64",
    "subtipo": "static-recomp",
    "plataforma": "N64",
-   "estrellas": 597,
+   "estrellas": 598,
    "ultimoCommit": "2026-11-08T18:53:18Z",
    "release": "v1.0.3",
    "fechaRelease": "2026-09-30T00:21:10Z",
@@ -3665,7 +3646,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 58
+   "dias": 59
   },
   {
    "id": "p-team-beef-studios-quakequest",
@@ -3684,7 +3665,7 @@
    "inactivo": false,
    "tuyos": [],
    "imagenRepo": "https://repository-images.githubusercontent.com/189354490/1b9a9f00-86ed-11e9-8412-c7a0c75b27ef",
-   "dias": 58
+   "dias": 59
   },
   {
    "id": "p-endprodukt-cannonball-dx",
@@ -3702,7 +3683,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 58
+   "dias": 59
   },
   {
    "id": "p-novapowers0-bloodyroar2recomp",
@@ -3710,7 +3691,7 @@
    "titulo": "Bloody Roar 2",
    "subtipo": "static-recomp",
    "plataforma": "PS1",
-   "estrellas": 101,
+   "estrellas": 102,
    "ultimoCommit": "2026-10-13T00:41:07Z",
    "release": "v0.7.1",
    "fechaRelease": "2026-09-26T09:39:14Z",
@@ -3720,7 +3701,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 61
+   "dias": 62
   },
   {
    "id": "p-harvestmoon64recomp-harvestmoon64recomp",
@@ -3738,7 +3719,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 62
+   "dias": 63
   },
   {
    "id": "p-elliotttate-dkc1recomp",
@@ -3760,12 +3741,12 @@
    ],
    "relacion": "terminado",
    "tuJuego": "Donkey Kong Country",
-   "dias": 68
+   "dias": 69
   },
   {
    "id": "p-unchiga-yugiohforbiddenmemoriesrecomp",
    "tipo": "p",
-   "titulo": "Yu-Gi-Oh! Forbidden Memories (Yu-Gi-Oh! Forbidden Memories - Recompiled)",
+   "titulo": "Yu-Gi-Oh! Forbidden Memories (YuGiOhForbiddenMemoriesRecomp)",
    "subtipo": "static-recomp",
    "plataforma": "PS1",
    "estrellas": 149,
@@ -3775,10 +3756,10 @@
    "url": "https://github.com/Unchiga/YuGiOhForbiddenMemoriesRecomp",
    "jugableUrl": null,
    "pideAssets": null,
-   "ia": true,
+   "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 68
+   "dias": 69
   },
   {
    "id": "p-domazinus-racewave46",
@@ -3796,7 +3777,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 71
+   "dias": 72
   },
   {
    "id": "p-danielgomesvieira2000-wave-race-64-recomp",
@@ -3814,7 +3795,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 73
+   "dias": 74
   },
   {
    "id": "p-elliotttate-dkc2recomp",
@@ -3822,7 +3803,7 @@
    "titulo": "Donkey Kong Country 2: Diddy's Kong Quest (DKC2Recomp)",
    "subtipo": "static-recomp",
    "plataforma": "SNES",
-   "estrellas": 207,
+   "estrellas": 208,
    "ultimoCommit": "2026-09-13T22:04:23Z",
    "release": "v0.0.8",
    "fechaRelease": "2026-09-13T22:13:01Z",
@@ -3832,7 +3813,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 74
+   "dias": 75
   },
   {
    "id": "p-elliotttate-dkc3recomp",
@@ -3850,7 +3831,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 75
+   "dias": 76
   },
   {
    "id": "p-fabiangreffrath-woof",
@@ -3859,7 +3840,7 @@
    "subtipo": "source-port",
    "plataforma": "DOS",
    "estrellas": 341,
-   "ultimoCommit": "2026-11-26T01:27:59Z",
+   "ultimoCommit": "2026-11-26T14:57:35Z",
    "release": "woof_16.0.0",
    "fechaRelease": "2026-09-08T06:14:38Z",
    "url": "https://github.com/fabiangreffrath/woof",
@@ -3868,7 +3849,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 80
+   "dias": 81
   },
   {
    "id": "p-elliotttate-wave-race-64-recomp",
@@ -3886,7 +3867,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 80
+   "dias": 81
   },
   {
    "id": "p-harbourmasters-ghostship",
@@ -3894,7 +3875,7 @@
    "titulo": "Super Mario 64 (Ghostship)",
    "subtipo": "source-port",
    "plataforma": "N64",
-   "estrellas": 943,
+   "estrellas": 944,
    "ultimoCommit": "2026-10-27T07:44:31Z",
    "release": "3.0.0",
    "fechaRelease": "2026-09-07T04:57:17Z",
@@ -3904,7 +3885,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 81
+   "dias": 82
   },
   {
    "id": "p-jhdev2006-super-mario-bros-remastered-public",
@@ -3912,7 +3893,7 @@
    "titulo": "Super Mario Bros. [Remastered]",
    "subtipo": "engine-remake",
    "plataforma": "NES",
-   "estrellas": 3352,
+   "estrellas": 3354,
    "ultimoCommit": "2026-11-14T14:45:07Z",
    "release": "1.1-stable",
    "fechaRelease": "2026-09-04T19:56:56Z",
@@ -3922,7 +3903,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 83
+   "dias": 84
   },
   {
    "id": "p-ed1z19-valkyrierecomp",
@@ -3940,7 +3921,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 83
+   "dias": 84
   },
   {
    "id": "p-distilledorion-sketch-initial-d-arcade-stage-3-native-sh-4-recompilation-wip",
@@ -3948,7 +3929,7 @@
    "titulo": "Initial D Arcade Stage 3 (Initial D Arcade Stage 3 Recompiled)",
    "subtipo": "static-recomp",
    "plataforma": "Arcade",
-   "estrellas": 177,
+   "estrellas": 178,
    "ultimoCommit": "2026-11-07T18:47:43Z",
    "release": "v2489-verified-vulkan-checkpoint",
    "fechaRelease": "2026-09-03T10:42:56Z",
@@ -3958,7 +3939,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 84
+   "dias": 85
   },
   {
    "id": "p-alexbeavs-ps1-ports-psxrecomp-ports",
@@ -3976,7 +3957,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 85
+   "dias": 86
   },
   {
    "id": "p-z2442-oot-psp",
@@ -3984,8 +3965,8 @@
    "titulo": "The Legend of Zelda: Ocarina of Time (oot-PSP)",
    "subtipo": "source-port",
    "plataforma": "N64",
-   "estrellas": 117,
-   "ultimoCommit": "2026-11-26T03:39:58Z",
+   "estrellas": 118,
+   "ultimoCommit": "2026-11-26T19:11:40Z",
    "release": "1.0",
    "fechaRelease": "2026-08-30T19:30:23Z",
    "url": "https://github.com/z2442/oot-PSP",
@@ -3994,7 +3975,7 @@
    "ia": false,
    "inactivo": false,
    "tuyos": [],
-   "dias": 88
+   "dias": 89
   },
   {
    "id": "p-strider973-einhander-recompiled",
@@ -4012,7 +3993,7 @@
    "ia": true,
    "inactivo": false,
    "tuyos": [],
-   "dias": 89
+   "dias": 90
   }
  ],
  "estudios": [
@@ -4043,7 +4024,7 @@
    "estudio": "FreakZone Games",
    "relacion": "terminado",
    "tuJuego": "The Angry Video Game Nerd Adventures",
-   "dias": 25
+   "dias": 26
   },
   {
    "id": "e-176043",
@@ -4071,7 +4052,7 @@
    "estudio": "Nintendo R&D1",
    "relacion": "terminado",
    "tuJuego": "Super Mario Land 2: 6 Golden Coins",
-   "dias": 115
+   "dias": 116
   },
   {
    "id": "e-410642",
@@ -4098,7 +4079,7 @@
    "estudio": "Nintendo",
    "relacion": "terminado",
    "tuJuego": "Rhythm Heaven Megamix",
-   "dias": 146
+   "dias": 147
   },
   {
    "id": "e-417186",
@@ -4128,7 +4109,7 @@
    "estudio": "HAL Laboratory",
    "relacion": "terminado",
    "tuJuego": "Kirby’s Dream Land 2",
-   "dias": -215
+   "dias": -214
   },
   {
    "id": "e-325611",
@@ -4159,7 +4140,7 @@
    "estudio": "Naughty Dog",
    "relacion": "terminado",
    "tuJuego": "Crash Team Racing",
-   "dias": -399
+   "dias": -398
   },
   {
    "id": "e-347662",
@@ -4187,7 +4168,7 @@
    "estudio": "Drinkbox Studios",
    "relacion": "terminado",
    "tuJuego": "Guacamelee!",
-   "dias": -399
+   "dias": -398
   },
   {
    "id": "e-387020",
@@ -4217,7 +4198,7 @@
    "estudio": "Dimps",
    "relacion": "terminado",
    "tuJuego": "Sonic Generations",
-   "dias": -399
+   "dias": -398
   },
   {
    "id": "e-417647",
@@ -4245,7 +4226,7 @@
    "estudio": "Blizzard Entertainment",
    "relacion": "terminado",
    "tuJuego": "StarCraft II: Heart of the Swarm",
-   "dias": -855
+   "dias": -854
   }
  ]
 }

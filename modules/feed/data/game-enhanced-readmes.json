@@ -1,7 +1,119 @@
 {
  "version": 1,
- "generatedAt": "2026-11-26T18:36:45.813Z",
+ "generatedAt": "2026-11-27T18:25:50.559Z",
  "readmes": {
+  "d-mstan-supermarioworldrecomp": {
+   "v": 2,
+   "repo": "mstan/SuperMarioWorldRecomp",
+   "actualizado": "2026-11-24T19:40:41.476Z",
+   "recortado": true,
+   "estado": {
+    "titulo": "Current status: believed fully playable",
+    "texto": "Hand-verified end-to-end through:"
+   },
+   "bloques": [
+    [
+     "h",
+     "SuperMarioWorldRecomp"
+    ],
+    [
+     "p",
+     "This recompilation is a byproduct of developing snesrecomp — the games are the proving ground, the framework is the goal. These are in-development previews, not finished ports — expect rough edges, and depth will keep landing over months, not days. My time for any one title is limited, so I ask for your patience. Contributions are welcome — testing, issues, and PRs to the game or framework all help and will accelerate this game's polish. More on the why at: Recomp + AI: 5 Months Later »"
+    ],
+    [
+     "p",
+     "Static recompilation of Super Mario World (SNES) into native C, using the snesrecomp framework. This repo is the per-game side: the runtime, the recompiled C output, the per-game .cfg, and the build glue."
+    ],
+    [
+     "h",
+     "What \"static recompilation\" means here"
+    ],
+    [
+     "p",
+     "The 65816 CPU code from the ROM is statically translated to C — every function the game runs on the SNES's main CPU is a real generated C function in src/gen/. The rest of the SNES is not recompiled — it's hardware. PPU rendering, the APU / SPC700 audio coprocessor, DMA and HDMA channels, hardware register I/O, and bank-mapping all run through a C reimplementation of the SNES hardware in snesrecomp/runner/src/snes/ — a LakeSnes-derived core (the same emulator family the snesrev reverse-engineered ports use), with individual algorithms credited to snes9x. This is the same model other…"
+    ],
+    [
+     "h",
+     "Current status: believed fully playable"
+    ],
+    [
+     "p",
+     "Hand-verified end-to-end through:"
+    ],
+    [
+     "li",
+     "Yoshi's Island (World 1) including Iggy's castle boss."
+    ],
+    [
+     "li",
+     "Donut Plains (World 2) end-to-end."
+    ],
+    [
+     "li",
+     "Vanilla Dome (World 3) in progress at time of writing."
+    ],
+    [
+     "p",
+     "No catastrophic visible regressions surfaced through these worlds. Two runtime tripwires (the M/X claim verifier and the async-cpu->m_flag/x_flag-write detector) are armed at boot and have not latched on the verified worlds. An off-rails event was captured in BufferScrollingTiles_Layer1_VerticalLevel_M1X1 during Donut Plains castle (bank-out-of-range pointer read; runtime mirrors the read to a safe location and gameplay continues) — see ISSUES.md for the bucketed capture and the offrails_get TCP query."
+    ],
+    [
+     "p",
+     "Worlds 4–7 and special content (Star Road, Special World) are not yet hand-verified but are expected to play similarly. If you hit a visible regression, please open an issue with a savestate and the offrails_get / mx_async_check_get JSON snapshots."
+    ],
+    [
+     "p",
+     "Active development; expect:"
+    ],
+    [
+     "li",
+     "Some branches don't build; only main is guaranteed to build."
+    ],
+    [
+     "li",
+     "Internal docs (ISSUES.md, ENHANCEMENTS.md) assume context."
+    ],
+    [
+     "li",
+     "APIs and recompiler output change without notice."
+    ],
+    [
+     "p",
+     "See RELEASE.md for the latest release notes."
+    ],
+    [
+     "h",
+     "Quick start (pre-built release)"
+    ],
+    [
+     "li",
+     "Download the Windows ZIP or Linux AppImage from Releases. Extract the ZIP, or make the AppImage executable."
+    ],
+    [
+     "li",
+     "Run SuperMarioWorldSNESRecomp.exe or the AppImage. On first launch a file picker asks for your legally-obtained Super Mario World (USA) ROM (.sfc / .smc). The path is remembered in rom.cfg next to the exe."
+    ],
+    [
+     "li",
+     "Edit keybinds.ini (auto-generated next to the exe on first run) to remap keys, then restart."
+    ],
+    [
+     "p",
+     "The ROM is never redistributed — supply your own dump."
+    ],
+    [
+     "p",
+     "To play as Captain Falcon, enable Captain Falcon on the launcher's Mods page, select your Super Smash Bros. (USA) v1.0 ROM, and press Play. The included helper prepares Falcon's assets in your user cache on first use. No Python installation or environment setup is required."
+    ],
+    [
+     "h",
+     "Send a reproducible bug report"
+    ],
+    [
+     "li",
+     "In the launcher's Mods page, check SMW Playtest Diagnostics → Diagnostic recording. It starts enabled for fresh settings and remembers your choice. Keep the gameplay mods and settings needed for your reproduction, including native co-op where applicable. Disable run-ahead while recording."
+    ]
+   ]
+  },
   "d-simon3sarkis-super-odyssey-pc-recomp": {
    "v": 2,
    "repo": "Simon3Sarkis/super-odyssey-pc-recomp",
@@ -172,6 +284,516 @@
     [
      "li",
      "An in-game menu (Esc, F1, a gamepad's Guide or Back), laid out as the other ports': online, display, the speed, sound, cheats (no damage, one-hit knockouts, everything unlocked), training mode, save states, reset and quit."
+    ]
+   ]
+  },
+  "d-deez-coder-smo-android-port": {
+   "v": 2,
+   "repo": "Deez-coder/SMO-android-port",
+   "actualizado": "2026-11-24T19:40:41.476Z",
+   "recortado": true,
+   "estado": {
+    "titulo": "Status: beta 0.5",
+    "texto": "The game boots, plays and saves. Here's how it runs on the dev's phone, on the phone's own driver."
+   },
+   "bloques": [
+    [
+     "p",
+     "the one official source of this port, anywhere else is NOT done by me"
+    ],
+    [
+     "h",
+     "SMO Android Port"
+    ],
+    [
+     "p",
+     "Super Mario Odyssey (version 1.0.0) running natively on Android, built on the static recompilation from smo-recomp."
+    ],
+    [
+     "p",
+     "The game runs natively. Its ARM64 code is translated to C ahead of time and compiled for Android with the NDK, with no CPU interpreter, JIT or compatibility layer in between, and this project's runtime takes care of the rest: the console's system libraries, NVN graphics (on Vulkan), shaders, audio, input and the file system."
+    ],
+    [
+     "p",
+     "There's no game code, no game assets, no keys and no firmware in this repo. You need your own copy of the game and keys dumped from your own console."
+    ],
+    [
+     "p",
+     "Made with AI. Most of the code was written by Claude, Anthropic's AI assistant (through Claude Code), with the project's creator directing it, reviewing it and testing it on a real phone. Expect some rough edges, and if something breaks, please send logs (see below)."
+    ],
+    [
+     "h",
+     "Status: beta 0.5"
+    ],
+    [
+     "p",
+     "The game boots, plays and saves. Here's how it runs on the dev's phone, on the phone's own driver."
+    ],
+    [
+     "p",
+     "Galaxy S24 Ultra (Snapdragon 8 Gen 3 / Adreno 750): about 58 to 60 fps in Cascade at 100% scale."
+    ],
+    [
+     "p",
+     "More device benchmarks will be added here as more logs come in."
+    ],
+    [
+     "p",
+     "Your results will likely be different. Speed depends a lot on the phone's chip, its GPU driver, how warm it gets and your settings, so we'd love to hear how yours does. Custom drivers are optional. The first start builds the graphics for your phone behind a progress bar, which takes a few minutes, but only once (and again after an update that changes the shaders). When you update, install the new APK over the old one. Uninstalling deletes those built graphics and your game files, and the next start has to build everything again."
+    ],
+    [
+     "p",
+     "New in 0.5: fixes for loading screens that never ended, the crash in Shiveria Town, the freeze after the first frog capture, and the intro cutscene's lighting with frame generation, plus about 1.3 GB less memory and fewer stutters on a first start. The full list is in CHANGELOG.md."
+    ],
+    [
+     "h",
+     "What you get"
+    ],
+    [
+     "p",
+     "Game. Import your own game right in the app: your prod.keys, then your NSP or XCI of 1.0.0 (base game, no update). The keys stay in the app's private storage until you remove them. Steady game speed keeps the game at its normal speed even below 60 fps, and the FPS limit goes from 20 to 60. Saves can be exported and imported as a .zip (your current save is kept as a backup). RomFS mods can be turned on and off in the app."
+    ],
+    [
+     "p",
+     "Graphics. A Vulkan 1.3 renderer with docked (1080p) or handheld (720p) resolution, scale presets or your own resolution scale, upscalers (bilinear, bicubic and more) for any scale under 100%, FXAA, sharpening and anisotropic filtering, plus an FPS counter and a performance overlay (average fps, 1% low, frame time). It uses your phone's own Vulkan driver by default. On Snapdragon you can also load custom AdrenoTools driver packages (like Mesa Turnip)."
+    ],
+    [
+     "p",
+     "Frame generation (beta). One extra frame is made after each real one, so the game shows 60 frames a second while running at 30. It looks smoother, and the controls react like at 30 fps. Set it to Off, On or Auto in the app or the in-game menu. Auto turns it on only while your phone can't hold 60 but can keep up with frame generation. Quality High gives Mario, enemies and other moving objects their own motion, and Fast follows only the camera for slower GPUs."
+    ],
+    [
+     "p",
+     "CPU boost. Keeps the phone's CPU clocks up so heavy scenes hold the frame rate, set to Auto, Always or Off. It does what you set, and the app shows a note about its heat and battery cost while it is on."
+    ]
+   ]
+  },
+  "d-kanapitsas-source-recomp": {
+   "v": 2,
+   "repo": "kanapitsas/source-recomp",
+   "actualizado": "2026-11-27T18:25:50.559Z",
+   "recortado": true,
+   "estado": {
+    "titulo": "Status",
+    "texto": "Updated 24 November 2026. Latest release: v0.4.0 (18 November). Items marked main only are merged but not in a release yet."
+   },
+   "bloques": [
+    [
+     "h",
+     "Portal 2, Half-Life 2 and Portal, statically recompiled for Apple silicon"
+    ],
+    [
+     "p",
+     "Video: Portal 2 running natively on an iPhone 15 Pro Max."
+    ],
+    [
+     "p",
+     "This project builds native Mac and iPhone apps from your own copies of Portal 2, Half-Life 2 (with Episode One, Episode Two and Lost Coast) and Portal. It translates the x86 code of the Linux versions into C, then compiles it for Apple silicon. No emulator, no Wine, no Rosetta."
+    ],
+    [
+     "p",
+     "You must own the games. This repository has no game files and no Valve code: everything is generated on your machine from your own copy. The app and the generated code contain Valve's game, so keep them for yourself and don't share them."
+    ],
+    [
+     "p",
+     "Unofficial fan project, not affiliated with or endorsed by Valve. Portal, Portal 2, Half-Life, Steam and Source are trademarks of Valve Corporation. Provided as is, without warranty."
+    ],
+    [
+     "h",
+     "Status"
+    ],
+    [
+     "p",
+     "Updated 24 November 2026. Latest release: v0.4.0 (18 November). Items marked main only are merged but not in a release yet."
+    ],
+    [
+     "p",
+     "In an experimental game, a crash ending with target not recompiled is a missing root. Please report it with the log."
+    ],
+    [
+     "h",
+     "Portal 2"
+    ],
+    [
+     "li",
+     "Mac: on an M3 Pro, Metal (the default) runs a scene at 122 fps where OpenGL gets 81 (2560×1440, MSAA 4×; measurements)."
+    ],
+    [
+     "li",
+     "iPhone: touch controls and portals fired by tapping the back of the phone near its left or right edge."
+    ],
+    [
+     "li",
+     "Controllers: work on Mac and iPhone (tested with an 8BitDo SN30 Pro). On Mac, turn Steam Input off for Portal 2."
+    ],
+    [
+     "li",
+     "Co-op over the local network: a Mac hosts, an iPhone or a second copy on the same Mac joins. Connection and map load are checked; a full co-op course has not been played yet."
+    ],
+    [
+     "li",
+     "Puzzle Maker (#42): Build and Play works on Mac, with the map compilers recompiled too. Opt-in with ./setup.sh --puzzle-maker, about ten more minutes and 220 MB (details). main only: the installer's checkbox for it (#49), and publishing chambers to the Workshop (#50), reported working by a contributor but not tested by us yet."
+    ],
+    [
+     "li",
+     "Native plugins (#32): a server plugin built as a macOS arm64 dylib loads where the game expects a Linux .so (details)."
+    ],
+    [
+     "h",
+     "Half-Life 2"
+    ],
+    [
+     "p",
+     "Full details."
+    ],
+    [
+     "li",
+     "Mac: playable. 120 fps with Metal on an M3 Pro at 1280×720. Players report an hour on an M4 Pro with no issue, play from Highway 17 on at mostly 60 fps (dips to 50) on an M4 Air at 2560×1664, maximum settings, with a DualShock 4, and it running on M2 and M5 Macs. No game bug is open; nobody has reported a start-to-end playthrough yet."
+    ],
+    [
+     "li",
+     "iPhone: touch controls and gyro aiming, one short session."
+    ],
+    [
+     "h",
+     "Portal"
+    ],
+    [
+     "p",
+     "Contributed in #31. Full details."
+    ],
+    [
+     "li",
+     "Mac: testchmb_a_00 played from the app; testchmb_a_01 to a_05 and a_10 load and run without trapping (what was tested). It needs the current Linux binaries (depot 404). The save crash of #44 is fixed in the recompiler and checked in Half-Life 2, not confirmed in Portal yet."
+    ],
+    [
+     "li",
+     "iPhone: a user played up to chamber 16 on an iPhone 18 Pro at a steady 60 fps without a crash (#53); back taps missed in the middle of the back and worked near the edges. Our own test is a short session only (menu and touch layout)."
+    ],
+    [
+     "h",
+     "All games"
+    ],
+    [
+     "li",
+     "Install: the Natif Installer app from the releases, or one command, setup.sh, for one game or all. Only the Xcode command line tools are required."
+    ],
+    [
+     "li",
+     "Multiplayer: only Portal 2's LAN co-op. No Steam invites or online play, and Half-Life 2: Deathmatch is not supported."
+    ],
+    [
+     "li",
+     "In review: Portal Stories: Mel (#52), not merged."
+    ],
+    [
+     "h",
+     "Quick start (Mac)"
+    ],
+    [
+     "p",
+     "You need an Apple silicon Mac on macOS 13 or newer, and the game installed in Steam with the account that owns it."
+    ],
+    [
+     "li",
+     "Download Natif-Installer- .zip from the latest release, unzip it and open Natif Installer. It offers to install the Xcode command line tools if they are missing."
+    ]
+   ]
+  },
+  "d-maurizi-ff9-3ds": {
+   "v": 2,
+   "repo": "maurizi/ff9-3ds",
+   "actualizado": "2026-11-24T19:40:41.476Z",
+   "recortado": false,
+   "estado": null,
+   "bloques": [
+    [
+     "h",
+     "ff9-3ds"
+    ],
+    [
+     "p",
+     "A native Nintendo 3DS port of Final Fantasy IX (PS1, NTSC-U), built from the C source of the ff9-decomp matching decompilation."
+    ],
+    [
+     "p",
+     "The game runs natively on the 3DS's ARM11 without emulation, and features stereoscopic 3D and a full dual-screen redesign of the UI."
+    ],
+    [
+     "p",
+     "This repository contains no game data, and neither do its releases. To play, you need your own copy of the four NTSC-U discs (SLUS-01251/01295/01296/01297)."
+    ],
+    [
+     "p",
+     "Final Fantasy IX © is owned by Square Enix; this project is not affiliated with or endorsed by Square Enix."
+    ],
+    [
+     "h",
+     "Playing"
+    ],
+    [
+     "p",
+     "Download the builder for your computer from Releases, run it, and point it at your four discs: BIN/CUE, IMG/CCD or raw ISO. It checks they are the NTSC-U release, unmodified, and writes the one you choose:"
+    ],
+    [
+     "li",
+     "ff9-full.cia (about 1.7 GB): install it with a CIA installer such as FBI, then start Final Fantasy IX from the HOME Menu."
+    ],
+    [
+     "li",
+     "ff9-full.3dsx: copy it to /3ds/ on the SD card and start it from the Homebrew Launcher."
+    ],
+    [
+     "p",
+     "Or, with nothing to install, use the web builder: the same builder running in your browser. Your disc images are read on your computer and never uploaded."
+    ],
+    [
+     "h",
+     "Building"
+    ],
+    [
+     "p",
+     "The program needs no disc to build:"
+    ],
+    [
+     "p",
+     "To build and run the game from a checkout, with raw 2352-byte images of the four discs at disks/us/raw/FF9 CD1.img … FF9 CD4.img (the same layout as ff9-decomp):"
+    ],
+    [
+     "p",
+     "tools/docker.sh runs the devkitARM container (libctru, citro3d) with Python and a 32-bit host gcc. The program holds none of the game's bytes: it reads them from the discs, and psxrel.bin (tools/gen_relocs.py) says which words are pointers. tools/check_nodata.py FILE... confirms a build carries no game data."
+    ],
+    [
+     "p",
+     "build/ff9.3dsx alone also runs with the discs on the SD card: /3ds/ff9.3dsx, /3ds/ff9/raw/FF9 CD1.img … FF9 CD4.img, and /3ds/ff9/psxrel.bin (from build/)."
+    ],
+    [
+     "h",
+     "Development"
+    ],
+    [
+     "p",
+     "Testing in the Azahar emulator: tools/azahar.sh boots a build on a private X display and captures screenshots and the game's log (sdmc:/3ds/ff9/log.txt); make 3ds SCENARIO=sdmc:/3ds/ff9/scenarios/X.cfg PROFILE=1 boots into a fixture with per-category timers; DUMP_AT=N writes the GPU's VRAM mirror and textures to the SD card; AUTOPRESS=/AUTOTOUCH= script buttons and taps."
+    ],
+    [
+     "p",
+     "Licence: port code GPL-3.0-or-later (LICENSE); tools CC0."
+    ]
+   ]
+  },
+  "d-ravencaio-tlou-remastered-pc": {
+   "v": 2,
+   "repo": "ravencaio/tlou-remastered-pc",
+   "actualizado": "2026-11-24T19:40:41.476Z",
+   "recortado": true,
+   "estado": {
+    "titulo": "📊 Status",
+    "texto": "Work in progress, reported playable from start to finish by a player, with one crash along the way that is not fixed yet (a workaround is under Known issues), and with rough edges."
+   },
+   "bloques": [
+    [
+     "h",
+     "The Last of Us Remastered — PC Port"
+    ],
+    [
+     "p",
+     "The PS4 The Last of Us Remastered running natively on Windows."
+    ],
+    [
+     "p",
+     "⬇️ Download · 🎮 Playing · ⚠️ Known issues · 🛠️ Building · 💬 Discord"
+    ],
+    [
+     "p",
+     "Runs the PS4 The Last of Us Remastered (CUSA00552, with its update 1.11) natively on Windows. The game's own x86-64 code runs directly on the PC; a runtime supplies the PS4 system libraries, and a Vulkan renderer (the shadPS4 video core) executes the PS4 GPU work."
+    ],
+    [
+     "p",
+     "[!IMPORTANT] No game files are in this repository. You need your own copy of the game (the dumped CUSA00552 folder, and its update). This project is not affiliated with Sony Interactive Entertainment or Naughty Dog."
+    ],
+    [
+     "h",
+     "❤️ Support the project"
+    ],
+    [
+     "p",
+     "If you enjoy the port and want to help it keep going, you can support it here. Thank you!"
+    ],
+    [
+     "h",
+     "🤔 Why"
+    ],
+    [
+     "p",
+     "Why The Last Of Us Remastered (PS4 version) is superior to The Last Of Us Part I (remake)?"
+    ],
+    [
+     "li",
+     "The PS4 remaster preserves the artistic style of the PS3 version and just improves the resolution and graphics."
+    ],
+    [
+     "li",
+     "Last version with multiplayer support, having multiplayer code is much easier to implement community/unofficial multiplayer"
+    ],
+    [
+     "li",
+     "Use less resources and storage space (no 4K textures, less polygons, no ray-tracing) than the remake version, which has a history of performance problems and poor optimization on PC."
+    ],
+    [
+     "h",
+     "📊 Status"
+    ],
+    [
+     "p",
+     "Work in progress, reported playable from start to finish by a player, with one crash along the way that is not fixed yet (a workaround is under Known issues), and with rough edges."
+    ],
+    [
+     "h",
+     "⚠️ Known issues"
+    ],
+    [
+     "p",
+     "Click an issue to expand it."
+    ],
+    [
+     "p",
+     "🧍 NPCs moving in jumps or bobbing up and down — fixed, testing"
+    ],
+    [
+     "p",
+     "NPCs moving in jumps or bobbing up and down (GitHub #57, #63): the game read some results of its GPU memory copy shader (Cs_MemCpy) a frame late. They are read back now; in a save where they jumped every time, they stopped. Tested on one save and one GPU so far: report it if they still jump somewhere (GOW3_TLOU_MEMCPY_READBACK=0 turns the fix off for comparison). Thanks to KyrieFrost, whose experimental patch in #63 pointed at that shader."
+    ],
+    [
+     "p",
+     "⏳ Short pauses while new shaders compile"
+    ],
+    [
+     "p",
+     "A frame that compiles many new shaders can pause the game for a moment, mostly the first time an area is played. The game's own frame watchdog is patched from 2 s to 20 s for that (TLOU_FIXES=none leaves the game unpatched). If a load ever hangs, start with GOW3_FRAMES_IN_FLIGHT=0 (slower)."
+    ],
+    [
+     "p",
+     "🔫 Shots going through scenery — fixed"
+    ],
+    [
+     "p",
+     "Pistol and rifle shots that went through scenery with no effect (firefly pendants that could not be shot down, GitHub #29, #45; walls that took no bullet holes from a pistol or rifle while a shotgun marked them) are fixed. The game asks the GPU, with an occlusion query, whether a character is under the crosshair; while one is, the player's bullets ignore scenery so thin cover in front of a target does not stop them. The runtime made up the answers to occlusion queries (always \"visible\"), so the bullets ignored scenery all the time; the queries are now real Vulkan occlusion queries…"
+    ],
+    [
+     "p",
+     "🧵 Device lost in Pittsburgh on GTX 900/10 series (cloth solver) — workaround on by default"
+    ],
+    [
+     "p",
+     "On NVIDIA graphics cards older than Turing (GTX 900 and 10 series), the game's cloth solver for its largest cloths (Cs_ClothSimulate512) lost the Vulkan device in Pittsburgh, once Henry and Sam appear: the runtime stopped with Device lost during submit, and Windows' System event log shows nvlddmkm \"SKEDCHECK19_CTA_REGISTER_CONSUMPTION failed\". A replay of that route lost it on 17 of 18 runs, on drivers 582.53 and 582.78, whatever was changed in the shader. Its one workgroup of 512 threads needs all the registers of a multiprocessor; on those cards it now runs as 256 threads that simulate 2…"
+    ],
+    [
+     "p",
+     "🟦 Intel graphics (Arc, UHD 630)"
+    ]
+   ]
+  },
+  "d-riviergrullon-kirby-epic-yarn-recomp": {
+   "v": 2,
+   "repo": "RivierGrullon/kirby-epic-yarn-recomp",
+   "actualizado": "2026-11-24T19:40:41.476Z",
+   "recortado": true,
+   "estado": null,
+   "bloques": [
+    [
+     "h",
+     "Kirby's Epic Yarn Recompiled"
+    ],
+    [
+     "p",
+     "A native recompilation of Kirby's Epic Yarn for Windows and Linux (x86-64), built with WiiCompiled and Aurora."
+    ],
+    [
+     "p",
+     "Play Kirby's Epic Yarn natively on PC with stable gameplay, configurable graphics, keyboard and controller support, and a dedicated launcher for settings and saves."
+    ],
+    [
+     "p",
+     "The C++ Qt Widgets launcher defaults to English. Open Basic settings for language, fullscreen and volume. Choose English, 简体中文 or Español from the language selector. Advanced settings contains graphics, custom input and diagnostics. Hover over a control or a question-mark button for help. The launcher saves your language choice in local/user/launcher-language.txt. To change Kirby’s language, choose Game language in Basic settings or in RecompLauncher’s game settings. The USA disc supports English, Français and Español. The choice takes effect on the next game launch."
+    ],
+    [
+     "p",
+     "Kirby Setup starts in English. Its own language selector switches between English, 简体中文 and Español, including during installation, and remembers your choice separately from the launcher."
+    ],
+    [
+     "p",
+     "The Wii executable is translated from PowerPC to C++ and compiled for the host. The native runtime uses Aurora for graphics (Vulkan on Linux). Dolphin extracts your disc and serves as a behavior reference; it does not run the native game."
+    ],
+    [
+     "p",
+     "Kirby's Epic Yarn running natively on Linux."
+    ],
+    [
+     "p",
+     "[!IMPORTANT] Get started on Windows or Linux. The Linux AppImage opens a dedicated installer, downloads its build tools once, and builds the game from your own supported copy. Windows uses an automatic native build script that creates a playable ZIP. You need your own USA disc, RK5E01 revision 0. Game files, generated game code, saves and shader caches are not included. Other revisions are rejected."
+    ],
+    [
+     "p",
+     "Build from source · Features · Gameplay validation history · Performance · Contributing · Changelog"
+    ],
+    [
+     "p",
+     "Third-party launchers: see Quiver, RecompLauncher and Decomp Buddy for supported platforms, setup requirements and the release integration checklist."
+    ],
+    [
+     "p",
+     "The native game and launcher run on Windows and Linux. Choose the setup instructions for your platform:"
+    ],
+    [
+     "h",
+     "Requirements"
+    ],
+    [
+     "li",
+     "Windows x86-64 or Linux x86-64 with a desktop session and working graphics drivers."
+    ],
+    [
+     "li",
+     "Your own complete RK5E01 Rev 0 dump, including the extracted files/ tree."
+    ],
+    [
+     "li",
+     "Linux AppImage: glibc 2.39 or newer, Vulkan graphics drivers, internet access for first-installation downloads, and space for extraction and compilation."
+    ],
+    [
+     "li",
+     "Linux source builds: Git, Python 3.11+ and Docker or Podman for the build environment."
+    ],
+    [
+     "li",
+     "Source builds with a launcher window need the matching Setup package's prebuilt Qt frontend or a desktop Qt build."
+    ],
+    [
+     "li",
+     "Windows: tools/windows/build-windows.ps1 automatically downloads LLVM-MinGW, Python, .NET 8, CMake, Ninja and Windows SDK headers."
+    ],
+    [
+     "li",
+     "Source builds: Dolphin's dolphin-tool / DolphinTool.exe for image extraction; 7-Zip only for .7z inputs. Neither is required for an already extracted DATA folder."
+    ],
+    [
+     "li",
+     "Several GB of storage and enough memory to compile the generated C++."
+    ],
+    [
+     "p",
+     "Expected sys/main.dol SHA-1: f4280a2b0709bfde4132be22e9f7fa8ecfa2a130."
+    ],
+    [
+     "p",
+     "Development hardware includes an Acer Nitro AN515-55 with an RTX 3050 Laptop GPU on Linux and a Ryzen 5 9600X with an RTX 3060 for celeron633's Windows port. See the performance guide for recorded measurements and hardware details."
+    ],
+    [
+     "h",
+     "Linux AppImage"
+    ],
+    [
+     "p",
+     "Download Kirby-Setup-linux-x86_64.AppImage (about 58 MB) and its matching .sha256 file from the release page. Make it executable in your file manager and open it, or run these commands in the download directory:"
     ]
    ]
   },
@@ -664,199 +1286,6 @@
     ]
    ]
   },
-  "d-maurizi-ff9-3ds": {
-   "v": 2,
-   "repo": "maurizi/ff9-3ds",
-   "actualizado": "2026-11-24T19:40:41.476Z",
-   "recortado": false,
-   "estado": null,
-   "bloques": [
-    [
-     "h",
-     "ff9-3ds"
-    ],
-    [
-     "p",
-     "A native Nintendo 3DS port of Final Fantasy IX (PS1, NTSC-U), built from the C source of the ff9-decomp matching decompilation."
-    ],
-    [
-     "p",
-     "The game runs natively on the 3DS's ARM11 without emulation, and features stereoscopic 3D and a full dual-screen redesign of the UI."
-    ],
-    [
-     "p",
-     "This repository contains no game data, and neither do its releases. To play, you need your own copy of the four NTSC-U discs (SLUS-01251/01295/01296/01297)."
-    ],
-    [
-     "p",
-     "Final Fantasy IX © is owned by Square Enix; this project is not affiliated with or endorsed by Square Enix."
-    ],
-    [
-     "h",
-     "Playing"
-    ],
-    [
-     "p",
-     "Download the builder for your computer from Releases, run it, and point it at your four discs: BIN/CUE, IMG/CCD or raw ISO. It checks they are the NTSC-U release, unmodified, and writes the one you choose:"
-    ],
-    [
-     "li",
-     "ff9-full.cia (about 1.7 GB): install it with a CIA installer such as FBI, then start Final Fantasy IX from the HOME Menu."
-    ],
-    [
-     "li",
-     "ff9-full.3dsx: copy it to /3ds/ on the SD card and start it from the Homebrew Launcher."
-    ],
-    [
-     "p",
-     "Or, with nothing to install, use the web builder: the same builder running in your browser. Your disc images are read on your computer and never uploaded."
-    ],
-    [
-     "h",
-     "Building"
-    ],
-    [
-     "p",
-     "The program needs no disc to build:"
-    ],
-    [
-     "p",
-     "To build and run the game from a checkout, with raw 2352-byte images of the four discs at disks/us/raw/FF9 CD1.img … FF9 CD4.img (the same layout as ff9-decomp):"
-    ],
-    [
-     "p",
-     "tools/docker.sh runs the devkitARM container (libctru, citro3d) with Python and a 32-bit host gcc. The program holds none of the game's bytes: it reads them from the discs, and psxrel.bin (tools/gen_relocs.py) says which words are pointers. tools/check_nodata.py FILE... confirms a build carries no game data."
-    ],
-    [
-     "p",
-     "build/ff9.3dsx alone also runs with the discs on the SD card: /3ds/ff9.3dsx, /3ds/ff9/raw/FF9 CD1.img … FF9 CD4.img, and /3ds/ff9/psxrel.bin (from build/)."
-    ],
-    [
-     "h",
-     "Development"
-    ],
-    [
-     "p",
-     "Testing in the Azahar emulator: tools/azahar.sh boots a build on a private X display and captures screenshots and the game's log (sdmc:/3ds/ff9/log.txt); make 3ds SCENARIO=sdmc:/3ds/ff9/scenarios/X.cfg PROFILE=1 boots into a fixture with per-category timers; DUMP_AT=N writes the GPU's VRAM mirror and textures to the SD card; AUTOPRESS=/AUTOTOUCH= script buttons and taps."
-    ],
-    [
-     "p",
-     "Licence: port code GPL-3.0-or-later (LICENSE); tools CC0."
-    ]
-   ]
-  },
-  "d-mstan-supermarioworldrecomp": {
-   "v": 2,
-   "repo": "mstan/SuperMarioWorldRecomp",
-   "actualizado": "2026-11-24T19:40:41.476Z",
-   "recortado": true,
-   "estado": {
-    "titulo": "Current status: believed fully playable",
-    "texto": "Hand-verified end-to-end through:"
-   },
-   "bloques": [
-    [
-     "h",
-     "SuperMarioWorldRecomp"
-    ],
-    [
-     "p",
-     "This recompilation is a byproduct of developing snesrecomp — the games are the proving ground, the framework is the goal. These are in-development previews, not finished ports — expect rough edges, and depth will keep landing over months, not days. My time for any one title is limited, so I ask for your patience. Contributions are welcome — testing, issues, and PRs to the game or framework all help and will accelerate this game's polish. More on the why at: Recomp + AI: 5 Months Later »"
-    ],
-    [
-     "p",
-     "Static recompilation of Super Mario World (SNES) into native C, using the snesrecomp framework. This repo is the per-game side: the runtime, the recompiled C output, the per-game .cfg, and the build glue."
-    ],
-    [
-     "h",
-     "What \"static recompilation\" means here"
-    ],
-    [
-     "p",
-     "The 65816 CPU code from the ROM is statically translated to C — every function the game runs on the SNES's main CPU is a real generated C function in src/gen/. The rest of the SNES is not recompiled — it's hardware. PPU rendering, the APU / SPC700 audio coprocessor, DMA and HDMA channels, hardware register I/O, and bank-mapping all run through a C reimplementation of the SNES hardware in snesrecomp/runner/src/snes/ — a LakeSnes-derived core (the same emulator family the snesrev reverse-engineered ports use), with individual algorithms credited to snes9x. This is the same model other…"
-    ],
-    [
-     "h",
-     "Current status: believed fully playable"
-    ],
-    [
-     "p",
-     "Hand-verified end-to-end through:"
-    ],
-    [
-     "li",
-     "Yoshi's Island (World 1) including Iggy's castle boss."
-    ],
-    [
-     "li",
-     "Donut Plains (World 2) end-to-end."
-    ],
-    [
-     "li",
-     "Vanilla Dome (World 3) in progress at time of writing."
-    ],
-    [
-     "p",
-     "No catastrophic visible regressions surfaced through these worlds. Two runtime tripwires (the M/X claim verifier and the async-cpu->m_flag/x_flag-write detector) are armed at boot and have not latched on the verified worlds. An off-rails event was captured in BufferScrollingTiles_Layer1_VerticalLevel_M1X1 during Donut Plains castle (bank-out-of-range pointer read; runtime mirrors the read to a safe location and gameplay continues) — see ISSUES.md for the bucketed capture and the offrails_get TCP query."
-    ],
-    [
-     "p",
-     "Worlds 4–7 and special content (Star Road, Special World) are not yet hand-verified but are expected to play similarly. If you hit a visible regression, please open an issue with a savestate and the offrails_get / mx_async_check_get JSON snapshots."
-    ],
-    [
-     "p",
-     "Active development; expect:"
-    ],
-    [
-     "li",
-     "Some branches don't build; only main is guaranteed to build."
-    ],
-    [
-     "li",
-     "Internal docs (ISSUES.md, ENHANCEMENTS.md) assume context."
-    ],
-    [
-     "li",
-     "APIs and recompiler output change without notice."
-    ],
-    [
-     "p",
-     "See RELEASE.md for the latest release notes."
-    ],
-    [
-     "h",
-     "Quick start (pre-built release)"
-    ],
-    [
-     "li",
-     "Download the Windows ZIP or Linux AppImage from Releases. Extract the ZIP, or make the AppImage executable."
-    ],
-    [
-     "li",
-     "Run SuperMarioWorldSNESRecomp.exe or the AppImage. On first launch a file picker asks for your legally-obtained Super Mario World (USA) ROM (.sfc / .smc). The path is remembered in rom.cfg next to the exe."
-    ],
-    [
-     "li",
-     "Edit keybinds.ini (auto-generated next to the exe on first run) to remap keys, then restart."
-    ],
-    [
-     "p",
-     "The ROM is never redistributed — supply your own dump."
-    ],
-    [
-     "p",
-     "To play as Captain Falcon, enable Captain Falcon on the launcher's Mods page, select your Super Smash Bros. (USA) v1.0 ROM, and press Play. The included helper prepares Falcon's assets in your user cache on first use. No Python installation or environment setup is required."
-    ],
-    [
-     "h",
-     "Send a reproducible bug report"
-    ],
-    [
-     "li",
-     "In the launcher's Mods page, check SMW Playtest Diagnostics → Diagnostic recording. It starts enabled for fresh settings and remembers your choice. Keep the gameplay mods and settings needed for your reproduction, including native co-op where applicable. Disable run-ahead while recording."
-    ]
-   ]
-  },
   "d-mstan-zeldaalttpsnesrecomp": {
    "v": 2,
    "repo": "mstan/ZeldaAlttPSNESRecomp",
@@ -978,111 +1407,6 @@
     [
      "h",
      "Adaptive widescreen"
-    ]
-   ]
-  },
-  "d-riviergrullon-kirby-epic-yarn-recomp": {
-   "v": 2,
-   "repo": "RivierGrullon/kirby-epic-yarn-recomp",
-   "actualizado": "2026-11-24T19:40:41.476Z",
-   "recortado": true,
-   "estado": null,
-   "bloques": [
-    [
-     "h",
-     "Kirby's Epic Yarn Recompiled"
-    ],
-    [
-     "p",
-     "A native recompilation of Kirby's Epic Yarn for Windows and Linux (x86-64), built with WiiCompiled and Aurora."
-    ],
-    [
-     "p",
-     "Play Kirby's Epic Yarn natively on PC with stable gameplay, configurable graphics, keyboard and controller support, and a dedicated launcher for settings and saves."
-    ],
-    [
-     "p",
-     "The C++ Qt Widgets launcher defaults to English. Open Basic settings for language, fullscreen and volume. Choose English, 简体中文 or Español from the language selector. Advanced settings contains graphics, custom input and diagnostics. Hover over a control or a question-mark button for help. The launcher saves your language choice in local/user/launcher-language.txt. To change Kirby’s language, choose Game language in Basic settings or in RecompLauncher’s game settings. The USA disc supports English, Français and Español. The choice takes effect on the next game launch."
-    ],
-    [
-     "p",
-     "Kirby Setup starts in English. Its own language selector switches between English, 简体中文 and Español, including during installation, and remembers your choice separately from the launcher."
-    ],
-    [
-     "p",
-     "The Wii executable is translated from PowerPC to C++ and compiled for the host. The native runtime uses Aurora for graphics (Vulkan on Linux). Dolphin extracts your disc and serves as a behavior reference; it does not run the native game."
-    ],
-    [
-     "p",
-     "Kirby's Epic Yarn running natively on Linux."
-    ],
-    [
-     "p",
-     "[!IMPORTANT] Get started on Windows or Linux. The Linux AppImage opens a dedicated installer, downloads its build tools once, and builds the game from your own supported copy. Windows uses an automatic native build script that creates a playable ZIP. You need your own USA disc, RK5E01 revision 0. Game files, generated game code, saves and shader caches are not included. Other revisions are rejected."
-    ],
-    [
-     "p",
-     "Build from source · Features · Gameplay validation history · Performance · Contributing · Changelog"
-    ],
-    [
-     "p",
-     "Third-party launchers: see Quiver, RecompLauncher and Decomp Buddy for supported platforms, setup requirements and the release integration checklist."
-    ],
-    [
-     "p",
-     "The native game and launcher run on Windows and Linux. Choose the setup instructions for your platform:"
-    ],
-    [
-     "h",
-     "Requirements"
-    ],
-    [
-     "li",
-     "Windows x86-64 or Linux x86-64 with a desktop session and working graphics drivers."
-    ],
-    [
-     "li",
-     "Your own complete RK5E01 Rev 0 dump, including the extracted files/ tree."
-    ],
-    [
-     "li",
-     "Linux AppImage: glibc 2.39 or newer, Vulkan graphics drivers, internet access for first-installation downloads, and space for extraction and compilation."
-    ],
-    [
-     "li",
-     "Linux source builds: Git, Python 3.11+ and Docker or Podman for the build environment."
-    ],
-    [
-     "li",
-     "Source builds with a launcher window need the matching Setup package's prebuilt Qt frontend or a desktop Qt build."
-    ],
-    [
-     "li",
-     "Windows: tools/windows/build-windows.ps1 automatically downloads LLVM-MinGW, Python, .NET 8, CMake, Ninja and Windows SDK headers."
-    ],
-    [
-     "li",
-     "Source builds: Dolphin's dolphin-tool / DolphinTool.exe for image extraction; 7-Zip only for .7z inputs. Neither is required for an already extracted DATA folder."
-    ],
-    [
-     "li",
-     "Several GB of storage and enough memory to compile the generated C++."
-    ],
-    [
-     "p",
-     "Expected sys/main.dol SHA-1: f4280a2b0709bfde4132be22e9f7fa8ecfa2a130."
-    ],
-    [
-     "p",
-     "Development hardware includes an Acer Nitro AN515-55 with an RTX 3050 Laptop GPU on Linux and a Ryzen 5 9600X with an RTX 3060 for celeron633's Windows port. See the performance guide for recorded measurements and hardware details."
-    ],
-    [
-     "h",
-     "Linux AppImage"
-    ],
-    [
-     "p",
-     "Download Kirby-Setup-linux-x86_64.AppImage (about 58 MB) and its matching .sha256 file from the release page. Make it executable in your file manager and open it, or run these commands in the download directory:"
     ]
    ]
   },
@@ -1384,134 +1708,6 @@
     ]
    ]
   },
-  "d-kanapitsas-source-recomp": {
-   "v": 2,
-   "repo": "kanapitsas/source-recomp",
-   "actualizado": "2026-11-21T16:21:44.378Z",
-   "recortado": true,
-   "estado": {
-    "titulo": "Status at a glance (8 November 2026)",
-    "texto": "Portal 2: fully playable."
-   },
-   "bloques": [
-    [
-     "h",
-     "Portal 2, Half-Life 2 and Portal, statically recompiled for Apple silicon"
-    ],
-    [
-     "p",
-     "Video: Portal 2 running natively on an iPhone 15 Pro Max."
-    ],
-    [
-     "p",
-     "This project builds native Mac and iPhone apps from your own copies of Portal 2, Half-Life 2 (with Episode One, Episode Two and Lost Coast) and Portal. It translates the x86 code of the Linux versions into C, then compiles it for Apple silicon. No emulator, no Wine, no Rosetta."
-    ],
-    [
-     "p",
-     "You must own the games. This repository has no game files and no Valve code: everything is generated on your machine from your own copy. The app and the generated code contain Valve's game, so keep them for yourself and don't share them."
-    ],
-    [
-     "p",
-     "Unofficial fan project, not affiliated with or endorsed by Valve. Portal, Portal 2, Half-Life, Steam and Source are trademarks of Valve Corporation. Provided as is, without warranty."
-    ],
-    [
-     "h",
-     "Status at a glance (8 November 2026)"
-    ],
-    [
-     "p",
-     "Portal 2: fully playable."
-    ],
-    [
-     "li",
-     "Mac: on an M3 Pro, Metal (the default) runs a scene at 122 fps where OpenGL gets 81 (2560×1440, MSAA 4×; measurements)."
-    ],
-    [
-     "li",
-     "iPhone: steady 60 fps on an iPhone 15 Pro Max, with touch controls and portals fired by tapping the back of the phone."
-    ],
-    [
-     "li",
-     "Controllers: work on Mac and iPhone (tested with an 8BitDo SN30 Pro). On Mac, turn Steam Input off for Portal 2."
-    ],
-    [
-     "li",
-     "Co-op over the local network: a Mac hosts, an iPhone or a second copy on the same Mac joins. Connection and map load are checked; a full co-op course has not been played yet."
-    ],
-    [
-     "p",
-     "Half-Life 2 (experimental), with Episode One, Episode Two and Lost Coast (details):"
-    ],
-    [
-     "li",
-     "Mac: 120 fps with Metal on an M3 Pro at 1280×720. Players report an hour on an M4 Pro with no issue, and mostly 60 fps (dips to 50) on an M4 Air at 2560×1664, maximum settings, with a DualShock 4."
-    ],
-    [
-     "li",
-     "Episodes and Lost Coast: their first maps load; they have not been played through."
-    ],
-    [
-     "li",
-     "iPhone: 60 fps on an iPhone 15 Pro Max, with touch controls and gyro aiming, in a short test."
-    ],
-    [
-     "p",
-     "Portal (experimental, details):"
-    ],
-    [
-     "li",
-     "Mac: the first chambers are playable; the build uses the same recompiler as Portal 2, with its own indirect call roots."
-    ],
-    [
-     "li",
-     "iPhone: the app installs, starts and renders; a short session only."
-    ],
-    [
-     "p",
-     "All three games"
-    ],
-    [
-     "li",
-     "Install: the Natif Installer app from the releases, or one command, setup.sh, for one game or all. Only the Xcode command line tools are required."
-    ],
-    [
-     "li",
-     "Multiplayer: only Portal 2's LAN co-op. No Steam invites or online play, and Half-Life 2: Deathmatch is not supported."
-    ],
-    [
-     "h",
-     "How it works"
-    ],
-    [
-     "li",
-     "tools/elfprep.py and tools/gameprep.py lay out the Linux ELF modules (engine.so, client.so, ...) at fixed guest addresses, apply their relocations offline and record imports, exports and entry points."
-    ],
-    [
-     "li",
-     "tools/lift.py translates every x86 function into a C function; clang compiles the result together with the runtime into one ARM64 executable (build/portal2-native; build/hl2/hl2-native for Half-Life 2). Indirect call targets that the static pass misses are collected at run time into config/game-roots.json."
-    ],
-    [
-     "li",
-     "The runtime (runtime/) implements what the binaries import: libc, pthreads and futexes, SDL2, OpenGL, Direct3D 9 and Steam. Guest threads are real threads serialized by one lock, the guest gate (docs/fast-path.md)."
-    ],
-    [
-     "li",
-     "Steam calls are forwarded to Valve's own arm64 libsteam_api.dylib (from Steamworks.NET) through generated i386 → arm64 proxies; there is no Steam emulator (docs/steam.md)."
-    ],
-    [
-     "li",
-     "Rendering has two paths. The default is Valve's shaderapivk.so talking to mtld3d, a native Direct3D 9 on Metal (docs/d3d9-bridge.md); mtld3d is the project, the library it builds is libd3d9metal. The fallback is Valve's togl, translating Direct3D 9 to legacy OpenGL 2.1 (docs/gl-audit.md)."
-    ],
-    [
-     "li",
-     "On iPhone the OpenGL path goes through gl4es, with every shader rewritten to GLSL ES 3.00 (docs/ios.md); the Metal path is linked statically."
-    ],
-    [
-     "h",
-     "What you need"
-    ]
-   ]
-  },
   "d-metroidret-mzm": {
    "v": 2,
    "repo": "metroidret/mzm",
@@ -1709,118 +1905,6 @@
     ]
    ]
   },
-  "d-ravencaio-tlou-remastered-pc": {
-   "v": 2,
-   "repo": "ravencaio/tlou-remastered-pc",
-   "actualizado": "2026-11-24T19:40:41.476Z",
-   "recortado": true,
-   "estado": {
-    "titulo": "📊 Status",
-    "texto": "Work in progress, reported playable from start to finish by a player, with one crash along the way that is not fixed yet (a workaround is under Known issues), and with rough edges."
-   },
-   "bloques": [
-    [
-     "h",
-     "The Last of Us Remastered — PC Port"
-    ],
-    [
-     "p",
-     "The PS4 The Last of Us Remastered running natively on Windows."
-    ],
-    [
-     "p",
-     "⬇️ Download · 🎮 Playing · ⚠️ Known issues · 🛠️ Building · 💬 Discord"
-    ],
-    [
-     "p",
-     "Runs the PS4 The Last of Us Remastered (CUSA00552, with its update 1.11) natively on Windows. The game's own x86-64 code runs directly on the PC; a runtime supplies the PS4 system libraries, and a Vulkan renderer (the shadPS4 video core) executes the PS4 GPU work."
-    ],
-    [
-     "p",
-     "[!IMPORTANT] No game files are in this repository. You need your own copy of the game (the dumped CUSA00552 folder, and its update). This project is not affiliated with Sony Interactive Entertainment or Naughty Dog."
-    ],
-    [
-     "h",
-     "❤️ Support the project"
-    ],
-    [
-     "p",
-     "If you enjoy the port and want to help it keep going, you can support it here. Thank you!"
-    ],
-    [
-     "h",
-     "🤔 Why"
-    ],
-    [
-     "p",
-     "Why The Last Of Us Remastered (PS4 version) is superior to The Last Of Us Part I (remake)?"
-    ],
-    [
-     "li",
-     "The PS4 remaster preserves the artistic style of the PS3 version and just improves the resolution and graphics."
-    ],
-    [
-     "li",
-     "Last version with multiplayer support, having multiplayer code is much easier to implement community/unofficial multiplayer"
-    ],
-    [
-     "li",
-     "Use less resources and storage space (no 4K textures, less polygons, no ray-tracing) than the remake version, which has a history of performance problems and poor optimization on PC."
-    ],
-    [
-     "h",
-     "📊 Status"
-    ],
-    [
-     "p",
-     "Work in progress, reported playable from start to finish by a player, with one crash along the way that is not fixed yet (a workaround is under Known issues), and with rough edges."
-    ],
-    [
-     "h",
-     "⚠️ Known issues"
-    ],
-    [
-     "p",
-     "Click an issue to expand it."
-    ],
-    [
-     "p",
-     "🧍 NPCs moving in jumps or bobbing up and down — fixed, testing"
-    ],
-    [
-     "p",
-     "NPCs moving in jumps or bobbing up and down (GitHub #57, #63): the game read some results of its GPU memory copy shader (Cs_MemCpy) a frame late. They are read back now; in a save where they jumped every time, they stopped. Tested on one save and one GPU so far: report it if they still jump somewhere (GOW3_TLOU_MEMCPY_READBACK=0 turns the fix off for comparison). Thanks to KyrieFrost, whose experimental patch in #63 pointed at that shader."
-    ],
-    [
-     "p",
-     "⏳ Short pauses while new shaders compile"
-    ],
-    [
-     "p",
-     "A frame that compiles many new shaders can pause the game for a moment, mostly the first time an area is played. The game's own frame watchdog is patched from 2 s to 20 s for that (TLOU_FIXES=none leaves the game unpatched). If a load ever hangs, start with GOW3_FRAMES_IN_FLIGHT=0 (slower)."
-    ],
-    [
-     "p",
-     "🔫 Shots going through scenery — fixed"
-    ],
-    [
-     "p",
-     "Pistol and rifle shots that went through scenery with no effect (firefly pendants that could not be shot down, GitHub #29, #45; walls that took no bullet holes from a pistol or rifle while a shotgun marked them) are fixed. The game asks the GPU, with an occlusion query, whether a character is under the crosshair; while one is, the player's bullets ignore scenery so thin cover in front of a target does not stop them. The runtime made up the answers to occlusion queries (always \"visible\"), so the bullets ignored scenery all the time; the queries are now real Vulkan occlusion queries…"
-    ],
-    [
-     "p",
-     "🧵 Device lost in Pittsburgh on GTX 900/10 series (cloth solver) — workaround on by default"
-    ],
-    [
-     "p",
-     "On NVIDIA graphics cards older than Turing (GTX 900 and 10 series), the game's cloth solver for its largest cloths (Cs_ClothSimulate512) lost the Vulkan device in Pittsburgh, once Henry and Sam appear: the runtime stopped with Device lost during submit, and Windows' System event log shows nvlddmkm \"SKEDCHECK19_CTA_REGISTER_CONSUMPTION failed\". A replay of that route lost it on 17 of 18 runs, on drivers 582.53 and 582.78, whatever was changed in the shader. Its one workgroup of 512 threads needs all the registers of a multiprocessor; on those cards it now runs as 256 threads that simulate 2…"
-    ],
-    [
-     "p",
-     "🟦 Intel graphics (Arc, UHD 630)"
-    ]
-   ]
-  },
   "d-patataofcourse-rhgold": {
    "v": 2,
    "repo": "patataofcourse/rhgold",
@@ -1951,86 +2035,6 @@
     [
      "li",
      "A launcher - Play, Settings, Controls, and a Game page to choose another game folder or rebuild the game code; it tells you when a new version is out and installs it in place (your saves, settings and mods stay)."
-    ]
-   ]
-  },
-  "d-deez-coder-smo-android-port": {
-   "v": 2,
-   "repo": "Deez-coder/SMO-android-port",
-   "actualizado": "2026-11-24T19:40:41.476Z",
-   "recortado": true,
-   "estado": {
-    "titulo": "Status: beta 0.5",
-    "texto": "The game boots, plays and saves. Here's how it runs on the dev's phone, on the phone's own driver."
-   },
-   "bloques": [
-    [
-     "p",
-     "the one official source of this port, anywhere else is NOT done by me"
-    ],
-    [
-     "h",
-     "SMO Android Port"
-    ],
-    [
-     "p",
-     "Super Mario Odyssey (version 1.0.0) running natively on Android, built on the static recompilation from smo-recomp."
-    ],
-    [
-     "p",
-     "The game runs natively. Its ARM64 code is translated to C ahead of time and compiled for Android with the NDK, with no CPU interpreter, JIT or compatibility layer in between, and this project's runtime takes care of the rest: the console's system libraries, NVN graphics (on Vulkan), shaders, audio, input and the file system."
-    ],
-    [
-     "p",
-     "There's no game code, no game assets, no keys and no firmware in this repo. You need your own copy of the game and keys dumped from your own console."
-    ],
-    [
-     "p",
-     "Made with AI. Most of the code was written by Claude, Anthropic's AI assistant (through Claude Code), with the project's creator directing it, reviewing it and testing it on a real phone. Expect some rough edges, and if something breaks, please send logs (see below)."
-    ],
-    [
-     "h",
-     "Status: beta 0.5"
-    ],
-    [
-     "p",
-     "The game boots, plays and saves. Here's how it runs on the dev's phone, on the phone's own driver."
-    ],
-    [
-     "p",
-     "Galaxy S24 Ultra (Snapdragon 8 Gen 3 / Adreno 750): about 58 to 60 fps in Cascade at 100% scale."
-    ],
-    [
-     "p",
-     "More device benchmarks will be added here as more logs come in."
-    ],
-    [
-     "p",
-     "Your results will likely be different. Speed depends a lot on the phone's chip, its GPU driver, how warm it gets and your settings, so we'd love to hear how yours does. Custom drivers are optional. The first start builds the graphics for your phone behind a progress bar, which takes a few minutes, but only once (and again after an update that changes the shaders). When you update, install the new APK over the old one. Uninstalling deletes those built graphics and your game files, and the next start has to build everything again."
-    ],
-    [
-     "p",
-     "New in 0.5: fixes for loading screens that never ended, the crash in Shiveria Town, the freeze after the first frog capture, and the intro cutscene's lighting with frame generation, plus about 1.3 GB less memory and fewer stutters on a first start. The full list is in CHANGELOG.md."
-    ],
-    [
-     "h",
-     "What you get"
-    ],
-    [
-     "p",
-     "Game. Import your own game right in the app: your prod.keys, then your NSP or XCI of 1.0.0 (base game, no update). The keys stay in the app's private storage until you remove them. Steady game speed keeps the game at its normal speed even below 60 fps, and the FPS limit goes from 20 to 60. Saves can be exported and imported as a .zip (your current save is kept as a backup). RomFS mods can be turned on and off in the app."
-    ],
-    [
-     "p",
-     "Graphics. A Vulkan 1.3 renderer with docked (1080p) or handheld (720p) resolution, scale presets or your own resolution scale, upscalers (bilinear, bicubic and more) for any scale under 100%, FXAA, sharpening and anisotropic filtering, plus an FPS counter and a performance overlay (average fps, 1% low, frame time). It uses your phone's own Vulkan driver by default. On Snapdragon you can also load custom AdrenoTools driver packages (like Mesa Turnip)."
-    ],
-    [
-     "p",
-     "Frame generation (beta). One extra frame is made after each real one, so the game shows 60 frames a second while running at 30. It looks smoother, and the controls react like at 30 fps. Set it to Off, On or Auto in the app or the in-game menu. Auto turns it on only while your phone can't hold 60 but can keep up with frame generation. Quality High gives Mario, enemies and other moving objects their own motion, and Fast follows only the camera for slower GPUs."
-    ],
-    [
-     "p",
-     "CPU boost. Keeps the phone's CPU clocks up so heavy scenes hold the frame rate, set to Auto, Always or Off. It does what you set, and the app shows a note about its heat and battery cost while it is on."
     ]
    ]
   },
@@ -7256,111 +7260,6 @@
     ]
    ]
   },
-  "p-mstan-megamanxsnesrecomp": {
-   "v": 2,
-   "repo": "mstan/MegaManXSNESRecomp",
-   "actualizado": "2026-11-25T18:48:38.617Z",
-   "recortado": true,
-   "estado": null,
-   "bloques": [
-    [
-     "h",
-     "Windows frame composition"
-    ],
-    [
-     "p",
-     "The pinned shared framework uses cached HLE frame composition by default on Windows x64. Guest CPU, mapper, audio and status behavior keep their existing interfaces; this is a host presentation optimization. For the maintained correctness-reference compositor, configure a separate Release build with cmake -S . -B build-frame-lle -DCMAKE_BUILD_TYPE=Release -DSNESRECOMP_FRAME_IMPL=LLE, then cmake --build build-frame-lle. Selection is fixed at build time. LLE can reduce performance; it remains available for correctness checks. Other platforms keep LLE defaults, and existing CMake cache…"
-    ],
-    [
-     "p",
-     "The reviewed native-view, uncapped Windows route measured 340.936 to 889.911 FPS (+161.02%, process CPU -67.17%); it includes boot/menu work and active gameplay. The owner accepted the normal-paced adaptive HLE build. These figures describe that measured build/route, not a new measurement of subsequent upstream title changes or other platforms. Foreign compiler activity limits precision. Normal play retains normal pacing/audio. See the shared framework's frame model for the host/guest boundary."
-    ],
-    [
-     "p",
-     "Play Mega Man X on PC with playable Zero, couch co-op and online netplay, all sixteen X2/X3 boss weapons, and adaptive widescreen. Choose Zero's original X3 combat, the optional Modern style with direct saber attacks, a second jump, and an air dash, or Saber Zero by RaphaelAzev."
-    ],
-    [
-     "p",
-     "Download | Getting started | Netplay setup"
-    ],
-    [
-     "h",
-     "Android"
-    ],
-    [
-     "p",
-     "A native Android APK is available alongside the desktop release, with the classic X campaign, optional Boss Rush, touch controls and Fit to screen by default. Import your own unmodified Mega Man X (USA) (Rev 1) ROM. See Android downloads and setup for platform scope and build details. The desktop release continues to provide the full mod catalog and online play."
-    ],
-    [
-     "h",
-     "Saber Zero"
-    ],
-    [
-     "p",
-     "Saber Zero is contributed by RaphaelAzev, from the MegaManXSNESRecompSaberZero fork. It gives Zero a Y-button Z-Saber: a 3-hit ground combo, air, wall and dash slashes, the X3 finisher with its Saber wave, hit-priority follow-ups, and Ride Armor pilot art. The X button keeps Zero's buster and special weapons."
-    ],
-    [
-     "p",
-     "To play it, choose Zero behavior → Saber Zero in either Characters → Add Zero (single player, Select switches X/Zero) or Characters → Co-op (whichever player is Zero). Saber Zero uses your Mega Man X3 USA ROM. The optional Characters → Saber Zero settings entry tunes its damage, hit priorities, finisher window and swing volume, and can outline hitboxes. Without it, Saber Zero uses RaphaelAzev's defaults."
-    ],
-    [
-     "p",
-     "The Saber sprites and sound effects come from the Zashiko Mod. They are included with permission under PolyForm Noncommercial with the additional permissions in PERMISSIONS.md. Controls, timings, the priority ladder and every option are in the Saber Zero reference."
-    ],
-    [
-     "p",
-     "Click the thumbnail to watch the gameplay showcase on YouTube."
-    ],
-    [
-     "p",
-     "X / Zero co-op Fight through X1 together, locally or over netplay."
-    ],
-    [
-     "p",
-     "Modern Zero Direct saber attacks with movement during airborne swings."
-    ],
-    [
-     "p",
-     "X2 / X3 weapon pages Sixteen imported boss weapons and their charged attacks."
-    ],
-    [
-     "p",
-     "Imported weapons in action X3's Triad Thunder on X1's Highway."
-    ],
-    [
-     "p",
-     "Gameplay screenshots from the project preview, plus a Modern Zero capture from the current playtest."
-    ],
-    [
-     "h",
-     "Features"
-    ],
-    [
-     "p",
-     "Checked boxes indicate available features. Configure optional mods in the launcher's Mods screen; these character and weapon mods target the USA Rev 1 build."
-    ],
-    [
-     "p",
-     "See the co-op validation notes for current limits."
-    ],
-    [
-     "h",
-     "Quick start (pre-built release)"
-    ],
-    [
-     "li",
-     "Download the latest Windows ZIP or Linux AppImage. Extract the ZIP on Windows, or make the AppImage executable on Linux."
-    ],
-    [
-     "li",
-     "Open the launcher and select your own Mega Man X (USA) (Rev 1) ROM (.sfc or .smc). Headered and unheadered ROMs are supported."
-    ],
-    [
-     "li",
-     "Configure your keyboard or controller in Controls."
-    ]
-   ]
-  },
   "p-hero88go-melee-unlocked": {
    "v": 2,
    "repo": "Hero88go/melee-unlocked",
@@ -7474,6 +7373,450 @@
     ]
    ]
   },
+  "p-cheviman-outrunners-port": {
+   "v": 2,
+   "repo": "cheviman/outrunners-port",
+   "actualizado": "2026-11-25T18:48:38.617Z",
+   "recortado": true,
+   "estado": null,
+   "bloques": [
+    [
+     "h",
+     "OutRunners — port"
+    ],
+    [
+     "p",
+     "Sega's 1992 arcade game OutRunners as a native game for computers, the Nintendo Switch, Android and Anbernic's handhelds, built on its decompilation, outrunners-decomp: the game's program in C, checked frame by frame against MAME in picture and sound. Two games come out of it:"
+    ],
+    [
+     "li",
+     "OutRunners Arcade: the arcade game as it is, both cabinet screens side by side."
+    ],
+    [
+     "li",
+     "OutRunners: the console version, the arcade game made for playing at home."
+    ],
+    [
+     "p",
+     "This repository contains no game data: you bring your own ROM set (MAME's orunners, World), and the game takes its assets out of it."
+    ],
+    [
+     "p",
+     "REVERSE: the goal picked on the route map\">"
+    ],
+    [
+     "h",
+     "Playing it"
+    ],
+    [
+     "p",
+     "Download the package for Windows, Linux or macOS from the releases. Keep orunners.zip beside the game, or drop it on its window when it asks: the first time, it takes the assets out of it. --game gives it the set's path (OutRunners --game D:\\roms\\orunners.zip), for a shortcut; with RecompLauncher you pick orunners.zip once and it does the rest (recomplauncher.json, in each package)."
+    ],
+    [
+     "p",
+     "Each device has a package of its own: the game without its assets, and the tool (for Windows, macOS and Linux) that makes it on your computer with your ROM set. Each package's name carries the release's version (outrunners-v1.3.2-windows-x64.zip):"
+    ],
+    [
+     "li",
+     "Nintendo Switch (outrunners-VERSION-switch.zip): OutRunners NSP makes OutRunners.nsp, for a console with Atmosphere (ports/switch)."
+    ],
+    [
+     "li",
+     "Android (outrunners-VERSION-android.zip): OutRunners APK makes OutRunners.apk (ports/android)."
+    ],
+    [
+     "li",
+     "Anbernic's H700 handhelds (outrunners-VERSION-anbernic.zip, RG35XX, RG40XX...): OutRunners Anbernic makes the folder for PORTS (ports/anbernic)."
+    ],
+    [
+     "li",
+     "The R36S on ArkOS (outrunners-VERSION-r36s.zip, RK3326, with PortMaster): OutRunners R36S makes the folder for ArkOS's ports (ports/r36s)."
+    ],
+    [
+     "p",
+     "What a tool makes has the game's data in it: it is yours alone, never share it."
+    ],
+    [
+     "h",
+     "The console version"
+    ],
+    [
+     "li",
+     "ARCADE: the arcade's game, one player."
+    ],
+    [
+     "li",
+     "2 PLAYERS: both seats in one race, side by side or one over the other."
+    ],
+    [
+     "li",
+     "NETWORK: up to four devices on the local network (below)."
+    ],
+    [
+     "li",
+     "& KNUCKLES: CLASSIC (the arcade's game, a little more time), TIME ATTACK (against your fastest run's ghost), FULL (all 31 courses in one race), REVERSE (from a goal back to the start)."
+    ],
+    [
+     "li",
+     "OPTIONS: controls, difficulty, time, video (window, full screen, sharp, smooth or CRT pixels, a wider picture: AUTO, the screen's shape, as a Steam Deck's in its hands, a TV's or an ultrawide monitor's, or 16:10, 16:9, 20:9 or 21:9; VSYNC), volume, sound test, steering, FPS."
+    ],
+    [
+     "li",
+     "The radio: > go round its ten songs and Jingle Bell, the hidden one, between Last Wave and Magical Sound Shower."
+    ],
+    [
+     "li",
+     "The pause in a race: CONTINUE, RESTART, QUIT GAME."
+    ],
+    [
+     "li",
+     "The picture: the scenery the arcade draws every other frame to make it look faint (the spray of Niagara's falls, the pyramids) is drawn see-through instead, so it does not blink."
+    ],
+    [
+     "h",
+     "Controls"
+    ],
+    [
+     "li",
+     "Keyboard: the arrows steer, accelerate and brake; Q and A shift up and down; space is the radio; Enter starts and pauses. OPTIONS > STEERING > SPEED is how fast the keys (and a d-pad) turn the wheel, 1 to 9, or INSTANT: all the way at once, and back to the centre at once."
+    ],
+    [
+     "li",
+     "Game controller: the left stick or the d-pad steers, the right trigger accelerates, the left trigger brakes, the shoulders shift. OPTIONS > CONTROLS changes them: the key or button pressed there takes the control's place. A stick's way can be one too (the right stick's up and down as the pedals, pressed as far as the stick goes); in controls.ini, by hand, a control can have 2 keys and 3 buttons."
+    ]
+   ]
+  },
+  "p-nautaro-dbz-bt4-tag-team-decomp": {
+   "v": 2,
+   "repo": "NauTaro/DBZ-BT4-Tag-Team-Decomp",
+   "actualizado": "2026-11-25T18:48:38.617Z",
+   "recortado": true,
+   "estado": null,
+   "bloques": [
+    [
+     "p",
+     "BT4decomp Budokai Tenkaichi 4 B14 Rev2. Native desktop runtime. Simultaneous team battles. Online Tag Team, tournaments, spectator rooms and proximity voice, built on Tenkaichi3Decomp. Join the official Discord community for matchmaking, project news and support."
+    ],
+    [
+     "p",
+     "Download · Install · Documentation · Report an issue"
+    ],
+    [
+     "p",
+     "BT4decomp adapts BT4 B14 Rev2 for Windows, Linux and Apple Silicon. It runs the game code natively rather than emulating a console. Installation requires your own compatible Spanish or English BT4 ISO; disc images and extracted game data are not distributed here."
+    ],
+    [
+     "p",
+     "Windows security review in progress. Users reported antivirus alerts for the R5 package. See the investigation and executable hashes."
+    ],
+    [
+     "h",
+     "Fight together"
+    ],
+    [
+     "p",
+     "Game menus support English and Spanish, with an optional Brazilian Portuguese pack. Setup supports English, Spanish and Brazilian Portuguese. F1 settings support English, Spanish and Brazilian Portuguese. F1 > Spectator offers free camera, fighter tracking and fight overview, with target, speed, zoom and reset controls. Keyboard and controller camera input replaces local fighter input while the camera is active; Start remains available. Panoramic mode expands menus and HUD across the viewport. Hiding the combat HUD also dismisses the Start pause menu; press Start to open it again."
+    ],
+    [
+     "h",
+     "Voice and presentation"
+    ],
+    [
+     "p",
+     "Proximity voice Talk across both teams, with volume adjusted by fighter distance. Choose microphone and output devices, voice activation, threshold and playback volume. Display controls Windows offers Vulkan, native Direct3D 11, Direct3D 12 and OpenGL. Adjust render scale, aspect ratio, effects and motion presentation independently of combat simulation. Custom content Add compatible stages with matching PNG previews, or install custom music. See the stage guide and music guide ."
+    ],
+    [
+     "h",
+     "Script mods"
+    ],
+    [
+     "p",
+     "F1 > Mods manages the included Modern HUD, Modern Camera, Modern Look and Skill List scripts. Mods start disabled. Each player can choose their own presentation settings; existing scripts and settings are preserved by automatic updates. F1 > Controls selects one target control method: L3, the right stick or the D-pad. F1 > Spectator can keep the normal camera during special attacks. See the Lua mod guide. F1 > Tech offers optional mechanics adjustments for offline duels; online matches, Tag Team and replays retain their original rules."
+    ],
+    [
+     "h",
+     "Installation"
+    ],
+    [
+     "li",
+     "Download your platform's ZIP from the latest published release and extract it completely."
+    ],
+    [
+     "li",
+     "Run BT4decomp-setup.exe on Windows, or ./BT4decomp-setup on Linux and macOS."
+    ],
+    [
+     "li",
+     "Select the setup language, game language and your compatible BT4 B14 Rev2 ISO."
+    ],
+    [
+     "li",
+     "Start BT4decomp.exe on Windows, or ./BT4decomp on Linux and macOS. Language installation and setup preview"
+    ],
+    [
+     "p",
+     "A single-language installation opens directly in that language. Selecting both languages downloads the alternate package from this repository and enables language selection at startup. Public language and HD texture packages download without GitHub sign-in."
+    ],
+    [
+     "p",
+     "For Linux permissions, macOS download handling and source builds, see native platform setup. Intel Macs and Linux ARM are not targets of these packages."
+    ],
+    [
+     "h",
+     "Automatic updates"
+    ],
+    [
+     "p",
+     "Open F1 > Updates > Check for updates to look for a new version. The game also checks this repository automatically for the latest signed package for its platform. It verifies the archive SHA-256 and Ed25519 signature, then asks for a game restart to apply the update at the offline main menu. Saves, settings, installed game data and custom content remain outside the replacement list. Updating does not restart an active battle or online session."
+    ],
+    [
+     "p",
+     "Installations that predate the signed updater need one initial package installation. Subsequent published signed updates can install through the launcher."
+    ]
+   ]
+  },
+  "p-mstan-megamanxsnesrecomp": {
+   "v": 2,
+   "repo": "mstan/MegaManXSNESRecomp",
+   "actualizado": "2026-11-25T18:48:38.617Z",
+   "recortado": true,
+   "estado": null,
+   "bloques": [
+    [
+     "h",
+     "Windows frame composition"
+    ],
+    [
+     "p",
+     "The pinned shared framework uses cached HLE frame composition by default on Windows x64. Guest CPU, mapper, audio and status behavior keep their existing interfaces; this is a host presentation optimization. For the maintained correctness-reference compositor, configure a separate Release build with cmake -S . -B build-frame-lle -DCMAKE_BUILD_TYPE=Release -DSNESRECOMP_FRAME_IMPL=LLE, then cmake --build build-frame-lle. Selection is fixed at build time. LLE can reduce performance; it remains available for correctness checks. Other platforms keep LLE defaults, and existing CMake cache…"
+    ],
+    [
+     "p",
+     "The reviewed native-view, uncapped Windows route measured 340.936 to 889.911 FPS (+161.02%, process CPU -67.17%); it includes boot/menu work and active gameplay. The owner accepted the normal-paced adaptive HLE build. These figures describe that measured build/route, not a new measurement of subsequent upstream title changes or other platforms. Foreign compiler activity limits precision. Normal play retains normal pacing/audio. See the shared framework's frame model for the host/guest boundary."
+    ],
+    [
+     "p",
+     "Play Mega Man X on PC with playable Zero, couch co-op and online netplay, all sixteen X2/X3 boss weapons, and adaptive widescreen. Choose Zero's original X3 combat, the optional Modern style with direct saber attacks, a second jump, and an air dash, or Saber Zero by RaphaelAzev."
+    ],
+    [
+     "p",
+     "Download | Getting started | Netplay setup"
+    ],
+    [
+     "h",
+     "Android"
+    ],
+    [
+     "p",
+     "A native Android APK is available alongside the desktop release, with the classic X campaign, optional Boss Rush, touch controls and Fit to screen by default. Import your own unmodified Mega Man X (USA) (Rev 1) ROM. See Android downloads and setup for platform scope and build details. The desktop release continues to provide the full mod catalog and online play."
+    ],
+    [
+     "h",
+     "Saber Zero"
+    ],
+    [
+     "p",
+     "Saber Zero is contributed by RaphaelAzev, from the MegaManXSNESRecompSaberZero fork. It gives Zero a Y-button Z-Saber: a 3-hit ground combo, air, wall and dash slashes, the X3 finisher with its Saber wave, hit-priority follow-ups, and Ride Armor pilot art. The X button keeps Zero's buster and special weapons."
+    ],
+    [
+     "p",
+     "To play it, choose Zero behavior → Saber Zero in either Characters → Add Zero (single player, Select switches X/Zero) or Characters → Co-op (whichever player is Zero). Saber Zero uses your Mega Man X3 USA ROM. The optional Characters → Saber Zero settings entry tunes its damage, hit priorities, finisher window and swing volume, and can outline hitboxes. Without it, Saber Zero uses RaphaelAzev's defaults."
+    ],
+    [
+     "p",
+     "The Saber sprites and sound effects come from the Zashiko Mod. They are included with permission under PolyForm Noncommercial with the additional permissions in PERMISSIONS.md. Controls, timings, the priority ladder and every option are in the Saber Zero reference."
+    ],
+    [
+     "p",
+     "Click the thumbnail to watch the gameplay showcase on YouTube."
+    ],
+    [
+     "p",
+     "X / Zero co-op Fight through X1 together, locally or over netplay."
+    ],
+    [
+     "p",
+     "Modern Zero Direct saber attacks with movement during airborne swings."
+    ],
+    [
+     "p",
+     "X2 / X3 weapon pages Sixteen imported boss weapons and their charged attacks."
+    ],
+    [
+     "p",
+     "Imported weapons in action X3's Triad Thunder on X1's Highway."
+    ],
+    [
+     "p",
+     "Gameplay screenshots from the project preview, plus a Modern Zero capture from the current playtest."
+    ],
+    [
+     "h",
+     "Features"
+    ],
+    [
+     "p",
+     "Checked boxes indicate available features. Configure optional mods in the launcher's Mods screen; these character and weapon mods target the USA Rev 1 build."
+    ],
+    [
+     "p",
+     "See the co-op validation notes for current limits."
+    ],
+    [
+     "h",
+     "Quick start (pre-built release)"
+    ],
+    [
+     "li",
+     "Download the latest Windows ZIP or Linux AppImage. Extract the ZIP on Windows, or make the AppImage executable on Linux."
+    ],
+    [
+     "li",
+     "Open the launcher and select your own Mega Man X (USA) (Rev 1) ROM (.sfc or .smc). Headered and unheadered ROMs are supported."
+    ],
+    [
+     "li",
+     "Configure your keyboard or controller in Controls."
+    ]
+   ]
+  },
+  "p-fridinator1-safehouse": {
+   "v": 2,
+   "repo": "FridiNaTor1/SafeHouse",
+   "actualizado": "2026-11-25T18:48:38.617Z",
+   "recortado": true,
+   "estado": null,
+   "bloques": [
+    [
+     "p",
+     "SafeHouse"
+    ],
+    [
+     "p",
+     "A launcher and native PC ports of the Sly Cooper games. Play from your own disc images, on Windows, Linux (including the Steam Deck), macOS, Android (including the Meta Quest), the Nintendo Switch and the Nintendo Switch 2."
+    ],
+    [
+     "p",
+     "Download · Features · Debug menu · Modding · Building · FAQ · Discord"
+    ],
+    [
+     "h",
+     "What it is"
+    ],
+    [
+     "p",
+     "SafeHouse installs each game from your own PlayStation 2 disc image and runs it as a native program: no emulator, no BIOS. SafeHouse includes no game data."
+    ],
+    [
+     "p",
+     "Supported discs: Sly 1 from the USA, Europe, Japan and Korea; Sly 2 from the USA, Europe (v1.00 and v2.01), Japan and Korea. Every platform carries the launcher and all three games, and takes every one of these discs."
+    ],
+    [
+     "h",
+     "Download and play"
+    ],
+    [
+     "li",
+     "Get the latest package from the Releases page:"
+    ],
+    [
+     "li",
+     "Open SafeHouse, pick a game, choose Install and select (or drag in) your disc image (.iso or .chd). The image is checked first: the game, the region, the free space and whether the image is complete."
+    ],
+    [
+     "li",
+     "Choose Play."
+    ],
+    [
+     "p",
+     "The launcher keeps itself up to date: it checks for a new release at startup and updates in place, leaving your saves and games alone (details). On the Steam Deck, install in Desktop Mode, then use Add to Steam on the game's page. More help: FAQ and troubleshooting."
+    ],
+    [
+     "h",
+     "PC features"
+    ],
+    [
+     "p",
+     "Super ultrawide at 32:9, with the HUD at 4:3 (default), 16:9, 16:10 or out to the edges."
+    ],
+    [
+     "li",
+     "Full keyboard and mouse support: remappable keys and buttons, mouse camera and aim, and separate invert options for the camera, the binocucom and the turrets, for the controller and the mouse."
+    ],
+    [
+     "li",
+     "Controller button icons for Xbox, Steam Controller, Steam Deck, Nintendo Switch, PS5, PS4 and PS3, or the original PS2 icons if you prefer them."
+    ],
+    [
+     "li",
+     "Dynamic input icons that switch instantly to whatever you're playing with."
+    ],
+    [
+     "li",
+     "Windows, Linux, SteamOS, macOS, Android, the Meta Quest, the Nintendo Switch and Switch 2."
+    ],
+    [
+     "li",
+     "VR (Sly 2) on PC headsets and the Meta Quest."
+    ],
+    [
+     "li",
+     "High refresh rates: 30, 60, 90, 120, 144, 240 FPS, uncapped or your monitor's refresh rate; the game speed stays the same."
+    ],
+    [
+     "li",
+     "Super ultrawide (up to 32:9): the HUD can sit at 4:3 (default), 16:9, 16:10 or match your screen, with improvements to the binocucom, effects and cutscene bars at wider aspect ratios."
+    ],
+    [
+     "li",
+     "A debug menu with PC extras: play as Carmelita, guards and bosses, fly Bentley's RC chopper anywhere, noclip, a free camera and warps."
+    ],
+    [
+     "li",
+     "Replay Jobs: jump back into your favourite jobs."
+    ],
+    [
+     "li",
+     "Every region: USA (NTSC), both PAL versions in every language, the Japanese Kaitou Sly Cooper 2 and the Korean release."
+    ],
+    [
+     "li",
+     "Mod support: texture, music, dialog, text and movie replacements, texture packs, and a built-in import of the HD textures from the PS3 Sly Collection."
+    ],
+    [
+     "li",
+     "And more: long shadows, 30 save slots, Add to Steam and desktop shortcuts. Input icons switch instantly to what you're using Icons for every major controller, or the original PS2 ones Full keyboard and mouse support High refresh rates, up to uncapped Extras: play as Carmelita The debug menu (F10) Replay Jobs, with operations Every region and language PS3 HD texture import (Sly 2 and Sly 1) Windows, Linux and the Steam Deck"
+    ],
+    [
+     "p",
+     "The full list is in docs/FEATURES.md, the debug menu in docs/DEBUG-MENU.md and modding in docs/MODDING.md."
+    ],
+    [
+     "h",
+     "Level editor (Sly 2)"
+    ],
+    [
+     "p",
+     "The cutscene editor playing the end of Rajan's boss fight: Neyla brings the Contessa (Episode 3)"
+    ],
+    [
+     "p",
+     "The launcher comes with a level editor for Sly 2 (Windows and Linux): fly through any level, move and add objects, build with brushes, edit guards, jobs and map states, make new levels and edit cutscenes on a timeline. Your changes are saved as a mod package that plays on every platform. How to use it: docs/MODDING.md."
+    ],
+    [
+     "h",
+     "Community"
+    ],
+    [
+     "li",
+     "Discord: join us on the ThiefRush Discord. ThiefRush is also the name of the multiplayer fork that is on its way."
+    ],
+    [
+     "li",
+     "Patreon: Support us on Patreon."
+    ]
+   ]
+  },
   "p-mstan-supermetroidrecomp": {
    "v": 2,
    "repo": "mstan/SuperMetroidRecomp",
@@ -7535,6 +7878,207 @@
     [
      "p",
      "Session logs and gameplay replay capture are enabled automatically, including after an update. No diagnostic mod or console setup is needed. When a problem occurs, stop playing and quit normally if possible. Zip the session's logs/sm-*.log and all matching logs/sm-replay-* files: .replay, .replay.sav, .replay.config.ini and .replay.mods.txt. A .replay alone is insufficient. Attach last_run_report.json and any crash_report_*.json or crash_minidump_*.dmp files too, before launching the game again. Include your release version, OS, what happened and roughly when. Keep your ROM out of the ZIP."
+    ]
+   ]
+  },
+  "p-zloikiller-nfshp2-port-win": {
+   "v": 2,
+   "repo": "ZloiKILLER/nfshp2-port-win",
+   "actualizado": "2026-11-25T18:48:38.617Z",
+   "recortado": false,
+   "estado": null,
+   "bloques": [
+    [
+     "h",
+     "Need for Speed: Hot Pursuit 2 — Windows port"
+    ],
+    [
+     "p",
+     "A static recompilation of the PlayStation 2 game for Windows: the game's own code, translated to C++, on a native Vulkan renderer, with PC controls, menus, profiles and settings. Ported by ZloiKILLER."
+    ],
+    [
+     "p",
+     "The game is not included. You need your own copy, a disc image (.iso) or the disc itself in a DVD drive, of one of these releases:"
+    ],
+    [
+     "li",
+     "USA, SLUS-20362"
+    ],
+    [
+     "li",
+     "Europe v1.00 and v2.00, SLES-50731"
+    ],
+    [
+     "li",
+     "Asia, SLPM-65181"
+    ],
+    [
+     "li",
+     "Korea, SLPM-67527"
+    ],
+    [
+     "h",
+     "Playing"
+    ],
+    [
+     "li",
+     "Download speed.exe from Releases."
+    ],
+    [
+     "li",
+     "Start it and choose Install. It asks for your disc image (Browse) or takes the disc from a DVD drive (From drive), and for the folder to install into (any folder you like), checks the disc, and puts everything the game needs there (about 3 GB; the disc is only read). Then the game starts."
+    ],
+    [
+     "li",
+     "From then on start speed.exe in that folder (or the shortcut on the desktop)."
+    ],
+    [
+     "p",
+     "To update, download the new speed.exe, start it and choose Update: it asks for the folder the game is installed in and replaces the program and the port's own files there. Settings, saves and replays stay as they are, and no disc is needed."
+    ],
+    [
+     "p",
+     "README.txt in the game's folder has the settings and what is in the folder. The controls are in the game: Options > Controls."
+    ],
+    [
+     "p",
+     "Saves from a PS2 or an emulator. Install and Update also put savestransfer.exe, the Saves Manager, in the game's folder. It imports Hot Pursuit 2 saves from PS2 memory cards (PCSX2's are found by themselves; .ps2/.mcd images of PCSX2, AetherSX2 and NetherSX2, PCSX2 folder cards) and from .psu, .max and .cbs save files as new profiles of the port, and exports a profile's save back onto a card or into such a file, with the game's icon, for any of the discs above. Profiles that are there already are never changed; a card is backed up (.bak) before it is written to."
+    ],
+    [
+     "p",
+     "Needs: Windows 10 or 11, 64-bit, a graphics card with Vulkan."
+    ],
+    [
+     "p",
+     "How to build it, how the repository is laid out and whose work it uses: TECHNICAL.md."
+    ],
+    [
+     "p",
+     "Need for Speed and Hot Pursuit are trademarks of Electronic Arts. This project is not affiliated with Electronic Arts."
+    ]
+   ]
+  },
+  "p-imyourhuckleberryponcho-pokemon-xd-pc-port": {
+   "v": 2,
+   "repo": "imyourhuckleberryponcho/Pokemon-XD-PC-Port",
+   "actualizado": "2026-11-25T18:48:38.617Z",
+   "recortado": true,
+   "estado": {
+    "titulo": "Status: public beta — version 0.7.4",
+    "texto": "Playable from New Game into the story, with known bugs. It is not finished: expect crashes, stalls and graphics differences, and keep backups of saves you care about. Downloads are on the Releases page, one per system:"
+   },
+   "bloques": [
+    [
+     "h",
+     "Pokémon XD: Gale of Darkness — PC Port"
+    ],
+    [
+     "p",
+     "A native PC port of Pokémon XD: Gale of Darkness (GameCube, USA, GXXE01), built from the Pokémon XD decompilation. Not an emulator: the game's own code, rebuilt for 64-bit Windows, with Linux and Mac builds for testers."
+    ],
+    [
+     "p",
+     "The goal is a \"definitive edition\": with the default settings the game plays exactly like the GameCube release (same timing, same random numbers, same quirks), and every enhancement is an option you turn on yourself."
+    ],
+    [
+     "p",
+     "This repository contains no game assets, ROMs, ISOs or executables, and none are compiled into the program. You need your own legally obtained copy of the game (USA, GXXE01); the port reads everything from your disc image while it runs."
+    ],
+    [
+     "h",
+     "Status: public beta — version 0.7.4"
+    ],
+    [
+     "p",
+     "Playable from New Game into the story, with known bugs. It is not finished: expect crashes, stalls and graphics differences, and keep backups of saves you care about. Downloads are on the Releases page, one per system:"
+    ],
+    [
+     "p",
+     "Found a bug, or want to help test? Join the Discord — see Reporting a bug below."
+    ],
+    [
+     "h",
+     "Quick start"
+    ],
+    [
+     "li",
+     "You need your own copy of Pokémon XD: Gale of Darkness (USA, GXXE01) as a disc image (.iso, .rvz, .gcm, ...). Windows 10 or 11, 64-bit, a graphics card with Direct3D 12 (Vulkan or Direct3D 11 as fall-backs)."
+    ],
+    [
+     "li",
+     "Download your system's file from the Releases page and unpack it."
+    ],
+    [
+     "li",
+     "Start Pokemon XD Launcher.exe (Linux: Pokemon XD Launcher.sh; Mac: the app). On the launcher's Disc page choose your disc image, then press Play."
+    ],
+    [
+     "li",
+     "Pick how you play (the launcher asks the first time): Original is exactly the GameCube game, Enhanced adds the port's improvements (recommended), Custom is your own mix."
+    ],
+    [
+     "p",
+     "The download's Read me.txt has all of the following, step by step."
+    ],
+    [
+     "h",
+     "How to..."
+    ],
+    [
+     "p",
+     "Everything here is done in the launcher (it opens first) unless it says \"in the game\". Your own discs are only read, never changed, and nothing from any disc comes with this program: what you make from them is kept in your data folder (%APPDATA%\\Pokemon XD), on your PC."
+    ],
+    [
+     "h",
+     "Play Pokemon XG (from your own XG disc)"
+    ],
+    [
+     "li",
+     "You need a disc image of Pokemon XG version 1.2.1 (the fan game) that you made yourself; this program does not include it."
+    ],
+    [
+     "li",
+     "Launcher, Disc page: choose that image the way you would choose the XD one. It says \"XG mode\"; press Play."
+    ],
+    [
+     "li",
+     "XG keeps its own saves, apart from XD's (in the folder \"xg\" inside your data folder), so your XD saves are never touched. A save only loads in its own game; the Save page marks every save XD or XG."
+    ],
+    [
+     "li",
+     "Works in XG: the randomizer (also the starter), the challenge rules, and online battles and trades with other XG players (XD and XG players cannot play each other)."
+    ],
+    [
+     "li",
+     "Not in XG (greyed with a reason): Gen 4 Pokemon and rules, the Fairy / modern types (XG has its own), and language packs (they would replace XG's own text)."
+    ],
+    [
+     "li",
+     "To play XD again, choose your XD disc on the Disc page."
+    ],
+    [
+     "h",
+     "Play in Japanese or another language (Extra assets, Language)"
+    ],
+    [
+     "li",
+     "The game stays your USA copy (keep it on the Disc page: the game's code comes from it); a language pack only changes its text, menus and pictures. You make a pack from a disc of that version."
+    ],
+    [
+     "li",
+     "Japanese: launcher, Extra assets page, \"Pokemon XD (Japanese)\": choose your Japanese disc (game ID GXXJ01) and press \"Make the Japanese pack\". It copies a few hundred MB and takes a few minutes."
+    ],
+    [
+     "li",
+     "German, French, Italian and Spanish: the same page, \"Pokemon XD (European, PAL)\": choose your European disc (GXXP01) and press \"Make the language pack\"."
+    ],
+    [
+     "li",
+     "When it says Done, choose the language in the \"Language\" row of the Play bar at the bottom of the launcher (or in the game: SETTINGS, Language). It applies the next time the game starts; in the game the \"Restart now\" row does that for you. Choose English (US) to go back."
+    ],
+    [
+     "li",
+     "The port's own screens in these languages are machine-made translations: corrections are welcome."
     ]
    ]
   },
@@ -8079,143 +8623,6 @@
     ]
    ]
   },
-  "p-fridinator1-safehouse": {
-   "v": 2,
-   "repo": "FridiNaTor1/SafeHouse",
-   "actualizado": "2026-11-25T18:48:38.617Z",
-   "recortado": true,
-   "estado": null,
-   "bloques": [
-    [
-     "p",
-     "SafeHouse"
-    ],
-    [
-     "p",
-     "A launcher and native PC ports of the Sly Cooper games. Play from your own disc images, on Windows, Linux (including the Steam Deck), macOS, Android (including the Meta Quest), the Nintendo Switch and the Nintendo Switch 2."
-    ],
-    [
-     "p",
-     "Download · Features · Debug menu · Modding · Building · FAQ · Discord"
-    ],
-    [
-     "h",
-     "What it is"
-    ],
-    [
-     "p",
-     "SafeHouse installs each game from your own PlayStation 2 disc image and runs it as a native program: no emulator, no BIOS. SafeHouse includes no game data."
-    ],
-    [
-     "p",
-     "Supported discs: Sly 1 from the USA, Europe, Japan and Korea; Sly 2 from the USA, Europe (v1.00 and v2.01), Japan and Korea. Every platform carries the launcher and all three games, and takes every one of these discs."
-    ],
-    [
-     "h",
-     "Download and play"
-    ],
-    [
-     "li",
-     "Get the latest package from the Releases page:"
-    ],
-    [
-     "li",
-     "Open SafeHouse, pick a game, choose Install and select (or drag in) your disc image (.iso or .chd). The image is checked first: the game, the region, the free space and whether the image is complete."
-    ],
-    [
-     "li",
-     "Choose Play."
-    ],
-    [
-     "p",
-     "The launcher keeps itself up to date: it checks for a new release at startup and updates in place, leaving your saves and games alone (details). On the Steam Deck, install in Desktop Mode, then use Add to Steam on the game's page. More help: FAQ and troubleshooting."
-    ],
-    [
-     "h",
-     "PC features"
-    ],
-    [
-     "p",
-     "Super ultrawide at 32:9, with the HUD at 4:3 (default), 16:9, 16:10 or out to the edges."
-    ],
-    [
-     "li",
-     "Full keyboard and mouse support: remappable keys and buttons, mouse camera and aim, and separate invert options for the camera, the binocucom and the turrets, for the controller and the mouse."
-    ],
-    [
-     "li",
-     "Controller button icons for Xbox, Steam Controller, Steam Deck, Nintendo Switch, PS5, PS4 and PS3, or the original PS2 icons if you prefer them."
-    ],
-    [
-     "li",
-     "Dynamic input icons that switch instantly to whatever you're playing with."
-    ],
-    [
-     "li",
-     "Windows, Linux, SteamOS, macOS, Android, the Meta Quest, the Nintendo Switch and Switch 2."
-    ],
-    [
-     "li",
-     "VR (Sly 2) on PC headsets and the Meta Quest."
-    ],
-    [
-     "li",
-     "High refresh rates: 30, 60, 90, 120, 144, 240 FPS, uncapped or your monitor's refresh rate; the game speed stays the same."
-    ],
-    [
-     "li",
-     "Super ultrawide (up to 32:9): the HUD can sit at 4:3 (default), 16:9, 16:10 or match your screen, with improvements to the binocucom, effects and cutscene bars at wider aspect ratios."
-    ],
-    [
-     "li",
-     "A debug menu with PC extras: play as Carmelita, guards and bosses, fly Bentley's RC chopper anywhere, noclip, a free camera and warps."
-    ],
-    [
-     "li",
-     "Replay Jobs: jump back into your favourite jobs."
-    ],
-    [
-     "li",
-     "Every region: USA (NTSC), both PAL versions in every language, the Japanese Kaitou Sly Cooper 2 and the Korean release."
-    ],
-    [
-     "li",
-     "Mod support: texture, music, dialog, text and movie replacements, texture packs, and a built-in import of the HD textures from the PS3 Sly Collection."
-    ],
-    [
-     "li",
-     "And more: long shadows, 30 save slots, Add to Steam and desktop shortcuts. Input icons switch instantly to what you're using Icons for every major controller, or the original PS2 ones Full keyboard and mouse support High refresh rates, up to uncapped Extras: play as Carmelita The debug menu (F10) Replay Jobs, with operations Every region and language PS3 HD texture import (Sly 2 and Sly 1) Windows, Linux and the Steam Deck"
-    ],
-    [
-     "p",
-     "The full list is in docs/FEATURES.md, the debug menu in docs/DEBUG-MENU.md and modding in docs/MODDING.md."
-    ],
-    [
-     "h",
-     "Level editor (Sly 2)"
-    ],
-    [
-     "p",
-     "The cutscene editor playing the end of Rajan's boss fight: Neyla brings the Contessa (Episode 3)"
-    ],
-    [
-     "p",
-     "The launcher comes with a level editor for Sly 2 (Windows and Linux): fly through any level, move and add objects, build with brushes, edit guards, jobs and map states, make new levels and edit cutscenes on a timeline. Your changes are saved as a mod package that plays on every platform. How to use it: docs/MODDING.md."
-    ],
-    [
-     "h",
-     "Community"
-    ],
-    [
-     "li",
-     "Discord: join us on the ThiefRush Discord. ThiefRush is also the name of the multiplayer fork that is on its way."
-    ],
-    [
-     "li",
-     "Patreon: Support us on Patreon."
-    ]
-   ]
-  },
   "p-chasem-dev-orre-launcher": {
    "v": 2,
    "repo": "chasem-dev/orre-launcher",
@@ -8565,119 +8972,6 @@
     ]
    ]
   },
-  "p-cheviman-outrunners-port": {
-   "v": 2,
-   "repo": "cheviman/outrunners-port",
-   "actualizado": "2026-11-25T18:48:38.617Z",
-   "recortado": true,
-   "estado": null,
-   "bloques": [
-    [
-     "h",
-     "OutRunners — port"
-    ],
-    [
-     "p",
-     "Sega's 1992 arcade game OutRunners as a native game for computers, the Nintendo Switch, Android and Anbernic's handhelds, built on its decompilation, outrunners-decomp: the game's program in C, checked frame by frame against MAME in picture and sound. Two games come out of it:"
-    ],
-    [
-     "li",
-     "OutRunners Arcade: the arcade game as it is, both cabinet screens side by side."
-    ],
-    [
-     "li",
-     "OutRunners: the console version, the arcade game made for playing at home."
-    ],
-    [
-     "p",
-     "This repository contains no game data: you bring your own ROM set (MAME's orunners, World), and the game takes its assets out of it."
-    ],
-    [
-     "p",
-     "REVERSE: the goal picked on the route map\">"
-    ],
-    [
-     "h",
-     "Playing it"
-    ],
-    [
-     "p",
-     "Download the package for Windows, Linux or macOS from the releases. Keep orunners.zip beside the game, or drop it on its window when it asks: the first time, it takes the assets out of it. --game gives it the set's path (OutRunners --game D:\\roms\\orunners.zip), for a shortcut; with RecompLauncher you pick orunners.zip once and it does the rest (recomplauncher.json, in each package)."
-    ],
-    [
-     "p",
-     "Each device has a package of its own: the game without its assets, and the tool (for Windows, macOS and Linux) that makes it on your computer with your ROM set. Each package's name carries the release's version (outrunners-v1.3.2-windows-x64.zip):"
-    ],
-    [
-     "li",
-     "Nintendo Switch (outrunners-VERSION-switch.zip): OutRunners NSP makes OutRunners.nsp, for a console with Atmosphere (ports/switch)."
-    ],
-    [
-     "li",
-     "Android (outrunners-VERSION-android.zip): OutRunners APK makes OutRunners.apk (ports/android)."
-    ],
-    [
-     "li",
-     "Anbernic's H700 handhelds (outrunners-VERSION-anbernic.zip, RG35XX, RG40XX...): OutRunners Anbernic makes the folder for PORTS (ports/anbernic)."
-    ],
-    [
-     "li",
-     "The R36S on ArkOS (outrunners-VERSION-r36s.zip, RK3326, with PortMaster): OutRunners R36S makes the folder for ArkOS's ports (ports/r36s)."
-    ],
-    [
-     "p",
-     "What a tool makes has the game's data in it: it is yours alone, never share it."
-    ],
-    [
-     "h",
-     "The console version"
-    ],
-    [
-     "li",
-     "ARCADE: the arcade's game, one player."
-    ],
-    [
-     "li",
-     "2 PLAYERS: both seats in one race, side by side or one over the other."
-    ],
-    [
-     "li",
-     "NETWORK: up to four devices on the local network (below)."
-    ],
-    [
-     "li",
-     "& KNUCKLES: CLASSIC (the arcade's game, a little more time), TIME ATTACK (against your fastest run's ghost), FULL (all 31 courses in one race), REVERSE (from a goal back to the start)."
-    ],
-    [
-     "li",
-     "OPTIONS: controls, difficulty, time, video (window, full screen, sharp, smooth or CRT pixels, a wider picture: AUTO, the screen's shape, as a Steam Deck's in its hands, a TV's or an ultrawide monitor's, or 16:10, 16:9, 20:9 or 21:9; VSYNC), volume, sound test, steering, FPS."
-    ],
-    [
-     "li",
-     "The radio: > go round its ten songs and Jingle Bell, the hidden one, between Last Wave and Magical Sound Shower."
-    ],
-    [
-     "li",
-     "The pause in a race: CONTINUE, RESTART, QUIT GAME."
-    ],
-    [
-     "li",
-     "The picture: the scenery the arcade draws every other frame to make it look faint (the spray of Niagara's falls, the pyramids) is drawn see-through instead, so it does not blink."
-    ],
-    [
-     "h",
-     "Controls"
-    ],
-    [
-     "li",
-     "Keyboard: the arrows steer, accelerate and brake; Q and A shift up and down; space is the radio; Enter starts and pauses. OPTIONS > STEERING > SPEED is how fast the keys (and a d-pad) turn the wheel, 1 to 9, or INSTANT: all the way at once, and back to the centre at once."
-    ],
-    [
-     "li",
-     "Game controller: the left stick or the d-pad steers, the right trigger accelerates, the left trigger brakes, the shoulders shift. OPTIONS > CONTROLS changes them: the key or button pressed there takes the control's place. A stick's way can be one too (the right stick's up and down as the pedals, pressed as far as the stick goes); in controls.ini, by hand, a control can have 2 keys and 3 buttons."
-    ]
-   ]
-  },
   "p-sinan-karakaya-dq8-recompiled": {
    "v": 2,
    "repo": "Sinan-Karakaya/DQ8-Recompiled",
@@ -9008,207 +9302,6 @@
     ]
    ]
   },
-  "p-imyourhuckleberryponcho-pokemon-xd-pc-port": {
-   "v": 2,
-   "repo": "imyourhuckleberryponcho/Pokemon-XD-PC-Port",
-   "actualizado": "2026-11-25T18:48:38.617Z",
-   "recortado": true,
-   "estado": {
-    "titulo": "Status: public beta — version 0.7.4",
-    "texto": "Playable from New Game into the story, with known bugs. It is not finished: expect crashes, stalls and graphics differences, and keep backups of saves you care about. Downloads are on the Releases page, one per system:"
-   },
-   "bloques": [
-    [
-     "h",
-     "Pokémon XD: Gale of Darkness — PC Port"
-    ],
-    [
-     "p",
-     "A native PC port of Pokémon XD: Gale of Darkness (GameCube, USA, GXXE01), built from the Pokémon XD decompilation. Not an emulator: the game's own code, rebuilt for 64-bit Windows, with Linux and Mac builds for testers."
-    ],
-    [
-     "p",
-     "The goal is a \"definitive edition\": with the default settings the game plays exactly like the GameCube release (same timing, same random numbers, same quirks), and every enhancement is an option you turn on yourself."
-    ],
-    [
-     "p",
-     "This repository contains no game assets, ROMs, ISOs or executables, and none are compiled into the program. You need your own legally obtained copy of the game (USA, GXXE01); the port reads everything from your disc image while it runs."
-    ],
-    [
-     "h",
-     "Status: public beta — version 0.7.4"
-    ],
-    [
-     "p",
-     "Playable from New Game into the story, with known bugs. It is not finished: expect crashes, stalls and graphics differences, and keep backups of saves you care about. Downloads are on the Releases page, one per system:"
-    ],
-    [
-     "p",
-     "Found a bug, or want to help test? Join the Discord — see Reporting a bug below."
-    ],
-    [
-     "h",
-     "Quick start"
-    ],
-    [
-     "li",
-     "You need your own copy of Pokémon XD: Gale of Darkness (USA, GXXE01) as a disc image (.iso, .rvz, .gcm, ...). Windows 10 or 11, 64-bit, a graphics card with Direct3D 12 (Vulkan or Direct3D 11 as fall-backs)."
-    ],
-    [
-     "li",
-     "Download your system's file from the Releases page and unpack it."
-    ],
-    [
-     "li",
-     "Start Pokemon XD Launcher.exe (Linux: Pokemon XD Launcher.sh; Mac: the app). On the launcher's Disc page choose your disc image, then press Play."
-    ],
-    [
-     "li",
-     "Pick how you play (the launcher asks the first time): Original is exactly the GameCube game, Enhanced adds the port's improvements (recommended), Custom is your own mix."
-    ],
-    [
-     "p",
-     "The download's Read me.txt has all of the following, step by step."
-    ],
-    [
-     "h",
-     "How to..."
-    ],
-    [
-     "p",
-     "Everything here is done in the launcher (it opens first) unless it says \"in the game\". Your own discs are only read, never changed, and nothing from any disc comes with this program: what you make from them is kept in your data folder (%APPDATA%\\Pokemon XD), on your PC."
-    ],
-    [
-     "h",
-     "Play Pokemon XG (from your own XG disc)"
-    ],
-    [
-     "li",
-     "You need a disc image of Pokemon XG version 1.2.1 (the fan game) that you made yourself; this program does not include it."
-    ],
-    [
-     "li",
-     "Launcher, Disc page: choose that image the way you would choose the XD one. It says \"XG mode\"; press Play."
-    ],
-    [
-     "li",
-     "XG keeps its own saves, apart from XD's (in the folder \"xg\" inside your data folder), so your XD saves are never touched. A save only loads in its own game; the Save page marks every save XD or XG."
-    ],
-    [
-     "li",
-     "Works in XG: the randomizer (also the starter), the challenge rules, and online battles and trades with other XG players (XD and XG players cannot play each other)."
-    ],
-    [
-     "li",
-     "Not in XG (greyed with a reason): Gen 4 Pokemon and rules, the Fairy / modern types (XG has its own), and language packs (they would replace XG's own text)."
-    ],
-    [
-     "li",
-     "To play XD again, choose your XD disc on the Disc page."
-    ],
-    [
-     "h",
-     "Play in Japanese or another language (Extra assets, Language)"
-    ],
-    [
-     "li",
-     "The game stays your USA copy (keep it on the Disc page: the game's code comes from it); a language pack only changes its text, menus and pictures. You make a pack from a disc of that version."
-    ],
-    [
-     "li",
-     "Japanese: launcher, Extra assets page, \"Pokemon XD (Japanese)\": choose your Japanese disc (game ID GXXJ01) and press \"Make the Japanese pack\". It copies a few hundred MB and takes a few minutes."
-    ],
-    [
-     "li",
-     "German, French, Italian and Spanish: the same page, \"Pokemon XD (European, PAL)\": choose your European disc (GXXP01) and press \"Make the language pack\"."
-    ],
-    [
-     "li",
-     "When it says Done, choose the language in the \"Language\" row of the Play bar at the bottom of the launcher (or in the game: SETTINGS, Language). It applies the next time the game starts; in the game the \"Restart now\" row does that for you. Choose English (US) to go back."
-    ],
-    [
-     "li",
-     "The port's own screens in these languages are machine-made translations: corrections are welcome."
-    ]
-   ]
-  },
-  "p-zloikiller-nfshp2-port-win": {
-   "v": 2,
-   "repo": "ZloiKILLER/nfshp2-port-win",
-   "actualizado": "2026-11-25T18:48:38.617Z",
-   "recortado": false,
-   "estado": null,
-   "bloques": [
-    [
-     "h",
-     "Need for Speed: Hot Pursuit 2 — Windows port"
-    ],
-    [
-     "p",
-     "A static recompilation of the PlayStation 2 game for Windows: the game's own code, translated to C++, on a native Vulkan renderer, with PC controls, menus, profiles and settings. Ported by ZloiKILLER."
-    ],
-    [
-     "p",
-     "The game is not included. You need your own copy, a disc image (.iso) or the disc itself in a DVD drive, of one of these releases:"
-    ],
-    [
-     "li",
-     "USA, SLUS-20362"
-    ],
-    [
-     "li",
-     "Europe v1.00 and v2.00, SLES-50731"
-    ],
-    [
-     "li",
-     "Asia, SLPM-65181"
-    ],
-    [
-     "li",
-     "Korea, SLPM-67527"
-    ],
-    [
-     "h",
-     "Playing"
-    ],
-    [
-     "li",
-     "Download speed.exe from Releases."
-    ],
-    [
-     "li",
-     "Start it and choose Install. It asks for your disc image (Browse) or takes the disc from a DVD drive (From drive), and for the folder to install into (any folder you like), checks the disc, and puts everything the game needs there (about 3 GB; the disc is only read). Then the game starts."
-    ],
-    [
-     "li",
-     "From then on start speed.exe in that folder (or the shortcut on the desktop)."
-    ],
-    [
-     "p",
-     "To update, download the new speed.exe, start it and choose Update: it asks for the folder the game is installed in and replaces the program and the port's own files there. Settings, saves and replays stay as they are, and no disc is needed."
-    ],
-    [
-     "p",
-     "README.txt in the game's folder has the settings and what is in the folder. The controls are in the game: Options > Controls."
-    ],
-    [
-     "p",
-     "Saves from a PS2 or an emulator. Install and Update also put savestransfer.exe, the Saves Manager, in the game's folder. It imports Hot Pursuit 2 saves from PS2 memory cards (PCSX2's are found by themselves; .ps2/.mcd images of PCSX2, AetherSX2 and NetherSX2, PCSX2 folder cards) and from .psu, .max and .cbs save files as new profiles of the port, and exports a profile's save back onto a card or into such a file, with the game's icon, for any of the discs above. Profiles that are there already are never changed; a card is backed up (.bak) before it is written to."
-    ],
-    [
-     "p",
-     "Needs: Windows 10 or 11, 64-bit, a graphics card with Vulkan."
-    ],
-    [
-     "p",
-     "How to build it, how the repository is laid out and whose work it uses: TECHNICAL.md."
-    ],
-    [
-     "p",
-     "Need for Speed and Hot Pursuit are trademarks of Electronic Arts. This project is not affiliated with Electronic Arts."
-    ]
-   ]
-  },
   "p-underdecoded-gen2recomped": {
    "v": 2,
    "repo": "UNDERdecoded/Gen2Recomped",
@@ -9285,7 +9378,7 @@
   "p-god-hand-rearmed-god-hand-rearmed": {
    "v": 2,
    "repo": "God-Hand-Rearmed/God-Hand-Rearmed",
-   "actualizado": "2026-11-21T16:21:44.378Z",
+   "actualizado": "2026-11-27T18:25:50.559Z",
    "recortado": true,
    "estado": null,
    "bloques": [
@@ -9299,7 +9392,7 @@
     ],
     [
      "p",
-     "An unofficial, fan-made native PC port of Clover Studio's God Hand (PlayStation 2, 2006). The game's own code is recompiled into a Windows program: no emulator running the show. It plays start to credits at a smooth 60, on any screen, with as much or as little of our own nonsense as you want."
+     "An unofficial, fan-made native PC port of Clover Studio's God Hand (PlayStation 2, 2006). The game's own code is recompiled into a Windows and Linux program: no emulator running the show. It plays start to credits at a smooth 60, on any screen, with as much or as little of our own nonsense as you want."
     ],
     [
      "p",
@@ -9314,8 +9407,16 @@
      "Get It Running"
     ],
     [
+     "p",
+     "Grab the latest release from Releases, then open yours:"
+    ],
+    [
+     "p",
+     "Windows"
+    ],
+    [
      "li",
-     "Grab the latest GHR-v….zip from Releases."
+     "Grab GHR-v…-Windows-x64.zip."
     ],
     [
      "li",
@@ -9351,7 +9452,35 @@
     ],
     [
      "p",
-     "When a new version is out, the launcher says so: What's new shows the changes, Update installs them and restarts. Your settings, saves, and mods stay where they are."
+     "Linux and Steam Deck"
+    ],
+    [
+     "p",
+     "Same release, three flavours: pick one."
+    ],
+    [
+     "li",
+     "AppImage (GHR-v…-Linux-x64.AppImage, one file): make it executable (file manager > Properties > Is executable, or chmod +x) and run it."
+    ],
+    [
+     "li",
+     "Folder (GHR-v…-Linux-x64.tar.gz): unpack it anywhere you can write to and run GHR inside, like the Windows zip."
+    ],
+    [
+     "li",
+     "Flatpak (GHR-v…-Linux-x64.flatpak): flatpak install --user it, then flatpak run io.github.God_Hand_Rearmed.GHR."
+    ],
+    [
+     "p",
+     "Point the launcher at your disc image (.iso or .chd) once, pick a preset and hit \"Play\"! The first start shows a \"Preparing shaders\" notice while the shaders are built for your GPU."
+    ],
+    [
+     "p",
+     "Steam Deck: in Desktop Mode, start the AppImage once, point it at your disc image, then hit Add to Steam in the launcher. Back in Game Mode it's in your library, full screen at the Deck's 16:10. (The Flatpak can't reach Steam from its sandbox: use Steam's own \"Add a Non-Steam Game\".)"
+    ],
+    [
+     "p",
+     "Needs glibc 2.31 or newer (SteamOS, or any distro from 2020 on) and a Vulkan driver. The README.txt in the tar.gz has the rest."
     ],
     [
      "h",
@@ -9359,7 +9488,15 @@
     ],
     [
      "p",
-     "Recompiled as a Windows program under Vulkan or DX11; PCSX2 as the renderer until later."
+     "Recompiled as a native program under Vulkan or DX11 (Windows); PCSX2 as the renderer until later."
+    ],
+    [
+     "h",
+     "Beat Off Anywhere!"
+    ],
+    [
+     "p",
+     "Available on or planned for the following platforms:"
     ],
     [
      "h",
@@ -9436,50 +9573,6 @@
     [
      "h",
      "The Presets"
-    ],
-    [
-     "p",
-     "Each one includes everything before it. Change any option a preset sets and you're on Custom. The tags below say which preset first switches a feature on; Toggle means none does, it's yours to flip."
-    ],
-    [
-     "h",
-     "Everything Else"
-    ],
-    [
-     "p",
-     "Controls"
-    ],
-    [
-     "li",
-     "Camera & FOV presets (As on the PS2, Wider, Widest, Action) or your own field of view, distance and tilt; enemies conduct themselves accordingly at any setting. Remastered+"
-    ],
-    [
-     "li",
-     "See Through: walls between you and the action go see-through instead of vanishing. Rearmed+"
-    ],
-    [
-     "li",
-     "Menu controls - Western, Japanese or Classic: confirm on the button you're used to."
-    ],
-    [
-     "li",
-     "(Nearly) every button rebindable, with a full keyboard & mouse layout and save states (F5 / F9; Select / Select + Start)."
-    ],
-    [
-     "p",
-     "Display & Graphics"
-    ],
-    [
-     "li",
-     "Fullscreen (borderless), maximized or windowed; any aspect ratio from 4:3 to 32:9."
-    ],
-    [
-     "li",
-     "Internal resolution up to 8x, Vulkan by default with Direct3D 11 as the fallback."
-    ],
-    [
-     "li",
-     "Texture filtering from the PS2's own smoothing to Dangerously Crunchy, plus trilinear, anisotropic, FXAA, brightness and depth of field."
     ]
    ]
   },
@@ -10052,6 +10145,119 @@
     ]
    ]
   },
+  "p-mstan-megamanx4recomp": {
+   "v": 2,
+   "repo": "mstan/MegaManX4Recomp",
+   "actualizado": "2026-11-25T18:48:38.617Z",
+   "recortado": true,
+   "estado": null,
+   "bloques": [
+    [
+     "p",
+     "[!NOTE] A special thank you to Thomu, Moro, and JMOTZU for their extensive playtesting in the Co-op mod. Also, a special thank you to Thomu for his generous support towards the project's development."
+    ],
+    [
+     "p",
+     "Read more about it here"
+    ],
+    [
+     "h",
+     "Mega Man X4 Recompiled"
+    ],
+    [
+     "p",
+     "Fan-subtitled Japanese FMVs: one optional Japanese FMVs mod with a subtitle dropdown from acediez/Hondoori (English) and El Retro Dan (Spanish), with full attribution and preserved upstream readmes."
+    ],
+    [
+     "p",
+     "X and Zero. Together."
+    ],
+    [
+     "p",
+     "Mega Man X4 on Windows and Linux. 1.0.27 Stable Public Beta, with two-player co-op. Bring a friend through X's or Zero's campaign, on one computer or over netplay."
+    ],
+    [
+     "p",
+     "Downloads · What's new in 1.0.27 · Known issues"
+    ],
+    [
+     "h",
+     "Two heroes, one campaign"
+    ],
+    [
+     "p",
+     "Play X and Zero simultaneously, with their own attacks, voices and effects. Player 1 owns the story, boss clears and permanent progress; Player 2 joins as the other hero. Arrive together, tackle bosses together, and share team retries. The hero who lands a boss's final hit gets their victory theme."
+    ],
+    [
+     "p",
+     "The extra boss encounters, scaling and character codes are off by default. The netplay host chooses the shared options."
+    ],
+    [
+     "p",
+     "One shared world, two independent netplay views."
+    ],
+    [
+     "p",
+     "Double and Iris in one co-op run, when you enable the option."
+    ],
+    [
+     "h",
+     "Start playing"
+    ],
+    [
+     "li",
+     "Download the Windows x64 ZIP and extract it, or use the Linux x86_64 AppImage (glibc 2.38 or newer)."
+    ],
+    [
+     "li",
+     "Select your own original, unmodified Mega Man X4 USA (SLUS-00561) disc image. Choose the .cue from a .cue + .bin set. OpenBIOS is included; a separate BIOS dump is optional."
+    ],
+    [
+     "li",
+     "For local co-op, enable Mods → X + Zero Co-op, assign Player 1 and Player 2 in Controls, and choose Local co-op display for Unified or side by side 8:3, then press Play. For netplay, press Netplay and host or join using X + Zero Co-op. Both peers need the same release."
+    ],
+    [
+     "p",
+     "Only the verified original USA disc is accepted, including when every mod is disabled. All changes belong in Mods. Patched discs, undubs and retranslated disc images are unsupported; use the corresponding mods over the original disc."
+    ],
+    [
+     "p",
+     "Co-op requires OpenGL and takes effect on a fresh game boot. Single-player remains available."
+    ],
+    [
+     "p",
+     "With side by side 8:3 or Split netplay, each player sees their own character's weapon or technique award, including its artwork and instructions. P1 advances the shared award and Save/Continue flow; both heroes share the campaign's unlocks. Unified uses P1's award screen."
+    ],
+    [
+     "p",
+     "Fast loading is built in. The old CD Speed and Fast Loading mods are retired; the game now keeps verified disc data in memory and feeds it through the original loading routines. Music and cutscenes retain their normal timing."
+    ],
+    [
+     "p",
+     "Offline co-op also supports save states (F7) and rewind (F8) when enabled. The Mods page includes widescreen, character codes and optional input display and diagnostic recording, off by default. Controls, saves and reporting guide →"
+    ],
+    [
+     "p",
+     "Optional language mods offer Spanish and Brazilian Portuguese dialogue using the game's own font. Supply your Japanese Rockman X4 disc to choose Japanese movies, voices and the title screen independently. Translations are drafts awaiting native-speaker review. Language setup and scope →"
+    ],
+    [
+     "p",
+     "Complete Story is an optional local solo/co-op mod, off by default. Add Zero's playable Memorial Hall duel, fight both Double and Iris, and watch the additional Colonel, Iris and Zero/Sigma movies in your campaign. Complete Story setup and scope →"
+    ],
+    [
+     "p",
+     "See the co-op settings"
+    ],
+    [
+     "h",
+     "Help improve the public beta"
+    ],
+    [
+     "p",
+     "Expect bugs; independent cameras can still slow down. Online sign-in/startup reports remain under investigation. Check the burndown or report a bug."
+    ]
+   ]
+  },
   "p-roman215-weltall": {
    "v": 2,
    "repo": "Roman215/Weltall",
@@ -10126,95 +10332,6 @@
     [
      "li",
      "Battle speeds of 2x and 4x, and faster text up to instant. Story battles start at normal speed. Press R1 (Camera right) to speed them up. Timed dialogue still leaves you time to read it."
-    ]
-   ]
-  },
-  "p-nautaro-dbz-bt4-tag-team-decomp": {
-   "v": 2,
-   "repo": "NauTaro/DBZ-BT4-Tag-Team-Decomp",
-   "actualizado": "2026-11-25T18:48:38.617Z",
-   "recortado": true,
-   "estado": null,
-   "bloques": [
-    [
-     "p",
-     "BT4decomp Budokai Tenkaichi 4 B14 Rev2. Native desktop runtime. Simultaneous team battles. Online Tag Team, tournaments, spectator rooms and proximity voice, built on Tenkaichi3Decomp. Join the official Discord community for matchmaking, project news and support."
-    ],
-    [
-     "p",
-     "Download · Install · Documentation · Report an issue"
-    ],
-    [
-     "p",
-     "BT4decomp adapts BT4 B14 Rev2 for Windows, Linux and Apple Silicon. It runs the game code natively rather than emulating a console. Installation requires your own compatible Spanish or English BT4 ISO; disc images and extracted game data are not distributed here."
-    ],
-    [
-     "p",
-     "Windows security review in progress. Users reported antivirus alerts for the R5 package. See the investigation and executable hashes."
-    ],
-    [
-     "h",
-     "Fight together"
-    ],
-    [
-     "p",
-     "Game menus support English and Spanish, with an optional Brazilian Portuguese pack. Setup supports English, Spanish and Brazilian Portuguese. F1 settings support English, Spanish and Brazilian Portuguese. F1 > Spectator offers free camera, fighter tracking and fight overview, with target, speed, zoom and reset controls. Keyboard and controller camera input replaces local fighter input while the camera is active; Start remains available. Panoramic mode expands menus and HUD across the viewport. Hiding the combat HUD also dismisses the Start pause menu; press Start to open it again."
-    ],
-    [
-     "h",
-     "Voice and presentation"
-    ],
-    [
-     "p",
-     "Proximity voice Talk across both teams, with volume adjusted by fighter distance. Choose microphone and output devices, voice activation, threshold and playback volume. Display controls Windows offers Vulkan, native Direct3D 11, Direct3D 12 and OpenGL. Adjust render scale, aspect ratio, effects and motion presentation independently of combat simulation. Custom content Add compatible stages with matching PNG previews, or install custom music. See the stage guide and music guide ."
-    ],
-    [
-     "h",
-     "Script mods"
-    ],
-    [
-     "p",
-     "F1 > Mods manages the included Modern HUD, Modern Camera, Modern Look and Skill List scripts. Mods start disabled. Each player can choose their own presentation settings; existing scripts and settings are preserved by automatic updates. F1 > Controls selects one target control method: L3, the right stick or the D-pad. F1 > Spectator can keep the normal camera during special attacks. See the Lua mod guide. F1 > Tech offers optional mechanics adjustments for offline duels; online matches, Tag Team and replays retain their original rules."
-    ],
-    [
-     "h",
-     "Installation"
-    ],
-    [
-     "li",
-     "Download your platform's ZIP from the latest published release and extract it completely."
-    ],
-    [
-     "li",
-     "Run BT4decomp-setup.exe on Windows, or ./BT4decomp-setup on Linux and macOS."
-    ],
-    [
-     "li",
-     "Select the setup language, game language and your compatible BT4 B14 Rev2 ISO."
-    ],
-    [
-     "li",
-     "Start BT4decomp.exe on Windows, or ./BT4decomp on Linux and macOS. Language installation and setup preview"
-    ],
-    [
-     "p",
-     "A single-language installation opens directly in that language. Selecting both languages downloads the alternate package from this repository and enables language selection at startup. Public language and HD texture packages download without GitHub sign-in."
-    ],
-    [
-     "p",
-     "For Linux permissions, macOS download handling and source builds, see native platform setup. Intel Macs and Linux ARM are not targets of these packages."
-    ],
-    [
-     "h",
-     "Automatic updates"
-    ],
-    [
-     "p",
-     "Open F1 > Updates > Check for updates to look for a new version. The game also checks this repository automatically for the latest signed package for its platform. It verifies the archive SHA-256 and Ed25519 signature, then asks for a game restart to apply the update at the offline main menu. Saves, settings, installed game data and custom content remain outside the replacement list. Updating does not restart an active battle or online session."
-    ],
-    [
-     "p",
-     "Installations that predate the signed updater need one initial package installation. Subsequent published signed updates can install through the launcher."
     ]
    ]
   },
@@ -10468,87 +10585,6 @@
     [
      "li",
      "docs/legal.md: what never goes into this repo, and why"
-    ]
-   ]
-  },
-  "p-zquestclassic-zquestclassic": {
-   "v": 2,
-   "repo": "ZQuestClassic/ZQuestClassic",
-   "actualizado": "2026-11-25T18:48:38.617Z",
-   "recortado": false,
-   "estado": null,
-   "bloques": [
-    [
-     "h",
-     "ZQuest Classic"
-    ],
-    [
-     "p",
-     "ZQuest Classic is a free, open source engine for making games similar to the original NES Zelda. Choose from hundreds of quests, or create your own."
-    ],
-    [
-     "p",
-     "Website: zquestclassic.com"
-    ],
-    [
-     "p",
-     "Latest Releases"
-    ],
-    [
-     "p",
-     "How to Play"
-    ],
-    [
-     "p",
-     "Our Discord"
-    ],
-    [
-     "h",
-     "Supported platforms"
-    ],
-    [
-     "li",
-     "Windows: Windows 7 or newer (x64 and x86). A native arm64 build is also available for Windows on ARM."
-    ],
-    [
-     "li",
-     "macOS: 12 or newer (universal binary, Intel and Apple Silicon)."
-    ],
-    [
-     "li",
-     "Linux: x86-64 and AArch64, with glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora 36, SteamOS 3, or newer). Requires an X11 session (or XWayland) with OpenGL, GTK 3, OpenSSL 3, libcurl 4, PulseAudio and ALSA client libraries, D-Bus, and libuuid; desktop installs of these distros already have them. Also available as a Flatpak (currently 2.55 releases only), which has no system requirements beyond Flatpak itself."
-    ],
-    [
-     "li",
-     "Web: an experimental web version that can also be played on mobile devices."
-    ],
-    [
-     "h",
-     "Development"
-    ],
-    [
-     "p",
-     "See docs/building.md and learn how to contribute."
-    ],
-    [
-     "p",
-     "Regarding the usage of AI in ZQuest Classic, see this doc."
-    ],
-    [
-     "h",
-     "Images"
-    ],
-    [
-     "p",
-     "See more on our website"
-    ],
-    [
-     "h",
-     "License"
-    ],
-    [
-     "p",
-     "GPLv3. See the LICENSE."
     ]
    ]
   },
@@ -12067,7 +12103,7 @@
   "p-abedegno-underworld-exhumed": {
    "v": 2,
    "repo": "abedegno/underworld-exhumed",
-   "actualizado": "2026-11-21T16:21:44.378Z",
+   "actualizado": "2026-11-27T18:25:50.559Z",
    "recortado": true,
    "estado": {
     "titulo": "Status",
@@ -14315,119 +14351,6 @@
     [
      "li",
      "The 2-player mode (Unused content) is unfinished. The plan is to finish it soon, but for now it's mostly in the state it was left in in the original code."
-    ]
-   ]
-  },
-  "p-mstan-megamanx4recomp": {
-   "v": 2,
-   "repo": "mstan/MegaManX4Recomp",
-   "actualizado": "2026-11-25T18:48:38.617Z",
-   "recortado": true,
-   "estado": null,
-   "bloques": [
-    [
-     "p",
-     "[!NOTE] A special thank you to Thomu, Moro, and JMOTZU for their extensive playtesting in the Co-op mod. Also, a special thank you to Thomu for his generous support towards the project's development."
-    ],
-    [
-     "p",
-     "Read more about it here"
-    ],
-    [
-     "h",
-     "Mega Man X4 Recompiled"
-    ],
-    [
-     "p",
-     "Fan-subtitled Japanese FMVs: one optional Japanese FMVs mod with a subtitle dropdown from acediez/Hondoori (English) and El Retro Dan (Spanish), with full attribution and preserved upstream readmes."
-    ],
-    [
-     "p",
-     "X and Zero. Together."
-    ],
-    [
-     "p",
-     "Mega Man X4 on Windows and Linux. 1.0.27 Stable Public Beta, with two-player co-op. Bring a friend through X's or Zero's campaign, on one computer or over netplay."
-    ],
-    [
-     "p",
-     "Downloads · What's new in 1.0.27 · Known issues"
-    ],
-    [
-     "h",
-     "Two heroes, one campaign"
-    ],
-    [
-     "p",
-     "Play X and Zero simultaneously, with their own attacks, voices and effects. Player 1 owns the story, boss clears and permanent progress; Player 2 joins as the other hero. Arrive together, tackle bosses together, and share team retries. The hero who lands a boss's final hit gets their victory theme."
-    ],
-    [
-     "p",
-     "The extra boss encounters, scaling and character codes are off by default. The netplay host chooses the shared options."
-    ],
-    [
-     "p",
-     "One shared world, two independent netplay views."
-    ],
-    [
-     "p",
-     "Double and Iris in one co-op run, when you enable the option."
-    ],
-    [
-     "h",
-     "Start playing"
-    ],
-    [
-     "li",
-     "Download the Windows x64 ZIP and extract it, or use the Linux x86_64 AppImage (glibc 2.38 or newer)."
-    ],
-    [
-     "li",
-     "Select your own original, unmodified Mega Man X4 USA (SLUS-00561) disc image. Choose the .cue from a .cue + .bin set. OpenBIOS is included; a separate BIOS dump is optional."
-    ],
-    [
-     "li",
-     "For local co-op, enable Mods → X + Zero Co-op, assign Player 1 and Player 2 in Controls, and choose Local co-op display for Unified or side by side 8:3, then press Play. For netplay, press Netplay and host or join using X + Zero Co-op. Both peers need the same release."
-    ],
-    [
-     "p",
-     "Only the verified original USA disc is accepted, including when every mod is disabled. All changes belong in Mods. Patched discs, undubs and retranslated disc images are unsupported; use the corresponding mods over the original disc."
-    ],
-    [
-     "p",
-     "Co-op requires OpenGL and takes effect on a fresh game boot. Single-player remains available."
-    ],
-    [
-     "p",
-     "With side by side 8:3 or Split netplay, each player sees their own character's weapon or technique award, including its artwork and instructions. P1 advances the shared award and Save/Continue flow; both heroes share the campaign's unlocks. Unified uses P1's award screen."
-    ],
-    [
-     "p",
-     "Fast loading is built in. The old CD Speed and Fast Loading mods are retired; the game now keeps verified disc data in memory and feeds it through the original loading routines. Music and cutscenes retain their normal timing."
-    ],
-    [
-     "p",
-     "Offline co-op also supports save states (F7) and rewind (F8) when enabled. The Mods page includes widescreen, character codes and optional input display and diagnostic recording, off by default. Controls, saves and reporting guide →"
-    ],
-    [
-     "p",
-     "Optional language mods offer Spanish and Brazilian Portuguese dialogue using the game's own font. Supply your Japanese Rockman X4 disc to choose Japanese movies, voices and the title screen independently. Translations are drafts awaiting native-speaker review. Language setup and scope →"
-    ],
-    [
-     "p",
-     "Complete Story is an optional local solo/co-op mod, off by default. Add Zero's playable Memorial Hall duel, fight both Double and Iris, and watch the additional Colonel, Iris and Zero/Sigma movies in your campaign. Complete Story setup and scope →"
-    ],
-    [
-     "p",
-     "See the co-op settings"
-    ],
-    [
-     "h",
-     "Help improve the public beta"
-    ],
-    [
-     "p",
-     "Expect bugs; independent cameras can still slow down. Online sign-in/startup reports remain under investigation. Check the burndown or report a bug."
     ]
    ]
   },
@@ -19165,7 +19088,7 @@
   "p-novapowers0-bloodyroar2recomp": {
    "v": 2,
    "repo": "novapowers0/BloodyRoar2Recomp",
-   "actualizado": "2026-11-21T16:21:44.378Z",
+   "actualizado": "2026-11-27T18:25:50.559Z",
    "recortado": true,
    "estado": null,
    "bloques": [

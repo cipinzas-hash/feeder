@@ -1,7 +1,13 @@
 {
  "version": 1,
- "generatedAt": "2026-11-26T18:36:45.813Z",
+ "generatedAt": "2026-11-27T18:25:50.559Z",
  "portadas": {
+  "d-mstan-supermarioworldrecomp": {
+   "v": 1,
+   "imagen": "co779k",
+   "fuente": "ficha",
+   "nombre": "Super Mario World"
+  },
   "d-simon3sarkis-super-odyssey-pc-recomp": {
    "v": 1,
    "imagen": "co1mxf",
@@ -13,6 +19,36 @@
    "imagen": "co61yo",
    "fuente": "ficha",
    "nombre": "SoulCalibur II"
+  },
+  "d-deez-coder-smo-android-port": {
+   "v": 1,
+   "imagen": "co1mxf",
+   "fuente": "ficha",
+   "nombre": "Super Mario Odyssey"
+  },
+  "d-kanapitsas-source-recomp": {
+   "v": 1,
+   "imagen": "co1rs4",
+   "fuente": "ficha",
+   "nombre": "Portal 2"
+  },
+  "d-maurizi-ff9-3ds": {
+   "v": 1,
+   "imagen": "co9okj",
+   "fuente": "ficha",
+   "nombre": "Final Fantasy IX"
+  },
+  "d-ravencaio-tlou-remastered-pc": {
+   "v": 1,
+   "imagen": "co1r7f",
+   "fuente": "ficha",
+   "nombre": "The Last of Us"
+  },
+  "d-riviergrullon-kirby-epic-yarn-recomp": {
+   "v": 1,
+   "imagen": "cod9rh",
+   "fuente": "ficha",
+   "nombre": "Kirby’s Epic Yarn"
   },
   "d-yeoldpress-alttp-dx": {
    "v": 1,
@@ -32,29 +68,11 @@
    "fuente": "ficha",
    "nombre": "SoulCalibur II"
   },
-  "d-maurizi-ff9-3ds": {
-   "v": 1,
-   "imagen": "co9okj",
-   "fuente": "ficha",
-   "nombre": "Final Fantasy IX"
-  },
-  "d-mstan-supermarioworldrecomp": {
-   "v": 1,
-   "imagen": "co779k",
-   "fuente": "ficha",
-   "nombre": "Super Mario World"
-  },
   "d-mstan-zeldaalttpsnesrecomp": {
    "v": 1,
    "imagen": "co5x34",
    "fuente": "ficha",
    "nombre": "The Legend of Zelda: A Link to the Past"
-  },
-  "d-riviergrullon-kirby-epic-yarn-recomp": {
-   "v": 1,
-   "imagen": "cod9rh",
-   "fuente": "ficha",
-   "nombre": "Kirby’s Epic Yarn"
   },
   "d-spannerisms-jpdasm": {
    "v": 1,
@@ -68,23 +86,11 @@
    "fuente": "ficha",
    "nombre": "The Legend of Zelda: A Link to the Past"
   },
-  "d-kanapitsas-source-recomp": {
-   "v": 1,
-   "imagen": "co1rs4",
-   "fuente": "ficha",
-   "nombre": "Portal 2"
-  },
   "d-metroidret-mzm": {
    "v": 1,
    "imagen": "co1vci",
    "fuente": "ficha",
    "nombre": "Metroid: Zero Mission"
-  },
-  "d-ravencaio-tlou-remastered-pc": {
-   "v": 1,
-   "imagen": "co1r7f",
-   "fuente": "ficha",
-   "nombre": "The Last of Us"
   },
   "d-patataofcourse-rhgold": {
    "v": 1,
@@ -93,12 +99,6 @@
    "nombre": "Rhythm Heaven (DS)"
   },
   "d-rwwo8-odysseyrecomp": {
-   "v": 1,
-   "imagen": "co1mxf",
-   "fuente": "ficha",
-   "nombre": "Super Mario Odyssey"
-  },
-  "d-deez-coder-smo-android-port": {
    "v": 1,
    "imagen": "co1mxf",
    "fuente": "ficha",
@@ -434,13 +434,6 @@
    "fuente": "ficha",
    "nombre": "Halo: Combat Evolved"
   },
-  "p-mstan-megamanxsnesrecomp": {
-   "v": 1,
-   "imagen": "co3z0b",
-   "busqueda": "Mega Man X",
-   "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "Mega Man X"
-  },
   "p-hero88go-melee-unlocked": {
    "v": 1,
    "imagen": "co21yv",
@@ -448,12 +441,54 @@
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "Super Smash Bros. Melee"
   },
+  "p-cheviman-outrunners-port": {
+   "v": 1,
+   "imagen": "co5ozj",
+   "busqueda": "OutRunners",
+   "buscado": "2026-11-21T22:03:31.566Z",
+   "nombre": "OutRunners"
+  },
+  "p-nautaro-dbz-bt4-tag-team-decomp": {
+   "v": 1,
+   "imagen": "co56cp",
+   "busqueda": "Dragon Ball Z: Budokai Tenkaichi 4",
+   "buscado": "2026-11-21T22:03:31.566Z",
+   "nombre": "Dragon Ball Z: Budokai Tenkaichi 4"
+  },
+  "p-mstan-megamanxsnesrecomp": {
+   "v": 1,
+   "imagen": "co3z0b",
+   "busqueda": "Mega Man X",
+   "buscado": "2026-11-21T22:03:31.566Z",
+   "nombre": "Mega Man X"
+  },
+  "p-fridinator1-safehouse": {
+   "v": 1,
+   "imagen": "co8c2u",
+   "busqueda": "Sly Cooper and the Thievius Raccoonus",
+   "buscado": "2026-11-21T22:03:31.566Z",
+   "nombre": "Sly Cooper and the Thievius Raccoonus"
+  },
   "p-mstan-supermetroidrecomp": {
    "v": 1,
    "imagen": "co5osy",
    "busqueda": "Super Metroid",
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "Super Metroid"
+  },
+  "p-zloikiller-nfshp2-port-win": {
+   "v": 1,
+   "imagen": "co2098",
+   "busqueda": "Need for Speed: Hot Pursuit 2",
+   "buscado": "2026-11-25T18:48:38.617Z",
+   "nombre": "Need for Speed: Hot Pursuit 2"
+  },
+  "p-imyourhuckleberryponcho-pokemon-xd-pc-port": {
+   "v": 1,
+   "imagen": "co1zk4",
+   "busqueda": "Pokemon XD: Gale of Darkness",
+   "buscado": "2026-11-25T18:48:38.617Z",
+   "nombre": "Pokémon XD: Gale of Darkness"
   },
   "p-nathanialf-ico-pc": {
    "v": 1,
@@ -489,13 +524,6 @@
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "Street Fighter Alpha 2"
   },
-  "p-fridinator1-safehouse": {
-   "v": 1,
-   "imagen": "co8c2u",
-   "busqueda": "Sly Cooper and the Thievius Raccoonus",
-   "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "Sly Cooper and the Thievius Raccoonus"
-  },
   "p-chasem-dev-orre-launcher": {
    "v": 1,
    "imagen": "co2tpe",
@@ -514,13 +542,6 @@
    "imagen": "co779k",
    "fuente": "ficha",
    "nombre": "Super Mario World"
-  },
-  "p-cheviman-outrunners-port": {
-   "v": 1,
-   "imagen": "co5ozj",
-   "busqueda": "OutRunners",
-   "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "OutRunners"
   },
   "p-sinan-karakaya-dq8-recompiled": {
    "v": 1,
@@ -541,20 +562,6 @@
    "busqueda": "Parasite Eve II",
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "Parasite Eve II"
-  },
-  "p-imyourhuckleberryponcho-pokemon-xd-pc-port": {
-   "v": 1,
-   "imagen": "co1zk4",
-   "busqueda": "Pokemon XD: Gale of Darkness",
-   "buscado": "2026-11-25T18:48:38.617Z",
-   "nombre": "Pokémon XD: Gale of Darkness"
-  },
-  "p-zloikiller-nfshp2-port-win": {
-   "v": 1,
-   "imagen": "co2098",
-   "busqueda": "Need for Speed: Hot Pursuit 2",
-   "buscado": "2026-11-25T18:48:38.617Z",
-   "nombre": "Need for Speed: Hot Pursuit 2"
   },
   "p-underdecoded-gen2recomped": {
    "v": 1,
@@ -604,19 +611,19 @@
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "The Simpsons Arcade"
   },
+  "p-mstan-megamanx4recomp": {
+   "v": 1,
+   "imagen": "coar91",
+   "busqueda": "Mega Man X4",
+   "buscado": "2026-11-21T22:03:31.566Z",
+   "nombre": "Mega Man X4"
+  },
   "p-roman215-weltall": {
    "v": 1,
    "imagen": "cobxj4",
    "busqueda": "Xenogears",
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "Xenogears"
-  },
-  "p-nautaro-dbz-bt4-tag-team-decomp": {
-   "v": 1,
-   "imagen": "co56cp",
-   "busqueda": "Dragon Ball Z: Budokai Tenkaichi 4",
-   "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "Dragon Ball Z: Budokai Tenkaichi 4"
   },
   "p-mstan-apeescaperecomp": {
    "v": 1,
@@ -625,12 +632,12 @@
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "Ape Escape"
   },
-  "p-zquestclassic-zquestclassic": {
+  "p-mbracali-prj-gd-engine": {
    "v": 1,
-   "imagen": "co1uii",
-   "busqueda": "The Legend of Zelda",
-   "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "The Legend of Zelda"
+   "imagen": "co8qmr",
+   "busqueda": "Guitar Hero",
+   "buscado": "2026-11-26T18:36:45.813Z",
+   "nombre": "Guitar Hero Dual Pack: Guitar Hero II & Guitar Hero Aerosmith"
   },
   "p-marcoscodas-bravely-emerald": {
    "v": 1,
@@ -849,12 +856,12 @@
    "buscado": "2026-11-21T22:03:31.566Z",
    "nombre": "Luigi's Mansion"
   },
-  "p-mstan-megamanx4recomp": {
+  "p-lfarroco-ogre-battle-64-recomp": {
    "v": 1,
-   "imagen": "coar91",
-   "busqueda": "Mega Man X4",
-   "buscado": "2026-11-21T22:03:31.566Z",
-   "nombre": "Mega Man X4"
+   "imagen": "co54xx",
+   "busqueda": "Ogre Battle 64: Person of Lordly Caliber",
+   "buscado": "2026-11-26T18:36:45.813Z",
+   "nombre": "Ogre Battle 64: Person of Lordly Caliber"
   },
   "p-flyngmt-nookery": {
    "v": 1,
@@ -1195,20 +1202,6 @@
    "imagen": null,
    "busqueda": "Einhänder",
    "buscado": "2026-11-21T22:03:31.566Z"
-  },
-  "p-mbracali-prj-gd-engine": {
-   "v": 1,
-   "imagen": "co8qmr",
-   "busqueda": "Guitar Hero",
-   "buscado": "2026-11-26T18:36:45.813Z",
-   "nombre": "Guitar Hero Dual Pack: Guitar Hero II & Guitar Hero Aerosmith"
-  },
-  "p-lfarroco-ogre-battle-64-recomp": {
-   "v": 1,
-   "imagen": "co54xx",
-   "busqueda": "Ogre Battle 64: Person of Lordly Caliber",
-   "buscado": "2026-11-26T18:36:45.813Z",
-   "nombre": "Ogre Battle 64: Person of Lordly Caliber"
   }
  }
 }

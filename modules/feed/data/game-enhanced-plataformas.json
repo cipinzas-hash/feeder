@@ -1,7 +1,13 @@
 {
  "version": 1,
- "generatedAt": "2026-11-26T18:36:45.813Z",
+ "generatedAt": "2026-11-27T18:25:50.559Z",
  "plataformas": {
+  "mstan/SuperMarioWorldRecomp": {
+   "v": 2,
+   "original": "SNES",
+   "actualizado": "2026-11-26T18:36:45.813Z",
+   "sugerencias": []
+  },
   "Simon3Sarkis/super-odyssey-pc-recomp": {
    "v": 2,
    "original": "Switch",
@@ -24,6 +30,57 @@
      "pushed": null
     }
    ]
+  },
+  "Deez-coder/SMO-android-port": {
+   "v": 2,
+   "original": "Switch",
+   "actualizado": "2026-11-26T18:36:45.813Z",
+   "sugerencias": []
+  },
+  "kanapitsas/source-recomp": {
+   "v": 2,
+   "original": "PC",
+   "actualizado": "2026-11-27T18:25:50.559Z",
+   "sugerencias": []
+  },
+  "maurizi/ff9-3ds": {
+   "v": 2,
+   "original": "PS1",
+   "actualizado": "2026-11-26T18:36:45.813Z",
+   "sugerencias": []
+  },
+  "ravencaio/tlou-remastered-pc": {
+   "v": 2,
+   "original": "PS4",
+   "actualizado": "2026-11-26T18:36:45.813Z",
+   "sugerencias": [
+    {
+     "tipo": "fork",
+     "nombre": "erickmendes22/tlou-remastered-android",
+     "url": "https://github.com/erickmendes22/tlou-remastered-android",
+     "plataformas": [
+      "Android"
+     ],
+     "estrellas": 106,
+     "pushed": "2026-11-26"
+    },
+    {
+     "tipo": "fork",
+     "nombre": "zFitness/tlou-remastered-arm",
+     "url": "https://github.com/zFitness/tlou-remastered-arm",
+     "plataformas": [
+      "Android"
+     ],
+     "estrellas": 4,
+     "pushed": "2026-11-03"
+    }
+   ]
+  },
+  "RivierGrullon/kirby-epic-yarn-recomp": {
+   "v": 2,
+   "original": "Wii",
+   "actualizado": "2026-11-24T19:40:41.476Z",
+   "sugerencias": []
   },
   "YeOldPress/alttp-dx": {
    "v": 2,
@@ -64,28 +121,10 @@
    "actualizado": "2026-11-26T18:36:45.813Z",
    "sugerencias": []
   },
-  "maurizi/ff9-3ds": {
-   "v": 2,
-   "original": "PS1",
-   "actualizado": "2026-11-26T18:36:45.813Z",
-   "sugerencias": []
-  },
-  "mstan/SuperMarioWorldRecomp": {
-   "v": 2,
-   "original": "SNES",
-   "actualizado": "2026-11-26T18:36:45.813Z",
-   "sugerencias": []
-  },
   "mstan/ZeldaAlttPSNESRecomp": {
    "v": 2,
    "original": "SNES",
    "actualizado": "2026-11-26T18:36:45.813Z",
-   "sugerencias": []
-  },
-  "RivierGrullon/kirby-epic-yarn-recomp": {
-   "v": 2,
-   "original": "Wii",
-   "actualizado": "2026-11-24T19:40:41.476Z",
    "sugerencias": []
   },
   "spannerisms/jpdasm": {
@@ -121,44 +160,11 @@
     }
    ]
   },
-  "kanapitsas/source-recomp": {
-   "v": 2,
-   "original": "PC",
-   "actualizado": "2026-11-21T16:21:44.378Z",
-   "sugerencias": []
-  },
   "metroidret/mzm": {
    "v": 2,
    "original": "GBA",
    "actualizado": "2026-11-26T18:36:45.813Z",
    "sugerencias": []
-  },
-  "ravencaio/tlou-remastered-pc": {
-   "v": 2,
-   "original": "PS4",
-   "actualizado": "2026-11-26T18:36:45.813Z",
-   "sugerencias": [
-    {
-     "tipo": "fork",
-     "nombre": "erickmendes22/tlou-remastered-android",
-     "url": "https://github.com/erickmendes22/tlou-remastered-android",
-     "plataformas": [
-      "Android"
-     ],
-     "estrellas": 106,
-     "pushed": "2026-11-26"
-    },
-    {
-     "tipo": "fork",
-     "nombre": "zFitness/tlou-remastered-arm",
-     "url": "https://github.com/zFitness/tlou-remastered-arm",
-     "plataformas": [
-      "Android"
-     ],
-     "estrellas": 4,
-     "pushed": "2026-11-03"
-    }
-   ]
   },
   "patataofcourse/rhgold": {
    "v": 2,
@@ -167,12 +173,6 @@
    "sugerencias": []
   },
   "rwwo8/OdysseyRecomp": {
-   "v": 2,
-   "original": "Switch",
-   "actualizado": "2026-11-26T18:36:45.813Z",
-   "sugerencias": []
-  },
-  "Deez-coder/SMO-android-port": {
    "v": 2,
    "original": "Switch",
    "actualizado": "2026-11-26T18:36:45.813Z",
@@ -650,15 +650,55 @@
    "actualizado": "2026-11-26T18:36:45.813Z",
    "sugerencias": []
   },
+  "Hero88go/melee-unlocked": {
+   "v": 2,
+   "original": "GameCube",
+   "actualizado": "2026-11-26T18:36:45.813Z",
+   "sugerencias": []
+  },
+  "cheviman/outrunners-port": {
+   "v": 2,
+   "original": "Arcade",
+   "actualizado": "2026-11-26T18:36:45.813Z",
+   "sugerencias": [
+    {
+     "tipo": "rama",
+     "nombre": "switch-4-players",
+     "url": "https://github.com/cheviman/outrunners-port/tree/switch-4-players",
+     "plataformas": [
+      "Switch"
+     ],
+     "estrellas": 0,
+     "pushed": null
+    }
+   ]
+  },
+  "NauTaro/DBZ-BT4-Tag-Team-Decomp": {
+   "v": 2,
+   "original": "PS2",
+   "actualizado": "2026-11-26T18:36:45.813Z",
+   "sugerencias": [
+    {
+     "tipo": "fork",
+     "nombre": "manumastro/DBZ-BT4-Tag-Team-Decomp-Vita",
+     "url": "https://github.com/manumastro/DBZ-BT4-Tag-Team-Decomp-Vita",
+     "plataformas": [
+      "PS Vita"
+     ],
+     "estrellas": 11,
+     "pushed": "2026-11-23"
+    }
+   ]
+  },
   "mstan/MegaManXSNESRecomp": {
    "v": 2,
    "original": "SNES",
    "actualizado": "2026-11-26T18:36:45.813Z",
    "sugerencias": []
   },
-  "Hero88go/melee-unlocked": {
+  "FridiNaTor1/SafeHouse": {
    "v": 2,
-   "original": "GameCube",
+   "original": "PS2",
    "actualizado": "2026-11-26T18:36:45.813Z",
    "sugerencias": []
   },
@@ -678,6 +718,18 @@
      "pushed": null
     }
    ]
+  },
+  "ZloiKILLER/nfshp2-port-win": {
+   "v": 2,
+   "original": "PS2",
+   "actualizado": "2026-11-25T18:48:38.617Z",
+   "sugerencias": []
+  },
+  "imyourhuckleberryponcho/Pokemon-XD-PC-Port": {
+   "v": 2,
+   "original": "GameCube",
+   "actualizado": "2026-11-25T18:48:38.617Z",
+   "sugerencias": []
   },
   "nathanialf/ico-pc": {
    "v": 2,
@@ -762,12 +814,6 @@
     }
    ]
   },
-  "FridiNaTor1/SafeHouse": {
-   "v": 2,
-   "original": "PS2",
-   "actualizado": "2026-11-26T18:36:45.813Z",
-   "sugerencias": []
-  },
   "chasem-dev/orre-launcher": {
    "v": 2,
    "original": "GameCube",
@@ -777,23 +823,6 @@
      "tipo": "rama",
      "nombre": "changelog/coop-switch-crash",
      "url": "https://github.com/chasem-dev/orre-launcher/tree/changelog/coop-switch-crash",
-     "plataformas": [
-      "Switch"
-     ],
-     "estrellas": 0,
-     "pushed": null
-    }
-   ]
-  },
-  "cheviman/outrunners-port": {
-   "v": 2,
-   "original": "Arcade",
-   "actualizado": "2026-11-26T18:36:45.813Z",
-   "sugerencias": [
-    {
-     "tipo": "rama",
-     "nombre": "switch-4-players",
-     "url": "https://github.com/cheviman/outrunners-port/tree/switch-4-players",
      "plataformas": [
       "Switch"
      ],
@@ -820,18 +849,6 @@
    "actualizado": "2026-11-26T18:36:45.813Z",
    "sugerencias": []
   },
-  "imyourhuckleberryponcho/Pokemon-XD-PC-Port": {
-   "v": 2,
-   "original": "GameCube",
-   "actualizado": "2026-11-25T18:48:38.617Z",
-   "sugerencias": []
-  },
-  "ZloiKILLER/nfshp2-port-win": {
-   "v": 2,
-   "original": "PS2",
-   "actualizado": "2026-11-25T18:48:38.617Z",
-   "sugerencias": []
-  },
   "UNDERdecoded/Gen2Recomped": {
    "v": 2,
    "original": "Game Boy Color",
@@ -841,7 +858,7 @@
   "God-Hand-Rearmed/God-Hand-Rearmed": {
    "v": 2,
    "original": "PS2",
-   "actualizado": "2026-11-21T16:21:44.378Z",
+   "actualizado": "2026-11-27T18:25:50.559Z",
    "sugerencias": []
   },
   "cheviman/tmnt-port": {
@@ -874,28 +891,17 @@
    "actualizado": "2026-11-26T18:36:45.813Z",
    "sugerencias": []
   },
-  "Roman215/Weltall": {
+  "mstan/MegaManX4Recomp": {
    "v": 2,
    "original": "PS1",
    "actualizado": "2026-11-26T18:36:45.813Z",
    "sugerencias": []
   },
-  "NauTaro/DBZ-BT4-Tag-Team-Decomp": {
+  "Roman215/Weltall": {
    "v": 2,
-   "original": "PS2",
+   "original": "PS1",
    "actualizado": "2026-11-26T18:36:45.813Z",
-   "sugerencias": [
-    {
-     "tipo": "fork",
-     "nombre": "manumastro/DBZ-BT4-Tag-Team-Decomp-Vita",
-     "url": "https://github.com/manumastro/DBZ-BT4-Tag-Team-Decomp-Vita",
-     "plataformas": [
-      "PS Vita"
-     ],
-     "estrellas": 11,
-     "pushed": "2026-11-23"
-    }
-   ]
+   "sugerencias": []
   },
   "mstan/ApeEscapeRecomp": {
    "v": 2,
@@ -906,12 +912,6 @@
   "mbracali/prj-gd-engine": {
    "v": 2,
    "original": "PS2",
-   "actualizado": "2026-11-26T18:36:45.813Z",
-   "sugerencias": []
-  },
-  "ZQuestClassic/ZQuestClassic": {
-   "v": 2,
-   "original": "NES",
    "actualizado": "2026-11-26T18:36:45.813Z",
    "sugerencias": []
   },
@@ -1109,7 +1109,7 @@
   "abedegno/underworld-exhumed": {
    "v": 2,
    "original": "DOS",
-   "actualizado": "2026-11-21T16:21:44.378Z",
+   "actualizado": "2026-11-27T18:25:50.559Z",
    "sugerencias": []
   },
   "BlackLabelHQ/SymphonyRecomp": {
@@ -1268,12 +1268,6 @@
   "rob646464/luigis-mansion-recompiled": {
    "v": 2,
    "original": "GameCube",
-   "actualizado": "2026-11-26T18:36:45.813Z",
-   "sugerencias": []
-  },
-  "mstan/MegaManX4Recomp": {
-   "v": 2,
-   "original": "PS1",
    "actualizado": "2026-11-26T18:36:45.813Z",
    "sugerencias": []
   },
@@ -1697,7 +1691,7 @@
   "novapowers0/BloodyRoar2Recomp": {
    "v": 2,
    "original": "PS1",
-   "actualizado": "2026-11-21T16:21:44.378Z",
+   "actualizado": "2026-11-27T18:25:50.559Z",
    "sugerencias": []
   },
   "HarvestMoon64Recomp/HarvestMoon64Recomp": {
