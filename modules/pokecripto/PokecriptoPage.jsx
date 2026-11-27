@@ -425,6 +425,9 @@ function PriceChart({history, precioVenta, compact, range, onSelectPoint, select
   const lineaPts=delgado?serieSuave(history).filter(h=>fechasF.has(h.date)):filtered;
   const path=lineaPts.map((h,i)=>`${(i===0||h.corte)?"M":"L"}${px(h.date).toFixed(1)},${py(h.market).toFixed(1)}`).join(" ");
   const cortes=filtered.filter((h,i)=>i>0&&h.corte);
+  // Mercado delgado: los puntos van sobre la línea (mediana 7 d), no sueltos a su precio crudo; el precio real de cada día se ve al tocar el punto.
+  const sobreLinea=new Map(lineaPts.map(h=>[h.date,h.market]));
+  const yDe=h=>py(delgado&&sobreLinea.has(h.date)?sobreLinea.get(h.date):h.market);
   const last=filtered[filtered.length-1];
   const first=filtered[0];
   const up=last.market>=first.market;
@@ -455,13 +458,13 @@ function PriceChart({history, precioVenta, compact, range, onSelectPoint, select
       {!compact&&cortes.map((h,i)=><line key={"c"+i} x1={px(h.date)} y1={padT} x2={px(h.date)} y2={H-padB} stroke={dark?"#555":"#ccc"} strokeWidth="1" strokeDasharray="2,3"><title>Cambio de fuente: la línea no se une a lo anterior</title></line>)}
       {/* Línea de precio */}
       <path d={path} fill="none" stroke={color} strokeWidth={compact?1.5:2} strokeLinejoin="round" strokeLinecap="round"/>
-      {delgado&&!compact&&<text x={padL+2} y={padT+7} fontSize="8" fontFamily="DM Sans,sans-serif" fill={dark?"#777":"#bbb"}>mediana 7 d · mercado delgado</text>}
+      {delgado&&!compact&&<text x={padL+2} y={padT+7} fontSize="8" fontFamily="DM Sans,sans-serif" fill={dark?"#777":"#bbb"}>mediana 7 d · mercado delgado · toca un punto para ver el precio real</text>}
       {/* Puntos */}
       {filtered.map((h,i)=>{
         const isSel=selectedPoint&&selectedPoint.date===h.date&&selectedPoint.market===h.market;
         return(
-          <circle key={i} cx={px(h.date)} cy={py(h.market)} r={isSel?5:compact?1.5:2.5}
-            fill={isSel?"#fff":color} stroke={isSel?color:"none"} strokeWidth={isSel?2:0} opacity={delgado&&!isSel?0.35:1}/>
+          <circle key={i} cx={px(h.date)} cy={yDe(h)} r={isSel?5:compact?1.5:2.5}
+            fill={isSel?"#fff":color} stroke={isSel?color:"none"} strokeWidth={isSel?2:0} opacity={1}><title>{`${h.date} · ${fmtUSD(h.market)}`}</title></circle>
         );
       })}
       {/* Labels eje X */}
@@ -473,7 +476,7 @@ function PriceChart({history, precioVenta, compact, range, onSelectPoint, select
         ));
       })()}
       {/* Label último valor */}
-      <text x={px(last.date)} y={py(last.market)-5} textAnchor="end"
+      <text x={px(last.date)} y={yDe(last)-5} textAnchor="end"
         fontSize={compact?8:9} fontFamily="DM Sans,sans-serif" fill={color} fontWeight="700">
         {fmtUSD(last.market)}
       </text>
@@ -588,6 +591,11 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
   const [histDir,     setHistDir]     = React.useState("todas");   // todas | suben | bajan | nuevas
   const [histTen,     setHistTen]     = React.useState("todas");   // todas | tengo | faltan
   const [histOrden,   setHistOrden]   = React.useState("cambio");
+  // Carpetas y colecciones que el historial de snapshots oculta (se recuerdan en este dispositivo, por juego). Elegir un grupo en el selector lo muestra igual.
+  const HIST_OCULTOS_KEY="angst-poke-hist-ocultos-"+juego;
+  const [histOcultos,  setHistOcultosS] = React.useState(()=>{ try{ const v=JSON.parse(localStorage.getItem("angst-poke-hist-ocultos-"+juego)||"[]"); return Array.isArray(v)?v:[]; }catch(e){ return []; } });
+  const setHistOcultos=lista=>{ setHistOcultosS(lista); try{ localStorage.setItem(HIST_OCULTOS_KEY,JSON.stringify(lista)); }catch(e){} };
+  const [histOcultarAbierto,setHistOcultarAbierto]=React.useState(false);
   const [apiKeyInput,    setApiKeyInput]    = React.useState("");
   // ── Revisión de cartas sin precio (3-oct-2026, a pedido de Cristopher) ──
   const [revAbierta,  setRevAbierta]  = React.useState(false);
@@ -2149,7 +2157,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const HIST_ORDENES=[["cambio","mayor cambio"],["suben","mayor subida"],["bajan","mayor baja"],["valor","valor"],["nombre","nombre"]];
   function calcularHistorial(){
     const tieneHist=c=>(c.priceHistory||[]).some(h=>h.market!=null);
-    const enGrupo=c=>!histGrupo||carpetaDeInv(c)===histGrupo;
+    const enGrupo=c=>histGrupo?carpetaDeInv(c)===histGrupo:!histOcultos.includes(carpetaDeInv(c));
     const enTenencia=c=>histTen==="todas"||(histTen==="tengo"?c.estado!=="hunting":c.estado==="hunting");
     const todas=inv.filter(tieneHist);
     const base=todas.filter(c=>enGrupo(c)&&enTenencia(c));
@@ -2201,7 +2209,7 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
     const presentes=new Set(todas.map(c=>carpetaDeInv(c)).filter(Boolean));
     const fijas=[FIJA1,"Staples & Meta","Price Watch"];
     const grupos=[...fijas.filter(g=>presentes.has(g)),...[...presentes].filter(g=>!fijas.includes(g)&&!NOMBRES_COLECCIONES.includes(g)).sort(),...NOMBRES_COLECCIONES.filter(g=>presentes.has(g))];
-    return {fechas,fecha,entradas,resumen,grupos,hayHistoria:todas.length>0};
+    return {fechas,fecha,entradas,resumen,grupos,hayHistoria:todas.length>0,ocultas:grupos.filter(g=>histOcultos.includes(g)).length};
   }
 
   // ── VISTA BUSCAR ─────────────────────────────────────────────────────────────
@@ -2472,7 +2480,18 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
             {HIST_ORDENES.map(([k,l])=><option key={k} value={k}>⇅ {l}</option>)}
           </select>
         </div>
-        <div style={{marginBottom:6}}><Segmentado items={[["todas","todas"],["suben","▲ suben"],["bajan","▼ bajan"],["nuevas","nuevas"]]} valor={histDir} onChange={setHistDir}/></div>
+        <div style={{display:"flex",gap:6,marginBottom:6,alignItems:"center"}}>
+          <div style={{flex:1}}><Segmentado items={[["todas","todas"],["suben","▲ suben"],["bajan","▼ bajan"],["nuevas","nuevas"]]} valor={histDir} onChange={setHistDir}/></div>
+          <button data-t="hist-ocultar" onClick={()=>setHistOcultarAbierto(a=>!a)} style={{...estiloSelector,flex:"none",cursor:"pointer",color:h.ocultas?"#c9a227":"#aaa",borderColor:histOcultarAbierto?"#fff":undefined}}>🙈 {h.ocultas?`${h.ocultas} oculta${h.ocultas===1?"":"s"}`:"ocultar"}</button>
+        </div>
+        {histOcultarAbierto&&<div data-t="hist-ocultar-panel" style={{background:"#111",border:"1px solid #222",borderRadius:10,padding:"8px 10px",marginBottom:8}}>
+          <div style={{...f,fontSize:10,color:"#777",marginBottom:6}}>Toca para ocultar o mostrar en el historial. Se recuerda en este dispositivo.</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+            {h.grupos.map(g=>{ const oc=histOcultos.includes(g); return <button key={g} data-grupo={g} data-oculto={oc?"1":"0"} onClick={()=>setHistOcultos(oc?histOcultos.filter(x=>x!==g):[...histOcultos,g])}
+              style={{...f,fontSize:11,padding:"5px 10px",borderRadius:14,border:"1px solid "+(oc?"#5a4a1a":"#333"),background:oc?"#2a2410":"transparent",color:oc?"#c9a227":"#bbb",cursor:"pointer",textDecoration:oc?"line-through":"none"}}>{NOMBRES_COLECCIONES.includes(g)?"◆ ":""}{g}</button>; })}
+          </div>
+          {h.ocultas>0&&<button onClick={()=>setHistOcultos([])} style={{...f,fontSize:10,color:"#888",background:"transparent",border:"none",marginTop:8,cursor:"pointer",padding:0}}>mostrar todas</button>}
+        </div>}
         <div style={{marginBottom:10}}><Segmentado items={[["todas","todas"],["tengo","tengo"],["faltan","me faltan"]]} valor={histTen} onChange={setHistTen}/></div>
         {!h.hayHistoria?(
           <div style={{...f,textAlign:"center",fontSize:12,color:"#555",padding:"30px 0"}}>todavía no hay snapshots de precios</div>
