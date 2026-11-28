@@ -408,10 +408,11 @@ function PriceChart({history, precioVenta, compact, range, onSelectPoint, select
   const metrics=computeHistMetrics(history,range||"todo");
   const filtered=metrics.filtered;
   if(filtered.length<2) return null;
-  const padB=compact?8:20, padL=8, padR=8, padT=8;
+  const padB=compact?8:22, padL=compact?8:36, padR=8, padT=8;   // padL: lugar para los precios del eje
   // `size` ({w,h} medidos por PriceChartFill) hace que el gráfico llene su contenedor; sin él conserva el tamaño fijo de siempre.
   const W=size?size.w:(compact?180:290), H=size?Math.max(60,size.h-padB):(compact?44:90);
-  const vals=[...filtered.map(h=>h.market), precioVenta].filter(Boolean);
+  const banda=!compact?filtered.filter(h=>h.agg&&h.low>0&&h.high>0):[];   // meses con media, mínimo y máximo (historial del pool)
+  const vals=[...filtered.map(h=>h.market), ...banda.flatMap(h=>[h.low,h.high]), precioVenta].filter(Boolean);
   const minV=Math.min(...vals)*0.93, maxV=Math.max(...vals)*1.07, rng=maxV-minV||1;
   const t0=new Date(filtered[0].date+"T12:00:00").getTime();
   const t1=new Date(filtered[filtered.length-1].date+"T12:00:00").getTime();
@@ -428,6 +429,20 @@ function PriceChart({history, precioVenta, compact, range, onSelectPoint, select
   // Mercado delgado: los puntos van sobre la línea (mediana 7 d), no sueltos a su precio crudo; el precio real de cada día se ve al tocar el punto.
   const sobreLinea=new Map(lineaPts.map(h=>[h.date,h.market]));
   const yDe=h=>py(delgado&&sobreLinea.has(h.date)?sobreLinea.get(h.date):h.market);
+  // Marcas del eje X: un día 1 de mes por tick si el rango pasa de ~10 semanas (se espacian para no pasar de ~7); si es corto, 5 fechas parejas
+  const MES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  const marcasX=(()=>{
+    if(compact) return [];
+    const out=[]; const d0=new Date(t0), d1=new Date(t1);
+    if(tRng>70*864e5){
+      const meses=[]; for(let y=d0.getFullYear(),m=d0.getMonth()+1;;m++){ if(m>11){m=0;y++;} const t=new Date(y,m,1,12).getTime(); if(t>t1) break; meses.push([y,m]); }
+      const paso=Math.max(1,Math.ceil(meses.length/7));
+      meses.forEach(([y,m],i)=>{ if(i%paso===0) out.push({d:`${y}-${String(m+1).padStart(2,"0")}-01`,t:(m===0||i===0)?`${MES[m]} '${String(y).slice(2)}`:MES[m]}); });
+    } else {
+      for(let k=0;k<=4;k++){ const t=new Date(t0+tRng*k/4); const d=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`; out.push({d,t:fmtDateShort(d)}); }
+    }
+    return out.filter(m=>px(m.d)>=padL-1&&px(m.d)<=W-padR+1);
+  })();
   const last=filtered[filtered.length-1];
   const first=filtered[0];
   const up=last.market>=first.market;
@@ -446,35 +461,45 @@ function PriceChart({history, precioVenta, compact, range, onSelectPoint, select
         });
         if(closest&&minDist<20) onSelectPoint(closest);
       }}>
-      {/* Grid horizontal */}
-      {!compact&&[0.25,0.5,0.75].map(f=>{
+      {/* Grid horizontal + precios en el eje */}
+      {!compact&&[0.05,0.25,0.5,0.75,0.95].map(f=>{
         const v=minV+f*rng;
-        return <line key={f} x1={padL} y1={py(v)} x2={W-padR} y2={py(v)} stroke={dark?"#262626":"#f0f0f0"} strokeWidth="1"/>;
+        return <g key={f}>{f>0.1&&f<0.9&&<line x1={padL} y1={py(v)} x2={W-padR} y2={py(v)} stroke={dark?"#262626":"#f0f0f0"} strokeWidth="1"/>}
+          <text x={padL-4} y={py(v)+3} textAnchor="end" fontSize="8" fontFamily="DM Sans,sans-serif" fill={dark?"#777":"#aaa"}>{fmtUSD(v)}</text></g>;
       })}
+      {/* Guías verticales por mes (rango largo) */}
+      {!compact&&marcasX.map((m,i)=><line key={"g"+i} x1={px(m.d)} y1={padT} x2={px(m.d)} y2={H-padB} stroke={dark?"#1f1f1f":"#f5f5f5"} strokeWidth="1"/>)}
       {/* Línea precio venta */}
       {precioVenta&&!compact&&<line x1={padL} y1={py(precioVenta)} x2={W-padR} y2={py(precioVenta)}
         stroke={color} strokeWidth="1" strokeDasharray="3,3" opacity="0.5"/>}
       {/* Cortes: marcas verticales donde la línea no se une (cambio de fuente / base) */}
       {!compact&&cortes.map((h,i)=><line key={"c"+i} x1={px(h.date)} y1={padT} x2={px(h.date)} y2={H-padB} stroke={dark?"#555":"#ccc"} strokeWidth="1" strokeDasharray="2,3"><title>Cambio de fuente: la línea no se une a lo anterior</title></line>)}
+      {/* Banda mín–máx del mes (media = línea): solo en los puntos mensuales; los snapshots diarios son solo línea */}
+      {banda.length>1&&(()=>{
+        const grupos=[]; let g=[];
+        filtered.forEach(h=>{ if(h.agg&&h.low>0&&h.high>0) g.push(h); else { if(g.length>1) grupos.push(g); g=[]; } }); if(g.length>1) grupos.push(g);
+        return grupos.map((gr,i)=>{
+          const arriba=gr.map(h=>`${px(h.date).toFixed(1)},${py(h.high).toFixed(1)}`), abajo=[...gr].reverse().map(h=>`${px(h.date).toFixed(1)},${py(h.low).toFixed(1)}`);
+          const linea=k=>gr.map((h,j)=>`${j?"L":"M"}${px(h.date).toFixed(1)},${py(h[k]).toFixed(1)}`).join(" ");
+          return <g key={"b"+i}><polygon points={[...arriba,...abajo].join(" ")} fill={color} opacity="0.12"/><path d={linea("high")} fill="none" stroke={color} strokeWidth="0.8" strokeDasharray="2,2" opacity="0.5"/><path d={linea("low")} fill="none" stroke={color} strokeWidth="0.8" strokeDasharray="2,2" opacity="0.5"/></g>;
+        });
+      })()}
       {/* Línea de precio */}
       <path d={path} fill="none" stroke={color} strokeWidth={compact?1.5:2} strokeLinejoin="round" strokeLinecap="round"/>
       {delgado&&!compact&&<text x={padL+2} y={padT+7} fontSize="8" fontFamily="DM Sans,sans-serif" fill={dark?"#777":"#bbb"}>mediana 7 d · mercado delgado · toca un punto para ver el precio real</text>}
+      {banda.length>1&&<text x={padL+2} y={padT+(delgado?16:7)} fontSize="8" fontFamily="DM Sans,sans-serif" fill={dark?"#777":"#bbb"}>línea = media del mes · banda = mínimo y máximo</text>}
       {/* Puntos */}
       {filtered.map((h,i)=>{
         const isSel=selectedPoint&&selectedPoint.date===h.date&&selectedPoint.market===h.market;
         return(
           <circle key={i} cx={px(h.date)} cy={yDe(h)} r={isSel?5:compact?1.5:2.5}
-            fill={isSel?"#fff":color} stroke={isSel?color:"none"} strokeWidth={isSel?2:0} opacity={1}><title>{`${h.date} · ${fmtUSD(h.market)}`}</title></circle>
+            fill={isSel?"#fff":color} stroke={isSel?color:"none"} strokeWidth={isSel?2:0} opacity={1}><title>{h.agg&&h.low>0&&h.high>0?`${h.date.slice(0,7)} · media ${fmtUSD(h.market)} · mín ${fmtUSD(h.low)} · máx ${fmtUSD(h.high)}`:`${h.date} · ${fmtUSD(h.market)}`}</title></circle>
         );
       })}
       {/* Labels eje X */}
-      {!compact&&(()=>{
-        const show=[filtered[0], filtered[Math.floor(filtered.length/2)], filtered[filtered.length-1]];
-        return show.map((h,i)=>(
-          <text key={i} x={px(h.date)} y={H+padB-2} textAnchor={i===0?"start":i===2?"end":"middle"}
-            fontSize="8" fontFamily="DM Sans,sans-serif" fill={dark?"#777":"#bbb"}>{fmtDateShort(h.date)}</text>
-        ));
-      })()}
+      {!compact&&marcasX.map((m,i)=>(
+        <text key={"x"+i} x={px(m.d)} y={H+padB-2} textAnchor="middle" fontSize="8" fontFamily="DM Sans,sans-serif" fill={dark?"#777":"#bbb"}>{m.t}</text>
+      ))}
       {/* Label último valor */}
       <text x={px(last.date)} y={yDe(last)-5} textAnchor="end"
         fontSize={compact?8:9} fontFamily="DM Sans,sans-serif" fill={color} fontWeight="700">
@@ -2040,8 +2065,8 @@ function PokecriptoPage({inventario,saveInventario,carpetas,saveCarpetas,darkCat
                 {selectedPoint&&(
                   <div style={{flex:"none",marginTop:6,display:"flex",alignItems:"center",gap:8,borderTop:"1px dashed #2a2a2a",paddingTop:6}}>
                     <span style={{fontFamily:"'Caveat',cursive",fontSize:15,fontWeight:700,color:"#fff"}}>{fmtUSD(selectedPoint.market)}</span>
-                    <span style={{...f,fontSize:10,color:"rgba(255,255,255,0.4)",flex:1}}>{selectedPoint.date}</span>
-                    {confirmDelSnap?.date===selectedPoint.date&&confirmDelSnap?.market===selectedPoint.market
+                    <span style={{...f,fontSize:10,color:"rgba(255,255,255,0.4)",flex:1}}>{selectedPoint.agg?`${selectedPoint.date.slice(0,7)} · media${selectedPoint.low>0&&selectedPoint.high>0?` · mín ${fmtUSD(selectedPoint.low)} · máx ${fmtUSD(selectedPoint.high)}`:""}`:selectedPoint.date}</span>
+                    {selectedPoint.agg?null:confirmDelSnap?.date===selectedPoint.date&&confirmDelSnap?.market===selectedPoint.market
                       ?<>
                         <span style={{...f,fontSize:11,color:"#ff8080"}}>¿borrar?</span>
                         <button onClick={()=>deleteSnapshot(detalle,selectedPoint)} style={{background:"#e53935",border:"none",borderRadius:6,padding:"3px 10px",cursor:"pointer",...f,fontSize:11,color:"#fff"}}>sí</button>

@@ -70,7 +70,16 @@ const busca = (lista, texto) => { for (const [re, id, largo, ico] of lista) if (
 
 // Describe una variante. Entrada: { juego, sub (subtipo/edición/acabado del producto), rareza, sufijo (texto entre paréntesis del
 // nombre del producto), grupo (nombre del set/grupo), precio {market, low, high}, pid }. Devuelve siempre el mismo objeto.
-export function describirVariante({ juego = "pokemon", sub = "", rareza = "", sufijo = "", grupo = "", market = null, low = null, high = null, pid = null } = {}) {
+// «Prize Pack Series Cards» → «Prize Pack Series», «Miscellaneous Cards & Products» → «Miscellaneous»
+export const grupoCorto = g => String(g || "").replace(/\s*(cards?\s*&\s*products?|series\s+cards?|cards?)\s*$/i, (m, x) => (/series/i.test(x) ? " Series" : "")).replace(/\s+/g, " ").trim();
+// ¿Entra a la lista de variantes un producto de OTRO grupo con el mismo nombre y número con total? Sí si es un sello (liga, prerelease, staff, evento…), un patrón
+// (Cosmos Holo…) o un producto SIN etiqueta (Prize Pack Series, Deck Exclusives…: el propio grupo es el sello). El resto (reverse y acabados de otro set) no.
+export function aceptaDeOtroGrupo({ sufijo = "", grupo = "" } = {}) {
+  if (!sufijo) return true;
+  const d = describirVariante({ juego: "pokemon", sufijo, grupo, fueraDeSet: true });
+  return d.tipo === "sello" || d.tipo === "patron";
+}
+export function describirVariante({ juego = "pokemon", sub = "", rareza = "", sufijo = "", grupo = "", market = null, low = null, high = null, pid = null, fueraDeSet = false } = {}) {
   const partes = [];                       // piezas de la etiqueta, de más a menos informativa
   const txt = norm(`${sufijo} ${grupo}`);
   let tipo = "base", clave = "base", icono = "○";
@@ -79,6 +88,7 @@ export function describirVariante({ juego = "pokemon", sub = "", rareza = "", su
   const acabado = busca(ACABADOS, norm(sub));
   const edicion = busca(EDICIONES, norm(sub));
   if (sello) { tipo = "sello"; clave = sello.id; icono = sello.ico; partes.push(sello.largo); }
+  else if (fueraDeSet && grupo && !patron && !sufijo) { tipo = "sello"; clave = "grp-" + norm(grupo).replace(/\s+/g, "-").slice(0, 24); icono = "🎁"; partes.push(grupoCorto(grupo)); }   // producto de otro grupo sin etiqueta: el grupo es el sello
   if (patron) { if (tipo === "base") { tipo = "patron"; clave = patron.id; icono = patron.ico; } partes.push(patron.largo); }
   if (acabado && !(acabado.id === "normal" && partes.length)) { if (tipo === "base") { tipo = acabado.id === "normal" ? "base" : "acabado"; clave = acabado.id; icono = acabado.ico; } partes.push(acabado.largo); }
   const ab = abreviarRareza(rareza);

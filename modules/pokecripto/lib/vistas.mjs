@@ -8,5 +8,5 @@ export const gridDe = v => { const t = TAMANOS_VISTA.find(x => x[0] === normVist
 export const RATIO_CARTA = { pokemon: 63 / 88, yugioh: 59 / 86, digimon: 63 / 88 };
 export const ratioDe = juego => RATIO_CARTA[juego] || RATIO_CARTA.pokemon;
 export const alturaFicha = (juego, ancho = 126) => Math.round(ancho / ratioDe(juego));
-// Un set se pliega a partir de cierto tamaño: con pocas cartas todo abierto; con muchas, cerrados y se abren al tocar
-export const abiertoPorDefecto = total => total <= 400;
+// Los sets de las colecciones parten SIEMPRE desplegados en los tres juegos (el plegado queda disponible al tocar la cabecera)
+export const abiertoPorDefecto = () => true;

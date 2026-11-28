@@ -27,7 +27,8 @@
     "test:historial-pool": "node tests/pokecripto-historial-pool.mjs",
     "test:mazos": "node tests/pokecripto-mazos.mjs",
     "test:tcgcrypto-pool": "node tests/tcgcrypto-pool.mjs",
-    "test:tcgcrypto-historial-pool": "node tests/tcgcrypto-historial-pool.mjs"
+    "test:tcgcrypto-historial-pool": "node tests/tcgcrypto-historial-pool.mjs",
+    "test:pokecripto-variantes-grupos": "node tests/pokecripto-variantes-grupos.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"

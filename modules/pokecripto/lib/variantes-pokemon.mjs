@@ -19,7 +19,7 @@ export function variantesDeShard(shard, indice, numero, nombre) {
   if (!lista) return [];
   const nombres = new Map(((indice && indice.grupos) || []).map(g => [g.id, g.nombre]));
   const vs = lista.map(([pid, sub, sufijo, market, low, high, grupoSello, rareza]) => ({
-    ...describirVariante({ juego: "pokemon", sub, sufijo, grupo: grupoSello ? nombres.get(grupoSello) || "" : "", rareza, market, low, high, pid }),
+    ...describirVariante({ juego: "pokemon", sub, sufijo, grupo: grupoSello ? nombres.get(grupoSello) || "" : "", rareza, market, low, high, pid, fueraDeSet: !!grupoSello }),
     key: `${pid}|${sub}`, sub, grupoSello: grupoSello ? nombres.get(grupoSello) || "" : "",
     // grupo de tcgcsv donde vive ESTE producto (los sellos de otros sets viven en su propio grupo)
     grupoId: grupoSello || (shard && shard.g) || null,

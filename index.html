@@ -4841,7 +4841,8 @@ ${linea}`, url: ev.url };
     for (const [re, id, largo, ico] of lista) if (re.test(texto2)) return { id, largo, ico };
     return null;
   };
-  function describirVariante({ juego = "pokemon", sub: sub2 = "", rareza = "", sufijo = "", grupo = "", market = null, low = null, high = null, pid = null } = {}) {
+  var grupoCorto = (g) => String(g || "").replace(/\s*(cards?\s*&\s*products?|series\s+cards?|cards?)\s*$/i, (m, x) => /series/i.test(x) ? " Series" : "").replace(/\s+/g, " ").trim();
+  function describirVariante({ juego = "pokemon", sub: sub2 = "", rareza = "", sufijo = "", grupo = "", market = null, low = null, high = null, pid = null, fueraDeSet = false } = {}) {
     const partes3 = [];
     const txt = norm2(`${sufijo} ${grupo}`);
     let tipo = "base", clave = "base", icono = "\u25CB";
@@ -4854,6 +4855,11 @@ ${linea}`, url: ev.url };
       clave = sello3.id;
       icono = sello3.ico;
       partes3.push(sello3.largo);
+    } else if (fueraDeSet && grupo && !patron && !sufijo) {
+      tipo = "sello";
+      clave = "grp-" + norm2(grupo).replace(/\s+/g, "-").slice(0, 24);
+      icono = "\u{1F381}";
+      partes3.push(grupoCorto(grupo));
     }
     if (patron) {
       if (tipo === "base") {
@@ -4915,7 +4921,7 @@ ${linea}`, url: ev.url };
     if (!lista) return [];
     const nombres = new Map((indice && indice.grupos || []).map((g) => [g.id, g.nombre]));
     const vs = lista.map(([pid, sub2, sufijo, market, low, high, grupoSello, rareza]) => ({
-      ...describirVariante({ juego: "pokemon", sub: sub2, sufijo, grupo: grupoSello ? nombres.get(grupoSello) || "" : "", rareza, market, low, high, pid }),
+      ...describirVariante({ juego: "pokemon", sub: sub2, sufijo, grupo: grupoSello ? nombres.get(grupoSello) || "" : "", rareza, market, low, high, pid, fueraDeSet: !!grupoSello }),
       key: `${pid}|${sub2}`,
       sub: sub2,
       grupoSello: grupoSello ? nombres.get(grupoSello) || "" : "",
@@ -5645,7 +5651,7 @@ ${linea}`, url: ev.url };
   var RATIO_CARTA = { pokemon: 63 / 88, yugioh: 59 / 86, digimon: 63 / 88 };
   var ratioDe = (juego) => RATIO_CARTA[juego] || RATIO_CARTA.pokemon;
   var alturaFicha = (juego, ancho = 126) => Math.round(ancho / ratioDe(juego));
-  var abiertoPorDefecto = (total) => total <= 400;
+  var abiertoPorDefecto = () => true;
 
   // modules/pokecripto/lib/historial-pool.mjs
   var CAT_JUEGO = { pokemon: 3, yugioh: 2, digimon: 63 };
@@ -6544,9 +6550,10 @@ ${item.link}`);
     const metrics = computeHistMetrics(history, range || "todo");
     const filtered = metrics.filtered;
     if (filtered.length < 2) return null;
-    const padB = compact ? 8 : 20, padL = 8, padR = 8, padT = 8;
+    const padB = compact ? 8 : 22, padL = compact ? 8 : 36, padR = 8, padT = 8;
     const W = size ? size.w : compact ? 180 : 290, H2 = size ? Math.max(60, size.h - padB) : compact ? 44 : 90;
-    const vals = [...filtered.map((h) => h.market), precioVenta].filter(Boolean);
+    const banda = !compact ? filtered.filter((h) => h.agg && h.low > 0 && h.high > 0) : [];
+    const vals = [...filtered.map((h) => h.market), ...banda.flatMap((h) => [h.low, h.high]), precioVenta].filter(Boolean);
     const minV = Math.min(...vals) * 0.93, maxV = Math.max(...vals) * 1.07, rng = maxV - minV || 1;
     const t0 = (/* @__PURE__ */ new Date(filtered[0].date + "T12:00:00")).getTime();
     const t1 = (/* @__PURE__ */ new Date(filtered[filtered.length - 1].date + "T12:00:00")).getTime();
@@ -6560,6 +6567,35 @@ ${item.link}`);
     const cortes = filtered.filter((h, i) => i > 0 && h.corte);
     const sobreLinea = new Map(lineaPts.map((h) => [h.date, h.market]));
     const yDe = (h) => py(delgado && sobreLinea.has(h.date) ? sobreLinea.get(h.date) : h.market);
+    const MES2 = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    const marcasX = (() => {
+      if (compact) return [];
+      const out = [];
+      const d0 = new Date(t0), d1 = new Date(t1);
+      if (tRng > 70 * 864e5) {
+        const meses = [];
+        for (let y = d0.getFullYear(), m = d0.getMonth() + 1; ; m++) {
+          if (m > 11) {
+            m = 0;
+            y++;
+          }
+          const t = new Date(y, m, 1, 12).getTime();
+          if (t > t1) break;
+          meses.push([y, m]);
+        }
+        const paso = Math.max(1, Math.ceil(meses.length / 7));
+        meses.forEach(([y, m], i) => {
+          if (i % paso === 0) out.push({ d: `${y}-${String(m + 1).padStart(2, "0")}-01`, t: m === 0 || i === 0 ? `${MES2[m]} '${String(y).slice(2)}` : MES2[m] });
+        });
+      } else {
+        for (let k = 0; k <= 4; k++) {
+          const t = new Date(t0 + tRng * k / 4);
+          const d = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+          out.push({ d, t: fmtDateShort(d) });
+        }
+      }
+      return out.filter((m) => px(m.d) >= padL - 1 && px(m.d) <= W - padR + 1);
+    })();
     const last = filtered[filtered.length - 1];
     const first = filtered[0];
     const up = last.market >= first.market;
@@ -6587,10 +6623,11 @@ ${item.link}`);
           if (closest && minDist < 20) onSelectPoint(closest);
         }
       },
-      !compact && [0.25, 0.5, 0.75].map((f7) => {
+      !compact && [0.05, 0.25, 0.5, 0.75, 0.95].map((f7) => {
         const v = minV + f7 * rng;
-        return /* @__PURE__ */ React.createElement("line", { key: f7, x1: padL, y1: py(v), x2: W - padR, y2: py(v), stroke: dark ? "#262626" : "#f0f0f0", strokeWidth: "1" });
+        return /* @__PURE__ */ React.createElement("g", { key: f7 }, f7 > 0.1 && f7 < 0.9 && /* @__PURE__ */ React.createElement("line", { x1: padL, y1: py(v), x2: W - padR, y2: py(v), stroke: dark ? "#262626" : "#f0f0f0", strokeWidth: "1" }), /* @__PURE__ */ React.createElement("text", { x: padL - 4, y: py(v) + 3, textAnchor: "end", fontSize: "8", fontFamily: "DM Sans,sans-serif", fill: dark ? "#777" : "#aaa" }, fmtUSD2(v)));
       }),
+      !compact && marcasX.map((m, i) => /* @__PURE__ */ React.createElement("line", { key: "g" + i, x1: px(m.d), y1: padT, x2: px(m.d), y2: H2 - padB, stroke: dark ? "#1f1f1f" : "#f5f5f5", strokeWidth: "1" })),
       precioVenta && !compact && /* @__PURE__ */ React.createElement(
         "line",
         {
@@ -6605,8 +6642,26 @@ ${item.link}`);
         }
       ),
       !compact && cortes.map((h, i) => /* @__PURE__ */ React.createElement("line", { key: "c" + i, x1: px(h.date), y1: padT, x2: px(h.date), y2: H2 - padB, stroke: dark ? "#555" : "#ccc", strokeWidth: "1", strokeDasharray: "2,3" }, /* @__PURE__ */ React.createElement("title", null, "Cambio de fuente: la l\xEDnea no se une a lo anterior"))),
+      banda.length > 1 && (() => {
+        const grupos = [];
+        let g = [];
+        filtered.forEach((h) => {
+          if (h.agg && h.low > 0 && h.high > 0) g.push(h);
+          else {
+            if (g.length > 1) grupos.push(g);
+            g = [];
+          }
+        });
+        if (g.length > 1) grupos.push(g);
+        return grupos.map((gr, i) => {
+          const arriba = gr.map((h) => `${px(h.date).toFixed(1)},${py(h.high).toFixed(1)}`), abajo = [...gr].reverse().map((h) => `${px(h.date).toFixed(1)},${py(h.low).toFixed(1)}`);
+          const linea = (k) => gr.map((h, j) => `${j ? "L" : "M"}${px(h.date).toFixed(1)},${py(h[k]).toFixed(1)}`).join(" ");
+          return /* @__PURE__ */ React.createElement("g", { key: "b" + i }, /* @__PURE__ */ React.createElement("polygon", { points: [...arriba, ...abajo].join(" "), fill: color2, opacity: "0.12" }), /* @__PURE__ */ React.createElement("path", { d: linea("high"), fill: "none", stroke: color2, strokeWidth: "0.8", strokeDasharray: "2,2", opacity: "0.5" }), /* @__PURE__ */ React.createElement("path", { d: linea("low"), fill: "none", stroke: color2, strokeWidth: "0.8", strokeDasharray: "2,2", opacity: "0.5" }));
+        });
+      })(),
       /* @__PURE__ */ React.createElement("path", { d: path, fill: "none", stroke: color2, strokeWidth: compact ? 1.5 : 2, strokeLinejoin: "round", strokeLinecap: "round" }),
       delgado && !compact && /* @__PURE__ */ React.createElement("text", { x: padL + 2, y: padT + 7, fontSize: "8", fontFamily: "DM Sans,sans-serif", fill: dark ? "#777" : "#bbb" }, "mediana 7 d \xB7 mercado delgado \xB7 toca un punto para ver el precio real"),
+      banda.length > 1 && /* @__PURE__ */ React.createElement("text", { x: padL + 2, y: padT + (delgado ? 16 : 7), fontSize: "8", fontFamily: "DM Sans,sans-serif", fill: dark ? "#777" : "#bbb" }, "l\xEDnea = media del mes \xB7 banda = m\xEDnimo y m\xE1ximo"),
       filtered.map((h, i) => {
         const isSel = selectedPoint && selectedPoint.date === h.date && selectedPoint.market === h.market;
         return /* @__PURE__ */ React.createElement(
@@ -6621,25 +6676,10 @@ ${item.link}`);
             strokeWidth: isSel ? 2 : 0,
             opacity: 1
           },
-          /* @__PURE__ */ React.createElement("title", null, `${h.date} \xB7 ${fmtUSD2(h.market)}`)
+          /* @__PURE__ */ React.createElement("title", null, h.agg && h.low > 0 && h.high > 0 ? `${h.date.slice(0, 7)} \xB7 media ${fmtUSD2(h.market)} \xB7 m\xEDn ${fmtUSD2(h.low)} \xB7 m\xE1x ${fmtUSD2(h.high)}` : `${h.date} \xB7 ${fmtUSD2(h.market)}`)
         );
       }),
-      !compact && (() => {
-        const show = [filtered[0], filtered[Math.floor(filtered.length / 2)], filtered[filtered.length - 1]];
-        return show.map((h, i) => /* @__PURE__ */ React.createElement(
-          "text",
-          {
-            key: i,
-            x: px(h.date),
-            y: H2 + padB - 2,
-            textAnchor: i === 0 ? "start" : i === 2 ? "end" : "middle",
-            fontSize: "8",
-            fontFamily: "DM Sans,sans-serif",
-            fill: dark ? "#777" : "#bbb"
-          },
-          fmtDateShort(h.date)
-        ));
-      })(),
+      !compact && marcasX.map((m, i) => /* @__PURE__ */ React.createElement("text", { key: "x" + i, x: px(m.d), y: H2 + padB - 2, textAnchor: "middle", fontSize: "8", fontFamily: "DM Sans,sans-serif", fill: dark ? "#777" : "#bbb" }, m.t)),
       /* @__PURE__ */ React.createElement(
         "text",
         {
@@ -8013,7 +8053,7 @@ ${item.link}`);
           onSelectPoint: (p) => setSelectedPoint(selectedPoint?.date === p.date && selectedPoint?.market === p.market ? null : p),
           selectedPoint
         }
-      )), selectedPoint && /* @__PURE__ */ React.createElement("div", { style: { flex: "none", marginTop: 6, display: "flex", alignItems: "center", gap: 8, borderTop: "1px dashed #2a2a2a", paddingTop: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 15, fontWeight: 700, color: "#fff" } }, fmtUSD2(selectedPoint.market)), /* @__PURE__ */ React.createElement("span", { style: { ...f7, fontSize: 10, color: "rgba(255,255,255,0.4)", flex: 1 } }, selectedPoint.date), confirmDelSnap?.date === selectedPoint.date && confirmDelSnap?.market === selectedPoint.market ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { style: { ...f7, fontSize: 11, color: "#ff8080" } }, "\xBFborrar?"), /* @__PURE__ */ React.createElement("button", { onClick: () => deleteSnapshot(detalle, selectedPoint), style: { background: "#e53935", border: "none", borderRadius: 6, padding: "3px 10px", cursor: "pointer", ...f7, fontSize: 11, color: "#fff" } }, "s\xED"), /* @__PURE__ */ React.createElement("button", { onClick: () => setConfirmDelSnap(null), style: { background: "transparent", border: "1px dashed #444", borderRadius: 6, padding: "3px 10px", cursor: "pointer", ...f7, fontSize: 11, color: "#999" } }, "no")) : /* @__PURE__ */ React.createElement(
+      )), selectedPoint && /* @__PURE__ */ React.createElement("div", { style: { flex: "none", marginTop: 6, display: "flex", alignItems: "center", gap: 8, borderTop: "1px dashed #2a2a2a", paddingTop: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { fontFamily: "'Caveat',cursive", fontSize: 15, fontWeight: 700, color: "#fff" } }, fmtUSD2(selectedPoint.market)), /* @__PURE__ */ React.createElement("span", { style: { ...f7, fontSize: 10, color: "rgba(255,255,255,0.4)", flex: 1 } }, selectedPoint.agg ? `${selectedPoint.date.slice(0, 7)} \xB7 media${selectedPoint.low > 0 && selectedPoint.high > 0 ? ` \xB7 m\xEDn ${fmtUSD2(selectedPoint.low)} \xB7 m\xE1x ${fmtUSD2(selectedPoint.high)}` : ""}` : selectedPoint.date), selectedPoint.agg ? null : confirmDelSnap?.date === selectedPoint.date && confirmDelSnap?.market === selectedPoint.market ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { style: { ...f7, fontSize: 11, color: "#ff8080" } }, "\xBFborrar?"), /* @__PURE__ */ React.createElement("button", { onClick: () => deleteSnapshot(detalle, selectedPoint), style: { background: "#e53935", border: "none", borderRadius: 6, padding: "3px 10px", cursor: "pointer", ...f7, fontSize: 11, color: "#fff" } }, "s\xED"), /* @__PURE__ */ React.createElement("button", { onClick: () => setConfirmDelSnap(null), style: { background: "transparent", border: "1px dashed #444", borderRadius: 6, padding: "3px 10px", cursor: "pointer", ...f7, fontSize: 11, color: "#999" } }, "no")) : /* @__PURE__ */ React.createElement(
         "button",
         {
           onClick: () => setConfirmDelSnap(selectedPoint),
@@ -8841,7 +8881,21 @@ ${item.link}`);
     useEffect10(() => {
       if (onZoomEstado) onZoomEstado(zoom != null);
     }, [zoom]);
-    const hist = fila ? historialConMensual(fila) : [];
+    const [poolHm, setPoolHm] = useState12(null);
+    useEffect10(() => {
+      let vivo = true;
+      setPoolHm(null);
+      const g = datos.setIds && datos.setIds[tile.setIdx], cat = CAT_JUEGO[datos.tcg];
+      if (g && cat) fetchDataJson(rutaHist(cat, g)).then((sh) => {
+        if (vivo) setPoolHm(histMesDeShard(sh, `${v.pid}|${v.sub}`));
+      }).catch(() => {
+      });
+      return () => {
+        vivo = false;
+      };
+    }, [v.key, tile.setIdx]);
+    const hoyIso = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+    const hist = historialConMensual({ priceHistory: fila ? fila.priceHistory || [] : v.market != null ? [{ date: hoyIso, market: v.market, low: v.low ?? null, high: v.high ?? null, src: "cat" }] : [], histMes: mezclarHistMes(poolHm, fila && fila.histMes) });
     const idx = lista.findIndex((x) => x.k === carta.k && x.setIdx === tile.setIdx && x.num === tile.num), nav = lista.length > 1;
     const { ath, athDate, atl, atlDate, vol, volLabel } = computeHistMetrics(hist, rango);
     const mult = multiploSobreBase(v, tile.vs);
@@ -8876,7 +8930,7 @@ ${item.link}`);
     }))), celdas.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6, flex: "none" } }, celdas.map((c) => /* @__PURE__ */ React.createElement("div", { key: c.label, style: { background: "#1a1a1a", borderRadius: 8, padding: "6px 8px", minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", gap: 4, ...lbl } }, /* @__PURE__ */ React.createElement("span", null, c.label), /* @__PURE__ */ React.createElement("span", { style: { letterSpacing: 0 } }, c.sub)), /* @__PURE__ */ React.createElement("div", { style: { ...cv2, fontSize: 16, fontWeight: 700, color: c.color, lineHeight: 1.15, whiteSpace: "nowrap" } }, c.txt)))), hist.length >= 2 ? /* @__PURE__ */ React.createElement("div", { style: { flex: "1 1 150px", minHeight: 150, background: "#1a1a1a", borderRadius: 10, padding: "8px 12px", display: "flex", flexDirection: "column" } }, /* @__PURE__ */ React.createElement("div", { style: { flex: "none", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } }, /* @__PURE__ */ React.createElement("div", { style: { ...lbl, letterSpacing: 2 } }, "historial \xB7 ", v.corta, " \xB7 ", hist.length), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 4 } }, ["7d", "30d", "todo"].map((rg) => /* @__PURE__ */ React.createElement("button", { key: rg, onClick: () => {
       setRango(rg);
       setSel(null);
-    }, style: { ...f3, fontSize: 9, padding: "2px 7px", borderRadius: 8, border: "1px solid", cursor: "pointer", background: rango === rg ? "#fff" : "transparent", color: rango === rg ? "#111" : "#666", borderColor: rango === rg ? "#fff" : "#333" } }, rg)))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, position: "relative" } }, /* @__PURE__ */ React.createElement(PriceChartFill, { history: hist, range: rango, onSelectPoint: (p) => setSel(sel && sel.date === p.date && sel.market === p.market ? null : p), selectedPoint: sel })), sel && /* @__PURE__ */ React.createElement("div", { style: { flex: "none", marginTop: 6, display: "flex", alignItems: "center", gap: 8, borderTop: "1px dashed #2a2a2a", paddingTop: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { ...cv2, fontSize: 15, fontWeight: 700, color: "#fff" } }, fmtUSD2(sel.market)), /* @__PURE__ */ React.createElement("span", { style: { ...f3, fontSize: 10, color: "rgba(255,255,255,0.4)", flex: 1 } }, sel.date))) : /* @__PURE__ */ React.createElement("div", { style: { flex: "1 1 120px", minHeight: 80, background: "#1a1a1a", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", ...f3, fontSize: 11, color: "rgba(255,255,255,0.3)", textAlign: "center", padding: 12 } }, fila ? "el historial de esta variante aparece cuando haya al menos dos snapshots de precio" : "marca esta variante para empezar a registrar su historial de precios"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flex: "none" } }, /* @__PURE__ */ React.createElement("button", { "data-t": "tengo", onClick: () => onMarca(v.key, { c: cons ? 0 : 1 }), style: btnAcc(cons ? "transparent" : "#2e7d52", cons ? "#999" : "#fff") }, cons ? "\u21BA volver a hunting" : "\u2713 marcar conseguida"), cons && /* @__PURE__ */ React.createElement("button", { "data-t": "editar", onClick: abrirEditar, style: btnAcc("transparent", "#999") }, "\u270E editar"), fila && /* @__PURE__ */ React.createElement("button", { "data-t": "quitar", onClick: () => {
+    }, style: { ...f3, fontSize: 9, padding: "2px 7px", borderRadius: 8, border: "1px solid", cursor: "pointer", background: rango === rg ? "#fff" : "transparent", color: rango === rg ? "#111" : "#666", borderColor: rango === rg ? "#fff" : "#333" } }, rg)))), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minHeight: 0, position: "relative" } }, /* @__PURE__ */ React.createElement(PriceChartFill, { history: hist, range: rango, onSelectPoint: (p) => setSel(sel && sel.date === p.date && sel.market === p.market ? null : p), selectedPoint: sel })), sel && /* @__PURE__ */ React.createElement("div", { style: { flex: "none", marginTop: 6, display: "flex", alignItems: "center", gap: 8, borderTop: "1px dashed #2a2a2a", paddingTop: 6 } }, /* @__PURE__ */ React.createElement("span", { style: { ...cv2, fontSize: 15, fontWeight: 700, color: "#fff" } }, fmtUSD2(sel.market)), /* @__PURE__ */ React.createElement("span", { style: { ...f3, fontSize: 10, color: "rgba(255,255,255,0.4)", flex: 1 } }, sel.date))) : /* @__PURE__ */ React.createElement("div", { style: { flex: "1 1 120px", minHeight: 80, background: "#1a1a1a", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", ...f3, fontSize: 11, color: "rgba(255,255,255,0.3)", textAlign: "center", padding: 12 } }, fila ? "el historial de esta variante aparece cuando haya al menos dos snapshots de precio" : "esta variante a\xFAn no tiene historial en el pool; empieza a registrarse cuando la marques"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flex: "none" } }, /* @__PURE__ */ React.createElement("button", { "data-t": "tengo", onClick: () => onMarca(v.key, { c: cons ? 0 : 1 }), style: btnAcc(cons ? "transparent" : "#2e7d52", cons ? "#999" : "#fff") }, cons ? "\u21BA volver a hunting" : "\u2713 marcar conseguida"), cons && /* @__PURE__ */ React.createElement("button", { "data-t": "editar", onClick: abrirEditar, style: btnAcc("transparent", "#999") }, "\u270E editar"), fila && /* @__PURE__ */ React.createElement("button", { "data-t": "quitar", onClick: () => {
       if (window.confirm(`\xBFQuitar ${v.etiqueta} de ${carta.n} de tu inventario?`)) onMarca(v.key, { c: 0, q: 0, cu: 0, nt: "" });
     }, title: "quitar del inventario", style: btnAcc("transparent", "#777", { flex: "none", padding: "10px 12px" }) }, "\u{1F5D1}"))))), zoom != null && /* @__PURE__ */ React.createElement("div", { onClick: () => setZoom(null), style: { position: "fixed", inset: 0, zIndex: 800, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "12px 0", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("button", { onClick: (e) => {
       e.stopPropagation();

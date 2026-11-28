@@ -13,7 +13,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { normNum, normName } from "../../pokecripto/lib/pricing.mjs";
-import { describirVariante } from "../../pokecripto/lib/variantes-comunes.mjs";
+import { describirVariante, aceptaDeOtroGrupo } from "../../pokecripto/lib/variantes-comunes.mjs";
 
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const RAIZ = path.join(AQUI, "..", "..", "..");
@@ -87,9 +87,10 @@ for (const [k1, hermanos] of porGrupoNumNombre) {
   // sellos de OTROS grupos con el mismo nombre y número con total
   if (numCrudo(base).includes("/")) {
     for (const s of porNombreNumero.get(`${base.base}|${numCrudo(base)}`) || []) {
-      if (s.grupo === base.grupo || !s.sufijo) continue;
-      const d = describirVariante({ juego: "pokemon", sufijo: s.sufijo, grupo: nombreGrupo.get(s.grupo) });
-      if (d.tipo !== "sello") continue;
+      if (s.grupo === base.grupo) continue;
+      // sellos, patrones (Cosmos Holo…) y productos sin etiqueta de otros grupos (Prize Pack Series, Deck Exclusives…): ver aceptaDeOtroGrupo
+      if (!aceptaDeOtroGrupo({ sufijo: s.sufijo, grupo: nombreGrupo.get(s.grupo) })) continue;
+      const d = describirVariante({ juego: "pokemon", sufijo: s.sufijo, grupo: nombreGrupo.get(s.grupo), fueraDeSet: true });
       lista.push(...variantesDe(s, s.grupo)); conteo.sellos.set(d.clave, (conteo.sellos.get(d.clave) || 0) + 1);
     }
   }
