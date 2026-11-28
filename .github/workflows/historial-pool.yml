@@ -13,7 +13,7 @@ on:
       min_usd:
         description: "Solo se guardan los productos que alguna vez valieron al menos esto (USD); 0 = todo"
         required: false
-        default: "0.5"
+        default: "0"
 
 concurrency:
   group: historial-pool
@@ -44,7 +44,7 @@ jobs:
           MIN=$(grep -oP '^min_usd=\K[0-9.]+' .github/lanzar-historial-pool 2>/dev/null || true)
           set +e
           HASTA_MES="$HASTA" MIN_USD="${{ github.event.inputs.min_usd || '' }}" ; export HASTA_MES
-          MIN_USD="${{ github.event.inputs.min_usd || '' }}"; [ -z "$MIN_USD" ] && MIN_USD="${MIN:-0.5}"; export MIN_USD
+          MIN_USD="${{ github.event.inputs.min_usd || '' }}"; [ -z "$MIN_USD" ] && MIN_USD="${MIN:-0}"; export MIN_USD
           PRESUPUESTO_MIN=300 NODE_OPTIONS=--max-old-space-size=6144 node modules/feed/scripts/build-historial-pool.mjs 2>&1 | tee /tmp/historial-pool.log
           echo "codigo=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
 

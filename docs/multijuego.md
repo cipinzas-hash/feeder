@@ -133,3 +133,12 @@ volver (1 conseguida, borde verde) → menú actualizado → Digimon con la mism
 3. Historial mensual: Run workflow «Historial mensual de precios (tcgcsv)» con `apply = true` (antes, el informe de prueba ya está en `docs/historial-mensual-reporte.md`).
 4. Pendiente (no hecho): marcar la variante que tienes en Pokémon (hoy solo se muestran), selector de tamaño de caras en las tarjetas de Pokémon, y mostrar
    las «promos relacionadas» por nombre (liga modernas) como lista aparte.
+
+## Tercera entrega (28-nov-2026)
+- **Variantes de otros grupos**: entran los productos de OTRO grupo con el mismo nombre y número con total que son sellos (liga, prerelease, staff…), patrones (Cosmos Holo de «Miscellaneous») o no llevan
+  etiqueta (Prize Pack Series, Deck Exclusives: el grupo es el sello). Ej.: Mega Absol ex 086/132 de los sobres de premio (Prize Pack) aparece junto a la versión normal. No existen en TCGplayer las versiones
+  de liga de Toxtricity ni Absol series 7/8 (sonda en docs/sonda-cartas.md): no se pueden seguir con precio automático.
+- **Sets siempre desplegados por defecto** en los tres juegos (el plegado sigue disponible).
+- **Gráficos**: línea = media; banda tenue = mínimo y máximo del mes (puntos mensuales del pool); precios en el eje Y; marcas de mes y año en el eje X con guías; al tocar un mes se ve media/mín/máx.
+- **Yu-Gi-Oh!**: el explorador muestra el historial del pool de cualquier variante sin marcarla (cierra con el precio del catálogo).
+- **Historial del pool sin filtro** (`MIN_USD=0`): todas las cartas tienen gráfico (~53 MB).

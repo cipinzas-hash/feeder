@@ -6,8 +6,8 @@
 //
 // Solo se procesan meses CERRADOS. Corrida completa = todos los días desde feb-2024 (varios GB de descargas, una sola vez; los archivos son inmutables y
 // la documentación de tcgcsv pide no repetirlas). Corrida mensual (cron, día 2) = solo los meses cerrados que faltan según tcgcrypto-hist/estado.json.
-// Para mantener el repositorio liviano solo se guardan los productos que alguna vez valieron ≥ MIN_USD (por omisión 0,50): el bulk no sirve para
-// decidir una compra. El informe (estado.json) dice cuánto habría pesado sin el filtro, para poder cambiarlo con datos.
+// MIN_USD (por omisión 0 = sin filtro) permite guardar solo los productos que alguna vez valieron ≥ ese monto si algún día el peso lo exige; el informe
+// (estado.json) dice cuánto pesa con y sin el filtro.
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
@@ -18,7 +18,7 @@ const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const DATA = process.env.DATA_DIR || path.join(AQUI, "..", "data");
 const SALIDA = path.join(DATA, "tcgcrypto-hist");
 const CATS = (process.env.CATS || "3,2,63").split(",").map(Number);
-const MIN_USD = Number(process.env.MIN_USD ?? 0.5);
+const MIN_USD = Number(process.env.MIN_USD ?? 0);          // 0 = todo (28-nov-2026: se quitó el filtro de US$0,50; sin filtro ≈ 53 MB y todas las cartas tienen gráfico)
 const PRIMER_DIA = process.env.DESDE || "2024-02-08";
 const ARCHIVO = process.env.ARCHIVO_BASE || "https://tcgcsv.com/archive/tcgplayer";
 const LOCAL = process.env.ARCHIVO_LOCAL || null;        // solo pruebas: carpeta con <fecha>/<cat>/<grupo>/prices ya extraídos

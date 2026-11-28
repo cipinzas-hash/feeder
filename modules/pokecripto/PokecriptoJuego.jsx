@@ -5,7 +5,8 @@
 //
 // Datos: el MISMO inventario de Pokécripto (pokeInventario): una fila por VARIANTE marcada (ver lib/juegos.mjs). El catálogo es virtual
 // (los JSON de tcgcrypto, de tcgcsv). Una tarjeta es una impresión (set + número) y reúne todas las variantes de esa impresión.
-import { fetchTcgCryptoData } from "../shared/catalog.js";
+import { fetchTcgCryptoData, fetchDataJson } from "../shared/catalog.js";
+import { histMesDeShard, rutaHist, CAT_JUEGO } from "./lib/historial-pool.mjs";
 import { TAMANOS_VISTA, ratioDe, alturaFicha, abiertoPorDefecto as plegadoPorDefecto } from "./lib/vistas.mjs";
 import EfectoCarta from "./EfectoCarta.jsx";
 import {
@@ -14,7 +15,7 @@ import {
 import { JUEGOS, juegoDe, idFila, filaTiene, marcasDeFilas, aplicarMarca, actualizarPreciosFilas, cartaDe, variantesDeImpresion, resumenFilas, pendientesDeCambio } from "./lib/juegos.mjs";
 import { encolarPokecriptoPending } from "./alta.js";
 import { multiploSobreBase } from "./lib/variantes-comunes.mjs";
-import { historialConMensual } from "./lib/historial.mjs";
+import { historialConMensual, mezclarHistMes } from "./lib/historial.mjs";
 import {
   cartasDeColeccion, filtrarCartas, urlImagen, urlImagenGrande, rankSets, valoresFiltro, cuentaFiltros, precioReferencia,
 } from "../tcgcrypto/logica.js";
@@ -105,7 +106,17 @@ function Detalle({ datos, col, carta, tile, filasCarta, lista, onIr, onCerrar, o
   const nTengo = tile.vs.filter(x => tiene(x.key)).length;
   useEffect(() => { if (zoomInicial) setZoom(v.pid); }, []);                        // eslint-disable-line
   useEffect(() => { if (onZoomEstado) onZoomEstado(zoom != null); }, [zoom]);
-  const hist = fila ? historialConMensual(fila) : [];
+  // Historial de esta variante: el de su fila (si la marcaste) y, SIEMPRE, el del pool (media, mínimo y máximo por mes desde feb-2024) leído del archivo de
+  // su grupo: no hace falta marcarla para verlo. Si no tiene fila, el precio del catálogo cierra la línea en «hoy».
+  const [poolHm, setPoolHm] = useState(null);
+  useEffect(() => {
+    let vivo = true; setPoolHm(null);
+    const g = datos.setIds && datos.setIds[tile.setIdx], cat = CAT_JUEGO[datos.tcg];
+    if (g && cat) fetchDataJson(rutaHist(cat, g)).then(sh => { if (vivo) setPoolHm(histMesDeShard(sh, `${v.pid}|${v.sub}`)); }).catch(() => {});
+    return () => { vivo = false; };
+  }, [v.key, tile.setIdx]);
+  const hoyIso = new Date().toISOString().slice(0, 10);
+  const hist = historialConMensual({ priceHistory: fila ? fila.priceHistory || [] : (v.market != null ? [{ date: hoyIso, market: v.market, low: v.low ?? null, high: v.high ?? null, src: "cat" }] : []), histMes: mezclarHistMes(poolHm, fila && fila.histMes) });
   const idx = lista.findIndex(x => x.k === carta.k && x.setIdx === tile.setIdx && x.num === tile.num), nav = lista.length > 1;
   const { ath, athDate, atl, atlDate, vol, volLabel } = computeHistMetrics(hist, rango);
   const mult = multiploSobreBase(v, tile.vs);
@@ -195,7 +206,7 @@ function Detalle({ datos, col, carta, tile, filasCarta, lista, onIr, onCerrar, o
             </div>
           ) : (
             <div style={{ flex: "1 1 120px", minHeight: 80, background: "#1a1a1a", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", ...f, fontSize: 11, color: "rgba(255,255,255,0.3)", textAlign: "center", padding: 12 }}>
-              {fila ? "el historial de esta variante aparece cuando haya al menos dos snapshots de precio" : "marca esta variante para empezar a registrar su historial de precios"}
+              {fila ? "el historial de esta variante aparece cuando haya al menos dos snapshots de precio" : "esta variante aún no tiene historial en el pool; empieza a registrarse cuando la marques"}
             </div>
           )}
           <div style={{ display: "flex", gap: 6, flex: "none" }}>
